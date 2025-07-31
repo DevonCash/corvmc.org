@@ -39,12 +39,15 @@ class BandProfileSeeder extends Seeder
         ];
 
         foreach ($rockBands as $bandData) {
+            $owner = $users->random();
             $band = BandProfile::factory()
-                ->for($users->random(), 'owner')
                 ->public()
                 ->withGenres($bandData['genres'])
                 ->withInfluences(['Led Zeppelin', 'Pink Floyd', 'Arctic Monkeys', 'The Strokes'])
-                ->create(['name' => $bandData['name']]);
+                ->create([
+                    'name' => $bandData['name'],
+                    'owner_id' => $owner->id,
+                ]);
 
             $this->attachMembers($band, $users, $bandData['memberCount']);
         }
@@ -59,12 +62,15 @@ class BandProfileSeeder extends Seeder
         ];
 
         foreach ($jazzGroups as $bandData) {
+            $owner = $users->random();
             $band = BandProfile::factory()
-                ->for($users->random(), 'owner')
                 ->public()
                 ->withGenres($bandData['genres'])
                 ->withInfluences(['Miles Davis', 'John Coltrane', 'Duke Ellington', 'Bill Evans'])
-                ->create(['name' => $bandData['name']]);
+                ->create([
+                    'name' => $bandData['name'],
+                    'owner_id' => $owner->id,
+                ]);
 
             $this->attachMembers($band, $users, $bandData['memberCount']);
         }
@@ -79,12 +85,15 @@ class BandProfileSeeder extends Seeder
         ];
 
         foreach ($electronicActs as $bandData) {
+            $owner = $users->random();
             $band = BandProfile::factory()
-                ->for($users->random(), 'owner')
                 ->public()
                 ->withGenres($bandData['genres'])
                 ->withInfluences(['Daft Punk', 'Aphex Twin', 'Burial', 'Boards of Canada'])
-                ->create(['name' => $bandData['name']]);
+                ->create([
+                    'name' => $bandData['name'],
+                    'owner_id' => $owner->id,
+                ]);
 
             $this->attachMembers($band, $users, $bandData['memberCount']);
         }
@@ -99,12 +108,15 @@ class BandProfileSeeder extends Seeder
         ];
 
         foreach ($folkGroups as $bandData) {
+            $owner = $users->random();
             $band = BandProfile::factory()
-                ->for($users->random(), 'owner')
                 ->public()
                 ->withGenres($bandData['genres'])
                 ->withInfluences(['Bob Dylan', 'Joni Mitchell', 'Fleet Foxes', 'The Lumineers'])
-                ->create(['name' => $bandData['name']]);
+                ->create([
+                    'name' => $bandData['name'],
+                    'owner_id' => $owner->id,
+                ]);
 
             $this->attachMembers($band, $users, $bandData['memberCount']);
         }
@@ -118,12 +130,15 @@ class BandProfileSeeder extends Seeder
         ];
 
         foreach ($classicalGroups as $bandData) {
+            $owner = $users->random();
             $band = BandProfile::factory()
-                ->for($users->random(), 'owner')
                 ->public()
                 ->withGenres($bandData['genres'])
                 ->withInfluences(['Bach', 'Mozart', 'Beethoven', 'Debussy'])
-                ->create(['name' => $bandData['name']]);
+                ->create([
+                    'name' => $bandData['name'],
+                    'owner_id' => $owner->id,
+                ]);
 
             $this->attachMembers($band, $users, $bandData['memberCount']);
         }

@@ -18,14 +18,14 @@ class BandProfileFactory extends Factory
         $bandTypes = ['Band', 'Duo', 'Trio', 'Quartet', 'Ensemble', 'Orchestra', 'Collective'];
         $adjectives = ['Electric', 'Midnight', 'Golden', 'Silver', 'Dark', 'Bright', 'Wild', 'Free', 'Lost', 'Found'];
         $nouns = ['Hearts', 'Souls', 'Dreams', 'Echoes', 'Shadows', 'Lights', 'Stars', 'Moons', 'Rivers', 'Mountains'];
-        
+
         $bandName = $this->faker->randomElement($adjectives) . ' ' . $this->faker->randomElement($nouns);
-        
+
         return [
             'name' => $bandName,
             'bio' => $this->faker->paragraphs(3, true),
             'hometown' => $this->faker->city() . ', ' . $this->faker->stateAbbr(),
-            'owner_id' => User::factory(),
+            'owner_id' => 1, // Will be overridden by seeder
             'visibility' => $this->faker->randomElement(['public', 'members', 'private']),
             'links' => $this->generateLinks(),
             'contact' => $this->generateContact(),
@@ -47,7 +47,7 @@ class BandProfileFactory extends Factory
 
         // Add 2-4 random links
         $selectedPlatforms = $this->faker->randomElements(array_keys($platforms), $this->faker->numberBetween(2, 4));
-        
+
         foreach ($selectedPlatforms as $platform) {
             $links[] = [
                 'name' => ucfirst($platform),
@@ -82,19 +82,19 @@ class BandProfileFactory extends Factory
         ]);
     }
 
-    public function withGenres(array $genres = null): static
+    public function withGenres(?array $genres = null): static
     {
         return $this->afterCreating(function (BandProfile $band) use ($genres) {
             $defaultGenres = ['Rock', 'Pop', 'Jazz', 'Blues', 'Folk', 'Electronic', 'Hip Hop', 'Country', 'Classical', 'Punk', 'Metal', 'Indie', 'Alternative'];
             $selectedGenres = $genres ?? $this->faker->randomElements($defaultGenres, $this->faker->numberBetween(1, 4));
-            
+
             foreach ($selectedGenres as $genre) {
                 $band->attachTag($genre, 'genre');
             }
         });
     }
 
-    public function withInfluences(array $influences = null): static
+    public function withInfluences(?array $influences = null): static
     {
         return $this->afterCreating(function (BandProfile $band) use ($influences) {
             $defaultInfluences = [
@@ -103,7 +103,7 @@ class BandProfileFactory extends Factory
                 'Nirvana', 'Pearl Jam', 'Red Hot Chili Peppers', 'Foo Fighters', 'Arctic Monkeys'
             ];
             $selectedInfluences = $influences ?? $this->faker->randomElements($defaultInfluences, $this->faker->numberBetween(2, 6));
-            
+
             foreach ($selectedInfluences as $influence) {
                 $band->attachTag($influence, 'influence');
             }

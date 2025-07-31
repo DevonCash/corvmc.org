@@ -5,6 +5,8 @@ namespace App\Filament\Resources\BandProfiles;
 use App\Filament\Resources\BandProfiles\Pages\CreateBandProfile;
 use App\Filament\Resources\BandProfiles\Pages\EditBandProfile;
 use App\Filament\Resources\BandProfiles\Pages\ListBandProfiles;
+use App\Filament\Resources\BandProfiles\Pages\ViewBandProfile;
+use App\Filament\Resources\BandProfiles\RelationManagers\MembersRelationManager;
 use App\Filament\Resources\BandProfiles\Schemas\BandProfileForm;
 use App\Filament\Resources\BandProfiles\Tables\BandProfilesTable;
 use App\Models\BandProfile;
@@ -18,9 +20,15 @@ class BandProfileResource extends Resource
 {
     protected static ?string $model = BandProfile::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::UserGroup;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    protected static ?string $navigationLabel = 'Bands';
+
+    protected static ?string $pluralModelLabel = 'Bands';
+
+    protected static ?string $modelLabel = 'Band';
 
     public static function form(Schema $schema): Schema
     {
@@ -35,7 +43,7 @@ class BandProfileResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            MembersRelationManager::class,
         ];
     }
 
@@ -44,6 +52,7 @@ class BandProfileResource extends Resource
         return [
             'index' => ListBandProfiles::route('/'),
             'create' => CreateBandProfile::route('/create'),
+            'view' => ViewBandProfile::route('/{record}'),
             'edit' => EditBandProfile::route('/{record}/edit'),
         ];
     }

@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Console\Concerns\InteractsWithIO;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\ModelFlags\Models\Concerns\HasFlags;
 use Spatie\Tags\HasTags;
 
@@ -17,7 +19,7 @@ use Spatie\Tags\HasTags;
 
 class BandProfile extends Model implements HasMedia
 {
-    use HasFlags, HasTags, InteractsWithMedia;
+    use HasFactory, HasFlags, HasTags, InteractsWithMedia;
 
     protected $fillable = [
         'name',
@@ -37,7 +39,23 @@ class BandProfile extends Model implements HasMedia
     public function members()
     {
         return $this->belongsToMany(User::class, 'band_profile_members')
-            ->withPivot('role', 'position')
+            ->withPivot('role', 'position', 'name', 'status', 'invited_at')
+            ->withTimestamps();
+    }
+
+    public function activeMembers()
+    {
+        return $this->belongsToMany(User::class, 'band_profile_members')
+            ->withPivot('role', 'position', 'name', 'status', 'invited_at')
+            ->wherePivot('status', 'active')
+            ->withTimestamps();
+    }
+
+    public function pendingInvitations()
+    {
+        return $this->belongsToMany(User::class, 'band_profile_members')
+            ->withPivot('role', 'position', 'name', 'status', 'invited_at')
+            ->wherePivot('status', 'invited')
             ->withTimestamps();
     }
 
@@ -61,8 +79,17 @@ class BandProfile extends Model implements HasMedia
         if ($this->hasMedia('avatar')) {
             return $this->getFirstMediaUrl('avatar');
         }
-        
+
         return null;
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(150)
+            ->height(150)
+            ->sharpen(10)
+            ->performOnCollections('avatar');
     }
 
     public function getAvatarThumbUrlAttribute()
@@ -70,7 +97,7 @@ class BandProfile extends Model implements HasMedia
         if ($this->hasMedia('avatar')) {
             return $this->getFirstMediaUrl('avatar', 'thumb');
         }
-        
+
         return $this->avatar_url;
     }
 
@@ -138,8 +165,77 @@ class BandProfile extends Model implements HasMedia
             $this->members()->attach($user->id, [
                 'role' => $role,
                 'position' => $position,
+                'status' => 'active',
             ]);
         }
+    }
+
+    /**
+     * Invite a user to join the band.
+     */
+    public function inviteMember(User $user, string $role = 'member', ?string $position = null): void
+    {
+        if (!$this->hasMember($user) && !$this->hasInvitedUser($user)) {
+            $this->members()->attach($user->id, [
+                'role' => $role,
+                'position' => $position,
+                'status' => 'invited',
+                'invited_at' => now(),
+            ]);
+            
+            // Send notification
+            $user->notify(new \App\Notifications\BandInvitationNotification(
+                $this,
+                $role,
+                $position
+            ));
+        }
+    }
+
+    /**
+     * Check if a user has been invited to this band.
+     */
+    public function hasInvitedUser(User $user): bool
+    {
+        return $this->members()
+            ->wherePivot('user_id', $user->id)
+            ->wherePivot('status', 'invited')
+            ->exists();
+    }
+
+    /**
+     * Accept an invitation to join the band.
+     */
+    public function acceptInvitation(User $user): void
+    {
+        $this->members()->updateExistingPivot($user->id, [
+            'status' => 'active',
+        ]);
+        
+        // Notify band owner and admins about the new member
+        $adminsAndOwner = $this->activeMembers()
+            ->wherePivot('role', 'admin')
+            ->get()
+            ->push($this->owner)
+            ->unique('id')
+            ->filter(fn($u) => $u->id !== $user->id); // Don't notify the person who just joined
+            
+        foreach ($adminsAndOwner as $admin) {
+            $admin->notify(new \App\Notifications\BandInvitationAcceptedNotification(
+                $this,
+                $user
+            ));
+        }
+    }
+
+    /**
+     * Decline an invitation to join the band.
+     */
+    public function declineInvitation(User $user): void
+    {
+        $this->members()->updateExistingPivot($user->id, [
+            'status' => 'declined',
+        ]);
     }
 
     /**
