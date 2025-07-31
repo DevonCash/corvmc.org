@@ -86,7 +86,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public function bandProfiles()
     {
-        return $this->hasMany(BandProfile::class);
+        return $this->belongsToMany(BandProfile::class, 'band_profile_members')
+            ->withPivot('role', 'position')
+            ->withTimestamps();
+    }
+
+    public function ownedBands()
+    {
+        return $this->hasMany(BandProfile::class, 'owner_id');
     }
 
     public function transactions()
@@ -110,4 +117,5 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         $user = auth()->user();
         return $user;
     }
+
 }

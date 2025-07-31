@@ -197,38 +197,43 @@
             {{-- Right Column - Links & Info --}}
             <div class="space-y-6">
                 {{-- Band Affiliations --}}
-                @php
-                    $bandMemberships = DB::table('band_profile_members')
-                        ->join('band_profiles', 'band_profile_members.band_profile_id', '=', 'band_profiles.id')
-                        ->where('band_profile_members.user_id', $record->user->id)
-                        ->select('band_profiles.*', 'band_profile_members.role', 'band_profile_members.position')
-                        ->get();
-                @endphp
-                @if($bandMemberships && count($bandMemberships) > 0)
+                @if($record->user->bandProfiles && count($record->user->bandProfiles) > 0)
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
                             <x-heroicon-s-user-group class="w-4 h-4 mr-2" />
                             Bands & Groups
                         </h2>
                         <div class="space-y-3">
-                            @foreach($bandMemberships as $membership)
+                            @foreach($record->user->bandProfiles as $band)
                                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                                     <div class="flex items-center min-w-0 flex-1">
-                                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                                            <x-heroicon-s-musical-note class="w-4 h-4 text-purple-600" />
-                                        </div>
+                                        @if($band->avatar_url)
+                                            <img src="{{ $band->avatar_url }}" 
+                                                 alt="{{ $band->name }}"
+                                                 class="w-8 h-8 rounded-full object-cover mr-3 flex-shrink-0">
+                                        @else
+                                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                                                <x-heroicon-s-musical-note class="w-4 h-4 text-purple-600" />
+                                            </div>
+                                        @endif
                                         <div class="min-w-0 flex-1">
-                                            <h3 class="font-medium text-gray-900 truncate">{{ $membership->name }}</h3>
-                                            @if($membership->position)
-                                                <p class="text-sm text-gray-500 truncate">{{ $membership->position }}</p>
-                                            @elseif($membership->role && $membership->role !== 'member')
-                                                <p class="text-sm text-gray-500 truncate">{{ ucfirst($membership->role) }}</p>
+                                            <h3 class="font-medium text-gray-900 truncate">{{ $band->name }}</h3>
+                                            @if($band->pivot->position)
+                                                <p class="text-sm text-gray-500 truncate">{{ $band->pivot->position }}</p>
+                                            @elseif($band->pivot->role && $band->pivot->role !== 'member')
+                                                <p class="text-sm text-gray-500 truncate">{{ ucfirst($band->pivot->role) }}</p>
                                             @endif
                                         </div>
                                     </div>
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 flex-shrink-0">
-                                        Member
-                                    </span>
+                                    @if($band->pivot->role === 'admin')
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 flex-shrink-0">
+                                            Admin
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 flex-shrink-0">
+                                            Member
+                                        </span>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
@@ -351,7 +356,7 @@
                         <p class="text-gray-600 text-sm mb-4">
                             Add Bandcamp, SoundCloud, YouTube, or other embeds to showcase your work
                         </p>
-                        @if($canEdit ?? false)
+                        @can('update', $record)
                             <a href="{{ route('filament.member.resources.directory.edit', ['record' => $record->id]) }}"
                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
                                 <x-heroicon-s-plus class="w-4 h-4 mr-2" />

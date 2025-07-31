@@ -13,10 +13,23 @@ class BandProfilePolicy
         return true;
     }
 
-    public function view(User $user, BandProfile $band): ?bool
+    public function view(User $user, BandProfile $band): bool
     {
-        if ($band->isPublic() || $band->members()->contains($user))
+        // Public bands are viewable by anyone
+        if ($band->visibility === 'public') {
             return true;
+        }
+
+        // Members-only bands are viewable by authenticated users
+        if ($band->visibility === 'members') {
+            return true;
+        }
+
+        // Private bands are only viewable by members and owners
+        if ($band->visibility === 'private') {
+            return $this->isMemberOrOwner($user, $band);
+        }
+
         return null;
     }
 
@@ -28,13 +41,20 @@ class BandProfilePolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, BandProfile $band): ?bool
+    public function update(User $user, BandProfile $band): bool
     {
-        if ($user->can('update', ['band_id' => $band->id])) {
+        // Owner can always update
+        if ($band->owner_id === $user->id) {
             return true;
         }
 
-        return null;
+        // System admins can update
+        if ($user->hasRole(['admin', 'moderator'])) {
+            return true;
+        }
+
+        // Band admins can update
+        return $this->isBandAdmin($user, $band);
     }
 
     /**
@@ -64,11 +84,96 @@ class BandProfilePolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, BandProfile $bandProfile): ?bool
+    public function forceDelete(User $user, BandProfile $bandProfile): bool
     {
-        if ($user->can('force delete profiles') || $user->id === $bandProfile->owner->id) {
+        return $user->hasRole(['admin']);
+    }
+
+    /**
+     * Determine whether the user can manage band members.
+     */
+    public function manageMembers(User $user, BandProfile $band): bool
+    {
+        // Owner can manage members
+        if ($band->owner_id === $user->id) {
             return true;
         }
-        return null;
+
+        // Band admins can manage members
+        return $this->isBandAdmin($user, $band);
+    }
+
+    /**
+     * Determine whether the user can invite members to the band.
+     */
+    public function inviteMembers(User $user, BandProfile $band): bool
+    {
+        return $this->manageMembers($user, $band);
+    }
+
+    /**
+     * Determine whether the user can remove members from the band.
+     */
+    public function removeMembers(User $user, BandProfile $band): bool
+    {
+        return $this->manageMembers($user, $band);
+    }
+
+    /**
+     * Determine whether the user can change member roles.
+     */
+    public function changeMemberRoles(User $user, BandProfile $band): bool
+    {
+        // Only owner can change roles
+        return $band->owner_id === $user->id;
+    }
+
+    /**
+     * Determine whether the user can leave the band.
+     */
+    public function leave(User $user, BandProfile $band): bool
+    {
+        // Owner cannot leave their own band (must transfer ownership first)
+        if ($band->owner_id === $user->id) {
+            return null;
+        }
+
+        // Members can leave
+        return $this->isMember($user, $band);
+    }
+
+    /**
+     * Determine whether the user can transfer ownership of the band.
+     */
+    public function transferOwnership(User $user, BandProfile $band): bool
+    {
+        return $band->owner_id === $user->id;
+    }
+
+    /**
+     * Helper method to check if user is a member or owner of the band.
+     */
+    protected function isMemberOrOwner(User $user, BandProfile $band): bool
+    {
+        return $band->owner_id === $user->id || $this->isMember($user, $band);
+    }
+
+    /**
+     * Helper method to check if user is a member of the band.
+     */
+    protected function isMember(User $user, BandProfile $band): bool
+    {
+        return $band->members()->wherePivot('user_id', $user->id)->exists();
+    }
+
+    /**
+     * Helper method to check if user is a band admin.
+     */
+    protected function isBandAdmin(User $user, BandProfile $band): bool
+    {
+        return $band->members()
+            ->wherePivot('user_id', $user->id)
+            ->wherePivot('role', 'admin')
+            ->exists();
     }
 }

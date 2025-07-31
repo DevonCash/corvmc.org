@@ -60,8 +60,6 @@ class ViewMemberProfile extends Page
     {
         return [
             'record' => $this->record,
-            'canEdit' => auth()->user()->can('update', $this->record) || 
-                        $this->record->user_id === auth()->id(),
         ];
     }
 }
