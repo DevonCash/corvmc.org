@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\BandProfiles\RelationManagers;
 
 use App\Models\User;
+use App\Services\BandService;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -148,12 +149,26 @@ class MembersRelationManager extends RelationManager
                             ->maxLength(100),
                     ])
                     ->using(function (array $data): void {
-                        $this->ownerRecord->members()->attach($data['recordId'], [
-                            'role' => $data['role'],
-                            'position' => $data['position'] ?? null,
-                            'name' => $data['name'],
-                            'status' => 'active', // Direct addition is active
-                        ]);
+                        $bandService = app(BandService::class);
+                        $user = $data['recordId'] ? User::find($data['recordId']) : null;
+                        
+                        if ($user) {
+                            $bandService->addMember(
+                                $this->ownerRecord,
+                                $user,
+                                $data['role'],
+                                $data['position'] ?? null,
+                                $data['name']
+                            );
+                        } else {
+                            // For guest members (no CMC account)
+                            $this->ownerRecord->members()->attach(null, [
+                                'role' => $data['role'],
+                                'position' => $data['position'] ?? null,
+                                'name' => $data['name'],
+                                'status' => 'active',
+                            ]);
+                        }
                     })
                     ->visible(fn (): bool => auth()->user()->can('manageMembers', $this->ownerRecord)),
 
@@ -203,33 +218,31 @@ class MembersRelationManager extends RelationManager
                             ->helperText('Override their display name for this band'),
                     ])
                     ->action(function (array $data): void {
+                        $bandService = app(BandService::class);
                         $user = User::find($data['user_id']);
                         
-                        if ($user && !$this->ownerRecord->hasMember($user) && !$this->ownerRecord->hasInvitedUser($user)) {
-                            $this->ownerRecord->inviteMember(
-                                $user, 
-                                $data['role'], 
-                                $data['position'] ?? null
+                        if ($user) {
+                            $success = $bandService->inviteMember(
+                                $this->ownerRecord,
+                                $user,
+                                $data['role'],
+                                $data['position'] ?? null,
+                                $data['name'] ?? null
                             );
                             
-                            // Update the display name if provided
-                            if (!empty($data['name'])) {
-                                $this->ownerRecord->members()->updateExistingPivot($user->id, [
-                                    'name' => $data['name'],
-                                ]);
+                            if ($success) {
+                                Notification::make()
+                                    ->title('Invitation sent')
+                                    ->body("Invitation sent to {$user->name}")
+                                    ->success()
+                                    ->send();
+                            } else {
+                                Notification::make()
+                                    ->title('Cannot send invitation')
+                                    ->body('User is already a member or has a pending invitation')
+                                    ->warning()
+                                    ->send();
                             }
-                            
-                            Notification::make()
-                                ->title('Invitation sent')
-                                ->body("Invitation sent to {$user->name}")
-                                ->success()
-                                ->send();
-                        } else {
-                            Notification::make()
-                                ->title('Cannot send invitation')
-                                ->body('User is already a member or has a pending invitation')
-                                ->warning()
-                                ->send();
                         }
                     })
                     ->visible(fn (): bool => auth()->user()->can('manageMembers', $this->ownerRecord)),
@@ -243,13 +256,16 @@ class MembersRelationManager extends RelationManager
                     ->modalHeading('Accept Band Invitation')
                     ->modalDescription(fn ($record) => "Accept invitation to join {$this->ownerRecord->name}?")
                     ->action(function ($record): void {
-                        $this->ownerRecord->acceptInvitation($record);
+                        $bandService = app(BandService::class);
+                        $success = $bandService->acceptInvitation($this->ownerRecord, $record);
                         
-                        Notification::make()
-                            ->title('Invitation accepted')
-                            ->body("Welcome to {$this->ownerRecord->name}!")
-                            ->success()
-                            ->send();
+                        if ($success) {
+                            Notification::make()
+                                ->title('Invitation accepted')
+                                ->body("Welcome to {$this->ownerRecord->name}!")
+                                ->success()
+                                ->send();
+                        }
                     })
                     ->visible(fn ($record): bool => 
                         $record->pivot->status === 'invited' && 
@@ -264,13 +280,16 @@ class MembersRelationManager extends RelationManager
                     ->modalHeading('Decline Band Invitation')
                     ->modalDescription(fn ($record) => "Decline invitation to join {$this->ownerRecord->name}?")
                     ->action(function ($record): void {
-                        $this->ownerRecord->declineInvitation($record);
+                        $bandService = app(BandService::class);
+                        $success = $bandService->declineInvitation($this->ownerRecord, $record);
                         
-                        Notification::make()
-                            ->title('Invitation declined')
-                            ->body('You have declined the invitation')
-                            ->success()
-                            ->send();
+                        if ($success) {
+                            Notification::make()
+                                ->title('Invitation declined')
+                                ->body('You have declined the invitation')
+                                ->success()
+                                ->send();
+                        }
                     })
                     ->visible(fn ($record): bool => 
                         $record->pivot->status === 'invited' && 
@@ -282,15 +301,16 @@ class MembersRelationManager extends RelationManager
                     ->color('warning')
                     ->icon('heroicon-m-arrow-path')
                     ->action(function ($record): void {
-                        $this->ownerRecord->members()->updateExistingPivot($record->id, [
-                            'invited_at' => now(),
-                        ]);
+                        $bandService = app(BandService::class);
+                        $success = $bandService->resendInvitation($this->ownerRecord, $record);
                         
-                        Notification::make()
-                            ->title('Invitation resent')
-                            ->body("Invitation resent to {$record->name}")
-                            ->success()
-                            ->send();
+                        if ($success) {
+                            Notification::make()
+                                ->title('Invitation resent')
+                                ->body("Invitation resent to {$record->name}")
+                                ->success()
+                                ->send();
+                        }
                     })
                     ->visible(fn ($record): bool => 
                         $record->pivot->status === 'invited' && 

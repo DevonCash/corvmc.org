@@ -158,84 +158,52 @@ class BandProfile extends Model implements HasMedia
 
     /**
      * Add a member to the band with optional role and position.
+     * 
+     * @deprecated Use BandService::addMember() instead
      */
     public function addMember(User $user, string $role = 'member', ?string $position = null): void
     {
-        if (!$this->hasMember($user)) {
-            $this->members()->attach($user->id, [
-                'role' => $role,
-                'position' => $position,
-                'status' => 'active',
-            ]);
-        }
+        app(\App\Services\BandService::class)->addMember($this, $user, $role, $position);
     }
 
     /**
      * Invite a user to join the band.
+     * 
+     * @deprecated Use BandService::inviteMember() instead
      */
     public function inviteMember(User $user, string $role = 'member', ?string $position = null): void
     {
-        if (!$this->hasMember($user) && !$this->hasInvitedUser($user)) {
-            $this->members()->attach($user->id, [
-                'role' => $role,
-                'position' => $position,
-                'status' => 'invited',
-                'invited_at' => now(),
-            ]);
-            
-            // Send notification
-            $user->notify(new \App\Notifications\BandInvitationNotification(
-                $this,
-                $role,
-                $position
-            ));
-        }
+        app(\App\Services\BandService::class)->inviteMember($this, $user, $role, $position);
     }
 
     /**
      * Check if a user has been invited to this band.
+     * 
+     * @deprecated Use BandService::hasInvitedUser() instead
      */
     public function hasInvitedUser(User $user): bool
     {
-        return $this->members()
-            ->wherePivot('user_id', $user->id)
-            ->wherePivot('status', 'invited')
-            ->exists();
+        return app(\App\Services\BandService::class)->hasInvitedUser($this, $user);
     }
 
     /**
      * Accept an invitation to join the band.
+     * 
+     * @deprecated Use BandService::acceptInvitation() instead
      */
     public function acceptInvitation(User $user): void
     {
-        $this->members()->updateExistingPivot($user->id, [
-            'status' => 'active',
-        ]);
-        
-        // Notify band owner and admins about the new member
-        $adminsAndOwner = $this->activeMembers()
-            ->wherePivot('role', 'admin')
-            ->get()
-            ->push($this->owner)
-            ->unique('id')
-            ->filter(fn($u) => $u->id !== $user->id); // Don't notify the person who just joined
-            
-        foreach ($adminsAndOwner as $admin) {
-            $admin->notify(new \App\Notifications\BandInvitationAcceptedNotification(
-                $this,
-                $user
-            ));
-        }
+        app(\App\Services\BandService::class)->acceptInvitation($this, $user);
     }
 
     /**
      * Decline an invitation to join the band.
+     * 
+     * @deprecated Use BandService::declineInvitation() instead
      */
     public function declineInvitation(User $user): void
     {
-        $this->members()->updateExistingPivot($user->id, [
-            'status' => 'declined',
-        ]);
+        app(\App\Services\BandService::class)->declineInvitation($this, $user);
     }
 
     /**

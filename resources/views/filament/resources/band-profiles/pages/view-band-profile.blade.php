@@ -246,7 +246,7 @@
                         <p class="text-gray-600 text-sm mb-4">
                             Add Bandcamp, SoundCloud, YouTube, or other embeds to showcase your work
                         </p>
-                        <a href="{{ route('filament.member.resources.band-profiles.edit', ['record' => $record->id]) }}"
+                        <a href="{{ route('filament.member.resources.bands.edit', ['record' => $record->id]) }}"
                             class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
                             <x-heroicon-s-plus class="w-4 h-4 mr-2" />
                             Add Content

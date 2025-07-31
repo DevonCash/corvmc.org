@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\BandProfile;
 use App\Models\User;
+use App\Services\BandService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -46,21 +47,14 @@ class BandInvitations extends Page
         $invitations = $this->getPendingInvitations();
         
         if ($invitations->isEmpty()) {
-            $this->redirect(route('filament.member.resources.band-profiles.index'));
+            $this->redirect(route('filament.member.resources.bands.index'));
             return;
         }
     }
 
     public function getPendingInvitations(): Collection
     {
-        return BandProfile::whereHas('members', function ($query) {
-            $query->where('user_id', auth()->id())
-                  ->where('status', 'invited');
-        })->with(['members' => function ($query) {
-            $query->where('user_id', auth()->id())
-                  ->where('status', 'invited')
-                  ->withPivot('role', 'position', 'invited_at');
-        }])->get();
+        return app(BandService::class)->getPendingInvitationsForUser(auth()->user());
     }
 
     protected function getActions(): array
@@ -75,30 +69,28 @@ class BandInvitations extends Page
 
     public function acceptInvitation(int $bandId): void
     {
+        $bandService = app(BandService::class);
         $band = BandProfile::findOrFail($bandId);
         $user = auth()->user();
         
-        if ($band->hasInvitedUser($user)) {
-            $band->acceptInvitation($user);
-            
+        if ($bandService->acceptInvitation($band, $user)) {
             Notification::make()
                 ->title('Invitation accepted')
                 ->body("Welcome to {$band->name}!")
                 ->success()
                 ->send();
             
-            $this->redirect(route('filament.member.resources.band-profiles.view', ['record' => $band->id]));
+            $this->redirect(route('filament.member.resources.bands.view', ['record' => $band->id]));
         }
     }
 
     public function declineInvitation(int $bandId): void
     {
+        $bandService = app(BandService::class);
         $band = BandProfile::findOrFail($bandId);
         $user = auth()->user();
         
-        if ($band->hasInvitedUser($user)) {
-            $band->declineInvitation($user);
-            
+        if ($bandService->declineInvitation($band, $user)) {
             Notification::make()
                 ->title('Invitation declined')
                 ->body('You have declined the invitation')
@@ -108,7 +100,7 @@ class BandInvitations extends Page
             // Redirect to band profiles index if no more invitations
             $remainingInvitations = $this->getPendingInvitations();
             if ($remainingInvitations->isEmpty()) {
-                $this->redirect(route('filament.member.resources.band-profiles.index'));
+                $this->redirect(route('filament.member.resources.bands.index'));
             }
         }
     }
