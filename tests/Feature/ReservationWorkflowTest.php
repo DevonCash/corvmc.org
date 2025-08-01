@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\ReservationService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ReservationWorkflowTest extends TestCase
@@ -26,7 +27,7 @@ class ReservationWorkflowTest extends TestCase
         \Spatie\Permission\Models\Role::create(['name' => 'sustaining member']);
     }
 
-    /** @test */
+    #[Test]
     public function regular_user_can_make_paid_reservation()
     {
         $user = User::factory()->create();
@@ -41,7 +42,7 @@ class ReservationWorkflowTest extends TestCase
         $this->assertFalse($reservation->is_recurring);
     }
 
-    /** @test */
+    #[Test]
     public function sustaining_member_gets_free_hours()
     {
         $user = User::factory()->create();
@@ -57,7 +58,7 @@ class ReservationWorkflowTest extends TestCase
         $this->assertEquals(2, $user->getRemainingFreeHours());
     }
 
-    /** @test */
+    #[Test]
     public function sustaining_member_pays_for_hours_beyond_free_limit()
     {
         $user = User::factory()->create();
@@ -83,7 +84,7 @@ class ReservationWorkflowTest extends TestCase
         $this->assertEquals(0, $user->getRemainingFreeHours());
     }
 
-    /** @test */
+    #[Test]
     public function user_identified_as_sustaining_member_by_recent_transaction()
     {
         $user = User::factory()->create();
@@ -103,7 +104,7 @@ class ReservationWorkflowTest extends TestCase
         $this->assertTrue($user->isSustainingMember());
     }
 
-    /** @test */
+    #[Test]
     public function conflicting_reservations_are_prevented()
     {
         $user1 = User::factory()->create();
@@ -125,7 +126,7 @@ class ReservationWorkflowTest extends TestCase
         $this->service->createReservation($user2, $overlappingStart, $overlappingEnd);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_update_their_reservation()
     {
         $user = User::factory()->create();
@@ -147,7 +148,7 @@ class ReservationWorkflowTest extends TestCase
         $this->assertEquals(3, $updated->hours_used);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_cancel_reservation()
     {
         $user = User::factory()->create();
@@ -163,7 +164,7 @@ class ReservationWorkflowTest extends TestCase
         $this->assertStringContainsString('Changed plans', $cancelled->notes);
     }
 
-    /** @test */
+    #[Test]
     public function sustaining_member_can_create_recurring_reservation()
     {
         $user = User::factory()->create();
@@ -194,7 +195,7 @@ class ReservationWorkflowTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function recurring_reservations_skip_conflicting_slots()
     {
         $user = User::factory()->create();
@@ -231,7 +232,7 @@ class ReservationWorkflowTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function available_time_slots_exclude_existing_reservations()
     {
         $date = Carbon::now()->addDay();
@@ -262,7 +263,7 @@ class ReservationWorkflowTest extends TestCase
         $this->assertCount(5, $slots);
     }
 
-    /** @test */
+    #[Test]
     public function user_stats_reflect_reservation_activity()
     {
         $user = User::factory()->create();
@@ -305,7 +306,7 @@ class ReservationWorkflowTest extends TestCase
         $this->assertTrue($stats['is_sustaining_member']);
     }
 
-    /** @test */
+    #[Test]
     public function business_hours_are_enforced()
     {
         $user = User::factory()->create();
@@ -318,7 +319,7 @@ class ReservationWorkflowTest extends TestCase
         $this->service->createReservation($user, $earlyStart, $earlyEnd);
     }
 
-    /** @test */
+    #[Test]
     public function duration_limits_are_enforced()
     {
         $user = User::factory()->create();
@@ -331,7 +332,7 @@ class ReservationWorkflowTest extends TestCase
         $this->service->createReservation($user, $start, $end);
     }
 
-    /** @test */
+    #[Test]
     public function free_hours_reset_monthly()
     {
         $user = User::factory()->create();

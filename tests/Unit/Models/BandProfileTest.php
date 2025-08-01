@@ -5,6 +5,7 @@ namespace Tests\Unit\Models;
 use App\Models\BandProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class BandProfileTest extends TestCase
@@ -26,14 +27,14 @@ class BandProfileTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_belongs_to_an_owner()
     {
         $this->assertInstanceOf(User::class, $this->band->owner);
         $this->assertEquals($this->owner->id, $this->band->owner->id);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_members()
     {
         $this->band->members()->attach($this->member->id, [
@@ -51,7 +52,7 @@ class BandProfileTest extends TestCase
         $this->assertEquals('active', $members->first()->pivot->status);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_filter_active_members()
     {
         // Add active member
@@ -73,7 +74,7 @@ class BandProfileTest extends TestCase
         $this->assertEquals($this->member->id, $activeMembers->first()->id);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_filter_pending_invitations()
     {
         // Add active member
@@ -95,7 +96,7 @@ class BandProfileTest extends TestCase
         $this->assertEquals($invitedMember->id, $pendingInvitations->first()->id);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_genres_as_tags()
     {
         $this->band->attachTag('rock', 'genre');
@@ -108,7 +109,7 @@ class BandProfileTest extends TestCase
         $this->assertTrue($genres->pluck('name')->contains('indie'));
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_influences_as_tags()
     {
         $this->band->attachTag('The Beatles', 'influence');
@@ -121,7 +122,7 @@ class BandProfileTest extends TestCase
         $this->assertTrue($influences->pluck('name')->contains('Radiohead'));
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_user_is_owner()
     {
         $otherUser = User::factory()->create();
@@ -131,7 +132,7 @@ class BandProfileTest extends TestCase
         $this->assertFalse($this->band->isOwnedBy($this->member));
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_user_is_member()
     {
         $otherUser = User::factory()->create();
@@ -144,7 +145,7 @@ class BandProfileTest extends TestCase
         $this->assertFalse($this->band->hasMember($this->owner)); // Owner is not automatically a member
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_user_is_admin()
     {
         $adminMember = User::factory()->create();
@@ -167,7 +168,7 @@ class BandProfileTest extends TestCase
         $this->assertFalse($this->band->hasAdmin($this->owner));
     }
 
-    /** @test */
+    #[Test]
     public function it_gets_user_role()
     {
         // Owner role
@@ -185,7 +186,7 @@ class BandProfileTest extends TestCase
         $this->assertNull($this->band->getUserRole($otherUser));
     }
 
-    /** @test */
+    #[Test]
     public function it_gets_user_position()
     {
         // Add member with position
@@ -202,7 +203,7 @@ class BandProfileTest extends TestCase
         $this->assertNull($this->band->getUserPosition($otherUser));
     }
 
-    /** @test */
+    #[Test]
     public function it_can_remove_member()
     {
         // Add member
@@ -214,7 +215,7 @@ class BandProfileTest extends TestCase
         $this->assertFalse($this->band->hasMember($this->member));
     }
 
-    /** @test */
+    #[Test]
     public function it_can_update_member_role()
     {
         // Add member
@@ -230,7 +231,7 @@ class BandProfileTest extends TestCase
         $this->assertEquals('bassist', $this->band->fresh()->getUserRole($this->member));
     }
 
-    /** @test */
+    #[Test]
     public function it_can_update_member_position()
     {
         // Add member
@@ -247,13 +248,13 @@ class BandProfileTest extends TestCase
         $this->assertEquals('lead', $this->band->fresh()->getUserPosition($this->member));
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_null_avatar_url_when_no_media()
     {
         $this->assertNull($this->band->avatar_url);
     }
 
-    /** @test */
+    #[Test]
     public function it_casts_attributes_correctly()
     {
         $links = ['website' => 'https://example.com', 'spotify' => 'https://spotify.com/artist/123'];
@@ -268,7 +269,7 @@ class BandProfileTest extends TestCase
         $this->assertEquals($contact, $this->band->contact);
     }
 
-    /** @test */
+    #[Test]
     public function it_has_correct_fillable_attributes()
     {
         $fillable = [
@@ -278,7 +279,7 @@ class BandProfileTest extends TestCase
         $this->assertEquals($fillable, $this->band->getFillable());
     }
 
-    /** @test */
+    #[Test]
     public function it_can_query_with_touring_bands()
     {
         // Create regular band

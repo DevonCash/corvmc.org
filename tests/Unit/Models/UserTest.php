@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class UserTest extends TestCase
@@ -25,7 +26,7 @@ class UserTest extends TestCase
         $this->user = User::factory()->create();
     }
 
-    /** @test */
+    #[Test]
     public function it_identifies_sustaining_member_by_role()
     {
         $this->assertFalse($this->user->isSustainingMember());
@@ -35,7 +36,7 @@ class UserTest extends TestCase
         $this->assertTrue($this->user->isSustainingMember());
     }
 
-    /** @test */
+    #[Test]
     public function it_identifies_sustaining_member_by_recurring_transaction()
     {
         $this->assertFalse($this->user->isSustainingMember());
@@ -51,7 +52,7 @@ class UserTest extends TestCase
         $this->assertTrue($this->user->isSustainingMember());
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_identify_sustaining_member_with_old_transaction()
     {
         // Create an old recurring transaction
@@ -65,7 +66,7 @@ class UserTest extends TestCase
         $this->assertFalse($this->user->isSustainingMember());
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_identify_sustaining_member_with_small_transaction()
     {
         // Create a recent recurring transaction under $10
@@ -79,7 +80,7 @@ class UserTest extends TestCase
         $this->assertFalse($this->user->isSustainingMember());
     }
 
-    /** @test */
+    #[Test]
     public function it_calculates_used_free_hours_this_month()
     {
         $this->assertEquals(0, $this->user->getUsedFreeHoursThisMonth());
@@ -122,7 +123,7 @@ class UserTest extends TestCase
         $this->assertEquals(3.5, $this->user->getUsedFreeHoursThisMonth());
     }
 
-    /** @test */
+    #[Test]
     public function it_calculates_remaining_free_hours_for_regular_user()
     {
         $this->assertEquals(0, $this->user->getRemainingFreeHours());
@@ -138,7 +139,7 @@ class UserTest extends TestCase
         $this->assertEquals(0, $this->user->getRemainingFreeHours());
     }
 
-    /** @test */
+    #[Test]
     public function it_calculates_remaining_free_hours_for_sustaining_member()
     {
         $this->user->assignRole('sustaining member');
@@ -180,7 +181,7 @@ class UserTest extends TestCase
         $this->assertEquals(0, $this->user->getRemainingFreeHours());
     }
 
-    /** @test */
+    #[Test]
     public function it_resets_free_hours_each_month()
     {
         $this->user->assignRole('sustaining member');
@@ -199,7 +200,7 @@ class UserTest extends TestCase
         $this->assertEquals(0, $this->user->getUsedFreeHoursThisMonth());
     }
 
-    /** @test */
+    #[Test]
     public function it_has_reservations_relationship()
     {
         $reservation = Reservation::factory()->create([
@@ -210,7 +211,7 @@ class UserTest extends TestCase
         $this->assertEquals($this->user->id, $reservation->user_id);
     }
 
-    /** @test */
+    #[Test]
     public function it_has_transactions_relationship()
     {
         $transaction = Transaction::factory()->create([

@@ -7,6 +7,7 @@ use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ReservationTest extends TestCase
@@ -28,13 +29,13 @@ class ReservationTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_calculates_duration_correctly()
     {
         $this->assertEquals(2.5, $this->reservation->duration);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_zero_duration_for_incomplete_times()
     {
         $reservation = new Reservation([
@@ -52,14 +53,14 @@ class ReservationTest extends TestCase
         $this->assertEquals(0, $reservation->duration);
     }
 
-    /** @test */
+    #[Test]
     public function it_formats_time_range_for_same_day()
     {
         $expected = 'Jan 15, 2025 2:00 PM - 4:30 PM';
         $this->assertEquals($expected, $this->reservation->time_range);
     }
 
-    /** @test */
+    #[Test]
     public function it_formats_time_range_for_different_days()
     {
         $this->reservation->reserved_until = Carbon::parse('2025-01-16 10:00:00');
@@ -68,7 +69,7 @@ class ReservationTest extends TestCase
         $this->assertEquals($expected, $this->reservation->time_range);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_tbd_for_incomplete_time_range()
     {
         $reservation = new Reservation([
@@ -79,7 +80,7 @@ class ReservationTest extends TestCase
         $this->assertEquals('TBD', $reservation->time_range);
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_confirmed()
     {
         $this->assertTrue($this->reservation->isConfirmed());
@@ -88,7 +89,7 @@ class ReservationTest extends TestCase
         $this->assertFalse($this->reservation->isConfirmed());
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_pending()
     {
         $this->assertFalse($this->reservation->isPending());
@@ -97,7 +98,7 @@ class ReservationTest extends TestCase
         $this->assertTrue($this->reservation->isPending());
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_cancelled()
     {
         $this->assertFalse($this->reservation->isCancelled());
@@ -106,7 +107,7 @@ class ReservationTest extends TestCase
         $this->assertTrue($this->reservation->isCancelled());
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_upcoming()
     {
         // Set reservation in the future
@@ -118,7 +119,7 @@ class ReservationTest extends TestCase
         $this->assertFalse($this->reservation->isUpcoming());
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_in_progress()
     {
         // Set reservation currently in progress
@@ -137,20 +138,20 @@ class ReservationTest extends TestCase
         $this->assertFalse($this->reservation->isInProgress());
     }
 
-    /** @test */
+    #[Test]
     public function it_formats_cost_display_for_paid_reservation()
     {
         $this->assertEquals('$37.50', $this->reservation->cost_display);
     }
 
-    /** @test */
+    #[Test]
     public function it_formats_cost_display_for_free_reservation()
     {
         $this->reservation->cost = 0;
         $this->assertEquals('Free', $this->reservation->cost_display);
     }
 
-    /** @test */
+    #[Test]
     public function it_belongs_to_user()
     {
         $user = User::factory()->create();
@@ -160,7 +161,7 @@ class ReservationTest extends TestCase
         $this->assertEquals($user->id, $reservation->user->id);
     }
 
-    /** @test */
+    #[Test]
     public function it_belongs_to_production()
     {
         $production = Production::factory()->create();
@@ -170,7 +171,7 @@ class ReservationTest extends TestCase
         $this->assertEquals($production->id, $reservation->production->id);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_null_production()
     {
         $reservation = Reservation::factory()->create(['production_id' => null]);
@@ -178,7 +179,7 @@ class ReservationTest extends TestCase
         $this->assertNull($reservation->production);
     }
 
-    /** @test */
+    #[Test]
     public function it_casts_attributes_correctly()
     {
         $reservation = Reservation::factory()->create([
@@ -201,7 +202,7 @@ class ReservationTest extends TestCase
         $this->assertEquals(4, $reservation->recurrence_pattern['weeks']);
     }
 
-    /** @test */
+    #[Test]
     public function it_has_correct_fillable_attributes()
     {
         $fillable = [
@@ -222,7 +223,7 @@ class ReservationTest extends TestCase
         $this->assertEquals($fillable, $reservation->getFillable());
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_reservation_with_factory()
     {
         $reservation = Reservation::factory()->confirmed()->create();
@@ -234,7 +235,7 @@ class ReservationTest extends TestCase
         $this->assertGreaterThan(0, $reservation->duration);
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_free_reservation_with_factory()
     {
         $reservation = Reservation::factory()->free()->create();
@@ -243,7 +244,7 @@ class ReservationTest extends TestCase
         $this->assertEquals('Free', $reservation->cost_display);
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_recurring_reservation_with_factory()
     {
         $reservation = Reservation::factory()->recurring()->create();
@@ -254,7 +255,7 @@ class ReservationTest extends TestCase
         $this->assertArrayHasKey('interval', $reservation->recurrence_pattern);
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_upcoming_reservation_with_factory()
     {
         $reservation = Reservation::factory()->upcoming()->create();
@@ -263,7 +264,7 @@ class ReservationTest extends TestCase
         $this->assertEquals('confirmed', $reservation->status);
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_past_reservation_with_factory()
     {
         $reservation = Reservation::factory()->past()->create();

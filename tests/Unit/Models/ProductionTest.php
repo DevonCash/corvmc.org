@@ -9,6 +9,7 @@ use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ProductionTest extends TestCase
@@ -28,14 +29,14 @@ class ProductionTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_belongs_to_a_manager()
     {
         $this->assertInstanceOf(User::class, $this->production->manager);
         $this->assertEquals($this->manager->id, $this->production->manager->id);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_performers()
     {
         $band1 = BandProfile::factory()->create();
@@ -51,7 +52,7 @@ class ProductionTest extends TestCase
         $this->assertEquals(30, $performers->first()->pivot->set_length);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_a_reservation()
     {
         $reservation = Reservation::factory()->create([
@@ -62,7 +63,7 @@ class ProductionTest extends TestCase
         $this->assertEquals($reservation->id, $this->production->reservation->id);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_genres_as_tags()
     {
         $this->production->attachTag('rock', 'genre');
@@ -75,7 +76,7 @@ class ProductionTest extends TestCase
         $this->assertTrue($genres->pluck('name')->contains('indie'));
     }
 
-    /** @test */
+    #[Test]
     public function it_formats_date_range_for_same_day()
     {
         $start = Carbon::parse('2025-03-15 19:00:00');
@@ -90,7 +91,7 @@ class ProductionTest extends TestCase
         $this->assertEquals($expected, $this->production->date_range);
     }
 
-    /** @test */
+    #[Test]
     public function it_formats_date_range_for_different_days()
     {
         $start = Carbon::parse('2025-03-15 19:00:00');
@@ -105,7 +106,7 @@ class ProductionTest extends TestCase
         $this->assertEquals($expected, $this->production->date_range);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_start_time_only_when_end_time_missing()
     {
         $start = Carbon::parse('2025-03-15 19:00:00');
@@ -118,7 +119,7 @@ class ProductionTest extends TestCase
         $this->assertEquals($expected, $this->production->date_range);
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_user_is_manager()
     {
         $otherUser = User::factory()->create();
@@ -127,7 +128,7 @@ class ProductionTest extends TestCase
         $this->assertFalse($this->production->isManageredBy($otherUser));
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_published()
     {
         // Not published yet
@@ -143,7 +144,7 @@ class ProductionTest extends TestCase
         $this->assertTrue($this->production->isPublished());
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_upcoming()
     {
         // Past event
@@ -155,7 +156,7 @@ class ProductionTest extends TestCase
         $this->assertTrue($this->production->isUpcoming());
     }
 
-    /** @test */
+    #[Test]
     public function it_calculates_estimated_duration()
     {
         $band1 = BandProfile::factory()->create();
@@ -167,13 +168,13 @@ class ProductionTest extends TestCase
         $this->assertEquals(75, $this->production->estimated_duration);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_zero_duration_with_no_performers()
     {
         $this->assertEquals(0, $this->production->estimated_duration);
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_for_external_venue()
     {
         // Default CMC location
@@ -187,7 +188,7 @@ class ProductionTest extends TestCase
         $this->assertTrue($this->production->isExternalVenue());
     }
 
-    /** @test */
+    #[Test]
     public function it_gets_venue_name()
     {
         // Create production with CMC location specifically
@@ -203,7 +204,7 @@ class ProductionTest extends TestCase
         $this->assertEquals('External Venue', $production->venue_name);
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_has_tickets()
     {
         $this->production->update(['ticket_url' => null]);
@@ -216,7 +217,7 @@ class ProductionTest extends TestCase
         $this->assertTrue($this->production->hasTickets());
     }
 
-    /** @test */
+    #[Test]
     public function it_normalizes_ticket_url()
     {
         $this->production->update(['ticket_url' => 'example.com/tickets']);
@@ -226,7 +227,7 @@ class ProductionTest extends TestCase
         $this->assertEquals('https://example.com/tickets', $this->production->ticket_url);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_notaflof_flag()
     {
         $this->assertFalse($this->production->isNotaflof());
@@ -238,7 +239,7 @@ class ProductionTest extends TestCase
         $this->assertFalse($this->production->isNotaflof());
     }
 
-    /** @test */
+    #[Test]
     public function it_formats_ticket_price_display()
     {
         // Free event (no ticket URL)
@@ -250,6 +251,7 @@ class ProductionTest extends TestCase
             'ticket_url' => 'https://example.com',
             'ticket_price' => 15.50
         ]);
+        $this->production->setNotaflof(false); // Ensure NOTAFLOF flag is cleared
         $this->assertEquals('$15.50', $this->production->ticket_price_display);
 
         // Ticketed event without price
@@ -257,6 +259,7 @@ class ProductionTest extends TestCase
             'ticket_url' => 'https://example.com',
             'ticket_price' => null
         ]);
+        $this->production->setNotaflof(false); // Ensure NOTAFLOF flag is cleared
         $this->assertEquals('Ticketed', $this->production->ticket_price_display);
 
         // NOTAFLOF event
@@ -268,7 +271,7 @@ class ProductionTest extends TestCase
         $this->assertEquals('$20.00 (NOTAFLOF)', $this->production->ticket_price_display);
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_free()
     {
         // No tickets
@@ -297,7 +300,7 @@ class ProductionTest extends TestCase
         $this->assertFalse($this->production->isFree());
     }
 
-    /** @test */
+    #[Test]
     public function it_casts_attributes_correctly()
     {
         $start = Carbon::parse('2025-03-15 19:00:00');
@@ -312,7 +315,7 @@ class ProductionTest extends TestCase
         $this->assertInstanceOf(LocationData::class, $this->production->location);
     }
 
-    /** @test */
+    #[Test]
     public function it_has_correct_fillable_attributes()
     {
         $fillable = [
@@ -323,7 +326,7 @@ class ProductionTest extends TestCase
         $this->assertEquals($fillable, $this->production->getFillable());
     }
 
-    /** @test */
+    #[Test]
     public function it_sets_default_location_on_creation()
     {
         $production = Production::factory()->create(['location' => null]);
