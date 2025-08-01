@@ -58,6 +58,42 @@ class UserFactory extends Factory
     }
 
     /**
+     * Create a user without a profile by disabling model events.
+     * Useful for testing scenarios where you need to manually control profile creation.
+     */
+    public function withoutProfile(): static
+    {
+        return $this->configure()
+            ->afterMaking(function ($user) {
+                // No action needed - just prevent automatic profile creation
+            })
+            ->afterCreating(function ($user) {
+                // Ensure no profile gets created by clearing any that might exist
+                $user->profile()?->delete();
+            });
+    }
+
+    /**
+     * Static method to create a user without a profile.
+     * Useful for testing scenarios where you need to manually control profile creation.
+     */
+    public static function createWithoutProfile(array $attributes = [])
+    {
+        return \App\Models\User::withoutEvents(function () use ($attributes) {
+            $factory = static::new();
+            if (!empty($attributes)) {
+                $factory = $factory->state($attributes);
+            }
+            $user = $factory->create();
+            
+            // Ensure no profile exists by deleting any that might have been created
+            \App\Models\MemberProfile::where('user_id', $user->id)->delete();
+            
+            return $user;
+        });
+    }
+
+    /**
      * Static method to create users without events and with profiles for seeding.
      * Returns an array with ['user' => User, 'profile' => MemberProfile]
      */

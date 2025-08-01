@@ -118,4 +118,40 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $user;
     }
 
+    /**
+     * Check if user is a sustaining member (has monthly donation > $10).
+     */
+    public function isSustainingMember(): bool
+    {
+        return $this->hasRole('sustaining member') || 
+               $this->transactions()
+                   ->where('type', 'recurring')
+                   ->where('amount', '>', 10)
+                   ->where('created_at', '>=', now()->subMonth())
+                   ->exists();
+    }
+
+    /**
+     * Get used free hours for the current month.
+     */
+    public function getUsedFreeHoursThisMonth(): float
+    {
+        return $this->reservations()
+            ->whereMonth('reserved_at', now()->month)
+            ->whereYear('reserved_at', now()->year)
+            ->sum('free_hours_used') ?? 0;
+    }
+
+    /**
+     * Get remaining free hours for sustaining members this month.
+     */
+    public function getRemainingFreeHours(): float
+    {
+        if (!$this->isSustainingMember()) {
+            return 0;
+        }
+        
+        return max(0, 4 - $this->getUsedFreeHoursThisMonth());
+    }
+
 }

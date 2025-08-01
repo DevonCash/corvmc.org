@@ -24,7 +24,7 @@ class ProductionPolicy
      */
     public function view(User $user, Production $production): ?bool
     {
-        if ($user->can('view productions')) {
+        if ($user->can('manage productions')) {
             return true;
         }
         return null;
@@ -35,7 +35,7 @@ class ProductionPolicy
      */
     public function create(User $user): ?bool
     {
-        if ($user->can('create productions')) {
+        if ($user->can('manage productions')) {
             return true;
         }
         return null;
@@ -46,7 +46,7 @@ class ProductionPolicy
      */
     public function update(User $user, Production $production): ?bool
     {
-        if ($user->can('update productions') && $user->id === $production->manager_id) {
+        if ($user->can('manage productions') && $user->id === $production->manager_id) {
             return true;
         }
         return null;

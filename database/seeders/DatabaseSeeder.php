@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             MemberProfileSeeder::class,
             BandProfileSeeder::class,
+            ProductionSeeder::class,
         ]);
     }
 }

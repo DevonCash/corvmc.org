@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\OwnedBandsScope;
 use Illuminate\Console\Concerns\InteractsWithIO;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,6 +36,15 @@ class BandProfile extends Model implements HasMedia
         'links' => 'array',
         'contact' => 'array',
     ];
+
+    /**
+     * The "booted" method of the model.
+     * Apply global scope to filter out touring bands by default.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new OwnedBandsScope);
+    }
 
     public function members()
     {
@@ -228,5 +238,13 @@ class BandProfile extends Model implements HasMedia
     public function updateMemberPosition(User $user, ?string $position): void
     {
         $this->members()->updateExistingPivot($user->id, ['position' => $position]);
+    }
+
+    /**
+     * Get all bands including touring bands.
+     */
+    public static function withTouringBands()
+    {
+        return static::withoutGlobalScope(OwnedBandsScope::class);
     }
 }

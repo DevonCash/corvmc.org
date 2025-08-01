@@ -14,11 +14,58 @@ Phase 2: All users who sign up to the site are considered members. Users with a 
 
 Payments are processed via Zeffy – a payment processor free for non-profits. Zeffy has no direct export features, but they have a Zapier integration for notifying a server when a payment is recieved – that will have to be enough!
 
-### Productions (TODO)
+### Productions (IN PROGRESS)
 
-Phase 1: Display upcoming events on the site, automatically redirect from /show-tonight to the next show being held at the collective.
+**Current Implementation Status:**
+- ✅ Complete production management system with Filament admin interface
+- ✅ Production lifecycle management (pre-production → published → completed/cancelled)
+- ✅ Band lineup management with set ordering and duration tracking
+- ✅ Staff assignment with manager-based permissions
+- ✅ Media management for posters and promotional materials
+- ✅ Location data structure for venue information
+- ✅ Genre tagging system integration
+- ✅ Production duplication functionality for recurring events
 
-Phase 2: Give staff a centralized area for managing shows at the Collective's building. Should include a consistent workflow and task assignment.
+**Phase 1 Requirements (Completed):**
+- ✅ Production creation and management interface for staff
+- ✅ Event scheduling with start/end times and doors times
+- ✅ Production status workflow (pre-production, published, completed, cancelled)
+- ✅ Manager assignment and permission-based access control
+- ✅ Basic venue/location information storage
+
+**Phase 2 Requirements (Completed):**
+- ✅ Centralized staff management area via Filament admin panel
+- ✅ Performer lineup management with drag-and-drop ordering
+- ✅ Set length tracking for scheduling and planning
+- ✅ Production transfer capabilities between managers
+- ✅ Comprehensive production search and filtering
+- ✅ Production statistics and reporting
+
+**Phase 3 Requirements (Needed for Full Public Implementation):**
+- ⏳ Public website integration for event display
+- ⏳ `/show-tonight` redirect functionality to next published production
+- ⏳ Public event calendar view with filtering by genre/date
+- ⏳ Individual production pages with performer details
+- ⏳ Integration with practice space reservations system
+- ⏳ Ticket sales integration (if applicable)
+- ⏳ Email notifications for production updates
+- ⏳ Public API endpoints for external calendar integrations
+
+**Technical Implementation Details:**
+- **Database**: Productions table with soft deletes, JSON location data, pivot table for band relationships
+- **Permissions**: Role-based access via `spatie/laravel-permission` (manage productions, view productions)
+- **Media**: Poster uploads via `spatie/laravel-medialibrary` with thumbnail generation
+- **Tags**: Genre classification via `spatie/laravel-tags`
+- **Service Layer**: Comprehensive `ProductionService` for business logic encapsulation
+- **Admin Interface**: Filament resources with form schemas, relation managers, and table configurations
+
+**Missing Components for Full Feature Completion:**
+- Public-facing web routes and controllers
+- Event detail pages for public consumption
+- Calendar widget/component for homepage
+- Integration with external calendar services (Google Calendar, iCal)
+- Notification system for production updates
+- Mobile-responsive event browsing interface
 
 ### Practice Space Scheduling (TODO)
 
