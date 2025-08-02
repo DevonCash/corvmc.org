@@ -17,7 +17,7 @@ class MemberDirectorySettings extends Settings
     {
         return $this->available_flags ?? [
             'teacher' => 'Music Teacher',
-            'performer' => 'Live Performer', 
+            'performer' => 'Live Performer',
             'producer' => 'Producer/Engineer',
             'songwriter' => 'Songwriter',
             'session_musician' => 'Session Musician',

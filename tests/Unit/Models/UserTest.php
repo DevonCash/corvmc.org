@@ -19,10 +19,10 @@ class UserTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create roles for testing
         \Spatie\Permission\Models\Role::create(['name' => 'sustaining member']);
-        
+
         $this->user = User::factory()->create();
     }
 

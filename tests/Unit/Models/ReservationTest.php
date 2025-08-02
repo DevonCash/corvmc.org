@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\Production;
 use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
@@ -19,7 +18,7 @@ class ReservationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->reservation = Reservation::factory()->create([
             'reserved_at' => Carbon::parse('2025-01-15 14:00:00'),
             'reserved_until' => Carbon::parse('2025-01-15 16:30:00'),
@@ -162,24 +161,6 @@ class ReservationTest extends TestCase
     }
 
     #[Test]
-    public function it_belongs_to_production()
-    {
-        $production = Production::factory()->create();
-        $reservation = Reservation::factory()->create(['production_id' => $production->id]);
-
-        $this->assertInstanceOf(Production::class, $reservation->production);
-        $this->assertEquals($production->id, $reservation->production->id);
-    }
-
-    #[Test]
-    public function it_can_have_null_production()
-    {
-        $reservation = Reservation::factory()->create(['production_id' => null]);
-
-        $this->assertNull($reservation->production);
-    }
-
-    #[Test]
     public function it_casts_attributes_correctly()
     {
         $reservation = Reservation::factory()->create([
@@ -207,7 +188,6 @@ class ReservationTest extends TestCase
     {
         $fillable = [
             'user_id',
-            'production_id',
             'status',
             'reserved_at',
             'reserved_until',
@@ -216,10 +196,10 @@ class ReservationTest extends TestCase
             'free_hours_used',
             'is_recurring',
             'recurrence_pattern',
-            'notes'
+            'notes',
         ];
 
-        $reservation = new Reservation();
+        $reservation = new Reservation;
         $this->assertEquals($fillable, $reservation->getFillable());
     }
 

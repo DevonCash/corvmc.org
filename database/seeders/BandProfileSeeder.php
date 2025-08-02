@@ -15,9 +15,10 @@ class BandProfileSeeder extends Seeder
     {
         // Get some existing users to be band owners
         $users = User::inRandomOrder()->limit(20)->get();
-        
+
         if ($users->isEmpty()) {
             $this->command->warn('No users found. Please run UserSeeder first.');
+
             return;
         }
 
@@ -27,7 +28,7 @@ class BandProfileSeeder extends Seeder
         $this->createElectronicActs($users);
         $this->createFolkGroups($users);
         $this->createClassicalEnsembles($users);
-        
+
         // Create touring bands (no owner)
         $this->createTouringBands();
     }
@@ -157,8 +158,8 @@ class BandProfileSeeder extends Seeder
                 'bio' => 'An indie rock quartet from Portland known for their atmospheric soundscapes and introspective lyrics. Currently on their West Coast tour.',
                 'contact' => [
                     'email' => 'booking@distantshores.com',
-                    'phone' => '(503) 555-0123'
-                ]
+                    'phone' => '(503) 555-0123',
+                ],
             ],
             [
                 'name' => 'Velvet Thunder',
@@ -167,8 +168,8 @@ class BandProfileSeeder extends Seeder
                 'bio' => 'A high-energy rock band from Nashville bringing southern blues-infused rock to venues across the country.',
                 'contact' => [
                     'email' => 'management@velvetthunder.net',
-                    'phone' => '(615) 555-0456'
-                ]
+                    'phone' => '(615) 555-0456',
+                ],
             ],
             [
                 'name' => 'Luna Sol',
@@ -177,8 +178,8 @@ class BandProfileSeeder extends Seeder
                 'bio' => 'A folk duo blending Latin American influences with contemporary songwriting. Based in LA but touring nationwide.',
                 'contact' => [
                     'email' => 'hello@lunasol.music',
-                    'phone' => '(323) 555-0789'
-                ]
+                    'phone' => '(323) 555-0789',
+                ],
             ],
             [
                 'name' => 'Circuit Breakers',
@@ -187,8 +188,8 @@ class BandProfileSeeder extends Seeder
                 'bio' => 'Electronic music producers turned live performers, bringing synthwave and retro-futurism to the stage.',
                 'contact' => [
                     'email' => 'bookings@circuitbreakers.io',
-                    'phone' => '(206) 555-0321'
-                ]
+                    'phone' => '(206) 555-0321',
+                ],
             ],
             [
                 'name' => 'Prairie Wind',
@@ -197,9 +198,9 @@ class BandProfileSeeder extends Seeder
                 'bio' => 'Traditional country with a modern twist, this Austin-based band brings authentic storytelling and tight harmonies.',
                 'contact' => [
                     'email' => 'contact@prairiewindband.com',
-                    'phone' => '(512) 555-0654'
-                ]
-            ]
+                    'phone' => '(512) 555-0654',
+                ],
+            ],
         ];
 
         foreach ($touringBands as $bandData) {
@@ -232,11 +233,11 @@ class BandProfileSeeder extends Seeder
 
         // Add additional members (subtract 1 since owner is already added)
         $additionalMembers = $users->except($owner->id)->random(min($memberCount - 1, $users->count() - 1));
-        
+
         $positions = [
             'Lead Vocalist', 'Backing Vocalist', 'Lead Guitarist', 'Rhythm Guitarist', 'Bassist',
             'Drummer', 'Keyboardist', 'Pianist', 'Saxophonist', 'Trumpeter', 'Violinist',
-            'Cellist', 'Flautist', 'Percussionist', 'Sound Engineer', 'Producer'
+            'Cellist', 'Flautist', 'Percussionist', 'Sound Engineer', 'Producer',
         ];
 
         foreach ($additionalMembers as $member) {

@@ -23,7 +23,7 @@ class BandProfilesTable
                     ->imageSize(60)
                     ->grow(false)
                     ->defaultImageUrl(function ($record) {
-                        return 'https://ui-avatars.com/api/?name=' . urlencode($record->name) . '&color=7C3AED&background=F3E8FF&size=120';
+                        return 'https://ui-avatars.com/api/?name='.urlencode($record->name).'&color=7C3AED&background=F3E8FF&size=120';
                     }),
 
                 TextColumn::make('name')
@@ -51,7 +51,7 @@ class BandProfilesTable
 
                 TextColumn::make('activity')
                     ->label('Activity')
-                    ->getStateUsing(fn($record) => 'Active ' . $record->updated_at->diffForHumans())
+                    ->getStateUsing(fn ($record) => 'Active '.$record->updated_at->diffForHumans())
                     ->color('gray')
                     ->size('sm'),
             ])
@@ -66,9 +66,10 @@ class BandProfilesTable
                             ->toArray();
                     })
                     ->query(function ($query, array $data) {
-                        if (!empty($data['values'])) {
+                        if (! empty($data['values'])) {
                             return $query->withAnyTags($data['values'], 'genre');
                         }
+
                         return $query;
                     }),
 
@@ -89,13 +90,14 @@ class BandProfilesTable
                         'seeking_members' => 'Seeking Members',
                     ])
                     ->query(function ($query, array $data) {
-                        if (!empty($data['value'])) {
+                        if (! empty($data['value'])) {
                             if ($data['value'] === 'with_members') {
                                 return $query->has('members', '>', 1);
                             } elseif ($data['value'] === 'seeking_members') {
                                 return $query->has('members', '<=', 1);
                             }
                         }
+
                         return $query;
                     }),
             ])

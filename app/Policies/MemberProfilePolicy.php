@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\MemberProfile;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class MemberProfilePolicy
 {
@@ -21,7 +20,10 @@ class MemberProfilePolicy
      */
     public function view(User $user, MemberProfile $memberProfile): ?bool
     {
-        if ($memberProfile->isVisible($user)) return true;
+        if ($memberProfile->isVisible($user)) {
+            return true;
+        }
+
         return null;
     }
 
@@ -41,6 +43,7 @@ class MemberProfilePolicy
         if ($user->id === $memberProfile->user->id || $user->can('update member profiles')) {
             return true;
         }
+
         return null;
     }
 

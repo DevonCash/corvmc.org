@@ -13,28 +13,28 @@ use Illuminate\Support\Collection;
 class BandInvitations extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-envelope';
-    
+
     protected string $view = 'filament.pages.band-invitations';
-    
+
     protected static ?string $navigationLabel = 'Band Invitations';
-    
+
     protected static ?int $navigationSort = 25;
-    
+
     public static function getNavigationBadge(): ?string
     {
         $count = BandProfile::whereHas('members', function ($query) {
             $query->where('user_id', auth()->id())
-                  ->where('status', 'invited');
+                ->where('status', 'invited');
         })->count();
-        
+
         return $count > 0 ? (string) $count : null;
     }
-    
+
     public static function getNavigationBadgeColor(): ?string
     {
         return 'warning';
     }
-    
+
     public static function shouldRegisterNavigation(): bool
     {
         // Only show in navigation if user has pending invitations
@@ -45,9 +45,10 @@ class BandInvitations extends Page
     {
         // Check if user has any pending invitations
         $invitations = $this->getPendingInvitations();
-        
+
         if ($invitations->isEmpty()) {
             $this->redirect(route('filament.member.resources.bands.index'));
+
             return;
         }
     }
@@ -72,14 +73,14 @@ class BandInvitations extends Page
         $bandService = app(BandService::class);
         $band = BandProfile::findOrFail($bandId);
         $user = auth()->user();
-        
+
         if ($bandService->acceptInvitation($band, $user)) {
             Notification::make()
                 ->title('Invitation accepted')
                 ->body("Welcome to {$band->name}!")
                 ->success()
                 ->send();
-            
+
             $this->redirect(route('filament.member.resources.bands.view', ['record' => $band->id]));
         }
     }
@@ -89,14 +90,14 @@ class BandInvitations extends Page
         $bandService = app(BandService::class);
         $band = BandProfile::findOrFail($bandId);
         $user = auth()->user();
-        
+
         if ($bandService->declineInvitation($band, $user)) {
             Notification::make()
                 ->title('Invitation declined')
                 ->body('You have declined the invitation')
                 ->success()
                 ->send();
-            
+
             // Redirect to band profiles index if no more invitations
             $remainingInvitations = $this->getPendingInvitations();
             if ($remainingInvitations->isEmpty()) {

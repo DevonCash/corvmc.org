@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\BandProfile;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class BandProfilePolicy
 {
@@ -77,9 +76,9 @@ class BandProfilePolicy
         if ($user->id === $bandProfile->owner->id || $user->can('restore profiles')) {
             return true;
         }
+
         return null;
     }
-
 
     /**
      * Determine whether the user can permanently delete the model.

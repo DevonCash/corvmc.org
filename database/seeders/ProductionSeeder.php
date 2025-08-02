@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\BandProfile;
 use App\Models\Production;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ProductionSeeder extends Seeder
@@ -21,33 +20,43 @@ class ProductionSeeder extends Seeder
 
         if ($users->isEmpty() || $bands->isEmpty()) {
             $this->command->warn('No users or bands found. Make sure to run UserSeeder and BandSeeder first.');
+
             return;
         }
 
-        // Create upcoming productions
-        $upcomingProductions = Production::factory()
-            ->count(8)
-            ->upcoming()
-            ->create([
-                'manager_id' => $users->random()->id,
-            ]);
+        // Create upcoming productions with unique times
+        $upcomingProductions = collect();
+        for ($i = 0; $i < 8; $i++) {
+            $production = Production::factory()
+                ->upcoming()
+                ->create([
+                    'manager_id' => $users->random()->id,
+                ]);
+            $upcomingProductions->push($production);
+        }
 
-        // Create completed productions
-        $completedProductions = Production::factory()
-            ->count(12)
-            ->completed()
-            ->create([
-                'manager_id' => $users->random()->id,
-            ]);
+        // Create completed productions with unique times
+        $completedProductions = collect();
+        for ($i = 0; $i < 12; $i++) {
+            $production = Production::factory()
+                ->completed()
+                ->create([
+                    'manager_id' => $users->random()->id,
+                ]);
+            $completedProductions->push($production);
+        }
 
-        // Create some in-progress productions
-        $inProgressProductions = Production::factory()
-            ->count(3)
-            ->create([
-                'status' => 'in-production',
-                'manager_id' => $users->random()->id,
-                'published_at' => null,
-            ]);
+        // Create some in-progress productions with unique times
+        $inProgressProductions = collect();
+        for ($i = 0; $i < 3; $i++) {
+            $production = Production::factory()
+                ->create([
+                    'status' => 'in-production',
+                    'manager_id' => $users->random()->id,
+                    'published_at' => null,
+                ]);
+            $inProgressProductions->push($production);
+        }
 
         // Combine all productions
         $allProductions = $upcomingProductions
@@ -58,7 +67,7 @@ class ProductionSeeder extends Seeder
         foreach ($allProductions as $production) {
             $performerCount = fake()->numberBetween(1, 5);
             $selectedBands = $bands->random($performerCount);
-            
+
             foreach ($selectedBands as $index => $band) {
                 $production->performers()->attach($band->id, [
                     'order' => $index + 1,
@@ -69,12 +78,12 @@ class ProductionSeeder extends Seeder
             // Add some tags
             $genres = collect(['rock', 'pop', 'jazz', 'folk', 'electronic', 'indie', 'acoustic', 'blues', 'country', 'hip-hop'])
                 ->random(fake()->numberBetween(1, 3));
-            
+
             foreach ($genres as $genre) {
                 $production->attachTag($genre, 'genre');
             }
         }
 
-        $this->command->info('Created ' . $allProductions->count() . ' productions with performers and genres.');
+        $this->command->info('Created '.$allProductions->count().' productions with performers and genres.');
     }
 }

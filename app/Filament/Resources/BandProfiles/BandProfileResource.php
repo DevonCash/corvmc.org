@@ -27,7 +27,7 @@ class BandProfileResource extends Resource
     protected static ?string $navigationLabel = 'Bands';
 
     protected static ?string $pluralModelLabel = 'Bands';
-    
+
     protected static ?string $slug = 'bands';
 
     protected static ?string $modelLabel = 'Band';

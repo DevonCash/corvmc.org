@@ -11,11 +11,9 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieTagsInput;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class BandProfileForm
@@ -42,8 +40,6 @@ class BandProfileForm
                                 ->maxLength(255)
                                 ->columnSpan(1),
                         ])->columns(3)->columnSpanFull(),
-
-
 
                         RichEditor::make('bio')
                             ->label('Biography')
@@ -145,7 +141,7 @@ class BandProfileForm
                                 'members' => 'Members Only',
                                 'public' => 'Public',
                             ])
-                            ->helperText(fn($state) => match ($state) {
+                            ->helperText(fn ($state) => match ($state) {
                                 'private' => 'Only band members can see your profile',
                                 'members' => 'Other CMC members can view your profile',
                                 'public' => 'Your profile is visible to the public',
@@ -162,7 +158,7 @@ class BandProfileForm
                                 'members' => 'Members Only',
                                 'public' => 'Public',
                             ])
-                            ->helperText(fn($state) => match ($state) {
+                            ->helperText(fn ($state) => match ($state) {
                                 'private' => 'Only band members can see contact info',
                                 'members' => 'Only other members can see contact info',
                                 'public' => 'Anyone who can see your profile can see contact info',
@@ -173,14 +169,13 @@ class BandProfileForm
                         Select::make('owner_id')
                             ->label('Band Owner')
                             ->options(
-                                fn(?BandProfile $record) =>
-                                $record
+                                fn (?BandProfile $record) => $record
                                     ? $record->members()->select('users.name', 'users.id')->pluck('name', 'id')->toArray()
                                     : [User::me()->id => User::me()->name]
                             )
                             ->searchable()
-                            ->default(fn() => User::me()->id)
-                            ->disabled(fn(?BandProfile $record) => $record && !User::me()->can('transferOwnership', $record))
+                            ->default(fn () => User::me()->id)
+                            ->disabled(fn (?BandProfile $record) => $record && ! User::me()->can('transferOwnership', $record))
                             ->helperText('The primary contact and administrator for this band'),
                     ]),
             ]);

@@ -14,11 +14,12 @@ class MemberProfileService
      */
     public function updateVisibility(MemberProfile $profile, string $visibility): bool
     {
-        if (!in_array($visibility, ['public', 'members', 'private'])) {
+        if (! in_array($visibility, ['public', 'members', 'private'])) {
             return false;
         }
 
         $profile->update(['visibility' => $visibility]);
+
         return true;
     }
 
@@ -30,7 +31,7 @@ class MemberProfileService
         DB::transaction(function () use ($profile, $skills) {
             // Remove existing skills
             $profile->detachTags($profile->tagsWithType('skill'));
-            
+
             // Add new skills
             foreach ($skills as $skill) {
                 $profile->attachTag($skill, 'skill');
@@ -48,7 +49,7 @@ class MemberProfileService
         DB::transaction(function () use ($profile, $genres) {
             // Remove existing genres
             $profile->detachTags($profile->tagsWithType('genre'));
-            
+
             // Add new genres
             foreach ($genres as $genre) {
                 $profile->attachTag($genre, 'genre');
@@ -66,7 +67,7 @@ class MemberProfileService
         DB::transaction(function () use ($profile, $influences) {
             // Remove existing influences
             $profile->detachTags($profile->tagsWithType('influence'));
-            
+
             // Add new influences
             foreach ($influences as $influence) {
                 $profile->attachTag($influence, 'influence');
@@ -84,7 +85,7 @@ class MemberProfileService
         DB::transaction(function () use ($profile, $flags) {
             // Remove all current flags
             $profile->flags()->delete();
-            
+
             // Add new flags
             foreach ($flags as $flag) {
                 $profile->flag($flag);
@@ -107,13 +108,13 @@ class MemberProfileService
         $profilesQuery = MemberProfile::withoutGlobalScope(\App\Models\Scopes\MemberVisibilityScope::class);
 
         // Apply visibility filter based on viewing user
-        if (!$viewingUser) {
+        if (! $viewingUser) {
             $profilesQuery->where('visibility', 'public');
-        } elseif (!$viewingUser->can('view private member profiles')) {
+        } elseif (! $viewingUser->can('view private member profiles')) {
             $profilesQuery->where(function ($q) use ($viewingUser) {
                 $q->where('visibility', 'public')
-                  ->orWhere('user_id', $viewingUser->id)
-                  ->orWhere('visibility', 'members');
+                    ->orWhere('user_id', $viewingUser->id)
+                    ->orWhere('visibility', 'members');
             });
         }
 
@@ -186,13 +187,13 @@ class MemberProfileService
         $query = MemberProfile::withFlag($flag);
 
         // Apply visibility filter
-        if (!$viewingUser) {
+        if (! $viewingUser) {
             $query->where('visibility', 'public');
-        } elseif (!$viewingUser->can('view private member profiles')) {
+        } elseif (! $viewingUser->can('view private member profiles')) {
             $query->where(function ($q) use ($viewingUser) {
                 $q->where('visibility', 'public')
-                  ->orWhere('user_id', $viewingUser->id)
-                  ->orWhere('visibility', 'members');
+                    ->orWhere('user_id', $viewingUser->id)
+                    ->orWhere('visibility', 'members');
             });
         }
 
@@ -208,14 +209,14 @@ class MemberProfileService
         $userSkills = $profile->skills;
 
         if (empty($userGenres) && empty($userSkills)) {
-            return new Collection();
+            return new Collection;
         }
 
         $query = MemberProfile::where('id', '!=', $profile->id)
             ->where('visibility', '!=', 'private');
 
         // Find profiles with matching genres or complementary skills
-        if (!empty($userGenres)) {
+        if (! empty($userGenres)) {
             $query->withAnyTags($userGenres, 'genre');
         }
 

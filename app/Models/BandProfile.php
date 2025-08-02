@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Models\Scopes\OwnedBandsScope;
-use Illuminate\Console\Concerns\InteractsWithIO;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
@@ -17,7 +16,6 @@ use Spatie\Tags\HasTags;
  * It includes details about the band's name, bio, links, and contact information.
  * The band can have multiple members and exactly one owner.
  */
-
 class BandProfile extends Model implements HasMedia
 {
     use HasFactory, HasFlags, HasTags, InteractsWithMedia;
@@ -168,7 +166,7 @@ class BandProfile extends Model implements HasMedia
 
     /**
      * Add a member to the band with optional role and position.
-     * 
+     *
      * @deprecated Use BandService::addMember() instead
      */
     public function addMember(User $user, string $role = 'member', ?string $position = null): void
@@ -178,7 +176,7 @@ class BandProfile extends Model implements HasMedia
 
     /**
      * Invite a user to join the band.
-     * 
+     *
      * @deprecated Use BandService::inviteMember() instead
      */
     public function inviteMember(User $user, string $role = 'member', ?string $position = null): void
@@ -188,7 +186,7 @@ class BandProfile extends Model implements HasMedia
 
     /**
      * Check if a user has been invited to this band.
-     * 
+     *
      * @deprecated Use BandService::hasInvitedUser() instead
      */
     public function hasInvitedUser(User $user): bool
@@ -198,7 +196,7 @@ class BandProfile extends Model implements HasMedia
 
     /**
      * Accept an invitation to join the band.
-     * 
+     *
      * @deprecated Use BandService::acceptInvitation() instead
      */
     public function acceptInvitation(User $user): void
@@ -208,7 +206,7 @@ class BandProfile extends Model implements HasMedia
 
     /**
      * Decline an invitation to join the band.
-     * 
+     *
      * @deprecated Use BandService::declineInvitation() instead
      */
     public function declineInvitation(User $user): void

@@ -49,7 +49,7 @@ class ProductionService
      */
     public function updatePerformerOrder(Production $production, BandProfile $band, int $order): bool
     {
-        if (!$this->hasPerformer($production, $band)) {
+        if (! $this->hasPerformer($production, $band)) {
             return false;
         }
 
@@ -65,7 +65,7 @@ class ProductionService
      */
     public function updatePerformerSetLength(Production $production, BandProfile $band, ?int $setLength): bool
     {
-        if (!$this->hasPerformer($production, $band)) {
+        if (! $this->hasPerformer($production, $band)) {
             return false;
         }
 
@@ -114,7 +114,7 @@ class ProductionService
      */
     public function unpublishProduction(Production $production): bool
     {
-        if (!$production->isPublished()) {
+        if (! $production->isPublished()) {
             return false;
         }
 
@@ -169,8 +169,7 @@ class ProductionService
     {
         return BandProfile::withTouringBands()
             ->where('name', 'like', "%{$search}%")
-            ->whereDoesntHave('productions', fn ($query) => 
-                $query->where('production_id', $production->id)
+            ->whereDoesntHave('productions', fn ($query) => $query->where('production_id', $production->id)
             )
             ->limit(50)
             ->get();
@@ -213,11 +212,10 @@ class ProductionService
      */
     public function getProductionsForBand(BandProfile $band): Collection
     {
-        return Production::whereHas('performers', fn ($query) => 
-            $query->where('band_profile_id', $band->id)
+        return Production::whereHas('performers', fn ($query) => $query->where('band_profile_id', $band->id)
         )
-        ->orderBy('start_time', 'desc')
-        ->get();
+            ->orderBy('start_time', 'desc')
+            ->get();
     }
 
     /**
@@ -268,13 +266,13 @@ class ProductionService
     {
         return Production::where(function ($q) use ($query) {
             $q->where('title', 'like', "%{$query}%")
-              ->orWhere('description', 'like', "%{$query}%")
-              ->orWhereJsonContains('location->venue_name', $query)
-              ->orWhereJsonContains('location->city', $query);
+                ->orWhere('description', 'like', "%{$query}%")
+                ->orWhereJsonContains('location->venue_name', $query)
+                ->orWhereJsonContains('location->city', $query);
         })
-        ->where('status', 'published')
-        ->orderBy('start_time', 'asc')
-        ->get();
+            ->where('status', 'published')
+            ->orderBy('start_time', 'asc')
+            ->get();
     }
 
     /**
@@ -292,7 +290,7 @@ class ProductionService
      * Duplicate a production with new date/time.
      */
     public function duplicateProduction(
-        Production $originalProduction, 
+        Production $originalProduction,
         \DateTime $newStartTime,
         ?\DateTime $newEndTime = null,
         ?\DateTime $newDoorsTime = null

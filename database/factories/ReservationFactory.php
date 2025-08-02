@@ -20,7 +20,7 @@ class ReservationFactory extends Factory
     {
         $reservedAt = $this->faker->dateTimeBetween('+1 hour', '+1 month');
         $duration = $this->faker->randomElement([1, 1.5, 2, 2.5, 3, 4, 6]); // hours
-        $reservedUntil = (clone $reservedAt)->modify('+' . ($duration * 60) . ' minutes');
+        $reservedUntil = (clone $reservedAt)->modify('+'.($duration * 60).' minutes');
 
         return [
             'user_id' => User::factory(),
@@ -110,7 +110,7 @@ class ReservationFactory extends Factory
             $user = User::factory()->create();
             $user->assignRole('sustaining member');
             $hours = $attributes['hours_used'] ?? 2;
-            
+
             return [
                 'user_id' => $user->id,
                 'cost' => 0, // Sustaining members often get free hours
@@ -126,7 +126,7 @@ class ReservationFactory extends Factory
     {
         $reservedAt = $this->faker->dateTimeBetween('+1 hour', '+2 weeks');
         $duration = $this->faker->randomElement([1, 1.5, 2, 2.5, 3, 4]);
-        $reservedUntil = (clone $reservedAt)->modify('+' . ($duration * 60) . ' minutes');
+        $reservedUntil = (clone $reservedAt)->modify('+'.($duration * 60).' minutes');
 
         return $this->state(fn (array $attributes) => [
             'reserved_at' => $reservedAt,
@@ -142,7 +142,7 @@ class ReservationFactory extends Factory
     {
         $reservedAt = $this->faker->dateTimeBetween('-2 months', '-1 hour');
         $duration = $this->faker->randomElement([1, 1.5, 2, 2.5, 3, 4]);
-        $reservedUntil = (clone $reservedAt)->modify('+' . ($duration * 60) . ' minutes');
+        $reservedUntil = (clone $reservedAt)->modify('+'.($duration * 60).' minutes');
 
         return $this->state(fn (array $attributes) => [
             'reserved_at' => $reservedAt,

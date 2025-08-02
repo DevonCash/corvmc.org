@@ -3,7 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\{Permission, Role};
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class PermissionSeeder extends Seeder
 {
@@ -25,7 +26,6 @@ class PermissionSeeder extends Seeder
         Role::firstOrCreate(['name' => 'practice space manager']);
 
         Role::firstOrCreate(['name' => 'directory moderator']);
-
 
         $this->command->info('Created roles for permission system');
     }

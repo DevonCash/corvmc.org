@@ -94,7 +94,7 @@ class BandMemberPolicy
 
         // Band admins can remove regular members (but not other admins)
         if ($this->isBandAdmin($user, $band)) {
-            return !$this->isBandAdmin($targetMember, $band);
+            return ! $this->isBandAdmin($targetMember, $band);
         }
 
         return null;

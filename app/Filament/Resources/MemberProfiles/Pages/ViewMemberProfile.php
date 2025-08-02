@@ -24,7 +24,8 @@ class ViewMemberProfile extends Page
     public function getSubheading(): string|\Illuminate\Contracts\Support\Htmlable
     {
         $location = $this->record->hometown ? " • {$this->record->hometown}" : '';
-        return 'Member since ' . $this->record->created_at->format('F Y') . $location;
+
+        return 'Member since '.$this->record->created_at->format('F Y').$location;
     }
 
     public function getBreadCrumbs(): array
@@ -39,8 +40,7 @@ class ViewMemberProfile extends Page
     {
         return [
             EditAction::make()
-                ->visible(fn () => 
-                    auth()->user()->can('update', $this->record) || 
+                ->visible(fn () => auth()->user()->can('update', $this->record) ||
                     $this->record->user_id === auth()->id()
                 ),
         ];
@@ -49,9 +49,9 @@ class ViewMemberProfile extends Page
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
-        
+
         // Check if user can view this profile
-        if (!$this->record->isVisible(auth()->user())) {
+        if (! $this->record->isVisible(auth()->user())) {
             abort(403, 'You do not have permission to view this profile.');
         }
     }

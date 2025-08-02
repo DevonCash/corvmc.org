@@ -19,7 +19,7 @@ class LocationData extends Data
         if ($this->is_external) {
             return 'External Venue';
         }
-        
+
         return 'Corvallis Music Collective';
     }
 
@@ -31,7 +31,7 @@ class LocationData extends Data
         if ($this->is_external) {
             return $this->details ?? 'External Venue';
         }
-        
+
         return 'Corvallis Music Collective';
     }
 

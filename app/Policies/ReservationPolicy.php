@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Reservation;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ReservationPolicy
 {
@@ -24,6 +23,7 @@ class ReservationPolicy
         if ($user->id === $reservation->user_id || $user->can('view reservations')) {
             return true;
         }
+
         return null;
     }
 
@@ -51,6 +51,7 @@ class ReservationPolicy
         if ($user->id === $reservation->user_id || $user->can('delete reservations')) {
             return true;
         }
+
         return null;
     }
 
@@ -62,6 +63,7 @@ class ReservationPolicy
         if ($user->id === $reservation->user_id || $user->can('restore reservations')) {
             return true;
         }
+
         return null;
     }
 

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 class UserSubscriptionService
 {
     const SUSTAINING_MEMBER_THRESHOLD = 10.00;
+
     const FREE_HOURS_PER_MONTH = 4;
 
     /**
@@ -37,7 +38,7 @@ class UserSubscriptionService
     {
         $isSustaining = $this->isSustainingMember($user);
         $recentTransaction = $this->getMostRecentRecurringTransaction($user);
-        
+
         return [
             'is_sustaining_member' => $isSustaining,
             'free_hours_per_month' => $isSustaining ? self::FREE_HOURS_PER_MONTH : 0,
@@ -45,8 +46,8 @@ class UserSubscriptionService
             'remaining_free_hours' => $user->getRemainingFreeHours(),
             'last_transaction' => $recentTransaction,
             'subscription_amount' => $recentTransaction?->amount ?? 0,
-            'next_billing_estimate' => $recentTransaction 
-                ? $recentTransaction->created_at->addMonth() 
+            'next_billing_estimate' => $recentTransaction
+                ? $recentTransaction->created_at->addMonth()
                 : null,
         ];
     }
@@ -57,16 +58,16 @@ class UserSubscriptionService
     public function processTransaction(Transaction $transaction): bool
     {
         $user = $transaction->user;
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
-        // If this is a recurring transaction over the threshold, 
+        // If this is a recurring transaction over the threshold,
         // potentially assign sustaining member role
-        if ($transaction->type === 'recurring' && 
+        if ($transaction->type === 'recurring' &&
             $transaction->amount > self::SUSTAINING_MEMBER_THRESHOLD) {
-            
-            if (!$user->hasRole('sustaining member')) {
+
+            if (! $user->hasRole('sustaining member')) {
                 $user->assignRole('sustaining member');
             }
         }
@@ -83,8 +84,8 @@ class UserSubscriptionService
             $query->where('name', 'sustaining member');
         })->orWhereHas('transactions', function ($query) {
             $query->where('type', 'recurring')
-                  ->where('amount', '>', self::SUSTAINING_MEMBER_THRESHOLD)
-                  ->where('created_at', '>=', now()->subMonth());
+                ->where('amount', '>', self::SUSTAINING_MEMBER_THRESHOLD)
+                ->where('created_at', '>=', now()->subMonth());
         })->with(['profile', 'transactions'])->get();
     }
 
@@ -95,7 +96,7 @@ class UserSubscriptionService
     {
         $totalUsers = User::count();
         $sustainingMembers = $this->getSustainingMembers()->count();
-        
+
         $recentTransactions = Transaction::where('type', 'recurring')
             ->where('created_at', '>=', now()->subMonth())
             ->get();
@@ -122,12 +123,12 @@ class UserSubscriptionService
 
         return User::whereHas('transactions', function ($query) use ($cutoffDate) {
             $query->where('type', 'recurring')
-                  ->where('amount', '>', self::SUSTAINING_MEMBER_THRESHOLD)
-                  ->where('created_at', '<=', $cutoffDate);
+                ->where('amount', '>', self::SUSTAINING_MEMBER_THRESHOLD)
+                ->where('created_at', '<=', $cutoffDate);
         })->whereDoesntHave('transactions', function ($query) {
             $query->where('type', 'recurring')
-                  ->where('amount', '>', self::SUSTAINING_MEMBER_THRESHOLD)
-                  ->where('created_at', '>=', now()->subMonth());
+                ->where('amount', '>', self::SUSTAINING_MEMBER_THRESHOLD)
+                ->where('created_at', '>=', now()->subMonth());
         })->with(['profile', 'transactions'])->get();
     }
 
@@ -176,6 +177,7 @@ class UserSubscriptionService
     {
         if ($user->hasRole('sustaining member')) {
             $user->removeRole('sustaining member');
+
             return true;
         }
 
@@ -187,8 +189,9 @@ class UserSubscriptionService
      */
     public function grantSustainingMemberStatus(User $user): bool
     {
-        if (!$user->hasRole('sustaining member')) {
+        if (! $user->hasRole('sustaining member')) {
             $user->assignRole('sustaining member');
+
             return true;
         }
 

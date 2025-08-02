@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Data\ContactData;
 use App\Models\Scopes\MemberVisibilityScope;
 use App\Settings\MemberDirectorySettings;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
@@ -26,22 +25,25 @@ class MemberProfile extends Model implements HasMedia
     {
         static::addGlobalScope(new MemberVisibilityScope);
     }
+
     protected $fillable = [
         'user_id',
         'bio',
         'hometown',
         'links',
         'contact',
-        'visibility'
+        'visibility',
     ];
 
     protected $casts = [
         'links' => 'array',
         'contact' => ContactData::class,
     ];
+
     public function getAvatarAttribute(): ?string
     {
         $url = $this->getFirstMediaUrl('avatar');
+
         return $url ?: null;
     }
 
@@ -62,7 +64,7 @@ class MemberProfile extends Model implements HasMedia
 
     public function isVisible(?User $user = null): bool
     {
-        if (!$user) {
+        if (! $user) {
             // Only public profiles are visible to guests
             return $this->visibility === 'public';
         }
@@ -90,6 +92,7 @@ class MemberProfile extends Model implements HasMedia
     {
         return $this->tagsWithType('skill')->pluck('name')->toArray();
     }
+
     public function getInfluencesAttribute(): array
     {
         return $this->tagsWithType('influence')->pluck('name')->toArray();
@@ -100,7 +103,7 @@ class MemberProfile extends Model implements HasMedia
         return $this->tagsWithType('genre')->pluck('name')->toArray();
     }
 
-    public function registerMediaConversions(Media $media = null): void
+    public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
             ->width(100)
@@ -111,12 +114,14 @@ class MemberProfile extends Model implements HasMedia
     public function getAvailableFlags(): array
     {
         $settings = app(MemberDirectorySettings::class);
+
         return $settings->getAvailableFlags();
     }
 
     public function getFlagLabel(string $flag): ?string
     {
         $settings = app(MemberDirectorySettings::class);
+
         return $settings->getFlagLabel($flag);
     }
 

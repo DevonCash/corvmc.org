@@ -6,13 +6,12 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\BadgeColumn;
+use Filament\Support\Enums\IconPosition;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Spatie\Permission\Models\Role;
 
 class UsersTable
 {
@@ -23,17 +22,18 @@ class UsersTable
                 ImageColumn::make('profile.avatar_url')
                     ->label('Avatar')
                     ->circular()
-                    ->size(40)
+                    ->imageSize(40)
                     ->defaultImageUrl('https://fastly.picsum.photos/id/1012/100/100.jpg?hmac=vuow0o9zubuAYNA_nZKuHb055Vy6pf6df8dUXl-6F2Y'),
                 TextColumn::make('name')
+                    ->description(fn($record) => $record->pronouns)
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('profile.pronouns')
-                    ->label('Pronouns')
-                    ->searchable()
-                    ->toggleable(),
                 TextColumn::make('email')
                     ->label('Email address')
+                    ->icon(fn($record) => $record->email_verified_at ? 'heroicon-s-check-circle' : 'heroicon-o-x')
+                    ->tooltip(fn($record) => $record->email_verified_at ? 'Verified on ' . $record->email_verified_at->format('M d, Y') : 'Email not verified')
+                    ->iconPosition(IconPosition::After)
+                    ->iconColor(fn($record) => $record->email_verified_at ? 'success' : 'danger')
                     ->searchable()
                     ->sortable()
                     ->copyable(),
@@ -41,35 +41,21 @@ class UsersTable
                     ->badge()
                     ->searchable()
                     ->color('primary'),
-                TextColumn::make('profile.visibility')
-                    ->label('Visibility')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'public' => 'success',
-                        'members' => 'warning',
-                        'private' => 'danger',
-                        default => 'gray',
-                    }),
-                TextColumn::make('email_verified_at')
-                    ->label('Verified')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(),
                 TextColumn::make('reservations_count')
                     ->label('Reservations')
                     ->counts('reservations')
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable(true, true),
                 TextColumn::make('transactions_count')
                     ->label('Transactions')
                     ->counts('transactions')
-                    ->sortable()
-                    ->toggleable(),
+                    ->toggleable(true, true)
+                    ->sortable(),
                 TextColumn::make('band_profiles_count')
                     ->label('Bands')
                     ->counts('bandProfiles')
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable(true, true),
                 TextColumn::make('created_at')
                     ->label('Joined')
                     ->dateTime()
@@ -99,12 +85,11 @@ class UsersTable
                 TernaryFilter::make('sustaining_member')
                     ->label('Sustaining Member')
                     ->queries(
-                        true: fn ($query) => $query->whereHas('roles', fn ($q) => $q->where('name', 'sustaining member')),
-                        false: fn ($query) => $query->whereDoesntHave('roles', fn ($q) => $q->where('name', 'sustaining member')),
+                        true: fn($query) => $query->whereHas('roles', fn($q) => $q->where('name', 'sustaining member')),
+                        false: fn($query) => $query->whereDoesntHave('roles', fn($q) => $q->where('name', 'sustaining member')),
                     ),
             ])
             ->recordActions([
-                ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

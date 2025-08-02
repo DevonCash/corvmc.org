@@ -13,13 +13,15 @@ class BandProfileTest extends TestCase
     use RefreshDatabase;
 
     protected BandProfile $band;
+
     protected User $owner;
+
     protected User $member;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->owner = User::factory()->create();
         $this->member = User::factory()->create();
         $this->band = BandProfile::factory()->create([
@@ -40,11 +42,11 @@ class BandProfileTest extends TestCase
         $this->band->members()->attach($this->member->id, [
             'role' => 'guitarist',
             'position' => 'lead',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         $members = $this->band->members;
-        
+
         $this->assertCount(1, $members);
         $this->assertEquals($this->member->id, $members->first()->id);
         $this->assertEquals('guitarist', $members->first()->pivot->role);
@@ -58,18 +60,18 @@ class BandProfileTest extends TestCase
         // Add active member
         $this->band->members()->attach($this->member->id, [
             'role' => 'guitarist',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         // Add invited member
         $invitedMember = User::factory()->create();
         $this->band->members()->attach($invitedMember->id, [
             'role' => 'bassist',
-            'status' => 'invited'
+            'status' => 'invited',
         ]);
 
         $activeMembers = $this->band->activeMembers;
-        
+
         $this->assertCount(1, $activeMembers);
         $this->assertEquals($this->member->id, $activeMembers->first()->id);
     }
@@ -80,18 +82,18 @@ class BandProfileTest extends TestCase
         // Add active member
         $this->band->members()->attach($this->member->id, [
             'role' => 'guitarist',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         // Add invited member
         $invitedMember = User::factory()->create();
         $this->band->members()->attach($invitedMember->id, [
             'role' => 'bassist',
-            'status' => 'invited'
+            'status' => 'invited',
         ]);
 
         $pendingInvitations = $this->band->pendingInvitations;
-        
+
         $this->assertCount(1, $pendingInvitations);
         $this->assertEquals($invitedMember->id, $pendingInvitations->first()->id);
     }
@@ -103,7 +105,7 @@ class BandProfileTest extends TestCase
         $this->band->attachTag('indie', 'genre');
 
         $genres = $this->band->genres;
-        
+
         $this->assertCount(2, $genres);
         $this->assertTrue($genres->pluck('name')->contains('rock'));
         $this->assertTrue($genres->pluck('name')->contains('indie'));
@@ -116,7 +118,7 @@ class BandProfileTest extends TestCase
         $this->band->attachTag('Radiohead', 'influence');
 
         $influences = $this->band->influences;
-        
+
         $this->assertCount(2, $influences);
         $this->assertTrue($influences->pluck('name')->contains('The Beatles'));
         $this->assertTrue($influences->pluck('name')->contains('Radiohead'));
@@ -154,13 +156,13 @@ class BandProfileTest extends TestCase
         // Add admin member
         $this->band->members()->attach($adminMember->id, [
             'role' => 'admin',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         // Add regular member
         $this->band->members()->attach($regularMember->id, [
             'role' => 'member',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         $this->assertTrue($this->band->hasAdmin($adminMember));
@@ -177,7 +179,7 @@ class BandProfileTest extends TestCase
         // Member role
         $this->band->members()->attach($this->member->id, [
             'role' => 'guitarist',
-            'status' => 'active'
+            'status' => 'active',
         ]);
         $this->assertEquals('guitarist', $this->band->getUserRole($this->member));
 
@@ -193,7 +195,7 @@ class BandProfileTest extends TestCase
         $this->band->members()->attach($this->member->id, [
             'role' => 'guitarist',
             'position' => 'lead',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         $this->assertEquals('lead', $this->band->getUserPosition($this->member));
@@ -221,7 +223,7 @@ class BandProfileTest extends TestCase
         // Add member
         $this->band->members()->attach($this->member->id, [
             'role' => 'guitarist',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         $this->assertEquals('guitarist', $this->band->getUserRole($this->member));
@@ -238,7 +240,7 @@ class BandProfileTest extends TestCase
         $this->band->members()->attach($this->member->id, [
             'role' => 'guitarist',
             'position' => 'rhythm',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         $this->assertEquals('rhythm', $this->band->getUserPosition($this->member));
@@ -259,10 +261,10 @@ class BandProfileTest extends TestCase
     {
         $links = ['website' => 'https://example.com', 'spotify' => 'https://spotify.com/artist/123'];
         $contact = ['email' => 'band@example.com', 'phone' => '555-1234'];
-        
+
         $this->band->update([
             'links' => $links,
-            'contact' => $contact
+            'contact' => $contact,
         ]);
 
         $this->assertEquals($links, $this->band->links);
@@ -273,7 +275,7 @@ class BandProfileTest extends TestCase
     public function it_has_correct_fillable_attributes()
     {
         $fillable = [
-            'name', 'bio', 'links', 'contact', 'hometown', 'owner_id', 'visibility'
+            'name', 'bio', 'links', 'contact', 'hometown', 'owner_id', 'visibility',
         ];
 
         $this->assertEquals($fillable, $this->band->getFillable());
@@ -284,7 +286,7 @@ class BandProfileTest extends TestCase
     {
         // Create regular band
         $regularBand = BandProfile::factory()->create();
-        
+
         // Create touring band (without owner - this might be what makes it touring)
         $touringBand = BandProfile::withTouringBands()->create([
             'name' => 'Touring Band',

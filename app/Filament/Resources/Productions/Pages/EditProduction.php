@@ -27,10 +27,10 @@ class EditProduction extends EditRecord
     {
         // Convert at_cmc to location.is_external
         if (isset($data['at_cmc'])) {
-            $data['location']['is_external'] = !$data['at_cmc'];
+            $data['location']['is_external'] = ! $data['at_cmc'];
             unset($data['at_cmc']);
         }
-        
+
         return $data;
     }
 

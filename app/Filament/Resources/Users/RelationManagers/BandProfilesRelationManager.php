@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\RelationManagers;
 
+use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -47,7 +48,8 @@ class BandProfilesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('pivot.position')
                     ->label('Position')
                     ->searchable(),
-                Tables\Columns\BadgeColumn::make('pivot.status')
+                Tables\Columns\TextColumn::make('pivot.status')
+                    ->badge()
                     ->label('Status')
                     ->color(fn (string $state): string => match ($state) {
                         'active' => 'success',
@@ -74,8 +76,8 @@ class BandProfilesRelationManager extends RelationManager
                     ]),
             ])
             ->headerActions([
-                Tables\Actions\AttachAction::make()
-                    ->form(fn (Tables\Actions\AttachAction $action): array => [
+                Actions\AttachAction::make()
+                    ->schema(fn (Actions\AttachAction $action): array => [
                         $action->getRecordSelect(),
                         Forms\Components\TextInput::make('role')
                             ->maxLength(100),
@@ -91,12 +93,12 @@ class BandProfilesRelationManager extends RelationManager
                     ])
                     ->preloadRecordSelect(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
-                    ->form([
+            ->recordActions([
+                Actions\EditAction::make()
+                    ->schema([
                         Forms\Components\TextInput::make('role')
                             ->maxLength(100),
-                        Forms\Components\TextInput::make('position')  
+                        Forms\Components\TextInput::make('position')
                             ->maxLength(100),
                         Forms\Components\Select::make('status')
                             ->options([
@@ -106,11 +108,11 @@ class BandProfilesRelationManager extends RelationManager
                             ])
                             ->default('active'),
                     ]),
-                Tables\Actions\DetachAction::make(),
+                Actions\DetachAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DetachBulkAction::make(),
+            ->toolbarActions([
+                Actions\BulkActionGroup::make([
+                    Actions\DetachBulkAction::make(),
                 ]),
             ]);
     }

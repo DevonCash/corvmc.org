@@ -15,16 +15,16 @@ use Illuminate\Database\Eloquent\Model;
 class Transaction extends Model
 {
     use HasFactory;
-    
+
     const UPDATED_AT = null;
-    
+
     protected $fillable = [
         'transaction_id',
         'email',
         'amount',
         'currency',
         'type',
-        'response'
+        'response',
     ];
 
     protected $casts = [

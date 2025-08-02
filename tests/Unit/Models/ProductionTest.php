@@ -5,7 +5,6 @@ namespace Tests\Unit\Models;
 use App\Data\LocationData;
 use App\Models\BandProfile;
 use App\Models\Production;
-use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,12 +16,13 @@ class ProductionTest extends TestCase
     use RefreshDatabase;
 
     protected Production $production;
+
     protected User $manager;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->manager = User::factory()->create();
         $this->production = Production::factory()->create([
             'manager_id' => $this->manager->id,
@@ -46,21 +46,10 @@ class ProductionTest extends TestCase
         $this->production->performers()->attach($band2->id, ['order' => 2, 'set_length' => 45]);
 
         $performers = $this->production->performers;
-        
+
         $this->assertCount(2, $performers);
         $this->assertEquals(1, $performers->first()->pivot->order);
         $this->assertEquals(30, $performers->first()->pivot->set_length);
-    }
-
-    #[Test]
-    public function it_can_have_a_reservation()
-    {
-        $reservation = Reservation::factory()->create([
-            'production_id' => $this->production->id,
-        ]);
-
-        $this->assertInstanceOf(Reservation::class, $this->production->reservation);
-        $this->assertEquals($reservation->id, $this->production->reservation->id);
     }
 
     #[Test]
@@ -70,7 +59,7 @@ class ProductionTest extends TestCase
         $this->production->attachTag('indie', 'genre');
 
         $genres = $this->production->genres;
-        
+
         $this->assertCount(2, $genres);
         $this->assertTrue($genres->pluck('name')->contains('rock'));
         $this->assertTrue($genres->pluck('name')->contains('indie'));
@@ -81,7 +70,7 @@ class ProductionTest extends TestCase
     {
         $start = Carbon::parse('2025-03-15 19:00:00');
         $end = Carbon::parse('2025-03-15 22:00:00');
-        
+
         $this->production->update([
             'start_time' => $start,
             'end_time' => $end,
@@ -96,7 +85,7 @@ class ProductionTest extends TestCase
     {
         $start = Carbon::parse('2025-03-15 19:00:00');
         $end = Carbon::parse('2025-03-16 01:00:00');
-        
+
         $this->production->update([
             'start_time' => $start,
             'end_time' => $end,
@@ -230,6 +219,8 @@ class ProductionTest extends TestCase
     #[Test]
     public function it_handles_notaflof_flag()
     {
+        // Ensure clean state - clear any existing NOTAFLOF flag
+        $this->production->setNotaflof(false);
         $this->assertFalse($this->production->isNotaflof());
 
         $this->production->setNotaflof(true);
@@ -249,7 +240,7 @@ class ProductionTest extends TestCase
         // Ticketed event with price
         $this->production->update([
             'ticket_url' => 'https://example.com',
-            'ticket_price' => 15.50
+            'ticket_price' => 15.50,
         ]);
         $this->production->setNotaflof(false); // Ensure NOTAFLOF flag is cleared
         $this->assertEquals('$15.50', $this->production->ticket_price_display);
@@ -257,7 +248,7 @@ class ProductionTest extends TestCase
         // Ticketed event without price
         $this->production->update([
             'ticket_url' => 'https://example.com',
-            'ticket_price' => null
+            'ticket_price' => null,
         ]);
         $this->production->setNotaflof(false); // Ensure NOTAFLOF flag is cleared
         $this->assertEquals('Ticketed', $this->production->ticket_price_display);
@@ -265,7 +256,7 @@ class ProductionTest extends TestCase
         // NOTAFLOF event
         $this->production->update([
             'ticket_url' => 'https://example.com',
-            'ticket_price' => 20.00
+            'ticket_price' => 20.00,
         ]);
         $this->production->setNotaflof(true);
         $this->assertEquals('$20.00 (NOTAFLOF)', $this->production->ticket_price_display);
@@ -281,21 +272,21 @@ class ProductionTest extends TestCase
         // Tickets but no price
         $this->production->update([
             'ticket_url' => 'https://example.com',
-            'ticket_price' => null
+            'ticket_price' => null,
         ]);
         $this->assertTrue($this->production->isFree());
 
         // Tickets with zero price
         $this->production->update([
             'ticket_url' => 'https://example.com',
-            'ticket_price' => 0
+            'ticket_price' => 0,
         ]);
         $this->assertTrue($this->production->isFree());
 
         // Tickets with price
         $this->production->update([
             'ticket_url' => 'https://example.com',
-            'ticket_price' => 15.00
+            'ticket_price' => 15.00,
         ]);
         $this->assertFalse($this->production->isFree());
     }
@@ -305,10 +296,10 @@ class ProductionTest extends TestCase
     {
         $start = Carbon::parse('2025-03-15 19:00:00');
         $location = LocationData::cmc();
-        
+
         $this->production->update([
             'start_time' => $start,
-            'location' => $location
+            'location' => $location,
         ]);
 
         $this->assertInstanceOf(Carbon::class, $this->production->start_time);
@@ -320,7 +311,7 @@ class ProductionTest extends TestCase
     {
         $fillable = [
             'title', 'description', 'start_time', 'end_time', 'doors_time',
-            'location', 'ticket_url', 'ticket_price', 'status', 'published_at', 'manager_id'
+            'location', 'ticket_url', 'ticket_price', 'status', 'published_at', 'manager_id',
         ];
 
         $this->assertEquals($fillable, $this->production->getFillable());
@@ -330,7 +321,7 @@ class ProductionTest extends TestCase
     public function it_sets_default_location_on_creation()
     {
         $production = Production::factory()->create(['location' => null]);
-        
+
         $this->assertInstanceOf(LocationData::class, $production->location);
         $this->assertEquals('Corvallis Music Collective', $production->location->getVenueName());
     }

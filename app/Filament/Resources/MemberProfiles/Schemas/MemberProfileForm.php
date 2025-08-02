@@ -44,7 +44,7 @@ class MemberProfileForm
                             TextInput::make('hometown')
                                 ->label('Hometown')
                                 ->columnSpan(1)
-                                ->datalist(fn() => MemberProfile::distinct()->get()->pluck('hometown')->concat(['Corvallis', 'Albany', 'Philomath', 'Monroe', 'Lebanon', 'Sweet Home', 'Eugene', 'Springfield', 'Portland', 'Salem'])),
+                                ->datalist(fn () => MemberProfile::distinct()->get()->pluck('hometown')->concat(['Corvallis', 'Albany', 'Philomath', 'Monroe', 'Lebanon', 'Sweet Home', 'Eugene', 'Springfield', 'Portland', 'Salem'])),
                         ])->columns(3)->columnSpanFull(),
                         RichEditor::make('bio')
                             ->label('Bio')
@@ -94,7 +94,6 @@ class MemberProfileForm
                             ])
                             ->columnSpanFull(),
 
-
                         Fieldset::make('Links')
                             ->columnSpanFull()
                             ->schema([
@@ -118,7 +117,7 @@ class MemberProfileForm
                                     ->table([
                                         TableColumn::make('Name')->alignLeft()
                                             ->width('30%'),
-                                        TableColumn::make('URL')->alignLeft()
+                                        TableColumn::make('URL')->alignLeft(),
                                     ])
                                     ->columnSpanFull()
                                     ->defaultItems(0),
@@ -148,7 +147,7 @@ class MemberProfileForm
                                 'members' => 'Members Only',
                                 'public' => 'Public',
                             ])
-                            ->helperText(fn($state) => match ($state) {
+                            ->helperText(fn ($state) => match ($state) {
                                 'private' => 'Only you can see your profile',
                                 'members' => 'Other CMC members can view your profile',
                                 'public' => 'Your profile is visible to the public',
@@ -166,7 +165,7 @@ class MemberProfileForm
                                 'members' => 'Members Only',
                                 'public' => 'Public',
                             ])
-                            ->helperText(fn($state) => match ($state) {
+                            ->helperText(fn ($state) => match ($state) {
                                 'private' => 'Only CMC staff can see your contact info',
                                 'members' => 'Only other members can see your contact info',
                                 'public' => 'Anyone who can see your profile can see your contact info',
@@ -182,6 +181,7 @@ class MemberProfileForm
                                     ->hiddenLabel()
                                     ->options(function () {
                                         $settings = app(MemberDirectorySettings::class);
+
                                         return $settings->getAvailableFlags();
                                     })
                                     ->descriptions([
@@ -191,17 +191,19 @@ class MemberProfileForm
                                         'music_teacher' => 'Available to teach music lessons',
                                     ])
                                     ->afterStateHydrated(function (CheckboxList $component, $record) {
-                                        if (!$record) return;
-                                        
+                                        if (! $record) {
+                                            return;
+                                        }
+
                                         $settings = app(MemberDirectorySettings::class);
                                         $activeFlags = [];
-                                        
+
                                         foreach ($settings->getAvailableFlags() as $flag => $label) {
                                             if ($record->hasFlag($flag)) {
                                                 $activeFlags[] = $flag;
                                             }
                                         }
-                                        
+
                                         $component->state($activeFlags);
                                     })
                                     ->dehydrated(false)

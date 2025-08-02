@@ -33,7 +33,7 @@ class BandInvitationNotification extends Notification
     {
         return [
             'title' => 'Band Invitation',
-            'body' => "You've been invited to join {$this->band->name}" . ($this->position ? " as {$this->position}" : ''),
+            'body' => "You've been invited to join {$this->band->name}".($this->position ? " as {$this->position}" : ''),
             'icon' => 'heroicon-o-user-group',
             'band_id' => $this->band->id,
             'band_name' => $this->band->name,

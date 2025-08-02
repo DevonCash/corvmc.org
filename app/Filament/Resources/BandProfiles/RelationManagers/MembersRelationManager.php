@@ -11,8 +11,8 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Schemas\Components\Grid;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Grid;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -36,7 +36,7 @@ class MembersRelationManager extends RelationManager
                     ->circular()
                     ->size(40)
                     ->defaultImageUrl(function ($record) {
-                        return 'https://ui-avatars.com/api/?name=' . urlencode($record->name) . '&color=7F9CF5&background=EBF4FF&size=80';
+                        return 'https://ui-avatars.com/api/?name='.urlencode($record->name).'&color=7F9CF5&background=EBF4FF&size=80';
                     }),
 
                 TextColumn::make('display_name')
@@ -97,9 +97,10 @@ class MembersRelationManager extends RelationManager
                         'declined' => 'Declined Invitations',
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        if (!empty($data['value'])) {
+                        if (! empty($data['value'])) {
                             return $query->wherePivot('status', $data['value']);
                         }
+
                         return $query;
                     }),
             ])
@@ -113,14 +114,12 @@ class MembersRelationManager extends RelationManager
                                 Select::make('recordId')
                                     ->label('CMC Member (optional)')
                                     ->relationship('members', 'name')
-                                    ->getSearchResultsUsing(fn (string $search): array => 
-                                        User::where('name', 'like', "%{$search}%")
-                                            ->whereDoesntHave('bandProfiles', fn ($query) => 
-                                                $query->where('band_profile_id', $this->ownerRecord->id)
-                                            )
-                                            ->limit(50)
-                                            ->pluck('name', 'id')
-                                            ->toArray()
+                                    ->getSearchResultsUsing(fn (string $search): array => User::where('name', 'like', "%{$search}%")
+                                        ->whereDoesntHave('bandProfiles', fn ($query) => $query->where('band_profile_id', $this->ownerRecord->id)
+                                        )
+                                        ->limit(50)
+                                        ->pluck('name', 'id')
+                                        ->toArray()
                                     )
                                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                                     ->searchable()
@@ -151,7 +150,7 @@ class MembersRelationManager extends RelationManager
                     ->using(function (array $data): void {
                         $bandService = app(BandService::class);
                         $user = $data['recordId'] ? User::find($data['recordId']) : null;
-                        
+
                         if ($user) {
                             $bandService->addMember(
                                 $this->ownerRecord,
@@ -180,14 +179,12 @@ class MembersRelationManager extends RelationManager
                         Select::make('user_id')
                             ->label('CMC Member')
                             ->relationship('members', 'name')
-                            ->getSearchResultsUsing(fn (string $search): array => 
-                                User::where('name', 'like', "%{$search}%")
-                                    ->whereDoesntHave('bandProfiles', fn ($query) => 
-                                        $query->where('band_profile_id', $this->ownerRecord->id)
-                                    )
-                                    ->limit(50)
-                                    ->pluck('name', 'id')
-                                    ->toArray()
+                            ->getSearchResultsUsing(fn (string $search): array => User::where('name', 'like', "%{$search}%")
+                                ->whereDoesntHave('bandProfiles', fn ($query) => $query->where('band_profile_id', $this->ownerRecord->id)
+                                )
+                                ->limit(50)
+                                ->pluck('name', 'id')
+                                ->toArray()
                             )
                             ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                             ->searchable()
@@ -220,7 +217,7 @@ class MembersRelationManager extends RelationManager
                     ->action(function (array $data): void {
                         $bandService = app(BandService::class);
                         $user = User::find($data['user_id']);
-                        
+
                         if ($user) {
                             $success = $bandService->inviteMember(
                                 $this->ownerRecord,
@@ -229,7 +226,7 @@ class MembersRelationManager extends RelationManager
                                 $data['position'] ?? null,
                                 $data['name'] ?? null
                             );
-                            
+
                             if ($success) {
                                 Notification::make()
                                     ->title('Invitation sent')
@@ -258,7 +255,7 @@ class MembersRelationManager extends RelationManager
                     ->action(function ($record): void {
                         $bandService = app(BandService::class);
                         $success = $bandService->acceptInvitation($this->ownerRecord, $record);
-                        
+
                         if ($success) {
                             Notification::make()
                                 ->title('Invitation accepted')
@@ -267,8 +264,7 @@ class MembersRelationManager extends RelationManager
                                 ->send();
                         }
                     })
-                    ->visible(fn ($record): bool => 
-                        $record->pivot->status === 'invited' && 
+                    ->visible(fn ($record): bool => $record->pivot->status === 'invited' &&
                         $record->id === auth()->id()
                     ),
 
@@ -282,7 +278,7 @@ class MembersRelationManager extends RelationManager
                     ->action(function ($record): void {
                         $bandService = app(BandService::class);
                         $success = $bandService->declineInvitation($this->ownerRecord, $record);
-                        
+
                         if ($success) {
                             Notification::make()
                                 ->title('Invitation declined')
@@ -291,8 +287,7 @@ class MembersRelationManager extends RelationManager
                                 ->send();
                         }
                     })
-                    ->visible(fn ($record): bool => 
-                        $record->pivot->status === 'invited' && 
+                    ->visible(fn ($record): bool => $record->pivot->status === 'invited' &&
                         $record->id === auth()->id()
                     ),
 
@@ -303,7 +298,7 @@ class MembersRelationManager extends RelationManager
                     ->action(function ($record): void {
                         $bandService = app(BandService::class);
                         $success = $bandService->resendInvitation($this->ownerRecord, $record);
-                        
+
                         if ($success) {
                             Notification::make()
                                 ->title('Invitation resent')
@@ -312,8 +307,7 @@ class MembersRelationManager extends RelationManager
                                 ->send();
                         }
                     })
-                    ->visible(fn ($record): bool => 
-                        $record->pivot->status === 'invited' && 
+                    ->visible(fn ($record): bool => $record->pivot->status === 'invited' &&
                         auth()->user()->can('manageMembers', $this->ownerRecord)
                     ),
 
@@ -337,8 +331,7 @@ class MembersRelationManager extends RelationManager
                                     ])
                                     ->default(fn ($record) => $record->pivot->role)
                                     ->required()
-                                    ->disabled(fn ($record): bool => 
-                                        !auth()->user()->can('changeMemberRoles', $this->ownerRecord) ||
+                                    ->disabled(fn ($record): bool => ! auth()->user()->can('changeMemberRoles', $this->ownerRecord) ||
                                         $record->id === $this->ownerRecord->owner_id
                                     ),
 
@@ -356,8 +349,7 @@ class MembersRelationManager extends RelationManager
                             'name' => $data['name'],
                         ]);
                     })
-                    ->visible(fn ($record): bool => 
-                        auth()->user()->can('manageMembers', $this->ownerRecord) ||
+                    ->visible(fn ($record): bool => auth()->user()->can('manageMembers', $this->ownerRecord) ||
                         $record->id === auth()->id()
                     ),
 
@@ -367,8 +359,7 @@ class MembersRelationManager extends RelationManager
                     ->modalHeading('Remove Band Member')
                     ->modalDescription('Are you sure you want to remove this member from the band?')
                     ->using(fn ($record) => $this->ownerRecord->members()->detach($record->id))
-                    ->visible(fn ($record): bool => 
-                        auth()->user()->can('removeMembers', $this->ownerRecord) &&
+                    ->visible(fn ($record): bool => auth()->user()->can('removeMembers', $this->ownerRecord) &&
                         $record->id !== $this->ownerRecord->owner_id // Can't remove owner
                     ),
             ])

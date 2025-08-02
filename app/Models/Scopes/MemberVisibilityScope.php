@@ -14,9 +14,10 @@ class MemberVisibilityScope implements Scope
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             // Only show public profiles to guests
             $builder->where('visibility', 'public');
+
             return;
         }
 

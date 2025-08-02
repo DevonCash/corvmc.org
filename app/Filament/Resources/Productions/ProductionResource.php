@@ -38,7 +38,7 @@ class ProductionResource extends Resource
     public static function getRelations(): array
     {
         return [
-            PerformersRelationManager::class
+            PerformersRelationManager::class,
         ];
     }
 

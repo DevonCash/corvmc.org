@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::table('band_profile_members', function (Blueprint $table) {
             $table->enum('status', ['active', 'invited', 'declined'])
-                  ->default('active')
-                  ->after('name');
+                ->default('active')
+                ->after('name');
             $table->timestamp('invited_at')->nullable()->after('status');
         });
     }

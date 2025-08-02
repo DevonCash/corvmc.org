@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\BandProfile;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,12 +18,12 @@ class BandProfileFactory extends Factory
         $adjectives = ['Electric', 'Midnight', 'Golden', 'Silver', 'Dark', 'Bright', 'Wild', 'Free', 'Lost', 'Found'];
         $nouns = ['Hearts', 'Souls', 'Dreams', 'Echoes', 'Shadows', 'Lights', 'Stars', 'Moons', 'Rivers', 'Mountains'];
 
-        $bandName = $this->faker->randomElement($adjectives) . ' ' . $this->faker->randomElement($nouns);
+        $bandName = $this->faker->randomElement($adjectives).' '.$this->faker->randomElement($nouns);
 
         return [
             'name' => $bandName,
             'bio' => $this->faker->paragraphs(3, true),
-            'hometown' => $this->faker->city() . ', ' . $this->faker->stateAbbr(),
+            'hometown' => $this->faker->city().', '.$this->faker->stateAbbr(),
             'owner_id' => 1, // Will be overridden by seeder
             'visibility' => $this->faker->randomElement(['public', 'members', 'private']),
             'links' => $this->generateLinks(),
@@ -36,13 +35,13 @@ class BandProfileFactory extends Factory
     {
         $links = [];
         $platforms = [
-            'website' => 'https://www.' . $this->faker->domainName(),
-            'spotify' => 'https://open.spotify.com/artist/' . $this->faker->uuid(),
-            'bandcamp' => 'https://' . $this->faker->slug() . '.bandcamp.com',
-            'youtube' => 'https://youtube.com/@' . $this->faker->slug(),
-            'instagram' => 'https://instagram.com/' . $this->faker->slug(),
-            'facebook' => 'https://facebook.com/' . $this->faker->slug(),
-            'soundcloud' => 'https://soundcloud.com/' . $this->faker->slug(),
+            'website' => 'https://www.'.$this->faker->domainName(),
+            'spotify' => 'https://open.spotify.com/artist/'.$this->faker->uuid(),
+            'bandcamp' => 'https://'.$this->faker->slug().'.bandcamp.com',
+            'youtube' => 'https://youtube.com/@'.$this->faker->slug(),
+            'instagram' => 'https://instagram.com/'.$this->faker->slug(),
+            'facebook' => 'https://facebook.com/'.$this->faker->slug(),
+            'soundcloud' => 'https://soundcloud.com/'.$this->faker->slug(),
         ];
 
         // Add 2-4 random links
@@ -100,7 +99,7 @@ class BandProfileFactory extends Factory
             $defaultInfluences = [
                 'The Beatles', 'Led Zeppelin', 'Pink Floyd', 'Queen', 'The Rolling Stones',
                 'Bob Dylan', 'Joni Mitchell', 'Miles Davis', 'John Coltrane', 'Radiohead',
-                'Nirvana', 'Pearl Jam', 'Red Hot Chili Peppers', 'Foo Fighters', 'Arctic Monkeys'
+                'Nirvana', 'Pearl Jam', 'Red Hot Chili Peppers', 'Foo Fighters', 'Arctic Monkeys',
             ];
             $selectedInfluences = $influences ?? $this->faker->randomElements($defaultInfluences, $this->faker->numberBetween(2, 6));
 

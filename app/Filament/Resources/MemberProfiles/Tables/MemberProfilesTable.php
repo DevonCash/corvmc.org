@@ -19,17 +19,17 @@ use Filament\Tables\Table;
 
 class MemberProfilesTable
 {
-
     public static function avatarColumn()
     {
-        return  ImageColumn::make('avatar_thumb_url')
+        return ImageColumn::make('avatar_thumb_url')
             ->label('')
             ->circular()
             ->imageSize(64)
             ->grow(false)
             ->defaultImageUrl(function ($record) {
                 $name = $record->user?->name ?? 'Member';
-                return 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&color=7F9CF5&background=EBF4FF&size=160';
+
+                return 'https://ui-avatars.com/api/?name='.urlencode($name).'&color=7F9CF5&background=EBF4FF&size=160';
             });
     }
 
@@ -66,7 +66,7 @@ class MemberProfilesTable
     public static function bioColumn()
     {
         return TextColumn::make('bio')
-            ->state(fn($record) => strip_tags($record->bio))
+            ->state(fn ($record) => strip_tags($record->bio))
             ->label('')
             ->lineClamp(2)
             ->color('gray');
@@ -102,10 +102,10 @@ class MemberProfilesTable
                                 static::pronounsColumn(),
                             ]),
                             static::hometownColumn(),
-                        ])->space(2)
+                        ])->space(2),
                     ]),
                     static::skillsColumn()->alignCenter(),
-                    static::bioColumn()
+                    static::bioColumn(),
                 ])
                     ->space(3)
                     ->alignCenter()
@@ -123,18 +123,18 @@ class MemberProfilesTable
                                     ->iconPosition(IconPosition::After),
                             ]),
                             static::skillsColumn(),
-                        ])->space(2)
+                        ])->space(2),
                     ]),
                     static::bioColumn(),
                 ])
                     ->visibleFrom('sm')
-                    ->space(2)
+                    ->space(2),
 
             ])
 
             ->filters([
                 SelectFilter::make('visibility')
-                    ->visible(fn($record) => User::me()?->can('view private member profiles'))
+                    ->visible(fn ($record) => User::me()?->can('view private member profiles'))
                     ->options([
                         'public' => 'Public',
                         'members' => 'Members Only',
@@ -145,12 +145,14 @@ class MemberProfilesTable
                     ->label('Directory Flags')
                     ->options(function () {
                         $settings = app(MemberDirectorySettings::class);
+
                         return $settings->getAvailableFlags();
                     })
                     ->query(function ($query, array $data) {
-                        if (!empty($data['value'])) {
+                        if (! empty($data['value'])) {
                             return $query->withFlag($data['value']);
                         }
+
                         return $query;
                     }),
 
@@ -164,9 +166,10 @@ class MemberProfilesTable
                             ->toArray();
                     })
                     ->query(function ($query, array $data) {
-                        if (!empty($data['values'])) {
+                        if (! empty($data['values'])) {
                             return $query->withAnyTags($data['values'], 'skill');
                         }
+
                         return $query;
                     }),
 
@@ -180,9 +183,10 @@ class MemberProfilesTable
                             ->toArray();
                     })
                     ->query(function ($query, array $data) {
-                        if (!empty($data['values'])) {
+                        if (! empty($data['values'])) {
                             return $query->withAnyTags($data['values'], 'genre');
                         }
+
                         return $query;
                     }),
 
@@ -196,9 +200,10 @@ class MemberProfilesTable
                             ->toArray();
                     })
                     ->query(function ($query, array $data) {
-                        if (!empty($data['values'])) {
+                        if (! empty($data['values'])) {
                             return $query->withAnyTags($data['values'], 'influence');
                         }
+
                         return $query;
                     }),
 

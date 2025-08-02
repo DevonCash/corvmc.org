@@ -2,20 +2,18 @@
 
 namespace App\Filament\Resources\Productions\Schemas;
 
-use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Fieldset;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class ProductionForm
@@ -51,10 +49,9 @@ class ProductionForm
                         static::timeFieldsGrid(),
                         static::ticketingGrid(),
                         static::locationFieldset(),
-                    ])
+                    ]),
             ]);
     }
-
 
     protected static function titleField(): TextInput
     {
@@ -70,7 +67,7 @@ class ProductionForm
     protected static function managerField(): Select
     {
         return Select::make('manager_id')
-            ->relationship('manager', 'name', fn($query) => $query->permission('manage productions'))
+            ->relationship('manager', 'name', fn ($query) => $query->permission('manage productions'))
             ->required()
             ->columnSpan([
                 'sm' => 1,
@@ -179,7 +176,7 @@ class ProductionForm
                     })
                     ->tooltip('Toggle NOTAFLOF (No One Turned Away For Lack of Funds)')
                     ->action(function ($set, $get) {
-                        $set('notaflof', !$get('notaflof'));
+                        $set('notaflof', ! $get('notaflof'));
                     })
             )
             ->columnSpan([
@@ -210,7 +207,7 @@ class ProductionForm
             ->afterStateHydrated(function (Checkbox $component, $record) {
                 if ($record && $record->location) {
                     // Invert the stored is_external value for display
-                    $component->state(!$record->location->isExternal());
+                    $component->state(! $record->location->isExternal());
                 }
             })
             ->dehydrated(false)
@@ -222,7 +219,7 @@ class ProductionForm
         return Textarea::make('location.details')
             ->label('External Venue Details')
             ->placeholder('Venue name, address, contact info, special instructions...')
-            ->visible(fn(Get $get) => !$get('at_cmc'))
+            ->visible(fn (Get $get) => ! $get('at_cmc'))
             ->columnSpanFull()
             ->rows(3);
     }
@@ -233,13 +230,19 @@ class ProductionForm
             ->label('Publish At')
             ->withoutSeconds()
             ->prefixIconColor(function ($state) {
-                if (!$state) return 'gray';
+                if (! $state) {
+                    return 'gray';
+                }
                 $date = is_string($state) ? \Carbon\Carbon::parse($state) : $state;
+
                 return $date->isFuture() ? 'warning' : 'success';
             })
             ->prefixIcon(function ($state) {
-                if (!$state) return 'heroicon-s-x-circle';
+                if (! $state) {
+                    return 'heroicon-s-x-circle';
+                }
                 $date = is_string($state) ? \Carbon\Carbon::parse($state) : $state;
+
                 return $date->isFuture() ? 'heroicon-s-clock' : 'heroicon-s-check';
             })
             ->suffixAction(
@@ -255,9 +258,12 @@ class ProductionForm
                     })
             )
             ->hint(function ($state) {
-                if (!$state) return 'Not scheduled';
+                if (! $state) {
+                    return 'Not scheduled';
+                }
                 $date = is_string($state) ? \Carbon\Carbon::parse($state) : $state;
-                return $date->isFuture() ? 'Publish in ' . $date->shortAbsoluteDiffForHumans() : 'Published';
+
+                return $date->isFuture() ? 'Publish in '.$date->shortAbsoluteDiffForHumans() : 'Published';
             })
             ->live();
     }

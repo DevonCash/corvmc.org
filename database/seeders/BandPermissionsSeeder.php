@@ -26,26 +26,26 @@ class BandPermissionsSeeder extends Seeder
             'delete bands',
             'restore bands',
             'force delete bands',
-            
+
             // Band member management
             'manage band members',
             'invite band members',
             'remove band members',
             'change member roles',
             'view band members',
-            
+
             // Band ownership and administration
             'transfer band ownership',
             'promote to band admin',
             'demote band admin',
-            
+
             // Band content management
             'upload band media',
             'manage band settings',
             'manage band visibility',
             'manage band links',
             'manage band contact info',
-            
+
             // Advanced band permissions
             'view private bands',
             'moderate bands',
@@ -66,7 +66,7 @@ class BandPermissionsSeeder extends Seeder
     private function createAdminRole(): void
     {
         $admin = Role::firstOrCreate(['name' => 'admin']);
-        
+
         // Admins get all band permissions
         $admin->givePermissionTo([
             'view bands',
@@ -98,7 +98,7 @@ class BandPermissionsSeeder extends Seeder
     private function createModeratorRole(): void
     {
         $moderator = Role::firstOrCreate(['name' => 'moderator']);
-        
+
         // Moderators get most band permissions except destructive ones
         $moderator->givePermissionTo([
             'view bands',
@@ -123,7 +123,7 @@ class BandPermissionsSeeder extends Seeder
     private function createMemberRole(): void
     {
         $member = Role::firstOrCreate(['name' => 'member']);
-        
+
         // Regular members get basic permissions
         $member->givePermissionTo([
             'view bands',
@@ -135,7 +135,7 @@ class BandPermissionsSeeder extends Seeder
     private function createBandLeaderRole(): void
     {
         $bandLeader = Role::firstOrCreate(['name' => 'band leader']);
-        
+
         // Band leaders get enhanced permissions for band management
         $bandLeader->givePermissionTo([
             'view bands',

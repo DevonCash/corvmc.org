@@ -26,7 +26,7 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'pronouns' => fake()->randomElement([
-                null, 'he/him', 'she/her', 'they/them', 'he/they', 'she/they', 'ze/zir'
+                null, 'he/him', 'she/her', 'they/them', 'he/they', 'she/they', 'ze/zir',
             ]),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
@@ -81,14 +81,14 @@ class UserFactory extends Factory
     {
         return \App\Models\User::withoutEvents(function () use ($attributes) {
             $factory = static::new();
-            if (!empty($attributes)) {
+            if (! empty($attributes)) {
                 $factory = $factory->state($attributes);
             }
             $user = $factory->create();
-            
+
             // Ensure no profile exists by deleting any that might have been created
             \App\Models\MemberProfile::where('user_id', $user->id)->delete();
-            
+
             return $user;
         });
     }
@@ -101,19 +101,19 @@ class UserFactory extends Factory
     {
         return \App\Models\User::withoutEvents(function () use ($userAttributes, $profileAttributes) {
             $factory = static::new();
-            if (!empty($userAttributes)) {
+            if (! empty($userAttributes)) {
                 $factory = $factory->state($userAttributes);
             }
             $user = $factory->create();
-            
+
             // Manually create profile since events are disabled
             $profile = \App\Models\MemberProfile::create(['user_id' => $user->id]);
-            
+
             // Update profile with provided attributes
-            if (!empty($profileAttributes)) {
+            if (! empty($profileAttributes)) {
                 $profile->update($profileAttributes);
             }
-            
+
             return ['user' => $user, 'profile' => $profile];
         });
     }
@@ -125,9 +125,10 @@ class UserFactory extends Factory
     {
         return \App\Models\User::withoutEvents(function () use ($count, $attributes) {
             $factory = static::new();
-            if (!empty($attributes)) {
+            if (! empty($attributes)) {
                 $factory = $factory->state($attributes);
             }
+
             return $factory->withProfile()->count($count)->create();
         });
     }
@@ -443,6 +444,7 @@ class UserFactory extends Factory
         for ($i = 0; $i < $count; $i++) {
             $users[] = static::createRandomUser($profileOverrides);
         }
+
         return $users;
     }
 }

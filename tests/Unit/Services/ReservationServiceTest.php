@@ -15,18 +15,20 @@ class ReservationServiceTest extends TestCase
     use RefreshDatabase;
 
     protected ReservationService $service;
+
     protected User $regularUser;
+
     protected User $sustainingUser;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create roles for testing
         \Spatie\Permission\Models\Role::create(['name' => 'sustaining member']);
-        
-        $this->service = new ReservationService();
-        
+
+        $this->service = new ReservationService;
+
         // Create test users
         $this->regularUser = User::factory()->create();
         $this->sustainingUser = User::factory()->create();
@@ -353,7 +355,7 @@ class ReservationServiceTest extends TestCase
         );
 
         $this->assertCount(4, $reservations);
-        
+
         foreach ($reservations as $i => $reservation) {
             $expectedStart = $start->copy()->addWeeks($i);
             $this->assertEquals($expectedStart, $reservation->reserved_at);

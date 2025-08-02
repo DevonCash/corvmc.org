@@ -7,7 +7,6 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
@@ -34,12 +33,12 @@ class ProductionsTable
                 TextColumn::make('title')
                     ->searchable(),
                 TextColumn::make('start_date')
-                    ->state(fn($record) => $record->start_time)
+                    ->state(fn ($record) => $record->start_time)
                     ->date(),
                 TextColumn::make('start_time')
-                    ->description(fn($record) => 'Doors ' . $record->start_time->format('g:i A'))
+                    ->description(fn ($record) => 'Doors '.$record->start_time->format('g:i A'))
                     ->dateTime('g:i A')
-                    ->suffix(fn($record) => ' - ' . $record->end_time?->format('g:i A'))
+                    ->suffix(fn ($record) => ' - '.$record->end_time?->format('g:i A'))
                     ->sortable(),
                 TextColumn::make('status')
                     ->searchable(),
@@ -48,16 +47,26 @@ class ProductionsTable
                     ->label('Published')
                     ->alignCenter()
                     ->icon(function ($state) {
-                        if (!$state) return 'heroicon-o-pencil-square';
-                        if ($state->isFuture()) return 'heroicon-o-clock';
+                        if (! $state) {
+                            return 'heroicon-o-pencil-square';
+                        }
+                        if ($state->isFuture()) {
+                            return 'heroicon-o-clock';
+                        }
+
                         return 'heroicon-o-check-circle';
                     })
                     ->color(function ($state) {
-                        if (!$state) return 'gray';
-                        if ($state->isFuture()) return 'warning';
+                        if (! $state) {
+                            return 'gray';
+                        }
+                        if ($state->isFuture()) {
+                            return 'warning';
+                        }
+
                         return 'success';
                     })
-                    ->tooltip(fn($state) => $state ? 'Published on ' . $state->format('M j, Y H:i A') : 'Not published'),
+                    ->tooltip(fn ($state) => $state ? 'Published on '.$state->format('M j, Y H:i A') : 'Not published'),
                 TextColumn::make('manager.name')
                     ->sortable(),
             ])

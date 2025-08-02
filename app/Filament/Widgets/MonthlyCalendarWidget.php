@@ -1,0 +1,111 @@
+<?php
+
+namespace App\Filament\Widgets;
+
+use App\Models\Production;
+use App\Models\Reservation;
+use Carbon\Carbon;
+use Closure;
+use Guava\Calendar\ValueObjects\CalendarEvent;
+use Guava\Calendar\Widgets\CalendarWidget;
+use Illuminate\Support\HtmlString;
+
+class MonthlyCalendarWidget extends CalendarWidget
+{
+    protected Closure|HtmlString|string|null $heading = 'Practice Space Overview';
+
+    protected int | string | array $columnSpan = 'full';
+
+    public function getEvents(array $fetchInfo = []): array
+    {
+        // Get actual reservations
+        $start = Carbon::parse($fetchInfo['start'] ?? now()->startOfMonth()->subMonth());
+        $end = Carbon::parse($fetchInfo['end'] ?? now()->endOfMonth()->addMonth());
+
+        $reservations = Reservation::withoutGlobalScopes()
+            ->with('user')
+            ->where('status', '!=', 'cancelled')
+            ->where('reserved_until', '>=', $start)
+            ->where('reserved_at', '<=', $end)
+            ->get()
+            ->map(function (Reservation $reservation) {
+                $currentUser = auth()->user();
+                $isOwnReservation = $currentUser && $currentUser->id === $reservation->user_id;
+                $canViewDetails = $currentUser && $currentUser->can('view reservations');
+                
+                // Show full details for own reservations or if user has permission
+                if ($isOwnReservation || $canViewDetails) {
+                    $title = $reservation->user->name;
+                    if ($reservation->notes) {
+                        $title .= ' - ' . $reservation->notes;
+                    }
+                } else {
+                    $title = 'Reserved';
+                }
+                
+                $color = match ($reservation->status) {
+                    'confirmed' => '#10b981', // green
+                    'pending' => '#f59e0b',   // yellow
+                    'cancelled' => '#ef4444', // red
+                    default => '#6b7280',     // gray
+                };
+                
+                return CalendarEvent::make($reservation)
+                    ->title($title)
+                    ->start($reservation->reserved_at)
+                    ->end($reservation->reserved_until)
+                    ->backgroundColor($color)
+                    ->textColor('#fff');
+            });
+
+        $productions = Production::with('manager')
+            ->where('end_time', '>=', $start)
+            ->where('start_time', '<=', $end)
+            ->get()
+            ->filter(fn(Production $production) => $production->usesPracticeSpace())
+            ->map(function (Production $production) {
+                $title = $production->title;
+                if (!$production->isPublished()) {
+                    $title .= ' (Draft)';
+                }
+                
+                $color = match ($production->status) {
+                    'pre-production' => '#8b5cf6', // purple
+                    'production' => '#3b82f6',     // blue
+                    'completed' => '#10b981',      // green
+                    'cancelled' => '#ef4444',      // red
+                    default => '#6b7280',          // gray
+                };
+                
+                return CalendarEvent::make($production)
+                    ->title($title)
+                    ->start($production->start_time)
+                    ->end($production->end_time)
+                    ->backgroundColor($color)
+                    ->textColor('#fff');
+            });
+
+        // Return all events
+        return $reservations->merge($productions)->toArray();
+    }
+
+    public function getConfig(): array
+    {
+        return [
+            'headerToolbar' => [
+                'left' => 'prev,next today',
+                'center' => 'title',
+                'right' => 'dayGridMonth',
+            ],
+            'initialView' => 'dayGridMonth',
+            'initialDate' => now()->format('Y-m-d'),
+            'firstDay' => 1, // Start week on Monday
+            'height' => 600,
+            'eventDisplay' => 'block',
+            'displayEventTime' => false, // Don't show time in month view
+            'dayMaxEvents' => 3, // Show max 3 events per day, then "+X more"
+            'moreLinkClick' => 'popover',
+            'eventDidMount' => 'function(info) { console.log("Event mounted:", info.event.title, info.event.start); }',
+        ];
+    }
+}

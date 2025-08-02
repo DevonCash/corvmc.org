@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Data\LocationData;
+use Guava\Calendar\Contracts\Eventable;
+use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,9 +12,11 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\ModelFlags\Models\Concerns\HasFlags;
+use Spatie\Period\Period;
+use Spatie\Period\Precision;
 use Spatie\Tags\HasTags;
 
-class Production extends Model implements HasMedia
+class Production extends Model implements Eventable, HasMedia
 {
     use HasFactory, HasFlags, HasTags, InteractsWithMedia, SoftDeletes;
 
@@ -51,11 +55,6 @@ class Production extends Model implements HasMedia
             ->withTimestamps();
     }
 
-    public function reservation()
-    {
-        return $this->hasOne(Reservation::class);
-    }
-
     public function getGenresAttribute()
     {
         return $this->tagsWithType('genre');
@@ -75,6 +74,7 @@ class Production extends Model implements HasMedia
         if ($this->hasMedia('poster')) {
             return $this->getFirstMediaUrl('poster');
         }
+
         return null;
     }
 
@@ -83,6 +83,7 @@ class Production extends Model implements HasMedia
         if ($this->hasMedia('poster')) {
             return $this->getFirstMediaUrl('poster', 'thumb');
         }
+
         return $this->poster_url;
     }
 
@@ -101,11 +102,12 @@ class Production extends Model implements HasMedia
     {
         if ($this->start_time && $this->end_time) {
             if ($this->start_time->isSameDay($this->end_time)) {
-                return $this->start_time->format('M j, Y g:i A') . ' - ' . $this->end_time->format('g:i A');
+                return $this->start_time->format('M j, Y g:i A').' - '.$this->end_time->format('g:i A');
             }
-            return $this->start_time->format('M j, Y g:i A') . ' - ' . $this->end_time->format('M j, Y g:i A');
+
+            return $this->start_time->format('M j, Y g:i A').' - '.$this->end_time->format('M j, Y g:i A');
         }
-        
+
         return $this->start_time ? $this->start_time->format('M j, Y g:i A') : 'TBD';
     }
 
@@ -162,7 +164,7 @@ class Production extends Model implements HasMedia
      */
     public function hasTickets(): bool
     {
-        return !empty($this->ticket_url);
+        return ! empty($this->ticket_url);
     }
 
     /**
@@ -173,12 +175,12 @@ class Production extends Model implements HasMedia
         if (empty($value)) {
             return null;
         }
-        
+
         // Ensure URL has a protocol
-        if (!str_starts_with($value, 'http://') && !str_starts_with($value, 'https://')) {
-            return 'https://' . $value;
+        if (! str_starts_with($value, 'http://') && ! str_starts_with($value, 'https://')) {
+            return 'https://'.$value;
         }
-        
+
         return $value;
     }
 
@@ -200,7 +202,7 @@ class Production extends Model implements HasMedia
         } else {
             $this->unflag('notaflof');
         }
-        
+
         return $this;
     }
 
@@ -209,16 +211,16 @@ class Production extends Model implements HasMedia
      */
     public function getTicketPriceDisplayAttribute(): string
     {
-        if (!$this->hasTickets()) {
+        if (! $this->hasTickets()) {
             return 'Free';
         }
-        
-        $price = $this->ticket_price ? '$' . number_format($this->ticket_price, 2) : 'Ticketed';
-        
+
+        $price = $this->ticket_price ? '$'.number_format($this->ticket_price, 2) : 'Ticketed';
+
         if ($this->isNotaflof()) {
             $price .= ' (NOTAFLOF)';
         }
-        
+
         return $price;
     }
 
@@ -227,7 +229,71 @@ class Production extends Model implements HasMedia
      */
     public function isFree(): bool
     {
-        return !$this->hasTickets() || ($this->ticket_price === null || $this->ticket_price == 0);
+        return ! $this->hasTickets() || ($this->ticket_price === null || $this->ticket_price == 0);
+    }
+
+    /**
+     * Get the production time as a Period object.
+     */
+    public function getPeriod(): ?Period
+    {
+        if (! $this->start_time || ! $this->end_time) {
+            return null;
+        }
+
+        return Period::make(
+            $this->start_time,
+            $this->end_time,
+            Precision::MINUTE()
+        );
+    }
+
+    /**
+     * Check if this production overlaps with another period.
+     */
+    public function overlapsWith(Period $period): bool
+    {
+        $thisPeriod = $this->getPeriod();
+
+        if (! $thisPeriod) {
+            return false;
+        }
+
+        return $thisPeriod->overlapsWith($period);
+    }
+
+    /**
+     * Check if this production touches another period (adjacent periods).
+     */
+    public function touchesWith(Period $period): bool
+    {
+        $thisPeriod = $this->getPeriod();
+
+        if (! $thisPeriod) {
+            return false;
+        }
+
+        return $thisPeriod->touchesWith($period);
+    }
+
+    /**
+     * Get the duration of the production in hours.
+     */
+    public function getDurationAttribute(): float
+    {
+        if (! $this->start_time || ! $this->end_time) {
+            return 0;
+        }
+
+        return $this->start_time->diffInMinutes($this->end_time) / 60;
+    }
+
+    /**
+     * Check if this production uses the CMC practice space (not external venue).
+     */
+    public function usesPracticeSpace(): bool
+    {
+        return ! $this->isExternalVenue();
     }
 
     /**
@@ -236,9 +302,53 @@ class Production extends Model implements HasMedia
     protected static function booted(): void
     {
         static::creating(function (Production $production) {
-            if (!$production->location) {
+            if (! $production->location) {
                 $production->location = LocationData::cmc();
             }
         });
+    }
+
+    /**
+     * Convert production to calendar event.
+     */
+    public function toCalendarEvent(): CalendarEvent
+    {
+        // Only show productions that use the practice space
+        if (! $this->usesPracticeSpace()) {
+            return CalendarEvent::make($this)
+                ->title('')
+                ->start($this->start_time->toISOString())
+                ->end($this->end_time->toISOString())
+                ->display('none');
+        }
+
+        $title = $this->title;
+
+        if (! $this->isPublished()) {
+            $title .= ' (Draft)';
+        }
+
+        $color = match ($this->status) {
+            'pre-production' => '#8b5cf6', // purple
+            'production' => '#3b82f6',     // blue
+            'completed' => '#10b981',      // green
+            'cancelled' => '#ef4444',      // red
+            default => '#6b7280',          // gray
+        };
+
+        return CalendarEvent::make($this)
+            ->title($title)
+            ->start($this->start_time)
+            ->end($this->end_time)
+            ->backgroundColor($color)
+            ->textColor('#fff')
+            ->extendedProps([
+                'type' => 'production',
+                'manager_name' => $this->manager->name ?? '',
+                'status' => $this->status,
+                'venue_name' => $this->venue_name,
+                'is_published' => $this->isPublished(),
+                'ticket_url' => $this->ticket_url,
+            ]);
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\MemberProfiles;
 
-use App\Filament\Resources\MemberProfiles\Pages\CreateMemberProfile;
 use App\Filament\Resources\MemberProfiles\Pages\EditMemberProfile;
 use App\Filament\Resources\MemberProfiles\Pages\ListMemberProfiles;
 use App\Filament\Resources\MemberProfiles\Pages\ViewMemberProfile;
@@ -17,9 +16,11 @@ use Filament\Tables\Table;
 class MemberProfileResource extends Resource
 {
     protected static ?string $slug = 'directory';
+
     protected static ?string $model = MemberProfile::class;
 
     protected static ?string $label = 'Member Profile';
+
     protected static ?string $pluralLabel = 'Member Directory';
 
     protected static ?string $navigationLabel = 'Member Directory';

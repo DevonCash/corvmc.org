@@ -2,13 +2,12 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use Filament\Forms\Components\DateTimePicker;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Spatie\Permission\Models\Role;
+use Filament\Support\Enums\IconPosition;
 
 class UserForm
 {
@@ -17,6 +16,16 @@ class UserForm
         return $schema
             ->components([
                 Section::make('User Information')
+                    ->headerActions([
+                        Action::make('edit_profile')
+                            ->label('Edit Profile')
+                            ->size('sm')
+
+                            ->icon('heroicon-o-pencil-square')
+                            ->iconPosition(IconPosition::After)
+                            ->url(fn ($record) => route('filament.member.resources.directory.edit', $record->profile->id))
+                            ->visible(fn ($record) => $record && $record->profile),
+                    ])
                     ->schema([
                         TextInput::make('name')
                             ->required()
@@ -26,48 +35,22 @@ class UserForm
                             ->email()
                             ->required()
                             ->unique(ignoreRecord: true)
-                            ->maxLength(255),
-                        TextInput::make('password')
-                            ->password()
-                            ->required(fn (string $context): bool => $context === 'create')
-                            ->dehydrated(fn ($state): bool => filled($state))
-                            ->revealable()
-                            ->minLength(8),
-                        DateTimePicker::make('email_verified_at')
-                            ->label('Email verified at'),
-                    ])
-                    ->columns(2),
-
-                Section::make('Profile Information')
-                    ->relationship('profile')
-                    ->schema([
-                        TextInput::make('pronouns')
-                            ->maxLength(50),
-                        TextInput::make('hometown')
-                            ->maxLength(255),
-                        Textarea::make('bio')
-                            ->rows(3)
-                            ->maxLength(1000),
-                        Select::make('visibility')
-                            ->options([
-                                'public' => 'Public',
-                                'members' => 'Members Only',
-                                'private' => 'Private',
-                            ])
-                            ->default('members')
-                            ->required(),
-                    ])
-                    ->columns(2),
-
-                Section::make('Roles & Permissions')
-                    ->schema([
+                            ->maxLength(255)
+                            ->suffixIcon(fn ($record) => $record && $record->email_verified_at ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
+                            ->suffixIconColor(fn ($record) => $record && $record->email_verified_at ? 'success' : 'danger')
+                            ->hint(
+                                fn ($record) => $record && $record->email_verified_at
+                                    ? $record->email_verified_at->format('M j Y') : ''
+                            ),
                         Select::make('roles')
                             ->relationship('roles', 'name')
                             ->multiple()
                             ->preload()
-                            ->searchable()
-                            ->helperText('Assign roles to grant specific permissions'),
-                    ]),
+                            ->searchable(),
+
+                    ])
+                    ->columnSpanFull()
+                    ->columns(3),
             ]);
     }
 }

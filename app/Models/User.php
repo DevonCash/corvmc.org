@@ -15,7 +15,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -36,7 +36,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     protected $hidden = [
         'password',
         'remember_token',
-        'settings'
+        'settings',
     ];
 
     public function canAccessPanel($panel): bool
@@ -54,6 +54,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         // Fall back to the full avatar URL if no thumbnail conversion exists
         return $this->profile?->avatar_url;
     }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -115,6 +116,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         /** @var User|null $user */
         $user = auth()->user();
+
         return $user;
     }
 
@@ -123,7 +125,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function isSustainingMember(): bool
     {
-        return $this->hasRole('sustaining member') || 
+        return $this->hasRole('sustaining member') ||
                $this->transactions()
                    ->where('type', 'recurring')
                    ->where('amount', '>', 10)
@@ -147,11 +149,10 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function getRemainingFreeHours(): float
     {
-        if (!$this->isSustainingMember()) {
+        if (! $this->isSustainingMember()) {
             return 0;
         }
-        
+
         return max(0, 4 - $this->getUsedFreeHoursThisMonth());
     }
-
 }

@@ -17,23 +17,23 @@ class MemberProfileFactory extends Factory
     public function definition(): array
     {
         $platforms = [
-            'Instagram' => 'https://instagram.com/' . fake()->userName(),
-            'Facebook' => 'https://facebook.com/' . fake()->userName(),
-            'Twitter' => 'https://twitter.com/' . fake()->userName(),
-            'Bandcamp' => 'https://' . fake()->userName() . '.bandcamp.com',
-            'Spotify' => 'https://open.spotify.com/artist/' . fake()->bothify('?##?##?##?##?##'),
-            'SoundCloud' => 'https://soundcloud.com/' . fake()->userName(),
-            'YouTube' => 'https://youtube.com/@' . fake()->userName(),
-            'TikTok' => 'https://tiktok.com/@' . fake()->userName(),
-            'LinkedIn' => 'https://linkedin.com/in/' . fake()->userName(),
-            'Website' => 'https://' . fake()->domainName(),
+            'Instagram' => 'https://instagram.com/'.fake()->userName(),
+            'Facebook' => 'https://facebook.com/'.fake()->userName(),
+            'Twitter' => 'https://twitter.com/'.fake()->userName(),
+            'Bandcamp' => 'https://'.fake()->userName().'.bandcamp.com',
+            'Spotify' => 'https://open.spotify.com/artist/'.fake()->bothify('?##?##?##?##?##'),
+            'SoundCloud' => 'https://soundcloud.com/'.fake()->userName(),
+            'YouTube' => 'https://youtube.com/@'.fake()->userName(),
+            'TikTok' => 'https://tiktok.com/@'.fake()->userName(),
+            'LinkedIn' => 'https://linkedin.com/in/'.fake()->userName(),
+            'Website' => 'https://'.fake()->domainName(),
         ];
 
         // Generate 0-4 random links
         $numLinks = fake()->numberBetween(0, 4);
         $selectedPlatforms = fake()->randomElements(array_keys($platforms), $numLinks);
         $links = [];
-        
+
         foreach ($selectedPlatforms as $platform) {
             $links[] = [
                 'name' => $platform,
@@ -44,7 +44,7 @@ class MemberProfileFactory extends Factory
         return [
             'user_id' => User::factory(),
             'bio' => fake()->boolean(80) ? $this->generateBio() : null,
-            'hometown' => fake()->boolean(60) ? fake()->city() . ', ' . fake()->stateAbbr() : null,
+            'hometown' => fake()->boolean(60) ? fake()->city().', '.fake()->stateAbbr() : null,
             'links' => $links,
             'contact' => new ContactData(
                 visibility: fake()->randomElement(['private', 'members', 'public']),
@@ -69,7 +69,7 @@ class MemberProfileFactory extends Factory
                 'Session Musician', 'Live Performance', 'Studio Recording',
                 'Music Theory', 'Improvisation', 'Backup Vocals', 'Lead Vocals',
             ];
-            
+
             $numSkills = fake()->numberBetween(1, 6);
             $selectedSkills = fake()->randomElements($skills, $numSkills);
             foreach ($selectedSkills as $skill) {
@@ -85,7 +85,7 @@ class MemberProfileFactory extends Factory
                 'Latin', 'Acoustic', 'Singer-Songwriter', 'Progressive',
                 'Psychedelic', 'Garage', 'Grunge', 'Ska', 'Bluegrass',
             ];
-            
+
             $numGenres = fake()->numberBetween(1, 5);
             $selectedGenres = fake()->randomElements($genres, $numGenres);
             foreach ($selectedGenres as $genre) {
@@ -103,7 +103,7 @@ class MemberProfileFactory extends Factory
                 'Tom Waits', 'Frank Zappa', 'Captain Beefheart', 'Velvet Underground',
                 'Patti Smith', 'Television', 'Wire', 'Can', 'Brian Eno',
             ];
-            
+
             $numInfluences = fake()->numberBetween(0, 4);
             if ($numInfluences > 0) {
                 $selectedInfluences = fake()->randomElements($influences, $numInfluences);
@@ -118,13 +118,13 @@ class MemberProfileFactory extends Factory
     {
         $templates = [
             "I'm a {adjective} {musician_type} from {location}. I've been making music for {years} years and love exploring {genre1} and {genre2} sounds. When I'm not creating music, you can find me {hobby}.",
-            
+
             "{musician_type} and {skill} based in {location}. My sound draws from {genre1}, {genre2}, and {genre3} influences. I'm passionate about {passion} and always looking to collaborate with like-minded artists.",
-            
+
             "Multi-instrumentalist with a focus on {skill1} and {skill2}. I've been part of the {location} music scene for {years} years. My work spans {genre1} to {genre2}, always with an emphasis on {value}.",
-            
-            "Independent {musician_type} creating {adjective} {genre1} music. I believe in {philosophy} and love working with other artists to bring unique sounds to life. Based in {location} but always ready to travel for the right project.",
-            
+
+            'Independent {musician_type} creating {adjective} {genre1} music. I believe in {philosophy} and love working with other artists to bring unique sounds to life. Based in {location} but always ready to travel for the right project.',
+
             "{adjective} songwriter and {skill} from {location}. My influences range from {influence1} to {influence2}, and I'm always experimenting with new sounds. Currently working on {project} and open to collaboration.",
         ];
 
@@ -149,7 +149,7 @@ class MemberProfileFactory extends Factory
         ];
 
         $template = fake()->randomElement($templates);
-        
+
         return str_replace(array_keys($replacements), array_values($replacements), $template);
     }
 

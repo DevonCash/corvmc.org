@@ -24,13 +24,14 @@ class ViewBandProfile extends Page
     {
         $genres = $this->record->tagsWithType('genre')->pluck('name');
         $location = $this->record->hometown ? " • {$this->record->hometown}" : '';
-        
+
         if ($genres->count() > 0) {
             $genreText = $genres->take(3)->join(', ');
-            return $genreText . $location;
+
+            return $genreText.$location;
         }
-        
-        return 'Band' . $location;
+
+        return 'Band'.$location;
     }
 
     public function getBreadCrumbs(): array
@@ -45,8 +46,7 @@ class ViewBandProfile extends Page
     {
         return [
             EditAction::make()
-                ->visible(fn () => 
-                    auth()->user()->can('update', $this->record)
+                ->visible(fn () => auth()->user()->can('update', $this->record)
                 ),
         ];
     }
@@ -54,9 +54,9 @@ class ViewBandProfile extends Page
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
-        
+
         // Check if user can view this profile
-        if (!auth()->user()->can('view', $this->record)) {
+        if (! auth()->user()->can('view', $this->record)) {
             abort(403, 'You do not have permission to view this band profile.');
         }
     }

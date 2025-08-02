@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('band_profiles', function (Blueprint $table) {
             // Drop the existing foreign key constraint
             $table->dropForeign(['owner_id']);
-            
+
             // Make owner_id nullable and add foreign key back
             $table->unsignedBigInteger('owner_id')->nullable()->change();
             $table->foreign('owner_id')->references('id')->on('users')->onDelete('set null');
@@ -29,7 +29,7 @@ return new class extends Migration
         Schema::table('band_profiles', function (Blueprint $table) {
             // Drop the nullable foreign key
             $table->dropForeign(['owner_id']);
-            
+
             // Make owner_id required again and add constraint
             $table->unsignedBigInteger('owner_id')->nullable(false)->change();
             $table->foreign('owner_id')->references('id')->on('users')->onDelete('cascade');

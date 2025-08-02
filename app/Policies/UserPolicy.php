@@ -14,6 +14,7 @@ class UserPolicy
         if ($user->can('view users')) {
             return true;
         }
+
         return null;
     }
 
@@ -25,6 +26,7 @@ class UserPolicy
         if ($user->is($model) || $user->can('view users')) {
             return true;
         }
+
         return null;
     }
 
@@ -44,6 +46,7 @@ class UserPolicy
         if ($user->is($model) || $user->can('update users')) {
             return true;
         }
+
         return null;
     }
 
@@ -55,6 +58,7 @@ class UserPolicy
         if ($user->is($model) || $user->can('delete users')) {
             return true;
         }
+
         return null;
     }
 
@@ -66,6 +70,7 @@ class UserPolicy
         if ($user->is($model) || $user->can('restore users')) {
             return true;
         }
+
         return null;
     }
 

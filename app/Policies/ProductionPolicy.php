@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Production;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ProductionPolicy
 {
@@ -16,6 +15,7 @@ class ProductionPolicy
         if ($user->can('view productions')) {
             return true;
         }
+
         return null;
     }
 
@@ -27,6 +27,7 @@ class ProductionPolicy
         if ($user->can('manage productions')) {
             return true;
         }
+
         return null;
     }
 
@@ -38,6 +39,7 @@ class ProductionPolicy
         if ($user->can('manage productions')) {
             return true;
         }
+
         return null;
     }
 
@@ -49,6 +51,7 @@ class ProductionPolicy
         if ($user->can('manage productions') && $user->id === $production->manager_id) {
             return true;
         }
+
         return null;
     }
 

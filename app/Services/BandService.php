@@ -15,9 +15,9 @@ class BandService
      * Invite a user to join a band.
      */
     public function inviteMember(
-        BandProfile $band, 
-        User $user, 
-        string $role = 'member', 
+        BandProfile $band,
+        User $user,
+        string $role = 'member',
         ?string $position = null,
         ?string $displayName = null
     ): bool {
@@ -34,7 +34,7 @@ class BandService
                 'status' => 'invited',
                 'invited_at' => now(),
             ]);
-            
+
             // Send notification
             $user->notify(new BandInvitationNotification($band, $role, $position));
         });
@@ -47,7 +47,7 @@ class BandService
      */
     public function acceptInvitation(BandProfile $band, User $user): bool
     {
-        if (!$this->hasInvitedUser($band, $user)) {
+        if (! $this->hasInvitedUser($band, $user)) {
             return false;
         }
 
@@ -56,7 +56,7 @@ class BandService
             $band->members()->updateExistingPivot($user->id, [
                 'status' => 'active',
             ]);
-            
+
             // Notify band owner and admins about the new member
             $this->notifyBandLeadership($band, $user, 'accepted');
         });
@@ -69,7 +69,7 @@ class BandService
      */
     public function declineInvitation(BandProfile $band, User $user): bool
     {
-        if (!$this->hasInvitedUser($band, $user)) {
+        if (! $this->hasInvitedUser($band, $user)) {
             return false;
         }
 
@@ -84,9 +84,9 @@ class BandService
      * Add a member directly to a band (without invitation).
      */
     public function addMember(
-        BandProfile $band, 
-        User $user, 
-        string $role = 'member', 
+        BandProfile $band,
+        User $user,
+        string $role = 'member',
         ?string $position = null,
         ?string $displayName = null
     ): bool {
@@ -127,11 +127,12 @@ class BandService
             return false;
         }
 
-        if (!$this->hasMember($band, $user)) {
+        if (! $this->hasMember($band, $user)) {
             return false;
         }
 
         $band->members()->updateExistingPivot($user->id, ['role' => $role]);
+
         return true;
     }
 
@@ -140,11 +141,12 @@ class BandService
      */
     public function updateMemberPosition(BandProfile $band, User $user, ?string $position): bool
     {
-        if (!$this->hasMember($band, $user)) {
+        if (! $this->hasMember($band, $user)) {
             return false;
         }
 
         $band->members()->updateExistingPivot($user->id, ['position' => $position]);
+
         return true;
     }
 
@@ -153,11 +155,12 @@ class BandService
      */
     public function updateMemberDisplayName(BandProfile $band, User $user, ?string $displayName): bool
     {
-        if (!$this->hasMember($band, $user)) {
+        if (! $this->hasMember($band, $user)) {
             return false;
         }
 
         $band->members()->updateExistingPivot($user->id, ['name' => $displayName]);
+
         return true;
     }
 
@@ -166,7 +169,7 @@ class BandService
      */
     public function resendInvitation(BandProfile $band, User $user): bool
     {
-        if (!$this->hasInvitedUser($band, $user)) {
+        if (! $this->hasInvitedUser($band, $user)) {
             return false;
         }
 
@@ -177,11 +180,11 @@ class BandService
 
         // Get the current invitation details
         $member = $band->members()->wherePivot('user_id', $user->id)->first();
-        
+
         // Resend notification
         $user->notify(new BandInvitationNotification(
-            $band, 
-            $member->pivot->role, 
+            $band,
+            $member->pivot->role,
             $member->pivot->position
         ));
 
@@ -193,18 +196,18 @@ class BandService
      */
     public function transferOwnership(BandProfile $band, User $newOwner): bool
     {
-        if (!$this->hasMember($band, $newOwner)) {
+        if (! $this->hasMember($band, $newOwner)) {
             return false;
         }
 
         DB::transaction(function () use ($band, $newOwner) {
             $oldOwner = $band->owner;
-            
+
             // Update band ownership
             $band->update(['owner_id' => $newOwner->id]);
-            
+
             // Add old owner as admin if they weren't already a member
-            if (!$this->hasMember($band, $oldOwner)) {
+            if (! $this->hasMember($band, $oldOwner)) {
                 $this->addMember($band, $oldOwner, 'admin');
             } else {
                 // Update their role to admin
@@ -222,11 +225,11 @@ class BandService
     {
         return BandProfile::whereHas('members', function ($query) use ($user) {
             $query->where('user_id', $user->id)
-                  ->where('status', 'invited');
+                ->where('status', 'invited');
         })->with(['members' => function ($query) use ($user) {
             $query->where('user_id', $user->id)
-                  ->where('status', 'invited')
-                  ->withPivot('role', 'position', 'invited_at');
+                ->where('status', 'invited')
+                ->withPivot('role', 'position', 'invited_at');
         }])->get();
     }
 
@@ -236,8 +239,7 @@ class BandService
     public function getAvailableUsersForInvitation(BandProfile $band, string $search = ''): Collection
     {
         return User::where('name', 'like', "%{$search}%")
-            ->whereDoesntHave('bandProfiles', fn ($query) => 
-                $query->where('band_profile_id', $band->id)
+            ->whereDoesntHave('bandProfiles', fn ($query) => $query->where('band_profile_id', $band->id)
             )
             ->limit(50)
             ->get();
@@ -312,7 +314,7 @@ class BandService
             ->get()
             ->push($band->owner)
             ->unique('id')
-            ->filter(fn($u) => $u->id !== $user->id); // Don't notify the person who just joined
+            ->filter(fn ($u) => $u->id !== $user->id); // Don't notify the person who just joined
 
         foreach ($adminsAndOwner as $admin) {
             $admin->notify(new BandInvitationAcceptedNotification($band, $user));

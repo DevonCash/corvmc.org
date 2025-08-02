@@ -18,7 +18,7 @@ class ProductionFactory extends Factory
     public function definition(): array
     {
         $startTime = $this->faker->dateTimeBetween('now', '+6 months');
-        $endTime = (clone $startTime)->modify('+' . $this->faker->numberBetween(90, 240) . ' minutes');
+        $endTime = (clone $startTime)->modify('+'.$this->faker->numberBetween(90, 240).' minutes');
         $doorsTime = (clone $startTime)->modify('-30 minutes');
 
         return [
@@ -43,7 +43,7 @@ class ProductionFactory extends Factory
             'start_time' => $startTime,
             'end_time' => $endTime,
             'doors_time' => $doorsTime,
-            'location' => $this->faker->boolean(30) 
+            'location' => $this->faker->boolean(30)
                 ? LocationData::external($this->faker->randomElement([
                     'The Underground - 123 Main St, Corvallis, OR 97330',
                     'City Music Hall - 456 Oak Ave, Corvallis, OR 97330',
@@ -56,34 +56,34 @@ class ProductionFactory extends Factory
                 ]))
                 : LocationData::cmc(),
             'ticket_url' => $this->faker->boolean(60) ? $this->faker->randomElement([
-                'https://eventbrite.com/event/' . $this->faker->numerify('############'),
-                'https://ticketmaster.com/event/' . $this->faker->numerify('##########'),
-                'https://brownpapertickets.com/event/' . $this->faker->numerify('#######'),
-                'https://corvallismusiccollective.org/tickets/' . $this->faker->slug,
-                'https://facebook.com/events/' . $this->faker->numerify('###############'),
-                'https://tixr.com/groups/' . $this->faker->numerify('######') . '/' . $this->faker->numerify('########'),
+                'https://eventbrite.com/event/'.$this->faker->numerify('############'),
+                'https://ticketmaster.com/event/'.$this->faker->numerify('##########'),
+                'https://brownpapertickets.com/event/'.$this->faker->numerify('#######'),
+                'https://corvallismusiccollective.org/tickets/'.$this->faker->slug,
+                'https://facebook.com/events/'.$this->faker->numerify('###############'),
+                'https://tixr.com/groups/'.$this->faker->numerify('######').'/'.$this->faker->numerify('########'),
             ]) : null,
             'ticket_price' => function (array $attributes) {
                 // Only set price if there's a ticket URL
-                if (!$attributes['ticket_url']) {
+                if (! $attributes['ticket_url']) {
                     return null;
                 }
-                
+
                 // 20% have no price specified (donation-based, varies, etc.)
                 if ($this->faker->boolean(20)) {
                     return null;
                 }
-                
+
                 // Realistic pricing for music collective shows
                 return $this->faker->randomElement([
-                    5.00, 8.00, 10.00, 12.00, 15.00, 18.00, 20.00, 25.00, 30.00
+                    5.00, 8.00, 10.00, 12.00, 15.00, 18.00, 20.00, 25.00, 30.00,
                 ]);
             },
             'status' => $this->faker->randomElement([
                 'pre-production',
                 'production',
                 'completed',
-                'cancelled'
+                'cancelled',
             ]),
             'published_at' => $this->faker->boolean(70) ? $this->faker->dateTimeBetween('-1 month', 'now') : null,
             'manager_id' => \App\Models\User::factory(),
@@ -95,7 +95,7 @@ class ProductionFactory extends Factory
      */
     public function published(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'published',
             'published_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
         ]);
@@ -107,10 +107,10 @@ class ProductionFactory extends Factory
     public function upcoming(): static
     {
         $startTime = $this->faker->dateTimeBetween('+1 week', '+3 months');
-        $endTime = (clone $startTime)->modify('+' . $this->faker->numberBetween(90, 240) . ' minutes');
+        $endTime = (clone $startTime)->modify('+'.$this->faker->numberBetween(90, 240).' minutes');
         $doorsTime = (clone $startTime)->modify('-30 minutes');
 
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'start_time' => $startTime,
             'end_time' => $endTime,
             'doors_time' => $doorsTime,
@@ -125,10 +125,10 @@ class ProductionFactory extends Factory
     public function completed(): static
     {
         $startTime = $this->faker->dateTimeBetween('-6 months', '-1 week');
-        $endTime = (clone $startTime)->modify('+' . $this->faker->numberBetween(90, 240) . ' minutes');
+        $endTime = (clone $startTime)->modify('+'.$this->faker->numberBetween(90, 240).' minutes');
         $doorsTime = (clone $startTime)->modify('-30 minutes');
 
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'start_time' => $startTime,
             'end_time' => $endTime,
             'doors_time' => $doorsTime,

@@ -28,10 +28,10 @@ return new class extends Migration
         Schema::table('reservations', function (Blueprint $table) {
             $table->dropColumn([
                 'cost',
-                'hours_used', 
+                'hours_used',
                 'is_recurring',
                 'recurrence_pattern',
-                'notes'
+                'notes',
             ]);
         });
     }

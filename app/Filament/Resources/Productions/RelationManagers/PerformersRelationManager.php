@@ -3,11 +3,10 @@
 namespace App\Filament\Resources\Productions\RelationManagers;
 
 use App\Filament\Resources\BandProfiles\BandProfileResource;
-use App\Models\BandProfile;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\SpatieTagsInput;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\ImageColumn;
@@ -28,7 +27,7 @@ class PerformersRelationManager extends RelationManager
     protected function getTableQuery(): ?\Illuminate\Database\Eloquent\Builder
     {
         $query = parent::getTableQuery();
-        
+
         return $query?->withoutGlobalScopes([
             \App\Models\Scopes\OwnedBandsScope::class,
         ]);
@@ -45,7 +44,7 @@ class PerformersRelationManager extends RelationManager
                     ->imageSize(60)
                     ->grow(false)
                     ->defaultImageUrl(function ($record) {
-                        return 'https://ui-avatars.com/api/?name=' . urlencode($record->name) . '&color=7C3AED&background=F3E8FF&size=120';
+                        return 'https://ui-avatars.com/api/?name='.urlencode($record->name).'&color=7C3AED&background=F3E8FF&size=120';
                     }),
 
                 TextColumn::make('name')
@@ -84,27 +83,27 @@ class PerformersRelationManager extends RelationManager
                             ->required()
                             ->maxLength(255)
                             ->placeholder('Enter band name'),
-                        
+
                         TextInput::make('hometown')
                             ->label('Location')
                             ->placeholder('City, State/Country')
                             ->maxLength(255),
-                        
+
                         Textarea::make('bio')
                             ->label('Biography')
                             ->placeholder('Brief description of the band...')
                             ->rows(3),
-                        
+
                         SpatieTagsInput::make('genres')
                             ->type('genre')
                             ->label('Musical Genres')
                             ->placeholder('Rock, Pop, Jazz, etc.'),
-                        
+
                         TextInput::make('contact.email')
                             ->label('Contact Email')
                             ->email()
                             ->placeholder('band@example.com'),
-                        
+
                         TextInput::make('contact.phone')
                             ->label('Contact Phone')
                             ->tel()
@@ -114,6 +113,7 @@ class PerformersRelationManager extends RelationManager
                         // Ensure touring bands have no owner
                         $data['owner_id'] = null;
                         $data['visibility'] = 'private';
+
                         return $data;
                     })
                     ->modalHeading('Add Touring Band')
