@@ -32,6 +32,15 @@
     --color-success: oklch(70% 0.14 160); /* #36d399 */
     --color-warning: oklch(90% 0.08 85); /* #ffe28a - CMC Yellow */
     --color-error: oklch(70% 0.18 15); /* #f87272 */
+
+    --cmc-orange: #e5771e;
+    --cmc-yellow: #ffe28a;
+    --cmc-blue: #003b5c;
+    --cmc-light-blue: #b8dde1;
+    --speaker-case: oklch(var(--p, 0.66 0.15 40));
+    --speaker-fill: oklch(var(--a, 0.92 0.09 85));
+    --sound-lines: oklch(var(--s, 0.53 0.13 210));
+    --speaker-front: oklch(var(--b3, 87.22% 0.0392 204.51));
 }
 
 /* CMC Brand Styles */

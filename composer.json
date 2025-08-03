@@ -20,7 +20,8 @@
         "spatie/laravel-permission": "^6.21",
         "spatie/laravel-settings": "^3.4",
         "spatie/laravel-tags": "^4.10",
-        "spatie/period": "^2.4"
+        "spatie/period": "^2.4",
+        "unicon-rocks/unicon-laravel": "^0.4.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
