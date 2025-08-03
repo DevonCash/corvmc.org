@@ -60,6 +60,15 @@ class ProductionPolicy
      */
     public function delete(User $user, Production $production): ?bool
     {
+        if ($user->can('manage productions') && $user->id === $production->manager_id) {
+            return true;
+        }
+
+        // Admins can delete any production
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
         return null;
     }
 
@@ -68,6 +77,15 @@ class ProductionPolicy
      */
     public function restore(User $user, Production $production): ?bool
     {
+        if ($user->can('manage productions') && $user->id === $production->manager_id) {
+            return true;
+        }
+
+        // Admins can restore any production
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
         return null;
     }
 

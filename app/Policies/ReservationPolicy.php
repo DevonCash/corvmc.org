@@ -12,7 +12,12 @@ class ReservationPolicy
      */
     public function viewAny(User $user): ?bool
     {
-        return true;
+        // Users can view their own reservations, admins can view all
+        if ($user->can('view reservations')) {
+            return true;
+        }
+
+        return true; // Users can see their own reservations via view method
     }
 
     /**
@@ -40,7 +45,13 @@ class ReservationPolicy
      */
     public function update(User $user, Reservation $reservation): bool
     {
-        return false;
+        // Practice space managers can update reservations
+        if ($user->can('manage practice space')) {
+            return true;
+        }
+
+        // Users can update their own reservations (within time limits)
+        return $user->id === $reservation->user_id;
     }
 
     /**

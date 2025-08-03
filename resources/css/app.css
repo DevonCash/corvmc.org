@@ -1,5 +1,7 @@
-@import 'tailwindcss';
-@import '../../vendor/filament/filament/resources/css/index.css';
+@import "tailwindcss";
+@plugin "daisyui";
+
+@import "../../vendor/filament/filament/resources/css/index.css";
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../vendor/filament/filament/resources/views/**/*.blade.php';
@@ -10,6 +12,50 @@
 @source '../views/filament/**/*.blade.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: "Lexend", ui-sans-serif, system-ui, sans-serif,
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+        "Noto Color Emoji";
+}
+
+@plugin "daisyui/theme" {
+    name: "corvmc";
+    default: true;
+
+    /* CMC Brand Colors */
+    --color-primary: oklch(67% 0.18 43); /* #e5771e - CMC Orange */
+    --color-secondary: oklch(25% 0.09 250); /* #003b5c - CMC Blue */
+    --color-accent: oklch(85% 0.05 200); /* #B8DDE1 - CMC Light Blue */
+    --color-neutral: oklch(24% 0.03 270); /* #1f2937 */
+    --color-base-100: oklch(100% 0 0); /* #ffffff */
+    --color-base-200: oklch(97% 0.01 270); /* #f8f9fa */
+    --color-info: oklch(85% 0.05 200); /* #B8DDE1 */
+    --color-success: oklch(70% 0.14 160); /* #36d399 */
+    --color-warning: oklch(90% 0.08 85); /* #ffe28a - CMC Yellow */
+    --color-error: oklch(70% 0.18 15); /* #f87272 */
+}
+
+/* CMC Brand Styles */
+.corvmc-header-stripes {
+    background: linear-gradient(
+        45deg,
+        #e5771e 0%,
+        #ffe28a 25%,
+        #003b5c 50%,
+        #b8dde1 75%,
+        #e5771e 100%
+    );
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+}
+
+@keyframes gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }

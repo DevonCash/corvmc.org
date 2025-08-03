@@ -34,7 +34,17 @@ class BandProfilePolicy
 
     public function create(User $user): bool
     {
-        return true;
+        // Check if user has permission to create bands
+        if ($user->can('create bands')) {
+            return true;
+        }
+
+        // Check if band creation requires approval
+        if ($user->can('approve band creation')) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -47,7 +57,12 @@ class BandProfilePolicy
             return true;
         }
 
-        // System admins can update
+        // Check if user has permission to update bands
+        if ($user->can('update bands')) {
+            return true;
+        }
+
+        // System admins and moderators can update
         if ($user->hasRole(['admin', 'moderator'])) {
             return true;
         }
@@ -61,7 +76,7 @@ class BandProfilePolicy
      */
     public function delete(User $user, BandProfile $bandProfile): ?bool
     {
-        if ($user->id === $bandProfile->owner->id || $user->can('delete profiles')) {
+        if ($user->id === $bandProfile->owner->id || $user->can('delete bands')) {
             return true;
         }
 
@@ -73,7 +88,7 @@ class BandProfilePolicy
      */
     public function restore(User $user, BandProfile $bandProfile): ?bool
     {
-        if ($user->id === $bandProfile->owner->id || $user->can('restore profiles')) {
+        if ($user->id === $bandProfile->owner->id || $user->can('restore bands')) {
             return true;
         }
 
@@ -85,7 +100,7 @@ class BandProfilePolicy
      */
     public function forceDelete(User $user, BandProfile $bandProfile): bool
     {
-        return $user->hasRole(['admin']);
+        return $user->hasRole(['admin']) || $user->can('force delete bands');
     }
 
     /**
@@ -98,6 +113,11 @@ class BandProfilePolicy
             return true;
         }
 
+        // Check if user has permission to manage band members
+        if ($user->can('manage band members')) {
+            return true;
+        }
+
         // Band admins can manage members
         return $this->isBandAdmin($user, $band);
     }
@@ -107,6 +127,11 @@ class BandProfilePolicy
      */
     public function inviteMembers(User $user, BandProfile $band): bool
     {
+        // Check specific invite permission
+        if ($user->can('invite band members')) {
+            return true;
+        }
+
         return $this->manageMembers($user, $band);
     }
 
@@ -115,6 +140,11 @@ class BandProfilePolicy
      */
     public function removeMembers(User $user, BandProfile $band): bool
     {
+        // Check specific remove permission
+        if ($user->can('remove band members')) {
+            return true;
+        }
+
         return $this->manageMembers($user, $band);
     }
 
@@ -123,6 +153,11 @@ class BandProfilePolicy
      */
     public function changeMemberRoles(User $user, BandProfile $band): bool
     {
+        // Check specific permission
+        if ($user->can('change member roles')) {
+            return true;
+        }
+
         // Only owner can change roles
         return $band->owner_id === $user->id;
     }
@@ -146,6 +181,11 @@ class BandProfilePolicy
      */
     public function transferOwnership(User $user, BandProfile $band): bool
     {
+        // Check specific permission
+        if ($user->can('transfer band ownership')) {
+            return true;
+        }
+
         return $band->owner_id === $user->id;
     }
 

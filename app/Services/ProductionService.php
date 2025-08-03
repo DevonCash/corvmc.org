@@ -239,7 +239,7 @@ class ProductionService
      */
     public function canManage(Production $production, User $user): bool
     {
-        return $this->isManager($production, $user) || $user->hasRole('admin');
+        return $this->isManager($production, $user) || $user->can('manage productions');
     }
 
     /**

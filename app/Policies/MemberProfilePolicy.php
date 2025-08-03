@@ -32,7 +32,8 @@ class MemberProfilePolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        // Members can create their own profile (handled in registration)
+        return true;
     }
 
     /**
@@ -52,7 +53,12 @@ class MemberProfilePolicy
      */
     public function delete(User $user, MemberProfile $memberProfile): ?bool
     {
-        return false;
+        // Users can delete their own profile or admins can delete
+        if ($user->id === $memberProfile->user->id || $user->can('delete member profiles')) {
+            return true;
+        }
+
+        return null;
     }
 
     /**
@@ -60,7 +66,12 @@ class MemberProfilePolicy
      */
     public function restore(User $user, MemberProfile $memberProfile): ?bool
     {
-        return false;
+        // Users can restore their own profile or admins can restore
+        if ($user->id === $memberProfile->user->id || $user->can('restore member profiles')) {
+            return true;
+        }
+
+        return null;
     }
 
     /**
