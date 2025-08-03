@@ -1,4 +1,4 @@
-<x-public.layout title="About - Corvallis Music Collective">
+<x-public.layout title="About CMC - Supporting Corvallis Musicians | Corvallis Music Collective">
     <!-- Hero Section -->
     <div class="hero min-h-96 bg-gradient-to-r from-secondary/10 to-accent/10">
         <div class="hero-content text-center">
@@ -189,8 +189,7 @@
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="/member/register" class="btn btn-primary">Become a Member</a>
-                <a href="{{ route('volunteer') }}" class="btn btn-outline btn-secondary">Volunteer</a>
-                <a href="{{ route('support') }}" class="btn btn-outline btn-accent">Support Us</a>
+                <a href="{{ route('contribute') }}" class="btn btn-outline btn-secondary">Contribute</a>
             </div>
         </div>
     </div>

@@ -1,4 +1,4 @@
-<x-public.layout title="{{ $bandProfile->name }} - Band Profile">
+<x-public.layout title="{{ $bandProfile->name }} - Local Band | Corvallis Music Collective">
     <div class="container mx-auto px-4 py-16">
         <!-- Band Header -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-16">
@@ -11,7 +11,7 @@
                     </figure>
                     @else
                     <figure class="px-6 pt-6 bg-gradient-to-r from-primary/20 to-secondary/20 aspect-square flex items-center justify-center rounded-lg">
-                        <div class="text-6xl opacity-50">🎸</div>
+                        <div class="text-6xl opacity-50"><x-unicon name="tabler:guitar-pick" class="size-16" /></div>
                     </figure>
                     @endif
                     

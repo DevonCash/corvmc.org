@@ -1,4 +1,4 @@
-<x-public.layout title="Events - Corvallis Music Collective">
+<x-public.layout title="Upcoming Music Events & Shows | Corvallis Music Collective">
     <!-- Hero Section -->
     <div class="hero min-h-96 bg-gradient-to-r from-secondary/10 to-accent/10">
         <div class="hero-content text-center">
@@ -79,7 +79,7 @@
                 </figure>
                 @else
                 <figure class="bg-gradient-to-r from-primary/20 to-secondary/20 h-48 flex items-center justify-center">
-                    <div class="text-6xl opacity-50">🎵</div>
+                    <div class="text-6xl opacity-50"><x-unicon name="tabler:music" class="size-16" /></div>
                 </figure>
                 @endif
                 
@@ -161,7 +161,7 @@
             </div>
             @empty
             <div class="col-span-full text-center py-16">
-                <div class="text-6xl mb-4">🎭</div>
+                <div class="text-6xl mb-4"><x-unicon name="tabler:masks-theater" class="size-16" /></div>
                 <h3 class="text-2xl font-bold mb-4">No events found</h3>
                 <p class="text-lg opacity-70">Check back soon for upcoming shows and community events!</p>
                 <a href="{{ route('contact') }}" class="btn btn-primary mt-4">Contact Us About Performing</a>

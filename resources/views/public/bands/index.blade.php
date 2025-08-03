@@ -1,4 +1,4 @@
-<x-public.layout title="Bands - Corvallis Music Collective">
+<x-public.layout title="Local Bands Directory | Corvallis Music Collective">
     <!-- Hero Section -->
     <div class="hero min-h-96 bg-gradient-to-r from-accent/10 to-primary/10">
         <div class="hero-content text-center">
@@ -72,7 +72,7 @@
                 </figure>
                 @else
                 <figure class="bg-gradient-to-r from-primary/20 to-secondary/20 h-48 flex items-center justify-center">
-                    <div class="text-6xl opacity-50">🎸</div>
+                    <div class="text-6xl opacity-50"><x-unicon name="tabler:guitar-pick" class="size-16" /></div>
                 </figure>
                 @endif
                 
@@ -169,7 +169,7 @@
             </div>
             @empty
             <div class="col-span-full text-center py-16">
-                <div class="text-6xl mb-4">🎸</div>
+                <div class="text-6xl mb-4"><x-unicon name="tabler:guitar-pick" class="size-16" /></div>
                 <h3 class="text-2xl font-bold mb-4">No bands found</h3>
                 <p class="text-lg opacity-70">Try adjusting your search criteria or check back later as more bands join our community.</p>
             </div>

@@ -66,6 +66,10 @@ Route::get('/practice-space', function () {
     return view('public.practice-space');
 })->name('practice-space');
 
+Route::get('/contribute', function () {
+    return view('public.contribute');
+})->name('contribute');
+
 Route::get('/support', function () {
     return view('public.support');
 })->name('support');

@@ -8,6 +8,15 @@
 
     <title>{{ $title ?? 'Corvallis Music Collective' }}</title>
 
+    <!-- Meta Tags -->
+    <meta name="description" content="Corvallis Music Collective (CMC) supports local musicians with affordable practice space, events, and community connections. Join Oregon's premier music collective.">
+    <meta name="keywords" content="Corvallis music, Oregon musicians, practice space, live music, music community, band rehearsal, music events">
+    <meta name="author" content="Corvallis Music Collective">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/x-unicon" href="/favicon.ico">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,11 +35,11 @@
 
             <!-- Mobile Header (single line) -->
             <div class="bg-base-100 border-b border-base-200">
-                <div class="container mx-auto px-4 py-3">
+                <div class=" px-4 py-3">
                     <div class="flex items-center justify-between">
                         <!-- Mobile menu button -->
-                        <label for="mobile-drawer" class="btn btn-ghost btn-sm btn-square drawer-button">
-                            <x-icon name="tabler:menu" class="w-5 h-5" />
+                        <label for="mobile-drawer" class="btn btn-ghost btn-square drawer-button">
+                            <x-unicon name="tabler:menu-2" class="size-6" />
                         </label>
 
                         <!-- Center: Small Logo + Title -->
@@ -44,8 +53,8 @@
 
                         <!-- Right: Dashboard -->
                         @auth
-                            <a href="/member" class="btn btn-ghost btn-sm btn-square" title="Dashboard">
-                                <x-icon name="tabler:dashboard" class="w-4 h-4" />
+                            <a href="/member" class="btn btn-ghost btn-square" title="Dashboard">
+                                <x-unicon name="tabler:layout-dashboard-filled" class="size-6" />
                             </a>
                         @else
                             <a href="/member/login" class="btn btn-ghost btn-sm btn-square text-xs">Login</a>
@@ -64,8 +73,7 @@
                 <div class="flex grid-flow-col gap-4">
                     <a href="{{ route('about') }}" class="link link-hover whitespace-nowrap">About</a>
                     <a href="{{ route('contact') }}" class="link link-hover whitespace-nowrap">Contact</a>
-                    <a href="{{ route('volunteer') }}" class="link link-hover whitespace-nowrap">Volunteer</a>
-                    <a href="{{ route('support') }}" class="link link-hover whitespace-nowrap">Support Us</a>
+                    <a href="{{ route('contribute') }}" class="link link-hover whitespace-nowrap">Contribute</a>
                 </div>
                 <div>
                     <div class="grid grid-flow-col gap-4">
@@ -114,35 +122,35 @@
                 <!-- Navigation Menu -->
                 <ul class="menu menu-lg w-full">
                     <li><a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">
-                        <x-icon name="tabler:home" class="w-5 h-5" />
+                        <x-unicon name="tabler:home" class="w-5 h-5" />
                         Home
                     </a></li>
                     <li><a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'active' : '' }}">
-                        <x-icon name="tabler:info-circle" class="w-5 h-5" />
+                        <x-unicon name="tabler:info-circle" class="w-5 h-5" />
                         About Us
                     </a></li>
                     <li><a href="{{ route('events.index') }}" class="{{ request()->routeIs('events.*') ? 'active' : '' }}">
-                        <x-icon name="tabler:calendar" class="w-5 h-5" />
+                        <x-unicon name="tabler:calendar" class="w-5 h-5" />
                         Events
                     </a></li>
                     <li><a href="{{ route('members.index') }}" class="{{ request()->routeIs('members.*') ? 'active' : '' }}">
-                        <x-icon name="tabler:users" class="w-5 h-5" />
+                        <x-unicon name="tabler:users" class="w-5 h-5" />
                         Members
                     </a></li>
                     <li><a href="{{ route('bands.index') }}" class="{{ request()->routeIs('bands.*') ? 'active' : '' }}">
-                        <x-icon name="tabler:music" class="w-5 h-5" />
+                        <x-unicon name="tabler:music" class="w-5 h-5" />
                         Bands
                     </a></li>
                     <li><a href="{{ route('practice-space') }}" class="{{ request()->routeIs('practice-space') ? 'active' : '' }}">
-                        <x-icon name="tabler:building" class="w-5 h-5" />
+                        <x-unicon name="tabler:building" class="w-5 h-5" />
                         Practice Space
                     </a></li>
-                    <li><a href="{{ route('volunteer') }}" class="{{ request()->routeIs('volunteer') ? 'active' : '' }}">
-                        <x-icon name="tabler:heart" class="w-5 h-5" />
-                        Volunteer
+                    <li><a href="{{ route('contribute') }}" class="{{ request()->routeIs(['contribute', 'volunteer', 'support']) ? 'active' : '' }}">
+                        <x-unicon name="tabler:heart-handshake" class="w-5 h-5" />
+                        Contribute
                     </a></li>
                     <li><a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'active' : '' }}">
-                        <x-icon name="tabler:mail" class="w-5 h-5" />
+                        <x-unicon name="tabler:mail" class="w-5 h-5" />
                         Contact
                     </a></li>
                 </ul>
@@ -150,9 +158,9 @@
                 <!-- Sidebar Footer -->
                 <div class="mt-auto pt-8">
                     <div class="divider"></div>
-                    <a href="{{ route('support') }}" class="btn btn-primary w-full">
-                        <x-icon name="tabler:heart" class="w-5 h-5" />
-                        Support CMC
+                    <a href="{{ route('contribute') }}" class="btn btn-primary w-full">
+                        <x-unicon name="tabler:heart-handshake" class="w-5 h-5" />
+                        Contribute
                     </a>
                 </div>
             </aside>
@@ -169,7 +177,7 @@
             <a href="{{ route('home') }}" class="flex items-center hover:opacity-80 transition-opacity" style="grid-row: 1 / 3;">
                 <x-logo class="h-24" :soundLines="true" />
             </a>
-            
+
             <!-- Title - first row, second column -->
             <div class="text-left flex items-center" style="grid-row: 1; grid-column: 2;">
                 <a href="{{ route('home') }}" class="flex flex-col items-start hover:opacity-80 transition-opacity">
@@ -181,7 +189,7 @@
             <div class="flex items-center gap-2" style="grid-row: 1; grid-column: 3;">
                 @auth
                     <a href="/member" class="btn btn-ghost btn-sm" title="Dashboard">
-                        <x-icon name="tabler:dashboard" class="w-5 h-5" />
+                        <x-unicon name="tabler:layout-dashboard-filled" class="w-5 h-5" />
                         <span class="ml-1">Dashboard</span>
                     </a>
                 @else
@@ -197,9 +205,9 @@
                     <li><a href="{{ route('members.index') }}" class="{{ request()->routeIs('members.*') ? 'active' : '' }}">Members</a></li>
                     <li><a href="{{ route('bands.index') }}" class="{{ request()->routeIs('bands.*') ? 'active' : '' }}">Bands</a></li>
                     <li><a href="{{ route('practice-space') }}" class="{{ request()->routeIs('practice-space') ? 'active' : '' }}">Practice Space</a></li>
-                    <li><a href="{{ route('volunteer') }}" class="{{ request()->routeIs('volunteer') ? 'active' : '' }}">Volunteer</a></li>
+                    <li><a href="{{ route('contribute') }}" class="{{ request()->routeIs(['contribute', 'volunteer', 'support']) ? 'active' : '' }}">Contribute</a></li>
                     <li class='ml-auto'>
-                        <a href="{{ route('support') }}" class="btn btn-primary btn-sm {{ request()->routeIs('support') ? 'active' : '' }}">Contribute</a>
+                        <a href="{{ route('contribute') }}" class="btn btn-primary btn-sm {{ request()->routeIs(['contribute', 'volunteer', 'support']) ? 'active' : '' }}">Contribute</a>
                     </li>
                 </ul>
             </div>
@@ -216,22 +224,21 @@
         <div class="grid grid-flow-col gap-4">
             <a href="{{ route('about') }}" class="link link-hover">About</a>
             <a href="{{ route('contact') }}" class="link link-hover">Contact</a>
-            <a href="{{ route('volunteer') }}" class="link link-hover">Volunteer</a>
-            <a href="{{ route('support') }}" class="link link-hover">Support Us</a>
+            <a href="{{ route('contribute') }}" class="link link-hover">Contribute</a>
         </div>
         <div>
             <div class="grid grid-flow-col gap-4">
                 <a href="#" class="text-2xl hover:text-primary">
-                    <x-icon name="tabler:brand-x" class="w-6 h-6" />
+                    <x-unicon name="tabler:brand-x" class="w-6 h-6" />
                 </a>
                 <a href="#" class="text-2xl hover:text-primary">
-                    <x-icon name="tabler:brand-facebook" class="w-6 h-6" />
+                    <x-unicon name="tabler:brand-facebook" class="w-6 h-6" />
                 </a>
                 <a href="#" class="text-2xl hover:text-primary">
-                    <x-icon name="tabler:brand-pinterest" class="w-6 h-6" />
+                    <x-unicon name="tabler:brand-pinterest" class="w-6 h-6" />
                 </a>
                 <a href="#" class="text-2xl hover:text-primary">
-                    <x-icon name="tabler:brand-instagram" class="w-6 h-6" />
+                    <x-unicon name="tabler:brand-instagram" class="w-6 h-6" />
                 </a>
             </div>
         </div>

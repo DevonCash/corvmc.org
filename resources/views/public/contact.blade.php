@@ -1,4 +1,4 @@
-<x-public.layout title="Contact Us - Corvallis Music Collective">
+<x-public.layout title="Contact CMC - Get in Touch | Corvallis Music Collective">
     <!-- Hero Section -->
     <div class="hero min-h-96 bg-gradient-to-r from-info/10 to-success/10">
         <div class="hero-content text-center">

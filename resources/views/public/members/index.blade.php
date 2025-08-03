@@ -1,4 +1,4 @@
-<x-public.layout title="Members Directory - Corvallis Music Collective">
+<x-public.layout title="Musician Members Directory | Corvallis Music Collective">
     <!-- Hero Section -->
     <div class="hero min-h-96 bg-gradient-to-r from-primary/10 to-secondary/10">
         <div class="hero-content text-center">
@@ -76,7 +76,7 @@
                     <h2 class="card-title">{{ $member->user->name }}</h2>
                     
                     @if($member->hometown)
-                    <p class="text-sm opacity-70">📍 {{ $member->hometown }}</p>
+                    <p class="text-sm opacity-70"><x-unicon name="tabler:map-pin" class="size-4 inline mr-1" /> {{ $member->hometown }}</p>
                     @endif
                     
                     @if($member->skills)
@@ -103,7 +103,7 @@
             </div>
             @empty
             <div class="col-span-full text-center py-16">
-                <div class="text-6xl mb-4">🎵</div>
+                <div class="text-6xl mb-4"><x-unicon name="tabler:music" class="size-16" /></div>
                 <h3 class="text-2xl font-bold mb-4">No musicians found</h3>
                 <p class="text-lg opacity-70">Try adjusting your search criteria or check back later.</p>
             </div>

@@ -1,4 +1,4 @@
-<x-public.layout title="Practice Space - Corvallis Music Collective">
+<x-public.layout title="Affordable Practice Space Rental | Corvallis Music Collective">
     <!-- Hero Section -->
     <div class="hero min-h-96 bg-gradient-to-r from-success/10 to-warning/10">
         <div class="hero-content text-center">
@@ -17,11 +17,11 @@
             <div>
                 <h2 class="text-4xl font-bold mb-6">Affordable Practice Space for Musicians</h2>
                 <p class="text-lg mb-4">
-                    Our practice rooms are equipped with professional gear and designed for musicians 
+                    Our practice rooms are equipped with professional gear and designed for musicians
                     who need a reliable space to rehearse, record demos, and develop their craft.
                 </p>
                 <p class="text-lg mb-4">
-                    Members can book hourly sessions in our soundproofed rooms, complete with 
+                    Members can book hourly sessions in our soundproofed rooms, complete with
                     PA systems, microphones, and all the essentials for a productive practice session.
                 </p>
                 <div class="alert alert-info">
@@ -31,7 +31,7 @@
                     <span><strong>Members Only:</strong> Practice space access requires CMC membership</span>
                 </div>
             </div>
-            
+
             <div class="card bg-base-100 shadow-xl">
                 <figure>
                     <img src="https://via.placeholder.com/400x300/f59e0b/ffffff?text=Practice+Room" alt="Practice Room" class="w-full h-64 object-cover" />
@@ -53,7 +53,7 @@
         <!-- Rooms Available -->
         <div class="mb-16">
             <h2 class="text-4xl font-bold text-center mb-12">Our Practice Rooms</h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="card bg-base-100 shadow-lg">
                     <figure>
@@ -77,7 +77,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="card bg-base-100 shadow-lg">
                     <figure>
                         <img src="https://via.placeholder.com/400x250/06b6d4/ffffff?text=Room+B" alt="Practice Room B" class="w-full h-48 object-cover" />
@@ -106,7 +106,7 @@
         <!-- Pricing -->
         <div class="mb-16">
             <h2 class="text-4xl font-bold text-center mb-12">Pricing</h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body text-center">
@@ -120,7 +120,7 @@
                         </ul>
                     </div>
                 </div>
-                
+
                 <div class="card bg-primary text-primary-content shadow-lg">
                     <div class="card-body text-center">
                         <h3 class="card-title justify-center text-2xl">Sustaining Members</h3>
@@ -133,11 +133,11 @@
                             <li>• Special events access</li>
                         </ul>
                         <div class="card-actions justify-center mt-4">
-                            <a href="{{ route('support') }}" class="btn btn-secondary">Learn More</a>
+                            <a href="{{ route('contribute') }}" class="btn btn-secondary">Learn More</a>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body text-center">
                         <h3 class="card-title justify-center text-2xl">Block Packages</h3>
@@ -183,7 +183,7 @@
                     </ul>
                 </div>
             </div>
-            
+
             <div class="card bg-base-100 shadow-lg">
                 <div class="card-body">
                     <h3 class="card-title text-2xl mb-4">Room Guidelines</h3>
@@ -216,35 +216,31 @@
         <!-- Equipment Details -->
         <div class="mb-16">
             <h2 class="text-4xl font-bold text-center mb-12">What's Included</h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="card bg-base-200">
                     <div class="card-body text-center">
-                        <div class="text-4xl mb-4">🥁</div>
                         <h3 class="font-bold">Drum Kits</h3>
                         <p class="text-sm">5-piece acoustic sets with hardware. Bring your own cymbals and sticks.</p>
                     </div>
                 </div>
-                
+
                 <div class="card bg-base-200">
                     <div class="card-body text-center">
-                        <div class="text-4xl mb-4">🎸</div>
                         <h3 class="font-bold">Amplifiers</h3>
                         <p class="text-sm">Guitar and bass amps ranging from 50W to 100W. Cables provided.</p>
                     </div>
                 </div>
-                
+
                 <div class="card bg-base-200">
                     <div class="card-body text-center">
-                        <div class="text-4xl mb-4">🎤</div>
                         <h3 class="font-bold">PA System</h3>
                         <p class="text-sm">Full sound system with monitors, mics, and mixing board.</p>
                     </div>
                 </div>
-                
+
                 <div class="card bg-base-200">
                     <div class="card-body text-center">
-                        <div class="text-4xl mb-4">🔌</div>
                         <h3 class="font-bold">Accessories</h3>
                         <p class="text-sm">Cables, stands, power strips, and basic recording interface.</p>
                     </div>
@@ -256,36 +252,36 @@
         <div class="text-center bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-12">
             <h2 class="text-4xl font-bold mb-6">Ready to Start Practicing?</h2>
             <p class="text-lg mb-8 max-w-2xl mx-auto">
-                Join the Corvallis Music Collective to gain access to our practice rooms, 
+                Join the Corvallis Music Collective to gain access to our practice rooms,
                 connect with other musicians, and be part of our vibrant community.
             </p>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="card bg-base-100">
                     <div class="card-body text-center">
-                        <div class="text-3xl mb-2">1️⃣</div>
+                        <div class="text-3xl mb-2"><x-unicon name="tabler:number-1" class="size-8" /></div>
                         <h3 class="font-bold">Join CMC</h3>
                         <p class="text-sm">Become a member to access practice spaces</p>
                     </div>
                 </div>
-                
+
                 <div class="card bg-base-100">
                     <div class="card-body text-center">
-                        <div class="text-3xl mb-2">2️⃣</div>
+                        <div class="text-3xl mb-2"><x-unicon name="tabler:number-2" class="size-8" /></div>
                         <h3 class="font-bold">Book Online</h3>
                         <p class="text-sm">Use our member portal to reserve time slots</p>
                     </div>
                 </div>
-                
+
                 <div class="card bg-base-100">
                     <div class="card-body text-center">
-                        <div class="text-3xl mb-2">3️⃣</div>
+                        <div class="text-3xl mb-2"><x-unicon name="tabler:number-3" class="size-8" /></div>
                         <h3 class="font-bold">Rock Out</h3>
                         <p class="text-sm">Show up and make some music!</p>
                     </div>
                 </div>
             </div>
-            
+
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="/member/register" class="btn btn-primary btn-lg">Become a Member</a>
                 <a href="{{ route('contact') }}" class="btn btn-outline btn-secondary btn-lg">Ask Questions</a>

@@ -1,4 +1,4 @@
-<x-public.layout title="Support Us - Corvallis Music Collective">
+<x-public.layout title="Support Local Music - Donate to CMC | Corvallis Music Collective">
     <!-- Hero Section -->
     <div class="hero min-h-96 bg-gradient-to-r from-accent/10 to-success/10">
         <div class="hero-content text-center">
@@ -190,25 +190,25 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="text-center">
-                    <div class="text-4xl mb-4">🎵</div>
+                    <div class="text-4xl mb-4"><x-unicon name="tabler:music" class="size-10" /></div>
                     <h3 class="font-bold mb-2">Attend Events</h3>
                     <p class="text-sm">Come to our shows and bring friends to support local music.</p>
                 </div>
                 
                 <div class="text-center">
-                    <div class="text-4xl mb-4">📢</div>
+                    <div class="text-4xl mb-4"><x-unicon name="tabler:speakerphone" class="size-10" /></div>
                     <h3 class="font-bold mb-2">Spread the Word</h3>
                     <p class="text-sm">Share our mission on social media and tell other musicians about us.</p>
                 </div>
                 
                 <div class="text-center">
-                    <div class="text-4xl mb-4">🛠️</div>
+                    <div class="text-4xl mb-4"><x-unicon name="tabler:tools" class="size-10" /></div>
                     <h3 class="font-bold mb-2">Volunteer</h3>
                     <p class="text-sm">Donate your time and skills to help with events and maintenance.</p>
                 </div>
                 
                 <div class="text-center">
-                    <div class="text-4xl mb-4">🎁</div>
+                    <div class="text-4xl mb-4"><x-unicon name="tabler:gift" class="size-10" /></div>
                     <h3 class="font-bold mb-2">In-Kind Donations</h3>
                     <p class="text-sm">Donate equipment, services, or supplies we need.</p>
                 </div>

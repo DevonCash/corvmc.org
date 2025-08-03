@@ -1,4 +1,4 @@
-<x-public.layout title="Volunteer - Corvallis Music Collective">
+<x-public.layout title="Volunteer with CMC - Help Local Musicians | Corvallis Music Collective">
     <!-- Hero Section -->
     <div class="hero min-h-96 bg-gradient-to-r from-warning/10 to-error/10">
         <div class="hero-content text-center">
@@ -28,19 +28,19 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="flex items-center gap-3">
-                        <div class="text-2xl">🤝</div>
+                        <div class="text-2xl"><x-unicon name="tabler:heart-handshake" class="size-6" /></div>
                         <span>Build lasting friendships</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="text-2xl">🎵</div>
+                        <div class="text-2xl"><x-unicon name="tabler:music" class="size-6" /></div>
                         <span>Support local music</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="text-2xl">📚</div>
+                        <div class="text-2xl"><x-unicon name="tabler:book" class="size-6" /></div>
                         <span>Learn new skills</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="text-2xl">⭐</div>
+                        <div class="text-2xl"><x-unicon name="tabler:star-filled" class="size-6" /></div>
                         <span>Make a real impact</span>
                     </div>
                 </div>
@@ -71,7 +71,7 @@
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="text-3xl">🎤</div>
+                            <div class="text-3xl"><x-unicon name="tabler:microphone" class="size-8" /></div>
                             <h3 class="card-title">Event Support</h3>
                         </div>
                         <p class="mb-4">Help with setup, sound, crowd management, and breakdown for our concerts and showcases.</p>
@@ -90,7 +90,7 @@
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="text-3xl">📱</div>
+                            <div class="text-3xl"><x-unicon name="tabler:device-mobile" class="size-8" /></div>
                             <h3 class="card-title">Social Media</h3>
                         </div>
                         <p class="mb-4">Create content, manage posts, and help spread the word about CMC events and programs.</p>
@@ -109,7 +109,7 @@
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="text-3xl">🔧</div>
+                            <div class="text-3xl"><x-unicon name="tabler:tool" class="size-8" /></div>
                             <h3 class="card-title">Facility Care</h3>
                         </div>
                         <p class="mb-4">Help maintain our practice rooms, equipment, and common areas to keep everything in top shape.</p>
@@ -128,7 +128,7 @@
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="text-3xl">📝</div>
+                            <div class="text-3xl"><x-unicon name="tabler:pencil" class="size-8" /></div>
                             <h3 class="card-title">Grant Writing</h3>
                         </div>
                         <p class="mb-4">Research and write grant applications to secure funding for our programs and facility improvements.</p>
@@ -147,7 +147,7 @@
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="text-3xl">📸</div>
+                            <div class="text-3xl"><x-unicon name="tabler:camera" class="size-8" /></div>
                             <h3 class="card-title">Media Creation</h3>
                         </div>
                         <p class="mb-4">Document our events, create promotional materials, and capture the energy of our community.</p>
@@ -166,7 +166,7 @@
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="text-3xl">💼</div>
+                            <div class="text-3xl"><x-unicon name="tabler:briefcase" class="size-8" /></div>
                             <h3 class="card-title">Administrative</h3>
                         </div>
                         <p class="mb-4">Support with data entry, member communications, event coordination, and general office tasks.</p>
@@ -191,7 +191,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="card bg-base-200">
                     <div class="card-body">
-                        <h3 class="card-title">🎨 Mural Project</h3>
+                        <h3 class="card-title"><x-unicon name="tabler:palette" class="size-5 mr-2" />Mural Project</h3>
                         <p>Help design and paint a mural for our main practice room. Looking for artists and painting assistants.</p>
                         <div class="text-sm mt-2 opacity-70">Status: Planning phase</div>
                     </div>
@@ -199,7 +199,7 @@
                 
                 <div class="card bg-base-200">
                     <div class="card-body">
-                        <h3 class="card-title">📚 Music Library</h3>
+                        <h3 class="card-title"><x-unicon name="tabler:library" class="size-5 mr-2" />Music Library</h3>
                         <p>Organize and digitize our collection of sheet music, method books, and educational resources.</p>
                         <div class="text-sm mt-2 opacity-70">Status: Starting soon</div>
                     </div>
@@ -207,7 +207,7 @@
                 
                 <div class="card bg-base-200">
                     <div class="card-body">
-                        <h3 class="card-title">🌐 Website Updates</h3>
+                        <h3 class="card-title"><x-unicon name="tabler:world-www" class="size-5 mr-2" />Website Updates</h3>
                         <p>Help improve our web presence with content updates, member spotlights, and SEO optimization.</p>
                         <div class="text-sm mt-2 opacity-70">Status: Ongoing</div>
                     </div>
@@ -215,7 +215,7 @@
                 
                 <div class="card bg-base-200">
                     <div class="card-body">
-                        <h3 class="card-title">🎪 Summer Festival</h3>
+                        <h3 class="card-title"><x-unicon name="tabler:confetti" class="size-5 mr-2" />Summer Festival</h3>
                         <p>Planning committee for our annual summer music festival. Help with logistics, vendor coordination, and more.</p>
                         <div class="text-sm mt-2 opacity-70">Status: Team forming</div>
                     </div>

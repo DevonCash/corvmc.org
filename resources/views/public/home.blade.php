@@ -1,11 +1,11 @@
-<x-public.layout title="Corvallis Music Collective - Supporting Local Music Community">
+<x-public.layout title="Corvallis Music Collective - Supporting Local Musicians & Community">
     <!-- Hero Section -->
     <div class="hero min-h-screen bg-gradient-to-r from-primary/10 to-secondary/10">
         <div class="hero-content text-center">
             <div class="max-w-2xl">
                 <h1 class="text-5xl font-bold">Building and Connecting Music Communities in Corvallis</h1>
                 <p class="py-6 text-lg">
-                    We provide shared music resources, affordable practice space, and a supportive 
+                    We provide shared music resources, affordable practice space, and a supportive
                     community for local musicians to grow, collaborate, and thrive together.
                 </p>
                 <div class="flex gap-4 justify-center flex-wrap">
@@ -34,7 +34,7 @@
                     <div class="stat-value text-primary">150+</div>
                     <div class="stat-desc">Musicians in our community</div>
                 </div>
-                
+
                 <div class="stat">
                     <div class="stat-figure text-secondary">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,7 +45,7 @@
                     <div class="stat-value text-secondary">12+</div>
                     <div class="stat-desc">Shows and community gatherings</div>
                 </div>
-                
+
                 <div class="stat">
                     <div class="stat-figure text-accent">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,7 +68,7 @@
                 <h2 class="text-4xl font-bold mb-4">Upcoming Events</h2>
                 <p class="text-lg opacity-70">Join us for these amazing musical experiences</p>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 @foreach($upcomingEvents as $event)
                 <div class="card bg-base-100 shadow-xl">
@@ -93,7 +93,7 @@
                 </div>
                 @endforeach
             </div>
-            
+
             <div class="text-center mt-8">
                 <a href="{{ route('events.index') }}" class="btn btn-outline btn-primary">
                     View All Events
@@ -110,35 +110,35 @@
                 <h2 class="text-4xl font-bold mb-4">What We Do</h2>
                 <p class="text-lg opacity-70">Supporting musicians and building community through various programs</p>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body text-center">
-                        <div class="text-4xl mb-4">🎵</div>
+                        <div class="text-4xl mb-4"><x-unicon name="tabler:music" class="size-10" /></div>
                         <h3 class="card-title justify-center">Practice Space</h3>
                         <p>Affordable hourly rehearsal space with professional equipment for bands and musicians.</p>
                     </div>
                 </div>
-                
+
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body text-center">
-                        <div class="text-4xl mb-4">🎤</div>
+                        <div class="text-4xl mb-4"><x-unicon name="tabler:microphone" class="size-10" /></div>
                         <h3 class="card-title justify-center">Live Events</h3>
                         <p>Regular concerts and showcases featuring local and touring musicians.</p>
                     </div>
                 </div>
-                
+
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body text-center">
-                        <div class="text-4xl mb-4">🤝</div>
+                        <div class="text-4xl mb-4"><x-unicon name="tabler:heart-handshake" class="size-10" /></div>
                         <h3 class="card-title justify-center">Community</h3>
                         <p>Connecting musicians for collaboration, education, and mutual support.</p>
                     </div>
                 </div>
-                
+
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body text-center">
-                        <div class="text-4xl mb-4">📚</div>
+                        <div class="text-4xl mb-4"><x-unicon name="tabler:book" class="size-10" /></div>
                         <h3 class="card-title justify-center">Education</h3>
                         <p>Workshops, masterclasses, and mentorship programs for musicians of all levels.</p>
                     </div>
@@ -154,7 +154,7 @@
                 <h2 class="text-4xl font-bold mb-4">Get Involved</h2>
                 <p class="text-lg opacity-70">Join our mission to support the local music community</p>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="card bg-primary text-primary-content shadow-lg">
                     <div class="card-body text-center">
@@ -165,23 +165,23 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="card bg-secondary text-secondary-content shadow-lg">
                     <div class="card-body text-center">
                         <h3 class="card-title justify-center text-2xl">Volunteer</h3>
                         <p>Help us organize events, maintain our space, and support fellow musicians in our community.</p>
                         <div class="card-actions justify-center mt-4">
-                            <a href="{{ route('volunteer') }}" class="btn btn-primary">Learn More</a>
+                            <a href="{{ route('contribute') }}" class="btn btn-primary">Learn More</a>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="card bg-accent text-accent-content shadow-lg">
                     <div class="card-body text-center">
                         <h3 class="card-title justify-center text-2xl">Support Us</h3>
                         <p>Your donation helps us provide affordable space and programs for the local music community.</p>
                         <div class="card-actions justify-center mt-4">
-                            <a href="{{ route('support') }}" class="btn btn-secondary">Donate</a>
+                            <a href="{{ route('contribute') }}" class="btn btn-secondary">Contribute</a>
                         </div>
                     </div>
                 </div>
