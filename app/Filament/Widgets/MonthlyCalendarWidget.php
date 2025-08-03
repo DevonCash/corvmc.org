@@ -14,7 +14,7 @@ class MonthlyCalendarWidget extends CalendarWidget
 {
     protected Closure|HtmlString|string|null $heading = 'Practice Space Overview';
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public function getEvents(array $fetchInfo = []): array
     {
@@ -32,24 +32,24 @@ class MonthlyCalendarWidget extends CalendarWidget
                 $currentUser = auth()->user();
                 $isOwnReservation = $currentUser && $currentUser->id === $reservation->user_id;
                 $canViewDetails = $currentUser && $currentUser->can('view reservations');
-                
+
                 // Show full details for own reservations or if user has permission
                 if ($isOwnReservation || $canViewDetails) {
                     $title = $reservation->user->name;
                     if ($reservation->notes) {
-                        $title .= ' - ' . $reservation->notes;
+                        $title .= ' - '.$reservation->notes;
                     }
                 } else {
                     $title = 'Reserved';
                 }
-                
+
                 $color = match ($reservation->status) {
                     'confirmed' => '#10b981', // green
                     'pending' => '#f59e0b',   // yellow
                     'cancelled' => '#ef4444', // red
                     default => '#6b7280',     // gray
                 };
-                
+
                 return CalendarEvent::make($reservation)
                     ->title($title)
                     ->start($reservation->reserved_at)
@@ -62,13 +62,13 @@ class MonthlyCalendarWidget extends CalendarWidget
             ->where('end_time', '>=', $start)
             ->where('start_time', '<=', $end)
             ->get()
-            ->filter(fn(Production $production) => $production->usesPracticeSpace())
+            ->filter(fn (Production $production) => $production->usesPracticeSpace())
             ->map(function (Production $production) {
                 $title = $production->title;
-                if (!$production->isPublished()) {
+                if (! $production->isPublished()) {
                     $title .= ' (Draft)';
                 }
-                
+
                 $color = match ($production->status) {
                     'pre-production' => '#8b5cf6', // purple
                     'production' => '#3b82f6',     // blue
@@ -76,7 +76,7 @@ class MonthlyCalendarWidget extends CalendarWidget
                     'cancelled' => '#ef4444',      // red
                     default => '#6b7280',          // gray
                 };
-                
+
                 return CalendarEvent::make($production)
                     ->title($title)
                     ->start($production->start_time)

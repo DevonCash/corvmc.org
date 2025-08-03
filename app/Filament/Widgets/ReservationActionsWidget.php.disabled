@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Filament\Widgets;
+
+use App\Models\Reservation;
+use App\Models\User;
+use Carbon\Carbon;
+use Filament\Actions\Action;
+use Filament\Support\Colors\Color;
+use Filament\Widgets\Widget;
+
+class ReservationActionsWidget extends Widget
+{
+    protected static ?int $sort = 4;
+
+    protected int | string | array $columnSpan = 'full';
+
+    protected static string $view = 'filament.widgets.reservation-actions';
+
+    public function getDisplayName(): string
+    {
+        return 'Quick Actions';
+    }
+
+    protected function getViewData(): array
+    {
+        $user = User::me();
+
+        // Get upcoming reservations needing attention
+        $upcomingReservations = Reservation::where('user_id', $user->id)
+            ->where('reserved_at', '>', Carbon::now())
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('reserved_at')
+            ->limit(3)
+            ->get();
+
+        // Get pending confirmations
+        $pendingConfirmations = Reservation::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->where('reserved_at', '>', Carbon::now())
+            ->orderBy('reserved_at')
+            ->limit(3)
+            ->get();
+
+        // Check if user can book right now
+        $canBookNow = !Reservation::where('reserved_at', '<=', Carbon::now())
+            ->where('reserved_until', '>', Carbon::now())
+            ->where('status', '!=', 'cancelled')
+            ->exists();
+
+        return [
+            'upcomingReservations' => $upcomingReservations,
+            'pendingConfirmations' => $pendingConfirmations,
+            'canBookNow' => $canBookNow,
+            'user' => $user,
+        ];
+    }
+}

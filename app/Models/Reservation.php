@@ -24,6 +24,10 @@ class Reservation extends Model implements Eventable
         'reserved_at',
         'reserved_until',
         'cost',
+        'payment_status',
+        'payment_method',
+        'paid_at',
+        'payment_notes',
         'hours_used',
         'free_hours_used',
         'is_recurring',
@@ -31,10 +35,15 @@ class Reservation extends Model implements Eventable
         'notes',
     ];
 
+    protected $attributes = [
+        'payment_status' => 'unpaid',
+    ];
+
     protected $casts = [
         'reserved_at' => 'datetime',
         'reserved_until' => 'datetime',
         'cost' => 'decimal:2',
+        'paid_at' => 'datetime',
         'hours_used' => 'decimal:2',
         'free_hours_used' => 'decimal:2',
         'is_recurring' => 'boolean',
@@ -169,6 +178,98 @@ class Reservation extends Model implements Eventable
         }
 
         return '$' . number_format($this->cost, 2);
+    }
+
+    /**
+     * Get formatted status display.
+     */
+    public function getStatusDisplayAttribute(): string
+    {
+        return ucfirst($this->status ?? '');
+    }
+
+    /**
+     * Check if reservation is paid.
+     */
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    /**
+     * Check if reservation is comped.
+     */
+    public function isComped(): bool
+    {
+        return $this->payment_status === 'comped';
+    }
+
+    /**
+     * Check if reservation is unpaid.
+     */
+    public function isUnpaid(): bool
+    {
+        return $this->payment_status === 'unpaid';
+    }
+
+    /**
+     * Check if reservation is refunded.
+     */
+    public function isRefunded(): bool
+    {
+        return $this->payment_status === 'refunded';
+    }
+
+    /**
+     * Mark reservation as paid.
+     */
+    public function markAsPaid(string $paymentMethod = null, string $notes = null): void
+    {
+        $this->update([
+            'payment_status' => 'paid',
+            'payment_method' => $paymentMethod,
+            'paid_at' => now(),
+            'payment_notes' => $notes,
+        ]);
+    }
+
+    /**
+     * Mark reservation as comped.
+     */
+    public function markAsComped(string $notes = null): void
+    {
+        $this->update([
+            'payment_status' => 'comped',
+            'payment_method' => 'comp',
+            'paid_at' => now(),
+            'payment_notes' => $notes,
+        ]);
+    }
+
+    /**
+     * Mark reservation as refunded.
+     */
+    public function markAsRefunded(string $notes = null): void
+    {
+        $this->update([
+            'payment_status' => 'refunded',
+            'paid_at' => now(),
+            'payment_notes' => $notes,
+        ]);
+    }
+
+    /**
+     * Get payment status display with badge styling.
+     */
+    public function getPaymentStatusBadgeAttribute(): array
+    {
+        return match ($this->payment_status) {
+            'paid' => ['label' => 'Paid', 'color' => 'success'],
+            'comped' => ['label' => 'Comped', 'color' => 'info'],
+            'refunded' => ['label' => 'Refunded', 'color' => 'danger'],
+            'unpaid' => ['label' => 'Unpaid', 'color' => 'danger'],
+            default => ['label' => 'Unknown', 'color' => 'gray'],
+        };
     }
 
     /**

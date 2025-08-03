@@ -13,6 +13,8 @@ use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use App\Filament\Widgets\MonthlyCalendarWidget;
+use App\Filament\Widgets\TodayReservationsWidget;
+use App\Filament\Widgets\WeeklyOverviewWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -44,6 +46,8 @@ class MemberPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
                 MonthlyCalendarWidget::class,
+                TodayReservationsWidget::class,
+                WeeklyOverviewWidget::class,
                 FilamentInfoWidget::class,
             ])
             ->middleware([

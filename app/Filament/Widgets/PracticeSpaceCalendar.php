@@ -5,7 +5,6 @@ namespace App\Filament\Widgets;
 use App\Models\Production;
 use App\Models\Reservation;
 use App\Models\User;
-use Carbon\Carbon;
 use Closure;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 use Guava\Calendar\Widgets\CalendarWidget;
@@ -18,7 +17,7 @@ class PracticeSpaceCalendar extends CalendarWidget
     public function getOptions(): array
     {
         return [
-            'nowIndicator' => true
+            'nowIndicator' => true,
 
         ];
     }
@@ -28,7 +27,7 @@ class PracticeSpaceCalendar extends CalendarWidget
     public function getEvents(array $fetchInfo = []): array
     {
         // Get actual reservations
-        @['start'=>$start,'end'=>$end] = $fetchInfo;
+        @['start' => $start,'end' => $end] = $fetchInfo;
 
         $reservations = Reservation::withoutGlobalScopes()
             ->with('user')
@@ -42,10 +41,10 @@ class PracticeSpaceCalendar extends CalendarWidget
                 $canViewDetails = $currentUser?->can('view reservations');
 
                 // Show full details for own reservations or if user has permission
-                if ($isOwnReservation ) {
+                if ($isOwnReservation) {
                     $title = $reservation->user->name;
                     if ($reservation->notes) {
-                        $title .= ' - ' . $reservation->notes;
+                        $title .= ' - '.$reservation->notes;
                     }
                 } else {
                     $title = 'Reserved';
@@ -71,10 +70,10 @@ class PracticeSpaceCalendar extends CalendarWidget
             ->where('start_time', '<=', $end)
             ->where('status', '!=', 'cancelled')
             ->get()
-            ->filter(fn(Production $production) => $production->usesPracticeSpace())
+            ->filter(fn (Production $production) => $production->usesPracticeSpace())
             ->map(function (Production $production) {
                 $title = $production->title;
-                if (!$production->isPublished()) {
+                if (! $production->isPublished()) {
                     $title .= ' (Draft)';
                 }
 

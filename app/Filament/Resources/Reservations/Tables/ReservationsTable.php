@@ -3,18 +3,23 @@
 namespace App\Filament\Resources\Reservations\Tables;
 
 use App\Models\Reservation;
+use App\Models\User;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Filament\Support\Enums\IconPosition;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class ReservationsTable
 {
@@ -44,16 +49,17 @@ class ReservationsTable
                     })
                     ->sortable(['reserved_at', 'reserved_until']),
 
-                TextColumn::make('status')
+                TextColumn::make('status_display')
+                    ->label('Status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn(Reservation $record): string => match ($record->status) {
                         'pending' => 'warning',
                         'confirmed' => 'success',
                         'cancelled' => 'danger',
                         default => 'gray',
                     })
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(['status'])
+                    ->sortable(['status']),
 
                 TextColumn::make('cost_display')
                     ->label('Cost')
@@ -61,6 +67,17 @@ class ReservationsTable
                         return $record->cost_display;
                     })
                     ->sortable(['cost']),
+
+                TextColumn::make('payment_status')
+                    ->label('Payment')
+                    ->badge()
+                    ->formatStateUsing(function (string $state, Reservation $record): string {
+                        return $record->payment_status_badge['label'];
+                    })
+                    ->color(function (string $state, Reservation $record): string {
+                        return $record->payment_status_badge['color'];
+                    })
+                    ->sortable(),
 
                 TextColumn::make('created_at')
                     ->label('Created')
@@ -84,7 +101,18 @@ class ReservationsTable
                     ])
                     ->multiple(),
 
+                SelectFilter::make('payment_status')
+                    ->label('Payment Status')
+                    ->options([
+                        'unpaid' => 'Unpaid',
+                        'paid' => 'Paid',
+                        'comped' => 'Comped',
+                        'refunded' => 'Refunded',
+                    ])
+                    ->multiple(),
+
                 SelectFilter::make('user')
+                    ->visible(User::me()->can('manage practice space'))
                     ->relationship('user', 'name')
                     ->searchable()
                     ->preload(),
@@ -108,11 +136,6 @@ class ReservationsTable
                             );
                     }),
 
-                Filter::make('upcoming')
-                    ->label('Upcoming Only')
-                    ->default()
-                    ->query(fn(Builder $query): Builder => $query->where('reserved_at', '>', now())),
-
                 Filter::make('this_month')
                     ->label('This Month')
                     ->query(fn(Builder $query): Builder => $query->whereMonth('reserved_at', now()->month)),
@@ -125,12 +148,134 @@ class ReservationsTable
                     ->label('Used Free Hours')
                     ->query(fn(Builder $query): Builder => $query->where('free_hours_used', '>', 0)),
             ])
+
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    Action::make('mark_paid')
+                        ->label('Mark Paid')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('success')
+                        ->visible(fn(Reservation $record) => $record->cost > 0 && $record->isUnpaid())
+                        ->schema([
+                            Select::make('payment_method')
+                                ->label('Payment Method')
+                                ->options([
+                                    'cash' => 'Cash',
+                                    'card' => 'Credit/Debit Card',
+                                    'venmo' => 'Venmo',
+                                    'paypal' => 'PayPal',
+                                    'zelle' => 'Zelle',
+                                    'check' => 'Check',
+                                    'other' => 'Other',
+                                ])
+                                ->required(),
+                            Textarea::make('payment_notes')
+                                ->label('Payment Notes')
+                                ->placeholder('Optional notes about the payment...')
+                                ->rows(2),
+                        ])
+                        ->action(function (Reservation $record, array $data) {
+                            $record->markAsPaid($data['payment_method'], $data['payment_notes']);
+
+                            Notification::make()
+                                ->title('Payment recorded')
+                                ->body("Reservation marked as paid via {$data['payment_method']}")
+                                ->success()
+                                ->send();
+                        }),
+
+                    Action::make('mark_comped')
+                        ->label('Comp')
+                        ->icon('heroicon-o-gift')
+                        ->color('info')
+                        ->visible(fn(Reservation $record) => $record->cost > 0 && $record->isUnpaid())
+                        ->schema([
+                            Textarea::make('comp_reason')
+                                ->label('Comp Reason')
+                                ->placeholder('Why is this reservation being comped?')
+                                ->required()
+                                ->rows(2),
+                        ])
+                        ->action(function (Reservation $record, array $data) {
+                            $record->markAsComped($data['comp_reason']);
+
+                            Notification::make()
+                                ->title('Reservation comped')
+                                ->body('Reservation has been marked as comped')
+                                ->success()
+                                ->send();
+                        }),
+
+                    ViewAction::make(),
+                ])
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    Action::make('mark_paid_bulk')
+                        ->label('Mark as Paid')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('success')
+                        ->schema([
+                            Select::make('payment_method')
+                                ->label('Payment Method')
+                                ->options([
+                                    'cash' => 'Cash',
+                                    'card' => 'Credit/Debit Card',
+                                    'venmo' => 'Venmo',
+                                    'paypal' => 'PayPal',
+                                    'zelle' => 'Zelle',
+                                    'check' => 'Check',
+                                    'other' => 'Other',
+                                ])
+                                ->required(),
+                            Textarea::make('payment_notes')
+                                ->label('Payment Notes')
+                                ->placeholder('Optional notes about the payment...')
+                                ->rows(2),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $count = 0;
+                            foreach ($records as $record) {
+                                if ($record->cost > 0 && $record->isUnpaid()) {
+                                    $record->markAsPaid($data['payment_method'], $data['payment_notes']);
+                                    $count++;
+                                }
+                            }
+
+                            Notification::make()
+                                ->title('Payments recorded')
+                                ->body("{$count} reservations marked as paid")
+                                ->success()
+                                ->send();
+                        }),
+
+                    Action::make('mark_comped_bulk')
+                        ->label('Comp Reservations')
+                        ->icon('heroicon-o-gift')
+                        ->color('info')
+                        ->schema([
+                            Textarea::make('comp_reason')
+                                ->label('Comp Reason')
+                                ->placeholder('Why are these reservations being comped?')
+                                ->required()
+                                ->rows(2),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $count = 0;
+                            foreach ($records as $record) {
+                                if ($record->cost > 0 && $record->isUnpaid()) {
+                                    $record->markAsComped($data['comp_reason']);
+                                    $count++;
+                                }
+                            }
+
+                            Notification::make()
+                                ->title('Reservations comped')
+                                ->body("{$count} reservations marked as comped")
+                                ->success()
+                                ->send();
+                        }),
+
                     DeleteBulkAction::make(),
                 ]),
             ])

@@ -494,4 +494,174 @@ class ReservationService
     {
         return $reservationDate->copy()->subWeek();
     }
+
+    /**
+     * Get all time slots for the practice space (15-minute intervals).
+     */
+    public function getAllTimeSlots(): array
+    {
+        $slots = [];
+        
+        // Practice space hours: 9 AM to 10 PM
+        $start = Carbon::createFromTime(9, 0);
+        $end = Carbon::createFromTime(22, 0);
+        
+        $current = $start->copy();
+        while ($current->lessThanOrEqualTo($end)) {
+            $timeString = $current->format('H:i');
+            $slots[$timeString] = $current->format('g:i A');
+            $current->addMinutes(15);
+        }
+        
+        return $slots;
+    }
+
+    /**
+     * Get valid end time options based on start time (max 8 hours, within business hours).
+     */
+    public function getValidEndTimes(string $startTime): array
+    {
+        $slots = [];
+        $start = Carbon::createFromFormat('H:i', $startTime);
+        
+        // Minimum 1 hour, maximum 8 hours
+        $earliestEnd = $start->copy()->addHour();
+        $latestEnd = $start->copy()->addHours(self::MAX_RESERVATION_DURATION);
+        
+        // Don't go past 10 PM
+        $businessEnd = Carbon::createFromTime(22, 0);
+        if ($latestEnd->greaterThan($businessEnd)) {
+            $latestEnd = $businessEnd;
+        }
+        
+        $current = $earliestEnd->copy();
+        while ($current->lessThanOrEqualTo($latestEnd)) {
+            $timeString = $current->format('H:i');
+            $slots[$timeString] = $current->format('g:i A');
+            $current->addMinutes(15);
+        }
+        
+        return $slots;
+    }
+
+    /**
+     * Get valid end times for a specific date and start time, avoiding conflicts.
+     */
+    public function getValidEndTimesForDateAndStart(Carbon $date, string $startTime): array
+    {
+        $slots = [];
+        $start = $date->copy()->setTimeFromTimeString($startTime);
+        
+        // Minimum 1 hour, maximum 8 hours
+        $earliestEnd = $start->copy()->addHour();
+        $latestEnd = $start->copy()->addHours(self::MAX_RESERVATION_DURATION);
+        
+        // Don't go past 10 PM
+        $businessEnd = $date->copy()->setTime(22, 0);
+        if ($latestEnd->greaterThan($businessEnd)) {
+            $latestEnd = $businessEnd;
+        }
+        
+        $current = $earliestEnd->copy();
+        while ($current->lessThanOrEqualTo($latestEnd)) {
+            $timeString = $current->format('H:i');
+            
+            // Check if this end time would cause conflicts
+            $hasConflicts = $this->hasAnyConflicts($start, $current);
+            
+            if (!$hasConflicts) {
+                $slots[$timeString] = $current->format('g:i A');
+            }
+            
+            $current->addMinutes(15);
+        }
+        
+        return $slots;
+    }
+
+    /**
+     * Validate that a time slot doesn't have conflicts using Spatie Period.
+     */
+    public function validateTimeSlot(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): array
+    {
+        $requestedPeriod = $this->createPeriod($startTime, $endTime);
+        
+        if (!$requestedPeriod) {
+            return [
+                'valid' => false,
+                'errors' => ['Invalid time period provided']
+            ];
+        }
+
+        // Check business hours
+        $businessStart = $startTime->copy()->setTime(9, 0);
+        $businessEnd = $startTime->copy()->setTime(22, 0);
+        
+        if ($startTime->lessThan($businessStart) || $endTime->greaterThan($businessEnd)) {
+            return [
+                'valid' => false,
+                'errors' => ['Reservation must be within business hours (9 AM - 10 PM)']
+            ];
+        }
+
+        // Check minimum/maximum duration
+        $duration = $startTime->diffInHours($endTime, true);
+        if ($duration < self::MIN_RESERVATION_DURATION) {
+            return [
+                'valid' => false,
+                'errors' => ['Minimum reservation duration is ' . self::MIN_RESERVATION_DURATION . ' hour']
+            ];
+        }
+        
+        if ($duration > self::MAX_RESERVATION_DURATION) {
+            return [
+                'valid' => false,
+                'errors' => ['Maximum reservation duration is ' . self::MAX_RESERVATION_DURATION . ' hours']
+            ];
+        }
+
+        // Check for conflicts using existing methods
+        $conflicts = $this->getAllConflicts($startTime, $endTime, $excludeReservationId);
+        $errors = [];
+        
+        if ($conflicts['reservations']->isNotEmpty()) {
+            $errors[] = 'Conflicts with ' . $conflicts['reservations']->count() . ' existing reservation(s)';
+        }
+        
+        if ($conflicts['productions']->isNotEmpty()) {
+            $errors[] = 'Conflicts with ' . $conflicts['productions']->count() . ' production(s)';
+        }
+
+        return [
+            'valid' => empty($errors),
+            'errors' => $errors,
+            'conflicts' => $conflicts
+        ];
+    }
+
+    /**
+     * Get available time slots for a specific date, filtering out conflicted times.
+     */
+    public function getAvailableTimeSlotsForDate(Carbon $date): array
+    {
+        $allSlots = $this->getAllTimeSlots();
+        $availableSlots = [];
+        
+        foreach ($allSlots as $timeString => $label) {
+            $testStart = $date->copy()->setTimeFromTimeString($timeString);
+            $testEnd = $testStart->copy()->addHour(); // Test with 1 hour duration
+            
+            // Only check for conflicts and past times, not duration limits
+            // since users might want shorter or longer reservations
+            $hasConflicts = $this->hasAnyConflicts($testStart, $testEnd);
+            $isPast = $testStart->isPast();
+            
+            // Only include slots that don't have conflicts and are in the future
+            if (!$hasConflicts && !$isPast) {
+                $availableSlots[$timeString] = $label;
+            }
+        }
+        
+        return $availableSlots;
+    }
 }

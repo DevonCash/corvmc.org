@@ -65,6 +65,36 @@ class ReservationInfolist
                     ])
                     ->columns(2),
 
+                Section::make('Payment Information')
+                    ->schema([
+                        TextEntry::make('payment_status')
+                            ->label('Payment Status')
+                            ->badge()
+                            ->formatStateUsing(function (string $state, Reservation $record): string {
+                                return $record->payment_status_badge['label'];
+                            })
+                            ->color(function (string $state, Reservation $record): string {
+                                return $record->payment_status_badge['color'];
+                            }),
+
+                        TextEntry::make('payment_method')
+                            ->label('Payment Method')
+                            ->placeholder('Not specified')
+                            ->formatStateUsing(fn (?string $state): string => $state ? ucfirst($state) : 'Not specified'),
+
+                        TextEntry::make('paid_at')
+                            ->label('Paid Date')
+                            ->dateTime()
+                            ->placeholder('Not paid'),
+
+                        TextEntry::make('payment_notes')
+                            ->label('Payment Notes')
+                            ->placeholder('No notes')
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(3)
+                    ->visible(fn (Reservation $record): bool => $record->cost > 0),
+
                 Section::make('Additional Information')
                     ->schema([
                         IconEntry::make('is_recurring')

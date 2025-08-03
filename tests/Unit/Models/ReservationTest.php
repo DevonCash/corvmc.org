@@ -192,6 +192,10 @@ class ReservationTest extends TestCase
             'reserved_at',
             'reserved_until',
             'cost',
+            'payment_status',
+            'payment_method',
+            'paid_at',
+            'payment_notes',
             'hours_used',
             'free_hours_used',
             'is_recurring',
@@ -252,5 +256,106 @@ class ReservationTest extends TestCase
         $this->assertFalse($reservation->isUpcoming());
         $this->assertTrue($reservation->reserved_at->isPast());
         $this->assertEquals('confirmed', $reservation->status);
+    }
+
+    #[Test]
+    public function it_has_default_payment_status_unpaid()
+    {
+        $this->assertEquals('unpaid', $this->reservation->payment_status);
+    }
+
+    #[Test]
+    public function it_can_mark_reservation_as_paid()
+    {
+        $this->reservation->markAsPaid('card', 'Paid in full');
+
+        $this->assertEquals('paid', $this->reservation->payment_status);
+        $this->assertEquals('card', $this->reservation->payment_method);
+        $this->assertEquals('Paid in full', $this->reservation->payment_notes);
+        $this->assertNotNull($this->reservation->paid_at);
+    }
+
+    #[Test]
+    public function it_can_mark_reservation_as_comped()
+    {
+        $this->reservation->markAsComped('Event sponsor');
+
+        $this->assertEquals('comped', $this->reservation->payment_status);
+        $this->assertEquals('comp', $this->reservation->payment_method);
+        $this->assertEquals('Event sponsor', $this->reservation->payment_notes);
+        $this->assertNotNull($this->reservation->paid_at);
+    }
+
+    #[Test]
+    public function it_can_mark_reservation_as_refunded()
+    {
+        $this->reservation->markAsRefunded('Customer request');
+
+        $this->assertEquals('refunded', $this->reservation->payment_status);
+        $this->assertEquals('Customer request', $this->reservation->payment_notes);
+        $this->assertNotNull($this->reservation->paid_at);
+    }
+
+    #[Test]
+    public function it_checks_if_unpaid()
+    {
+        $this->assertTrue($this->reservation->isUnpaid());
+
+        $this->reservation->markAsPaid('cash');
+        $this->assertFalse($this->reservation->isUnpaid());
+    }
+
+    #[Test]
+    public function it_checks_if_paid()
+    {
+        $this->assertFalse($this->reservation->isPaid());
+
+        $this->reservation->markAsPaid('cash');
+        $this->assertTrue($this->reservation->isPaid());
+    }
+
+    #[Test]
+    public function it_checks_if_comped()
+    {
+        $this->assertFalse($this->reservation->isComped());
+
+        $this->reservation->markAsComped('Testing');
+        $this->assertTrue($this->reservation->isComped());
+    }
+
+    #[Test]
+    public function it_checks_if_refunded()
+    {
+        $this->assertFalse($this->reservation->isRefunded());
+
+        $this->reservation->markAsRefunded('Testing');
+        $this->assertTrue($this->reservation->isRefunded());
+    }
+
+    #[Test]
+    public function it_returns_correct_payment_status_badge()
+    {
+        // Test unpaid
+        $badge = $this->reservation->payment_status_badge;
+        $this->assertEquals('Unpaid', $badge['label']);
+        $this->assertEquals('danger', $badge['color']);
+
+        // Test paid
+        $this->reservation->markAsPaid('card');
+        $badge = $this->reservation->payment_status_badge;
+        $this->assertEquals('Paid', $badge['label']);
+        $this->assertEquals('success', $badge['color']);
+
+        // Test comped
+        $this->reservation->markAsComped('Testing');
+        $badge = $this->reservation->payment_status_badge;
+        $this->assertEquals('Comped', $badge['label']);
+        $this->assertEquals('info', $badge['color']);
+
+        // Test refunded
+        $this->reservation->markAsRefunded('Testing');
+        $badge = $this->reservation->payment_status_badge;
+        $this->assertEquals('Refunded', $badge['label']);
+        $this->assertEquals('danger', $badge['color']);
     }
 }
