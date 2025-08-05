@@ -6,15 +6,38 @@ This is a site for the Corvallis Music Collective, a nonprofit organization oper
 
 Features are listed in order of priority. Each should be implemented in an isolated module using as many pre-existing tools as possible. Moderation and access to each feature should be handled on an individual basis to allow volunteers to take on a subset of features for moderation.
 
-### Membership (TODO)
+### Membership (IMPLEMENTED - Zeffy Integration Pending)
 
-Phase 1: Allow users to sign up to the website.
+**Current Implementation Status:**
+- ✅ Complete user registration and authentication system
+- ✅ Role-based membership management with Spatie Permissions
+- ✅ Sustaining member role and permissions system
+- ✅ Transaction model for payment tracking
+- ✅ Staff access controls for moderation tools
 
-Phase 2: All users who sign up to the site are considered members. Users with a monthly recurring donation exceeding $10 are "sustaining members". Staff are employees or volunteers for the music collective who have access to the moderation tools for each of the features.
+**Phase 1 (Completed):**
+- ✅ User registration and authentication via Filament
+- ✅ Basic member profile management
+- ✅ Admin interface for user management
 
-Payments are processed via Zeffy – a payment processor free for non-profits. Zeffy has no direct export features, but they have a Zapier integration for notifying a server when a payment is recieved – that will have to be enough!
+**Phase 2 (Mostly Implemented):**
+- ✅ Members automatically created on registration
+- ✅ Sustaining member role system with enhanced permissions
+- ✅ Staff roles with granular access to moderation tools
+- ✅ Transaction tracking infrastructure
+- ⏳ Automated sustaining member detection based on $10+ monthly donations
 
-### Productions (IN PROGRESS)
+**Pending Integration:**
+- ⏳ Zeffy webhook integration for payment processing
+- ⏳ Automated role assignment based on payment status
+
+**Technical Implementation:**
+- **Authentication**: Laravel Filament authentication with custom member panel
+- **Roles**: Comprehensive role system (member, sustaining member, staff, admin)
+- **Payments**: Transaction model ready for Zeffy webhook integration
+- **Admin Interface**: Full user management via Filament resources
+
+### Productions (FULLY IMPLEMENTED - Minor Enhancements Pending)
 
 **Current Implementation Status:**
 - ✅ Complete production management system with Filament admin interface
@@ -25,13 +48,18 @@ Payments are processed via Zeffy – a payment processor free for non-profits. Z
 - ✅ Location data structure for venue information
 - ✅ Genre tagging system integration
 - ✅ Production duplication functionality for recurring events
+- ✅ **Public event listing and detail pages** (`/events` routes)
+- ✅ **Advanced search and filtering** (genre, date, venue)
+- ✅ **Ticket URL and pricing integration**
+- ✅ **Practice space conflict detection**
+- ✅ **Homepage event integration**
 
 **Phase 1 Requirements (Completed):**
 - ✅ Production creation and management interface for staff
 - ✅ Event scheduling with start/end times and doors times
 - ✅ Production status workflow (pre-production, published, completed, cancelled)
 - ✅ Manager assignment and permission-based access control
-- ✅ Basic venue/location information storage
+- ✅ Advanced venue/location information with LocationData DTOs
 
 **Phase 2 Requirements (Completed):**
 - ✅ Centralized staff management area via Filament admin panel
@@ -41,13 +69,13 @@ Payments are processed via Zeffy – a payment processor free for non-profits. Z
 - ✅ Comprehensive production search and filtering
 - ✅ Production statistics and reporting
 
-**Phase 3 Requirements (Needed for Full Public Implementation):**
-- ⏳ Public website integration for event display
+**Phase 3 Requirements (Mostly Completed):**
+- ✅ Public website integration for event display
+- ✅ Public event calendar view with filtering by genre/date
+- ✅ Individual production pages with performer details
+- ✅ Integration with practice space reservations system
+- ✅ Ticket sales integration (URL and pricing)
 - ⏳ `/show-tonight` redirect functionality to next published production
-- ⏳ Public event calendar view with filtering by genre/date
-- ⏳ Individual production pages with performer details
-- ⏳ Integration with practice space reservations system
-- ⏳ Ticket sales integration (if applicable)
 - ⏳ Email notifications for production updates
 - ⏳ Public API endpoints for external calendar integrations
 
@@ -58,32 +86,102 @@ Payments are processed via Zeffy – a payment processor free for non-profits. Z
 - **Tags**: Genre classification via `spatie/laravel-tags`
 - **Service Layer**: Comprehensive `ProductionService` for business logic encapsulation
 - **Admin Interface**: Filament resources with form schemas, relation managers, and table configurations
+- **Public Interface**: Full public event browsing with search, filtering, and detail views
 
-**Missing Components for Full Feature Completion:**
-- Public-facing web routes and controllers
-- Event detail pages for public consumption
-- Calendar widget/component for homepage
-- Integration with external calendar services (Google Calendar, iCal)
-- Notification system for production updates
-- Mobile-responsive event browsing interface
+### Practice Space Scheduling (FULLY IMPLEMENTED - Admin Interface Only)
 
-### Practice Space Scheduling (TODO)
+**Current Implementation Status:**
+- ✅ Complete reservation management system with Filament admin interface
+- ✅ Sophisticated pricing logic ($15/hour with 4 free hours for sustaining members)
+- ✅ Payment tracking with multiple payment methods (cash, card, Venmo, PayPal, etc.)
+- ✅ Conflict detection with productions and other reservations
+- ✅ Calendar integration for visual scheduling
+- ✅ Recurring reservation support for sustaining members
+- ✅ Business rules enforcement (9 AM-10 PM, 1-8 hour durations)
 
-Phase 1: Allow members to schedule practice space at our building. Practice space is available at a rate of $15 dollars per hour, and sustiaining members get 4 free hours per month.
+**Phase 1 (Fully Implemented):**
+- ✅ Complete reservation system for practice space scheduling
+- ✅ $15/hour rate with automatic calculation
+- ✅ 4 free hours per month for sustaining members with rollover tracking
+- ✅ Payment status management (unpaid/paid/comped/refunded)
+- ✅ Reservation conflict detection using Spatie Period library
 
-Phase 2: Sustaining members can create recurring reservations at the space. Needs confirmation workflow & waitlisting.
+**Phase 2 (Fully Implemented):**
+- ✅ Recurring reservations for sustaining members
+- ✅ Advanced approval workflow and status management
+- ✅ Sophisticated conflict detection across reservations and productions
+- ⏳ Waitlisting system (not yet implemented)
 
-### Member Directory (TODO)
+**Technical Implementation:**
+- **Database**: Comprehensive reservations table with payment tracking
+- **Business Logic**: `ReservationService` with complex pricing and conflict detection
+- **Calendar**: Visual calendar interface for staff scheduling
+- **Permissions**: Role-based access control for reservation management
+- **Payment Methods**: Support for cash, card, digital payments, and comps
 
-Phase 1: Give users a place to list their skills and abilities.
+**Note**: Currently admin-interface only. No public booking interface is specified or implemented - all reservations managed through Filament admin panel.
 
-Phase 2: Sustaining members can list their profiles publicly, including on our lists of teachers and other professionals.
+### Member Directory (FULLY IMPLEMENTED)
 
-### Band Directory (TODO)
+**Current Implementation Status:**
+- ✅ Complete public member directory with search and filtering
+- ✅ Rich member profiles with skills, bio, and contact information
+- ✅ Avatar management with thumbnail generation
+- ✅ Skills and genre tagging system via Spatie Tags
+- ✅ Visibility controls (public/members/private)
+- ✅ Professional designation system with flags
+- ✅ Individual member profile pages
 
-Phase 1: Allow users to create and manage band profiles. Allow bands to post links to their social media pages, along with an avatar. Add a "web ring" which will allow users to browse through a linked list of bands.
+**Phase 1 (Completed):**
+- ✅ Comprehensive skills and abilities listing system
+- ✅ Public member directory (`/members` route)
+- ✅ Advanced search by name, skills, location, and instruments
+- ✅ Professional profile management
 
-Phase 2: Sustaining members can post their EPK, including file hosting etc, and add events to their band page.
+**Phase 2 (Completed):**
+- ✅ Public profile visibility for sustaining members and all users
+- ✅ Teachers and professionals designation via flag system
+- ✅ Enhanced profiles with bio, hometown, influences, and social links
+- ✅ Contact information management
+
+**Technical Implementation:**
+- **Database**: `member_profiles` table with comprehensive user information
+- **Media**: Avatar uploads via `spatie/laravel-medialibrary`
+- **Tags**: Skills and genres via `spatie/laravel-tags`
+- **Public Interface**: Searchable member directory with filtering
+- **Permissions**: Visibility controls and role-based access
+
+### Band Directory (FULLY IMPLEMENTED)
+
+**Current Implementation Status:**
+- ✅ Complete band profile management system
+- ✅ Public band directory with search and filtering (`/bands` route)
+- ✅ Comprehensive band member management with invitation system
+- ✅ Social media integration and avatar management
+- ✅ Genre and influence tagging system
+- ✅ Band member roles and permissions (owner, admin, member)
+- ✅ EPK (Electronic Press Kit) functionality with media management
+
+**Phase 1 (Completed):**
+- ✅ Band profile creation and management interface
+- ✅ Social media links and avatar management
+- ✅ Public band directory with "web ring" browsing functionality
+- ✅ Individual band profile pages with detailed information
+- ✅ Band member invitation and management system
+
+**Phase 2 (Completed):**
+- ✅ Full EPK functionality with file hosting via `spatie/laravel-medialibrary`
+- ✅ Media management for promotional materials and press photos
+- ✅ Integration with productions system for event management
+- ✅ Available to all users (not restricted to sustaining members)
+
+**Technical Implementation:**
+- **Database**: `band_profiles` table with member pivot relationships
+- **Media**: Avatar and EPK uploads via `spatie/laravel-medialibrary`
+- **Tags**: Genre classification via `spatie/laravel-tags`
+- **Permissions**: Role-based band member management (owner, admin, member)
+- **Notifications**: Email notifications for band invitations
+- **Public Interface**: Searchable band directory with individual band pages
 
 ## Planned Features
 

@@ -23,7 +23,7 @@
                         </label>
                         <input type="text" placeholder="Search..." class="input input-bordered" />
                     </div>
-                    
+
                     <div class="form-control">
                         <label class="label">
                             <span class="label-text">Date</span>
@@ -35,7 +35,7 @@
                             <option>Next Month</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-control">
                         <label class="label">
                             <span class="label-text">Genre</span>
@@ -49,7 +49,7 @@
                             <option>Classical</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-control">
                         <label class="label">
                             <span class="label-text">Venue</span>
@@ -61,7 +61,7 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="flex justify-between items-center mt-4">
                     <button class="btn btn-primary">Search</button>
                     <span class="text-sm opacity-70">{{ $events->total() }} events found</span>
@@ -82,7 +82,7 @@
                     <div class="text-6xl opacity-50"><x-unicon name="tabler:music" class="size-16" /></div>
                 </figure>
                 @endif
-                
+
                 <div class="card-body">
                     <h2 class="card-title">
                         {{ $event->title }}
@@ -90,47 +90,38 @@
                         <div class="badge badge-success">FREE</div>
                         @endif
                     </h2>
-                    
+
                     <div class="space-y-2 text-sm">
                         <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
+                            <x-unicon name="tabler:calendar" class='size-4'/>
                             <span>{{ $event->start_time->format('M j, Y') }}</span>
                         </div>
-                        
+
                         <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+                            <x-unicon name="tabler:clock" class="size-4"/>
                             <span>{{ $event->start_time->format('g:i A') }}</span>
                             @if($event->doors_time)
                             <span class="opacity-70">(Doors: {{ $event->doors_time->format('g:i A') }})</span>
                             @endif
                         </div>
-                        
+
                         <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
+                            <x-unicon name="tabler:map-pin" class='size-4'/>
                             <span>{{ $event->venue_name }}</span>
                         </div>
-                        
+
                         @if(!$event->isFree())
                         <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                            </svg>
+                            <x-unicon name="tabler:ticket" class="size-4"/>
                             <span>{{ $event->ticket_price_display }}</span>
                         </div>
                         @endif
                     </div>
-                    
+
                     @if($event->description)
                     <p class="text-sm opacity-70 mt-2">{{ Str::limit($event->description, 100) }}</p>
                     @endif
-                    
+
                     @if($event->performers->count() > 0)
                     <div class="mt-3">
                         <div class="text-xs font-semibold mb-1">Featuring:</div>
@@ -144,7 +135,7 @@
                         </div>
                     </div>
                     @endif
-                    
+
                     <div class="card-actions justify-between items-center mt-4">
                         <div>
                             @if($event->hasTickets())
@@ -178,7 +169,7 @@
                 @else
                 <a href="{{ $events->previousPageUrl() }}" class="join-item btn">«</a>
                 @endif
-                
+
                 @for($i = 1; $i <= $events->lastPage(); $i++)
                     @if($i == $events->currentPage())
                     <button class="join-item btn btn-active">{{ $i }}</button>
@@ -186,7 +177,7 @@
                     <a href="{{ $events->url($i) }}" class="join-item btn">{{ $i }}</a>
                     @endif
                 @endfor
-                
+
                 @if($events->hasMorePages())
                 <a href="{{ $events->nextPageUrl() }}" class="join-item btn">»</a>
                 @else

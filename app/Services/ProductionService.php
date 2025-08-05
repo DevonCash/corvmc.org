@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Models\BandProfile;
 use App\Models\Production;
 use App\Models\User;
+use App\Notifications\ProductionUpdatedNotification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class ProductionService
 {
@@ -106,6 +108,9 @@ class ProductionService
             'published_at' => now(),
         ]);
 
+        // Notify interested users about the published production
+        $this->notifyInterestedUsers($production, 'published');
+
         return true;
     }
 
@@ -146,6 +151,9 @@ class ProductionService
         $production->update([
             'status' => 'cancelled',
         ]);
+
+        // Notify interested users about the cancelled production
+        $this->notifyInterestedUsers($production, 'cancelled');
 
         return true;
     }
@@ -317,5 +325,75 @@ class ProductionService
         }
 
         return $newProduction;
+    }
+
+    /**
+     * Notify interested users about production updates.
+     */
+    private function notifyInterestedUsers(Production $production, string $updateType, array $changes = []): void
+    {
+        // Get all users who should be notified
+        $users = $this->getInterestedUsers($production);
+
+        if ($users->isNotEmpty()) {
+            Notification::send($users, new ProductionUpdatedNotification($production, $updateType, $changes));
+        }
+    }
+
+    /**
+     * Get users who should be notified about production updates.
+     * This includes: manager, band members, and optionally all sustaining members for published events.
+     */
+    private function getInterestedUsers(Production $production): Collection
+    {
+        $users = collect();
+
+        // Always notify the production manager
+        if ($production->manager) {
+            $users->push($production->manager);
+        }
+
+        // Notify all band members performing in this production
+        foreach ($production->performers as $band) {
+            $bandUsers = $band->members()->with('user')->get()->pluck('user');
+            $users = $users->merge($bandUsers);
+        }
+
+        // For published events, optionally notify all sustaining members
+        // (This could be made configurable via settings)
+        if ($production->isPublished()) {
+            $sustainingMembers = User::role('sustaining member')->get();
+            $users = $users->merge($sustainingMembers);
+        }
+
+        // Remove duplicates and filter out null values
+        return $users->filter()->unique('id');
+    }
+
+    /**
+     * Update production with change tracking for notifications.
+     */
+    public function updateProductionWithNotifications(Production $production, array $attributes): bool
+    {
+        $originalValues = $production->only(array_keys($attributes));
+        $production->update($attributes);
+        
+        // Track what changed
+        $changes = [];
+        foreach ($attributes as $key => $newValue) {
+            if (isset($originalValues[$key]) && $originalValues[$key] !== $newValue) {
+                $changes[$key] = [
+                    'old' => $originalValues[$key],
+                    'new' => $newValue,
+                ];
+            }
+        }
+
+        // Send notification if there were meaningful changes
+        if (!empty($changes)) {
+            $this->notifyInterestedUsers($production, 'updated', $changes);
+        }
+
+        return true;
     }
 }
