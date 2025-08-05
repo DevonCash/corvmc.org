@@ -8,17 +8,26 @@
     'emptyIcon' => 'tabler:search',
     'emptyTitle' => 'No results found',
     'emptyMessage' => 'Try adjusting your search criteria.',
-    'cardComponent' => null
+    'cardComponent' => null,
+    'gridCols' => 3 // New prop to control filter grid columns
 ])
 
 <div class="container mx-auto px-4 py-16">
+    <!-- Flash Messages -->
+    @if(session('info'))
+    <div class="alert alert-info max-w-4xl mx-auto mb-8">
+        <x-unicon name="tabler:info-circle" class="size-6"/>
+        <span>{{ session('info') }}</span>
+    </div>
+    @endif
+
     <!-- Search and Filters -->
     <form class="card bg-base-100 shadow-lg mb-8">
         <div class="card-body">
             <h2 class="card-title mb-4">{{ $title }}</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-{{ $gridCols }} gap-4">
                 <!-- Search Input -->
-                <fieldset class="fieldset col-span-3">
+                <fieldset class="fieldset col-span-{{ $gridCols }}">
                     <legend class="fieldset-legend">
                         {{ $searchPlaceholder }}
                     </legend>

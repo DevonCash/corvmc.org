@@ -10,13 +10,25 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 // Public website routes
 Route::get('/', function () {
-    $upcomingEvents = Production::where('published_at', '<=', now())
-        ->where('start_time', '>', now())
-        ->orderBy('start_time')
+    $upcomingEvents = Production::publishedUpcoming()
         ->limit(3)
         ->get();
 
-    return view('public.home', compact('upcomingEvents'));
+    // Calculate stats from database
+    $stats = [
+        'active_members' => MemberProfile::whereIn('visibility', ['public', 'members'])->count(),
+        'monthly_events' => Production::publishedUpcoming()
+            ->whereBetween('start_time', [now()->startOfMonth(), now()->endOfMonth()])
+            ->count(),
+        'practice_hours' => \App\Models\Reservation::where('status', 'confirmed')
+            ->whereBetween('start_time', [now()->startOfMonth(), now()->endOfMonth()])
+            ->get()
+            ->sum(function ($reservation) {
+                return $reservation->duration ?? 0;
+            })
+    ];
+
+    return view('public.home', compact('upcomingEvents', 'stats'));
 })->name('home');
 
 Route::get('/about', function () {
@@ -24,12 +36,7 @@ Route::get('/about', function () {
 })->name('about');
 
 Route::get('/events', function () {
-    $events = Production::where('published_at', '<=', now())
-        ->where('start_time', '>', now())
-        ->orderBy('start_time')
-        ->paginate(12);
-
-    return view('public.events.index', compact('events'));
+    return view('public.events.index');
 })->name('events.index');
 
 Route::get('/events/{production}', function (Production $production) {
@@ -39,38 +46,26 @@ Route::get('/events/{production}', function (Production $production) {
 })->name('events.show');
 
 Route::get('/show-tonight', function () {
-    // Find next published production happening today or next upcoming show
-    $tonightShow = Production::where('published_at', '<=', now())
-        ->where('start_time', '>=', now()->startOfDay())
-        ->where('start_time', '<=', now()->endOfDay())
-        ->orderBy('start_time')
-        ->first();
+    // Find next published production happening today
+    $tonightShow = Production::publishedToday()->first();
 
     // If no show tonight, get next upcoming published show
     if (!$tonightShow) {
-        $tonightShow = Production::where('published_at', '<=', now())
-            ->where('start_time', '>', now())
-            ->orderBy('start_time')
-            ->first();
+        $tonightShow = Production::publishedUpcoming()->first();
     }
 
-    // If still no show found, redirect to events listing
+    // If still no show found, redirect to events listing with message
     if (!$tonightShow) {
         return redirect()->route('events.index')
-            ->with('info', 'No upcoming shows found. Check back soon!');
+            ->with('info', 'No upcoming shows found. Check back soon for exciting events!');
     }
 
+    // Redirect to the specific show page
     return redirect()->route('events.show', $tonightShow);
 })->name('show-tonight');
 
 Route::get('/members', function () {
-    $members = QueryBuilder::for(MemberProfile::class)
-        ->allowedFilters(['name', 'hometown', AllowedFilter::scope('withAllTags')])
-        ->with('user')
-        ->whereIn('visibility', ['public'])
-        ->paginate(24);
-
-    return view('public.members.index', compact('members'));
+    return view('public.members.index');
 })->name('members.index');
 
 Route::get('/members/{memberProfile}', function (MemberProfile $memberProfile) {
@@ -80,11 +75,7 @@ Route::get('/members/{memberProfile}', function (MemberProfile $memberProfile) {
 })->name('members.show');
 
 Route::get('/bands', function () {
-    $bands = BandProfile::with('members')
-        ->whereIn('visibility', ['public', 'members'])
-        ->paginate(24);
-
-    return view('public.bands.index', compact('bands'));
+    return view('public.bands.index');
 })->name('bands.index');
 
 Route::get('/bands/{bandProfile}', function (BandProfile $bandProfile) {
@@ -112,6 +103,21 @@ Route::get('/contact', function () {
 })->name('contact');
 
 Route::post('/contact', function () {
-    // Handle contact form submission
+    $validated = request()->validate([
+        'first_name' => ['required', 'string', 'max:255'],
+        'last_name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'email', 'max:255'],
+        'phone' => ['nullable', 'string', 'max:20'],
+        'subject' => ['required', 'string', 'in:general,membership,practice_space,performance,volunteer,donation'],
+        'message' => ['required', 'string', 'max:2000']
+    ]);
+
+    // Store the contact submission (you might want to create a ContactSubmission model)
+    // For now, we'll just log it
+    logger('Contact form submission', $validated);
+    
+    // TODO: Send email notification to staff
+    // TODO: Consider storing in database for follow-up tracking
+    
     return back()->with('success', 'Thank you for your message! We\'ll get back to you soon.');
 })->name('contact.store');

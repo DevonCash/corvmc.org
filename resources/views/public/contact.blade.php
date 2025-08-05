@@ -35,14 +35,24 @@
                                 <label class="label">
                                     <span class="label-text">First Name *</span>
                                 </label>
-                                <input type="text" name="first_name" class="input input-bordered" required value="{{ old('first_name') }}" />
+                                <input type="text" name="first_name" class="input input-bordered @error('first_name') input-error @enderror" required value="{{ old('first_name') }}" />
+                                @error('first_name')
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ $message }}</span>
+                                </label>
+                                @enderror
                             </div>
                             
                             <div class="form-control">
                                 <label class="label">
                                     <span class="label-text">Last Name *</span>
                                 </label>
-                                <input type="text" name="last_name" class="input input-bordered" required value="{{ old('last_name') }}" />
+                                <input type="text" name="last_name" class="input input-bordered @error('last_name') input-error @enderror" required value="{{ old('last_name') }}" />
+                                @error('last_name')
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ $message }}</span>
+                                </label>
+                                @enderror
                             </div>
                         </div>
                         
@@ -50,36 +60,56 @@
                             <label class="label">
                                 <span class="label-text">Email *</span>
                             </label>
-                            <input type="email" name="email" class="input input-bordered" required value="{{ old('email') }}" />
+                            <input type="email" name="email" class="input input-bordered @error('email') input-error @enderror" required value="{{ old('email') }}" />
+                            @error('email')
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ $message }}</span>
+                            </label>
+                            @enderror
                         </div>
                         
                         <div class="form-control">
                             <label class="label">
                                 <span class="label-text">Phone</span>
                             </label>
-                            <input type="tel" name="phone" class="input input-bordered" value="{{ old('phone') }}" />
+                            <input type="tel" name="phone" class="input input-bordered @error('phone') input-error @enderror" value="{{ old('phone') }}" />
+                            @error('phone')
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ $message }}</span>
+                            </label>
+                            @enderror
                         </div>
                         
                         <div class="form-control">
                             <label class="label">
                                 <span class="label-text">Subject *</span>
                             </label>
-                            <select name="subject" class="select select-bordered" required>
+                            <select name="subject" class="select select-bordered @error('subject') select-error @enderror" required>
                                 <option value="">Choose a topic...</option>
-                                <option value="general">General Inquiry</option>
-                                <option value="membership">Membership Questions</option>
-                                <option value="practice_space">Practice Space</option>
-                                <option value="performance">Performance Inquiry</option>
-                                <option value="volunteer">Volunteer Opportunities</option>
-                                <option value="donation">Donations & Support</option>
+                                <option value="general" {{ old('subject') == 'general' ? 'selected' : '' }}>General Inquiry</option>
+                                <option value="membership" {{ old('subject') == 'membership' ? 'selected' : '' }}>Membership Questions</option>
+                                <option value="practice_space" {{ old('subject') == 'practice_space' ? 'selected' : '' }}>Practice Space</option>
+                                <option value="performance" {{ old('subject') == 'performance' ? 'selected' : '' }}>Performance Inquiry</option>
+                                <option value="volunteer" {{ old('subject') == 'volunteer' ? 'selected' : '' }}>Volunteer Opportunities</option>
+                                <option value="donation" {{ old('subject') == 'donation' ? 'selected' : '' }}>Donations & Support</option>
                             </select>
+                            @error('subject')
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ $message }}</span>
+                            </label>
+                            @enderror
                         </div>
                         
                         <div class="form-control">
                             <label class="label">
                                 <span class="label-text">Message *</span>
                             </label>
-                            <textarea name="message" class="textarea textarea-bordered h-32" placeholder="Tell us more about your inquiry..." required>{{ old('message') }}</textarea>
+                            <textarea name="message" class="textarea textarea-bordered h-32 @error('message') textarea-error @enderror" placeholder="Tell us more about your inquiry..." required>{{ old('message') }}</textarea>
+                            @error('message')
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ $message }}</span>
+                            </label>
+                            @enderror
                         </div>
                         
                         <div class="card-actions justify-center mt-6">

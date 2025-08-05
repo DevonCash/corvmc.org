@@ -197,4 +197,40 @@ class UserSubscriptionService
 
         return false;
     }
+
+    /**
+     * Upgrade user to sustaining member based on transaction.
+     */
+    public function upgradeToSustainingMember(User $user, Transaction $transaction): bool
+    {
+        if (!$user->hasRole('sustaining member')) {
+            $user->assignRole('sustaining member');
+            
+            // Log the upgrade
+            \Log::info('User upgraded to sustaining member via webhook', [
+                'user_id' => $user->id,
+                'transaction_id' => $transaction->transaction_id,
+                'amount' => $transaction->amount,
+            ]);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Update user's contribution tracking.
+     */
+    public function updateContributionTracking(User $user, Transaction $transaction): void
+    {
+        // This could track total contributions, recent activity, etc.
+        // For now, we'll just ensure the transaction is linked to the user
+        \Log::info('Contribution tracking updated', [
+            'user_id' => $user->id,
+            'transaction_id' => $transaction->transaction_id,
+            'amount' => $transaction->amount,
+            'total_contributions' => $user->transactions()->sum('amount'),
+        ]);
+    }
 }

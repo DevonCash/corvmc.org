@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'zeffy' => [
+        'webhook_secret' => env('ZEFFY_WEBHOOK_SECRET'),
+        // Note: Zeffy doesn't have a direct API - only Zapier integration
+        'organization_name' => env('ZEFFY_ORGANIZATION_NAME', 'Corvallis Music Collective'),
+    ],
+
 ];

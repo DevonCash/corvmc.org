@@ -128,6 +128,63 @@ class Production extends Model implements Eventable, HasMedia
     }
 
     /**
+     * Scope to get published upcoming productions.
+     */
+    public function scopePublishedUpcoming($query)
+    {
+        return $query->where('published_at', '<=', now())
+            ->whereNotNull('published_at')
+            ->where('start_time', '>', now())
+            ->orderBy('start_time');
+    }
+
+    /**
+     * Scope to get published productions happening today.
+     */
+    public function scopePublishedToday($query)
+    {
+        return $query->where('published_at', '<=', now())
+            ->whereNotNull('published_at')
+            ->where('start_time', '>=', now()->startOfDay())
+            ->where('start_time', '<=', now()->endOfDay())
+            ->orderBy('start_time');
+    }
+
+    /**
+     * Scope to filter by date range.
+     */
+    public function scopeDateRange($query, $range)
+    {
+        switch ($range) {
+            case 'this_week':
+                return $query->whereBetween('start_time', [now()->startOfWeek(), now()->endOfWeek()]);
+            case 'this_month':
+                return $query->whereBetween('start_time', [now()->startOfMonth(), now()->endOfMonth()]);
+            case 'next_month':
+                return $query->whereBetween('start_time', [now()->addMonth()->startOfMonth(), now()->addMonth()->endOfMonth()]);
+            default:
+                return $query;
+        }
+    }
+
+    /**
+     * Scope to filter by venue type.
+     */
+    public function scopeVenue($query, $venueType)
+    {
+        switch ($venueType) {
+            case 'cmc':
+                return $query->where(function($q) {
+                    $q->whereNull('location->is_external')->orWhere('location->is_external', false);
+                });
+            case 'external':
+                return $query->where('location->is_external', true);
+            default:
+                return $query;
+        }
+    }
+
+    /**
      * Get the total estimated duration of the production.
      */
     public function getEstimatedDurationAttribute(): int

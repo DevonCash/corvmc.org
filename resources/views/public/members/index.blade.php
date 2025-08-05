@@ -11,37 +11,7 @@
         </div>
     </div>
 
-    <x-searchable-grid 
-        title="Find Musicians"
-        search-placeholder="Search by name or instrument"
-        search-name="filter[name]"
-        :items="$members"
-        :total-count="$members->total()"
-        empty-icon="tabler:music"
-        empty-title="No musicians found"
-        empty-message="Try adjusting your search criteria or check back later."
-        card-component="member-card"
-        :filters="[
-            [
-                'name' => 'filter[withAllTags]',
-                'label' => 'Genre',
-                'placeholder' => 'All Genres',
-                'options' => \Spatie\Tags\Tag::getWithType('genre')->pluck('name', 'name')->toArray()
-            ],
-            [
-                'name' => 'filter[withAllTags]',
-                'label' => 'Skills', 
-                'placeholder' => 'All Skills',
-                'options' => \Spatie\Tags\Tag::getWithType('skill')->pluck('name', 'name')->toArray()
-            ],
-            [
-                'name' => 'filter[hometown]',
-                'label' => 'Location',
-                'placeholder' => 'All Locations',
-                'options' => \App\Models\MemberProfile::select('hometown')->distinct()->get()->pluck('hometown')->filter(fn($location) => $location)->mapWithKeys(fn($location) => [$location => $location])->toArray()
-            ]
-        ]"
-    />
+    @livewire('members-grid')
 
     <!-- Call to Action -->
     <div class="container mx-auto px-4">
