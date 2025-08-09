@@ -1,266 +1,195 @@
 <x-public.layout :title="$production->title . ' | Corvallis Music Collective'">
-    <!-- Hero Section with Event Image -->
-    <div class="hero min-h-96 bg-gradient-to-r from-secondary/10 to-accent/10 relative overflow-hidden">
-        @if($production->poster_url)
-        <div class="absolute inset-0 bg-black/50 z-10"></div>
-        <img src="{{ $production->poster_url }}" alt="{{ $production->title }}" class="absolute inset-0 w-full h-full object-cover">
-        @endif
-        <div class="hero-content text-center z-20 relative">
-            <div class="max-w-4xl text-white">
-                <h1 class="text-5xl font-bold mb-4">{{ $production->title }}</h1>
-                @if($production->subtitle)
-                <p class="text-xl mb-6">{{ $production->subtitle }}</p>
-                @endif
-                
-                <div class="flex flex-wrap justify-center gap-6 text-lg">
-                    <div class="flex items-center gap-2">
-                        <x-unicon name="tabler:calendar" class="size-5"/>
-                        <span>{{ $production->start_time->format('l, F j, Y') }}</span>
-                    </div>
-                    
-                    <div class="flex items-center gap-2">
-                        <x-unicon name="tabler:clock" class="size-5"/>
-                        <span>{{ $production->start_time->format('g:i A') }}</span>
-                        @if($production->doors_time)
-                        <span class="opacity-80">(Doors: {{ $production->doors_time->format('g:i A') }})</span>
-                        @endif
-                    </div>
-                    
-                    <div class="flex items-center gap-2">
-                        <x-unicon name="tabler:map-pin" class="size-5"/>
-                        <span>{{ $production->venue_name }}</span>
-                    </div>
-                </div>
+    <!-- Hero Section: Full Height Poster + Event Details -->
+    <div class="flex flex-col items-center lg:grid grid-cols-2 gap-x-8 justify-center md:mx-auto p-8"
+        style="grid-template-columns: min(calc(90vh * 8.5/11), calc(100vw - var(--container-xs) - 12rem)) min-content; place-content: center;">
+        <!-- Poster Section - Takes most of the height -->
+        <div
+            class="max-h-[75vh] h-auto  sm:h-[80vh] w-full sm:w-auto aspect-[8.5/11] col-span-2 md:col-span-1 relative lg:ml-auto">
+            <div class="hidden sm:flex lg:hidden flex-col gap-4 justify-center absolute left-full p-4">
+                <a href="https://facebook.com/sharer/sharer.php?u={{ urlencode(request()->url()) }}" target="_blank"
+                    class="btn btn-outline btn-circle btn-lg">
+                    <x-unicon name="tabler:brand-facebook" class="size-6" />
+                </a>
+                <a href="https://twitter.com/intent/tweet?url={{ urlencode(request()->url()) }}&text={{ urlencode($production->title) }}"
+                    target="_blank" class="btn btn-outline btn-circle btn-lg">
+                    <x-unicon name="tabler:brand-x" class="size-6" />
+                </a>
+                <button onclick="navigator.share({title: '{{ $production->title }}', url: '{{ request()->url() }}'})"
+                    class="btn btn-outline btn-circle btn-lg">
+                    <x-unicon name="tabler:share" class="size-6" />
+                </button>
+            </div>
 
-                @if($production->hasTickets() || $production->isFree())
-                <div class="mt-8">
-                    @if($production->isFree())
-                    <div class="badge badge-success badge-lg">FREE EVENT</div>
-                    @else
-                    <a href="{{ $production->ticket_url }}" target="_blank" class="btn btn-primary btn-lg">
-                        <x-unicon name="tabler:ticket" class="size-5"/>
-                        Get Tickets - {{ $production->ticket_price_display }}
-                    </a>
-                    @endif
+            @if ($production->poster_url)
+                <div
+                    class="bg-white p-6 rounded-lg  transform hover:scale-[1.02] transition-transform duration-500 h-full mx-auto">
+                    <img src="{{ $production->poster_url }}" alt="{{ $production->title }}"
+                        class="w-full h-full object-cover rounded">
                 </div>
-                @endif
+            @else
+                <div
+                    class="bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg  flex items-center justify-center h-full w-full">
+                    <div class="text-center opacity-30">
+                        <x-unicon name="tabler:music" class="size-32 mx-auto mb-6" />
+                        <p class="text-2xl font-bold">{{ $production->title }}</p>
+                    </div>
+                </div>
+            @endif
+        </div>
+        <div class='grow flex flex-col gap-6 p-8 min-w-sm lg:border-l-2'>
+            @if ($production->hasTickets())
+                <div class="border-t border-base-300 order-first">
+                    <a href="{{ $production->ticket_url }}" target="_blank"
+                        class="btn btn-primary btn-lg w-full transform hover:scale-105 transition-all duration-300">
+                        <x-unicon name="tabler:ticket" class="size-6" />
+                        Get Tickets
+                    </a>
+                </div>
+            @endif
+
+            <!-- Event Details Card - Aligned to poster height -->
+            <div class="card w-full bg-base-100 whitespace-nowrap">
+                <h1 class="card-title sm:text-2xl lg:text-3xl">{{ $production->title }}</h1>
+                <!-- Event Info Grid -->
+                <div class="flex flex-col grow grid-cols-3 sm:grid lg:flex gap-4 whitespace-nowrap p-4">
+                    <div class="flex flex-wrap gap-2 items-center justify-center">
+                        <x-unicon name="tabler:calendar" class="size-8 text-primary" />
+                        <div class='grow'>
+                            <div class="font-semibold text-xl">
+                                {{ $production->start_time->format('M j, Y') }}</div>
+                            <div class="text-base opacity-70">
+                                {{ $production->start_time->format('l') }}</div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 items-center justify-center">
+                        <x-unicon name="tabler:clock" class="size-8 text-primary " />
+                        <div class='grow'>
+                            <div class="font-semibold text-xl">
+                                {{ $production->start_time->format('g:i A') }}</div>
+                            @if ($production->doors_time)
+                                <div class="text-base opacity-70">Doors:
+                                    {{ $production->doors_time->format('g:i A') }}</div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 items-center justify-center">
+                        <x-unicon name="tabler:ticket" class="size-8 text-primary flex-shrink-0" />
+                        <div class='grow'>
+                            <div class="font-semibold text-xl text-primary">
+                                @if ($production->isFree())
+                                    Free
+                                @else
+                                    ${{ number_format($production->ticket_price, 2) }}
+                                @endif
+                            </div>
+                            @if ($production->isNotaflof())
+                                <div class="text-base opacity-70">
+                                    NOTAFLOF
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Prominent Ticket Button at bottom of card -->
+
+            <div class="flex gap-4 justify-center sm:hidden lg:flex">
+                <a href="https://facebook.com/sharer/sharer.php?u={{ urlencode(request()->url()) }}" target="_blank"
+                    class="btn btn-outline btn-circle btn-lg">
+                    <x-unicon name="tabler:brand-facebook" class="size-6" />
+                </a>
+                <a href="https://twitter.com/intent/tweet?url={{ urlencode(request()->url()) }}&text={{ urlencode($production->title) }}"
+                    target="_blank" class="btn btn-outline btn-circle btn-lg">
+                    <x-unicon name="tabler:brand-x" class="size-6" />
+                </a>
+                <button onclick="navigator.share({title: '{{ $production->title }}', url: '{{ request()->url() }}'})"
+                    class="btn btn-outline btn-circle btn-lg">
+                    <x-unicon name="tabler:share" class="size-6" />
+                </button>
             </div>
         </div>
     </div>
+    <div class="space-y-8 container mx-auto p-4">
 
-    <div class="container mx-auto px-4 py-16">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <!-- Main Content -->
-            <div class="lg:col-span-2">
-                <!-- Event Description -->
-                @if($production->description)
-                <div class="card bg-base-100 shadow-lg mb-8">
-                    <div class="card-body">
-                        <h2 class="card-title text-2xl mb-4">About This Event</h2>
-                        <div class="prose max-w-none">
-                            {!! nl2br(e($production->description)) !!}
-                        </div>
+        <!-- Event Description -->
+        @if ($production->description)
+            <h2 class="font-bold text-2xl mb-4">About This Event</h2>
+            <div class="prose max-w-none">
+                {!! nl2br(e($production->description)) !!}
+            </div>
+        @endif
+
+        <!-- Performers -->
+        @if ($production->performers && $production->performers->count() > 0)
+            <h2 class="font-bold text-2xl mb-6">Featured Artists</h2>
+            <div class="grid grid-cols-1 
+                     @if($production->performers->count() == 4) sm:grid-cols-2 gap-6
+                     @else sm:grid-cols-2 md:grid-cols-3 gap-6 @endif">
+                @foreach ($production->performers as $performer)
+                    <x-performer-card :performer="$performer" />
+                @endforeach
+            </div>
+        @endif
+
+
+
+        @if ($production->age_restriction)
+            <div class="list-row">
+                <x-unicon name="tabler:id" class="size-6 text-primary" />
+                <div>
+                    <div class="font-semibold">Age Restriction</div>
+                    <div class="text-sm opacity-70">{{ $production->age_restriction }}
                     </div>
                 </div>
-                @endif
+            </div>
+        @endif
 
-                <!-- Performers -->
-                @if($production->performers && $production->performers->count() > 0)
-                <div class="card bg-base-100 shadow-lg mb-8">
-                    <div class="card-body">
-                        <h2 class="card-title text-2xl mb-6">Featured Artists</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            @foreach($production->performers as $performer)
-                            <div class="flex items-center gap-4 p-4 bg-base-200 rounded-lg">
-                                @if($performer->avatar_url)
-                                <div class="avatar">
-                                    <div class="w-16 h-16 rounded-full">
-                                        <img src="{{ $performer->avatar_url }}" alt="{{ $performer->name }}">
-                                    </div>
-                                </div>
+        <!-- Related Events -->
+        @php
+            $relatedEvents = \App\Models\Production::publishedUpcoming()
+                ->where('id', '!=', $production->id)
+                ->limit(3)
+                ->get();
+        @endphp
+
+        @if ($relatedEvents->count() > 0)
+            <h2 class="font-bold text-2xl mb-6">More Upcoming Events</h2>
+            <div class="carousel carousel-center max-w-full p-4 space-x-4 rounded-box mb-8">
+                @foreach ($relatedEvents as $event)
+                    <div class="carousel-item">
+                        <a href="{{ route('events.show', $event) }}" class="block">
+                            <div class="relative group">
+                                @if ($event->poster_url)
+                                    <img src="{{ $event->poster_url }}" alt="{{ $event->title }}"
+                                        class="h-64 w-auto aspect-[8.5/11] object-cover rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                                 @else
-                                <div class="avatar placeholder">
-                                    <div class="bg-neutral text-neutral-content rounded-full w-16 h-16">
-                                        <span class="text-xl">{{ strtoupper(substr($performer->name, 0, 1)) }}</span>
+                                    <div
+                                        class="h-64 w-40 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300 flex items-center justify-center">
+                                        <div class="text-center opacity-50">
+                                            <x-unicon name="tabler:music" class="size-16 mx-auto mb-2" />
+                                            <p class="text-sm font-bold px-2 text-center">{{ $event->title }}</p>
+                                        </div>
                                     </div>
-                                </div>
                                 @endif
-                                
-                                <div class="flex-1">
-                                    <h3 class="font-bold text-lg">{{ $performer->name }}</h3>
-                                    @if($performer->hometown)
-                                    <p class="text-sm opacity-70">{{ $performer->hometown }}</p>
-                                    @endif
-                                    @if($performer->bio)
-                                    <p class="text-sm mt-1">{{ Str::limit($performer->bio, 100) }}</p>
+                                <div class="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-3 rounded-b-lg">
+                                    <h3 class="font-bold text-sm truncate">{{ $event->title }}</h3>
+                                    <p class="text-xs opacity-90">{{ $event->start_time->format('M j, Y') }}</p>
+                                    @if ($event->venue_name)
+                                        <p class="text-xs opacity-75 truncate">{{ $event->venue_name }}</p>
                                     @endif
                                 </div>
                             </div>
-                            @endforeach
-                        </div>
+                        </a>
                     </div>
-                </div>
-                @endif
-
-                <!-- Venue Information -->
-                @if($production->venue_name || $production->venue_address)
-                <div class="card bg-base-100 shadow-lg mb-8">
-                    <div class="card-body">
-                        <h2 class="card-title text-2xl mb-4">Venue Information</h2>
-                        <div class="space-y-3">
-                            @if($production->venue_name)
-                            <div class="flex items-center gap-3">
-                                <x-unicon name="tabler:building" class="size-5"/>
-                                <span class="text-lg font-semibold">{{ $production->venue_name }}</span>
-                            </div>
-                            @endif
-                            
-                            @if($production->venue_address)
-                            <div class="flex items-center gap-3">
-                                <x-unicon name="tabler:map-pin" class="size-5"/>
-                                <span>{{ $production->venue_address }}</span>
-                            </div>
-                            @endif
-                            
-                            @if($production->venue_website)
-                            <div class="flex items-center gap-3">
-                                <x-unicon name="tabler:external-link" class="size-5"/>
-                                <a href="{{ $production->venue_website }}" target="_blank" class="link link-primary">
-                                    Visit Venue Website
-                                </a>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-                @endif
+                @endforeach
             </div>
-
-            <!-- Sidebar -->
-            <div class="lg:col-span-1">
-                <!-- Event Details Card -->
-                <div class="card bg-base-100 shadow-lg mb-8 sticky top-8">
-                    <div class="card-body">
-                        <h3 class="card-title text-xl mb-4">Event Details</h3>
-                        
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center py-2 border-b border-base-300">
-                                <span class="font-semibold">Date</span>
-                                <span>{{ $production->start_time->format('M j, Y') }}</span>
-                            </div>
-                            
-                            <div class="flex justify-between items-center py-2 border-b border-base-300">
-                                <span class="font-semibold">Time</span>
-                                <span>{{ $production->start_time->format('g:i A') }}</span>
-                            </div>
-                            
-                            @if($production->doors_time)
-                            <div class="flex justify-between items-center py-2 border-b border-base-300">
-                                <span class="font-semibold">Doors Open</span>
-                                <span>{{ $production->doors_time->format('g:i A') }}</span>
-                            </div>
-                            @endif
-                            
-                            @if($production->end_time)
-                            <div class="flex justify-between items-center py-2 border-b border-base-300">
-                                <span class="font-semibold">Ends</span>
-                                <span>{{ $production->end_time->format('g:i A') }}</span>
-                            </div>
-                            @endif
-                            
-                            <div class="flex justify-between items-center py-2 border-b border-base-300">
-                                <span class="font-semibold">Venue</span>
-                                <span>{{ $production->venue_name }}</span>
-                            </div>
-                            
-                            @if(!$production->isFree())
-                            <div class="flex justify-between items-center py-2 border-b border-base-300">
-                                <span class="font-semibold">Tickets</span>
-                                <span class="font-bold text-primary">{{ $production->ticket_price_display }}</span>
-                            </div>
-                            @endif
-                            
-                            @if($production->age_restriction)
-                            <div class="flex justify-between items-center py-2 border-b border-base-300">
-                                <span class="font-semibold">Age</span>
-                                <span>{{ $production->age_restriction }}</span>
-                            </div>
-                            @endif
-                        </div>
-
-                        @if($production->hasTickets())
-                        <div class="mt-6">
-                            <a href="{{ $production->ticket_url }}" target="_blank" class="btn btn-primary w-full">
-                                <x-unicon name="tabler:ticket" class="size-5"/>
-                                Get Tickets
-                            </a>
-                        </div>
-                        @elseif($production->isFree())
-                        <div class="mt-6">
-                            <div class="alert alert-success">
-                                <x-unicon name="tabler:check" class="size-5"/>
-                                <span>This is a free event!</span>
-                            </div>
-                        </div>
-                        @endif
-
-                        <!-- Social Sharing -->
-                        <div class="mt-6">
-                            <h4 class="font-semibold mb-3">Share This Event</h4>
-                            <div class="flex gap-2">
-                                <a href="https://facebook.com/sharer/sharer.php?u={{ urlencode(request()->url()) }}" target="_blank" class="btn btn-square btn-outline btn-sm">
-                                    <x-unicon name="tabler:brand-facebook" class="size-4"/>
-                                </a>
-                                <a href="https://twitter.com/intent/tweet?url={{ urlencode(request()->url()) }}&text={{ urlencode($production->title) }}" target="_blank" class="btn btn-square btn-outline btn-sm">
-                                    <x-unicon name="tabler:brand-x" class="size-4"/>
-                                </a>
-                                <button onclick="navigator.share({title: '{{ $production->title }}', url: '{{ request()->url() }}'})" class="btn btn-square btn-outline btn-sm">
-                                    <x-unicon name="tabler:share" class="size-4"/>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Related Events -->
-                @php
-                $relatedEvents = \App\Models\Production::publishedUpcoming()
-                    ->where('id', '!=', $production->id)
-                    ->limit(3)
-                    ->get();
-                @endphp
-
-                @if($relatedEvents->count() > 0)
-                <div class="card bg-base-100 shadow-lg">
-                    <div class="card-body">
-                        <h3 class="card-title text-xl mb-4">More Upcoming Events</h3>
-                        <div class="space-y-4">
-                            @foreach($relatedEvents as $event)
-                            <a href="{{ route('events.show', $event) }}" class="block p-3 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
-                                <h4 class="font-semibold mb-1">{{ $event->title }}</h4>
-                                <div class="text-sm opacity-70">
-                                    {{ $event->start_time->format('M j') }} • {{ $event->venue_name }}
-                                </div>
-                            </a>
-                            @endforeach
-                        </div>
-                        <div class="mt-4">
-                            <a href="{{ route('events.index') }}" class="btn btn-outline btn-sm w-full">
-                                View All Events
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                @endif
+            <div class="text-center">
+                <a href="{{ route('events.index') }}" class="btn btn-outline btn-lg">
+                    View All Events
+                </a>
             </div>
-        </div>
-
-        <!-- Back to Events -->
-        <div class="mt-16 text-center">
-            <a href="{{ route('events.index') }}" class="btn btn-outline">
-                <x-unicon name="tabler:arrow-left" class="size-4"/>
-                Back to All Events
-            </a>
-        </div>
+        @endif
     </div>
 </x-public.layout>

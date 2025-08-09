@@ -58,8 +58,8 @@ class EventsGrid extends SearchableGrid
 
     protected function configureFilters()
     {
-        // For now, just focus on title search - no additional filters
-        // The main search field will handle title searching
+        // Override to prevent default filters from being added
+        // Events only need the main search field for title searching
     }
 
     // Override getItems to focus on title search only
@@ -71,15 +71,6 @@ class EventsGrid extends SearchableGrid
         // Apply simple title search if we have search term
         if (!empty($this->search)) {
             $query->where('title', 'like', '%' . $this->search . '%');
-        }
-
-        // Debug logging when in debug mode
-        if (config('app.debug') && !empty($this->search)) {
-            logger('EventsGrid title search', [
-                'search' => $this->search,
-                'sql' => $query->toSql(),
-                'bindings' => $query->getBindings()
-            ]);
         }
 
         return $query->paginate($this->getPerPage());

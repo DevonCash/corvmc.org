@@ -245,4 +245,36 @@ class BandProfile extends Model implements HasMedia
     {
         return static::withoutGlobalScope(OwnedBandsScope::class);
     }
+
+    /**
+     * Get the primary link for this band profile.
+     * Returns public profile if visible, otherwise first external link.
+     */
+    public function primaryLink(): ?array
+    {
+        // Priority 1: Public profile
+        if ($this->visibility === 'public') {
+            return [
+                'url' => route('bands.show', $this),
+                'text' => 'View Profile',
+                'icon' => 'tabler:user',
+                'external' => false,
+            ];
+        }
+
+        // Priority 2: First external link
+        if (!empty($this->links) && is_array($this->links)) {
+            $firstLink = reset($this->links);
+            if ($firstLink) {
+                return [
+                    'url' => $firstLink,
+                    'text' => 'Visit Website',
+                    'icon' => 'tabler:external-link',
+                    'external' => true,
+                ];
+            }
+        }
+
+        return null;
+    }
 }

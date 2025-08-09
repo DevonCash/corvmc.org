@@ -112,12 +112,14 @@ Route::post('/contact', function () {
         'message' => ['required', 'string', 'max:2000']
     ]);
 
-    // Store the contact submission (you might want to create a ContactSubmission model)
-    // For now, we'll just log it
+    // Log the contact submission
     logger('Contact form submission', $validated);
     
-    // TODO: Send email notification to staff
-    // TODO: Consider storing in database for follow-up tracking
+    // Send email notification to organization contact email
+    $organizationEmail = app(\App\Settings\OrganizationSettings::class)->email;
+    $staffEmail = $organizationEmail ?? config('mail.from.address');
+    \Illuminate\Support\Facades\Notification::route('mail', $staffEmail)
+        ->notify(new \App\Notifications\ContactFormSubmissionNotification($validated));
     
     return back()->with('success', 'Thank you for your message! We\'ll get back to you soon.');
 })->name('contact.store');
