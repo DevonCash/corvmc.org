@@ -5,6 +5,11 @@ namespace App\Filament\Resources\Users;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Filament\Resources\Users\Pages\ViewUser;
+use App\Filament\Resources\Users\RelationManagers\BandProfilesRelationManager;
+use App\Filament\Resources\Users\RelationManagers\ProductionsRelationManager;
+use App\Filament\Resources\Users\RelationManagers\ReservationsRelationManager;
+use App\Filament\Resources\Users\RelationManagers\TransactionsRelationManager;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Models\User;
@@ -20,6 +25,26 @@ class UserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('view users') ?? null;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('invite users') ?? null;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->can('update users') ?? null;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->can('delete users') ?? null;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return UserForm::configure($schema);
@@ -33,7 +58,10 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            BandProfilesRelationManager::class,
+            ProductionsRelationManager::class,
+            ReservationsRelationManager::class,
+            TransactionsRelationManager::class,
         ];
     }
 
@@ -41,7 +69,8 @@ class UserResource extends Resource
     {
         return [
             'index' => ListUsers::route('/'),
-            'create' => CreateUser::route('/create'),
+            'create' => CreateUser::route('/invite'),
+            'view' => ViewUser::route('/{record}'),
             'edit' => EditUser::route('/{record}/edit'),
         ];
     }

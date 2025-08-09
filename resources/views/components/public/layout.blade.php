@@ -101,7 +101,7 @@
                 </div>
                 <div>
                     <p>Copyright © {{ date('Y') }} Corvallis Music Collective. All rights reserved.</p>
-                    <p class="text-sm opacity-70">501(c)(3) Nonprofit Organization • EIN: XX-XXXXXXX</p>
+                    <p class="text-sm opacity-70">{{ app(\App\Settings\OrganizationSettings::class)->getFullNonprofitDescription() }}</p>
                 </div>
             </footer>
         </div>
@@ -244,7 +244,7 @@
         </div>
         <div>
             <p>Copyright © {{ date('Y') }} Corvallis Music Collective. All rights reserved.</p>
-            <p class="text-sm opacity-70">501(c)(3) Nonprofit Organization • EIN: XX-XXXXXXX</p>
+            <p class="text-sm opacity-70">{{ app(\App\Settings\OrganizationSettings::class)->getFullNonprofitDescription() }}</p>
         </div>
     </footer>
 </body>

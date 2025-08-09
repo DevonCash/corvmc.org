@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Productions\RelationManagers;
 
 use App\Filament\Resources\BandProfiles\BandProfileResource;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\SpatieTagsInput;
 use Filament\Forms\Components\Textarea;
@@ -36,7 +37,12 @@ class PerformersRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->reorderable('order')
+            ->reorderable('production_bands.order')
+            ->reorderRecordsTriggerAction(
+                fn(Action $action, bool $isReordering) => $action
+                    ->button()
+                    ->label($isReordering ? 'Disable reordering' : 'Enable reordering'),
+            )
             ->columns([
                 ImageColumn::make('avatar_url')
                     ->label('')
@@ -44,7 +50,7 @@ class PerformersRelationManager extends RelationManager
                     ->imageSize(60)
                     ->grow(false)
                     ->defaultImageUrl(function ($record) {
-                        return 'https://ui-avatars.com/api/?name='.urlencode($record->name).'&color=7C3AED&background=F3E8FF&size=120';
+                        return 'https://ui-avatars.com/api/?name=' . urlencode($record->name) . '&color=7C3AED&background=F3E8FF&size=120';
                     }),
 
                 TextColumn::make('name')
@@ -77,7 +83,7 @@ class PerformersRelationManager extends RelationManager
             ->headerActions([
                 CreateAction::make()
                     ->createAnother(false)
-                    ->form([
+                    ->schema([
                         TextInput::make('name')
                             ->label('Band Name')
                             ->required()

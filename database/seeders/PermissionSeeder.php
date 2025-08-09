@@ -30,9 +30,11 @@ class PermissionSeeder extends Seeder
         $permissions = [
             // User Management
             'view users',
+            'create users',
             'update users',
             'delete users',
             'restore users',
+            'invite users',
 
             // Member Profile Management
             'view private member profiles',
@@ -100,6 +102,7 @@ class PermissionSeeder extends Seeder
         $moderator = Role::firstOrCreate(['name' => 'moderator']);
         $moderator->syncPermissions([
             'view users',
+            'invite users',
             'view any bands',
             'view private bands',
             'create bands',

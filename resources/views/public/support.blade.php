@@ -242,7 +242,7 @@
                 <strong>Tax Deductible:</strong> CMC is a 501(c)(3) nonprofit organization. 
                 Your donation is tax-deductible to the full extent allowed by law.
             </p>
-            <p class="text-sm opacity-70">EIN: XX-XXXXXXX</p>
+            <p class="text-sm opacity-70">EIN: {{ app(\App\Settings\OrganizationSettings::class)->getFormattedEin() }}</p>
         </div>
     </div>
 </x-public.layout>

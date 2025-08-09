@@ -13,7 +13,9 @@ class ListUsers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->label('Invite User')
+                ->icon('heroicon-o-paper-airplane'),
         ];
     }
 }
