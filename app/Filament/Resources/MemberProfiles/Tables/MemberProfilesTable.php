@@ -7,6 +7,10 @@ use App\Settings\MemberDirectorySettings;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieTagsInput;
+use Filament\Schemas\Components\Grid;
 use Filament\Support\Enums\IconPosition;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\Layout\Split;
@@ -15,6 +19,7 @@ use Filament\Tables\Columns\SpatieTagsColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 
 class MemberProfilesTable
@@ -29,7 +34,7 @@ class MemberProfilesTable
             ->defaultImageUrl(function ($record) {
                 $name = $record->user?->name ?? 'Member';
 
-                return 'https://ui-avatars.com/api/?name='.urlencode($name).'&color=7F9CF5&background=EBF4FF&size=160';
+                return 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&color=7F9CF5&background=EBF4FF&size=160';
             });
     }
 
@@ -66,7 +71,7 @@ class MemberProfilesTable
     public static function bioColumn()
     {
         return TextColumn::make('bio')
-            ->state(fn ($record) => strip_tags($record->bio))
+            ->state(fn($record) => strip_tags($record->bio))
             ->label('')
             ->lineClamp(2)
             ->color('gray');
@@ -133,81 +138,94 @@ class MemberProfilesTable
             ])
 
             ->filters([
-                SelectFilter::make('visibility')
-                    ->visible(fn ($record) => User::me()?->can('view private member profiles'))
-                    ->options([
-                        'public' => 'Public',
-                        'members' => 'Members Only',
-                        'private' => 'Private',
-                    ]),
+                Filter::make('custom_filters')
+                    ->columnSpanFull()
+                    ->schema([
+                        Grid::make(3)
+                            ->schema([
+                                Select::make('skills')
+                                    ->label('Skills')
+                                    ->multiple()
+                                    ->searchable()
+                                    ->options(function () {
+                                        return \Spatie\Tags\Tag::where('type', 'skill')
+                                            ->pluck('name', 'name')
+                                            ->toArray();
+                                    }),
 
-                SelectFilter::make('directory_flags')
-                    ->label('Directory Flags')
-                    ->options(function () {
-                        $settings = app(MemberDirectorySettings::class);
+                                Select::make('genres')
+                                    ->label('Genres')
+                                    ->multiple()
+                                    ->searchable()
+                                    ->options(function () {
+                                        return \Spatie\Tags\Tag::where('type', 'genre')
+                                            ->pluck('name', 'name')
+                                            ->toArray();
+                                    }),
 
-                        return $settings->getAvailableFlags();
-                    })
+                                Select::make('influences')
+                                    ->label('Influences')
+                                    ->multiple()
+                                    ->searchable()
+                                    ->options(function () {
+                                        return \Spatie\Tags\Tag::where('type', 'influence')
+                                            ->pluck('name', 'name')
+                                            ->toArray();
+                                    }),
+                            ]),
+
+                        Grid::make(2)
+                            ->schema([
+                                CheckboxList::make('flags')
+                                    ->label('Services')
+                                    ->options(function () {
+                                        $settings = app(MemberDirectorySettings::class);
+                                        return $settings->getAvailableFlags();
+                                    })
+                                    ->columns(function () {
+                                        return User::me()?->can('view private member profiles') ? 2 : 4;
+                                    })
+                                    ->columnSpan(function () {
+                                        return User::me()?->can('view private member profiles') ? 1 : 2;
+                                    }),
+
+                                Select::make('visibility')
+                                    ->label('Visibility 🛡️')
+                                    ->visible(fn() => User::me()?->can('view private member profiles'))
+                                    ->options([
+                                        'public' => 'Public',
+                                        'members' => 'Members Only',
+                                        'private' => 'Private',
+                                    ]),
+                            ]),
+                    ])
                     ->query(function ($query, array $data) {
-                        if (! empty($data['value'])) {
-                            return $query->withFlag($data['value']);
+                        if (!empty($data['visibility'])) {
+                            // Handle visibility filter
+                        }
+
+                        if (!empty($data['flags'])) {
+                            foreach ($data['flags'] as $flag) {
+                                $query->withFlag($flag);
+                            }
+                        }
+
+                        if (!empty($data['skills'])) {
+                            $query->withAnyTags($data['skills'], 'skill');
+                        }
+
+                        if (!empty($data['genres'])) {
+                            $query->withAnyTags($data['genres'], 'genre');
+                        }
+
+                        if (!empty($data['influences'])) {
+                            $query->withAnyTags($data['influences'], 'influence');
                         }
 
                         return $query;
                     }),
 
-                SelectFilter::make('skills')
-                    ->label('Skills')
-                    ->multiple()
-                    ->searchable()
-                    ->options(function () {
-                        return \Spatie\Tags\Tag::where('type', 'skill')
-                            ->pluck('name', 'name')
-                            ->toArray();
-                    })
-                    ->query(function ($query, array $data) {
-                        if (! empty($data['values'])) {
-                            return $query->withAnyTags($data['values'], 'skill');
-                        }
-
-                        return $query;
-                    }),
-
-                SelectFilter::make('genres')
-                    ->label('Genres')
-                    ->multiple()
-                    ->searchable()
-                    ->options(function () {
-                        return \Spatie\Tags\Tag::where('type', 'genre')
-                            ->pluck('name', 'name')
-                            ->toArray();
-                    })
-                    ->query(function ($query, array $data) {
-                        if (! empty($data['values'])) {
-                            return $query->withAnyTags($data['values'], 'genre');
-                        }
-
-                        return $query;
-                    }),
-
-                SelectFilter::make('influences')
-                    ->label('Influences')
-                    ->multiple()
-                    ->searchable()
-                    ->options(function () {
-                        return \Spatie\Tags\Tag::where('type', 'influence')
-                            ->pluck('name', 'name')
-                            ->toArray();
-                    })
-                    ->query(function ($query, array $data) {
-                        if (! empty($data['values'])) {
-                            return $query->withAnyTags($data['values'], 'influence');
-                        }
-
-                        return $query;
-                    }),
-
-            ], layout: FiltersLayout::BelowContent)
+            ], layout: FiltersLayout::AboveContent)
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
