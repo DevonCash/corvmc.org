@@ -24,7 +24,11 @@ class ProductionPolicy
      */
     public function view(User $user, Production $production): ?bool
     {
-        if ($user->can('manage productions')) {
+        if ($user?->id === $production->manager_id || $user->can('manage productions')) {
+            return true;
+        }
+
+        if ($production->isPublished()) {
             return true;
         }
 

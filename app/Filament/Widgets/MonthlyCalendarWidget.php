@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Production;
 use App\Models\Reservation;
+use App\Models\User;
 use Carbon\Carbon;
 use Closure;
 use Guava\Calendar\ValueObjects\CalendarEvent;
@@ -19,25 +20,23 @@ class MonthlyCalendarWidget extends CalendarWidget
     public function getEvents(array $fetchInfo = []): array
     {
         // Get actual reservations
-        $start = Carbon::parse($fetchInfo['start'] ?? now()->startOfMonth()->subMonth());
-        $end = Carbon::parse($fetchInfo['end'] ?? now()->endOfMonth()->addMonth());
+        // $start = Carbon::parse($fetchInfo['start'] ?? now()->startOfMonth()->subMonth());
+        // $end = Carbon::parse($fetchInfo['end'] ?? now()->endOfMonth()->addMonth());
 
         $reservations = Reservation::withoutGlobalScopes()
             ->with('user')
             ->where('status', '!=', 'cancelled')
-            ->where('reserved_until', '>=', $start)
-            ->where('reserved_at', '<=', $end)
             ->get()
             ->map(function (Reservation $reservation) {
-                $currentUser = auth()->user();
-                $isOwnReservation = $currentUser && $currentUser->id === $reservation->user_id;
-                $canViewDetails = $currentUser && $currentUser->can('view reservations');
+                $currentUser = User::me();
+                $isOwnReservation = $currentUser?->id === $reservation->user_id;
+                $canViewDetails = $currentUser?->can('view reservations');
 
                 // Show full details for own reservations or if user has permission
                 if ($isOwnReservation || $canViewDetails) {
                     $title = $reservation->user->name;
                     if ($reservation->notes) {
-                        $title .= ' - '.$reservation->notes;
+                        $title .= ' - ' . $reservation->notes;
                     }
                 } else {
                     $title = 'Reserved';
@@ -55,14 +54,13 @@ class MonthlyCalendarWidget extends CalendarWidget
                     ->start($reservation->reserved_at)
                     ->end($reservation->reserved_until)
                     ->backgroundColor($color)
+                    ->action('view')
                     ->textColor('#fff');
             });
 
         $productions = Production::with('manager')
-            ->where('end_time', '>=', $start)
-            ->where('start_time', '<=', $end)
             ->get()
-            ->filter(fn (Production $production) => $production->usesPracticeSpace())
+            ->filter(fn(Production $production) => $production->usesPracticeSpace())
             ->map(function (Production $production) {
                 $title = $production->title;
                 if (! $production->isPublished()) {
@@ -82,11 +80,15 @@ class MonthlyCalendarWidget extends CalendarWidget
                     ->start($production->start_time)
                     ->end($production->end_time)
                     ->backgroundColor($color)
+                    ->action('view')
                     ->textColor('#fff');
             });
 
         // Return all events
-        return $reservations->merge($productions)->toArray();
+        return $reservations
+            ->merge($productions)
+            ->map(fn($event) => $event->action('view'))
+            ->toArray();
     }
 
     public function getConfig(): array

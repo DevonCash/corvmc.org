@@ -77,7 +77,7 @@ class ReservationStatsOverview extends BaseWidget
             Stat::make('Free Hours', $remainingFreeHours.'/'.$totalFreeHours)
                 ->description($user->isSustainingMember()
                     ? ($usedFreeHours > 0 ? 'Used '.number_format($usedFreeHours, 1).' this month' : 'None used this month')
-                    : 'Upgrade to sustaining member'
+                    : 'Learn More'
                 )
                 ->descriptionIcon($user->isSustainingMember() ? 'heroicon-m-gift' : 'heroicon-m-arrow-up-circle')
                 ->color($user->isSustainingMember()
