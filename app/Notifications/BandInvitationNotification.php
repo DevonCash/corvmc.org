@@ -23,7 +23,23 @@ class BandInvitationNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['mail', 'database'];
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): \Illuminate\Notifications\Messages\MailMessage
+    {
+        return (new \Illuminate\Notifications\Messages\MailMessage)
+            ->subject("You're invited to join {$this->band->name}!")
+            ->greeting('Hello!')
+            ->line("You've been invited to join {$this->band->name}" . ($this->position ? " as {$this->position}" : '') . '.')
+            ->line("Here's a bit about the band:")
+            ->line($this->band->bio ?: 'No bio available yet.')
+            ->action('View Band Profile', route('bands.show', $this->band))
+            ->line('You can accept or decline this invitation from your dashboard.')
+            ->line('Welcome to the music community!');
     }
 
     /**

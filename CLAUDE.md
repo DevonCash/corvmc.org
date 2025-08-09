@@ -59,6 +59,13 @@ NOTE: Filament v4 beta makes some changes from v3
 - `vendor/bin/pest` - Run Pest tests directly
 - `vendor/bin/pint` - Laravel Pint code style fixer
 
+### Custom Test Commands
+
+- `php artisan test:invitations` - Test the user invitation system end-to-end
+- `php artisan test:notifications` - Test all notification types in the system
+- Use `--clean` flag on invitation tests to clean up test data first
+- Use `--send` flag on notification tests to actually send notifications (default is dry-run)
+
 ### Database
 
 - `php artisan migrate` - Run database migrations
@@ -137,3 +144,48 @@ Resources are organized in dedicated directories under `app/Filament/Resources/`
 - Both Feature and Unit test suites configured
 - Use Pest testing framework syntax
 - Environment properly isolated for testing
+
+### Custom Testing Commands Pattern
+
+When developing complex features, create dedicated test commands to validate functionality:
+
+#### Process for Creating Test Commands:
+
+1. **Create the command**: `php artisan make:command TestFeatureName`
+2. **Structure the command**:
+   - Use clear section headers with emojis for visual separation
+   - Include `--dry-run` or similar flags to show what would happen without executing
+   - Provide `--clean` flags to reset test data
+   - Use descriptive output with ✓ for success, ✗ for failure, → for dry-run actions
+3. **Test comprehensively**:
+   - Test the happy path (normal flow)
+   - Test error conditions (expired tokens, invalid data)
+   - Test edge cases (duplicate actions, cleanup)
+   - Verify data integrity before and after operations
+4. **Include cleanup**: Always clean up test data to avoid pollution
+5. **Add to CLAUDE.md**: Document the command and its flags for future reference
+
+#### Example Implementation:
+```php
+protected $signature = 'test:feature {--dry-run : Show what would happen} {--clean : Clean test data}';
+
+public function handle() {
+    $this->info('🧪 Testing Feature Name');
+    $this->line('========================');
+    
+    if ($this->option('dry-run')) {
+        $this->warn('DRY RUN mode - no changes will be made');
+    }
+    
+    // Test sections with clear visual separation
+    $this->info('📧 1. Testing core functionality...');
+    // ... test logic
+    
+    $this->line('   ✓ Success message');
+    $this->line('   → Would execute action (dry-run)');
+    
+    $this->info('✅ All tests passed!');
+}
+```
+
+This pattern provides reliable, repeatable testing for complex business logic and integrations.

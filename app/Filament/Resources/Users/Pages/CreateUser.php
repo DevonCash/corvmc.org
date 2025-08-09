@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
+use App\Services\UserInvitationService;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
@@ -16,35 +17,33 @@ class CreateUser extends CreateRecord
 
     protected static ?string $breadcrumb = 'Invite';
 
-    protected function getCreatedNotificationTitle(): ?string
+    protected function handleRecordCreation(array $data): User
     {
-        return 'User invited successfully';
-    }
-
-    protected function mutateFormDataBeforeCreate(array $data): array
-    {
-        // Generate a temporary name if not provided
-        if (empty($data['name'])) {
-            $data['name'] = 'Invited User';
+        $invitationService = app(UserInvitationService::class);
+        
+        // Extract role names from the form data
+        $roleNames = [];
+        if (isset($data['roles']) && is_array($data['roles'])) {
+            $roleNames = \Spatie\Permission\Models\Role::whereIn('id', $data['roles'])
+                ->pluck('name')
+                ->toArray();
         }
 
-        // Generate a temporary password that will be reset when user accepts invitation
-        $data['password'] = bcrypt(Str::random(32));
+        // Use the invitation service to create and invite the user
+        return $invitationService->inviteUser($data['email'], $roleNames);
+    }
 
-        return $data;
+    protected function getCreatedNotificationTitle(): ?string
+    {
+        return 'User invitation sent successfully';
     }
 
     protected function afterCreate(): void
     {
-        // Send invitation email (you would implement this based on your email system)
-        // For now, we'll just show a notification
         Notification::make()
             ->title('Invitation sent')
             ->body("An invitation email has been sent to {$this->record->email}")
             ->success()
             ->send();
-
-        // TODO: Implement actual email invitation logic here
-        // This might involve creating an invitation token, sending an email, etc.
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Production;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Notifications\ReservationConfirmedNotification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -232,7 +233,7 @@ class ReservationService
         $costCalculation = $this->calculateCost($user, $startTime, $endTime);
 
         return DB::transaction(function () use ($user, $startTime, $endTime, $costCalculation, $options) {
-            return Reservation::create([
+            $reservation = Reservation::create([
                 'user_id' => $user->id,
                 'reserved_at' => $startTime,
                 'reserved_until' => $endTime,
@@ -244,6 +245,13 @@ class ReservationService
                 'is_recurring' => $options['is_recurring'] ?? false,
                 'recurrence_pattern' => $options['recurrence_pattern'] ?? null,
             ]);
+
+            // Send confirmation notification for confirmed reservations
+            if ($reservation->status === 'confirmed') {
+                $user->notify(new ReservationConfirmedNotification($reservation));
+            }
+
+            return $reservation;
         });
     }
 
@@ -273,6 +281,23 @@ class ReservationService
 
             return $reservation;
         });
+    }
+
+    /**
+     * Confirm a pending reservation.
+     */
+    public function confirmReservation(Reservation $reservation): Reservation
+    {
+        if ($reservation->status !== 'pending') {
+            return $reservation;
+        }
+
+        $reservation->update(['status' => 'confirmed']);
+        
+        // Send confirmation notification
+        $reservation->user->notify(new ReservationConfirmedNotification($reservation));
+
+        return $reservation;
     }
 
     /**

@@ -121,3 +121,12 @@ Route::post('/contact', function () {
     
     return back()->with('success', 'Thank you for your message! We\'ll get back to you soon.');
 })->name('contact.store');
+
+// User invitation routes (public, no auth required)
+Route::get('/invitation/accept/{token}', [\App\Http\Controllers\InvitationController::class, 'show'])
+    ->name('invitation.accept')
+    ->where('token', '.*'); // Allow any characters in token
+
+Route::post('/invitation/accept/{token}', [\App\Http\Controllers\InvitationController::class, 'store'])
+    ->name('invitation.accept.store')
+    ->where('token', '.*');

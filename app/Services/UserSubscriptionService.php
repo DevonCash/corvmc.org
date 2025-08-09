@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Transaction;
 use App\Models\User;
+use App\Notifications\DonationReceivedNotification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -71,6 +72,9 @@ class UserSubscriptionService
                 $user->assignRole('sustaining member');
             }
         }
+
+        // Send donation thank you notification
+        $user->notify(new DonationReceivedNotification($transaction));
 
         return true;
     }
