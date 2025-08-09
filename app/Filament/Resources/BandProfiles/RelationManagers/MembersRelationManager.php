@@ -311,6 +311,29 @@ class MembersRelationManager extends RelationManager
                         auth()->user()->can('manageMembers', $this->ownerRecord)
                     ),
 
+                Action::make('reinvite_declined')
+                    ->label('Re-invite')
+                    ->color('primary')
+                    ->icon('heroicon-m-envelope')
+                    ->requiresConfirmation()
+                    ->modalHeading('Re-invite Member')
+                    ->modalDescription(fn ($record) => "Send a new invitation to {$record->name}?")
+                    ->action(function ($record): void {
+                        $bandService = app(BandService::class);
+                        $success = $bandService->reInviteDeclinedUser($this->ownerRecord, $record);
+
+                        if ($success) {
+                            Notification::make()
+                                ->title('Invitation sent')
+                                ->body("New invitation sent to {$record->name}")
+                                ->success()
+                                ->send();
+                        }
+                    })
+                    ->visible(fn ($record): bool => $record->pivot->status === 'declined' &&
+                        auth()->user()->can('manageMembers', $this->ownerRecord)
+                    ),
+
                 EditAction::make()
                     ->form([
                         TextInput::make('name')

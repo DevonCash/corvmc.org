@@ -73,13 +73,7 @@
                                     Accept
                                 </button>
                                 
-                                <button 
-                                    wire:click="declineInvitation({{ $band->id }})"
-                                    wire:confirm="Are you sure you want to decline this invitation?"
-                                    class="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 transition-colors">
-                                    <x-heroicon-s-x-mark class="w-4 h-4 mr-2" />
-                                    Decline
-                                </button>
+                                {{ ($this->declineInvitationAction)(['bandId' => $band->id]) }}
                             </div>
                         </div>
                     </div>

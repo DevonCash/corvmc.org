@@ -32,6 +32,21 @@ class BandProfileResource extends Resource
 
     protected static ?string $modelLabel = 'Band';
 
+    public static function getNavigationBadge(): ?string
+    {
+        $count = BandProfile::whereHas('members', function ($query) {
+            $query->where('user_id', auth()->id())
+                ->where('status', 'invited');
+        })->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return BandProfileForm::configure($schema);

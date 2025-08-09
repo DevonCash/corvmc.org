@@ -192,6 +192,34 @@ class BandService
     }
 
     /**
+     * Re-invite a user who previously declined.
+     */
+    public function reInviteDeclinedUser(BandProfile $band, User $user): bool
+    {
+        if (! $this->hasDeclinedUser($band, $user)) {
+            return false;
+        }
+
+        // Get the current invitation details
+        $member = $band->members()->wherePivot('user_id', $user->id)->first();
+
+        // Update status back to invited
+        $band->members()->updateExistingPivot($user->id, [
+            'status' => 'invited',
+            'invited_at' => now(),
+        ]);
+
+        // Send notification
+        $user->notify(new BandInvitationNotification(
+            $band,
+            $member->pivot->role,
+            $member->pivot->position
+        ));
+
+        return true;
+    }
+
+    /**
      * Transfer ownership of a band to another member.
      */
     public function transferOwnership(BandProfile $band, User $newOwner): bool
@@ -264,6 +292,17 @@ class BandService
         return $band->members()
             ->wherePivot('user_id', $user->id)
             ->wherePivot('status', 'invited')
+            ->exists();
+    }
+
+    /**
+     * Check if a user has declined an invitation to the band.
+     */
+    public function hasDeclinedUser(BandProfile $band, User $user): bool
+    {
+        return $band->members()
+            ->wherePivot('user_id', $user->id)
+            ->wherePivot('status', 'declined')
             ->exists();
     }
 
