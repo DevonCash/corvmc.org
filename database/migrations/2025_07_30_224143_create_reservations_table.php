@@ -16,7 +16,6 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             $table->foreignId('user_id')->constrained();
-            $table->foreignId('production_id')->nullable()->constrained();
             $table->string('status')->default('pending'); // e.g., 'pending', 'confirmed', 'cancelled'
             $table->timestamp('reserved_at')->nullable();
             $table->timestamp('reserved_until')->nullable();
