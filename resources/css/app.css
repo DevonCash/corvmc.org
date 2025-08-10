@@ -16,18 +16,18 @@
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji";
 }
-
 @plugin "daisyui/theme" {
     name: "corvmc";
     default: true;
 
-    /* CMC Brand Colors */
+    /* CMC Brand Colors - Light Theme */
     --color-primary: oklch(67% 0.18 43); /* #e5771e - CMC Orange */
     --color-secondary: oklch(25% 0.09 250); /* #003b5c - CMC Blue */
     --color-accent: oklch(85% 0.05 200); /* #B8DDE1 - CMC Light Blue */
     --color-neutral: oklch(24% 0.03 270); /* #1f2937 */
     --color-base-100: oklch(100% 0 0); /* #ffffff */
     --color-base-200: oklch(97% 0.01 270); /* #f8f9fa */
+    --color-base-300: oklch(92% 0.02 270); /* #e5e7eb */
     --color-info: oklch(85% 0.05 200); /* #B8DDE1 */
     --color-success: oklch(70% 0.14 160); /* #36d399 */
     --color-warning: oklch(90% 0.08 85); /* #ffe28a - CMC Yellow */
@@ -43,15 +43,46 @@
     --speaker-front: oklch(var(--b3, 87.22% 0.0392 204.51));
 }
 
+@plugin "daisyui/theme" {
+    prefersdark: true;
+    color-scheme: dark;
+    --color-primary: oklch(75% 0.18 43); /* Brighter CMC Orange for dark bg */
+    --color-secondary: oklch(70% 0.08 200); /* Lighter CMC Blue variant */
+    --color-accent: oklch(75% 0.06 200); /* Brighter CMC Light Blue */
+    --color-neutral: oklch(85% 0.02 270); /* Light text */
+    --color-neutral-content: oklch(
+        20% 0.03 270
+    ); /* Dark text on light elements */
+    --color-base-100: oklch(16% 0.02 270); /* #1a1b23 - Dark background */
+    --color-base-200: oklch(20% 0.02 270); /* #22242e - Slightly lighter */
+    --color-base-300: oklch(24% 0.02 270); /* #2a2d3a - Card backgrounds */
+    --color-base-content: oklch(85% 0.02 270); /* Light text */
+    --color-info: oklch(75% 0.06 200);
+    --color-success: oklch(75% 0.14 160);
+    --color-warning: oklch(80% 0.1 85); /* Slightly dimmed yellow */
+    --color-error: oklch(75% 0.18 15);
+
+    --cmc-orange: #ff8c42; /* Brighter orange for dark theme */
+    --cmc-yellow: #ffeaa7;
+    --cmc-blue: #4a90e2; /* Brighter blue for dark theme */
+    --cmc-light-blue: #74b9ff;
+    --speaker-case: oklch(60% 0.14 40); /* Dimmed version of light primary */
+    --speaker-fill: oklch(82% 0.08 85); /* Dimmed version of light accent */
+    --sound-lines: oklch(48% 0.12 210); /* Dimmed version of light secondary */
+    --speaker-front: oklch(78% 0.035 204.51); /* Dimmed version of light speaker-front */
+
+    color-scheme: dark;
+}
+
 /* CMC Brand Styles */
 .corvmc-header-stripes {
     background: linear-gradient(
         45deg,
-        #e5771e 0%,
-        #ffe28a 25%,
-        #003b5c 50%,
-        #b8dde1 75%,
-        #e5771e 100%
+        var(--cmc-orange) 0%,
+        var(--cmc-yellow) 25%,
+        var(--cmc-blue) 50%,
+        var(--cmc-light-blue) 75%,
+        var(--cmc-orange) 100%
     );
     background-size: 200% 200%;
     animation: gradient-shift 8s ease infinite;
@@ -66,5 +97,22 @@
     }
     100% {
         background-position: 0% 50%;
+    }
+}
+
+/* Enhanced styling for better dark mode experience */
+@media (prefers-color-scheme: dark) {
+    .card {
+        @apply shadow-lg;
+    }
+
+    .navbar {
+        backdrop-filter: blur(10px);
+        background-color: oklch(var(--b1) / 0.9);
+    }
+
+    .footer {
+        background-color: oklch(var(--b2));
+        border-top: 1px solid oklch(var(--b3));
     }
 }
