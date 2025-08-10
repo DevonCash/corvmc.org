@@ -100,83 +100,140 @@
             <div class="mb-12">
                 <h3 class="text-2xl font-bold mb-6">Board of Directors</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div class="card bg-base-100 shadow-lg">
-                        <div class="card-body text-center">
-                            <div class="avatar">
-                                <div class="w-24 rounded-full mx-auto mb-4">
-                                    <img src="https://via.placeholder.com/150" alt="Board Member" />
+                    @forelse($boardMembers as $member)
+                        <div class="card bg-base-100 shadow-lg">
+                            <div class="card-body text-center">
+                                <div class="avatar">
+                                    <div class="w-24 rounded-full mx-auto mb-4">
+                                        <img src="{{ $member->profile_image_url ?: 'https://via.placeholder.com/150' }}" 
+                                             alt="{{ $member->name }}" />
+                                    </div>
                                 </div>
+                                <h4 class="card-title justify-center">
+                                    @if($member->user && $member->user->profile && $member->user->profile->isVisible())
+                                        <a href="{{ route('members.show', $member->user->profile) }}" class="link link-hover">
+                                            {{ $member->name }}
+                                        </a>
+                                    @else
+                                        {{ $member->name }}
+                                    @endif
+                                </h4>
+                                @if($member->title)
+                                    <p class="text-sm opacity-70">{{ $member->title }}</p>
+                                @endif
+                                @if($member->bio)
+                                    <p>{{ $member->bio }}</p>
+                                @endif
+                                
+                                @if($member->social_links)
+                                    <div class="flex justify-center gap-2 mt-3">
+                                        @foreach($member->social_links as $link)
+                                            <a href="{{ $link['url'] }}" target="_blank" rel="noopener" 
+                                               class="btn btn-sm btn-ghost btn-circle" 
+                                               title="{{ ucfirst($link['platform']) }}">
+                                                @switch($link['platform'])
+                                                    @case('website')
+                                                        <x-unicon name="tabler:world" class="w-4 h-4" />
+                                                        @break
+                                                    @case('linkedin')
+                                                        <x-unicon name="tabler:brand-linkedin" class="w-4 h-4" />
+                                                        @break
+                                                    @case('twitter')
+                                                        <x-unicon name="tabler:brand-x" class="w-4 h-4" />
+                                                        @break
+                                                    @case('facebook')
+                                                        <x-unicon name="tabler:brand-facebook" class="w-4 h-4" />
+                                                        @break
+                                                    @case('instagram')
+                                                        <x-unicon name="tabler:brand-instagram" class="w-4 h-4" />
+                                                        @break
+                                                    @case('github')
+                                                        <x-unicon name="tabler:brand-github" class="w-4 h-4" />
+                                                        @break
+                                                @endswitch
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
-                            <h4 class="card-title justify-center">Sarah Johnson</h4>
-                            <p class="text-sm opacity-70">Board President</p>
-                            <p>Local musician and music educator with 15+ years experience in community organizing.</p>
                         </div>
-                    </div>
-                    
-                    <div class="card bg-base-100 shadow-lg">
-                        <div class="card-body text-center">
-                            <div class="avatar">
-                                <div class="w-24 rounded-full mx-auto mb-4">
-                                    <img src="https://via.placeholder.com/150" alt="Board Member" />
-                                </div>
-                            </div>
-                            <h4 class="card-title justify-center">Mike Chen</h4>
-                            <p class="text-sm opacity-70">Treasurer</p>
-                            <p>Accountant and bassist who brings financial expertise and passion for supporting local arts.</p>
+                    @empty
+                        <div class="col-span-full text-center py-8">
+                            <p class="text-lg opacity-70">Board member information will be available soon.</p>
                         </div>
-                    </div>
-                    
-                    <div class="card bg-base-100 shadow-lg">
-                        <div class="card-body text-center">
-                            <div class="avatar">
-                                <div class="w-24 rounded-full mx-auto mb-4">
-                                    <img src="https://via.placeholder.com/150" alt="Board Member" />
-                                </div>
-                            </div>
-                            <h4 class="card-title justify-center">Alex Rivera</h4>
-                            <p class="text-sm opacity-70">Secretary</p>
-                            <p>Event coordinator and drummer who helps organize our community events and outreach.</p>
-                        </div>
-                    </div>
+                    @endforelse
                 </div>
             </div>
 
             <div>
                 <h3 class="text-2xl font-bold mb-6">Staff</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="card bg-base-100 shadow-lg">
-                        <div class="card-body">
-                            <div class="flex items-center gap-4">
-                                <div class="avatar">
-                                    <div class="w-16 rounded-full">
-                                        <img src="https://via.placeholder.com/150" alt="Staff Member" />
+                    @forelse($staffMembers as $member)
+                        <div class="card bg-base-100 shadow-lg">
+                            <div class="card-body">
+                                <div class="flex items-center gap-4">
+                                    <div class="avatar">
+                                        <div class="w-16 rounded-full">
+                                            <img src="{{ $member->profile_image_url ?: 'https://via.placeholder.com/150' }}" 
+                                                 alt="{{ $member->name }}" />
+                                        </div>
                                     </div>
-                                </div>
-                                <div>
-                                    <h4 class="card-title">Jamie Thompson</h4>
-                                    <p class="text-sm opacity-70">Operations Manager</p>
-                                    <p>Handles day-to-day operations, booking, and member services.</p>
+                                    <div class="flex-1">
+                                        <h4 class="card-title">
+                                            @if($member->user && $member->user->profile && $member->user->profile->isVisible())
+                                                <a href="{{ route('members.show', $member->user->profile) }}" class="link link-hover">
+                                                    {{ $member->name }}
+                                                </a>
+                                            @else
+                                                {{ $member->name }}
+                                            @endif
+                                        </h4>
+                                        @if($member->title)
+                                            <p class="text-sm opacity-70">{{ $member->title }}</p>
+                                        @endif
+                                        @if($member->bio)
+                                            <p class="mt-1">{{ $member->bio }}</p>
+                                        @endif
+                                        
+                                        @if($member->social_links)
+                                            <div class="flex gap-1 mt-2">
+                                                @foreach($member->social_links as $link)
+                                                    <a href="{{ $link['url'] }}" target="_blank" rel="noopener" 
+                                                       class="btn btn-xs btn-ghost btn-circle" 
+                                                       title="{{ ucfirst($link['platform']) }}">
+                                                        @switch($link['platform'])
+                                                            @case('website')
+                                                                <x-unicon name="tabler:world" class="w-3 h-3" />
+                                                                @break
+                                                            @case('linkedin')
+                                                                <x-unicon name="tabler:brand-linkedin" class="w-3 h-3" />
+                                                                @break
+                                                            @case('twitter')
+                                                                <x-unicon name="tabler:brand-x" class="w-3 h-3" />
+                                                                @break
+                                                            @case('facebook')
+                                                                <x-unicon name="tabler:brand-facebook" class="w-3 h-3" />
+                                                                @break
+                                                            @case('instagram')
+                                                                <x-unicon name="tabler:brand-instagram" class="w-3 h-3" />
+                                                                @break
+                                                            @case('github')
+                                                                <x-unicon name="tabler:brand-github" class="w-3 h-3" />
+                                                                @break
+                                                        @endswitch
+                                                    </a>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="card bg-base-100 shadow-lg">
-                        <div class="card-body">
-                            <div class="flex items-center gap-4">
-                                <div class="avatar">
-                                    <div class="w-16 rounded-full">
-                                        <img src="https://via.placeholder.com/150" alt="Staff Member" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="card-title">Taylor Brooks</h4>
-                                    <p class="text-sm opacity-70">Program Coordinator</p>
-                                    <p>Organizes events, workshops, and community outreach programs.</p>
-                                </div>
-                            </div>
+                    @empty
+                        <div class="col-span-full text-center py-8">
+                            <p class="text-lg opacity-70">Staff information will be available soon.</p>
                         </div>
-                    </div>
+                    @endforelse
                 </div>
             </div>
         </div>

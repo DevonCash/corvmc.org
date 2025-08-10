@@ -87,6 +87,25 @@ class UsersTable
                             });
                         }
                     }),
+
+                SelectFilter::make('staff_filter')
+                    ->label('Staff Members')
+                    ->options([
+                        'staff' => 'All Staff',
+                        'board' => 'Board Members',
+                        'staff_only' => 'Staff Members',
+                    ])
+                    ->query(function ($query, $data) {
+                        if ($data['value'] === 'staff') {
+                            $query->where('show_on_about_page', true);
+                        } elseif ($data['value'] === 'board') {
+                            $query->where('staff_type', 'board')
+                                  ->where('show_on_about_page', true);
+                        } elseif ($data['value'] === 'staff_only') {
+                            $query->where('staff_type', 'staff')
+                                  ->where('show_on_about_page', true);
+                        }
+                    }),
             ])
             ->recordActions([
                 ViewAction::make(),

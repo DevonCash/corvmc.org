@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             BandProfileSeeder::class,
             ProductionSeeder::class,
             ReservationSeeder::class,
+            StaffProfileSeeder::class,
         ]);
     }
 }

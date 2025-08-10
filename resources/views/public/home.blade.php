@@ -12,8 +12,8 @@
                     <a href="/member/register" class="btn btn-primary btn-lg">
                         Join Our Community!
                     </a>
-                    <a href="{{ route('practice-space') }}" class="btn btn-outline btn-primary">
-                        Book Practice Space
+                    <a href="{{ route('programs') }}" class="btn btn-outline btn-primary">
+                        Explore Programs
                     </a>
                 </div>
             </div>

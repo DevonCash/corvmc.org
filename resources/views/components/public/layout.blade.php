@@ -24,6 +24,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <script src="https://zeffy-scripts.s3.ca-central-1.amazonaws.com/embed-form-script.min.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -147,10 +148,10 @@
                             <x-unicon name="tabler:music" class="w-5 h-5" />
                             Bands
                         </a></li>
-                    <li><a href="{{ route('practice-space') }}"
-                            class="{{ request()->routeIs('practice-space') ? 'active' : '' }}">
-                            <x-unicon name="tabler:building" class="w-5 h-5" />
-                            Practice Space
+                    <li><a href="{{ route('programs') }}"
+                            class="{{ request()->routeIs('programs') ? 'active' : '' }}">
+                            <x-unicon name="tabler:apps" class="w-5 h-5" />
+                            Programs
                         </a></li>
                     <li><a href="{{ route('contact') }}"
                             class="{{ request()->routeIs('contact') ? 'active' : '' }}">
@@ -214,8 +215,8 @@
                             class="{{ request()->routeIs('members.*') ? 'active' : '' }}">Members</a></li>
                     <li><a href="{{ route('bands.index') }}"
                             class="{{ request()->routeIs('bands.*') ? 'active' : '' }}">Bands</a></li>
-                    <li><a href="{{ route('practice-space') }}"
-                            class="{{ request()->routeIs('practice-space') ? 'active' : '' }}">Practice Space</a></li>
+                    <li><a href="{{ route('programs') }}"
+                            class="{{ request()->routeIs('programs') ? 'active' : '' }}">Programs</a></li>
                     <li class='ml-auto'>
                         <a href="{{ route('contribute') }}"
                             class="btn btn-primary btn-sm {{ request()->routeIs(['contribute', 'volunteer', 'support']) ? 'active' : '' }}">Contribute</a>

@@ -32,7 +32,28 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/about', function () {
-    return view('public.about');
+    $boardMembers = \App\Models\StaffProfile::active()
+        ->board()
+        ->ordered()
+        ->get();
+        
+    $staffMembers = \App\Models\StaffProfile::active()
+        ->staff()
+        ->ordered()
+        ->get();
+        
+    // For each staff member, try to find a matching user with a public profile
+    $boardMembers->each(function ($member) {
+        $user = \App\Models\User::where('email', $member->email)->first();
+        $member->user = $user;
+    });
+    
+    $staffMembers->each(function ($member) {
+        $user = \App\Models\User::where('email', $member->email)->first();
+        $member->user = $user;
+    });
+        
+    return view('public.about', compact('boardMembers', 'staffMembers'));
 })->name('about');
 
 Route::get('/events', function () {
@@ -82,16 +103,16 @@ Route::get('/bands/{bandProfile}', function (BandProfile $bandProfile) {
     return view('public.bands.show', compact('bandProfile'));
 })->name('bands.show');
 
-Route::get('/practice-space', function () {
-    return view('public.practice-space');
-})->name('practice-space');
+Route::get('/programs', function () {
+    return view('public.programs');
+})->name('programs');
 
 Route::get('/contribute', function () {
     return view('public.contribute');
 })->name('contribute');
 
 Route::get('/support', function () {
-    return view('public.support');
+    return redirect()->route('contribute')->with('info', 'Support options have been integrated into our contribute page.');
 })->name('support');
 
 Route::get('/volunteer', function () {

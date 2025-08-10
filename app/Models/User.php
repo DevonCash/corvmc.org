@@ -26,6 +26,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'name',
         'email',
         'password',
+        'staff_title',
+        'staff_bio',
+        'staff_type',
+        'staff_sort_order',
+        'show_on_about_page',
+        'staff_social_links',
     ];
 
     /**
@@ -66,6 +72,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'settings' => UserSettingsData::class,
+            'staff_social_links' => 'array',
+            'show_on_about_page' => 'boolean',
         ];
     }
 
@@ -154,5 +162,31 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         }
 
         return max(0, 4 - $this->getUsedFreeHoursThisMonth());
+    }
+
+    public function scopeStaffMembers($query)
+    {
+        return $query->where('show_on_about_page', true)
+                    ->whereNotNull('staff_type');
+    }
+
+    public function scopeBoardMembers($query)
+    {
+        return $query->staffMembers()->where('staff_type', 'board');
+    }
+
+    public function scopeStaffOnly($query)
+    {
+        return $query->staffMembers()->where('staff_type', 'staff');
+    }
+
+    public function scopeStaffOrdered($query)
+    {
+        return $query->orderBy('staff_sort_order')->orderBy('name');
+    }
+
+    public function getStaffProfileImageUrlAttribute(): ?string
+    {
+        return $this->getFilamentAvatarUrl();
     }
 }
