@@ -24,7 +24,7 @@
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="/member/register" class="btn btn-primary">Join as a Member</a>
                 <a href="{{ route('members.index') }}" class="btn btn-outline btn-secondary">Find Musicians</a>
-                <a href="{{ route('contact') }}" class="btn btn-outline btn-accent">Contact Us</a>
+                <a href="{{ route('contact') }}?topic=general" class="btn btn-outline btn-accent">Contact Us</a>
             </div>
         </div>
     </div>

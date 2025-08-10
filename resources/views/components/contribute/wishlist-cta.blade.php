@@ -10,7 +10,7 @@
             We're always open to creative contributions and unexpected donations.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="{{ route('contact') }}" class="btn btn-accent btn-lg">
+            <a href="{{ route('contact') }}?topic=donation" class="btn btn-accent btn-lg">
                 <x-unicon name="tabler:mail" class="size-5 mr-2" />
                 Show Us What You've Got!
             </a>

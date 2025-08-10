@@ -21,7 +21,7 @@
                 We're always looking for talented local musicians to showcase at our events.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="{{ route('contact') }}" class="btn btn-primary">Submit Performance Inquiry</a>
+                <a href="{{ route('contact') }}?topic=performance" class="btn btn-primary">Submit Performance Inquiry</a>
                 <a href="/member/register" class="btn btn-outline btn-secondary">Become a Member</a>
             </div>
         </div>

@@ -114,7 +114,7 @@
             <!-- Additional Info -->
             <div class="text-center mt-8 text-sm opacity-70">
                 <p>By completing registration, you agree to be part of the Corvallis Music Collective community.</p>
-                <p class="mt-2">Need help? <a href="{{ route('contact') }}" class="link link-primary">Contact us</a></p>
+                <p class="mt-2">Need help? <a href="{{ route('contact') }}?topic=membership" class="link link-primary">Contact us</a></p>
             </div>
         </div>
     </div>

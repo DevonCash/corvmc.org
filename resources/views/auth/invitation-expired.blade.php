@@ -23,7 +23,7 @@
                     </div>
 
                     <div class="card-actions justify-center">
-                        <a href="{{ route('contact') }}" class="btn btn-primary">
+                        <a href="{{ route('contact') }}?topic=membership" class="btn btn-primary">
                             <x-unicon name="tabler:mail" class="w-5 h-5" />
                             Contact Us
                         </a>

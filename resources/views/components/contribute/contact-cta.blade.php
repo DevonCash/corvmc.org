@@ -9,7 +9,7 @@
             We'd love to hear from you! Contact us to discuss how your donation can help our community.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="{{ route('contact') }}" class="btn btn-primary btn-lg">
+            <a href="{{ route('contact') }}?topic=donation" class="btn btn-primary btn-lg">
                 <x-unicon name="tabler:mail" class="size-5 mr-2" />
                 Contact Us About Donations
             </a>

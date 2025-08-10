@@ -14,7 +14,7 @@
             <x-unicon name="tabler:heart" class="size-5 mr-2" />
             Make a Donation
         </a>
-        <a href="{{ route('contact') }}" class="btn btn-outline btn-accent btn-lg">
+        <a href="{{ route('contact') }}?topic=general" class="btn btn-outline btn-accent btn-lg">
             <x-unicon name="tabler:mail" class="size-5 mr-2" />
             Contact Us
         </a>

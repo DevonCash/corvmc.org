@@ -86,12 +86,12 @@
                             </label>
                             <select name="subject" class="select select-bordered @error('subject') select-error @enderror" required>
                                 <option value="">Choose a topic...</option>
-                                <option value="general" {{ old('subject') == 'general' ? 'selected' : '' }}>General Inquiry</option>
-                                <option value="membership" {{ old('subject') == 'membership' ? 'selected' : '' }}>Membership Questions</option>
-                                <option value="practice_space" {{ old('subject') == 'practice_space' ? 'selected' : '' }}>Practice Space</option>
-                                <option value="performance" {{ old('subject') == 'performance' ? 'selected' : '' }}>Performance Inquiry</option>
-                                <option value="volunteer" {{ old('subject') == 'volunteer' ? 'selected' : '' }}>Volunteer Opportunities</option>
-                                <option value="donation" {{ old('subject') == 'donation' ? 'selected' : '' }}>Donations & Support</option>
+                                <option value="general" {{ (old('subject') ?: request('topic')) == 'general' ? 'selected' : '' }}>General Inquiry</option>
+                                <option value="membership" {{ (old('subject') ?: request('topic')) == 'membership' ? 'selected' : '' }}>Membership Questions</option>
+                                <option value="practice_space" {{ (old('subject') ?: request('topic')) == 'practice_space' ? 'selected' : '' }}>Practice Space</option>
+                                <option value="performance" {{ (old('subject') ?: request('topic')) == 'performance' ? 'selected' : '' }}>Performance Inquiry</option>
+                                <option value="volunteer" {{ (old('subject') ?: request('topic')) == 'volunteer' ? 'selected' : '' }}>Volunteer Opportunities</option>
+                                <option value="donation" {{ (old('subject') ?: request('topic')) == 'donation' ? 'selected' : '' }}>Donations & Support</option>
                             </select>
                             @error('subject')
                             <label class="label">

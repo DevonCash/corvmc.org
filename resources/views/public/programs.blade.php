@@ -140,7 +140,7 @@
 
             <div class="text-center">
                 <a href="{{ route('events.index') }}" class="btn btn-primary btn-lg">View Upcoming Shows</a>
-                <a href="{{ route('contact') }}" class="btn btn-outline btn-secondary btn-lg">Apply to Perform</a>
+                <a href="{{ route('contact') }}?topic=performance" class="btn btn-outline btn-secondary btn-lg">Apply to Perform</a>
             </div>
         </section>
 
@@ -241,7 +241,7 @@
             </div>
 
             <div class="text-center">
-                <a href="{{ route('contact') }}" class="btn btn-primary btn-lg">Join a Meetup</a>
+                <a href="{{ route('contact') }}?topic=general" class="btn btn-primary btn-lg">Join a Meetup</a>
                 <a href="{{ route('members.index') }}" class="btn btn-outline btn-secondary btn-lg">Connect with Members</a>
             </div>
         </section>
@@ -281,7 +281,7 @@
 
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="/member/register" class="btn btn-primary btn-lg">Become a Member</a>
-                <a href="{{ route('contact') }}" class="btn btn-outline btn-secondary btn-lg">Ask Questions</a>
+                <a href="{{ route('contact') }}?topic=general" class="btn btn-outline btn-secondary btn-lg">Ask Questions</a>
             </div>
         </div>
     </div>
