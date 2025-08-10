@@ -46,51 +46,75 @@
         <!-- History -->
         <div class="mb-20">
             <h2 class="text-4xl font-bold text-center mb-12">Our Story</h2>
-            <div class="timeline timeline-vertical">
-                <div class="timeline-start timeline-box">
-                    <h3 class="font-bold">2020</h3>
-                    <p>Founded by local musicians frustrated with the lack of affordable practice space in Corvallis.</p>
-                </div>
-                <div class="timeline-middle">
-                    <div class="timeline-marker bg-primary"></div>
-                </div>
-                <hr class="bg-primary" />
+            <ul class="timeline timeline-vertical">
+                <li>
+                    <div class="timeline-start timeline-box">
+                        <h3 class="font-bold">2020</h3>
+                        <p>Founded by local musicians frustrated with the lack of affordable practice space in Corvallis.</p>
+                    </div>
+                    <div class="timeline-middle">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="text-primary w-5 h-5">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L8.004 10.5a.75.75 0 00-1.008 1.114l2 1.811a.75.75 0 001.11-.093l4.25-5.931z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <hr class="bg-primary" />
+                </li>
                 
-                <div class="timeline-end timeline-box">
-                    <h3 class="font-bold">2021</h3>
-                    <p>Opened our first practice room and began hosting monthly showcases for local bands.</p>
-                </div>
-                <div class="timeline-middle">
-                    <div class="timeline-marker bg-secondary"></div>
-                </div>
-                <hr class="bg-secondary" />
+                <li>
+                    <hr class="bg-primary" />
+                    <div class="timeline-middle">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="text-secondary w-5 h-5">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L8.004 10.5a.75.75 0 00-1.008 1.114l2 1.811a.75.75 0 001.11-.093l4.25-5.931z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="timeline-end timeline-box">
+                        <h3 class="font-bold">2021</h3>
+                        <p>Opened our first practice room and began hosting monthly showcases for local bands.</p>
+                    </div>
+                    <hr class="bg-secondary" />
+                </li>
                 
-                <div class="timeline-start timeline-box">
-                    <h3 class="font-bold">2022</h3>
-                    <p>Achieved 501(c)(3) nonprofit status and expanded to include educational workshops.</p>
-                </div>
-                <div class="timeline-middle">
-                    <div class="timeline-marker bg-accent"></div>
-                </div>
-                <hr class="bg-accent" />
+                <li>
+                    <hr class="bg-secondary" />
+                    <div class="timeline-start timeline-box">
+                        <h3 class="font-bold">2022</h3>
+                        <p>Achieved 501(c)(3) nonprofit status and expanded to include educational workshops.</p>
+                    </div>
+                    <div class="timeline-middle">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="text-accent w-5 h-5">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L8.004 10.5a.75.75 0 00-1.008 1.114l2 1.811a.75.75 0 001.11-.093l4.25-5.931z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <hr class="bg-accent" />
+                </li>
                 
-                <div class="timeline-end timeline-box">
-                    <h3 class="font-bold">2023</h3>
-                    <p>Launched our sustaining member program and added a second practice room.</p>
-                </div>
-                <div class="timeline-middle">
-                    <div class="timeline-marker bg-warning"></div>
-                </div>
-                <hr class="bg-warning" />
+                <li>
+                    <hr class="bg-accent" />
+                    <div class="timeline-middle">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="text-warning w-5 h-5">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L8.004 10.5a.75.75 0 00-1.008 1.114l2 1.811a.75.75 0 001.11-.093l4.25-5.931z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="timeline-end timeline-box">
+                        <h3 class="font-bold">2023</h3>
+                        <p>Launched our sustaining member program and added a second practice room.</p>
+                    </div>
+                    <hr class="bg-warning" />
+                </li>
                 
-                <div class="timeline-start timeline-box">
-                    <h3 class="font-bold">2024</h3>
-                    <p>Celebrating 150+ active members and planning facility expansion.</p>
-                </div>
-                <div class="timeline-middle">
-                    <div class="timeline-marker bg-success"></div>
-                </div>
-            </div>
+                <li>
+                    <hr class="bg-warning" />
+                    <div class="timeline-start timeline-box">
+                        <h3 class="font-bold">2024</h3>
+                        <p>Celebrating 150+ active members and planning facility expansion.</p>
+                    </div>
+                    <div class="timeline-middle">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="text-success w-5 h-5">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L8.004 10.5a.75.75 0 00-1.008 1.114l2 1.811a.75.75 0 001.11-.093l4.25-5.931z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </li>
+            </ul>
         </div>
 
         <!-- Board & Staff -->
