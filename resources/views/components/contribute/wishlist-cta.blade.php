@@ -12,11 +12,11 @@
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="{{ route('contact') }}?topic=donation" class="btn btn-accent btn-lg">
                 <x-unicon name="tabler:mail" class="size-5 mr-2" />
-                Show Us What You've Got!
+                Share Your Ideas!
             </a>
             <a href="mailto:donations@corvallismusiccollective.org" class="btn btn-outline btn-accent btn-lg">
                 <x-unicon name="tabler:send" class="size-5 mr-2" />
-                Email Directly
+                Email Us
             </a>
         </div>
         <p class="text-sm opacity-70 mt-4">
