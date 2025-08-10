@@ -10,17 +10,15 @@ use App\Filament\Resources\BandProfiles\RelationManagers\MembersRelationManager;
 use App\Filament\Resources\BandProfiles\Schemas\BandProfileForm;
 use App\Filament\Resources\BandProfiles\Tables\BandProfilesTable;
 use App\Models\BandProfile;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
 class BandProfileResource extends Resource
 {
     protected static ?string $model = BandProfile::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::UserGroup;
+    protected static string|\BackedEnum|null $navigationIcon = 'tabler-microphone-2';
 
     protected static ?string $recordTitleAttribute = 'name';
 

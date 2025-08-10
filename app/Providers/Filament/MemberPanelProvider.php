@@ -10,11 +10,17 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use App\Filament\Widgets\ActivityFeedWidget;
 use App\Filament\Widgets\MonthlyCalendarWidget;
+use App\Filament\Widgets\MyBandsWidget;
 use App\Filament\Widgets\TodayReservationsWidget;
+use App\Filament\Widgets\UpcomingEventsWidget;
 use App\Filament\Widgets\WeeklyOverviewWidget;
+use App\Models\User;
+use Filament\Actions\Action;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -36,8 +42,23 @@ class MemberPanelProvider extends PanelProvider
             ->font('Lexend')
             ->darkMode()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => [
+                    50 => 'oklch(0.98 0.04 43)',
+                    100 => 'oklch(0.95 0.08 43)',
+                    200 => 'oklch(0.90 0.13 43)',
+                    300 => 'oklch(0.83 0.16 43)',
+                    400 => 'oklch(0.75 0.17 43)',
+                    500 => 'oklch(0.67 0.18 43)', // CMC Brand Orange
+                    600 => 'oklch(0.59 0.16 43)',
+                    700 => 'oklch(0.51 0.14 43)',
+                    800 => 'oklch(0.43 0.12 43)',
+                    900 => 'oklch(0.35 0.10 43)',
+                    950 => 'oklch(0.27 0.08 43)',
+                ],
             ])
+            ->brandLogo(asset('images/cmc-compact-logo.svg'))
+            ->brandLogoHeight('2rem')
+            ->icons(config('filament-icons', []))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
@@ -46,9 +67,16 @@ class MemberPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->widgets([
                 AccountWidget::class,
+                UpcomingEventsWidget::class,
+                MyBandsWidget::class,
+                ActivityFeedWidget::class,
                 MonthlyCalendarWidget::class,
                 TodayReservationsWidget::class,
                 WeeklyOverviewWidget::class,
+            ])
+
+            ->userMenuItems([
+                'profile' => fn(Action $action) => $action->url(route('filament.member.resources.users.edit', ['record' => User::me()])),
             ])
             ->middleware([
                 EncryptCookies::class,

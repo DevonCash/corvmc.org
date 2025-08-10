@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Represents a reservation at the practice space.
@@ -16,7 +18,7 @@ use Spatie\Period\Precision;
  */
 class Reservation extends Model implements Eventable
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'user_id',
@@ -330,5 +332,14 @@ class Reservation extends Model implements Eventable
             ->backgroundColor($color)
             ->textColor('#fff')
             ->extendedProps($extendedProps);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'reserved_at', 'reserved_until', 'cost', 'payment_status'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Practice space reservation {$eventName}");
     }
 }

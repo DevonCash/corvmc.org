@@ -11,17 +11,17 @@ use App\Filament\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\ReservationsTable;
 use App\Models\Reservation;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
 class ReservationResource extends Resource
 {
     protected static ?string $model = Reservation::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'tabler-calendar-time';
 
     public static function form(Schema $schema): Schema
     {
@@ -43,6 +43,12 @@ class ReservationResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        if(!User::me()->can('manage reservations')) return null;
+        return Reservation::whereToday('reserved_at')->count() || null;
     }
 
     public static function getPages(): array

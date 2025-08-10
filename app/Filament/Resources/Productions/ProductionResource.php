@@ -9,10 +9,8 @@ use App\Filament\Resources\Productions\RelationManagers\PerformersRelationManage
 use App\Filament\Resources\Productions\Schemas\ProductionForm;
 use App\Filament\Resources\Productions\Tables\ProductionsTable;
 use App\Models\Production;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -21,8 +19,7 @@ class ProductionResource extends Resource
 {
     protected static ?string $model = Production::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-
+    protected static string|\BackedEnum|null $navigationIcon = 'tabler-calendar-event';
     protected static ?string $recordTitleAttribute = 'title';
 
     public static function form(Schema $schema): Schema

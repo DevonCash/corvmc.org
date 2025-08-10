@@ -8,9 +8,9 @@ use App\Filament\Resources\MemberProfiles\Pages\ViewMemberProfile;
 use App\Filament\Resources\MemberProfiles\Schemas\MemberProfileForm;
 use App\Filament\Resources\MemberProfiles\Tables\MemberProfilesTable;
 use App\Models\MemberProfile;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
 class MemberProfileResource extends Resource
@@ -25,7 +25,7 @@ class MemberProfileResource extends Resource
 
     protected static ?string $navigationLabel = 'Member Directory';
 
-    protected static string|\BackedEnum|null $navigationIcon = Heroicon::Users;
+    protected static string|BackedEnum|null $navigationIcon = 'tabler-users';
 
     protected static ?string $recordTitleAttribute = 'user.name';
 

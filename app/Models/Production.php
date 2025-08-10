@@ -15,10 +15,12 @@ use Spatie\ModelFlags\Models\Concerns\HasFlags;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
 use Spatie\Tags\HasTags;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Production extends Model implements Eventable, HasMedia
 {
-    use HasFactory, HasFlags, HasTags, InteractsWithMedia, SoftDeletes;
+    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -407,5 +409,14 @@ class Production extends Model implements Eventable, HasMedia
                 'is_published' => $this->isPublished(),
                 'ticket_url' => $this->ticket_url,
             ]);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['title', 'description', 'start_time', 'end_time', 'location', 'status', 'published_at'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Production {$eventName}");
     }
 }

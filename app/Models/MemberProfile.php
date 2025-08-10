@@ -12,6 +12,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\ModelFlags\Models\Concerns\HasFlags;
 use Spatie\Tags\HasTags;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Represents a member profile in the application.
@@ -19,7 +21,7 @@ use Spatie\Tags\HasTags;
  */
 class MemberProfile extends Model implements HasMedia
 {
-    use HasFactory, HasFlags, HasTags, InteractsWithMedia;
+    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity;
 
     protected static function booted(): void
     {
@@ -144,5 +146,16 @@ class MemberProfile extends Model implements HasMedia
         return $query->whereHas('flags', function ($q) use ($flag) {
             $q->where('name', $flag);
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['bio', 'hometown', 'visibility'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Member profile {$eventName}")
+            ->dontLogIfAttributesChangedOnly(['updated_at']) // Don't log if only timestamps changed
+            ->logExcept($this->visibility === 'private' ? ['bio', 'hometown'] : []); // Don't log profile content for private profiles
     }
 }

@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
 
 class BandInvitations extends Page
 {
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-envelope';
+    protected static string|\BackedEnum|null $navigationIcon = 'tabler-mail';
 
     protected string $view = 'filament.pages.band-invitations';
 

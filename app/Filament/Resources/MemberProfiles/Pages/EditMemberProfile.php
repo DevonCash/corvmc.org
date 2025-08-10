@@ -12,6 +12,7 @@ class EditMemberProfile extends EditRecord
 {
     protected static string $resource = MemberProfileResource::class;
 
+
     protected function getHeaderActions(): array
     {
         return [

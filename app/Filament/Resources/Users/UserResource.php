@@ -16,33 +16,39 @@ use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'tabler-user-cog';
+    protected static string|UnitEnum|null $navigationGroup = 'Admin';
+
+    public static function getRecordTitle($record): string
+    {
+        return $record->name ?? 'Unknown User';
+    }
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('view users') ?? null;
+        return User::me()?->can('view users') ?? false;
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->can('invite users') ?? null;
+        return User::me()?->can('invite users') ?? null;
     }
 
     public static function canEdit($record): bool
     {
-        return auth()->user()?->can('update users') ?? null;
+        return User::me()?->can('update users') ?? null;
     }
 
     public static function canDelete($record): bool
     {
-        return auth()->user()?->can('delete users') ?? null;
+        return User::me()?->can('delete users') ?? null;
     }
 
     public static function form(Schema $schema): Schema

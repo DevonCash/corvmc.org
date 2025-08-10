@@ -19,7 +19,7 @@ use Filament\Schemas\Schema;
 
 class MemberProfileForm
 {
-    public static function configure(Schema $schema): Schema
+    public static function configure($schema)
     {
         return $schema
             ->columns(4)
@@ -32,20 +32,21 @@ class MemberProfileForm
                                 TextInput::make('name')
                                     ->label('Name')
                                     ->required()
+                                    ->columnSpan(2)
                                     ->maxLength(255)
                                     ->placeholder('Enter your name'),
                                 TextInput::make('pronouns')
                                     ->label('Pronouns')
                                     ->maxLength(50)
                                     ->placeholder('e.g. he/him, she/her, they/them'),
-                            ])->columns(2)
-                                ->columnSpan(2)
+                            ])->columns(3)
+                                ->columnSpan(3)
                                 ->relationship('user'),
                             TextInput::make('hometown')
                                 ->label('Hometown')
                                 ->columnSpan(1)
-                                ->datalist(fn () => MemberProfile::distinct()->get()->pluck('hometown')->concat(['Corvallis', 'Albany', 'Philomath', 'Monroe', 'Lebanon', 'Sweet Home', 'Eugene', 'Springfield', 'Portland', 'Salem'])),
-                        ])->columns(3)->columnSpanFull(),
+                                ->datalist(fn() => MemberProfile::distinct()->get()->pluck('hometown')->concat(['Corvallis', 'Albany', 'Philomath', 'Monroe', 'Lebanon', 'Sweet Home', 'Eugene', 'Springfield', 'Portland', 'Salem'])),
+                        ])->columns(4)->columnSpanFull(),
                         RichEditor::make('bio')
                             ->label('Bio')
                             ->placeholder('Tell us about yourself')
@@ -147,7 +148,7 @@ class MemberProfileForm
                                 'members' => 'Members Only',
                                 'public' => 'Public',
                             ])
-                            ->helperText(fn ($state) => match ($state) {
+                            ->helperText(fn($state) => match ($state) {
                                 'private' => 'Only you can see your profile',
                                 'members' => 'Other CMC members can view your profile',
                                 'public' => 'Your profile is visible to the public',
@@ -165,7 +166,7 @@ class MemberProfileForm
                                 'members' => 'Members Only',
                                 'public' => 'Public',
                             ])
-                            ->helperText(fn ($state) => match ($state) {
+                            ->helperText(fn($state) => match ($state) {
                                 'private' => 'Only CMC staff can see your contact info',
                                 'members' => 'Only other members can see your contact info',
                                 'public' => 'Anyone who can see your profile can see your contact info',
@@ -207,7 +208,7 @@ class MemberProfileForm
                                         $component->state($activeFlags);
                                     })
                                     ->dehydrated(false)
-                                    ->columns(2)
+                                    ->columns(1)
                                     ->columnSpanFull(),
                             ]),
                     ]),

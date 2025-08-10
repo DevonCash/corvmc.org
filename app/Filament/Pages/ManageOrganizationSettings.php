@@ -8,6 +8,7 @@ use App\Settings\FooterSettings;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms;
+use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
@@ -21,11 +22,11 @@ class ManageOrganizationSettings extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-office';
+    protected static string|BackedEnum|null $navigationIcon = 'tabler-adjustments';
 
-    protected static ?string $navigationLabel = 'Organization';
+    protected static ?string $navigationLabel = 'Site Settings';
 
-    protected static string|UnitEnum|null $navigationGroup = null;
+    protected static string|UnitEnum|null $navigationGroup = 'Admin';
 
     protected static ?int $navigationSort = 10;
 
@@ -115,12 +116,20 @@ class ManageOrganizationSettings extends Page implements HasForms
                                     ->maxLength(255),
                             ])
                             ->columns(2)
+                            ->table([
+                                TableColumn::make('Label'),
+                                TableColumn::make('Url')
+                            ])
                             ->reorderable()
                             ->collapsible()
                             ->defaultItems(3),
 
                         Forms\Components\Repeater::make('social_links')
                             ->label('Social Media Links')
+                            ->table([
+                                TableColumn::make('Label'),
+                                TableColumn::make('Url')
+                            ])
                             ->schema([
                                 Forms\Components\Select::make('icon')
                                     ->label('Icon')
@@ -172,7 +181,7 @@ class ManageOrganizationSettings extends Page implements HasForms
         $settings->address = $data['address'];
         $settings->phone = $data['phone'];
         $settings->email = $data['email'];
-        
+
         $footerSettings->links = $data['footer_links'] ?? [];
         $footerSettings->social_links = $data['social_links'] ?? [];
 

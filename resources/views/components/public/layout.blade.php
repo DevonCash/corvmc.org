@@ -112,13 +112,12 @@
                             <x-unicon name="tabler:apps" class="w-5 h-5" />
                             Programs
                         </a></li>
-                    <li><a href="{{ route('contact') }}"
-                            class="{{ request()->routeIs('contact') ? 'active' : '' }}">
+                    <li><a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'active' : '' }}">
                             <x-unicon name="tabler:mail" class="w-5 h-5" />
                             Contact
                         </a></li>
                     <li><a href="{{ route('contribute') }}"
-                            class="{{ request()->routeIs('contribute') ? 'active text-primary' : 'text-primary outline outline-1 outline-primary' }}">
+                            class="{{ request()->routeIs('contribute') ? 'active text-primary' : 'text-primary outline outline-1 outline-primary ' }} mt-4">
                             <x-unicon name="tabler:heart-handshake" class="w-5 h-5" />
                             Contribute
                         </a></li>
@@ -178,7 +177,9 @@
                     <li><a href="{{ route('programs') }}"
                             class="{{ request()->routeIs('programs') ? 'active' : '' }}">Programs</a></li>
                     <li><a href="{{ route('contribute') }}"
-                            class="{{ request()->routeIs('contribute') ? 'active text-primary' : 'text-primary outline outline-1 outline-primary' }}">Contribute</a></li>
+                            class="{{ request()->routeIs('contribute') ? 'active text-primary ml-2' : 'text-primary outline outline-1 outline-primary ml-2' }}">
+                            <x-unicon name="tabler:heart-handshake" class="w-5 h-5" />
+                            Contribute</a></li>
                 </ul>
             </div>
         </div>
@@ -198,13 +199,13 @@
     <footer
         class="footer footer-center bg-base-200 text-base-content p-10 mt-20 flex justify-between flex-wrap items-center">
         <div class="grid grid-flow-col gap-4 mx-auto">
-            @foreach($footerLinks as $link)
+            @foreach ($footerLinks as $link)
                 <a href="{{ $link['url'] }}" class="link link-hover">{{ $link['label'] }}</a>
             @endforeach
         </div>
         <div class='mx-auto'>
             <div class="grid grid-flow-col gap-4">
-                @foreach($socialLinks as $social)
+                @foreach ($socialLinks as $social)
                     <a href="{{ $social['url'] }}" class="text-2xl hover:text-primary">
                         <x-unicon name="{{ $social['icon'] }}" class="w-6 h-6" />
                     </a>

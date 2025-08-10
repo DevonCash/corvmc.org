@@ -69,7 +69,9 @@
     --speaker-case: oklch(60% 0.14 40); /* Dimmed version of light primary */
     --speaker-fill: oklch(82% 0.08 85); /* Dimmed version of light accent */
     --sound-lines: oklch(48% 0.12 210); /* Dimmed version of light secondary */
-    --speaker-front: oklch(78% 0.035 204.51); /* Dimmed version of light speaker-front */
+    --speaker-front: oklch(
+        78% 0.035 204.51
+    ); /* Dimmed version of light speaker-front */
 
     color-scheme: dark;
 }
@@ -115,4 +117,8 @@
         background-color: oklch(var(--b2));
         border-top: 1px solid oklch(var(--b3));
     }
+}
+
+.fi-sidebar-item:not(.fi-active) .fi-sidebar-item-icon {
+    color: var(--color-secondary);
 }

@@ -10,6 +10,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\ModelFlags\Models\Concerns\HasFlags;
 use Spatie\Tags\HasTags;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Represents a band profile in the application.
@@ -18,7 +20,7 @@ use Spatie\Tags\HasTags;
  */
 class BandProfile extends Model implements HasMedia
 {
-    use HasFactory, HasFlags, HasTags, InteractsWithMedia;
+    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity;
 
     protected $fillable = [
         'name',
@@ -276,5 +278,16 @@ class BandProfile extends Model implements HasMedia
         }
 
         return null;
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'bio', 'hometown', 'visibility'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Band profile {$eventName}")
+            ->dontLogIfAttributesChangedOnly(['updated_at'])
+            ->logExcept($this->visibility === 'private' ? ['bio', 'hometown'] : []); // Don't log content for private bands
     }
 }
