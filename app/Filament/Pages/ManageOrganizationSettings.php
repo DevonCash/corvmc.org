@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\User;
 use App\Settings\OrganizationSettings;
+use App\Settings\FooterSettings;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms;
@@ -35,6 +36,7 @@ class ManageOrganizationSettings extends Page implements HasForms
     public function mount(): void
     {
         $settings = app(OrganizationSettings::class);
+        $footerSettings = app(FooterSettings::class);
 
         $this->form->fill([
             'name' => $settings->name,
@@ -43,6 +45,8 @@ class ManageOrganizationSettings extends Page implements HasForms
             'address' => $settings->address,
             'phone' => $settings->phone,
             'email' => $settings->email,
+            'footer_links' => $footerSettings->getLinks(),
+            'social_links' => $footerSettings->getSocialLinks(),
         ]);
     }
 
@@ -94,6 +98,54 @@ class ManageOrganizationSettings extends Page implements HasForms
                             ->required()
                             ->maxLength(255),
                     ]),
+
+                Section::make('Footer Links')
+                    ->schema([
+                        Forms\Components\Repeater::make('footer_links')
+                            ->label('Footer Links')
+                            ->schema([
+                                Forms\Components\TextInput::make('label')
+                                    ->label('Label')
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('url')
+                                    ->label('URL')
+                                    ->required()
+                                    ->url()
+                                    ->maxLength(255),
+                            ])
+                            ->columns(2)
+                            ->reorderable()
+                            ->collapsible()
+                            ->defaultItems(3),
+
+                        Forms\Components\Repeater::make('social_links')
+                            ->label('Social Media Links')
+                            ->schema([
+                                Forms\Components\Select::make('icon')
+                                    ->label('Icon')
+                                    ->required()
+                                    ->options([
+                                        'tabler:brand-x' => 'X (Twitter)',
+                                        'tabler:brand-facebook' => 'Facebook',
+                                        'tabler:brand-instagram' => 'Instagram',
+                                        'tabler:brand-pinterest' => 'Pinterest',
+                                        'tabler:brand-youtube' => 'YouTube',
+                                        'tabler:brand-linkedin' => 'LinkedIn',
+                                        'tabler:brand-tiktok' => 'TikTok',
+                                        'tabler:brand-discord' => 'Discord',
+                                    ]),
+                                Forms\Components\TextInput::make('url')
+                                    ->label('URL')
+                                    ->required()
+                                    ->url()
+                                    ->maxLength(255),
+                            ])
+                            ->columns(2)
+                            ->reorderable()
+                            ->collapsible()
+                            ->defaultItems(4),
+                    ]),
             ])
             ->statePath('data');
     }
@@ -112,6 +164,7 @@ class ManageOrganizationSettings extends Page implements HasForms
         $data = $this->form->getState();
 
         $settings = app(OrganizationSettings::class);
+        $footerSettings = app(FooterSettings::class);
 
         $settings->name = $data['name'];
         $settings->description = $data['description'];
@@ -119,8 +172,12 @@ class ManageOrganizationSettings extends Page implements HasForms
         $settings->address = $data['address'];
         $settings->phone = $data['phone'];
         $settings->email = $data['email'];
+        
+        $footerSettings->links = $data['footer_links'] ?? [];
+        $footerSettings->social_links = $data['social_links'] ?? [];
 
         $settings->save();
+        $footerSettings->save();
 
         Notification::make()
             ->success()
