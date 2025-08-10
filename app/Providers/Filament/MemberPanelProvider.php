@@ -32,7 +32,9 @@ class MemberPanelProvider extends PanelProvider
             ->path('member')
             ->profile()
             ->login()
+            ->registration()
             ->font('Lexend')
+            ->darkMode()
             ->colors([
                 'primary' => Color::Amber,
             ])
