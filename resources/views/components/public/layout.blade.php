@@ -158,15 +158,16 @@
                             <x-unicon name="tabler:mail" class="w-5 h-5" />
                             Contact
                         </a></li>
+                    <li><a href="{{ route('contribute') }}"
+                            class="{{ request()->routeIs('contribute') ? 'active text-primary' : 'text-primary outline outline-1 outline-primary' }}">
+                            <x-unicon name="tabler:heart-handshake" class="w-5 h-5" />
+                            Contribute
+                        </a></li>
                 </ul>
 
                 <!-- Sidebar Footer -->
                 <div class="mt-auto pt-8">
                     <div class="divider"></div>
-                    <a href="{{ route('contribute') }}" class="btn btn-primary w-full">
-                        <x-unicon name="tabler:heart-handshake" class="w-5 h-5" />
-                        Contribute
-                    </a>
                 </div>
             </aside>
         </div>
@@ -217,10 +218,8 @@
                             class="{{ request()->routeIs('bands.*') ? 'active' : '' }}">Bands</a></li>
                     <li><a href="{{ route('programs') }}"
                             class="{{ request()->routeIs('programs') ? 'active' : '' }}">Programs</a></li>
-                    <li class='ml-auto'>
-                        <a href="{{ route('contribute') }}"
-                            class="btn btn-primary btn-sm {{ request()->routeIs(['contribute', 'volunteer', 'support']) ? 'active' : '' }}">Contribute</a>
-                    </li>
+                    <li><a href="{{ route('contribute') }}"
+                            class="{{ request()->routeIs('contribute') ? 'active text-primary' : 'text-primary outline outline-1 outline-primary' }}">Contribute</a></li>
                 </ul>
             </div>
         </div>
