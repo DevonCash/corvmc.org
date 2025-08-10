@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             $table->string('hometown')->nullable(); // New field for hometown
-            $table->foreignId('owner_id')->constrained()->onDelete('cascade');
+            $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
             $table->string('name')->unique();
             $table->text('bio')->nullable();
             $table->jsonb('links')->nullable(); // Store social media links or other relevant URLs
