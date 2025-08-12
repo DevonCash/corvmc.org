@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\User;
 use Filament\Widgets\Widget;
 use Spatie\Activitylog\Models\Activity;
 
@@ -9,22 +10,27 @@ class ActivityFeedWidget extends Widget
 {
     protected string $view = 'filament.widgets.activity-feed-widget';
 
-    protected int | string | array $columnSpan = 'full';
+    protected int | string | array $columnSpan = [
+        'md' => 2,
+        'xl' => 1,
+    ];
 
-    protected static ?int $sort = 3;
+    protected static ?int $sort = -1;
 
     public function getActivities()
     {
-        $currentUser = auth()->user();
+        $currentUser = User::me();
 
-        return Activity::with(['subject', 'causer'])
+        $activities = Activity::with(['subject', 'causer'])
             ->latest()
             ->limit(50) // Get more to account for filtering
             ->get()
             ->filter(function (Activity $activity) use ($currentUser) {
                 return $this->canViewActivity($activity, $currentUser);
-            })
-            ->take(4) // Limit final results to 10
+            });
+
+        // Show activities with minimum of 3, maximum that fits in scroll area
+        return $activities->take(10) // Reasonable limit for scrollable area
             ->map(function (Activity $activity) {
                 return [
                     'id' => $activity->id,
@@ -41,10 +47,7 @@ class ActivityFeedWidget extends Widget
 
     protected function formatActivityDescription(Activity $activity): string
     {
-        $currentUser = auth()->user();
-        $subjectType = class_basename($activity->subject_type ?? '');
         $causerName = $activity->causer?->name ?? 'System';
-        $subject = $activity->subject;
 
         return match ($activity->description) {
             'User account created' => "{$causerName} joined the community",
@@ -95,10 +98,12 @@ class ActivityFeedWidget extends Widget
         $reservation = $activity->subject;
 
         // Only show details for own reservations or if user has permission
-        if ($currentUser && $reservation &&
-            ($reservation->user_id === $currentUser->id || $currentUser->can('view reservations'))) {
+        if (
+            $currentUser && $reservation &&
+            ($reservation->user_id === $currentUser->id || $currentUser->can('view reservations'))
+        ) {
 
-            $actionText = match($action) {
+            $actionText = match ($action) {
                 'booked' => 'booked the practice space',
                 'updated' => 'updated their reservation',
                 'cancelled' => 'cancelled a reservation',
@@ -206,7 +211,7 @@ class ActivityFeedWidget extends Widget
         if ($bandProfile->visibility === 'private') {
             // Only band members/owners
             return $bandProfile->owner_id === $currentUser->id ||
-                   $bandProfile->members()->wherePivot('user_id', $currentUser->id)->exists();
+                $bandProfile->members()->wherePivot('user_id', $currentUser->id)->exists();
         }
 
         return false;
@@ -226,7 +231,7 @@ class ActivityFeedWidget extends Widget
         // Unpublished productions only visible to manager and staff
         if ($currentUser) {
             return $production->manager_id === $currentUser->id ||
-                   $currentUser->can('view productions');
+                $currentUser->can('view productions');
         }
 
         return false;

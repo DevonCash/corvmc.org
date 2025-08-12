@@ -64,6 +64,14 @@ class MemberProfile extends Model implements HasMedia
         return $this->belongsTo(User::class);
     }
 
+    public function isComplete(): bool
+    {
+        // Check if profile has key information filled out
+        return !empty($this->bio) && 
+               !empty($this->skills) && 
+               $this->hasMedia('avatar');
+    }
+
     public function isVisible(?User $user = null): bool
     {
         if (! $user) {

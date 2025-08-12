@@ -152,7 +152,7 @@
             </div>
 
             <!-- Action Buttons - first row, third column -->
-            <div class="flex items-center gap-2" style="grid-row: 1; grid-column: 3;">
+            <div class="flex items-center gap-2" style="grid-row: 2; grid-column: 3;">
                 @auth
                     <a href="/member" class="btn btn-ghost btn-sm" title="Dashboard">
                         <x-unicon name="tabler:layout-dashboard-filled" class="w-5 h-5" />
@@ -164,7 +164,7 @@
             </div>
 
             <!-- Navigation - second row, spans columns 2-3 -->
-            <div class="flex items-center" style="grid-row: 2; grid-column: 2 / 4;">
+            <div class="flex items-center" style="grid-row: 2; grid-column: 2;">
                 <ul class="menu menu-horizontal px-1 w-full">
                     <li><a href="{{ route('about') }}"
                             class="{{ request()->routeIs('about') ? 'active' : '' }}">About Us</a></li>

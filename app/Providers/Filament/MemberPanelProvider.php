@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Components\ActivitySidebar;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -18,6 +19,8 @@ use App\Filament\Widgets\MonthlyCalendarWidget;
 use App\Filament\Widgets\MyBandsWidget;
 use App\Filament\Widgets\TodayReservationsWidget;
 use App\Filament\Widgets\UpcomingEventsWidget;
+use App\Filament\Widgets\QuickActionsWidget;
+use App\Filament\Widgets\UserSummaryWidget;
 use App\Filament\Widgets\WeeklyOverviewWidget;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -66,13 +69,12 @@ class MemberPanelProvider extends PanelProvider
             ])
             ->databaseNotifications()
             ->widgets([
-                AccountWidget::class,
+                UserSummaryWidget::class,
+                ActivityFeedWidget::class,
+                QuickActionsWidget::class,
                 UpcomingEventsWidget::class,
                 MyBandsWidget::class,
-                ActivityFeedWidget::class,
-                MonthlyCalendarWidget::class,
                 TodayReservationsWidget::class,
-                WeeklyOverviewWidget::class,
             ])
 
             ->userMenuItems([
@@ -92,6 +94,14 @@ class MemberPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->renderHook(
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn (): string => view('filament.components.activity-toggle-button')->render()
+            )
+            ->renderHook(
+                PanelsRenderHook::CONTENT_END,
+                fn (): string => ActivitySidebar::render()
+            )
             ->viteTheme('resources/css/app.css');
     }
 }

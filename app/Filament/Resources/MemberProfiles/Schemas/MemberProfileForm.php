@@ -45,7 +45,7 @@ class MemberProfileForm
                             TextInput::make('hometown')
                                 ->label('Hometown')
                                 ->columnSpan(1)
-                                ->datalist(fn() => MemberProfile::distinct()->get()->pluck('hometown')->concat(['Corvallis', 'Albany', 'Philomath', 'Monroe', 'Lebanon', 'Sweet Home', 'Eugene', 'Springfield', 'Portland', 'Salem'])),
+                                ->datalist(fn() => MemberProfile::withoutGlobalScope(\App\Models\Scopes\MemberVisibilityScope::class)->distinct()->pluck('hometown')->concat(['Corvallis', 'Albany', 'Philomath', 'Monroe', 'Lebanon', 'Sweet Home', 'Eugene', 'Springfield', 'Portland', 'Salem'])),
                         ])->columns(4)->columnSpanFull(),
                         RichEditor::make('bio')
                             ->label('Bio')

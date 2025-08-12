@@ -14,6 +14,7 @@
         "guava/calendar": "^2.0@beta",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "maatwebsite/excel": "^3.1",
         "secondnetwork/blade-tabler-icons": "^3.34",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-data": "^4.17",

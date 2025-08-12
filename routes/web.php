@@ -21,7 +21,7 @@ Route::get('/', function () {
             ->whereBetween('start_time', [now()->startOfMonth(), now()->endOfMonth()])
             ->count(),
         'practice_hours' => \App\Models\Reservation::where('status', 'confirmed')
-            ->whereBetween('start_time', [now()->startOfMonth(), now()->endOfMonth()])
+            ->whereBetween('reserved_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->get()
             ->sum(function ($reservation) {
                 return $reservation->duration ?? 0;

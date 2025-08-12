@@ -10,6 +10,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class ReservationStatsOverview extends BaseWidget
 {
+    protected array|int|null $columns = 2;
+    protected array|string|int $columnSpan = 1;
     protected function getStats(): array
     {
         $user = User::me();

@@ -22,7 +22,7 @@ class ProductionsRelationManager extends RelationManager
                     ->maxLength(255),
                 Forms\Components\Textarea::make('description')
                     ->maxLength(1000),
-                Forms\Components\DateTimePicker::make('event_date')
+                Forms\Components\DateTimePicker::make('start_time')
                     ->required(),
                 Forms\Components\TextInput::make('venue')
                     ->maxLength(255),
@@ -47,7 +47,7 @@ class ProductionsRelationManager extends RelationManager
                     ->sortable(),
                 Tables\Columns\TextColumn::make('venue')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('event_date')
+                Tables\Columns\TextColumn::make('start_time')
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\BadgeColumn::make('status')
@@ -85,6 +85,6 @@ class ProductionsRelationManager extends RelationManager
                     Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('event_date', 'desc');
+            ->defaultSort('start_time', 'desc');
     }
 }

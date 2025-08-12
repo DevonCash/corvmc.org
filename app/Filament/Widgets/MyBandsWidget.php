@@ -14,7 +14,7 @@ class MyBandsWidget extends BaseWidget
 {
     protected static ?string $heading = 'My Bands';
 
-    protected int | string | array $columnSpan = 'full';
+    protected int | string | array $columnSpan = 1;
 
     protected static ?int $sort = 4;
 
@@ -31,7 +31,6 @@ class MyBandsWidget extends BaseWidget
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('Band Name')
-                    ->searchable()
                     ->sortable()
                     ->weight('medium'),
 
@@ -39,23 +38,23 @@ class MyBandsWidget extends BaseWidget
                     ->label('Role')
                     ->formatStateUsing(function (BandProfile $record): string {
                         $user = User::me();
-                        
+
                         // Owner
                         if ($record->owner_id === $user->id) {
                             return 'owner';
                         }
-                        
+
                         // Check membership
                         $membership = $record->members()->where('users.id', $user->id)->first();
                         if (!$membership) {
                             return 'none';
                         }
-                        
+
                         // Check if invited
                         if ($membership->pivot->status === 'invited') {
                             return 'invited';
                         }
-                        
+
                         return $membership->pivot->role ?? 'member';
                     })
                     ->badge()
@@ -122,14 +121,8 @@ class MyBandsWidget extends BaseWidget
                     ->openUrlInNewTab(),
             ])
             ->headerActions([
-                Actions\Action::make('create')
-                    ->label('Create Band')
-                    ->icon('tabler-plus')
-                    ->url(route('filament.member.resources.bands.create'))
-                    ->visible(fn() => User::me()?->can('create bands') ?? false),
-
                 Actions\Action::make('view_all')
-                    ->label('Manage All')
+                    ->label('See All')
                     ->icon('tabler-settings')
                     ->url(route('filament.member.resources.bands.index')),
             ])

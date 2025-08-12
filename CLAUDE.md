@@ -12,7 +12,6 @@ This is a Laravel-based web application for the Corvallis Music Collective, a no
 
 - **Laravel 12** - PHP framework
 - **Filament PHP v4** - Admin panel and forms framework
-- **SQLite** - Database (development)
 - **Vite** - Asset bundling with TailwindCSS v4
 - **Pest** - Testing framework
 
@@ -65,6 +64,17 @@ NOTE: Filament v4 beta makes some changes from v3
 - `php artisan test:notifications` - Test all notification types in the system
 - Use `--clean` flag on invitation tests to clean up test data first
 - Use `--send` flag on notification tests to actually send notifications (default is dry-run)
+
+### Import Features
+
+- **Zeffy Data Import** - Use the "Import Zeffy Data" button in the Transactions resource
+- **File Format Support** - Accepts both CSV and Excel (.xlsx, .xls) files from Zeffy exports
+- Automatic column mapping with visual interface
+- Real-time validation and error reporting
+- Duplicate detection and failed payment filtering
+- Dynamic additional questions handling for campaign-specific fields
+- Supports all Zeffy export columns including donor info, campaigns, and payment details
+- Background processing with progress tracking and notifications
 
 ### Database
 

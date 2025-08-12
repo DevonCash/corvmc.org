@@ -9,10 +9,7 @@ class UpcomingEventsWidget extends Widget
 {
     protected string $view = 'filament.widgets.upcoming-events-widget';
 
-    protected int | string | array $columnSpan = [
-        'md' => 2,
-        'xl' => 1,
-    ];
+    protected int | string | array $columnSpan = 'full';
 
     protected static ?int $sort = 2;
 
@@ -20,7 +17,7 @@ class UpcomingEventsWidget extends Widget
     {
         return Production::publishedUpcoming()
             ->with(['performers', 'manager'])
-            ->limit(3)
+            ->limit(8)
             ->get()
             ->map(function (Production $production) {
                 return [
