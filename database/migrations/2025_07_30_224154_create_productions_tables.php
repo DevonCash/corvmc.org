@@ -20,7 +20,9 @@ return new class extends Migration
             $table->dateTime('start_time');
             $table->dateTime('end_time')->nullable();
             $table->dateTime('doors_time')->nullable();
-            $table->jsonb('location')->nullable(); // Assuming location can be complex, using JSONB
+            $table->json('location')->nullable(); // Assuming location can be complex, using JSON
+            $table->string('ticket_url')->nullable();
+            $table->decimal('ticket_price', 8, 2)->nullable();
             $table->string('status')->default('pre-production');
             $table->timestamp('published_at')->nullable();
             $table->foreignId('manager_id')->constrained('users');
@@ -41,7 +43,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('productions');
         Schema::dropIfExists('production_bands');
+        Schema::dropIfExists('productions');
     }
 };

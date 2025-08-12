@@ -17,9 +17,9 @@ return new class extends Migration
             $table->softDeletes();
             $table->foreignId('user_id')->unique()->constrained()->onDelete('cascade');
             $table->string('hometown')->nullable(); // New field for hometown
-            $table->string('bio')->nullable();
-            $table->jsonb('links')->nullable(); // Store social media links or other relevant URLs
-            $table->jsonb('contact')->nullable(); // Store contact information like email, phone, etc.
+            $table->text('bio')->nullable();
+            $table->json('links')->nullable(); // Store social media links or other relevant URLs
+            $table->json('contact')->nullable(); // Store contact information like email, phone, etc.
             $table->string('visibility')->default('private'); // Visibility of the profile, e.g., private, public
         });
     }
