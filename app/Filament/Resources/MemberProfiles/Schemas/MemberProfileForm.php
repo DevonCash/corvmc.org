@@ -170,6 +170,7 @@ class MemberProfileForm
                                 'private' => 'Only CMC staff can see your contact info',
                                 'members' => 'Only other members can see your contact info',
                                 'public' => 'Anyone who can see your profile can see your contact info',
+                                default => $state
                             })
                             ->selectablePlaceholder(false)
                             ->default('private')
