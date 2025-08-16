@@ -71,6 +71,7 @@ return [
             'use_path_style_endpoint' => true,
             'throw' => true,
             'report' => false,
+            'temporary_url' => true, // Important for temp file access
         ],
 
         'media' => [
