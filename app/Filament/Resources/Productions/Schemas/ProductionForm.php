@@ -67,7 +67,7 @@ class ProductionForm
     protected static function managerField(): Select
     {
         return Select::make('manager_id')
-            ->relationship('manager', 'name', fn ($query) => $query->permission('manage productions'))
+            ->relationship('manager', 'name', fn($query) => $query->permission('manage productions'))
             ->required()
             ->columnSpan([
                 'sm' => 1,
@@ -219,7 +219,7 @@ class ProductionForm
         return Textarea::make('location.details')
             ->label('External Venue Details')
             ->placeholder('Venue name, address, contact info, special instructions...')
-            ->visible(fn (Get $get) => ! $get('at_cmc'))
+            ->visible(fn(Get $get) => ! $get('at_cmc'))
             ->columnSpanFull()
             ->rows(3);
     }
@@ -263,7 +263,7 @@ class ProductionForm
                 }
                 $date = is_string($state) ? \Carbon\Carbon::parse($state) : $state;
 
-                return $date->isFuture() ? 'Publish in '.$date->shortAbsoluteDiffForHumans() : 'Published';
+                return $date->isFuture() ? 'Publish in ' . $date->shortAbsoluteDiffForHumans() : 'Published';
             })
             ->live();
     }
@@ -273,6 +273,7 @@ class ProductionForm
         return SpatieMediaLibraryFileUpload::make('poster')
             ->collection('posters')
             ->image()
+            ->disk('r2')
             ->maxSize(1024);
     }
 }

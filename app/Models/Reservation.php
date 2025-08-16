@@ -225,7 +225,7 @@ class Reservation extends Model implements Eventable
     /**
      * Mark reservation as paid.
      */
-    public function markAsPaid(string $paymentMethod = null, string $notes = null): void
+    public function markAsPaid(?string $paymentMethod = null, ?string $notes = null): void
     {
         $this->update([
             'payment_status' => 'paid',
@@ -238,7 +238,7 @@ class Reservation extends Model implements Eventable
     /**
      * Mark reservation as comped.
      */
-    public function markAsComped(string $notes = null): void
+    public function markAsComped(?string $notes = null): void
     {
         $this->update([
             'payment_status' => 'comped',
@@ -251,7 +251,7 @@ class Reservation extends Model implements Eventable
     /**
      * Mark reservation as refunded.
      */
-    public function markAsRefunded(string $notes = null): void
+    public function markAsRefunded(?string $notes = null): void
     {
         $this->update([
             'payment_status' => 'refunded',

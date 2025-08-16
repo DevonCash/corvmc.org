@@ -22,22 +22,11 @@ class PerformersRelationManager extends RelationManager
 
     protected static ?string $relatedResource = BandProfileResource::class;
 
-    /**
-     * Modify the query to include touring bands.
-     */
-    protected function getTableQuery(): ?\Illuminate\Database\Eloquent\Builder
-    {
-        $query = parent::getTableQuery();
-
-        return $query?->withoutGlobalScopes([
-            \App\Models\Scopes\OwnedBandsScope::class,
-        ]);
-    }
-
     public function table(Table $table): Table
     {
         return $table
             ->reorderable('production_bands.order')
+            ->defaultSort('production_bands.order')
             ->reorderRecordsTriggerAction(
                 fn(Action $action, bool $isReordering) => $action
                     ->button()
@@ -115,7 +104,7 @@ class PerformersRelationManager extends RelationManager
                             ->tel()
                             ->placeholder('(555) 123-4567'),
                     ])
-                    ->mutateFormDataUsing(function (array $data): array {
+                    ->mutateDataUsing(function (array $data): array {
                         // Ensure touring bands have no owner
                         $data['owner_id'] = null;
                         $data['visibility'] = 'private';
