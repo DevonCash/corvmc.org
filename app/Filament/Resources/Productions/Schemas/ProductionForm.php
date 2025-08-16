@@ -273,6 +273,9 @@ class ProductionForm
         return SpatieMediaLibraryFileUpload::make('poster')
             ->collection('posters')
             ->image()
+            ->visibility('public') // Important for R2
+            ->directory('posters') // Specify directory structure
+            ->multiple(false)
             ->disk('r2')
             ->maxSize(1024);
     }
