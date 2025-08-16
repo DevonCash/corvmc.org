@@ -60,7 +60,7 @@
                                 <x-unicon name="tabler:layout-dashboard-filled" class="size-6" />
                             </a>
                         @else
-                            <a href="/member/login" class="btn btn-ghost btn-sm btn-square text-xs">Login</a>
+                            <a href="/member/login" class="btn btn-ghost btn-square text-xs">Login</a>
                         @endauth
                     </div>
                 </div>
@@ -154,12 +154,12 @@
             <!-- Action Buttons - first row, third column -->
             <div class="flex items-center gap-2" style="grid-row: 2; grid-column: 3;">
                 @auth
-                    <a href="/member" class="btn btn-ghost btn-sm" title="Dashboard">
+                    <a href="/member" class="btn btn-ghost" title="Dashboard">
                         <x-unicon name="tabler:layout-dashboard-filled" class="w-5 h-5" />
                         <span class="ml-1">Dashboard</span>
                     </a>
                 @else
-                    <a href="/member/login" class="btn btn-ghost btn-sm">Login</a>
+                    <a href="/member/login" class="btn btn-ghost">Login</a>
                 @endauth
             </div>
 
