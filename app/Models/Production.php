@@ -62,6 +62,12 @@ class Production extends Model implements Eventable, HasMedia
         return $this->tagsWithType('genre');
     }
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('poster')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+            ->singleFile(); // This is key for single poster uploads
+    }
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
@@ -104,10 +110,10 @@ class Production extends Model implements Eventable, HasMedia
     {
         if ($this->start_time && $this->end_time) {
             if ($this->start_time->isSameDay($this->end_time)) {
-                return $this->start_time->format('M j, Y g:i A').' - '.$this->end_time->format('g:i A');
+                return $this->start_time->format('M j, Y g:i A') . ' - ' . $this->end_time->format('g:i A');
             }
 
-            return $this->start_time->format('M j, Y g:i A').' - '.$this->end_time->format('M j, Y g:i A');
+            return $this->start_time->format('M j, Y g:i A') . ' - ' . $this->end_time->format('M j, Y g:i A');
         }
 
         return $this->start_time ? $this->start_time->format('M j, Y g:i A') : 'TBD';
@@ -176,7 +182,7 @@ class Production extends Model implements Eventable, HasMedia
     {
         switch ($venueType) {
             case 'cmc':
-                return $query->where(function($q) {
+                return $query->where(function ($q) {
                     $q->whereNull('location->is_external')->orWhere('location->is_external', false);
                 });
             case 'external':
@@ -237,7 +243,7 @@ class Production extends Model implements Eventable, HasMedia
 
         // Ensure URL has a protocol
         if (! str_starts_with($value, 'http://') && ! str_starts_with($value, 'https://')) {
-            return 'https://'.$value;
+            return 'https://' . $value;
         }
 
         return $value;
@@ -274,7 +280,7 @@ class Production extends Model implements Eventable, HasMedia
             return 'Free';
         }
 
-        $price = $this->ticket_price ? '$'.number_format($this->ticket_price, 2) : 'Ticketed';
+        $price = $this->ticket_price ? '$' . number_format($this->ticket_price, 2) : 'Ticketed';
 
         if ($this->isNotaflof()) {
             $price .= ' (NOTAFLOF)';
