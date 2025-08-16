@@ -149,3 +149,26 @@
 .fi-sidebar-item:not(.fi-active) .fi-sidebar-item-icon {
     color: var(--color-secondary);
 }
+
+/* Reorder repeater items: [reorder] [input] [remove] */
+.fi-fo-repeater-item {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.fi-fo-repeater-item > .fi-fo-repeater-item-actions {
+    order: -1 !important;
+    margin-right: 0.75rem !important;
+    margin-left: 0 !important;
+}
+
+.fi-fo-repeater-item > .fi-fo-repeater-item-content {
+    order: 0 !important;
+    flex: 1 !important;
+}
+
+.fi-fo-repeater-item > .fi-fo-repeater-item-actions:last-child {
+    order: 1 !important;
+    margin-right: 0 !important;
+    margin-left: 0.75rem !important;
+}

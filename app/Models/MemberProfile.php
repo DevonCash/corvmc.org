@@ -34,12 +34,14 @@ class MemberProfile extends Model implements HasMedia
         'hometown',
         'links',
         'contact',
+        'embeds',
         'visibility',
     ];
 
     protected $casts = [
         'links' => 'array',
         'contact' => ContactData::class,
+        'embeds' => 'array',
     ];
 
     public function getAvatarAttribute(): ?string

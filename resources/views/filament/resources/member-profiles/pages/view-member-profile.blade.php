@@ -198,49 +198,67 @@
 
                 {{-- Embeds & Widgets --}}
                 @if($record->embeds && count($record->embeds) > 0)
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                            <x-heroicon-s-play class="w-4 h-4 mr-2" />
-                            Featured Content
-                        </h2>
-                        <div class="space-y-4">
-                            @foreach($record->embeds as $embed)
-                                <div class="relative">
-                                    @if($embed['type'] === 'iframe')
-                                        <div class="aspect-video rounded-lg overflow-hidden">
-                                            <iframe
-                                                src="{{ $embed['url'] }}"
-                                                title="{{ $embed['title'] ?? 'Embedded content' }}"
-                                                class="w-full h-full border-0"
-                                                loading="lazy"
-                                                allowfullscreen>
-                                            </iframe>
-                                        </div>
-                                    @elseif($embed['type'] === 'bandcamp')
-                                        <div class="bandcamp-embed">
-                                            {!! $embed['html'] !!}
-                                        </div>
-                                    @elseif($embed['type'] === 'soundcloud')
-                                        <div class="soundcloud-embed">
-                                            {!! $embed['html'] !!}
-                                        </div>
-                                    @else
-                                        <div class="bg-gray-100 rounded-lg p-4 text-center">
-                                            <a href="{{ $embed['url'] }}"
-                                               target="_blank"
-                                               rel="noopener noreferrer"
-                                               class="text-blue-600 hover:text-blue-800 font-medium">
-                                                {{ $embed['title'] ?? 'View Content' }}
-                                            </a>
-                                        </div>
-                                    @endif
-                                    @if($embed['title'] && $embed['type'] !== 'link')
-                                        <p class="text-sm text-gray-600 mt-2">{{ $embed['title'] }}</p>
-                                    @endif
+                    @foreach($record->embeds as $embed)
+                        @php
+                            $embedUrl = $embed['url'] ?? $embed;
+                            // Auto-detect embed type from URL
+                            $type = 'iframe'; // default
+                            if (str_contains($embedUrl, 'spotify.com')) {
+                                $type = 'spotify';
+                            } elseif (str_contains($embedUrl, 'bandcamp.com')) {
+                                $type = 'bandcamp';
+                            } elseif (str_contains($embedUrl, 'soundcloud.com')) {
+                                $type = 'soundcloud';
+                            } elseif (str_contains($embedUrl, 'youtube.com') || str_contains($embedUrl, 'youtu.be') || str_contains($embedUrl, 'vimeo.com')) {
+                                $type = 'iframe';
+                            }
+                        @endphp
+                        <div class="relative">
+                            @if($type === 'iframe')
+                                <div class="aspect-video rounded-lg overflow-hidden bg-white shadow-sm border border-gray-200">
+                                    <iframe
+                                        src="{{ $embedUrl }}"
+                                        title="Embedded video"
+                                        class="w-full h-full border-0"
+                                        frameborder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        referrerpolicy="strict-origin-when-cross-origin"
+                                        loading="lazy"
+                                        allowfullscreen>
+                                    </iframe>
                                 </div>
-                            @endforeach
+                            @elseif($type === 'spotify')
+                                <iframe
+                                    src="{{ $embedUrl }}"
+                                    width="100%"
+                                    height="352"
+                                    frameborder="0"
+                                    allowtransparency="true"
+                                    allow="encrypted-media"
+                                    class="w-full border-0 rounded-lg">
+                                </iframe>
+                            @elseif($type === 'bandcamp')
+                                <iframe
+                                    src="{{ $embedUrl }}"
+                                    width="400"
+                                    height="340"
+                                    frameborder="0"
+                                    seamless
+                                    class="w-full border-0 rounded-lg">
+                                </iframe>
+                            @elseif($type === 'soundcloud')
+                                <iframe
+                                    src="{{ $embedUrl }}"
+                                    width="100%"
+                                    height="166"
+                                    scrolling="no"
+                                    frameborder="no"
+                                    allow="autoplay"
+                                    class="w-full border-0 rounded-lg">
+                                </iframe>
+                            @endif
                         </div>
-                    </div>
+                    @endforeach
                 @else
                     {{-- Placeholder for when no embeds exist --}}
                     <div class="bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 p-8 text-center">

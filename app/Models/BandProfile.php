@@ -27,6 +27,7 @@ class BandProfile extends Model implements HasMedia
         'bio',
         'links',
         'contact',
+        'embeds',
         'hometown',
         'owner_id',
         'visibility',
@@ -35,6 +36,7 @@ class BandProfile extends Model implements HasMedia
     protected $casts = [
         'links' => 'array',
         'contact' => 'array',
+        'embeds' => 'array',
     ];
 
     /**

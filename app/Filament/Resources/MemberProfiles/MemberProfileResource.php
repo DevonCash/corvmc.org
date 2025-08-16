@@ -23,7 +23,7 @@ class MemberProfileResource extends Resource
 
     protected static ?string $pluralLabel = 'Member Directory';
 
-    protected static ?string $navigationLabel = 'Member Directory';
+    protected static ?string $navigationLabel = 'Members';
 
     protected static string|BackedEnum|null $navigationIcon = 'tabler-users';
 
