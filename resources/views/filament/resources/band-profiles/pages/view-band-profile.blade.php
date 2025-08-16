@@ -11,7 +11,7 @@
                         {{-- Avatar Section --}}
                         <div class="flex-shrink-0 mt-2">
                             <div class="relative">
-                                <img src="{{ $record->avatar_url ?: 'https://ui-avatars.com/api/?name=' . urlencode($record->name) . '&color=7C3AED&background=F3E8FF&size=200' }}"
+                                <img src="{{ $record->getFirstMediaUrl('avatar') ?: 'https://ui-avatars.com/api/?name=' . urlencode($record->name) . '&color=7C3AED&background=F3E8FF&size=200' }}"
                                     alt="{{ $record->name }}"
                                     class="fi-avatar fi-avatar-lg rounded-full object-cover mx-auto"
                                     style="width: 120px; height: 120px;">
@@ -117,7 +117,7 @@
                             <x-heroicon-s-document-text class="w-4 h-4 mr-2" />
                             About the Band
                         </h2>
-                        
+
                         @if ($record->bio)
                             <div class="prose prose-gray max-w-none mb-6">
                                 {!! $record->bio !!}
