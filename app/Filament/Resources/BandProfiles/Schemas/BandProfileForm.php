@@ -9,6 +9,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\SpatieTagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Fieldset;
@@ -118,7 +119,8 @@ class BandProfileForm
                         Fieldset::make('Band Photo')
                             ->columns(1)
                             ->schema([
-                                FileUpload::make('avatar')
+                                SpatieMediaLibraryFileUpload::make('avatar')
+                                    ->disk('r2')
                                     ->hiddenLabel()
                                     ->image()
                                     ->imageEditor()

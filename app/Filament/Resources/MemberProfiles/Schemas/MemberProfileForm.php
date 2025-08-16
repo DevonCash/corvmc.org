@@ -134,6 +134,7 @@ class MemberProfileForm
                             ->schema([
                                 SpatieMediaLibraryFileUpload::make('avatar')
                                     ->collection('avatar')
+                                    ->disk('r2')
                                     ->alignCenter()
                                     ->hiddenLabel()
                                     ->avatar(),

@@ -67,9 +67,9 @@ class MemberProfile extends Model implements HasMedia
     public function isComplete(): bool
     {
         // Check if profile has key information filled out
-        return !empty($this->bio) && 
-               !empty($this->skills) && 
-               $this->hasMedia('avatar');
+        return !empty($this->bio) &&
+            !empty($this->skills) &&
+            $this->hasMedia('avatar');
     }
 
     public function isVisible(?User $user = null): bool
@@ -111,6 +111,13 @@ class MemberProfile extends Model implements HasMedia
     public function getGenresAttribute()
     {
         return $this->tagsWithType('genre')->pluck('name')->toArray();
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('avatar')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+            ->singleFile(); // This is key for single avatar uploads
     }
 
     public function registerMediaConversions(?Media $media = null): void

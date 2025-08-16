@@ -18,7 +18,7 @@ class TransactionImportAction
             ->label('Import Zeffy Data')
             ->icon('heroicon-o-arrow-up-tray')
             ->color('success')
-            ->form([
+            ->schema([
                 FileUpload::make('file')
                     ->label('Zeffy Export File')
                     ->required()
@@ -32,7 +32,7 @@ class TransactionImportAction
                         '.xls'
                     ])
                     ->helperText('Upload a CSV or Excel (.xlsx, .xls) file exported from Zeffy.')
-                    ->disk('local')
+                    ->disk('r2')
                     ->directory('imports')
                     ->maxSize(10240), // 10MB limit
             ])
@@ -54,7 +54,7 @@ class TransactionImportAction
                 // Fallback to direct path resolution
                 $fullPath = storage_path('app/' . ltrim($filePath, '/'));
             }
-            
+
             if (!file_exists($fullPath)) {
                 // Debug info
                 \Log::error('File not found during import', [
@@ -122,7 +122,7 @@ class TransactionImportAction
     {
         $data = [];
         $handle = fopen($filePath, 'r');
-        
+
         if (!$handle) {
             throw new \Exception("Could not open CSV file");
         }
@@ -143,14 +143,14 @@ class TransactionImportAction
         foreach ($rows as $row) {
             try {
                 $data = array_combine($headers, $row);
-                
+
                 if (empty($data) || !static::isValidTransactionRow($data)) {
                     $skipped++;
                     continue;
                 }
 
                 $transactionData = static::mapRowToTransaction($data);
-                
+
                 if (static::isDuplicate($transactionData['transaction_id'])) {
                     $skipped++;
                     continue;
@@ -206,13 +206,13 @@ class TransactionImportAction
     {
         // Generate transaction ID
         $transactionId = static::generateTransactionId($data);
-        
+
         // Parse payment date
         $paymentDate = Carbon::createFromFormat('Y-m-d H:i:s', $data['Payment Date (America/Los_Angeles)'], 'America/Los_Angeles');
-        
+
         // Determine transaction type
         $type = static::determineTransactionType($data);
-        
+
         // Build response payload with all data
         $response = [
             'donation_id' => $transactionId,
@@ -262,7 +262,7 @@ class TransactionImportAction
         $email = $data['Email'];
         $amount = $data['Total Amount'];
         $date = $data['Payment Date (America/Los_Angeles)'];
-        
+
         $hash = substr(md5($email . $amount . $date), 0, 8);
         return "zeffy_import_{$hash}";
     }
@@ -272,11 +272,11 @@ class TransactionImportAction
         if (($data['Recurring Status'] ?? '') === 'Active') {
             return 'recurring';
         }
-        
+
         if (!empty($data['Company Name'])) {
             return 'sponsorship';
         }
-        
+
         return 'donation';
     }
 
@@ -303,19 +303,19 @@ class TransactionImportAction
     private static function mapCampaign(string $campaign): string
     {
         $campaign = strtolower($campaign);
-        
+
         if (str_contains($campaign, 'sustaining') || str_contains($campaign, 'monthly')) {
             return 'sustaining_membership';
         }
-        
+
         if (str_contains($campaign, 'equipment') || str_contains($campaign, 'gear')) {
             return 'equipment_fund';
         }
-        
+
         if (str_contains($campaign, 'event') || str_contains($campaign, 'show')) {
             return 'event_support';
         }
-        
+
         return 'general_support';
     }
 
@@ -354,13 +354,13 @@ class TransactionImportAction
         ];
 
         $additionalQuestions = [];
-        
+
         foreach ($data as $column => $value) {
             if (!in_array($column, $standardColumns) && !empty($value)) {
                 $additionalQuestions[$column] = $value;
             }
         }
-        
+
         return $additionalQuestions;
     }
 
