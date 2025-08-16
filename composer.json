@@ -10,7 +10,7 @@
         "filament/filament": "^4.0",
         "filament/notifications": "^4.0@beta",
         "filament/spatie-laravel-media-library-plugin": "^4.0",
-        "filament/spatie-laravel-tags-plugin": "^3.2",
+        "filament/spatie-laravel-tags-plugin": "^4.0",
         "guava/calendar": "^2.0@beta",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
