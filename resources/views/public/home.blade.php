@@ -55,46 +55,26 @@
     </div> --}}
 
     <!-- Upcoming Events -->
-    @if($upcomingEvents->count() > 0)
-    <div class="py-16">
-        <div class="container mx-auto px-4">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold mb-4">Upcoming Events</h2>
-                <p class="text-lg opacity-70">Join us for these amazing musical experiences</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                @foreach($upcomingEvents as $event)
-                <div class="card bg-base-100 shadow-xl">
-                    @if($event->poster_url)
-                    <figure>
-                        <img src="{{ $event->poster_thumb_url }}" alt="{{ $event->title }}" class="w-full h-48 object-cover">
-                    </figure>
-                    @endif
-                    <div class="card-body">
-                        <h2 class="card-title">{{ $event->title }}</h2>
-                        <p class="opacity-70">{{ $event->start_time->format('M j, Y g:i A') }}</p>
-                        <p class="opacity-70">{{ $event->venue_name }}</p>
-                        @if($event->description)
-                        <p>{{ Str::limit($event->description, 100) }}</p>
-                        @endif
-                        <div class="card-actions justify-end">
-                            <a href="{{ route('events.show', $event) }}" class="btn btn-primary btn-sm">
-                                Learn More
-                            </a>
-                        </div>
-                    </div>
+    @if ($upcomingEvents->count() > 0)
+        <div class="py-16">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Upcoming Events</h2>
                 </div>
-                @endforeach
-            </div>
 
-            <div class="text-center mt-8">
-                <a href="{{ route('events.index') }}" class="btn btn-outline btn-primary">
-                    View All Events
-                </a>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    @foreach ($upcomingEvents as $event)
+                        <x-event-card :item="$event" />
+                    @endforeach
+                </div>
+
+                <div class="text-center mt-8">
+                    <a href="{{ route('events.index') }}" class="btn btn-outline btn-primary">
+                        View All Events
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
     @endif
 
     <!-- What We Do -->
@@ -138,6 +118,7 @@
                     </div>
                 </div>
             </div>
+            <a href="{{ route('programs') }}" class="btn btn-outline btn-primary mt-8">View All Programs</a>
         </div>
     </div>
 
@@ -153,7 +134,8 @@
                 <div class="card bg-primary text-primary-content shadow-lg">
                     <div class="card-body text-center">
                         <h3 class="card-title justify-center text-2xl">Become a Member</h3>
-                        <p>Join our community of musicians and gain access to practice space, events, and networking opportunities.</p>
+                        <p>Join our community of musicians and gain access to practice space, events, and networking
+                            opportunities.</p>
                         <div class="card-actions justify-center mt-4">
                             <a href="/member/register" class="btn btn-secondary">Join Now</a>
                         </div>
@@ -163,7 +145,8 @@
                 <div class="card bg-secondary text-secondary-content shadow-lg">
                     <div class="card-body text-center">
                         <h3 class="card-title justify-center text-2xl">Volunteer</h3>
-                        <p>Help us organize events, maintain our space, and support fellow musicians in our community.</p>
+                        <p>Help us organize events, maintain our space, and support fellow musicians in our community.
+                        </p>
                         <div class="card-actions justify-center mt-4">
                             <a href="{{ route('contribute') }}" class="btn btn-primary">Learn More</a>
                         </div>
@@ -173,7 +156,8 @@
                 <div class="card bg-accent text-accent-content shadow-lg">
                     <div class="card-body text-center">
                         <h3 class="card-title justify-center text-2xl">Support Us</h3>
-                        <p>Your donation helps us provide affordable space and programs for the local music community.</p>
+                        <p>Your donation helps us provide affordable space and programs for the local music community.
+                        </p>
                         <div class="card-actions justify-center mt-4">
                             <a href="{{ route('contribute') }}" class="btn btn-secondary">Contribute</a>
                         </div>

@@ -70,6 +70,108 @@
         </div>
     </form>
 
+    <!-- Active Filters Display -->
+    @php
+        // Handle nested filter arrays properly
+        $allParams = request()->query();
+        $activeFilters = collect();
+        
+        // Flatten nested filter arrays like filter[skill] => value
+        foreach ($allParams as $key => $value) {
+            if ($key === 'page') continue;
+            
+            if ($key === 'filter' && is_array($value)) {
+                // Handle filter[key] => value structure
+                foreach ($value as $filterKey => $filterValue) {
+                    if (!empty($filterValue)) {
+                        $activeFilters->put("filter[{$filterKey}]", $filterValue);
+                    }
+                }
+            } elseif (!empty($value) && !is_array($value)) {
+                // Handle direct key => value
+                $activeFilters->put($key, $value);
+            }
+        }
+        
+        $hasActiveFilters = $activeFilters->isNotEmpty();
+    @endphp
+
+    @if($hasActiveFilters)
+    <div class="flex flex-wrap items-center gap-2 mb-6">
+        <span class="text-sm font-medium opacity-70">Active filters:</span>
+        
+        @foreach($activeFilters as $key => $value)
+            @php
+                // Skip if value is an array or empty
+                if (is_array($value) || empty($value)) {
+                    continue;
+                }
+                
+                // Convert value to string
+                $value = (string) $value;
+                
+                // Parse filter keys like 'filter[skill]' to get the label
+                $filterKey = str_replace(['filter[', ']'], '', $key);
+                $filterLabel = '';
+                $displayValue = $value;
+                
+                // Find the matching filter configuration
+                foreach($filters as $filter) {
+                    if ($filter['name'] === $key) {
+                        $filterLabel = $filter['label'];
+                        // If it's a select filter with options, get the display label
+                        if (isset($filter['options'][$value])) {
+                            $displayValue = $filter['options'][$value];
+                        }
+                        break;
+                    }
+                }
+                
+                // Fallback labels for common filter patterns
+                if (empty($filterLabel)) {
+                    $filterLabel = match($filterKey) {
+                        'name' => 'Name',
+                        'skill' => 'Skill',
+                        'genre' => 'Genre', 
+                        'flag' => 'Looking For',
+                        'hometown' => 'Location',
+                        default => ucfirst($filterKey)
+                    };
+                }
+                
+                // Create removal URL - handle nested filter structure
+                $removeParams = request()->query();
+                if (str_starts_with($key, 'filter[') && str_ends_with($key, ']')) {
+                    $filterKey = str_replace(['filter[', ']'], '', $key);
+                    if (isset($removeParams['filter'][$filterKey])) {
+                        unset($removeParams['filter'][$filterKey]);
+                        if (empty($removeParams['filter'])) {
+                            unset($removeParams['filter']);
+                        }
+                    }
+                } else {
+                    unset($removeParams[$key]);
+                }
+                $removeUrl = request()->url() . '?' . http_build_query($removeParams);
+            @endphp
+            
+            <div class="filter">
+                <span class="filter-label">{{ $filterLabel }}</span>
+                <span class="filter-value">{{ $displayValue }}</span>
+                <a href="{{ $removeUrl }}" class="filter-remove">
+                    <x-unicon name="tabler:x" class="size-3" />
+                </a>
+            </div>
+        @endforeach
+        
+        <!-- Clear All Filters Button -->
+        <a href="{{ request()->url() }}" class="btn btn-outline btn-xs">
+            <x-unicon name="tabler:x" class="size-3" />
+            Clear All
+        </a>
+    </div>
+    @endif
+
     <!-- Results Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
         @forelse($items as $item)

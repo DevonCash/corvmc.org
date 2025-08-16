@@ -83,7 +83,7 @@ class Production extends Model implements Eventable, HasMedia
             return $this->getFirstMediaUrl('poster');
         }
 
-        return null;
+        return 'https://picsum.photos/200/258?random=' . $this->id;
     }
 
     public function getPosterThumbUrlAttribute()

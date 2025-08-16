@@ -85,15 +85,8 @@ Route::get('/show-tonight', function () {
     return redirect()->route('events.show', $tonightShow);
 })->name('show-tonight');
 
-Route::get('/members', function () {
-    return view('public.members.index');
-})->name('members.index');
-
-Route::get('/members/{memberProfile}', function (MemberProfile $memberProfile) {
-    abort_unless($memberProfile->isVisible(auth()->user()), 404);
-
-    return view('public.members.show', compact('memberProfile'));
-})->name('members.show');
+Route::get('/members', [\App\Http\Controllers\PublicMemberController::class, 'index'])->name('members.index');
+Route::get('/members/{memberProfile}', [\App\Http\Controllers\PublicMemberController::class, 'show'])->name('members.show');
 
 Route::get('/bands', function () {
     return view('public.bands.index');

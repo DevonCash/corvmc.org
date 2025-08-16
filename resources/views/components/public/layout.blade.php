@@ -33,8 +33,6 @@
     <div class="drawer lg:hidden">
         <input id="mobile-drawer" type="checkbox" class="drawer-toggle" />
         <div class="drawer-content flex flex-col">
-            <!-- Header Stripe -->
-            <div class="corvmc-header-stripes h-2"></div>
 
             <!-- Mobile Header (single line) -->
             <div class="bg-base-100 border-b border-base-200">
@@ -64,6 +62,9 @@
                         @endauth
                     </div>
                 </div>
+                <!-- Header Stripe -->
+                <div class="corvmc-header-stripes h-2"></div>
+
             </div>
 
 
@@ -131,9 +132,6 @@
         </div>
     </div>
 
-    <!-- Header Stripe (Desktop only) -->
-    <div class="corvmc-header-stripes h-2 hidden lg:block"></div>
-
     <!-- Desktop Header (two rows) -->
     <div class="bg-base-100 border-b border-base-200 hidden lg:block">
         <div class="container mx-auto p-4 grid gap-x-4"
@@ -145,7 +143,7 @@
             </a>
 
             <!-- Title - first row, second column -->
-            <div class="text-left flex items-center" style="grid-row: 1; grid-column: 2;">
+            <div class="text-left flex items-center mt-1" style="grid-row: 1; grid-column: 2;">
                 <a href="{{ route('home') }}" class="flex flex-col items-start hover:opacity-80 transition-opacity">
                     <div class="text-primary font-bold text-3xl">Corvallis Music Collective</div>
                 </a>
@@ -165,7 +163,7 @@
 
             <!-- Navigation - second row, spans columns 2-3 -->
             <div class="flex items-center" style="grid-row: 2; grid-column: 2;">
-                <ul class="menu menu-horizontal px-1 w-full">
+                <ul class="menu menu-horizontal px-1 w-full -ml-4">
                     <li><a href="{{ route('about') }}"
                             class="{{ request()->routeIs('about') ? 'active' : '' }}">About Us</a></li>
                     <li><a href="{{ route('events.index') }}"
@@ -184,6 +182,10 @@
             </div>
         </div>
     </div>
+
+    <!-- Header Stripe (Desktop only) -->
+    <div class="corvmc-header-stripes h-3 hidden lg:block"></div>
+
 
     <!-- Main Content -->
     <main>

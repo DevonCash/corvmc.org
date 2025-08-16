@@ -1,4 +1,4 @@
-<x-public.layout title="Musician Members Directory | Corvallis Music Collective">
+<x-public.layout title="Musicians Directory | Corvallis Music Collective">
     <!-- Hero Section -->
     <div class="hero min-h-96 bg-gradient-to-r from-primary/10 to-secondary/10">
         <div class="hero-content text-center">
@@ -11,11 +11,24 @@
         </div>
     </div>
 
-    @livewire('members-grid')
+    <!-- Members Grid Component -->
+    <x-searchable-grid 
+        title="Find Musicians"
+        search-placeholder="Search musicians by name..."
+        search-name="filter[name]"
+        :filters="$filters"
+        :items="$members"
+        :total-count="$members->total()"
+        empty-icon="tabler:music"
+        empty-title="No musicians found"
+        empty-message="Try adjusting your search criteria or check back later for new members."
+        card-component="member-card"
+        :grid-cols="3"
+    />
 
     <!-- Call to Action -->
     <div class="container mx-auto px-4">
-        <div class="text-center mt-16 bg-base-200 rounded-lg p-8">
+        <div class="text-center mt-8 bg-base-200 rounded-lg p-8">
             <h2 class="text-3xl font-bold mb-4">Join Our Community</h2>
             <p class="text-lg mb-6">
                 Are you a musician in the Corvallis area? Join our directory and connect with other local artists.

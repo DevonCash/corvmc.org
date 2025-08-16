@@ -24,16 +24,17 @@
     right: 0;
     height: 100vh;
     z-index: 40;
-    box-shadow: -4px 0 6px -1px rgb(0 0 0 / 0.1), -2px 0 4px -2px rgb(0 0 0 / 0.1);
+    box-shadow: -4px 0 6px -1px rgb(0 0 0 / 0.1),
+        -2px 0 4px -2px rgb(0 0 0 / 0.1);
 }
 
 /* Horizontal Scroll Styles */
 .scrollbar-hide {
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
 }
-.scrollbar-hide::-webkit-scrollbar { 
-    display: none;  /* Safari and Chrome */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
 }
 
 /* Line clamp utility */
@@ -52,9 +53,9 @@
     --color-secondary: oklch(25% 0.09 250); /* #003b5c - CMC Blue */
     --color-accent: oklch(85% 0.05 200); /* #B8DDE1 - CMC Light Blue */
     --color-neutral: oklch(24% 0.03 270); /* #1f2937 */
-    --color-base-100: oklch(100% 0 0); /* #ffffff */
-    --color-base-200: oklch(97% 0.01 270); /* #f8f9fa */
-    --color-base-300: oklch(92% 0.02 270); /* #e5e7eb */
+    --color-base-100: oklch(99% 0.015 65); /* warm cream white */
+    --color-base-200: oklch(96% 0.02 60); /* light parchment */
+    --color-base-300: oklch(92% 0.025 55); /* aged paper tone */
     --color-info: oklch(85% 0.05 200); /* #B8DDE1 */
     --color-success: oklch(70% 0.14 160); /* #36d399 */
     --color-warning: oklch(90% 0.08 85); /* #ffe28a - CMC Yellow */
@@ -80,9 +81,9 @@
     --color-neutral-content: oklch(
         20% 0.03 270
     ); /* Dark text on light elements */
-    --color-base-100: oklch(16% 0.02 270); /* #1a1b23 - Dark background */
-    --color-base-200: oklch(20% 0.02 270); /* #22242e - Slightly lighter */
-    --color-base-300: oklch(24% 0.02 270); /* #2a2d3a - Card backgrounds */
+    --color-base-100: oklch(18% 0.02 70); /* warm dark brown */
+    --color-base-200: oklch(22% 0.025 65); /* rich coffee brown */
+    --color-base-300: oklch(28% 0.03 60); /* lighter warm brown */
     --color-base-content: oklch(85% 0.02 270); /* Light text */
     --color-info: oklch(75% 0.06 200);
     --color-success: oklch(75% 0.14 160);
@@ -105,16 +106,19 @@
 
 /* CMC Brand Styles */
 .corvmc-header-stripes {
+    --cmc-blue: #003b5c;
+    --cmc-goldenrod: #ffb500;
+    --cmc-redorange: #f84d13;
     background: linear-gradient(
-        45deg,
-        var(--cmc-orange) 0%,
-        var(--cmc-yellow) 25%,
-        var(--cmc-blue) 50%,
-        var(--cmc-light-blue) 75%,
-        var(--cmc-orange) 100%
+        var(--sound-lines) 0%,
+        var(--sound-lines) 33%,
+
+        var(--cmc-goldenrod) 33%,
+        var(--cmc-goldenrod) 66%,
+
+        var(--cmc-redorange) 66%,
+        var(--cmc-redorange) 100%
     );
-    background-size: 200% 200%;
-    animation: gradient-shift 8s ease infinite;
 }
 
 @keyframes gradient-shift {
