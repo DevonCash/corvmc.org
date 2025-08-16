@@ -26,7 +26,7 @@ class MemberProfilesTable
 {
     public static function avatarColumn()
     {
-        return ImageColumn::make('avatar_thumb_url')
+        return ImageColumn::make('avatar_url')
             ->label('')
             ->circular()
             ->imageSize(64)

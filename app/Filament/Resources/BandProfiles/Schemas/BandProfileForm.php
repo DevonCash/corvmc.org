@@ -116,22 +116,17 @@ class BandProfileForm
                 Grid::make(1)
                     ->columnSpan(1)
                     ->schema([
-                        Fieldset::make('Band Photo')
-                            ->columns(1)
-                            ->schema([
-                                SpatieMediaLibraryFileUpload::make('avatar')
-                                    ->disk('r2')
-                                    ->hiddenLabel()
-                                    ->image()
-                                    ->imageEditor()
-                                    ->imageCropAspectRatio('1:1')
-                                    ->imageResizeTargetWidth('400')
-                                    ->imageResizeTargetHeight('400')
-                                    ->directory('band-avatars')
-                                    ->visibility('public')
-                                    ->alignCenter(),
-                            ])
-                            ->columnSpanFull(),
+                            SpatieMediaLibraryFileUpload::make('avatar')
+                                ->disk('r2')
+                                ->image()
+                                ->imageEditor()
+                                ->imageCropAspectRatio('1:1')
+                                ->imageResizeTargetWidth('400')
+                                ->imageResizeTargetHeight('400')
+                                ->directory('band-avatars')
+                                ->collection('avatar')
+                                ->visibility('public')
+                                ->alignCenter(),
 
                         Select::make('visibility')
                             ->label('Profile Visibility')

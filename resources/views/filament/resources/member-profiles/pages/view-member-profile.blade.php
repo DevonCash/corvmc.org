@@ -12,7 +12,7 @@
                         <div class="flex-shrink-0 mt-2">
                             <div class="relative">
                                 <img
-                                    src="{{ $record->avatar_url ?: 'https://ui-avatars.com/api/?name=' . urlencode($record->user->name) . '&color=7F9CF5&background=EBF4FF&size=200' }}"
+                                    src="{{ $record->avatar_url }}"
                                     alt="{{ $record->user->name }}"
                                     class="fi-avatar fi-avatar-lg rounded-full object-cover mx-auto"
                                     style="width: 120px; height: 120px;"
@@ -127,7 +127,6 @@
                 @if($record->bio || count($record->skills) > 0 || count($record->genres) > 0 || count($record->influences) > 0)
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                            <x-heroicon-s-user class="w-4 h-4 mr-2" />
                             About
                         </h2>
                         
@@ -140,7 +139,7 @@
                         @if(count($record->skills) > 0)
                             <div class="mb-6">
                                 <h3 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                                    <x-heroicon-s-wrench-screwdriver class="w-3 h-3 mr-1" />
+                                    <x-tabler-tools class="size-4 mr-1" />
                                     Skills & Instruments
                                 </h3>
                                 <div class="flex flex-wrap gap-2">
@@ -158,7 +157,7 @@
                         @if(count($record->genres) > 0)
                             <div class="mb-6">
                                 <h3 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                                    <x-heroicon-s-musical-note class="w-3 h-3 mr-1" />
+                                    <x-tabler-music class="size-4 mr-1" />
                                     Musical Genres
                                 </h3>
                                 <div class="flex flex-wrap gap-2">
@@ -176,7 +175,7 @@
                         @if(count($record->influences) > 0)
                             <div>
                                 <h3 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                                    <x-heroicon-s-star class="w-3 h-3 mr-1" />
+                                    <x-tabler-star class="w-3 h-3 mr-1" />
                                     Musical Influences
                                 </h3>
                                 <div class="flex flex-wrap gap-2">
@@ -196,11 +195,74 @@
 
             {{-- Right Column - Links & Info --}}
             <div class="space-y-6">
+
+                {{-- Embeds & Widgets --}}
+                @if($record->embeds && count($record->embeds) > 0)
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                            <x-heroicon-s-play class="w-4 h-4 mr-2" />
+                            Featured Content
+                        </h2>
+                        <div class="space-y-4">
+                            @foreach($record->embeds as $embed)
+                                <div class="relative">
+                                    @if($embed['type'] === 'iframe')
+                                        <div class="aspect-video rounded-lg overflow-hidden">
+                                            <iframe
+                                                src="{{ $embed['url'] }}"
+                                                title="{{ $embed['title'] ?? 'Embedded content' }}"
+                                                class="w-full h-full border-0"
+                                                loading="lazy"
+                                                allowfullscreen>
+                                            </iframe>
+                                        </div>
+                                    @elseif($embed['type'] === 'bandcamp')
+                                        <div class="bandcamp-embed">
+                                            {!! $embed['html'] !!}
+                                        </div>
+                                    @elseif($embed['type'] === 'soundcloud')
+                                        <div class="soundcloud-embed">
+                                            {!! $embed['html'] !!}
+                                        </div>
+                                    @else
+                                        <div class="bg-gray-100 rounded-lg p-4 text-center">
+                                            <a href="{{ $embed['url'] }}"
+                                               target="_blank"
+                                               rel="noopener noreferrer"
+                                               class="text-blue-600 hover:text-blue-800 font-medium">
+                                                {{ $embed['title'] ?? 'View Content' }}
+                                            </a>
+                                        </div>
+                                    @endif
+                                    @if($embed['title'] && $embed['type'] !== 'link')
+                                        <p class="text-sm text-gray-600 mt-2">{{ $embed['title'] }}</p>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    {{-- Placeholder for when no embeds exist --}}
+                    <div class="bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 p-8 text-center">
+                        <x-heroicon-s-musical-note class="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Share Your Music</h3>
+                        <p class="text-gray-600 text-sm mb-4">
+                            Add Bandcamp, SoundCloud, YouTube, or other embeds to showcase your work
+                        </p>
+                        @can('update', $record)
+                            <a href="{{ route('filament.member.resources.directory.edit', ['record' => $record->id]) }}"
+                               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
+                                <x-heroicon-s-plus class="w-4 h-4 mr-2" />
+                                Add Content
+                            </a>
+                        @endif
+                    </div>
+                @endif
                 {{-- Band Affiliations --}}
                 @if($record->user->bandProfiles && count($record->user->bandProfiles) > 0)
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                            <x-heroicon-s-user-group class="w-4 h-4 mr-2" />
+                            <x-tabler-users-group class="w-4 h-4 mr-2" />
                             Bands & Groups
                         </h2>
                         <div class="space-y-3">
@@ -294,68 +356,6 @@
                     </div>
                 @endif
 
-                {{-- Embeds & Widgets --}}
-                @if($record->embeds && count($record->embeds) > 0)
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                            <x-heroicon-s-play class="w-4 h-4 mr-2" />
-                            Featured Content
-                        </h2>
-                        <div class="space-y-4">
-                            @foreach($record->embeds as $embed)
-                                <div class="relative">
-                                    @if($embed['type'] === 'iframe')
-                                        <div class="aspect-video rounded-lg overflow-hidden">
-                                            <iframe
-                                                src="{{ $embed['url'] }}"
-                                                title="{{ $embed['title'] ?? 'Embedded content' }}"
-                                                class="w-full h-full border-0"
-                                                loading="lazy"
-                                                allowfullscreen>
-                                            </iframe>
-                                        </div>
-                                    @elseif($embed['type'] === 'bandcamp')
-                                        <div class="bandcamp-embed">
-                                            {!! $embed['html'] !!}
-                                        </div>
-                                    @elseif($embed['type'] === 'soundcloud')
-                                        <div class="soundcloud-embed">
-                                            {!! $embed['html'] !!}
-                                        </div>
-                                    @else
-                                        <div class="bg-gray-100 rounded-lg p-4 text-center">
-                                            <a href="{{ $embed['url'] }}"
-                                               target="_blank"
-                                               rel="noopener noreferrer"
-                                               class="text-blue-600 hover:text-blue-800 font-medium">
-                                                {{ $embed['title'] ?? 'View Content' }}
-                                            </a>
-                                        </div>
-                                    @endif
-                                    @if($embed['title'] && $embed['type'] !== 'link')
-                                        <p class="text-sm text-gray-600 mt-2">{{ $embed['title'] }}</p>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @else
-                    {{-- Placeholder for when no embeds exist --}}
-                    <div class="bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 p-8 text-center">
-                        <x-heroicon-s-musical-note class="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">Share Your Music</h3>
-                        <p class="text-gray-600 text-sm mb-4">
-                            Add Bandcamp, SoundCloud, YouTube, or other embeds to showcase your work
-                        </p>
-                        @can('update', $record)
-                            <a href="{{ route('filament.member.resources.directory.edit', ['record' => $record->id]) }}"
-                               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
-                                <x-heroicon-s-plus class="w-4 h-4 mr-2" />
-                                Add Content
-                            </a>
-                        @endif
-                    </div>
-                @endif
             </div>
         </div>
     </div>

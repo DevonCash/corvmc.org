@@ -89,8 +89,7 @@ class BandProfile extends Model implements HasMedia
         if ($this->hasMedia('avatar')) {
             return $this->getFirstMediaUrl('avatar');
         }
-
-        return null;
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=200';
     }
 
 

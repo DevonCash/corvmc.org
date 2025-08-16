@@ -46,17 +46,17 @@ class MemberProfile extends Model implements HasMedia
     {
         $url = $this->getFirstMediaUrl('avatar');
 
-        return $url ?: null;
+        return $url ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=200';
     }
 
     public function getAvatarUrlAttribute(): string
     {
-        return $this->getFirstMediaUrl('avatar') ?: 'https://fastly.picsum.photos/id/1012/100/100.jpg?hmac=vuow0o9zubuAYNA_nZKuHb055Vy6pf6df8dUXl-6F2Y';
+        return $this->getFirstMediaUrl('avatar') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=200';;
     }
 
     public function getAvatarThumbUrlAttribute(): string
     {
-        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://fastly.picsum.photos/id/1012/100/100.jpg?hmac=vuow0o9zubuAYNA_nZKuHb055Vy6pf6df8dUXl-6F2Y';
+        return $this->getFirstMediaUrl('avatar', 'thumb');
     }
 
     public function user()

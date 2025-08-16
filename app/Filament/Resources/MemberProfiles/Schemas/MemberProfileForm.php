@@ -129,17 +129,12 @@ class MemberProfileForm
                 Grid::make(1)
                     ->columnSpan(1)
                     ->schema([
-                        Fieldset::make('Profile Picture')
-                            ->columns(1)
-                            ->schema([
                                 SpatieMediaLibraryFileUpload::make('avatar')
+                                    ->label('Profile Picture')
                                     ->collection('avatar')
                                     ->disk('r2')
                                     ->alignCenter()
-                                    ->hiddenLabel()
                                     ->avatar(),
-                            ])
-                            ->columnSpanFull(),
 
                         Select::make('visibility')
                             ->label('Profile Visibility')
