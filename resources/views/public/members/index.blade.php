@@ -11,20 +11,7 @@
         </div>
     </div>
 
-    <!-- Members Grid Component -->
-    <x-searchable-grid 
-        title="Find Musicians"
-        search-placeholder="Search musicians by name..."
-        search-name="filter[name]"
-        :filters="$filters"
-        :items="$members"
-        :total-count="$members->total()"
-        empty-icon="tabler:music"
-        empty-title="No musicians found"
-        empty-message="Try adjusting your search criteria or check back later for new members."
-        card-component="member-card"
-        :grid-cols="3"
-    />
+    @livewire('members-grid')
 
     <!-- Call to Action -->
     <div class="container mx-auto px-4">

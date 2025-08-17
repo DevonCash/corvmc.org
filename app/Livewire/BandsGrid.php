@@ -28,7 +28,7 @@ class BandsGrid extends SearchableGrid
 
     protected function getSearchPlaceholder(): string
     {
-        return 'Search bands by name...';
+        return 'Search bands by name, genre, or location...';
     }
 
     protected function getEmptyIcon(): string
@@ -48,11 +48,60 @@ class BandsGrid extends SearchableGrid
 
     protected function configureFilters()
     {
-        // Add common filters
-        $this->addTextFilter('name', 'Name');
-        $this->addTextFilter('hometown', 'Location');
+        // Add hometown dropdown
+        $hometowns = BandProfile::whereIn('visibility', ['public', 'members'])
+            ->whereNotNull('hometown')
+            ->where('hometown', '!=', '')
+            ->distinct()
+            ->pluck('hometown', 'hometown')
+            ->sort();
 
-        // Add band-specific tag filters
-        $this->addTagFilter('genre', 'Genre');
+        if ($hometowns->count() > 0) {
+            $this->availableFilters[] = [
+                'type' => 'select',
+                'key' => 'hometown',
+                'label' => 'Location',
+                'placeholder' => 'All Locations',
+                'options' => $hometowns->toArray(),
+            ];
+        }
+    }
+
+    // Override getItems to implement comprehensive search and filters
+    protected function getItems()
+    {
+        // Get base query
+        $query = $this->getBaseQuery();
+
+        // Apply comprehensive search if we have search term
+        if (!empty($this->search)) {
+            $query->where(function ($q) {
+                $searchTerm = $this->search;
+                
+                // Search in band name
+                $q->where('name', 'ilike', '%' . $searchTerm . '%')
+                  // Search in hometown
+                  ->orWhere('hometown', 'ilike', '%' . $searchTerm . '%')
+                  // Search in genre tags using spatie package methods
+                  ->orWhere(function ($genreQuery) use ($searchTerm) {
+                      // Get all genre tags that contain the search term
+                      $genreTags = \Spatie\Tags\Tag::getWithType('genre')
+                          ->filter(function ($tag) use ($searchTerm) {
+                              return stripos($tag->name, $searchTerm) !== false;
+                          });
+                      
+                      if ($genreTags->isNotEmpty()) {
+                          $genreQuery->withAnyTags($genreTags->pluck('name')->toArray(), 'genre');
+                      }
+                  });
+            });
+        }
+
+        // Apply hometown filter
+        if (!empty($this->filters['hometown'])) {
+            $query->where('hometown', $this->filters['hometown']);
+        }
+
+        return $query->paginate($this->getPerPage());
     }
 }

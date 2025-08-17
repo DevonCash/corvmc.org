@@ -6,6 +6,15 @@ use App\Models\Production;
 
 class EventsGrid extends SearchableGrid
 {
+    public $scope = 'upcoming';
+
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'filters' => ['except' => []],
+        'scope' => ['except' => 'upcoming'],
+        'page' => ['except' => 1],
+    ];
+
     protected function getModelClass(): string
     {
         return Production::class;
@@ -13,7 +22,10 @@ class EventsGrid extends SearchableGrid
 
     protected function getBaseQuery()
     {
-        return Production::publishedUpcoming();
+        return match ($this->scope) {
+            'past' => Production::publishedPast(),
+            default => Production::publishedUpcoming(),
+        };
     }
 
     protected function getCardComponent(): string
@@ -23,12 +35,15 @@ class EventsGrid extends SearchableGrid
 
     protected function getTitle(): string
     {
-        return 'Find Events';
+        return match ($this->scope) {
+            'past' => 'Past Events',
+            default => 'Upcoming Events',
+        };
     }
 
     protected function getSearchPlaceholder(): string
     {
-        return 'Search events by title...';
+        return 'Search events by title, genre, or performer...';
     }
 
     protected function getEmptyIcon(): string
@@ -43,7 +58,15 @@ class EventsGrid extends SearchableGrid
 
     protected function getEmptyMessage(): string
     {
-        return 'Check back soon for upcoming shows and community events!';
+        return match ($this->scope) {
+            'past' => 'No past events found matching your search.',
+            default => 'Check back soon for upcoming shows and community events!',
+        };
+    }
+
+    public function updatedScope()
+    {
+        $this->resetPage();
     }
 
     protected function getGridCols(): int
@@ -68,9 +91,30 @@ class EventsGrid extends SearchableGrid
         // Get base query from parent
         $query = $this->getBaseQuery();
 
-        // Apply simple title search if we have search term
+        // Apply case-insensitive search across title, tags, and performers if we have search term
         if (!empty($this->search)) {
-            $query->where('title', 'like', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $searchTerm = $this->search;
+                
+                // Search in title (use ilike for PostgreSQL case-insensitive search)
+                $q->where('title', 'ilike', '%' . $searchTerm . '%')
+                  // Search in tags/genres using spatie package methods
+                  ->orWhere(function ($tagQuery) use ($searchTerm) {
+                      // Get all genre tags that contain the search term
+                      $genreTags = \Spatie\Tags\Tag::getWithType('genre')
+                          ->filter(function ($tag) use ($searchTerm) {
+                              return stripos($tag->name, $searchTerm) !== false;
+                          });
+                      
+                      if ($genreTags->isNotEmpty()) {
+                          $tagQuery->withAnyTags($genreTags->pluck('name')->toArray(), 'genre');
+                      }
+                  })
+                  // Search in performer/band names
+                  ->orWhereHas('performers', function ($performerQuery) use ($searchTerm) {
+                      $performerQuery->where('name', 'ilike', '%' . $searchTerm . '%');
+                  });
+            });
         }
 
         return $query->paginate($this->getPerPage());

@@ -62,7 +62,7 @@
                     <h2 class="text-4xl font-bold mb-4">Upcoming Events</h2>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto">
                     @foreach ($upcomingEvents as $event)
                         <x-event-card :item="$event" />
                     @endforeach

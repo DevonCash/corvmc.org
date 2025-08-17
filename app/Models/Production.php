@@ -147,6 +147,17 @@ class Production extends Model implements Eventable, HasMedia
     }
 
     /**
+     * Scope to get published past productions.
+     */
+    public function scopePublishedPast($query)
+    {
+        return $query->where('published_at', '<=', now())
+            ->whereNotNull('published_at')
+            ->where('start_time', '<', now())
+            ->orderBy('start_time', 'desc');
+    }
+
+    /**
      * Scope to get published productions happening today.
      */
     public function scopePublishedToday($query)
