@@ -8,6 +8,8 @@ use App\Data\UserSettingsData;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Activitylog\LogOptions;
@@ -32,7 +34,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'staff_bio',
         'staff_type',
         'staff_sort_order',
-        'show_on_about_page',
         'staff_social_links',
     ];
 
@@ -75,7 +76,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             'password' => 'hashed',
             'settings' => UserSettingsData::class,
             'staff_social_links' => 'array',
-            'show_on_about_page' => 'boolean',
         ];
     }
 
@@ -100,6 +100,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->belongsToMany(BandProfile::class, 'band_profile_members')
             ->withPivot('role', 'position')
             ->withTimestamps();
+    }
+
+    public function staffProfile(): HasOne
+    {
+        return $this->hasOne(StaffProfile::class);
     }
 
     public function ownedBands()
@@ -136,11 +141,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function isSustainingMember(): bool
     {
         return $this->hasRole('sustaining member') ||
-               $this->transactions()
-                   ->where('type', 'recurring')
-                   ->where('amount', '>', 10)
-                   ->where('created_at', '>=', now()->subMonth())
-                   ->exists();
+            $this->transactions()
+            ->where('type', 'recurring')
+            ->where('amount', '>', 10)
+            ->where('created_at', '>=', now()->subMonth())
+            ->exists();
     }
 
     /**
@@ -169,7 +174,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function scopeStaffMembers($query)
     {
         return $query->where('show_on_about_page', true)
-                    ->whereNotNull('staff_type');
+            ->whereNotNull('staff_type');
     }
 
     public function scopeBoardMembers($query)

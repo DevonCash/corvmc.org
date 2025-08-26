@@ -3,17 +3,16 @@
 namespace App\Filament\Resources\Users\Schemas;
 
 use App\Filament\Resources\MemberProfiles\Schemas\MemberProfileForm;
-use Filament\Forms\Components\DateTimePicker;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Repeater\TableColumn;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Text;
+use Filament\Schemas\Components\TextEntry;
 use Filament\Schemas\Schema;
 use Spatie\Permission\Models\Role;
 
@@ -61,8 +60,39 @@ class UserForm
                             ]),
                         Tab::make('Staff Profile')
                             ->schema([
-                                StaffProfileForm::configure(Section::make(''))
-                                    ->hiddenOn('create'),
+                                Section::make('')->schema([
+                                    Text::make('No staff profile exists for this user.')
+                                        ->extraAttributes(['class' => 'text-center']),
+                                    Action::make('create_staff_profile')
+                                        ->label('Add Staff Profile')
+                                        ->icon('heroicon-o-plus')
+                                        ->color('primary')
+                                        ->action(function ($livewire) {
+                                            $record = $livewire->getRecord();
+                                            if ($record && !$record->staffProfile) {
+                                                $record->staffProfile()->create([
+                                                    'name' => $record->name,
+                                                    'email' => $record->email,
+                                                    'type' => 'staff',
+                                                    'is_active' => false,
+                                                    'sort_order' => 0,
+                                                ]);
+                                                $record->refresh();
+                                                $livewire->form->fill($record->toArray());
+                                            }
+                                        })
+                                ])
+                                    ->visible(fn($record) => !$record?->staffProfile),
+                                StaffProfileForm::configure(Section::make('')
+                                    ->schema([
+                                        \Filament\Forms\Components\Toggle::make('is_active')
+                                            ->label('Show on About Page')
+                                            ->helperText('Display this user in the Leadership section of the About page')
+                                            ->live(),
+                                    ])
+                                    ->relationship('staffProfile')
+                                    ->visible(fn($record) => $record?->staffProfile))
+
                             ]),
 
                     ]),

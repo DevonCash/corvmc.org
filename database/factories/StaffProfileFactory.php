@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -60,14 +61,23 @@ class StaffProfileFactory extends Factory
             ];
         }
 
+        $name = fake()->name();
+        $email = fake()->optional(0.6)->safeEmail();
+        
         return [
-            'name' => fake()->name(),
+            'user_id' => User::factory()->create([
+                'name' => $name,
+                'email' => $email ?: fake()->safeEmail(),
+                'email_verified_at' => now(),
+                'password' => bcrypt('password'),
+            ])->id,
+            'name' => $name,
             'title' => fake()->optional(0.8)->passthrough($title), // 80% chance of having a title
             'bio' => fake()->optional(0.8)->paragraph(2),
             'type' => $type,
             'sort_order' => fake()->numberBetween(0, 100),
             'is_active' => fake()->boolean(90), // 90% chance of being active
-            'email' => fake()->optional(0.6)->safeEmail(),
+            'email' => $email,
             'social_links' => empty($socialLinks) ? null : $socialLinks,
         ];
     }

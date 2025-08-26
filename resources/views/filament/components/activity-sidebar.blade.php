@@ -8,7 +8,7 @@
     };
 @endphp
 
-<div x-data="{ sidebarOpen: false }" @toggle-activity-sidebar.window="sidebarOpen = !sidebarOpen" class="relative">
+<div x-data="{ sidebarOpen: false }" @toggle-activity-sidebar.window="sidebarOpen = !sidebarOpen" class="relative" x-init="$nextTick(() => { /* Prevent flash by ensuring initial state is set */ })">
     {{-- Overlay --}}
     <div 
         x-show="sidebarOpen"
@@ -26,7 +26,7 @@
     <aside 
         class="fi-activity-sidebar w-80 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden flex flex-col transition-transform duration-300 ease-in-out"
         :class="sidebarOpen ? 'translate-x-0' : 'translate-x-full'"
-        x-show="true"
+        x-cloak
     >
     {{-- Header --}}
     <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">

@@ -43,7 +43,7 @@ class UserResource extends Resource
 
     public static function canEdit($record): bool
     {
-        return User::me()?->can('update users') ?? null;
+        return $record->id === auth()->id() || User::me()?->can('update users') ?? null;
     }
 
     public static function canDelete($record): bool
@@ -76,8 +76,7 @@ class UserResource extends Resource
         return [
             'index' => ListUsers::route('/'),
             'create' => CreateUser::route('/invite'),
-            'view' => ViewUser::route('/{record}'),
-            'edit' => EditUser::route('/{record}/edit'),
+            'edit' => EditUser::route('/{record}'),
         ];
     }
 }

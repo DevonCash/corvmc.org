@@ -5,81 +5,94 @@ namespace App\Filament\Resources\Users\Schemas;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
 
 class StaffProfileForm
 {
     public static function configure($schema)
     {
         return $schema->components([
-            Toggle::make('show_on_about_page')
-                ->label('Show on About Page')
-                ->helperText('Display this user in the Leadership section of the About page')
-                ->reactive(),
-
-            Grid::make(2)
-                ->schema([
-                    TextInput::make('staff_title')
-                        ->label('Staff Title')
+            Grid::make(1)->schema([
+                Group::make([
+                    TextInput::make('name')
+                        ->label('Name')
+                        ->required()
                         ->maxLength(255)
-                        ->placeholder('e.g. Board President, Operations Manager (optional)')
-                        ->helperText('Leave blank for board members without specific titles')
-                        ->visible(fn($get) => $get('show_on_about_page')),
+                        ->placeholder('Enter full name'),
 
-                    Select::make('staff_type')
-                        ->label('Staff Type')
-                        ->options([
-                            'board' => 'Board Member',
-                            'staff' => 'Staff Member',
-                        ])
-                        ->visible(fn($get) => $get('show_on_about_page')),
-                ]),
+                    TextInput::make('email')
+                        ->label('Email')
+                        ->email()
+                        ->maxLength(255)
+                        ->placeholder('Optional public email'),
+                ])->columns(2)
+                    ->columnSpanFull(),
 
-            Textarea::make('staff_bio')
-                ->label('Staff Bio')
-                ->rows(3)
-                ->maxLength(1000)
-                ->placeholder('Brief description of role and background')
-                ->visible(fn($get) => $get('show_on_about_page')),
+                Grid::make(2)
+                    ->schema([
+                        TextInput::make('title')
+                            ->label('Staff Title')
+                            ->maxLength(255)
+                            ->placeholder('e.g. Board President, Operations Manager')
+                            ->helperText('Leave blank for board members without specific titles'),
 
-            TextInput::make('staff_sort_order')
-                ->label('Sort Order')
-                ->numeric()
-                ->default(0)
-                ->helperText('Lower numbers appear first')
-                ->visible(fn($get) => $get('show_on_about_page')),
+                        Select::make('type')
+                            ->label('Staff Type')
+                            ->options([
+                                'board' => 'Board Member',
+                                'staff' => 'Staff Member',
+                            ])
+                            ->required(),
+                    ]),
 
+                Textarea::make('bio')
+                    ->label('Staff Bio')
+                    ->rows(3)
+                    ->maxLength(1000)
+                    ->placeholder('Brief description of role and background'),
+                TextInput::make('sort_order')
+                    ->label('Sort Order')
+                    ->numeric()
+                    ->default(0)
+                    ->helperText('Lower numbers appear first'),
+                SpatieMediaLibraryFileUpload::make('profile_image')
+                    ->label('Profile Picture')
+                    ->collection('profile_image')
+                    ->disk('r2')
+                    ->alignCenter()
+                    ->avatar(),
+                Repeater::make('social_links')
+                    ->label('Social Links')
+                    ->table([
+                        TableColumn::make('Platform'),
+                        TableColumn::make('URL')
+                    ])
+                    ->schema([
+                        Select::make('platform')
+                            ->required()
+                            ->options([
+                                'website' => 'Website',
+                                'linkedin' => 'LinkedIn',
+                                'twitter' => 'Twitter',
+                                'facebook' => 'Facebook',
+                                'instagram' => 'Instagram',
+                                'github' => 'GitHub',
+                            ]),
 
-            Repeater::make('staff_social_links')
-                ->label('Social Links')
-                ->table([
-                    TableColumn::make('Platform'),
-                    TableColumn::make('URL')
-                ])
-                ->schema([
-                    Select::make('platform')
-                        ->required()
-                        ->options([
-                            'website' => 'Website',
-                            'linkedin' => 'LinkedIn',
-                            'twitter' => 'Twitter',
-                            'facebook' => 'Facebook',
-                            'instagram' => 'Instagram',
-                            'github' => 'GitHub',
-                        ]),
-
-                    TextInput::make('url')
-                        ->required()
-                        ->url()
-                        ->placeholder('https://...'),
-                ])
-                ->addActionLabel('Add Social Link')
-                ->collapsible()
-                ->itemLabel(fn(array $state): ?string => $state['platform'] ?? null)
-                ->visible(fn($get) => $get('show_on_about_page')),
+                        TextInput::make('url')
+                            ->required()
+                            ->url()
+                            ->placeholder('https://...'),
+                    ])
+                    ->addActionLabel('Add Social Link')
+                    ->collapsible()
+                    ->itemLabel(fn(array $state): ?string => $state['platform'] ?? null)
+            ])
         ]);
     }
 }
