@@ -51,11 +51,11 @@
             <div class="flex-1">
                 <div class="relative">
                     <x-unicon name="tabler:search" class="absolute left-3 top-1/2 transform -translate-y-1/2 size-5 text-base-content/50"/>
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         wire:model.live.debounce.300ms="search"
-                        placeholder="{{ $searchPlaceholder }}" 
-                        class="input input-bordered w-full pl-10" 
+                        placeholder="{{ $searchPlaceholder }}"
+                        class="input input-bordered w-full pl-10"
                     />
                 </div>
             </div>
@@ -64,11 +64,11 @@
             @foreach($availableFilters as $filter)
                 <div class="min-w-48">
                     @if($filter['type'] === 'text')
-                        <input 
-                            type="text" 
+                        <input
+                            type="text"
                             wire:model.live.debounce.300ms="filters.{{ $filter['key'] }}"
-                            placeholder="{{ $filter['placeholder'] }}" 
-                            class="input input-bordered w-full" 
+                            placeholder="{{ $filter['placeholder'] }}"
+                            class="input input-bordered w-full"
                         />
                     @elseif($filter['type'] === 'select')
                         <select wire:model.live="filters.{{ $filter['key'] }}" class="select select-bordered w-full">
@@ -98,7 +98,7 @@
     </div>
 
     <!-- Results Grid -->
-    <div wire:loading.remove class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+    <div wire:loading.remove class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 mb-8">
         @forelse($items as $item)
             @if ($cardComponent)
                 <x-dynamic-component :component="$cardComponent" :item="$item" />

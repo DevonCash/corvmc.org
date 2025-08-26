@@ -53,8 +53,8 @@
                     <!-- Pronouns -->
                     <div>
                         <h3 class="font-bold text-base leading-tight">{{ $member->user->name }}</h3>
-                        @if ($member->pronouns)
-                            <p class="text-xs text-base-content/60">{{ $member->pronouns }}
+                        @if ($member->user->pronouns)
+                            <p class="text-xs text-base-content/60">{{ $member->user->pronouns }}
                             </p>
                         @endif
 

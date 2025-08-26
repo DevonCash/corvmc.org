@@ -81,24 +81,24 @@
 
 
                                 {{-- Contact Information --}}
-                                @if ($record->contact && $record->contact['visibility'] !== 'private')
+                                @if ($record->contact && $record->contact->visibility !== 'private')
                                     <div class="space-y-2">
-                                        @if (isset($record->contact['email']) && $record->contact['email'])
+                                        @if ($record->contact->email)
                                             <div class="flex items-center">
                                                 <x-heroicon-s-envelope
                                                     class="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                                                <a href="mailto:{{ $record->contact['email'] }}"
+                                                <a href="mailto:{{ $record->contact->email }}"
                                                     class="text-blue-600 hover:text-blue-800 text-sm break-all">
-                                                    {{ $record->contact['email'] }}
+                                                    {{ $record->contact->email }}
                                                 </a>
                                             </div>
                                         @endif
-                                        @if (isset($record->contact['phone']) && $record->contact['phone'])
+                                        @if ($record->contact->phone)
                                             <div class="flex items-center">
                                                 <x-heroicon-s-phone class="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                                                <a href="tel:{{ $record->contact['phone'] }}"
+                                                <a href="tel:{{ $record->contact->phone }}"
                                                     class="text-blue-600 hover:text-blue-800 text-sm">
-                                                    {{ $record->contact['phone'] }}
+                                                    {{ $record->contact->phone }}
                                                 </a>
                                             </div>
                                         @endif

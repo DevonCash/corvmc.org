@@ -133,6 +133,17 @@
     }
 }
 
+.vinyl-card {
+    z-index: 1;
+    transition: z-index 0s 0.2s;
+}
+
+.vinyl-card:hover {
+    z-index: 20;
+    transition: z-index 0s 0s;
+}
+
+
 /* Enhanced styling for better dark mode experience */
 @media (prefers-color-scheme: dark) {
     .card {
