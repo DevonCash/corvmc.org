@@ -21,7 +21,10 @@ class ReservationResource extends Resource
 {
     protected static ?string $model = Reservation::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'tabler-calendar-time';
+    protected static string|BackedEnum|null $navigationIcon = 'tabler-piano';
+
+
+    protected static ?string $navigationLabel = 'Practice Space';
 
     public static function form(Schema $schema): Schema
     {

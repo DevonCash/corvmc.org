@@ -93,7 +93,7 @@ class MemberProfilesTable
         return $table
             ->searchable(['user.name'])
             ->contentGrid([
-                'lg' => 2,
+                'lg' => 3,
             ])
             ->columns([
                 Stack::make([

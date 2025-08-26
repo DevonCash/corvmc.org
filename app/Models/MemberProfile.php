@@ -70,8 +70,7 @@ class MemberProfile extends Model implements HasMedia
     {
         // Check if profile has key information filled out
         return !empty($this->bio) &&
-            !empty($this->skills) &&
-            $this->hasMedia('avatar');
+            !empty($this->skills);
     }
 
     public function isVisible(?User $user = null): bool

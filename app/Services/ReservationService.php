@@ -6,6 +6,8 @@ use App\Models\Production;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Notifications\ReservationConfirmedNotification;
+use App\Notifications\ReservationCreatedNotification;
+use App\Notifications\ReservationCancelledNotification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -246,9 +248,13 @@ class ReservationService
                 'recurrence_pattern' => $options['recurrence_pattern'] ?? null,
             ]);
 
-            // Send confirmation notification for confirmed reservations
+            // Send appropriate notification based on status
             if ($reservation->status === 'confirmed') {
+                // For immediately confirmed reservations, send the confirmation notification
                 $user->notify(new ReservationConfirmedNotification($reservation));
+            } else {
+                // For pending reservations, send the creation notification
+                $user->notify(new ReservationCreatedNotification($reservation));
             }
 
             return $reservation;
@@ -309,6 +315,9 @@ class ReservationService
             'status' => 'cancelled',
             'notes' => $reservation->notes.($reason ? "\nCancellation reason: ".$reason : ''),
         ]);
+
+        // Send cancellation notification
+        $reservation->user->notify(new ReservationCancelledNotification($reservation));
 
         return $reservation;
     }

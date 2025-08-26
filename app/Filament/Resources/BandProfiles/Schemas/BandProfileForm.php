@@ -174,10 +174,10 @@ class BandProfileForm
                             ->label('Band Owner')
                             ->options(
                                 fn (?BandProfile $record) => $record
-                                    ? $record->members()->select('users.name', 'users.id')->pluck('name', 'id')->toArray()
+                                    ? $record->members()->select(['users.name', 'users.id'])->pluck('name', 'id')->toArray()
                                     : [User::me()->id => User::me()->name]
                             )
-                            ->searchable()
+                            ->preload()
                             ->default(fn () => User::me()->id)
                             ->disabled(fn (?BandProfile $record) => $record && ! User::me()->can('transferOwnership', $record))
                             ->helperText('The primary contact and administrator for this band'),

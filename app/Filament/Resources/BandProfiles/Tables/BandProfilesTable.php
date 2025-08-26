@@ -28,7 +28,7 @@ class BandProfilesTable
 
                 TextColumn::make('name')
                     ->label('Band')
-                    ->grow(false)
+                    ->grow(condition: false)
                     ->searchable()
                     ->sortable()
                     ->weight(FontWeight::Bold)
@@ -46,6 +46,7 @@ class BandProfilesTable
                 SpatieTagsColumn::make('genres')
                     ->label('Genres')
                     ->type('genre')
+                    ->grow(true)
                     ->separator(', ')
                     ->limitList(2),
 

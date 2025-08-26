@@ -51,7 +51,7 @@ class ReservationReminderNotification extends Notification implements ShouldQueu
         return $message
             ->line('**Address:** Corvallis Music Collective, [ADDRESS]')
             ->line('**What to bring:** Your instruments, cables, and any equipment you need')
-            ->action('View Reservation', route('reservations.show', $this->reservation))
+            ->action('View Reservation', route('filament.member.resources.reservations.view', $this->reservation))
             ->line('Need to reschedule? Contact us ASAP.')
             ->line('See you soon!');
     }

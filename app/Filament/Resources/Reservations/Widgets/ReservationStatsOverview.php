@@ -12,6 +12,17 @@ class ReservationStatsOverview extends BaseWidget
 {
     protected array|int|null $columns = 2;
     protected array|string|int $columnSpan = 1;
+
+    protected function getColumns(): array|int|null
+    {
+        return User::me()->can('manage reservations') ? 2 : 4;
+    }
+
+    public function getColumnSpan(): array|int|string
+    {
+        return User::me()->can('manage reservations') ? 1 : 2;
+    }
+
     protected function getStats(): array
     {
         $user = User::me();
@@ -61,30 +72,32 @@ class ReservationStatsOverview extends BaseWidget
 
         return [
             Stat::make('Today', $todayReservations)
-                ->description($todayHours > 0 ? number_format($todayHours, 1).' hours booked' : 'No practice time today')
+                ->description($todayHours > 0 ? number_format($todayHours, 1) . ' hours booked' : 'No practice time today')
                 ->descriptionIcon($todayReservations > 0 ? 'heroicon-m-clock' : 'heroicon-m-calendar')
                 ->color($todayReservations > 0 ? 'success' : 'gray')
                 ->chart($this->getTodayChart()),
 
             Stat::make('This Week', $weekReservations)
-                ->description($weekHours > 0 ? number_format($weekHours, 1).' hours total' : 'No bookings this week')
+                ->description($weekHours > 0 ? number_format($weekHours, 1) . ' hours total' : 'No bookings this week')
                 ->descriptionIcon('heroicon-m-calendar-days')
                 ->color($weekReservations > 0 ? 'info' : 'gray'),
 
             Stat::make('This Month', $monthReservations)
-                ->description($monthHours > 0 ? number_format($monthHours, 1).' hours total' : 'No bookings this month')
+                ->description($monthHours > 0 ? number_format($monthHours, 1) . ' hours total' : 'No bookings this month')
                 ->descriptionIcon('heroicon-m-calendar-days')
                 ->color($monthReservations > 0 ? 'primary' : 'gray'),
 
-            Stat::make('Free Hours', $remainingFreeHours.'/'.$totalFreeHours)
-                ->description($user->isSustainingMember()
-                    ? ($usedFreeHours > 0 ? 'Used '.number_format($usedFreeHours, 1).' this month' : 'None used this month')
-                    : 'Learn More'
+            Stat::make('Free Hours', $remainingFreeHours . '/' . $totalFreeHours)
+                ->description(
+                    $user->isSustainingMember()
+                        ? ($usedFreeHours > 0 ? 'Used ' . number_format($usedFreeHours, 1) . ' this month' : 'None used this month')
+                        : 'Learn More'
                 )
                 ->descriptionIcon($user->isSustainingMember() ? 'heroicon-m-gift' : 'heroicon-m-arrow-up-circle')
-                ->color($user->isSustainingMember()
-                    ? ($remainingFreeHours > 0 ? 'success' : 'warning')
-                    : 'gray'
+                ->color(
+                    $user->isSustainingMember()
+                        ? ($remainingFreeHours > 0 ? 'success' : 'warning')
+                        : 'gray'
                 ),
         ];
     }

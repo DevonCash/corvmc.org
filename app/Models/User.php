@@ -15,6 +15,9 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
+use App\Notifications\PasswordResetNotification;
+use App\Notifications\EmailVerificationNotification;
+
 
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
@@ -28,6 +31,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     protected $fillable = [
         'name',
+        'pronouns',
         'email',
         'password',
         'staff_title',
@@ -204,5 +208,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(fn(string $eventName) => "User account {$eventName}");
+    }
+
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new PasswordResetNotification($token));
+    }
+
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new EmailVerificationNotification());
     }
 }

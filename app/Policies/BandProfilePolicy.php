@@ -12,7 +12,7 @@ class BandProfilePolicy
         return true;
     }
 
-    public function view(User $user, BandProfile $band): bool
+    public function view(User $user, BandProfile $band): ?bool
     {
         // Public bands are viewable by anyone
         if ($band->visibility === 'public') {
@@ -44,7 +44,7 @@ class BandProfilePolicy
             return true;
         }
 
-        return false;
+        return true;
     }
 
     /**

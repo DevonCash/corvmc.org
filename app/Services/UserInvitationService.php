@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Notifications\UserInvitationNotification;
+use App\Notifications\NewMemberWelcomeNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
@@ -77,6 +78,9 @@ class UserInvitationService
 
             // Clear the invitation token
             $this->clearInvitationToken($user);
+
+            // Send welcome notification for new members
+            $user->notify(new NewMemberWelcomeNotification($user));
 
             return $user;
         });

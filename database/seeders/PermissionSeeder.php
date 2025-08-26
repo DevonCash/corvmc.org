@@ -18,7 +18,7 @@ class PermissionSeeder extends Seeder
 
         // Create all permissions
         $this->createPermissions();
-        
+
         // Create roles and assign permissions
         $this->createRoles();
 
@@ -35,6 +35,8 @@ class PermissionSeeder extends Seeder
             'delete users',
             'restore users',
             'invite users',
+
+            'update user roles',
 
             // Member Profile Management
             'view private member profiles',

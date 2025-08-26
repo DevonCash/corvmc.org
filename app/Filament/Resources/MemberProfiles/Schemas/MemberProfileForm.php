@@ -73,7 +73,7 @@ class MemberProfileForm
                                     ->placeholder('(555) 123-4567'),
                             ])
                             ->columns(2),
-                        
+
                         Fieldset::make('Embeds & Media')
                             ->columnSpanFull()
                             ->schema([
@@ -137,12 +137,12 @@ class MemberProfileForm
                 Grid::make(1)
                     ->columnSpan(1)
                     ->schema([
-                                SpatieMediaLibraryFileUpload::make('avatar')
-                                    ->label('Profile Picture')
-                                    ->collection('avatar')
-                                    ->disk('r2')
-                                    ->alignCenter()
-                                    ->avatar(),
+                        SpatieMediaLibraryFileUpload::make('avatar')
+                            ->label('Profile Picture')
+                            ->collection('avatar')
+                            ->disk('r2')
+                            ->alignCenter()
+                            ->avatar(),
 
                         Select::make('visibility')
                             ->label('Profile Visibility')
@@ -194,7 +194,7 @@ class MemberProfileForm
                                         'open_to_collaboration' => 'Open to musical collaborations and creative partnerships',
                                         'available_for_hire' => 'Available for paid musical services (sessions, performances, etc.)',
                                         'looking_for_band' => 'Actively seeking to join or form a band',
-                                        'music_teacher' => 'Available to teach music lessons',
+                                        'music_teacher' => 'Available to teach lessons',
                                     ])
                                     ->afterStateHydrated(function (CheckboxList $component, $record) {
                                         if (! $record) {
@@ -213,6 +213,26 @@ class MemberProfileForm
                                         $component->state($activeFlags);
                                     })
                                     ->dehydrated(false)
+                                    ->afterStateUpdated(function ($state, $record) {
+                                        if (!$record) {
+                                            return;
+                                        }
+
+                                        $settings = app(MemberDirectorySettings::class);
+                                        $availableFlags = array_keys($settings->getAvailableFlags());
+
+                                        // Remove all current flags that are in the available flags list
+                                        foreach ($availableFlags as $flag) {
+                                            $record->unFlag($flag);
+                                        }
+
+                                        // Add the selected flags
+                                        foreach ($state ?? [] as $flag) {
+                                            if (in_array($flag, $availableFlags)) {
+                                                $record->flag($flag);
+                                            }
+                                        }
+                                    })
                                     ->columns(1)
                                     ->columnSpanFull(),
                             ]),

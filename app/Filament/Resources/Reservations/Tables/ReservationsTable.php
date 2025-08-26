@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Reservations\Tables;
 
 use App\Models\Reservation;
 use App\Models\User;
+use App\Services\ReservationService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -155,7 +156,9 @@ class ReservationsTable
                         ->label('Mark Paid')
                         ->icon('heroicon-o-banknotes')
                         ->color('success')
-                        ->visible(fn(Reservation $record) => $record->cost > 0 && $record->isUnpaid())
+                        ->visible(fn(Reservation $record) =>
+                        User::me()->can('manage reservations') &&
+                            $record->cost > 0 && $record->isUnpaid())
                         ->schema([
                             Select::make('payment_method')
                                 ->label('Payment Method')
@@ -188,7 +191,9 @@ class ReservationsTable
                         ->label('Comp')
                         ->icon('heroicon-o-gift')
                         ->color('info')
-                        ->visible(fn(Reservation $record) => $record->cost > 0 && $record->isUnpaid())
+                        ->visible(fn(Reservation $record) =>
+                        User::me()->can('manage reservations') &&
+                            $record->cost > 0 && $record->isUnpaid())
                         ->schema([
                             Textarea::make('comp_reason')
                                 ->label('Comp Reason')
@@ -205,6 +210,20 @@ class ReservationsTable
                                 ->success()
                                 ->send();
                         }),
+                    Action::make('cancel')
+                        ->icon('tabler-calendar-x')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(function (Reservation $record) {
+                            $reservationService = new ReservationService();
+                            $reservationService->cancelReservation($record);
+
+                            Notification::make()
+                                ->title('Reservation Cancelled')
+                                ->body('The reservation has been cancelled.')
+                                ->success()
+                                ->send();
+                        }),
 
                     ViewAction::make(),
                 ])
@@ -215,6 +234,7 @@ class ReservationsTable
                         ->label('Mark as Paid')
                         ->icon('heroicon-o-banknotes')
                         ->color('success')
+                        ->visible(fn() => User::me()->can('manage reservations'))
                         ->schema([
                             Select::make('payment_method')
                                 ->label('Payment Method')
@@ -253,6 +273,7 @@ class ReservationsTable
                         ->label('Comp Reservations')
                         ->icon('heroicon-o-gift')
                         ->color('info')
+                        ->visible(fn() => User::me()->can('manage reservations'))
                         ->schema([
                             Textarea::make('comp_reason')
                                 ->label('Comp Reason')
@@ -276,7 +297,20 @@ class ReservationsTable
                                 ->send();
                         }),
 
-                    DeleteBulkAction::make(),
+                    Action::make('bulk_cancel')
+                        ->requiresConfirmation()
+                        ->action(function (Collection $records) {
+                            $reservationService = new ReservationService();
+                            foreach ($records as $record) {
+                                $reservationService->cancelReservation($record);
+                            }
+
+                            Notification::make()
+                                ->title('Reservations cancelled')
+                                ->body("{$records->count()} reservations marked as cancelled")
+                                ->success()
+                                ->send();
+                        }),
                 ]),
             ])
             ->emptyStateHeading('No reservations found')

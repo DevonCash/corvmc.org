@@ -10,9 +10,17 @@ use App\Services\ReservationService;
 use App\Services\UserSubscriptionService;
 use App\Services\BandService;
 use App\Notifications\ReservationConfirmedNotification;
+use App\Notifications\ReservationCreatedNotification;
+use App\Notifications\ReservationConfirmationReminderNotification;
 use App\Notifications\ReservationReminderNotification;
+use App\Notifications\ReservationCancelledNotification;
 use App\Notifications\DonationReceivedNotification;
 use App\Notifications\BandInvitationNotification;
+use App\Notifications\MembershipExpiredNotification;
+use App\Notifications\MembershipRenewalReminderNotification;
+use App\Notifications\NewMemberWelcomeNotification;
+use App\Notifications\PasswordResetNotification;
+use App\Notifications\EmailVerificationNotification;
 use Illuminate\Console\Command;
 
 class TestNotificationSystem extends Command
@@ -57,8 +65,16 @@ class TestNotificationSystem extends Command
             $this->info('🎵 3. Testing Band Invitation Notifications...');
             $this->testBandNotifications($testUser, $shouldSend);
 
-            // 4. Show notification summary
-            $this->info('📊 4. Notification Summary...');
+            // 4. Test Membership Notifications
+            $this->info('👥 4. Testing Membership Notifications...');
+            $this->testMembershipNotifications($testUser, $shouldSend);
+
+            // 5. Test Authentication Notifications
+            $this->info('🔐 5. Testing Authentication Notifications...');
+            $this->testAuthNotifications($testUser, $shouldSend);
+
+            // 6. Show notification summary
+            $this->info('📊 6. Notification Summary...');
             $this->showNotificationSummary($testUser);
 
             $this->line('');
@@ -114,6 +130,16 @@ class TestNotificationSystem extends Command
 
         $this->line("   • Created test reservation: {$reservation->time_range}");
 
+        // Test reservation creation notification (for pending status)
+        $pendingReservation = $reservation->replicate();
+        $pendingReservation->status = 'pending';
+        if ($shouldSend) {
+            $user->notify(new ReservationCreatedNotification($pendingReservation));
+            $this->line("   ✓ Sent reservation creation notification (pending)");
+        } else {
+            $this->line("   → Would send reservation creation notification (pending)");
+        }
+
         // Test reservation confirmation notification
         if ($shouldSend) {
             $user->notify(new ReservationConfirmedNotification($reservation));
@@ -122,12 +148,28 @@ class TestNotificationSystem extends Command
             $this->line("   → Would send reservation confirmation notification");
         }
 
+        // Test reservation confirmation reminder (for pending reservations 3 days before)
+        if ($shouldSend) {
+            $user->notify(new ReservationConfirmationReminderNotification($pendingReservation));
+            $this->line("   ✓ Sent reservation confirmation reminder notification");
+        } else {
+            $this->line("   → Would send reservation confirmation reminder notification");
+        }
+
         // Test reservation reminder notification
         if ($shouldSend) {
             $user->notify(new ReservationReminderNotification($reservation));
             $this->line("   ✓ Sent reservation reminder notification");
         } else {
             $this->line("   → Would send reservation reminder notification");
+        }
+
+        // Test reservation cancelled notification
+        if ($shouldSend) {
+            $user->notify(new ReservationCancelledNotification($reservation));
+            $this->line("   ✓ Sent reservation cancelled notification");
+        } else {
+            $this->line("   → Would send reservation cancelled notification");
         }
 
         // Clean up
@@ -210,6 +252,64 @@ class TestNotificationSystem extends Command
 
         // Clean up
         $band->delete();
+    }
+
+    protected function testMembershipNotifications(User $user, bool $shouldSend): void
+    {
+        $this->line("   • Testing membership expiry and renewal notifications");
+
+        // Test membership renewal reminder (7 days)
+        if ($shouldSend) {
+            $user->notify(new MembershipRenewalReminderNotification($user, 7));
+            $this->line("   ✓ Sent membership renewal reminder (7 days)");
+        } else {
+            $this->line("   → Would send membership renewal reminder (7 days)");
+        }
+
+        // Test membership renewal reminder (1 day)
+        if ($shouldSend) {
+            $user->notify(new MembershipRenewalReminderNotification($user, 1));
+            $this->line("   ✓ Sent membership renewal reminder (1 day)");
+        } else {
+            $this->line("   → Would send membership renewal reminder (1 day)");
+        }
+
+        // Test membership expired notification
+        if ($shouldSend) {
+            $user->notify(new MembershipExpiredNotification($user));
+            $this->line("   ✓ Sent membership expired notification");
+        } else {
+            $this->line("   → Would send membership expired notification");
+        }
+
+        // Test new member welcome notification
+        if ($shouldSend) {
+            $user->notify(new NewMemberWelcomeNotification($user));
+            $this->line("   ✓ Sent new member welcome notification");
+        } else {
+            $this->line("   → Would send new member welcome notification");
+        }
+    }
+
+    protected function testAuthNotifications(User $user, bool $shouldSend): void
+    {
+        $this->line("   • Testing authentication-related notifications");
+
+        // Test password reset notification
+        if ($shouldSend) {
+            $user->notify(new PasswordResetNotification('test-token'));
+            $this->line("   ✓ Sent password reset notification");
+        } else {
+            $this->line("   → Would send password reset notification");
+        }
+
+        // Test email verification notification
+        if ($shouldSend) {
+            $user->notify(new EmailVerificationNotification());
+            $this->line("   ✓ Sent email verification notification");
+        } else {
+            $this->line("   → Would send email verification notification");
+        }
     }
 
     protected function showNotificationSummary(User $user): void

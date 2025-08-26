@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Schemas;
 
 use App\Filament\Resources\MemberProfiles\Schemas\MemberProfileForm;
+use App\Filament\Resources\Users\Schemas\StaffProfileForm;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -15,6 +16,7 @@ use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\TextEntry;
 use Filament\Schemas\Schema;
 use Spatie\Permission\Models\Role;
+use App\Models\User;
 
 class UserForm
 {
@@ -25,6 +27,8 @@ class UserForm
                 Tabs::make('Tabs')
                     ->columnSpanFull()
                     ->contained(false)
+                    ->persistTab()
+                    ->id('user_form_tabs')
                     ->tabs([
                         Tab::make('Account')
                             ->schema([
@@ -51,14 +55,32 @@ class UserForm
                                             ->relationship('roles', 'name')
                                             ->options(Role::all()->pluck('name', 'id'))
                                             ->preload()
+                                            ->visible(fn() => User::me()?->can('update user roles'))
                                             ->searchable()
+                                    ]),
+                                Section::make('')
+                                    ->schema([
+                                        Action::make('send_password_reset')
+                                            ->label('Reset Password')
+                                            ->icon('heroicon-o-key')
+                                            ->color('info')
+                                            ->requiresConfirmation()
+                                            ->modalHeading('Reset Password')
+                                            ->modalDescription(fn($record) => "Send a password reset email to {$record->email}?")
+                                            ->modalSubmitActionLabel('Send Reset Email')
+                                            ->action(function(User $record) {
+
+                                                $record->sendPasswordResetNotification();
+                                            })
                                     ])
+                                    ->visible(fn($record) => User::me()->is($record) || User::me()?->can('update users'))
                             ]),
                         Tab::make('Member Profile')
                             ->schema([
                                 MemberProfileForm::configure(Section::make('')->relationship('profile'))
                             ]),
                         Tab::make('Staff Profile')
+                            ->visible(fn() => User::me()?->hasRole('admin') || User::me()?->can('update users'))
                             ->schema([
                                 Section::make('')->schema([
                                     Text::make('No staff profile exists for this user.')

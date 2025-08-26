@@ -6,6 +6,7 @@ use App\Models\BandProfile;
 use App\Models\Production;
 use App\Models\User;
 use App\Notifications\ProductionUpdatedNotification;
+use App\Notifications\ProductionCancelledNotification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -152,8 +153,11 @@ class ProductionService
             'status' => 'cancelled',
         ]);
 
-        // Notify interested users about the cancelled production
-        $this->notifyInterestedUsers($production, 'cancelled');
+        // Send specific cancellation notifications
+        $users = $this->getInterestedUsers($production);
+        if ($users->isNotEmpty()) {
+            Notification::send($users, new ProductionCancelledNotification($production));
+        }
 
         return true;
     }

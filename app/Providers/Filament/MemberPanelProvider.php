@@ -7,23 +7,17 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use App\Filament\Widgets\ActivityFeedWidget;
-use App\Filament\Widgets\MonthlyCalendarWidget;
 use App\Filament\Widgets\MyBandsWidget;
 use App\Filament\Widgets\TodayReservationsWidget;
 use App\Filament\Widgets\UpcomingEventsWidget;
 use App\Filament\Widgets\QuickActionsWidget;
 use App\Filament\Widgets\UserSummaryWidget;
-use App\Filament\Widgets\WeeklyOverviewWidget;
-use App\Models\User;
 use Filament\Actions\Action;
+use Filament\Pages\Dashboard;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -42,6 +36,8 @@ class MemberPanelProvider extends PanelProvider
             ->profile()
             ->login()
             ->registration()
+            ->passwordReset()
+            ->emailVerification()
             ->font('Lexend')
             ->darkMode()
             ->colors([
@@ -78,7 +74,7 @@ class MemberPanelProvider extends PanelProvider
             ])
 
             ->userMenuItems([
-                'profile' => fn(Action $action) => $action->url(route('filament.member.resources.users.edit', ['record' => User::me()])),
+                'profile' => fn(Action $action) => $action->url(route('filament.member.resources.users.edit', ['record' => auth()->user()->id])),
             ])
             ->middleware([
                 EncryptCookies::class,

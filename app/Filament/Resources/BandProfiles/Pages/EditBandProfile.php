@@ -16,4 +16,12 @@ class EditBandProfile extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+
+    public function getRelationManagers(): array
+    {
+        return [
+            \App\Filament\Resources\BandProfiles\RelationManagers\MembersRelationManager::class,
+        ];
+    }
 }

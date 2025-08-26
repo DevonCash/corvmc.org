@@ -7,6 +7,12 @@ use App\Filament\Resources\Reservations\Widgets\ReservationStatsOverview;
 use App\Filament\Widgets\TodayReservationsWidget;
 use App\Models\User;
 use Filament\Actions\CreateAction;
+use App\Filament\Resources\Reservations\Schemas\ReservationForm;
+use App\Models\Reservation;
+use App\Services\ReservationService;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Wizard\Step;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,6 +20,8 @@ use Illuminate\Database\Eloquent\Builder;
 class ListReservations extends ListRecords
 {
     protected static string $resource = ReservationResource::class;
+
+    protected static ?string $title = 'Reserve Practice Space';
 
     protected function getHeaderWidgets(): array
     {
@@ -26,16 +34,44 @@ class ListReservations extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            Action::make('create_reservation')
+                ->label('Reserve Space')
+                ->icon('tabler-calendar-plus')
+                ->steps(ReservationForm::getSteps())
+                ->action(function (array $data) {
+                    $user = User::find($data['user_id']);
+                    $reservationService = new ReservationService();
+                    
+                    // Use ReservationService to properly create reservation with notifications
+                    $reservation = $reservationService->createReservation(
+                        $user,
+                        \Carbon\Carbon::parse($data['reserved_at']),
+                        \Carbon\Carbon::parse($data['reserved_until']),
+                        [
+                            'status' => $data['status'],
+                            'notes' => $data['notes'] ?? null,
+                            'is_recurring' => $data['is_recurring'] ?? false,
+                        ]
+                    );
+
+                    Notification::make()
+                        ->title('Reservation Created')
+                        ->body('Your reservation has been created successfully.')
+                        ->success()
+                        ->send();
+                }),
         ];
     }
+
 
     public function getTabs(): array
     {
         return [
             'upcoming' => Tab::make('Upcoming')
                 ->icon('heroicon-o-clock')
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('reserved_at', '>', now())),
+                ->modifyQueryUsing(fn(Builder $query) => $query
+                    ->where('status', '!=', 'cancelled')
+                    ->where('reserved_at', '>', now())),
 
             'all' => Tab::make('All')
                 ->icon('heroicon-o-queue-list'),

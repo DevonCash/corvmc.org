@@ -26,6 +26,12 @@ class MembersRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    public function canViewAny(): bool
+    {
+        // Allow viewing if user can view the parent record
+        return auth()->user()->can('view', $this->ownerRecord);
+    }
+
     public function table(Table $table): Table
     {
         return $table
@@ -34,7 +40,7 @@ class MembersRelationManager extends RelationManager
                 ImageColumn::make('avatar_url')
                     ->label('Photo')
                     ->circular()
-                    ->size(40)
+                    ->imageSize(40)
                     ->defaultImageUrl(function ($record) {
                         return 'https://ui-avatars.com/api/?name='.urlencode($record->name).'&color=7F9CF5&background=EBF4FF&size=80';
                     }),
@@ -43,7 +49,6 @@ class MembersRelationManager extends RelationManager
                     ->label('Member Name')
                     ->weight(FontWeight::Bold)
                     ->getStateUsing(fn ($record) => $record->pivot->name ?: $record->name)
-                    ->searchable()
                     ->sortable(),
 
                 TextColumn::make('pivot.position')
@@ -100,7 +105,6 @@ class MembersRelationManager extends RelationManager
                         if (! empty($data['value'])) {
                             return $query->wherePivot('status', $data['value']);
                         }
-
                         return $query;
                     }),
             ])
@@ -108,7 +112,7 @@ class MembersRelationManager extends RelationManager
                 CreateAction::make()
                     ->label('Add Member')
                     ->color('success')
-                    ->form([
+                    ->schema([
                         Grid::make(2)
                             ->schema([
                                 Select::make('recordId')
@@ -172,10 +176,10 @@ class MembersRelationManager extends RelationManager
                     ->visible(fn (): bool => auth()->user()->can('manageMembers', $this->ownerRecord)),
 
                 Action::make('invite')
-                    ->label('Invite Member')
+                    ->label('Add Member')
                     ->color('primary')
-                    ->icon('heroicon-m-envelope')
-                    ->form([
+                    ->icon('tabler-user-plus')
+                    ->schema([
                         Select::make('user_id')
                             ->label('CMC Member')
                             ->relationship('members', 'name')
@@ -187,7 +191,6 @@ class MembersRelationManager extends RelationManager
                                 ->toArray()
                             )
                             ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
-                            ->searchable()
                             ->required()
                             ->helperText('Select a CMC member to invite'),
 
@@ -244,7 +247,7 @@ class MembersRelationManager extends RelationManager
                     })
                     ->visible(fn (): bool => auth()->user()->can('manageMembers', $this->ownerRecord)),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('accept_invitation')
                     ->label('Accept')
                     ->color('success')
@@ -335,7 +338,7 @@ class MembersRelationManager extends RelationManager
                     ),
 
                 EditAction::make()
-                    ->form([
+                    ->schema([
                         TextInput::make('name')
                             ->label('Display Name')
                             ->placeholder('Member name or stage name')

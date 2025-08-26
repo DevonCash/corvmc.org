@@ -260,6 +260,13 @@ class Reservation extends Model implements Eventable
         ]);
     }
 
+    public function markAsCancelled()
+    {
+        $this->update([
+            'status' => 'cancelled',
+        ]);
+    }
+
     /**
      * Get payment status display with badge styling.
      */
