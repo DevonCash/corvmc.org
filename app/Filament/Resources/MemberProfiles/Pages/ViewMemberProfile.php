@@ -7,6 +7,7 @@ use App\Models\User;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
+use Illuminate\Contracts\View\View;
 
 class ViewMemberProfile extends Page
 {
@@ -54,6 +55,11 @@ class ViewMemberProfile extends Page
         if (! $this->record->isVisible(auth()->user())) {
             abort(403, 'You do not have permission to view this profile.');
         }
+    }
+
+    public function getHeader(): ?View
+    {
+        return null;
     }
 
     protected function getViewData(): array

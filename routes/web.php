@@ -93,6 +93,10 @@ Route::get('/bands', function () {
 })->name('bands.index');
 
 Route::get('/bands/{bandProfile}', function (BandProfile $bandProfile) {
+    abort_unless($bandProfile->isVisible(auth()->user()), 404);
+
+    $bandProfile->load(['members', 'tags', 'media']);
+
     return view('public.bands.show', compact('bandProfile'));
 })->name('bands.show');
 
@@ -146,3 +150,17 @@ Route::get('/invitation/accept/{token}', [\App\Http\Controllers\InvitationContro
 Route::post('/invitation/accept/{token}', [\App\Http\Controllers\InvitationController::class, 'store'])
     ->name('invitation.accept.store')
     ->where('token', '.*');
+
+// Email template preview (development only)
+if (app()->environment('local', 'development')) {
+    Route::get('/email-preview/password-reset', function () {
+        $user = new User([
+            'name' => 'John Doe',
+            'email' => 'john@example.com'
+        ]);
+        
+        $notification = new \App\Notifications\PasswordResetNotification('sample-token-12345');
+        
+        return $notification->toMail($user)->render();
+    })->name('email.preview.password-reset');
+}

@@ -30,7 +30,7 @@ class QuickActionsWidget extends Widget
             'description' => 'Reserve a room for rehearsal',
             'icon' => 'tabler-calendar-plus',
             'color' => 'primary',
-            'url' => route('filament.member.resources.reservations.create'),
+            'url' => route('filament.member.resources.reservations.index'),
         ];
 
         // Band-related actions

@@ -187,3 +187,11 @@
     margin-right: 0 !important;
     margin-left: 0.75rem !important;
 }
+
+.fi-main {
+    padding:0 !important;
+}
+
+.fi-page {
+    padding: 0 1rem !important;
+}

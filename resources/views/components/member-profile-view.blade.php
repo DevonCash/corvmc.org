@@ -1,23 +1,94 @@
 @props(['record', 'showEditButton' => false])
 
 {{-- Concert Program Layout - mimics a folded program booklet --}}
-<div class="max-w-5xl mx-auto">
+<div class="max-w-5xl mx-auto relative">
+
+    @auth
+        @if ($record->user_id === auth()->id())
+            <div class="p-4 bg-info text-info-content flex items-center">
+                <x-tabler-info-circle class="w-5 h-5 mr-3 flex-shrink-0" />
+                <div class='grow'>
+                    <h3 class="font-semibold">This is your profile</h3>
+                    <p class="text-sm opacity-90">
+                        You're viewing your own profile as it appears to
+                        @switch ($record->visibility)
+                            @case('private')
+                                <strong>only you</strong> (private)
+                            @break
+
+                            @case('members')
+                                <strong>logged-in members</strong> (members-only)
+                            @break
+
+                            @default
+                                <strong>everyone</strong> (public)
+                            @break
+                        @endswitch
+                    </p>
+                </div>
+                @can('update', $record)
+                    <a href="{{ route('filament.member.resources.directory.edit', ['record' => $record->id]) }}"
+                        class="btn btn-outline btn-secondary">
+                        <x-tabler-edit class="w-4 h-4 mr-2" />
+                        Edit
+                    </a>
+                @endcan
+            </div>
+        @elseif ($record->visibility === 'private')
+            <div class="p-4 bg-warning text-warning-content rounded-lg border-l-4 border-warning-content">
+                <div class="flex items-center">
+                    <x-tabler-lock class="w-5 h-5 mr-3 flex-shrink-0" />
+                    <div>
+                        <h3 class="font-semibold">Private Profile</h3>
+                        <p class="text-sm opacity-90">This profile is private and only visible to you because you
+                            have special access.</p>
+                    </div>
+                </div>
+            </div>
+        @elseif ($record->visibility === 'members')
+            <div class="p-4 bg-secondary text-secondary-content rounded-lg border-l-4 border-secondary-content">
+                <div class="flex items-center">
+                    <x-tabler-users class="w-5 h-5 mr-3 flex-shrink-0" />
+                    <div>
+                        <h3 class="font-semibold">Member Profile</h3>
+                        <p class="text-sm opacity-90">This profile is only visible to logged-in community members.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endauth
 
     {{-- Program Cover/Header --}}
-    <div class="bg-base-200 border-b-2 border-base-300 px-8 py-6">
-        <div class="text-center mb-6">
-            <div class="inline-block">
-                <div class="text-xs uppercase tracking-widest text-base-content/60 mb-1">
-                    @if ($record->hasFlag('sponsor'))
-                        Sponsor
-                    @elseif($record->hasFlag('sustaining_member'))
-                        Sustaining Member
-                    @else
-                        Member
-                    @endif
-                    since {{ $record->created_at->format('Y') }}
+    <div class="bg-base-200 border-b-2 border-base-300 px-8 pb-6 space-y-6">
+        <div class='navbar'>
+            {{-- Navigation to directory, using the appropriate route --}}
+            <div class="navbar-start">
+                @php $route = request()->routeIs('filament.*') ? route('filament.member.resources.directory.index') : route('members.index') @endphp
+                <a href="{{ $route }}" class="btn btn-ghost flex items-center">
+                    <x-tabler-arrow-left class="w-4 h-4 mr-1" />
+                    Back to Directory
+                </a>
+            </div>
+
+            <div class="navbar-center">
+                <div class="inline-block">
+                    <div class="text-xs uppercase tracking-widest text-base-content/60 mb-1">
+                        @if ($record->hasFlag('sponsor'))
+                            Sponsor
+                        @elseif($record->hasFlag('sustaining_member'))
+                            Sustaining Member
+                        @else
+                            Member
+                        @endif
+                        since {{ $record->created_at->format('Y') }}
+                    </div>
+                    <div class="w-16 h-0.5 bg-primary mx-auto"></div>
                 </div>
-                <div class="w-16 h-0.5 bg-primary mx-auto"></div>
+            </div>
+
+            <div class="navbar-end">
+
             </div>
         </div>
 
@@ -55,7 +126,7 @@
 
                 {{-- Performance Status Badges --}}
                 @php $activeFlags = $record->getActiveFlagsWithLabels(); @endphp
-                @if (count($activeFlags) > 0)
+                @if ($activeFlags && count($activeFlags) > 0)
                     <div class="flex flex-wrap gap-2 justify-center lg:justify-start">
                         @foreach ($activeFlags as $flag => $label)
                             @php
@@ -77,6 +148,8 @@
                 @endif
             </div>
         </div>
+
+
     </div>
 
     {{-- Program Content - Two Column Layout like program booklet --}}
@@ -280,7 +353,8 @@
                                     <span class="font-medium text-base-content">{{ $band->name }}</span>
                                 @endif
                                 @if ($band->pivot->position)
-                                    <div class="text-xs text-base-content/60 italic">{{ $band->pivot->position }}</div>
+                                    <div class="text-xs text-base-content/60 italic">{{ $band->pivot->position }}
+                                    </div>
                                 @endif
                             </div>
                         @endforeach
@@ -331,7 +405,6 @@
                     </div>
                 </div>
             @endif
-
         </div>
     </div>
 </div>

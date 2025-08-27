@@ -6,6 +6,7 @@ use App\Filament\Resources\BandProfiles\BandProfileResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
+use Illuminate\Contracts\View\View;
 
 class ViewBandProfile extends Page
 {
@@ -59,6 +60,11 @@ class ViewBandProfile extends Page
         if (! auth()->user()->can('view', $this->record)) {
             abort(403, 'You do not have permission to view this band profile.');
         }
+    }
+
+    public function getHeader(): ?View
+    {
+        return null;
     }
 
     protected function getViewData(): array

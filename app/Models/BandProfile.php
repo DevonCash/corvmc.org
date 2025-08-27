@@ -289,6 +289,35 @@ class BandProfile extends Model implements HasMedia
         return null;
     }
 
+    /**
+     * Check if the band profile is visible to the given user.
+     */
+    public function isVisible(?User $user = null): bool
+    {
+        if (! $user) {
+            // Only public profiles are visible to guests
+            return $this->visibility === 'public';
+        }
+
+        // Band members and owner can always see the profile
+        if ($this->owner_id === $user->id || $this->members->contains($user)) {
+            return true;
+        }
+
+        // Staff can see all profiles if they have permission
+        if ($user->can('view private band profiles') || $user->can('view private member profiles')) {
+            return true;
+        }
+
+        // Check visibility settings
+        return match ($this->visibility) {
+            'public' => true,
+            'members' => true, // All logged-in users are considered members
+            'private' => false,
+            default => false,
+        };
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
