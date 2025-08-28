@@ -16,13 +16,15 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Image\Enums\CropPosition;
 
 /**
- * Represents a band profile in the application.
+ * Represents a band in the application.
  * It includes details about the band's name, bio, links, and contact information.
  * The band can have multiple members and exactly one owner.
  */
-class BandProfile extends Model implements HasMedia
+class Band extends Model implements HasMedia
 {
     use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity;
+
+    protected $table = 'band_profiles';
 
     protected $fillable = [
         'name',
@@ -52,24 +54,24 @@ class BandProfile extends Model implements HasMedia
 
     public function members()
     {
-        return $this->belongsToMany(User::class, 'band_profile_members')
+        return $this->belongsToMany(User::class, 'band_profile_members', 'band_profile_id', 'user_id')
             ->withPivot('role', 'position', 'name', 'status', 'invited_at')
             ->withTimestamps();
     }
 
     public function allMembers()
     {
-        return $this->hasMany(\App\Models\BandProfileMember::class);
+        return $this->hasMany(BandMember::class, 'band_profile_id');
     }
 
     public function activeMembers()
     {
-        return $this->hasMany(BandProfileMember::class)->where('status', 'active');
+        return $this->hasMany(BandMember::class, 'band_profile_id')->where('status', 'active');
     }
 
     public function pendingInvitations()
     {
-        return $this->belongsToMany(User::class, 'band_profile_members')
+        return $this->belongsToMany(User::class, 'band_profile_members', 'band_profile_id', 'user_id')
             ->withPivot('role', 'position', 'name', 'status', 'invited_at')
             ->wherePivot('status', 'invited')
             ->withTimestamps();

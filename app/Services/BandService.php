@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Models\User;
 use App\Notifications\BandInvitationAcceptedNotification;
 use App\Notifications\BandInvitationNotification;
@@ -15,7 +15,7 @@ class BandService
      * Invite a user to join a band.
      */
     public function inviteMember(
-        BandProfile $band,
+        Band $band,
         User $user,
         string $role = 'member',
         ?string $position = null,
@@ -45,7 +45,7 @@ class BandService
     /**
      * Accept an invitation to join a band.
      */
-    public function acceptInvitation(BandProfile $band, User $user): bool
+    public function acceptInvitation(Band $band, User $user): bool
     {
         if (! $this->hasInvitedUser($band, $user)) {
             return false;
@@ -67,7 +67,7 @@ class BandService
     /**
      * Decline an invitation to join a band.
      */
-    public function declineInvitation(BandProfile $band, User $user): bool
+    public function declineInvitation(Band $band, User $user): bool
     {
         if (! $this->hasInvitedUser($band, $user)) {
             return false;
@@ -84,7 +84,7 @@ class BandService
      * Add a member directly to a band (without invitation).
      */
     public function addMember(
-        BandProfile $band,
+        Band $band,
         User $user,
         string $role = 'member',
         ?string $position = null,
@@ -107,7 +107,7 @@ class BandService
     /**
      * Remove a member from a band.
      */
-    public function removeMember(BandProfile $band, User $user): bool
+    public function removeMember(Band $band, User $user): bool
     {
         // Cannot remove the owner
         if ($band->owner_id === $user->id) {
@@ -120,7 +120,7 @@ class BandService
     /**
      * Update a member's role in the band.
      */
-    public function updateMemberRole(BandProfile $band, User $user, string $role): bool
+    public function updateMemberRole(Band $band, User $user, string $role): bool
     {
         // Cannot change owner's role
         if ($band->owner_id === $user->id) {
@@ -139,7 +139,7 @@ class BandService
     /**
      * Update a member's position in the band.
      */
-    public function updateMemberPosition(BandProfile $band, User $user, ?string $position): bool
+    public function updateMemberPosition(Band $band, User $user, ?string $position): bool
     {
         if (! $this->hasMember($band, $user)) {
             return false;
@@ -153,7 +153,7 @@ class BandService
     /**
      * Update a member's display name in the band.
      */
-    public function updateMemberDisplayName(BandProfile $band, User $user, ?string $displayName): bool
+    public function updateMemberDisplayName(Band $band, User $user, ?string $displayName): bool
     {
         if (! $this->hasMember($band, $user)) {
             return false;
@@ -167,7 +167,7 @@ class BandService
     /**
      * Resend an invitation to a user.
      */
-    public function resendInvitation(BandProfile $band, User $user): bool
+    public function resendInvitation(Band $band, User $user): bool
     {
         if (! $this->hasInvitedUser($band, $user)) {
             return false;
@@ -194,7 +194,7 @@ class BandService
     /**
      * Re-invite a user who previously declined.
      */
-    public function reInviteDeclinedUser(BandProfile $band, User $user): bool
+    public function reInviteDeclinedUser(Band $band, User $user): bool
     {
         if (! $this->hasDeclinedUser($band, $user)) {
             return false;
@@ -222,7 +222,7 @@ class BandService
     /**
      * Transfer ownership of a band to another member.
      */
-    public function transferOwnership(BandProfile $band, User $newOwner): bool
+    public function transferOwnership(Band $band, User $newOwner): bool
     {
         if (! $this->hasMember($band, $newOwner)) {
             return false;
@@ -251,7 +251,7 @@ class BandService
      */
     public function getPendingInvitationsForUser(User $user): Collection
     {
-        return BandProfile::whereHas('members', function ($query) use ($user) {
+        return Band::whereHas('members', function ($query) use ($user) {
             $query->where('user_id', $user->id)
                 ->where('status', 'invited');
         })->with(['members' => function ($query) use ($user) {
@@ -264,10 +264,10 @@ class BandService
     /**
      * Get all users available for invitation (CMC members not in the band).
      */
-    public function getAvailableUsersForInvitation(BandProfile $band, string $search = ''): Collection
+    public function getAvailableUsersForInvitation(Band $band, string $search = ''): Collection
     {
         return User::where('name', 'like', "%{$search}%")
-            ->whereDoesntHave('bandProfiles', fn ($query) => $query->where('band_profile_id', $band->id)
+            ->whereDoesntHave('Bands', fn ($query) => $query->where('band_profile_id', $band->id)
             )
             ->limit(50)
             ->get();
@@ -276,7 +276,7 @@ class BandService
     /**
      * Check if a user is a member of the band.
      */
-    public function hasMember(BandProfile $band, User $user): bool
+    public function hasMember(Band $band, User $user): bool
     {
         return $band->members()
             ->wherePivot('user_id', $user->id)
@@ -287,7 +287,7 @@ class BandService
     /**
      * Check if a user has been invited to the band.
      */
-    public function hasInvitedUser(BandProfile $band, User $user): bool
+    public function hasInvitedUser(Band $band, User $user): bool
     {
         return $band->members()
             ->wherePivot('user_id', $user->id)
@@ -298,7 +298,7 @@ class BandService
     /**
      * Check if a user has declined an invitation to the band.
      */
-    public function hasDeclinedUser(BandProfile $band, User $user): bool
+    public function hasDeclinedUser(Band $band, User $user): bool
     {
         return $band->members()
             ->wherePivot('user_id', $user->id)
@@ -309,7 +309,7 @@ class BandService
     /**
      * Get a user's role in the band.
      */
-    public function getUserRole(BandProfile $band, User $user): ?string
+    public function getUserRole(Band $band, User $user): ?string
     {
         if ($band->owner_id === $user->id) {
             return 'owner';
@@ -326,7 +326,7 @@ class BandService
     /**
      * Check if a user is an admin of the band.
      */
-    public function hasAdmin(BandProfile $band, User $user): bool
+    public function hasAdmin(Band $band, User $user): bool
     {
         return $this->getUserRole($band, $user) === 'admin';
     }
@@ -334,7 +334,7 @@ class BandService
     /**
      * Check if a user is the owner of the band.
      */
-    public function isOwner(BandProfile $band, User $user): bool
+    public function isOwner(Band $band, User $user): bool
     {
         return $band->owner_id === $user->id;
     }
@@ -342,7 +342,7 @@ class BandService
     /**
      * Notify band leadership (owner and admins) about membership changes.
      */
-    protected function notifyBandLeadership(BandProfile $band, User $user, string $action): void
+    protected function notifyBandLeadership(Band $band, User $user, string $action): void
     {
         if ($action !== 'accepted') {
             return; // Only notify on acceptance for now

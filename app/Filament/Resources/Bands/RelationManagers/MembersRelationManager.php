@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\BandProfiles\RelationManagers;
+namespace App\Filament\Resources\Bands\RelationManagers;
 
 use App\Models\User;
 use App\Services\BandService;

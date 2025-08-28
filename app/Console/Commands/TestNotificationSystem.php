@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Models\User;
 use App\Models\Reservation;
 use App\Models\Transaction;
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Services\ReservationService;
 use App\Services\UserSubscriptionService;
 use App\Services\BandService;
@@ -41,10 +41,10 @@ class TestNotificationSystem extends Command
     public function handle()
     {
         $shouldSend = $this->option('send');
-        
+
         $this->info('🔔 Testing Notification System');
         $this->line('===============================');
-        
+
         if (!$shouldSend) {
             $this->warn('Running in DRY RUN mode. Use --send to actually send notifications.');
             $this->line('');
@@ -57,7 +57,7 @@ class TestNotificationSystem extends Command
             $this->info('🏠 1. Testing Reservation Notifications...');
             $this->testReservationNotifications($testUser, $shouldSend);
 
-            // 2. Test Donation Notifications  
+            // 2. Test Donation Notifications
             $this->info('💰 2. Testing Donation Notifications...');
             $this->testDonationNotifications($testUser, $shouldSend);
 
@@ -79,7 +79,7 @@ class TestNotificationSystem extends Command
 
             $this->line('');
             $this->info('✅ All notification tests completed!');
-            
+
             if ($shouldSend) {
                 $this->comment('Check your email and database notifications for the test user.');
             } else {
@@ -97,7 +97,7 @@ class TestNotificationSystem extends Command
     protected function getOrCreateTestUser(): User
     {
         $user = User::where('email', 'notifications-test@corvmc.org')->first();
-        
+
         if (!$user) {
             $user = User::create([
                 'name' => 'Notification Test User',
@@ -223,7 +223,7 @@ class TestNotificationSystem extends Command
     protected function testBandNotifications(User $user, bool $shouldSend): void
     {
         // Create a test band
-        $band = BandProfile::create([
+        $band = Band::create([
             'name' => 'Test Notification Band',
             'bio' => 'A band created for testing notification system',
             'owner_id' => $user->id,
@@ -316,7 +316,7 @@ class TestNotificationSystem extends Command
     {
         $totalNotifications = $user->notifications()->count();
         $unreadNotifications = $user->unreadNotifications()->count();
-        
+
         $this->line("   • Total notifications for test user: {$totalNotifications}");
         $this->line("   • Unread notifications: {$unreadNotifications}");
 

@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Models\Production;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -16,7 +16,7 @@ class ProductionSeeder extends Seeder
     {
         // Get some existing users and bands to work with
         $users = User::take(5)->get();
-        $bands = BandProfile::take(10)->get();
+        $bands = Band::take(10)->get();
 
         if ($users->isEmpty() || $bands->isEmpty()) {
             $this->command->warn('No users or bands found. Make sure to run UserSeeder and BandSeeder first.');

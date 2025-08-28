@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\BandProfiles\Tables;
+namespace App\Filament\Resources\Bands\Tables;
 
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -11,7 +11,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
-class BandProfilesTable
+class BandsTable
 {
     public static function configure(Table $table): Table
     {
@@ -72,7 +72,7 @@ class BandProfilesTable
                 SelectFilter::make('hometown')
                     ->label('Location')
                     ->options(function () {
-                        return \App\Models\BandProfile::whereNotNull('hometown')
+                        return \App\Models\Band::whereNotNull('hometown')
                             ->distinct()
                             ->pluck('hometown', 'hometown')
                             ->sort()

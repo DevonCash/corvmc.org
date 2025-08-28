@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PermissionSeeder::class,
             MemberProfileSeeder::class,
-            BandProfileSeeder::class,
+            BandSeeder::class,
             ProductionSeeder::class,
             ReservationSeeder::class,
             StaffProfileSeeder::class,

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Models\User;
 use App\Services\BandService;
 use Filament\Actions\Action;
@@ -55,7 +55,7 @@ class BandInvitations extends Page
     public function acceptInvitation(int $bandId): void
     {
         $bandService = app(BandService::class);
-        $band = BandProfile::findOrFail($bandId);
+        $band = Band::findOrFail($bandId);
         $user = User::me();
 
         if ($bandService->acceptInvitation($band, $user)) {
@@ -77,12 +77,12 @@ class BandInvitations extends Page
             ->icon('heroicon-s-x-mark')
             ->requiresConfirmation()
             ->modalHeading('Decline Band Invitation')
-            ->modalDescription(fn (array $arguments) => "Are you sure you want to decline the invitation to join " . BandProfile::find($arguments['bandId'])->name . "?")
+            ->modalDescription(fn (array $arguments) => "Are you sure you want to decline the invitation to join " . Band::find($arguments['bandId'])->name . "?")
             ->modalSubmitActionLabel('Yes, decline')
             ->modalCancelActionLabel('Cancel')
             ->action(function (array $arguments): void {
                 $bandService = app(BandService::class);
-                $band = BandProfile::findOrFail($arguments['bandId']);
+                $band = Band::findOrFail($arguments['bandId']);
                 $user = auth()->user();
 
                 if ($bandService->declineInvitation($band, $user)) {

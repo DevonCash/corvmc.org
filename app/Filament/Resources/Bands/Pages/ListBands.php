@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Filament\Resources\BandProfiles\Pages;
+namespace App\Filament\Resources\Bands\Pages;
 
-use App\Filament\Resources\BandProfiles\BandProfileResource;
-use App\Models\BandProfile;
+use App\Filament\Resources\Bands\BandResource;
+use App\Models\Band;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
 
-class ListBandProfiles extends ListRecords
+class ListBands extends ListRecords
 {
-    protected static string $resource = BandProfileResource::class;
+    protected static string $resource = BandResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -48,7 +48,7 @@ class ListBandProfiles extends ListRecords
 
     protected function getPendingInvitationsCount(): int
     {
-        return BandProfile::whereHas('members', function ($query) {
+        return Band::whereHas('members', function ($query) {
             $query->where('user_id', auth()->id())
                 ->where('status', 'invited');
         })->count();

@@ -51,7 +51,7 @@ class Production extends Model implements Eventable, HasMedia
 
     public function performers()
     {
-        return $this->belongsToMany(BandProfile::class, 'production_bands')
+        return $this->belongsToMany(Band::class, 'production_bands', 'production_id', 'band_profile_id')
             ->withPivot('order', 'set_length')
             ->orderBy('production_bands.order')
             ->withTimestamps();

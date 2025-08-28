@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
@@ -12,7 +12,7 @@ class BandProfileTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected BandProfile $band;
+    protected Band $band;
 
     protected User $owner;
 
@@ -24,7 +24,7 @@ class BandProfileTest extends TestCase
 
         $this->owner = User::factory()->create();
         $this->member = User::factory()->create();
-        $this->band = BandProfile::factory()->create([
+        $this->band = Band::factory()->create([
             'owner_id' => $this->owner->id,
         ]);
     }
@@ -285,18 +285,18 @@ class BandProfileTest extends TestCase
     public function it_can_query_with_touring_bands()
     {
         // Create regular band
-        $regularBand = BandProfile::factory()->create();
+        $regularBand = Band::factory()->create();
 
         // Create touring band (without owner - this might be what makes it touring)
-        $touringBand = BandProfile::withTouringBands()->create([
+        $touringBand = Band::withTouringBands()->create([
             'name' => 'Touring Band',
             'owner_id' => null,
         ]);
 
         // Regular query should only return owned bands
-        $this->assertCount(2, BandProfile::all()); // $this->band and $regularBand
+        $this->assertCount(2, Band::all()); // $this->band and $regularBand
 
         // With touring bands should return all
-        $this->assertCount(3, BandProfile::withTouringBands()->get());
+        $this->assertCount(3, Band::withTouringBands()->get());
     }
 }

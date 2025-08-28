@@ -174,8 +174,8 @@ $production->setNotaflof(true);
 ### Managing Performers  
 ```php
 // Add bands as performers
-$band1 = BandProfile::find(1);
-$band2 = BandProfile::find(2);
+$band1 = Band::find(1);
+$band2 = Band::find(2);
 
 $production->performers()->attach($band1, [
     'order' => 1,

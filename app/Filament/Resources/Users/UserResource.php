@@ -6,7 +6,7 @@ use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
-use App\Filament\Resources\Users\RelationManagers\BandProfilesRelationManager;
+use App\Filament\Resources\Users\RelationManagers\BandsRelationManager;
 use App\Filament\Resources\Users\RelationManagers\ProductionsRelationManager;
 use App\Filament\Resources\Users\RelationManagers\ReservationsRelationManager;
 use App\Filament\Resources\Users\RelationManagers\TransactionsRelationManager;
@@ -82,7 +82,7 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            BandProfilesRelationManager::class,
+            BandsRelationManager::class,
             ProductionsRelationManager::class,
             ReservationsRelationManager::class,
             TransactionsRelationManager::class,

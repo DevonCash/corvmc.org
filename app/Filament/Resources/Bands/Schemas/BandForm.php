@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Resources\BandProfiles\Schemas;
+namespace App\Filament\Resources\Bands\Schemas;
 
 use App\Filament\Components\EmbedControl;
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Models\User;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -18,7 +18,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Schema;
 
-class BandProfileForm
+class BandForm
 {
     public static function configure(Schema $schema): Schema
     {
@@ -177,13 +177,13 @@ class BandProfileForm
                         Select::make('owner_id')
                             ->label('Band Owner')
                             ->options(
-                                fn (?BandProfile $record) => $record
+                                fn (?Band $record) => $record
                                     ? $record->members()->select(['users.name', 'users.id'])->pluck('name', 'id')->toArray()
                                     : [User::me()->id => User::me()->name]
                             )
                             ->preload()
                             ->default(fn () => User::me()->id)
-                            ->disabled(fn (?BandProfile $record) => $record && ! User::me()->can('transferOwnership', $record))
+                            ->disabled(fn (?Band $record) => $record && ! User::me()->can('transferOwnership', $record))
                             ->helperText('The primary contact and administrator for this band'),
                     ]),
             ]);

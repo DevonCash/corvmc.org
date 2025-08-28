@@ -2,7 +2,7 @@
 
 namespace App\Notifications;
 
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
@@ -12,7 +12,7 @@ class BandInvitationAcceptedNotification extends Notification
     use Queueable;
 
     public function __construct(
-        public BandProfile $band,
+        public Band $band,
         public User $newMember
     ) {
         //

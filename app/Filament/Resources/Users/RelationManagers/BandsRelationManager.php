@@ -9,7 +9,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-class BandProfilesRelationManager extends RelationManager
+class BandsRelationManager extends RelationManager
 {
     protected static string $relationship = 'bandProfiles';
 

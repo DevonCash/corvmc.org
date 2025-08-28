@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Models\User;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -36,7 +36,7 @@ class MyBandsWidget extends BaseWidget
 
                 Tables\Columns\TextColumn::make('role')
                     ->label('Role')
-                    ->formatStateUsing(function (BandProfile $record): string {
+                    ->formatStateUsing(function (Band $record): string {
                         $user = User::me();
 
                         // Owner
@@ -96,28 +96,28 @@ class MyBandsWidget extends BaseWidget
                 Actions\Action::make('view')
                     ->label('View')
                     ->icon('tabler-eye')
-                    ->url(fn(BandProfile $record) => route('filament.member.resources.bands.view', $record))
+                    ->url(fn(Band $record) => route('filament.member.resources.bands.view', $record))
                     ->openUrlInNewTab(),
 
                 Actions\Action::make('edit')
                     ->label('Edit')
                     ->icon('tabler-edit')
-                    ->url(fn(BandProfile $record) => route('filament.member.resources.bands.edit', $record))
-                    ->visible(fn(BandProfile $record) => $this->canEditBand($record))
+                    ->url(fn(Band $record) => route('filament.member.resources.bands.edit', $record))
+                    ->visible(fn(Band $record) => $this->canEditBand($record))
                     ->openUrlInNewTab(),
 
                 Actions\Action::make('manage_members')
                     ->label('Members')
                     ->icon('tabler-users-plus')
-                    ->url(fn(BandProfile $record) => route('filament.member.resources.bands.edit', $record) . '#members')
-                    ->visible(fn(BandProfile $record) => $this->canManageBand($record) && $record->pending_invitations > 0)
+                    ->url(fn(Band $record) => route('filament.member.resources.bands.edit', $record) . '#members')
+                    ->visible(fn(Band $record) => $this->canManageBand($record) && $record->pending_invitations > 0)
                     ->openUrlInNewTab(),
 
                 Actions\Action::make('primary_link')
                     ->label('Visit')
-                    ->icon(fn(BandProfile $record) => $this->getPrimaryLinkIcon($record))
-                    ->url(fn(BandProfile $record) => $this->getPrimaryLinkUrl($record))
-                    ->visible(fn(BandProfile $record) => $this->getPrimaryLinkUrl($record) !== null)
+                    ->icon(fn(Band $record) => $this->getPrimaryLinkIcon($record))
+                    ->url(fn(Band $record) => $this->getPrimaryLinkUrl($record))
+                    ->visible(fn(Band $record) => $this->getPrimaryLinkUrl($record) !== null)
                     ->openUrlInNewTab(),
             ])
             ->headerActions([
@@ -144,10 +144,10 @@ class MyBandsWidget extends BaseWidget
         $user = User::me();
 
         if (!$user) {
-            return BandProfile::query()->whereRaw('1=0'); // Empty query
+            return Band::query()->whereRaw('1=0'); // Empty query
         }
 
-        return BandProfile::query()
+        return Band::query()
             ->where(function ($query) use ($user) {
                 $query->where('owner_id', $user->id)
                       ->orWhereHas('members', function ($q) use ($user) {
@@ -160,7 +160,7 @@ class MyBandsWidget extends BaseWidget
     }
 
 
-    protected function canEditBand(BandProfile $band): bool
+    protected function canEditBand(Band $band): bool
     {
         $user = User::me();
 
@@ -183,7 +183,7 @@ class MyBandsWidget extends BaseWidget
         return $membership?->pivot->role === 'admin';
     }
 
-    protected function canManageBand(BandProfile $band): bool
+    protected function canManageBand(Band $band): bool
     {
         $user = User::me();
 
@@ -206,13 +206,13 @@ class MyBandsWidget extends BaseWidget
         return $membership?->pivot->role === 'admin';
     }
 
-    protected function getPrimaryLinkUrl(BandProfile $band): ?string
+    protected function getPrimaryLinkUrl(Band $band): ?string
     {
         $primaryLink = $band->primaryLink();
         return $primaryLink['url'] ?? null;
     }
 
-    protected function getPrimaryLinkIcon(BandProfile $band): string
+    protected function getPrimaryLinkIcon(Band $band): string
     {
         $primaryLink = $band->primaryLink();
         return str_replace('tabler:', 'tabler-', $primaryLink['icon'] ?? 'tabler-external-link');

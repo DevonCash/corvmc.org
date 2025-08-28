@@ -2,18 +2,18 @@
 
 namespace App\Livewire;
 
-use App\Models\BandProfile;
+use App\Models\Band;
 
 class BandsGrid extends SearchableGrid
 {
     protected function getModelClass(): string
     {
-        return BandProfile::class;
+        return Band::class;
     }
 
     protected function getBaseQuery()
     {
-        return BandProfile::with('members')->whereIn('visibility', ['public', 'members']);
+        return Band::with('members')->whereIn('visibility', ['public', 'members']);
     }
 
     protected function getCardComponent(): string
@@ -49,7 +49,7 @@ class BandsGrid extends SearchableGrid
     protected function configureFilters()
     {
         // Add hometown dropdown
-        $hometowns = BandProfile::whereIn('visibility', ['public', 'members'])
+        $hometowns = Band::whereIn('visibility', ['public', 'members'])
             ->whereNotNull('hometown')
             ->where('hometown', '!=', '')
             ->distinct()
@@ -77,7 +77,7 @@ class BandsGrid extends SearchableGrid
         if (!empty($this->search)) {
             $query->where(function ($q) {
                 $searchTerm = $this->search;
-                
+
                 // Search in band name
                 $q->where('name', 'ilike', '%' . $searchTerm . '%')
                   // Search in hometown
@@ -89,7 +89,7 @@ class BandsGrid extends SearchableGrid
                           ->filter(function ($tag) use ($searchTerm) {
                               return stripos($tag->name, $searchTerm) !== false;
                           });
-                      
+
                       if ($genreTags->isNotEmpty()) {
                           $genreQuery->withAnyTags($genreTags->pluck('name')->toArray(), 'genre');
                       }

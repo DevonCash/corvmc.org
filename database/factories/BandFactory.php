@@ -2,15 +2,15 @@
 
 namespace Database\Factories;
 
-use App\Models\BandProfile;
+use App\Models\Band;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\BandProfile>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Band>
  */
-class BandProfileFactory extends Factory
+class BandFactory extends Factory
 {
-    protected $model = BandProfile::class;
+    protected $model = Band::class;
 
     public function definition(): array
     {
@@ -83,7 +83,7 @@ class BandProfileFactory extends Factory
 
     public function withGenres(?array $genres = null): static
     {
-        return $this->afterCreating(function (BandProfile $band) use ($genres) {
+        return $this->afterCreating(function (Band $band) use ($genres) {
             $defaultGenres = ['Rock', 'Pop', 'Jazz', 'Blues', 'Folk', 'Electronic', 'Hip Hop', 'Country', 'Classical', 'Punk', 'Metal', 'Indie', 'Alternative'];
             $selectedGenres = $genres ?? $this->faker->randomElements($defaultGenres, $this->faker->numberBetween(1, 4));
 
@@ -95,7 +95,7 @@ class BandProfileFactory extends Factory
 
     public function withInfluences(?array $influences = null): static
     {
-        return $this->afterCreating(function (BandProfile $band) use ($influences) {
+        return $this->afterCreating(function (Band $band) use ($influences) {
             $defaultInfluences = [
                 'The Beatles', 'Led Zeppelin', 'Pink Floyd', 'Queen', 'The Rolling Stones',
                 'Bob Dylan', 'Joni Mitchell', 'Miles Davis', 'John Coltrane', 'Radiohead',

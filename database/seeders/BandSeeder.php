@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
-class BandProfileSeeder extends Seeder
+class BandSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -44,7 +44,7 @@ class BandProfileSeeder extends Seeder
 
         foreach ($rockBands as $bandData) {
             $owner = $users->random();
-            $band = BandProfile::factory()
+            $band = Band::factory()
                 ->public()
                 ->withGenres($bandData['genres'])
                 ->withInfluences(['Led Zeppelin', 'Pink Floyd', 'Arctic Monkeys', 'The Strokes'])
@@ -67,7 +67,7 @@ class BandProfileSeeder extends Seeder
 
         foreach ($jazzGroups as $bandData) {
             $owner = $users->random();
-            $band = BandProfile::factory()
+            $band = Band::factory()
                 ->public()
                 ->withGenres($bandData['genres'])
                 ->withInfluences(['Miles Davis', 'John Coltrane', 'Duke Ellington', 'Bill Evans'])
@@ -90,7 +90,7 @@ class BandProfileSeeder extends Seeder
 
         foreach ($electronicActs as $bandData) {
             $owner = $users->random();
-            $band = BandProfile::factory()
+            $band = Band::factory()
                 ->public()
                 ->withGenres($bandData['genres'])
                 ->withInfluences(['Daft Punk', 'Aphex Twin', 'Burial', 'Boards of Canada'])
@@ -113,7 +113,7 @@ class BandProfileSeeder extends Seeder
 
         foreach ($folkGroups as $bandData) {
             $owner = $users->random();
-            $band = BandProfile::factory()
+            $band = Band::factory()
                 ->public()
                 ->withGenres($bandData['genres'])
                 ->withInfluences(['Bob Dylan', 'Joni Mitchell', 'Fleet Foxes', 'The Lumineers'])
@@ -135,7 +135,7 @@ class BandProfileSeeder extends Seeder
 
         foreach ($classicalGroups as $bandData) {
             $owner = $users->random();
-            $band = BandProfile::factory()
+            $band = Band::factory()
                 ->public()
                 ->withGenres($bandData['genres'])
                 ->withInfluences(['Bach', 'Mozart', 'Beethoven', 'Debussy'])
@@ -204,7 +204,7 @@ class BandProfileSeeder extends Seeder
         ];
 
         foreach ($touringBands as $bandData) {
-            $band = BandProfile::withTouringBands()->create([
+            $band = Band::withTouringBands()->create([
                 'name' => $bandData['name'],
                 'hometown' => $bandData['hometown'],
                 'bio' => $bandData['bio'],
@@ -222,7 +222,7 @@ class BandProfileSeeder extends Seeder
         }
     }
 
-    private function attachMembers(BandProfile $band, $users, int $memberCount): void
+    private function attachMembers(Band $band, $users, int $memberCount): void
     {
         // Always include the owner as a member
         $owner = $band->owner;

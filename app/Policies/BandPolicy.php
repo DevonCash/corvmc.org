@@ -2,17 +2,17 @@
 
 namespace App\Policies;
 
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Models\User;
 
-class BandProfilePolicy
+class BandPolicy
 {
     public function viewAny(User $user): bool
     {
         return true;
     }
 
-    public function view(User $user, BandProfile $band): ?bool
+    public function view(User $user, Band $band): ?bool
     {
         // Public bands are viewable by anyone
         if ($band->visibility === 'public') {
@@ -50,7 +50,7 @@ class BandProfilePolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, BandProfile $band): bool
+    public function update(User $user, Band $band): bool
     {
         // Owner can always update
         if ($band->owner_id === $user->id) {
@@ -74,9 +74,9 @@ class BandProfilePolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, BandProfile $bandProfile): ?bool
+    public function delete(User $user, Band $band): ?bool
     {
-        if ($user->id === $bandProfile->owner->id || $user->can('delete bands')) {
+        if ($user->id === $band->owner->id || $user->can('delete bands')) {
             return true;
         }
 
@@ -86,9 +86,9 @@ class BandProfilePolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, BandProfile $bandProfile): ?bool
+    public function restore(User $user, Band $band): ?bool
     {
-        if ($user->id === $bandProfile->owner->id || $user->can('restore bands')) {
+        if ($user->id === $band->owner->id || $user->can('restore bands')) {
             return true;
         }
 
@@ -98,7 +98,7 @@ class BandProfilePolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, BandProfile $bandProfile): bool
+    public function forceDelete(User $user, Band $band): bool
     {
         return $user->hasRole(['admin']) || $user->can('force delete bands');
     }
@@ -106,7 +106,7 @@ class BandProfilePolicy
     /**
      * Determine whether the user can manage band members.
      */
-    public function manageMembers(User $user, BandProfile $band): bool
+    public function manageMembers(User $user, Band $band): bool
     {
         // Owner can manage members
         if ($band->owner_id === $user->id) {
@@ -125,7 +125,7 @@ class BandProfilePolicy
     /**
      * Determine whether the user can invite members to the band.
      */
-    public function inviteMembers(User $user, BandProfile $band): bool
+    public function inviteMembers(User $user, Band $band): bool
     {
         // Check specific invite permission
         if ($user->can('invite band members')) {
@@ -138,7 +138,7 @@ class BandProfilePolicy
     /**
      * Determine whether the user can remove members from the band.
      */
-    public function removeMembers(User $user, BandProfile $band): bool
+    public function removeMembers(User $user, Band $band): bool
     {
         // Check specific remove permission
         if ($user->can('remove band members')) {
@@ -151,7 +151,7 @@ class BandProfilePolicy
     /**
      * Determine whether the user can change member roles.
      */
-    public function changeMemberRoles(User $user, BandProfile $band): bool
+    public function changeMemberRoles(User $user, Band $band): bool
     {
         // Check specific permission
         if ($user->can('change member roles')) {
@@ -165,7 +165,7 @@ class BandProfilePolicy
     /**
      * Determine whether the user can leave the band.
      */
-    public function leave(User $user, BandProfile $band): bool
+    public function leave(User $user, Band $band): bool
     {
         // Owner cannot leave their own band (must transfer ownership first)
         if ($band->owner_id === $user->id) {
@@ -179,7 +179,7 @@ class BandProfilePolicy
     /**
      * Determine whether the user can transfer ownership of the band.
      */
-    public function transferOwnership(User $user, BandProfile $band): bool
+    public function transferOwnership(User $user, Band $band): bool
     {
         // Check specific permission
         if ($user->can('transfer band ownership')) {
@@ -192,7 +192,7 @@ class BandProfilePolicy
     /**
      * Helper method to check if user is a member or owner of the band.
      */
-    protected function isMemberOrOwner(User $user, BandProfile $band): bool
+    protected function isMemberOrOwner(User $user, Band $band): bool
     {
         return $band->owner_id === $user->id || $this->isMember($user, $band);
     }
@@ -200,7 +200,7 @@ class BandProfilePolicy
     /**
      * Helper method to check if user is a member of the band.
      */
-    protected function isMember(User $user, BandProfile $band): bool
+    protected function isMember(User $user, Band $band): bool
     {
         return $band->members()->wherePivot('user_id', $user->id)->exists();
     }
@@ -208,7 +208,7 @@ class BandProfilePolicy
     /**
      * Helper method to check if user is a band admin.
      */
-    protected function isBandAdmin(User $user, BandProfile $band): bool
+    protected function isBandAdmin(User $user, Band $band): bool
     {
         return $band->members()
             ->wherePivot('user_id', $user->id)
@@ -216,7 +216,7 @@ class BandProfilePolicy
             ->exists();
     }
 
-    public function viewMembers(User $user, BandProfile $band): bool
+    public function viewMembers(User $user, Band $band): bool
     {
         // Public bands: anyone can view members
         if ($band->visibility === 'public') {
@@ -236,7 +236,7 @@ class BandProfilePolicy
         return false;
     }
 
-    public function viewContact(?User $user, BandProfile $band): bool
+    public function viewContact(?User $user, Band $band): bool
     {
         // Public bands: anyone can view contact info
         if ($band->visibility === 'public') {

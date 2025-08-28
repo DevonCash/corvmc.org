@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Productions\RelationManagers;
 
-use App\Filament\Resources\BandProfiles\BandProfileResource;
+use App\Filament\Resources\Bands\BandResource;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\SpatieTagsInput;
@@ -20,7 +20,7 @@ class PerformersRelationManager extends RelationManager
 {
     protected static string $relationship = 'performers';
 
-    protected static ?string $relatedResource = BandProfileResource::class;
+    protected static ?string $relatedResource = BandResource::class;
 
     public function table(Table $table): Table
     {

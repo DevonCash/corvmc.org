@@ -33,7 +33,7 @@ class ActivitySidebar
         switch ($context['type']) {
             case 'band':
                 if ($context['record_id']) {
-                    $query->where('subject_type', 'App\\Models\\BandProfile')
+                    $query->where('subject_type', 'App\\Models\\Band')
                           ->where('subject_id', $context['record_id']);
                 }
                 break;
@@ -265,7 +265,7 @@ class ActivitySidebar
 
         try {
             return match ($activity->subject_type) {
-                'App\\Models\\BandProfile' => route('filament.member.resources.bands.view', ['record' => $activity->subject_id]),
+                'App\\Models\\Band' => route('filament.member.resources.bands.view', ['record' => $activity->subject_id]),
                 'App\\Models\\MemberProfile' => route('filament.member.resources.directory.view', ['record' => $activity->subject_id]),
                 'App\\Models\\Production' => route('filament.member.resources.productions.view', ['record' => $activity->subject_id]),
                 'App\\Models\\Reservation' => route('filament.member.resources.reservations.view', ['record' => $activity->subject_id]),

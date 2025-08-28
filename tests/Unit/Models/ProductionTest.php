@@ -3,7 +3,7 @@
 namespace Tests\Unit\Models;
 
 use App\Data\LocationData;
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Models\Production;
 use App\Models\User;
 use Carbon\Carbon;
@@ -39,8 +39,8 @@ class ProductionTest extends TestCase
     #[Test]
     public function it_can_have_performers()
     {
-        $band1 = BandProfile::factory()->create();
-        $band2 = BandProfile::factory()->create();
+        $band1 = Band::factory()->create();
+        $band2 = Band::factory()->create();
 
         $this->production->performers()->attach($band1->id, ['order' => 1, 'set_length' => 30]);
         $this->production->performers()->attach($band2->id, ['order' => 2, 'set_length' => 45]);
@@ -148,8 +148,8 @@ class ProductionTest extends TestCase
     #[Test]
     public function it_calculates_estimated_duration()
     {
-        $band1 = BandProfile::factory()->create();
-        $band2 = BandProfile::factory()->create();
+        $band1 = Band::factory()->create();
+        $band2 = Band::factory()->create();
 
         $this->production->performers()->attach($band1->id, ['set_length' => 30]);
         $this->production->performers()->attach($band2->id, ['set_length' => 45]);

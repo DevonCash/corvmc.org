@@ -161,7 +161,7 @@ class ActivityFeedWidget extends Widget
         return match ($subjectType) {
             'App\\Models\\User' => $this->canViewUserActivity($activity, $currentUser),
             'App\\Models\\MemberProfile' => $this->canViewMemberProfileActivity($subject, $currentUser),
-            'App\\Models\\BandProfile' => $this->canViewBandProfileActivity($subject, $currentUser),
+            'App\\Models\\Band' => $this->canViewBandProfileActivity($subject, $currentUser),
             'App\\Models\\Production' => $this->canViewProductionActivity($subject, $currentUser),
             'App\\Models\\Reservation' => $this->canViewReservationActivity($subject, $currentUser),
             default => true, // Allow other activity types by default

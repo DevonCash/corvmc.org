@@ -76,7 +76,7 @@ class ActivityLogResource extends Resource
                     $q->whereIn('visibility', $currentUser ? ['public', 'members'] : ['public']);
                 })
                 ->orWhereHasMorph('subject', [
-                    \App\Models\BandProfile::class,
+                    \App\Models\Band::class,
                 ], function ($q) use ($currentUser) {
                     // Apply band visibility rules
                     if ($currentUser) {

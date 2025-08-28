@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Models\User;
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Models\Production;
 use App\Models\MemberProfile;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -92,12 +92,12 @@ Route::get('/bands', function () {
     return view('public.bands.index');
 })->name('bands.index');
 
-Route::get('/bands/{bandProfile}', function (BandProfile $bandProfile) {
-    abort_unless($bandProfile->isVisible(auth()->user()), 404);
+Route::get('/bands/{band}', function (Band $band) {
+    abort_unless($band->isVisible(auth()->user()), 404);
 
-    $bandProfile->load(['members', 'tags', 'media']);
+    $band->load(['members', 'tags', 'media']);
 
-    return view('public.bands.show', compact('bandProfile'));
+    return view('public.bands.show', compact('band'));
 })->name('bands.show');
 
 Route::get('/programs', function () {

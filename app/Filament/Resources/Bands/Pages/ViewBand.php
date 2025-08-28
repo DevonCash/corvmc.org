@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Filament\Resources\BandProfiles\Pages;
+namespace App\Filament\Resources\Bands\Pages;
 
-use App\Filament\Resources\BandProfiles\BandProfileResource;
+use App\Filament\Resources\Bands\BandResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\View\View;
 
-class ViewBandProfile extends Page
+class ViewBand extends Page
 {
     use InteractsWithRecord;
 
-    protected static string $resource = BandProfileResource::class;
+    protected static string $resource = BandResource::class;
 
     protected string $view = 'filament.resources.band-profiles.pages.view-band-profile';
 

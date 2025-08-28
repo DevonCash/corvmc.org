@@ -1,22 +1,22 @@
 <?php
 
-namespace App\Filament\Resources\BandProfiles;
+namespace App\Filament\Resources\Bands;
 
-use App\Filament\Resources\BandProfiles\Pages\CreateBandProfile;
-use App\Filament\Resources\BandProfiles\Pages\EditBandProfile;
-use App\Filament\Resources\BandProfiles\Pages\ListBandProfiles;
-use App\Filament\Resources\BandProfiles\Pages\ViewBandProfile;
-use App\Filament\Resources\BandProfiles\RelationManagers\MembersRelationManager;
-use App\Filament\Resources\BandProfiles\Schemas\BandProfileForm;
-use App\Filament\Resources\BandProfiles\Tables\BandProfilesTable;
-use App\Models\BandProfile;
+use App\Filament\Resources\Bands\Pages\CreateBand;
+use App\Filament\Resources\Bands\Pages\EditBand;
+use App\Filament\Resources\Bands\Pages\ListBands;
+use App\Filament\Resources\Bands\Pages\ViewBand;
+use App\Filament\Resources\Bands\RelationManagers\MembersRelationManager;
+use App\Filament\Resources\Bands\Schemas\BandForm;
+use App\Filament\Resources\Bands\Tables\BandsTable;
+use App\Models\Band;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 
-class BandProfileResource extends Resource
+class BandResource extends Resource
 {
-    protected static ?string $model = BandProfile::class;
+    protected static ?string $model = Band::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'tabler-microphone-2';
 
@@ -32,7 +32,7 @@ class BandProfileResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $count = BandProfile::whereHas('members', function ($query) {
+        $count = Band::whereHas('members', function ($query) {
             $query->where('user_id', auth()->id())
                 ->where('status', 'invited');
         })->count();
@@ -47,12 +47,12 @@ class BandProfileResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return BandProfileForm::configure($schema);
+        return BandForm::configure($schema);
     }
 
     public static function table(Table $table): Table
     {
-        return BandProfilesTable::configure($table);
+        return BandsTable::configure($table);
     }
 
     public static function getRelations(): array
@@ -65,10 +65,10 @@ class BandProfileResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListBandProfiles::route('/'),
-            'create' => CreateBandProfile::route('/create'),
-            'view' => ViewBandProfile::route('/{record}'),
-            'edit' => EditBandProfile::route('/{record}/edit'),
+            'index' => ListBands::route('/'),
+            'create' => CreateBand::route('/create'),
+            'view' => ViewBand::route('/{record}'),
+            'edit' => EditBand::route('/{record}/edit'),
         ];
     }
 }

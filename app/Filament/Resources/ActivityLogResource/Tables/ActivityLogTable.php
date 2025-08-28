@@ -41,7 +41,7 @@ class ActivityLogTable
                     ->color(fn(?string $state): string => match ($state) {
                         'App\\Models\\User' => 'info',
                         'App\\Models\\MemberProfile' => 'success',
-                        'App\\Models\\BandProfile' => 'warning',
+                        'App\\Models\\Band' => 'warning',
                         'App\\Models\\Production' => 'primary',
                         'App\\Models\\Reservation' => 'secondary',
                         default => 'gray',
@@ -84,7 +84,7 @@ class ActivityLogTable
                     ->options([
                         'App\\Models\\User' => 'Users',
                         'App\\Models\\MemberProfile' => 'Member Profiles',
-                        'App\\Models\\BandProfile' => 'Band Profiles',
+                        'App\\Models\\Band' => 'Bands',
                         'App\\Models\\Production' => 'Events',
                         'App\\Models\\Reservation' => 'Reservations',
                     ])
@@ -131,7 +131,7 @@ class ActivityLogTable
 
                         return match ($record->subject_type) {
                             'App\\Models\\MemberProfile' => route('filament.member.resources.directory.view', $record->subject),
-                            'App\\Models\\BandProfile' => route('filament.member.resources.bands.view', $record->subject),
+                            'App\\Models\\Band' => route('filament.member.resources.bands.view', $record->subject),
                             'App\\Models\\Production' => route('filament.member.resources.productions.edit', $record->subject),
                             'App\\Models\\Reservation' => route('filament.member.resources.reservations.view', $record->subject),
                             default => null,

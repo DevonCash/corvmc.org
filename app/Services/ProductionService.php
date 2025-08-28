@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\BandProfile;
+use App\Models\Band;
 use App\Models\Production;
 use App\Models\User;
 use App\Notifications\ProductionUpdatedNotification;
@@ -18,7 +18,7 @@ class ProductionService
      */
     public function addPerformer(
         Production $production,
-        BandProfile $band,
+        Band $band,
         int $order = 0,
         ?int $setLength = null
     ): bool {
@@ -42,7 +42,7 @@ class ProductionService
     /**
      * Remove a performer from a production.
      */
-    public function removePerformer(Production $production, BandProfile $band): bool
+    public function removePerformer(Production $production, Band $band): bool
     {
         return $production->performers()->detach($band->id) > 0;
     }
@@ -50,7 +50,7 @@ class ProductionService
     /**
      * Update a performer's order in the lineup.
      */
-    public function updatePerformerOrder(Production $production, BandProfile $band, int $order): bool
+    public function updatePerformerOrder(Production $production, Band $band, int $order): bool
     {
         if (! $this->hasPerformer($production, $band)) {
             return false;
@@ -66,7 +66,7 @@ class ProductionService
     /**
      * Update a performer's set length.
      */
-    public function updatePerformerSetLength(Production $production, BandProfile $band, ?int $setLength): bool
+    public function updatePerformerSetLength(Production $production, Band $band, ?int $setLength): bool
     {
         if (! $this->hasPerformer($production, $band)) {
             return false;
@@ -179,9 +179,11 @@ class ProductionService
      */
     public function getAvailableBands(Production $production, string $search = ''): Collection
     {
-        return BandProfile::withTouringBands()
+        return Band::withTouringBands()
             ->where('name', 'like', "%{$search}%")
-            ->whereDoesntHave('productions', fn ($query) => $query->where('production_id', $production->id)
+            ->whereDoesntHave(
+                'productions',
+                fn($query) => $query->where('production_id', $production->id)
             )
             ->limit(50)
             ->get();
@@ -222,9 +224,11 @@ class ProductionService
     /**
      * Get productions featuring a specific band.
      */
-    public function getProductionsForBand(BandProfile $band): Collection
+    public function getProductionsForBand(Band $band): Collection
     {
-        return Production::whereHas('performers', fn ($query) => $query->where('band_profile_id', $band->id)
+        return Production::whereHas(
+            'performers',
+            fn($query) => $query->where('band_profile_id', $band->id)
         )
             ->orderBy('start_time', 'desc')
             ->get();
@@ -233,7 +237,7 @@ class ProductionService
     /**
      * Check if a production has a specific performer.
      */
-    public function hasPerformer(Production $production, BandProfile $band): bool
+    public function hasPerformer(Production $production, Band $band): bool
     {
         return $production->performers()->where('band_profile_id', $band->id)->exists();
     }
@@ -381,7 +385,7 @@ class ProductionService
     {
         $originalValues = $production->only(array_keys($attributes));
         $production->update($attributes);
-        
+
         // Track what changed
         $changes = [];
         foreach ($attributes as $key => $newValue) {

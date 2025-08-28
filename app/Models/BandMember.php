@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class BandProfileMember extends Model
+class BandMember extends Model
 {
     protected $table = 'band_profile_members';
 
@@ -23,9 +23,9 @@ class BandProfileMember extends Model
         'invited_at' => 'datetime',
     ];
 
-    public function bandProfile(): BelongsTo
+    public function band(): BelongsTo
     {
-        return $this->belongsTo(BandProfile::class);
+        return $this->belongsTo(Band::class, 'band_profile_id');
     }
 
     public function user(): BelongsTo
