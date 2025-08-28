@@ -215,4 +215,44 @@ class BandProfilePolicy
             ->wherePivot('role', 'admin')
             ->exists();
     }
+
+    public function viewMembers(User $user, BandProfile $band): bool
+    {
+        // Public bands: anyone can view members
+        if ($band->visibility === 'public') {
+            return true;
+        }
+
+        // Members-only bands: only members and owner can view members
+        if ($band->visibility === 'members') {
+            return $this->isMemberOrOwner($user, $band);
+        }
+
+        // Private bands: only members and owner can view members
+        if ($band->visibility === 'private') {
+            return $this->isMemberOrOwner($user, $band);
+        }
+
+        return false;
+    }
+
+    public function viewContact(?User $user, BandProfile $band): bool
+    {
+        // Public bands: anyone can view contact info
+        if ($band->visibility === 'public') {
+            return true;
+        }
+
+        // Members-only bands: only members and owner can view contact info
+        if ($band->visibility === 'members') {
+            return $user !== null;
+        }
+
+        // Private bands: only members and owner can view contact info
+        if ($band->visibility === 'private') {
+            return $this->isMemberOrOwner($user, $band);
+        }
+
+        return false;
+    }
 }

@@ -19,12 +19,8 @@ class BandProfilesTable
             ->columns([
                 ImageColumn::make('avatar_url')
                     ->label('')
-                    ->circular()
                     ->imageSize(60)
-                    ->grow(false)
-                    ->defaultImageUrl(function ($record) {
-                        return 'https://ui-avatars.com/api/?name='.urlencode($record->name).'&color=7C3AED&background=F3E8FF&size=120';
-                    }),
+                    ->grow(false),
 
                 TextColumn::make('name')
                     ->label('Band')
@@ -47,12 +43,11 @@ class BandProfilesTable
                     ->label('Genres')
                     ->type('genre')
                     ->grow(true)
-                    ->separator(', ')
-                    ->limitList(2),
+                    ->separator(', '),
 
                 TextColumn::make('activity')
                     ->label('Activity')
-                    ->getStateUsing(fn ($record) => 'Active '.$record->updated_at->diffForHumans())
+                    ->getStateUsing(fn($record) => 'Active ' . $record->updated_at->diffForHumans())
                     ->color('gray')
                     ->size('sm'),
             ])

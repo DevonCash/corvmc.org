@@ -14,6 +14,7 @@ use Spatie\ModelFlags\Models\Concerns\HasFlags;
 use Spatie\Tags\HasTags;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Image\Enums\CropPosition;
 
 /**
  * Represents a member profile in the application.
@@ -53,12 +54,22 @@ class MemberProfile extends Model implements HasMedia
 
     public function getAvatarUrlAttribute(): string
     {
-        return $this->getFirstMediaUrl('avatar') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=200';;
+        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=300';
     }
 
     public function getAvatarThumbUrlAttribute(): string
     {
-        return $this->getFirstMediaUrl('avatar', 'thumb');
+        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=100';
+    }
+
+    public function getAvatarLargeUrlAttribute(): string
+    {
+        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=600';
+    }
+
+    public function getAvatarOptimizedUrlAttribute(): string
+    {
+        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=1200';
     }
 
     public function user()
@@ -118,15 +129,40 @@ class MemberProfile extends Model implements HasMedia
     {
         $this->addMediaCollection('avatar')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
-            ->singleFile(); // This is key for single avatar uploads
+            ->singleFile()
+            ->onlyKeepLatest(1);
     }
 
     public function registerMediaConversions(?Media $media = null): void
     {
+        // Thumbnail for lists and small displays
         $this->addMediaConversion('thumb')
             ->width(100)
             ->height(100)
+            ->crop(100, 100, CropPosition::Center)
+            ->quality(90)
             ->sharpen(10);
+
+        // Medium size for member cards and directory
+        $this->addMediaConversion('medium')
+            ->width(300)
+            ->height(300)
+            ->crop(300, 300, CropPosition::Center)
+            ->quality(85);
+
+        // Large size for profile pages
+        $this->addMediaConversion('large')
+            ->width(600)
+            ->height(600)
+            ->crop(600, 600, CropPosition::Center)
+            ->quality(80);
+
+        // Optimized original for high-res displays
+        $this->addMediaConversion('optimized')
+            ->width(1200)
+            ->height(1200)
+            ->crop(1200, 1200, CropPosition::Center)
+            ->quality(75);
     }
 
     public function getAvailableFlags(): array

@@ -2,158 +2,11 @@
 
 {{-- Concert Program Layout - mimics a folded program booklet --}}
 <div class="max-w-5xl mx-auto relative">
-
-    @auth
-        @if ($record->user_id === auth()->id())
-            <div class="p-4 bg-info text-info-content flex items-center">
-                <x-tabler-info-circle class="w-5 h-5 mr-3 flex-shrink-0" />
-                <div class='grow'>
-                    <h3 class="font-semibold">This is your profile</h3>
-                    <p class="text-sm opacity-90">
-                        You're viewing your own profile as it appears to
-                        @switch ($record->visibility)
-                            @case('private')
-                                <strong>only you</strong> (private)
-                            @break
-
-                            @case('members')
-                                <strong>logged-in members</strong> (members-only)
-                            @break
-
-                            @default
-                                <strong>everyone</strong> (public)
-                            @break
-                        @endswitch
-                    </p>
-                </div>
-                @can('update', $record)
-                    <a href="{{ route('filament.member.resources.directory.edit', ['record' => $record->id]) }}"
-                        class="btn btn-outline btn-secondary">
-                        <x-tabler-edit class="w-4 h-4 mr-2" />
-                        Edit
-                    </a>
-                @endcan
-            </div>
-        @elseif ($record->visibility === 'private')
-            <div class="p-4 bg-warning text-warning-content rounded-lg border-l-4 border-warning-content">
-                <div class="flex items-center">
-                    <x-tabler-lock class="w-5 h-5 mr-3 flex-shrink-0" />
-                    <div>
-                        <h3 class="font-semibold">Private Profile</h3>
-                        <p class="text-sm opacity-90">This profile is private and only visible to you because you
-                            have special access.</p>
-                    </div>
-                </div>
-            </div>
-        @elseif ($record->visibility === 'members')
-            <div class="p-4 bg-secondary text-secondary-content rounded-lg border-l-4 border-secondary-content">
-                <div class="flex items-center">
-                    <x-tabler-users class="w-5 h-5 mr-3 flex-shrink-0" />
-                    <div>
-                        <h3 class="font-semibold">Member Profile</h3>
-                        <p class="text-sm opacity-90">This profile is only visible to logged-in community members.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        @endif
-    @endauth
-
-    {{-- Program Cover/Header --}}
-    <div class="bg-base-200 border-b-2 border-base-300 px-8 pb-6 space-y-6">
-        <div class='navbar'>
-            {{-- Navigation to directory, using the appropriate route --}}
-            <div class="navbar-start">
-                @php $route = request()->routeIs('filament.*') ? route('filament.member.resources.directory.index') : route('members.index') @endphp
-                <a href="{{ $route }}" class="btn btn-ghost flex items-center">
-                    <x-tabler-arrow-left class="w-4 h-4 mr-1" />
-                    Back to Directory
-                </a>
-            </div>
-
-            <div class="navbar-center">
-                <div class="inline-block">
-                    <div class="text-xs uppercase tracking-widest text-base-content/60 mb-1">
-                        @if ($record->hasFlag('sponsor'))
-                            Sponsor
-                        @elseif($record->hasFlag('sustaining_member'))
-                            Sustaining Member
-                        @else
-                            Member
-                        @endif
-                        since {{ $record->created_at->format('Y') }}
-                    </div>
-                    <div class="w-16 h-0.5 bg-primary mx-auto"></div>
-                </div>
-            </div>
-
-            <div class="navbar-end">
-
-            </div>
-        </div>
-
-        <div class="flex flex-col lg:flex-row items-center gap-6">
-            {{-- Artist Photo --}}
-            <div class="relative">
-                <img src="{{ $record->avatar_url }}" alt="{{ $record->user->name }}"
-                    class="w-32 h-32 object-cover border-4 border-base-100"
-                    style="clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);">
-                @if ($record->visibility === 'private')
-                    <div class="absolute -top-2 -right-2">
-                        <div class="bg-error text-error-content px-2 py-1 text-xs font-bold flex items-center">
-                            <x-tabler-lock class="w-3 h-3 mr-1" />
-                            PRIVATE
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            {{-- Artist Details --}}
-            <div class="text-center lg:text-left flex-1">
-                <h1 class="text-4xl font-bold text-base-content mb-2 tracking-tight">
-                    {{ $record->user->name }}
-                </h1>
-                @if ($record->user->pronouns)
-                    <div class="text-lg text-base-content/70 mb-2">({{ $record->user->pronouns }})</div>
-                @endif
-
-                @if ($record->hometown)
-                    <div class="flex items-center justify-center lg:justify-start text-base-content/70 mb-4">
-                        <x-tabler-map-pin class="w-4 h-4 mr-1" />
-                        <span>{{ $record->hometown }}</span>
-                    </div>
-                @endif
-
-                {{-- Performance Status Badges --}}
-                @php $activeFlags = $record->getActiveFlagsWithLabels(); @endphp
-                @if ($activeFlags && count($activeFlags) > 0)
-                    <div class="flex flex-wrap gap-2 justify-center lg:justify-start">
-                        @foreach ($activeFlags as $flag => $label)
-                            @php
-                                $flagStyle = match ($flag) {
-                                    'open_to_collaboration' => 'badge-info',
-                                    'available_for_hire' => 'badge-success',
-                                    'looking_for_band' => 'badge-secondary',
-                                    'music_teacher' => 'badge-warning',
-                                    'sponsor' => 'badge-accent',
-                                    'sustaining_member' => 'badge-primary',
-                                    default => 'badge-neutral',
-                                };
-                            @endphp
-                            <span class="badge {{ $flagStyle }} badge-sm font-bold uppercase tracking-wide">
-                                {{ $label }}
-                            </span>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-        </div>
-
-
-    </div>
+    <x-profile-navigation :record="$record" type="member" :canEdit="auth()->user()?->can('update', $record)" />
+    <x-profile-header :record="$record" type="member" />
 
     {{-- Program Content - Two Column Layout like program booklet --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 bg-base-100">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 bg-base-100 border-x-2 border-base-300">
 
         {{-- Main Performance Details --}}
         <div class="lg:col-span-2 px-8 py-6 space-y-8">
@@ -163,7 +16,7 @@
                 <section>
                     <h2
                         class="text-lg font-bold text-base-content mb-4 uppercase tracking-wide border-b border-base-300 pb-2">
-                        Program Notes
+                        Artist Bio
                     </h2>
                     <div class="prose max-w-none text-base-content/80 leading-relaxed">
                         {!! $record->bio !!}
@@ -174,18 +27,13 @@
             {{-- Musical Repertoire --}}
             @if (count($record->skills) > 0 || count($record->genres) > 0 || count($record->influences) > 0)
                 <section>
-                    <h2
-                        class="text-lg font-bold text-base-content mb-6 uppercase tracking-wide border-b border-base-300 pb-2">
-                        Musical Repertoire
-                    </h2>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {{-- Instruments & Skills --}}
                         @if (count($record->skills) > 0)
                             <div>
                                 <h3 class="font-semibold text-base-content/90 mb-3 flex items-center">
                                     <x-tabler-tools class="w-4 h-4 mr-2" />
-                                    Instruments & Skills
+                                    Instruments / Skills
                                 </h3>
                                 <div class="space-y-1 text-sm text-base-content/70">
                                     @foreach ($record->skills as $skill)
@@ -207,7 +55,7 @@
                             <div>
                                 <h3 class="font-semibold text-base-content/90 mb-3 flex items-center">
                                     <x-tabler-music class="w-4 h-4 mr-2" />
-                                    Musical Styles
+                                    Genres
                                 </h3>
                                 <div class="flex flex-wrap gap-1">
                                     @foreach ($record->genres as $genre)
@@ -231,7 +79,7 @@
                         <div class="mt-6">
                             <h3 class="font-semibold text-base-content/90 mb-3 flex items-center">
                                 <x-tabler-star class="w-4 h-4 mr-2" />
-                                Musical Influences
+                                Influences
                             </h3>
                             <div class="flex flex-wrap gap-1">
                                 @foreach ($record->influences as $influence)
@@ -250,85 +98,24 @@
                 </section>
             @endif
 
-            {{-- Featured Recordings --}}
-            @if ($record->embeds && count($record->embeds) > 0)
-                <section>
-                    <h2
-                        class="text-lg font-bold text-base-content mb-6 uppercase tracking-wide border-b border-base-300 pb-2">
-                        Featured Recordings
-                    </h2>
-                    <div class="space-y-6">
-                        @foreach ($record->embeds as $embed)
-                            @php
-                                $embedUrl = $embed['url'] ?? $embed;
-                            @endphp
-                            <x-embed-display :url="$embedUrl" />
-                        @endforeach
-                    </div>
-                </section>
-            @elseif($showEditButton && auth()->check() && auth()->user()->can('update', $record))
-                <section>
-                    <h2
-                        class="text-lg font-bold text-base-content mb-6 uppercase tracking-wide border-b border-base-300 pb-2">
-                        Featured Recordings
-                    </h2>
-                    <div class="border-2 border-dashed border-base-300 p-8 text-center bg-base-200">
-                        <x-tabler-music class="w-12 h-12 text-base-content/40 mx-auto mb-3" />
-                        <h3 class="font-semibold text-base-content mb-2">Share Your Music</h3>
-                        <p class="text-base-content/70 text-sm mb-4">
-                            Add featured recordings to showcase your musical work
-                        </p>
-                        <a href="{{ route('filament.member.resources.directory.edit', ['record' => $record->id]) }}"
-                            class="btn btn-primary btn-sm uppercase tracking-wide">
-                            <x-tabler-plus class="w-4 h-4 mr-2" />
-                            Add Content
-                        </a>
-                    </div>
-                </section>
-            @endif
+            <x-profile-recordings
+                :embeds="$record->embeds"
+                :canEdit="$showEditButton && auth()->check() && auth()->user()->can('update', $record)"
+                :editRoute="route('filament.member.resources.directory.edit', ['record' => $record->id])"
+                type="member" />
         </div>
 
         {{-- Program Sidebar - Artist Info & Credits --}}
         <div class="bg-base-200 px-6 py-6 space-y-6 border-l border-base-300">
 
-            {{-- Contact Information --}}
-            @if ($record->contact && $record->contact->visibility !== 'private')
-                <div>
-                    <h3
-                        class="font-bold text-base-content mb-3 uppercase tracking-wide text-sm border-b border-base-300 pb-1">
-                        Artist Contact
-                    </h3>
-                    <div class="space-y-2 text-sm">
-                        @if ($record->contact->email)
-                            <a href="mailto:{{ $record->contact->email }}"
-                                class="flex items-center text-primary hover:text-primary-focus">
-                                <x-tabler-mail class="w-4 h-4 mr-2" />
-                                <span>{{ $record->contact->email }}</span>
-                            </a>
-                        @endif
-                        @if ($record->contact->phone)
-                            <a href="tel:{{ $record->contact->phone }}"
-                                class="flex items-center text-primary hover:text-primary-focus">
-                                <x-tabler-phone class="w-4 h-4 mr-2" />
-                                <span>{{ $record->contact->phone }}</span>
-                            </a>
-                        @endif
-                        @if ($record->contact->address)
-                            <div class="flex items-start text-base-content/70">
-                                <x-tabler-map-pin class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
-                                <span>{{ $record->contact->address }}</span>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endif
+            <x-profile-contact :profile="$record" />
 
             {{-- Ensemble Credits --}}
             @if ($record->user->bandProfiles && count($record->user->bandProfiles) > 0)
                 <div>
                     <h3
                         class="font-bold text-base-content mb-3 uppercase tracking-wide text-sm border-b border-base-300 pb-1">
-                        Ensemble Credits
+                        Bands
                     </h3>
                     <div class="space-y-2 text-sm">
                         @foreach ($record->user->bandProfiles as $band)
@@ -367,42 +154,9 @@
                 <div>
                     <h3
                         class="font-bold text-base-content mb-3 uppercase tracking-wide text-sm border-b border-base-300 pb-1">
-                        More Information
+                        Links
                     </h3>
-                    <div class="space-y-1">
-                        @foreach ($record->links as $link)
-                            @php
-                                $url = strtolower($link['url']);
-                                $linkIcon = match (true) {
-                                    str_contains($url, 'spotify') => 'tabler-brand-spotify',
-                                    str_contains($url, 'youtube') || str_contains($url, 'youtu.be')
-                                        => 'tabler-brand-youtube',
-                                    str_contains($url, 'instagram') => 'tabler-brand-instagram',
-                                    str_contains($url, 'facebook') => 'tabler-brand-facebook',
-                                    str_contains($url, 'twitter') || str_contains($url, 'x.com')
-                                        => 'tabler-brand-twitter',
-                                    str_contains($url, 'soundcloud') => 'tabler-brand-soundcloud',
-                                    str_contains($url, 'bandcamp') => 'tabler-music',
-                                    default => 'tabler-world',
-                                };
-                                $linkColor = match (true) {
-                                    str_contains($url, 'spotify') => 'text-success',
-                                    str_contains($url, 'youtube') || str_contains($url, 'youtu.be') => 'text-error',
-                                    str_contains($url, 'instagram') => 'text-secondary',
-                                    str_contains($url, 'facebook') => 'text-info',
-                                    str_contains($url, 'soundcloud') => 'text-warning',
-                                    str_contains($url, 'bandcamp') => 'text-info',
-                                    default => 'text-base-content/70',
-                                };
-                            @endphp
-                            <a href="{{ $link['url'] }}" target="_blank" rel="noopener noreferrer"
-                                class="flex items-center text-sm hover:bg-base-300 p-1 -mx-1 rounded transition-colors">
-                                <x-dynamic-component :component="$linkIcon" class="w-4 h-4 mr-2 {{ $linkColor }}" />
-                                <span class="text-base-content/80 flex-1">{{ $link['name'] }}</span>
-                                <x-tabler-external-link class="w-3 h-3 text-base-content/40" />
-                            </a>
-                        @endforeach
-                    </div>
+                    <x-social-links :links="$record->links" />
                 </div>
             @endif
         </div>

@@ -124,16 +124,20 @@ class BandProfileForm
                     ->columnSpan(1)
                     ->schema([
                             SpatieMediaLibraryFileUpload::make('avatar')
+                                ->label('Band Photo')
                                 ->disk('r2')
                                 ->image()
                                 ->imageEditor()
                                 ->imageCropAspectRatio('1:1')
-                                ->imageResizeTargetWidth('400')
-                                ->imageResizeTargetHeight('400')
+                                ->imageResizeTargetWidth(800)
+                                ->imageResizeTargetHeight(800)
                                 ->directory('band-avatars')
                                 ->collection('avatar')
                                 ->visibility('public')
-                                ->alignCenter(),
+                                ->alignCenter()
+                                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+                                ->maxSize(3072)
+                                ->imageResizeMode('cover'),
 
                         Select::make('visibility')
                             ->label('Profile Visibility')

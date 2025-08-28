@@ -271,12 +271,19 @@ class ProductionForm
     protected static function posterField(): SpatieMediaLibraryFileUpload
     {
         return SpatieMediaLibraryFileUpload::make('poster')
-            ->collection('posters')
+            ->label('Event Poster')
+            ->collection('poster')
             ->image()
-            ->visibility('public') // Important for R2
-            ->directory('posters') // Specify directory structure
+            ->visibility('public')
+            ->directory('posters')
             ->multiple(false)
             ->disk('r2')
-            ->maxSize(1024);
+            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+            ->maxSize(4096) // 4MB for posters
+            ->imageResizeMode('cover')
+            ->imageCropAspectRatio('8.5:11') // Standard poster ratio
+            ->imageResizeTargetWidth(850)
+            ->imageResizeTargetHeight(1100)
+            ->helperText('Upload a poster in 8.5:11 aspect ratio (letter size). Max 4MB.');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Data\ContactData;
 use App\Models\Scopes\OwnedBandsScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ use Spatie\ModelFlags\Models\Concerns\HasFlags;
 use Spatie\Tags\HasTags;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Image\Enums\CropPosition;
 
 /**
  * Represents a band profile in the application.
@@ -35,7 +37,7 @@ class BandProfile extends Model implements HasMedia
 
     protected $casts = [
         'links' => 'array',
-        'contact' => 'array',
+        'contact' => ContactData::class,
         'embeds' => 'array',
     ];
 
@@ -55,12 +57,14 @@ class BandProfile extends Model implements HasMedia
             ->withTimestamps();
     }
 
+    public function allMembers()
+    {
+        return $this->hasMany(\App\Models\BandProfileMember::class);
+    }
+
     public function activeMembers()
     {
-        return $this->belongsToMany(User::class, 'band_profile_members')
-            ->withPivot('role', 'position', 'name', 'status', 'invited_at')
-            ->wherePivot('status', 'active')
-            ->withTimestamps();
+        return $this->hasMany(BandProfileMember::class)->where('status', 'active');
     }
 
     public function pendingInvitations()
@@ -88,10 +92,7 @@ class BandProfile extends Model implements HasMedia
 
     public function getAvatarUrlAttribute()
     {
-        if ($this->hasMedia('avatar')) {
-            return $this->getFirstMediaUrl('avatar');
-        }
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=200';
+        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=400';
     }
 
 
@@ -99,25 +100,59 @@ class BandProfile extends Model implements HasMedia
     {
         $this->addMediaCollection('avatar')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
-            ->singleFile(); // This is key for single avatar uploads
+            ->singleFile()
+            ->onlyKeepLatest(1);
     }
 
     public function registerMediaConversions(?Media $media = null): void
     {
+        // Thumbnail for lists and small displays
         $this->addMediaConversion('thumb')
             ->width(150)
             ->height(150)
+            ->crop(150, 150, CropPosition::Center)
+            ->quality(90)
             ->sharpen(10)
+            ->performOnCollections('avatar');
+
+        // Medium size for band cards and directory
+        $this->addMediaConversion('medium')
+            ->width(400)
+            ->height(400)
+            ->crop(400, 400, CropPosition::Center)
+            ->quality(85)
+            ->performOnCollections('avatar');
+
+        // Large size for band profile pages
+        $this->addMediaConversion('large')
+            ->width(800)
+            ->height(800)
+            ->crop(800, 800, CropPosition::Center)
+            ->quality(80)
+            ->performOnCollections('avatar');
+
+        // Optimized original for high-res displays
+        $this->addMediaConversion('optimized')
+            ->width(1200)
+            ->height(1200)
+            ->crop(1200, 1200, CropPosition::Center)
+            ->quality(75)
             ->performOnCollections('avatar');
     }
 
     public function getAvatarThumbUrlAttribute()
     {
-        if ($this->hasMedia('avatar')) {
-            return $this->getFirstMediaUrl('avatar', 'thumb');
-        }
+        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=150';
+    }
 
-        return $this->avatar_url;
+    public function getAvatarLargeUrlAttribute()
+    {
+        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=800';
+    }
+
+    public function getAvatarOptimizedUrlAttribute()
+    {
+        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=1200';
     }
 
     /**

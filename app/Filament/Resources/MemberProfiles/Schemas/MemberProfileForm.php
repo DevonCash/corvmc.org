@@ -142,7 +142,13 @@ class MemberProfileForm
                             ->collection('avatar')
                             ->disk('r2')
                             ->alignCenter()
-                            ->avatar(),
+                            ->avatar()
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+                            ->maxSize(2048)
+                            ->imageResizeMode('cover')
+                            ->imageCropAspectRatio('1:1')
+                            ->imageResizeTargetWidth(600)
+                            ->imageResizeTargetHeight(600),
 
                         Select::make('visibility')
                             ->label('Profile Visibility')

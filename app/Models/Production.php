@@ -66,33 +66,64 @@ class Production extends Model implements Eventable, HasMedia
     {
         $this->addMediaCollection('poster')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
-            ->singleFile(); // This is key for single poster uploads
+            ->singleFile()
+            ->onlyKeepLatest(1)
+            ->useFallbackUrl('/images/default-poster.png');
     }
     public function registerMediaConversions(?Media $media = null): void
     {
+        // Thumbnail for lists and cards (8.5:11 aspect ratio)
         $this->addMediaConversion('thumb')
-            ->width(300)
-            ->height(200)
+            ->width(200)
+            ->height(258) // 8.5:11 ratio (200 * 1.294)
+            ->crop('crop-center')
+            ->quality(90)
             ->sharpen(10)
+            ->performOnCollections('poster');
+        
+        // Medium size for event listings (8.5:11 aspect ratio)
+        $this->addMediaConversion('medium')
+            ->width(400)
+            ->height(517) // 8.5:11 ratio (400 * 1.294)
+            ->crop('crop-center')
+            ->quality(85)
+            ->performOnCollections('poster');
+        
+        // Large size for event detail pages (8.5:11 aspect ratio)
+        $this->addMediaConversion('large')
+            ->width(600)
+            ->height(776) // 8.5:11 ratio (600 * 1.294)
+            ->crop('crop-center')
+            ->quality(80)
+            ->performOnCollections('poster');
+        
+        // Optimized original for high-res displays (8.5:11 aspect ratio)
+        $this->addMediaConversion('optimized')
+            ->width(850)
+            ->height(1100) // Exact 8.5:11 ratio
+            ->crop('crop-center')
+            ->quality(75)
             ->performOnCollections('poster');
     }
 
     public function getPosterUrlAttribute()
     {
-        if ($this->hasMedia('poster')) {
-            return $this->getFirstMediaUrl('poster');
-        }
-
-        return 'https://picsum.photos/200/258?random=' . $this->id;
+        return $this->getFirstMediaUrl('poster', 'medium') ?: 'https://picsum.photos/400/517?random=' . $this->id;
     }
 
     public function getPosterThumbUrlAttribute()
     {
-        if ($this->hasMedia('poster')) {
-            return $this->getFirstMediaUrl('poster', 'thumb');
-        }
+        return $this->getFirstMediaUrl('poster', 'thumb') ?: 'https://picsum.photos/200/258?random=' . $this->id;
+    }
 
-        return $this->poster_url;
+    public function getPosterLargeUrlAttribute()
+    {
+        return $this->getFirstMediaUrl('poster', 'large') ?: 'https://picsum.photos/600/776?random=' . $this->id;
+    }
+
+    public function getPosterOptimizedUrlAttribute()
+    {
+        return $this->getFirstMediaUrl('poster', 'optimized') ?: 'https://picsum.photos/850/1100?random=' . $this->id;
     }
 
     /**
