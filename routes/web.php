@@ -120,6 +120,10 @@ Route::get('/contact', function () {
     return view('public.contact');
 })->name('contact');
 
+Route::get('/privacy-policy', function () {
+    return view('public.privacy-policy');
+})->name('privacy-policy');
+
 Route::post('/contact', function () {
     $validated = request()->validate([
         'first_name' => ['required', 'string', 'max:255'],
@@ -146,10 +150,6 @@ Route::post('/contact', function () {
 Route::get('/invitation/accept/{token}', [\App\Http\Controllers\InvitationController::class, 'show'])
     ->name('invitation.accept')
     ->where('token', '.*'); // Allow any characters in token
-
-Route::post('/invitation/accept/{token}', [\App\Http\Controllers\InvitationController::class, 'store'])
-    ->name('invitation.accept.store')
-    ->where('token', '.*');
 
 // Email template preview (development only)
 if (app()->environment('local', 'development')) {

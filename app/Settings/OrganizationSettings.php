@@ -8,9 +8,9 @@ class OrganizationSettings extends Settings
 {
     public string $name;
     public string $ein;
-    public string $description;
-    public string $address;
-    public string $phone;
+    public ?string $description;
+    public ?string $address;
+    public ?string $phone;
     public string $email;
     
     public static function group(): string

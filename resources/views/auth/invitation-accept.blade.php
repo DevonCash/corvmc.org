@@ -32,88 +32,13 @@
                 <div class="card-body">
                     <h2 class="card-title text-xl mb-4">Complete Your Profile</h2>
                     
-                    <form method="POST" action="{{ route('invitation.accept.store', $token) }}" class="space-y-4">
-                        @csrf
-                        
-                        <!-- Name -->
-                        <div class="form-control">
-                            <label class="label" for="name">
-                                <span class="label-text">Full Name</span>
-                            </label>
-                            <input 
-                                type="text" 
-                                id="name" 
-                                name="name" 
-                                value="{{ old('name') }}" 
-                                class="input input-bordered @error('name') input-error @enderror" 
-                                required 
-                                autofocus 
-                                placeholder="Enter your full name"
-                            >
-                            @error('name')
-                                <label class="label">
-                                    <span class="label-text-alt text-error">{{ $message }}</span>
-                                </label>
-                            @enderror
-                        </div>
-
-                        <!-- Password -->
-                        <div class="form-control">
-                            <label class="label" for="password">
-                                <span class="label-text">Password</span>
-                            </label>
-                            <input 
-                                type="password" 
-                                id="password" 
-                                name="password" 
-                                class="input input-bordered @error('password') input-error @enderror" 
-                                required
-                                placeholder="Create a secure password"
-                            >
-                            @error('password')
-                                <label class="label">
-                                    <span class="label-text-alt text-error">{{ $message }}</span>
-                                </label>
-                            @enderror
-                        </div>
-
-                        <!-- Confirm Password -->
-                        <div class="form-control">
-                            <label class="label" for="password_confirmation">
-                                <span class="label-text">Confirm Password</span>
-                            </label>
-                            <input 
-                                type="password" 
-                                id="password_confirmation" 
-                                name="password_confirmation" 
-                                class="input input-bordered" 
-                                required
-                                placeholder="Confirm your password"
-                            >
-                        </div>
-
-                        <!-- Token Error -->
-                        @error('token')
-                            <div class="alert alert-error">
-                                <x-unicon name="tabler:alert-circle" class="w-5 h-5" />
-                                <span>{{ $message }}</span>
-                            </div>
-                        @enderror
-
-                        <!-- Submit -->
-                        <div class="form-control mt-6">
-                            <button type="submit" class="btn btn-primary">
-                                <x-unicon name="tabler:user-check" class="w-5 h-5" />
-                                Complete Registration
-                            </button>
-                        </div>
-                    </form>
+                    @livewire('invitation-accept-form', ['token' => $token])
                 </div>
             </div>
 
             <!-- Additional Info -->
             <div class="text-center mt-8 text-sm opacity-70">
-                <p>By completing registration, you agree to be part of the Corvallis Music Collective community.</p>
+                <p>By completing registration, you agree to be part of the Corvallis Music Collective community and accept our <a href="{{ route('privacy-policy') }}" class="link link-primary">Privacy Policy</a>.</p>
                 <p class="mt-2">Need help? <a href="{{ route('contact') }}?topic=membership" class="link link-primary">Contact us</a></p>
             </div>
         </div>

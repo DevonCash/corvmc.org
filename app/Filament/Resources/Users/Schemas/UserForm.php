@@ -46,9 +46,20 @@ class UserForm
                                             ->label('Email address')
                                             ->email()
                                             ->required()
-                                            ->suffixIcon(fn($record) => $record->email_verified_at ? 'tabler-circle-check' : 'tabler-circle-x')
-                                            ->suffixIconColor(fn($record) => $record->email_verified_at ? 'success' : 'danger')
-                                            ->hint(fn($record) => $record->email_verified_at ? 'Verified' : 'Unverified'),
+                                            ->suffixAction(
+                                                fn($record) => $record?->email_verified_at ? 
+                                                    null : 
+                                                    Action::make('send_verification')
+                                                        ->icon('heroicon-o-envelope')
+                                                        ->color('primary')
+                                                        ->tooltip('Send verification email')
+                                                        ->action(function($record) {
+                                                            $record->sendEmailVerificationNotification();
+                                                        })
+                                            )
+                                            ->suffixIcon(fn($record) => $record?->email_verified_at ? 'tabler-circle-check' : null)
+                                            ->suffixIconColor('success')
+                                            ->hint(fn($record) => $record?->email_verified_at ? 'Verified' : 'Unverified'),
                                         Select::make('roles')
                                             ->label('Roles')
                                             ->multiple()
@@ -80,7 +91,7 @@ class UserForm
                                 MemberProfileForm::configure(Section::make('')->relationship('profile'))
                             ]),
                         Tab::make('Staff Profile')
-                            ->visible(fn() => User::me()?->hasRole('admin') || User::me()?->can('update users'))
+                            ->visible(fn($record) => User::me()?->can('manage staff profiles') || (User::me()->is($record) && $record?->staffProfile))
                             ->schema([
                                 Section::make('')->schema([
                                     Text::make('No staff profile exists for this user.')
@@ -104,7 +115,7 @@ class UserForm
                                             }
                                         })
                                 ])
-                                    ->visible(fn($record) => !$record?->staffProfile),
+                                    ->visible(fn($record) => !$record?->staffProfile && User::me()?->can('manage staff profiles')),
                                 StaffProfileForm::configure(Section::make('')
                                     ->schema([
                                         \Filament\Forms\Components\Toggle::make('is_active')

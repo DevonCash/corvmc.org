@@ -112,8 +112,33 @@ class ManageOrganizationSettings extends Page implements HasForms
                                 Forms\Components\TextInput::make('url')
                                     ->label('URL')
                                     ->required()
-                                    ->url()
-                                    ->maxLength(255),
+                                    ->maxLength(255)
+                                    ->rules([
+                                        function () {
+                                            return function (string $attribute, $value, \Closure $fail) {
+                                                if (empty($value)) {
+                                                    return;
+                                                }
+                                                
+                                                // Accept relative URLs (starting with /)
+                                                if (str_starts_with($value, '/')) {
+                                                    return;
+                                                }
+                                                
+                                                // Accept fragment URLs (starting with #)
+                                                if (str_starts_with($value, '#')) {
+                                                    return;
+                                                }
+                                                
+                                                // Accept absolute URLs
+                                                if (filter_var($value, FILTER_VALIDATE_URL)) {
+                                                    return;
+                                                }
+                                                
+                                                $fail('The URL must be a valid absolute URL, relative path starting with /, or fragment starting with #.');
+                                            };
+                                        },
+                                    ]),
                             ])
                             ->columns(2)
                             ->table([
@@ -147,8 +172,33 @@ class ManageOrganizationSettings extends Page implements HasForms
                                 Forms\Components\TextInput::make('url')
                                     ->label('URL')
                                     ->required()
-                                    ->url()
-                                    ->maxLength(255),
+                                    ->maxLength(255)
+                                    ->rules([
+                                        function () {
+                                            return function (string $attribute, $value, \Closure $fail) {
+                                                if (empty($value)) {
+                                                    return;
+                                                }
+                                                
+                                                // Accept relative URLs (starting with /)
+                                                if (str_starts_with($value, '/')) {
+                                                    return;
+                                                }
+                                                
+                                                // Accept fragment URLs (starting with #)
+                                                if (str_starts_with($value, '#')) {
+                                                    return;
+                                                }
+                                                
+                                                // Accept absolute URLs
+                                                if (filter_var($value, FILTER_VALIDATE_URL)) {
+                                                    return;
+                                                }
+                                                
+                                                $fail('The URL must be a valid absolute URL, relative path starting with /, or fragment starting with #.');
+                                            };
+                                        },
+                                    ]),
                             ])
                             ->columns(2)
                             ->reorderable()

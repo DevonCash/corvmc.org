@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MemberProfiles\Pages;
 
+use App\Filament\Actions\InviteUserAction;
 use App\Filament\Resources\MemberProfiles\MemberProfileResource;
 use App\Models\MemberProfile;
 use App\Models\User;
@@ -47,6 +48,7 @@ class ListMemberProfiles extends Page
     protected function getHeaderActions(): array
     {
         return [
+            InviteUserAction::make(),
             EditAction::make()
                 ->label('Edit My Profile')
                 ->record(fn(): MemberProfile => auth()->user()->profile),

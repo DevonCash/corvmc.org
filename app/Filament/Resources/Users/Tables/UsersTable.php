@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Filament\Actions\InviteUserAction;
 use App\Services\UserInvitationService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -135,6 +136,8 @@ class UsersTable
                                 ->send();
                         }
                     }),
+            ])
+            ->headerActions([
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

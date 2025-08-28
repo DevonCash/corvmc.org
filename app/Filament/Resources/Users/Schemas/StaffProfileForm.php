@@ -59,7 +59,14 @@ class StaffProfileForm
                     ->label('Sort Order')
                     ->numeric()
                     ->default(0)
-                    ->helperText('Lower numbers appear first'),
+                    ->helperText('Lower numbers appear first')
+                    ->visible(fn() => auth()->user()?->can('manage staff profiles')),
+
+                Toggle::make('is_active')
+                    ->label('Show on About Page')
+                    ->default(true)
+                    ->helperText('Toggle whether this profile appears on the public about page')
+                    ->visible(fn() => auth()->user()?->can('manage staff profiles')),
                 SpatieMediaLibraryFileUpload::make('profile_image')
                     ->label('Profile Picture')
                     ->collection('profile_image')

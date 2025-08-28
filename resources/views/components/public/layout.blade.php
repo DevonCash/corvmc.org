@@ -6,14 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Corvallis Music Collective' }}</title>
+    @php
+        $organizationSettings = app(\App\Settings\OrganizationSettings::class);
+        $metaDescription = $organizationSettings->description ?: 'Corvallis Music Collective (CMC) supports local musicians with affordable practice space, events, and community connections. Join Oregon\'s premier music collective.';
+    @endphp
+
+    <title>{{ $title ?? $organizationSettings->name }}</title>
 
     <!-- Meta Tags -->
-    <meta name="description"
-        content="Corvallis Music Collective (CMC) supports local musicians with affordable practice space, events, and community connections. Join Oregon's premier music collective.">
+    <meta name="description" content="{{ $metaDescription }}">
     <meta name="keywords"
         content="Corvallis music, Oregon musicians, practice space, live music, music community, band rehearsal, music events">
-    <meta name="author" content="Corvallis Music Collective">
+    <meta name="author" content="{{ $organizationSettings->name }}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">

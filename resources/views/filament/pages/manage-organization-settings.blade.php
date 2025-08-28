@@ -1,8 +1,8 @@
 <x-filament-panels::page>
     <form wire:submit="save">
         {{ $this->form }}
-        
-        <div class="fi-form-actions">
+
+        <div class="fi-form-actions mt-4">
             @foreach($this->getFormActions() as $action)
                 {{ $action }}
             @endforeach

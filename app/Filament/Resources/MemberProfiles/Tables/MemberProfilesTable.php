@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MemberProfiles\Tables;
 
+use App\Filament\Actions\InviteUserAction;
 use App\Models\User;
 use App\Settings\MemberDirectorySettings;
 use Filament\Actions\DeleteAction;
@@ -233,6 +234,9 @@ class MemberProfilesTable
                     ->iconButton()
                     ->requiresConfirmation()
                     ->successNotificationTitle('Member profile deleted successfully'),
+            ])
+            ->headerActions([
+                InviteUserAction::make(),
             ])
             ->paginated([10, 25, 50]);
     }

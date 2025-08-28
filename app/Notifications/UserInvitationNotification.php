@@ -34,7 +34,7 @@ class UserInvitationNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $acceptUrl = URL::signedRoute('invitation.accept', ['token' => $this->invitationToken]);
+        $acceptUrl = route('invitation.accept', ['token' => $this->invitationToken]);
         
         $rolesText = empty($this->roles) 
             ? 'as a member' 
