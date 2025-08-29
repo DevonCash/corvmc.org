@@ -81,4 +81,9 @@ class UserPolicy
     {
         return null;
     }
+
+    public function canImpersonate(User $user): bool
+    {
+        return $user->can('impersonate users');
+    }
 }

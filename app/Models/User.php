@@ -17,12 +17,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 use App\Notifications\PasswordResetNotification;
 use App\Notifications\EmailVerificationNotification;
-
+use Lab404\Impersonate\Models\Impersonate;
 
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, HasRoles, LogsActivity, Notifiable;
+    use HasFactory, HasRoles, LogsActivity, Notifiable, Impersonate;
 
     /**
      * The attributes that are mass assignable.

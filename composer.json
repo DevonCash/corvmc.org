@@ -26,6 +26,7 @@
         "spatie/laravel-settings": "^3.4",
         "spatie/laravel-tags": "^4.10",
         "spatie/period": "^2.4",
+        "stechstudio/filament-impersonate": "^4.0",
         "symfony/http-client": "^7.3",
         "symfony/postmark-mailer": "^7.3",
         "unicon-rocks/unicon-laravel": "^0.4.2"

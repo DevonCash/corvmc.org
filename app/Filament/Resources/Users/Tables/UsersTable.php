@@ -16,6 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
+use STS\FilamentImpersonate\Actions\Impersonate;
 
 class UsersTable
 {
@@ -101,24 +102,25 @@ class UsersTable
                             $query->where('show_on_about_page', true);
                         } elseif ($data['value'] === 'board') {
                             $query->where('staff_type', 'board')
-                                  ->where('show_on_about_page', true);
+                                ->where('show_on_about_page', true);
                         } elseif ($data['value'] === 'staff_only') {
                             $query->where('staff_type', 'staff')
-                                  ->where('show_on_about_page', true);
+                                ->where('show_on_about_page', true);
                         }
                     }),
             ])
             ->recordActions([
+
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('resend_invitation')
                     ->label('Resend Invitation')
                     ->icon('heroicon-o-paper-airplane')
                     ->color('info')
-                    ->visible(fn ($record) => $record->email_verified_at === null && $record->name === 'Invited User')
+                    ->visible(fn($record) => $record->email_verified_at === null && $record->name === 'Invited User')
                     ->requiresConfirmation()
                     ->modalHeading('Resend Invitation')
-                    ->modalDescription(fn ($record) => "Resend invitation email to {$record->email}?")
+                    ->modalDescription(fn($record) => "Resend invitation email to {$record->email}?")
                     ->action(function ($record) {
                         $invitationService = app(UserInvitationService::class);
 
@@ -136,9 +138,12 @@ class UsersTable
                                 ->send();
                         }
                     }),
+                Impersonate::make()
+                    ->hiddenLabel()
+                    ->redirectTo(route('filament.member.pages.dashboard')),
+
             ])
-            ->headerActions([
-            ])
+            ->headerActions([])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
