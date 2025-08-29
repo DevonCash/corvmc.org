@@ -3,7 +3,6 @@
 @can('view contact', $profile)
     @php $contact = $profile->contact; @endphp
     @if ($contact)
-        {
         <div>
             <h3 class="font-bold text-base-content mb-3 uppercase tracking-wide text-sm border-b border-base-300 pb-1">
                 Contact
