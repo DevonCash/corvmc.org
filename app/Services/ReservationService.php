@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Production;
 use App\Models\Reservation;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Notifications\ReservationConfirmedNotification;
 use App\Notifications\ReservationCreatedNotification;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
+use Stripe\Checkout\Session as StripeSession;
+use Stripe\Exception\ApiErrorException;
 
 class ReservationService
 {
@@ -697,5 +700,133 @@ class ReservationService
         }
         
         return $availableSlots;
+    }
+
+    /**
+     * Create a Stripe checkout session for a reservation payment.
+     */
+    public function createCheckoutSession(Reservation $reservation): StripeSession
+    {
+        $user = $reservation->user;
+        
+        // Ensure user has a Stripe customer ID
+        if (!$user->hasStripeId()) {
+            $user->createAsStripeCustomer();
+        }
+
+        $lineItems = [
+            [
+                'price_data' => [
+                    'currency' => config('cashier.currency', 'usd'),
+                    'product_data' => [
+                        'name' => 'Practice Space Reservation',
+                        'description' => sprintf(
+                            'Practice space reservation for %s (%s hours)',
+                            $reservation->time_range,
+                            number_format($reservation->duration, 1)
+                        ),
+                    ],
+                    'unit_amount' => intval($reservation->cost * 100), // Convert to cents
+                ],
+                'quantity' => 1,
+            ],
+        ];
+
+        // Add free hours information if applicable
+        if ($reservation->free_hours_used > 0) {
+            $lineItems[] = [
+                'price_data' => [
+                    'currency' => config('cashier.currency', 'usd'),
+                    'product_data' => [
+                        'name' => 'Free Hours Applied',
+                        'description' => sprintf(
+                            'Sustaining member benefit: %.1f free hours',
+                            $reservation->free_hours_used
+                        ),
+                    ],
+                    'unit_amount' => 0, // Free
+                ],
+                'quantity' => 1,
+            ];
+        }
+
+        $sessionData = [
+            'payment_method_types' => ['card'],
+            'line_items' => $lineItems,
+            'mode' => 'payment',
+            'success_url' => route('reservations.payment.success', ['reservation' => $reservation->id]) . '?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => route('reservations.payment.cancel', ['reservation' => $reservation->id]),
+            'customer' => $user->stripe_id,
+            'metadata' => [
+                'reservation_id' => $reservation->id,
+                'user_id' => $user->id,
+                'type' => 'practice_space_reservation',
+            ],
+        ];
+
+        return StripeSession::create($sessionData);
+    }
+
+    /**
+     * Handle successful payment and update reservation.
+     */
+    public function handleSuccessfulPayment(Reservation $reservation, string $sessionId): Transaction
+    {
+        try {
+            $session = StripeSession::retrieve($sessionId);
+            
+            // Create transaction record
+            $transaction = Transaction::create([
+                'transaction_id' => $session->payment_intent,
+                'email' => $reservation->user->email,
+                'amount' => $reservation->cost,
+                'currency' => $session->currency,
+                'type' => 'payment',
+                'response' => [
+                    'stripe_session_id' => $sessionId,
+                    'stripe_payment_intent' => $session->payment_intent,
+                    'stripe_payment_status' => $session->payment_status,
+                    'stripe_customer_id' => $session->customer,
+                    'metadata' => $session->metadata->toArray(),
+                ],
+                'transactionable_type' => Reservation::class,
+                'transactionable_id' => $reservation->id,
+            ]);
+
+            // Update reservation payment status
+            $reservation->update([
+                'payment_status' => 'paid',
+                'payment_method' => 'stripe',
+                'paid_at' => now(),
+                'payment_notes' => "Paid via Stripe (Session: {$sessionId})",
+                'status' => 'confirmed', // Automatically confirm paid reservations
+            ]);
+
+            return $transaction;
+            
+        } catch (ApiErrorException $e) {
+            throw new \Exception('Failed to process Stripe payment: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Handle failed or cancelled payment.
+     */
+    public function handleFailedPayment(Reservation $reservation, ?string $sessionId = null): void
+    {
+        $notes = $sessionId ? "Payment failed/cancelled (Session: {$sessionId})" : "Payment cancelled by user";
+        
+        $reservation->update([
+            'payment_status' => 'unpaid',
+            'payment_notes' => $notes,
+        ]);
+    }
+
+    /**
+     * Get checkout session details.
+     */
+    public function getCheckoutSession(string $sessionId): StripeSession
+    {
+        return StripeSession::retrieve($sessionId);
     }
 }

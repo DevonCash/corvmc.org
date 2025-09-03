@@ -36,10 +36,27 @@ return [
         ],
     ],
 
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook' => [
+            'secret' => env('STRIPE_WEBHOOK_SECRET'),
+            'tolerance' => env('STRIPE_WEBHOOK_TOLERANCE', 300),
+        ],
+    ],
+
     'zeffy' => [
         'webhook_secret' => env('ZEFFY_WEBHOOK_SECRET'),
         // Note: Zeffy doesn't have a direct API - only Zapier integration
         'organization_name' => env('ZEFFY_ORGANIZATION_NAME', 'Corvallis Music Collective'),
+    ],
+
+    'github' => [
+        'token' => env('GITHUB_TOKEN'),
+        'repository' => [
+            'owner' => env('GITHUB_REPO_OWNER'),
+            'name' => env('GITHUB_REPO_NAME'),
+        ],
     ],
 
 ];

@@ -25,6 +25,8 @@ class Transaction extends Model
         'currency',
         'type',
         'response',
+        'transactionable_type',
+        'transactionable_id',
     ];
 
     protected $casts = [
@@ -34,5 +36,13 @@ class Transaction extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'email', 'email');
+    }
+
+    /**
+     * Get the owning transactionable model (Reservation, etc.).
+     */
+    public function transactionable()
+    {
+        return $this->morphTo();
     }
 }

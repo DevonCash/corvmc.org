@@ -18,11 +18,12 @@ use Spatie\Permission\Traits\HasRoles;
 use App\Notifications\PasswordResetNotification;
 use App\Notifications\EmailVerificationNotification;
 use Lab404\Impersonate\Models\Impersonate;
+use Laravel\Cashier\Billable;
 
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, HasRoles, LogsActivity, Notifiable, Impersonate;
+    use HasFactory, HasRoles, LogsActivity, Notifiable, Impersonate, Billable;
 
     /**
      * The attributes that are mass assignable.

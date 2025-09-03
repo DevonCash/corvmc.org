@@ -151,6 +151,20 @@ Route::get('/invitation/accept/{token}', [\App\Http\Controllers\InvitationContro
     ->name('invitation.accept')
     ->where('token', '.*'); // Allow any characters in token
 
+// Stripe webhook (no authentication needed - Stripe validates with signature)
+Route::post('/stripe/webhook', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook'])
+    ->name('stripe.webhook');
+
+// Reservation payment routes (requires authentication)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/reservations/{reservation}/checkout', [\App\Http\Controllers\ReservationPaymentController::class, 'checkout'])
+        ->name('reservations.payment.checkout');
+    Route::get('/reservations/{reservation}/payment/success', [\App\Http\Controllers\ReservationPaymentController::class, 'success'])
+        ->name('reservations.payment.success');
+    Route::get('/reservations/{reservation}/payment/cancel', [\App\Http\Controllers\ReservationPaymentController::class, 'cancel'])
+        ->name('reservations.payment.cancel');
+});
+
 // Email template preview (development only)
 if (app()->environment('local', 'development')) {
     Route::get('/email-preview/password-reset', function () {

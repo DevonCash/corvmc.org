@@ -58,6 +58,23 @@ class Reservation extends Model implements Eventable
     }
 
     /**
+     * Get the reservation's transactions.
+     */
+    public function transactions()
+    {
+        return $this->morphMany(Transaction::class, 'transactionable');
+    }
+
+    /**
+     * Get the payment transaction for this reservation.
+     */
+    public function paymentTransaction()
+    {
+        return $this->morphOne(Transaction::class, 'transactionable')
+            ->where('type', 'payment');
+    }
+
+    /**
      * Get the reservation as a Period object.
      */
     public function getPeriod(): ?Period

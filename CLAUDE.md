@@ -34,7 +34,7 @@ NOTE: Filament v4 beta makes some changes from v3
 ### Additional Libraries
 
 - **guava/calendar** - Calendar component integration
-- **unicon-rocks/unicon-laravel** - Frontent icon system
+- **unicon-rocks/unicon-laravel** - Frontend icon system
 
 ### Frontend Integration
 
@@ -95,7 +95,8 @@ NOTE: Filament v4 beta makes some changes from v3
 
 ### Third-Party Integrations
 
-- **Zeffy** - Payment processing via Zapier webhooks for donations and memberships
+- **Stripe** - Payment processing via Laravel Cashier for practice space reservations
+- **Zeffy** - Payment processing via Zapier webhooks for donations and memberships  
 - **Filament Plugins** - spatie/laravel-medialibrary-plugin, spatie/laravel-tags-plugin
 
 ### Application Structure
@@ -106,7 +107,7 @@ Core models include:
 
 - `User` - Authentication and base user data
 - `MemberProfile` - Extended user profiles with bio, links, skills (tags), and media
-- `BandProfile` - Band information and social media links
+- `Band` - Band information and social media links
 - `Production` - Events and shows management
 - `Reservation` - Practice space booking system
 - `Transaction` - Payment and financial tracking
@@ -125,12 +126,94 @@ Resources are organized in dedicated directories under `app/Filament/Resources/`
 - Integrated authentication with profile management
 - Resources auto-discovery from `app/Filament/Resources`
 
+#### Service Layer Architecture
+
+The application uses dedicated service classes for complex business logic:
+
+- `UserSubscriptionService` - Handles membership status and sustaining member logic
+- `UserInvitationService` - Manages user invitation workflow and token handling
+- `ReservationService` - Practice space booking logic with conflict detection
+- `ProductionService` - Event management and production workflows
+- `BandService` - Band profile management and member relationships
+- `MemberProfileService` - Member directory and profile management
+
+#### Custom Testing Commands Pattern
+
+When developing complex features, create dedicated test commands to validate functionality:
+
+##### Process for Creating Test Commands:
+
+1. **Create the command**: `php artisan make:command TestFeatureName`
+2. **Structure the command**:
+   - Use clear section headers with emojis for visual separation
+   - Include `--dry-run` or similar flags to show what would happen without executing
+   - Provide `--clean` flags to reset test data
+   - Use descriptive output with ✓ for success, ✗ for failure, → for dry-run actions
+3. **Test comprehensively**:
+   - Test the happy path (normal flow)
+   - Test error conditions (expired tokens, invalid data)
+   - Test edge cases (duplicate actions, cleanup)
+   - Verify data integrity before and after operations
+4. **Include cleanup**: Always clean up test data to avoid pollution
+5. **Add to CLAUDE.md**: Document the command and its flags for future reference
+
+##### Example Implementation:
+```php
+protected $signature = 'test:feature {--dry-run : Show what would happen} {--clean : Clean test data}';
+
+public function handle() {
+    $this->info('🧪 Testing Feature Name');
+    $this->line('========================');
+    
+    if ($this->option('dry-run')) {
+        $this->warn('DRY RUN mode - no changes will be made');
+    }
+    
+    // Test sections with clear visual separation
+    $this->info('📧 1. Testing core functionality...');
+    // ... test logic
+    
+    $this->line('   ✓ Success message');
+    $this->line('   → Would execute action (dry-run)');
+    
+    $this->info('✅ All tests passed!');
+}
+```
+
 ### Database Design
 
 - Uses descriptive migration timestamps (2025_07_30_*)
 - Implements soft deletes and proper foreign key relationships
 - Media library integration for file attachments
 - Permission system tables for role-based access
+
+### Key Business Logic
+
+#### Membership System
+
+- Users can be "sustaining members" via role assignment or $10+ monthly donations
+- Sustaining members get 4 free practice space hours per month
+- Monthly hour tracking with rollover capabilities
+- Transaction-based membership detection via `UserSubscriptionService`
+
+#### Practice Space Reservations
+
+- $15/hour base rate for all users
+- 4 free hours monthly for sustaining members
+- Operating hours: 9 AM - 10 PM
+- Duration limits: 1-8 hours per reservation
+- Sophisticated conflict detection with productions and other reservations
+- Support for recurring reservations (sustaining members only)
+- **Stripe Integration**: Online payments via Laravel Cashier with checkout sessions
+- Polymorphic relationship: reservations linked to transactions via `transactionable`
+
+#### Event Management (Productions)
+
+- Production lifecycle: pre-production → published → completed/cancelled
+- Band lineup management with set ordering and duration
+- Manager-based permissions and production ownership
+- Integration with practice space conflict detection
+- Public event listing with search and filtering
 
 ## Development Guidelines
 
@@ -155,47 +238,16 @@ Resources are organized in dedicated directories under `app/Filament/Resources/`
 - Use Pest testing framework syntax
 - Environment properly isolated for testing
 
-### Custom Testing Commands Pattern
-
-When developing complex features, create dedicated test commands to validate functionality:
-
-#### Process for Creating Test Commands:
-
-1. **Create the command**: `php artisan make:command TestFeatureName`
-2. **Structure the command**:
-   - Use clear section headers with emojis for visual separation
-   - Include `--dry-run` or similar flags to show what would happen without executing
-   - Provide `--clean` flags to reset test data
-   - Use descriptive output with ✓ for success, ✗ for failure, → for dry-run actions
-3. **Test comprehensively**:
-   - Test the happy path (normal flow)
-   - Test error conditions (expired tokens, invalid data)
-   - Test edge cases (duplicate actions, cleanup)
-   - Verify data integrity before and after operations
-4. **Include cleanup**: Always clean up test data to avoid pollution
-5. **Add to CLAUDE.md**: Document the command and its flags for future reference
-
-#### Example Implementation:
-```php
-protected $signature = 'test:feature {--dry-run : Show what would happen} {--clean : Clean test data}';
-
-public function handle() {
-    $this->info('🧪 Testing Feature Name');
-    $this->line('========================');
-    
-    if ($this->option('dry-run')) {
-        $this->warn('DRY RUN mode - no changes will be made');
-    }
-    
-    // Test sections with clear visual separation
-    $this->info('📧 1. Testing core functionality...');
-    // ... test logic
-    
-    $this->line('   ✓ Success message');
-    $this->line('   → Would execute action (dry-run)');
-    
-    $this->info('✅ All tests passed!');
-}
-```
-
 This pattern provides reliable, repeatable testing for complex business logic and integrations.
+
+## TODO: Next Session Tasks
+
+### Stripe Transaction Fee Coverage
+- **Task**: Add opt-in upcharge to cover Stripe transaction costs
+- **Location**: `ReservationService::createCheckoutSession()` method
+- **Implementation**: 
+  - Calculate Stripe fees (2.9% + $0.30 for cards)
+  - Add optional checkbox in checkout for user to cover processing fees
+  - Update line items to include fee coverage if selected
+  - Ensure fee calculation is accurate for reservation amounts
+- **User Experience**: Allow users to voluntarily cover transaction costs to support the organization

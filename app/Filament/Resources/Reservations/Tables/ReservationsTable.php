@@ -30,6 +30,8 @@ class ReservationsTable
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Member')
+                    ->toggleable()
+                    ->toggleable(isToggledHiddenByDefault: !User::me()->can('manage practice space'))
                     ->searchable()
                     ->sortable(),
 
@@ -151,6 +153,18 @@ class ReservationsTable
             ])
 
             ->recordActions([
+                Action::make('pay_stripe')
+                    ->label('Pay Online')
+                    ->icon('tabler-credit-card')
+                    ->color('success')
+                    ->visible(fn(Reservation $record) =>
+                        $record->cost > 0 &&
+                        $record->isUnpaid() &&
+                        ($record->user_id === User::me()->id || User::me()->can('manage reservations'))
+                    )
+                    ->url(fn(Reservation $record) => route('reservations.payment.checkout', $record))
+                    ->openUrlInNewTab(false),
+
                 ActionGroup::make([
                     Action::make('mark_paid')
                         ->label('Mark Paid')
@@ -210,6 +224,7 @@ class ReservationsTable
                                 ->success()
                                 ->send();
                         }),
+
                     Action::make('cancel')
                         ->icon('tabler-calendar-x')
                         ->color('danger')
