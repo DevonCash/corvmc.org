@@ -36,23 +36,23 @@ Route::get('/about', function () {
         ->board()
         ->ordered()
         ->get();
-        
+
     $staffMembers = \App\Models\StaffProfile::active()
         ->staff()
         ->ordered()
         ->get();
-        
+
     // For each staff member, try to find a matching user with a public profile
     $boardMembers->each(function ($member) {
-        $user = \App\Models\User::where('email', $member->email)->first();
+        $user = User::where('email', $member->email)->first();
         $member->user = $user;
     });
-    
+
     $staffMembers->each(function ($member) {
-        $user = \App\Models\User::where('email', $member->email)->first();
+        $user = User::where('email', $member->email)->first();
         $member->user = $user;
     });
-        
+
     return view('public.about', compact('boardMembers', 'staffMembers'));
 })->name('about');
 
@@ -136,13 +136,13 @@ Route::post('/contact', function () {
 
     // Log the contact submission
     logger('Contact form submission', $validated);
-    
+
     // Send email notification to organization contact email
     $organizationEmail = app(\App\Settings\OrganizationSettings::class)->email;
     $staffEmail = $organizationEmail ?? config('mail.from.address');
     \Illuminate\Support\Facades\Notification::route('mail', $staffEmail)
         ->notify(new \App\Notifications\ContactFormSubmissionNotification($validated));
-    
+
     return back()->with('success', 'Thank you for your message! We\'ll get back to you soon.');
 })->name('contact.store');
 
@@ -172,9 +172,9 @@ if (app()->environment('local', 'development')) {
             'name' => 'John Doe',
             'email' => 'john@example.com'
         ]);
-        
+
         $notification = new \App\Notifications\PasswordResetNotification('sample-token-12345');
-        
+
         return $notification->toMail($user)->render();
     })->name('email.preview.password-reset');
 }

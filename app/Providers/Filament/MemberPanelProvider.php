@@ -94,6 +94,14 @@ class MemberPanelProvider extends PanelProvider
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,
                 fn (): string => view('livewire.feedback-button-wrapper')->render()
             )
+            ->renderHook(
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn (): string => view('filament.components.activity-toggle-button')->render()
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => ActivitySidebar::render()
+            )
             ->viteTheme('resources/css/app.css');
     }
 }

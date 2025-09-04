@@ -23,9 +23,13 @@ class ActivitySidebar
     protected static function getContextualActivities()
     {
         $currentUser = User::me();
+        if (!$currentUser) {
+            return collect();
+        }
+        
         $context = self::getCurrentContext();
 
-        $query = Activity::with(['subject', 'causer'])
+        $query = Activity::with(['subject', 'causer.profile'])
             ->latest()
             ->limit(100); // Get more to account for filtering
 
@@ -40,14 +44,15 @@ class ActivitySidebar
 
             case 'member':
                 if ($context['record_id']) {
-                    $query->where(function ($q) use ($context) {
+                    // Get the member profile and user ID outside the query to avoid N+1
+                    $memberProfile = \App\Models\MemberProfile::find($context['record_id']);
+                    
+                    $query->where(function ($q) use ($context, $memberProfile) {
                         // Direct member profile activities
                         $q->where('subject_type', 'App\\Models\\MemberProfile')
                           ->where('subject_id', $context['record_id']);
                         
                         // User activities related to this member profile
-                        // First get the user ID for this member profile
-                        $memberProfile = \App\Models\MemberProfile::find($context['record_id']);
                         if ($memberProfile && $memberProfile->user_id) {
                             $q->orWhere(function ($userQuery) use ($memberProfile) {
                                 $userQuery->where('subject_type', 'App\\Models\\User')
@@ -100,6 +105,15 @@ class ActivitySidebar
     protected static function getCurrentContext(): array
     {
         $route = Route::current();
+        if (!$route) {
+            return [
+                'type' => 'dashboard',
+                'resource' => null,
+                'record_id' => null,
+                'page' => 'dashboard',
+            ];
+        }
+        
         $routeName = $route->getName();
         $parameters = $route->parameters();
 
@@ -269,7 +283,7 @@ class ActivitySidebar
                 'App\\Models\\MemberProfile' => route('filament.member.resources.directory.view', ['record' => $activity->subject_id]),
                 'App\\Models\\Production' => route('filament.member.resources.productions.view', ['record' => $activity->subject_id]),
                 'App\\Models\\Reservation' => route('filament.member.resources.reservations.view', ['record' => $activity->subject_id]),
-                'App\\Models\\User' => $activity->subject && $activity->subject->profile ? 
+                'App\\Models\\User' => $activity->subject?->profile?->id ? 
                     route('filament.member.resources.directory.view', ['record' => $activity->subject->profile->id]) : null,
                 default => null,
             };
