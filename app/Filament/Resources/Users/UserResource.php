@@ -26,6 +26,7 @@ class UserResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = 'tabler-user-cog';
     protected static string|UnitEnum|null $navigationGroup = 'Admin';
 
+
     public static function shouldRegisterNavigation(): bool
     {
         return User::me()?->can('view users') ?? false;

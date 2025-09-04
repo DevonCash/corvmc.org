@@ -26,7 +26,7 @@ class ListMemberProfiles extends Page
 
     protected string $view = 'filament.resources.member-profiles.pages.list-member-profiles';
 
-    protected static ?string $title = 'Member Directory';
+    protected static ?string $title = 'Members';
 
     public $filters = [
         'skills' => [],

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Data\ContactData;
 use App\Models\Scopes\MemberVisibilityScope;
 use App\Settings\MemberDirectorySettings;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
@@ -23,6 +24,11 @@ use Spatie\Image\Enums\CropPosition;
 class MemberProfile extends Model implements HasMedia
 {
     use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity;
+
+    public static function getGlobalSearchResultTitle(Model $record): string | Htmlable
+    {
+        return $record->user->name;
+    }
 
     protected static function booted(): void
     {
@@ -50,6 +56,11 @@ class MemberProfile extends Model implements HasMedia
         $url = $this->getFirstMediaUrl('avatar');
 
         return $url ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=200';
+    }
+
+    public function getNameAttribute(): string
+    {
+        return $this->user->name;
     }
 
     public function getAvatarUrlAttribute(): string

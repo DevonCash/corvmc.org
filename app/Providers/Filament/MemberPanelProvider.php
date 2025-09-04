@@ -57,6 +57,7 @@ class MemberPanelProvider extends PanelProvider
                 ],
             ])
             ->brandLogo(asset('images/cmc-compact-logo.svg'))
+            ->darkModeBrandLogo(asset('images/cmc-compact-logo-dark.svg'))
             ->brandLogoHeight('3rem')
             ->icons(config('filament-icons', []))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
