@@ -8,6 +8,7 @@ use App\Notifications\DonationReceivedNotification;
 use App\Services\StripePaymentService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class UserSubscriptionService
 {
@@ -117,13 +118,15 @@ class UserSubscriptionService
      */
     public function getSustainingMembers(): Collection
     {
-        return User::whereHas('roles', function ($query) {
-            $query->where('name', 'sustaining member');
-        })->orWhereHas('transactions', function ($query) {
-            $query->where('type', 'recurring')
-                ->where('amount', '>', self::SUSTAINING_MEMBER_THRESHOLD)
-                ->where('created_at', '>=', now()->subMonth());
-        })->with(['profile', 'transactions'])->get();
+        return Cache::remember('sustaining_members', 1800, function() {
+            return User::whereHas('roles', function ($query) {
+                $query->where('name', 'sustaining member');
+            })->orWhereHas('transactions', function ($query) {
+                $query->where('type', 'recurring')
+                    ->where('amount', '>', self::SUSTAINING_MEMBER_THRESHOLD)
+                    ->where('created_at', '>=', now()->subMonth());
+            })->with(['profile', 'transactions'])->get();
+        });
     }
 
     /**
@@ -131,28 +134,30 @@ class UserSubscriptionService
      */
     public function getSubscriptionStats(): array
     {
-        $totalUsers = User::count();
-        $sustainingMembers = $this->getSustainingMembers()->count();
+        return Cache::remember('subscription_stats', 1800, function() {
+            $totalUsers = User::count();
+            $sustainingMembers = $this->getSustainingMembers()->count();
 
-        $recentTransactions = Transaction::where('type', 'recurring')
-            ->where('created_at', '>=', now()->subMonth())
-            ->get();
+            $recentTransactions = Transaction::where('type', 'recurring')
+                ->where('created_at', '>=', now()->subMonth())
+                ->get();
 
-        $totalMonthlyRevenue = $recentTransactions->sum('amount');
-        $averageSubscription = $recentTransactions->avg('amount') ?? 0;
+            $totalMonthlyRevenue = $recentTransactions->sum('amount');
+            $averageSubscription = $recentTransactions->avg('amount') ?? 0;
 
-        // Calculate total allocated hours based on actual subscription amounts
-        $totalAllocatedHours = $this->getSustainingMembers()
-            ->sum(fn($user) => $this->getUserMonthlyFreeHours($user));
+            // Calculate total allocated hours based on actual subscription amounts
+            $totalAllocatedHours = $this->getSustainingMembers()
+                ->sum(fn($user) => $this->getUserMonthlyFreeHours($user));
 
-        return [
-            'total_users' => $totalUsers,
-            'sustaining_members' => $sustainingMembers,
-            'sustaining_percentage' => $totalUsers > 0 ? ($sustainingMembers / $totalUsers) * 100 : 0,
-            'monthly_revenue' => $totalMonthlyRevenue,
-            'average_subscription' => $averageSubscription,
-            'total_free_hours_allocated' => $totalAllocatedHours,
-        ];
+            return [
+                'total_users' => $totalUsers,
+                'sustaining_members' => $sustainingMembers,
+                'sustaining_percentage' => $totalUsers > 0 ? ($sustainingMembers / $totalUsers) * 100 : 0,
+                'monthly_revenue' => $totalMonthlyRevenue,
+                'average_subscription' => $averageSubscription,
+                'total_free_hours_allocated' => $totalAllocatedHours,
+            ];
+        });
     }
 
     /**

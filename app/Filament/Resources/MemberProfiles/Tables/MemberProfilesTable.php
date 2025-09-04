@@ -22,6 +22,7 @@ use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Cache;
 
 class MemberProfilesTable
 {
@@ -149,9 +150,11 @@ class MemberProfilesTable
                                     ->multiple()
                                     ->searchable()
                                     ->options(function () {
-                                        return \Spatie\Tags\Tag::where('type', 'skill')
-                                            ->pluck('name', 'name')
-                                            ->toArray();
+                                        return Cache::tags(['member_directory', 'tags'])->remember('member_directory.skills', 3600, function() {
+                                            return \Spatie\Tags\Tag::where('type', 'skill')
+                                                ->pluck('name', 'name')
+                                                ->toArray();
+                                        });
                                     }),
 
                                 Select::make('genres')
@@ -159,9 +162,11 @@ class MemberProfilesTable
                                     ->multiple()
                                     ->searchable()
                                     ->options(function () {
-                                        return \Spatie\Tags\Tag::where('type', 'genre')
-                                            ->pluck('name', 'name')
-                                            ->toArray();
+                                        return Cache::tags(['member_directory', 'tags'])->remember('member_directory.genres', 3600, function() {
+                                            return \Spatie\Tags\Tag::where('type', 'genre')
+                                                ->pluck('name', 'name')
+                                                ->toArray();
+                                        });
                                     }),
 
                                 Select::make('influences')
@@ -169,9 +174,11 @@ class MemberProfilesTable
                                     ->multiple()
                                     ->searchable()
                                     ->options(function () {
-                                        return \Spatie\Tags\Tag::where('type', 'influence')
-                                            ->pluck('name', 'name')
-                                            ->toArray();
+                                        return Cache::tags(['member_directory', 'tags'])->remember('member_directory.influences', 3600, function() {
+                                            return \Spatie\Tags\Tag::where('type', 'influence')
+                                                ->pluck('name', 'name')
+                                                ->toArray();
+                                        });
                                     }),
                             ]),
 

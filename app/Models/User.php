@@ -19,6 +19,7 @@ use App\Notifications\PasswordResetNotification;
 use App\Notifications\EmailVerificationNotification;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Cashier\Billable;
+use Illuminate\Support\Facades\Cache;
 
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
@@ -146,12 +147,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function isSustainingMember(): bool
     {
-        return $this->hasRole('sustaining member') ||
-            $this->transactions()
-            ->where('type', 'recurring')
-            ->where('amount', '>', 10)
-            ->where('created_at', '>=', now()->subMonth())
-            ->exists();
+        return Cache::remember("user.{$this->id}.is_sustaining", 3600, function() {
+            return $this->hasRole('sustaining member') ||
+                $this->transactions()
+                ->where('type', 'recurring')
+                ->where('amount', '>', 10)
+                ->where('created_at', '>=', now()->subMonth())
+                ->exists();
+        });
     }
 
     /**
@@ -159,10 +162,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function getUsedFreeHoursThisMonth(): float
     {
-        return $this->reservations()
-            ->whereMonth('reserved_at', now()->month)
-            ->whereYear('reserved_at', now()->year)
-            ->sum('free_hours_used') ?? 0;
+        return Cache::remember("user.{$this->id}.free_hours." . now()->format('Y-m'), 1800, function() {
+            return $this->reservations()
+                ->whereMonth('reserved_at', now()->month)
+                ->whereYear('reserved_at', now()->year)
+                ->sum('free_hours_used') ?? 0;
+        });
     }
 
     /**

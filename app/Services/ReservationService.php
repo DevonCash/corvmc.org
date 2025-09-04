@@ -12,6 +12,7 @@ use App\Notifications\ReservationCreatedNotification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
 use Stripe\Checkout\Session as StripeSession;
@@ -93,25 +94,35 @@ class ReservationService
     public function getConflictingReservations(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): Collection
     {
         $requestedPeriod = $this->createPeriod($startTime, $endTime);
+        $cacheKey = "reservations.conflicts." . $startTime->format('Y-m-d');
 
-        // Get reservations that might overlap (broader query)
-        $query = Reservation::with('user')
-            ->where('status', '!=', 'cancelled')
-            ->where('reserved_until', '>', $startTime) // End time is after our start
-            ->where('reserved_at', '<', $endTime);     // Start time is before our end
+        // Cache all day's reservations, then filter for specific conflicts
+        $dayReservations = Cache::remember($cacheKey, 1800, function() use ($startTime) {
+            $dayStart = $startTime->copy()->startOfDay();
+            $dayEnd = $startTime->copy()->endOfDay();
+            
+            return Reservation::with('user')
+                ->where('status', '!=', 'cancelled')
+                ->where('reserved_until', '>', $dayStart)
+                ->where('reserved_at', '<', $dayEnd)
+                ->get();
+        });
 
-        if ($excludeReservationId) {
-            $query->where('id', '!=', $excludeReservationId);
-        }
-
-        $reservations = $query->get();
+        // Filter cached results for the specific time range and exclusion
+        $filteredReservations = $dayReservations->filter(function (Reservation $reservation) use ($startTime, $endTime, $excludeReservationId) {
+            if ($excludeReservationId && $reservation->id === $excludeReservationId) {
+                return false;
+            }
+            
+            return $reservation->reserved_until > $startTime && $reservation->reserved_at < $endTime;
+        });
 
         // If we can't create a valid period, return all potentially overlapping reservations
         if (! $requestedPeriod) {
-            return $reservations;
+            return $filteredReservations;
         }
 
-        return $reservations->filter(function (Reservation $reservation) use ($requestedPeriod) {
+        return $filteredReservations->filter(function (Reservation $reservation) use ($requestedPeriod) {
             return $reservation->overlapsWith($requestedPeriod);
         });
     }
@@ -122,24 +133,33 @@ class ReservationService
     public function getConflictingProductions(Carbon $startTime, Carbon $endTime): Collection
     {
         $requestedPeriod = $this->createPeriod($startTime, $endTime);
+        $cacheKey = "productions.conflicts." . $startTime->format('Y-m-d');
 
-        // Get productions that might overlap and use practice space
-        $query = Production::query()
-            ->where('end_time', '>', $startTime) // End time is after our start
-            ->where('start_time', '<', $endTime); // Start time is before our end
+        // Cache all day's productions, then filter for specific conflicts
+        $dayProductions = Cache::remember($cacheKey, 3600, function() use ($startTime) {
+            $dayStart = $startTime->copy()->startOfDay();
+            $dayEnd = $startTime->copy()->endOfDay();
+            
+            return Production::query()
+                ->where('end_time', '>', $dayStart)
+                ->where('start_time', '<', $dayEnd)
+                ->get()
+                ->filter(function (Production $production) {
+                    return $production->usesPracticeSpace();
+                });
+        });
 
-        $productions = $query->get()
-            ->filter(function (Production $production) {
-                // Only consider productions that use the practice space
-                return $production->usesPracticeSpace();
-            });
+        // Filter cached results for the specific time range
+        $filteredProductions = $dayProductions->filter(function (Production $production) use ($startTime, $endTime) {
+            return $production->end_time > $startTime && $production->start_time < $endTime;
+        });
 
         // If we can't create a valid period, return all potentially overlapping productions
         if (! $requestedPeriod) {
-            return $productions;
+            return $filteredProductions;
         }
 
-        return $productions->filter(function (Production $production) use ($requestedPeriod) {
+        return $filteredProductions->filter(function (Production $production) use ($requestedPeriod) {
             return $production->overlapsWith($requestedPeriod);
         });
     }
