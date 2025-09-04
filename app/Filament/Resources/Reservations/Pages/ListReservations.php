@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Reservations\Pages;
 
 use App\Filament\Resources\Reservations\ReservationResource;
 use App\Filament\Resources\Reservations\Widgets\ReservationStatsOverview;
-use App\Filament\Widgets\TodayReservationsWidget;
 use App\Models\User;
 use Filament\Actions\CreateAction;
 use App\Filament\Resources\Reservations\Schemas\ReservationForm;
@@ -27,7 +26,6 @@ class ListReservations extends ListRecords
     {
         return [
             ReservationStatsOverview::class,
-            ...(User::me()->can('manage reservations') ? [TodayReservationsWidget::class] : [])
         ];
     }
 

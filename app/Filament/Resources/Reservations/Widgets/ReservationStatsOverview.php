@@ -10,18 +10,9 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class ReservationStatsOverview extends BaseWidget
 {
-    protected array|int|null $columns = 2;
-    protected array|string|int $columnSpan = 1;
+    protected array|int|null $columns = 4;
+    protected array|string|int $columnSpan = 'full';
 
-    protected function getColumns(): array|int|null
-    {
-        return User::me()->can('manage reservations') ? 2 : 4;
-    }
-
-    public function getColumnSpan(): array|int|string
-    {
-        return User::me()->can('manage reservations') ? 1 : 2;
-    }
 
     protected function getStats(): array
     {
