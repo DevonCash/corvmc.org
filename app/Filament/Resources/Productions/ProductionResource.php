@@ -22,6 +22,8 @@ class ProductionResource extends Resource
     protected static string|\BackedEnum|null $navigationIcon = 'tabler-calendar-event';
     protected static ?string $recordTitleAttribute = 'title';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Operations';
+
     public static function form(Schema $schema): Schema
     {
         return ProductionForm::configure($schema);

@@ -6,9 +6,9 @@ use App\Models\Production;
 use App\Models\Reservation;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Notifications\ReservationCancelledNotification;
 use App\Notifications\ReservationConfirmedNotification;
 use App\Notifications\ReservationCreatedNotification;
-use App\Notifications\ReservationCancelledNotification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -302,7 +302,7 @@ class ReservationService
         }
 
         $reservation->update(['status' => 'confirmed']);
-        
+
         // Send confirmation notification
         $reservation->user->notify(new ReservationConfirmedNotification($reservation));
 
@@ -521,7 +521,7 @@ class ReservationService
      */
     public function needsConfirmationReminder(Carbon $reservationDate, bool $isRecurring = false): bool
     {
-        return !$isRecurring && $reservationDate->isAfter(Carbon::now()->addWeek());
+        return ! $isRecurring && $reservationDate->isAfter(Carbon::now()->addWeek());
     }
 
     /**
@@ -538,18 +538,18 @@ class ReservationService
     public function getAllTimeSlots(): array
     {
         $slots = [];
-        
+
         // Practice space hours: 9 AM to 10 PM
         $start = Carbon::createFromTime(9, 0);
         $end = Carbon::createFromTime(22, 0);
-        
+
         $current = $start->copy();
         while ($current->lessThanOrEqualTo($end)) {
             $timeString = $current->format('H:i');
             $slots[$timeString] = $current->format('g:i A');
             $current->addMinutes(15);
         }
-        
+
         return $slots;
     }
 
@@ -560,24 +560,24 @@ class ReservationService
     {
         $slots = [];
         $start = Carbon::createFromFormat('H:i', $startTime);
-        
+
         // Minimum 1 hour, maximum 8 hours
         $earliestEnd = $start->copy()->addHour();
         $latestEnd = $start->copy()->addHours(self::MAX_RESERVATION_DURATION);
-        
+
         // Don't go past 10 PM
         $businessEnd = Carbon::createFromTime(22, 0);
         if ($latestEnd->greaterThan($businessEnd)) {
             $latestEnd = $businessEnd;
         }
-        
+
         $current = $earliestEnd->copy();
         while ($current->lessThanOrEqualTo($latestEnd)) {
             $timeString = $current->format('H:i');
             $slots[$timeString] = $current->format('g:i A');
             $current->addMinutes(15);
         }
-        
+
         return $slots;
     }
 
@@ -588,31 +588,31 @@ class ReservationService
     {
         $slots = [];
         $start = $date->copy()->setTimeFromTimeString($startTime);
-        
+
         // Minimum 1 hour, maximum 8 hours
         $earliestEnd = $start->copy()->addHour();
         $latestEnd = $start->copy()->addHours(self::MAX_RESERVATION_DURATION);
-        
+
         // Don't go past 10 PM
         $businessEnd = $date->copy()->setTime(22, 0);
         if ($latestEnd->greaterThan($businessEnd)) {
             $latestEnd = $businessEnd;
         }
-        
+
         $current = $earliestEnd->copy();
         while ($current->lessThanOrEqualTo($latestEnd)) {
             $timeString = $current->format('H:i');
-            
+
             // Check if this end time would cause conflicts
             $hasConflicts = $this->hasAnyConflicts($start, $current);
-            
-            if (!$hasConflicts) {
+
+            if (! $hasConflicts) {
                 $slots[$timeString] = $current->format('g:i A');
             }
-            
+
             $current->addMinutes(15);
         }
-        
+
         return $slots;
     }
 
@@ -622,22 +622,22 @@ class ReservationService
     public function validateTimeSlot(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): array
     {
         $requestedPeriod = $this->createPeriod($startTime, $endTime);
-        
-        if (!$requestedPeriod) {
+
+        if (! $requestedPeriod) {
             return [
                 'valid' => false,
-                'errors' => ['Invalid time period provided']
+                'errors' => ['Invalid time period provided'],
             ];
         }
 
         // Check business hours
         $businessStart = $startTime->copy()->setTime(9, 0);
         $businessEnd = $startTime->copy()->setTime(22, 0);
-        
+
         if ($startTime->lessThan($businessStart) || $endTime->greaterThan($businessEnd)) {
             return [
                 'valid' => false,
-                'errors' => ['Reservation must be within business hours (9 AM - 10 PM)']
+                'errors' => ['Reservation must be within business hours (9 AM - 10 PM)'],
             ];
         }
 
@@ -646,33 +646,33 @@ class ReservationService
         if ($duration < self::MIN_RESERVATION_DURATION) {
             return [
                 'valid' => false,
-                'errors' => ['Minimum reservation duration is ' . self::MIN_RESERVATION_DURATION . ' hour']
+                'errors' => ['Minimum reservation duration is '.self::MIN_RESERVATION_DURATION.' hour'],
             ];
         }
-        
+
         if ($duration > self::MAX_RESERVATION_DURATION) {
             return [
                 'valid' => false,
-                'errors' => ['Maximum reservation duration is ' . self::MAX_RESERVATION_DURATION . ' hours']
+                'errors' => ['Maximum reservation duration is '.self::MAX_RESERVATION_DURATION.' hours'],
             ];
         }
 
         // Check for conflicts using existing methods
         $conflicts = $this->getAllConflicts($startTime, $endTime, $excludeReservationId);
         $errors = [];
-        
+
         if ($conflicts['reservations']->isNotEmpty()) {
-            $errors[] = 'Conflicts with ' . $conflicts['reservations']->count() . ' existing reservation(s)';
+            $errors[] = 'Conflicts with '.$conflicts['reservations']->count().' existing reservation(s)';
         }
-        
+
         if ($conflicts['productions']->isNotEmpty()) {
-            $errors[] = 'Conflicts with ' . $conflicts['productions']->count() . ' production(s)';
+            $errors[] = 'Conflicts with '.$conflicts['productions']->count().' production(s)';
         }
 
         return [
             'valid' => empty($errors),
             'errors' => $errors,
-            'conflicts' => $conflicts
+            'conflicts' => $conflicts,
         ];
     }
 
@@ -683,22 +683,22 @@ class ReservationService
     {
         $allSlots = $this->getAllTimeSlots();
         $availableSlots = [];
-        
+
         foreach ($allSlots as $timeString => $label) {
             $testStart = $date->copy()->setTimeFromTimeString($timeString);
             $testEnd = $testStart->copy()->addHour(); // Test with 1 hour duration
-            
+
             // Only check for conflicts and past times, not duration limits
             // since users might want shorter or longer reservations
             $hasConflicts = $this->hasAnyConflicts($testStart, $testEnd);
             $isPast = $testStart->isPast();
-            
+
             // Only include slots that don't have conflicts and are in the future
-            if (!$hasConflicts && !$isPast) {
+            if (! $hasConflicts && ! $isPast) {
                 $availableSlots[$timeString] = $label;
             }
         }
-        
+
         return $availableSlots;
     }
 
@@ -708,9 +708,9 @@ class ReservationService
     public function createCheckoutSession(Reservation $reservation): StripeSession
     {
         $user = $reservation->user;
-        
+
         // Ensure user has a Stripe customer ID
-        if (!$user->hasStripeId()) {
+        if (! $user->hasStripeId()) {
             $user->createAsStripeCustomer();
         }
 
@@ -726,7 +726,7 @@ class ReservationService
                             number_format($reservation->duration, 1)
                         ),
                     ],
-                    'unit_amount' => intval($reservation->cost * 100), // Convert to cents
+                    'unit_amount' => app(StripePaymentService::class)->dollarsToStripeAmount($reservation->cost),
                 ],
                 'quantity' => 1,
             ],
@@ -754,7 +754,7 @@ class ReservationService
             'payment_method_types' => ['card'],
             'line_items' => $lineItems,
             'mode' => 'payment',
-            'success_url' => route('reservations.payment.success', ['reservation' => $reservation->id]) . '?session_id={CHECKOUT_SESSION_ID}',
+            'success_url' => route('reservations.payment.success', ['reservation' => $reservation->id]).'?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => route('reservations.payment.cancel', ['reservation' => $reservation->id]),
             'customer' => $user->stripe_id,
             'metadata' => [
@@ -774,7 +774,7 @@ class ReservationService
     {
         try {
             $session = StripeSession::retrieve($sessionId);
-            
+
             // Create transaction record
             $transaction = Transaction::create([
                 'transaction_id' => $session->payment_intent,
@@ -803,9 +803,9 @@ class ReservationService
             ]);
 
             return $transaction;
-            
+
         } catch (ApiErrorException $e) {
-            throw new \Exception('Failed to process Stripe payment: ' . $e->getMessage());
+            throw new \Exception('Failed to process Stripe payment: '.$e->getMessage());
         }
     }
 
@@ -814,8 +814,8 @@ class ReservationService
      */
     public function handleFailedPayment(Reservation $reservation, ?string $sessionId = null): void
     {
-        $notes = $sessionId ? "Payment failed/cancelled (Session: {$sessionId})" : "Payment cancelled by user";
-        
+        $notes = $sessionId ? "Payment failed/cancelled (Session: {$sessionId})" : 'Payment cancelled by user';
+
         $reservation->update([
             'payment_status' => 'unpaid',
             'payment_notes' => $notes,

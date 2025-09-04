@@ -34,6 +34,7 @@ class MemberPanelProvider extends PanelProvider
             ->id('member')
             ->path('member')
             ->profile()
+            ->userMenu(false)
             ->login()
             ->registration()
             ->passwordReset()
@@ -73,9 +74,6 @@ class MemberPanelProvider extends PanelProvider
                 TodayReservationsWidget::class,
             ])
 
-            ->userMenuItems([
-                'profile' => fn(Action $action) => $action->url(route('filament.member.resources.users.edit', ['record' => auth()->user()->id])),
-            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -91,7 +89,7 @@ class MemberPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->renderHook(
-                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
                 fn (): string => view('livewire.feedback-button-wrapper')->render()
             )
             ->renderHook(
@@ -101,6 +99,10 @@ class MemberPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn (): string => ActivitySidebar::render()
+            )
+            ->renderHook(
+                PanelsRenderHook::SIDEBAR_FOOTER,
+                fn (): string => view('filament.components.sidebar-footer')->render()
             )
             ->viteTheme('resources/css/app.css');
     }

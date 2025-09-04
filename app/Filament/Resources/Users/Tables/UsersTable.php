@@ -30,18 +30,16 @@ class UsersTable
 
                 TextColumn::make('email')
                     ->label('Email address')
+                    ->icon(fn($record) => $record?->email_verified_at ? 'tabler-circle-check' : null)
+                    ->iconColor('success')
+                    ->iconPosition('after')
                     ->searchable()
                     ->sortable(),
 
-                TagsColumn::make('roles.name')
+                TextColumn::make('roles.name')
+                    ->badge()
                     ->label('Roles')
                     ->separator(','),
-
-                TextColumn::make('email_verified_at')
-                    ->label('Verified')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(),
 
                 TextColumn::make('created_at')
                     ->dateTime()

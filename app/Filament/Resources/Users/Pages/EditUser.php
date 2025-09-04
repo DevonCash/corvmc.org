@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Password;
 use Filament\Notifications\Notification;
@@ -14,9 +15,30 @@ class EditUser extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [
+        $actions = [
             DeleteAction::make(),
         ];
+
+        // Add logout action if user is editing their own profile
+        if ($this->getRecord()->id === auth()->id()) {
+            $actions[] = Action::make('logout')
+                ->label('Logout')
+                ->icon('heroicon-m-arrow-left-on-rectangle')
+                ->color('danger')
+                ->outlined()
+                ->requiresConfirmation()
+                ->modalHeading('Logout')
+                ->modalDescription('Are you sure you want to logout?')
+                ->modalSubmitActionLabel('Logout')
+                ->action(function () {
+                    auth()->logout();
+                    request()->session()->invalidate();
+                    request()->session()->regenerateToken();
+                    return redirect()->route('filament.member.auth.login');
+                });
+        }
+
+        return $actions;
     }
 
     public function sendPasswordReset(): void

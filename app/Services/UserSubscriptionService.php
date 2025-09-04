@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Notifications\DonationReceivedNotification;
+use App\Services\StripePaymentService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -13,6 +14,38 @@ class UserSubscriptionService
     const SUSTAINING_MEMBER_THRESHOLD = 10.00;
 
     const FREE_HOURS_PER_MONTH = 4;
+    const HOURS_PER_DOLLAR_AMOUNT = 1; // Number of hours granted
+    const DOLLAR_AMOUNT_FOR_HOURS = 5; // Per this dollar amount
+
+    public function __construct(
+        private StripePaymentService $stripeService
+    ) {}
+
+    /**
+     * Calculate free hours based on contribution amount.
+     */
+    public function calculateFreeHours(float $contributionAmount): int
+    {
+        return intval(floor($contributionAmount / self::DOLLAR_AMOUNT_FOR_HOURS) * self::HOURS_PER_DOLLAR_AMOUNT);
+    }
+
+    /**
+     * Get the user's monthly free hours based on their subscription amount.
+     */
+    public function getUserMonthlyFreeHours(User $user): int
+    {
+        if (!$this->isSustainingMember($user)) {
+            return 0;
+        }
+
+        $displayInfo = $this->getSubscriptionDisplayInfo($user);
+        if ($displayInfo['has_subscription']) {
+            return $this->calculateFreeHours($displayInfo['amount']);
+        }
+
+        // Fallback to legacy constant for role-based members without subscriptions
+        return self::FREE_HOURS_PER_MONTH;
+    }
 
     /**
      * Check if a user qualifies as a sustaining member.
@@ -42,7 +75,7 @@ class UserSubscriptionService
 
         return [
             'is_sustaining_member' => $isSustaining,
-            'free_hours_per_month' => $isSustaining ? self::FREE_HOURS_PER_MONTH : 0,
+            'free_hours_per_month' => $this->getUserMonthlyFreeHours($user),
             'current_month_used_hours' => $user->getUsedFreeHoursThisMonth(),
             'remaining_free_hours' => $user->getRemainingFreeHours(),
             'last_transaction' => $recentTransaction,
@@ -108,13 +141,17 @@ class UserSubscriptionService
         $totalMonthlyRevenue = $recentTransactions->sum('amount');
         $averageSubscription = $recentTransactions->avg('amount') ?? 0;
 
+        // Calculate total allocated hours based on actual subscription amounts
+        $totalAllocatedHours = $this->getSustainingMembers()
+            ->sum(fn($user) => $this->getUserMonthlyFreeHours($user));
+
         return [
             'total_users' => $totalUsers,
             'sustaining_members' => $sustainingMembers,
             'sustaining_percentage' => $totalUsers > 0 ? ($sustainingMembers / $totalUsers) * 100 : 0,
             'monthly_revenue' => $totalMonthlyRevenue,
             'average_subscription' => $averageSubscription,
-            'total_free_hours_allocated' => $sustainingMembers * self::FREE_HOURS_PER_MONTH,
+            'total_free_hours_allocated' => $totalAllocatedHours,
         ];
     }
 
@@ -151,6 +188,8 @@ class UserSubscriptionService
         $totalHours = $reservations->sum('hours_used');
         $totalPaid = $reservations->sum('cost');
 
+        $allocatedFreeHours = $this->getUserMonthlyFreeHours($user);
+        
         return [
             'month' => $month->format('Y-m'),
             'total_reservations' => $reservations->count(),
@@ -158,8 +197,8 @@ class UserSubscriptionService
             'free_hours_used' => $totalFreeHours,
             'paid_hours' => $totalHours - $totalFreeHours,
             'total_cost' => $totalPaid,
-            'allocated_free_hours' => $this->isSustainingMember($user) ? self::FREE_HOURS_PER_MONTH : 0,
-            'unused_free_hours' => max(0, self::FREE_HOURS_PER_MONTH - $totalFreeHours),
+            'allocated_free_hours' => $allocatedFreeHours,
+            'unused_free_hours' => max(0, $allocatedFreeHours - $totalFreeHours),
         ];
     }
 
@@ -236,5 +275,229 @@ class UserSubscriptionService
             'amount' => $transaction->amount,
             'total_contributions' => $user->transactions()->sum('amount'),
         ]);
+    }
+
+    /**
+     * Create a Stripe subscription with sliding scale pricing.
+     */
+    public function createSubscription(User $user, float $baseAmount, bool $coverFees = false): array
+    {
+        try {
+            // Ensure user has Stripe customer ID
+            if (!$user->hasStripeId()) {
+                $user->createAsStripeCustomer();
+            }
+
+            $breakdown = $this->stripeService->getFeeBreakdown($baseAmount, $coverFees);
+            $totalAmount = $breakdown['total_amount'];
+
+            // Create checkout session
+            $checkout = $user->checkout([
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'usd',
+                        'unit_amount' => $this->stripeService->dollarsToStripeAmount($totalAmount),
+                        'recurring' => ['interval' => 'month'],
+                        'product_data' => [
+                            'name' => 'Sliding Scale Membership',
+                            'description' => $breakdown['description'],
+                        ],
+                    ],
+                    'quantity' => 1,
+                ]],
+                'success_url' => route('filament.member.auth.profile') . '?membership=success',
+                'cancel_url' => route('filament.member.auth.profile') . '?membership=cancelled',
+                'subscription_data' => [
+                    'metadata' => [
+                        'base_amount' => $breakdown['base_amount'],
+                        'fee_amount' => $breakdown['fee_amount'],
+                        'covers_fees' => $coverFees ? 'true' : 'false',
+                        'net_received' => $this->stripeService->calculateNetAmount($totalAmount),
+                    ],
+                ],
+            ]);
+
+            return [
+                'success' => true,
+                'checkout_url' => $checkout->url,
+                'breakdown' => $breakdown,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Update an existing Stripe subscription amount.
+     */
+    public function updateSubscriptionAmount(User $user, float $baseAmount, bool $coverFees = false): array
+    {
+        try {
+            $subscription = $user->subscription('default');
+            
+            if (!$subscription || !$subscription->active()) {
+                return [
+                    'success' => false,
+                    'error' => 'No active subscription found',
+                ];
+            }
+
+            $breakdown = $this->stripeService->getFeeBreakdown($baseAmount, $coverFees);
+            $totalAmount = $breakdown['total_amount'];
+
+            // Update the subscription with new pricing
+            $subscription->swap([
+                'price_data' => [
+                    'currency' => 'usd',
+                    'unit_amount' => $this->stripeService->dollarsToStripeAmount($totalAmount),
+                    'recurring' => ['interval' => 'month'],
+                    'product_data' => [
+                        'name' => 'Sliding Scale Membership',
+                        'description' => $breakdown['description'],
+                    ],
+                ],
+            ]);
+
+            return [
+                'success' => true,
+                'breakdown' => $breakdown,
+                'message' => 'Membership amount updated successfully. Changes will take effect with your next billing cycle.',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Get subscription display information for a user.
+     */
+    public function getSubscriptionDisplayInfo(User $user): array
+    {
+        $subscription = $user->subscription('default');
+        
+        if (!$subscription || !$subscription->active()) {
+            return [
+                'has_subscription' => false,
+                'status' => 'No active subscription',
+                'amount' => 0,
+            ];
+        }
+
+        $price = $subscription->items->first()?->price ?? null;
+        $amount = $price ? $this->stripeService->stripeAmountToDollars($price->unit_amount) : 0;
+
+        return [
+            'has_subscription' => true,
+            'status' => ucfirst($subscription->stripe_status),
+            'amount' => $amount,
+            'formatted_amount' => $this->stripeService->formatMoney($amount),
+            'interval' => $price->recurring->interval ?? 'month',
+            'next_billing' => $subscription->asStripeSubscription()->current_period_end,
+        ];
+    }
+
+    /**
+     * Get fee calculation for display purposes.
+     */
+    public function getFeeCalculation(float $baseAmount, bool $coverFees = false): array
+    {
+        return $this->stripeService->getFeeBreakdown($baseAmount, $coverFees);
+    }
+
+    /**
+     * Get suggested membership amounts.
+     */
+    public function getSuggestedAmounts(): array
+    {
+        return [
+            10 => ['label' => '$10/month - Basic Support', 'description' => 'Essential community support'],
+            25 => ['label' => '$25/month - Enhanced Support', 'description' => 'Recommended contribution level'],
+            50 => ['label' => '$50/month - Premium Support', 'description' => 'Strong community investment'],
+        ];
+    }
+
+    /**
+     * Determine current subscription tier based on amount.
+     */
+    public function getCurrentTier(User $user): ?string
+    {
+        $displayInfo = $this->getSubscriptionDisplayInfo($user);
+        
+        if (!$displayInfo['has_subscription']) {
+            return null;
+        }
+
+        $amount = $displayInfo['amount'];
+        
+        return match (true) {
+            $amount >= 45 && $amount <= 55 => 'suggested_50',
+            $amount >= 20 && $amount <= 30 => 'suggested_25',
+            $amount >= 8 && $amount <= 12 => 'suggested_10',
+            default => 'custom'
+        };
+    }
+
+    /**
+     * Cancel a user's subscription.
+     */
+    public function cancelSubscription(User $user): array
+    {
+        try {
+            $subscription = $user->subscription('default');
+            
+            if (!$subscription || !$subscription->active()) {
+                return [
+                    'success' => false,
+                    'error' => 'No active subscription found',
+                ];
+            }
+
+            $subscription->cancel();
+
+            return [
+                'success' => true,
+                'message' => 'Subscription cancelled successfully. You will retain access until the end of your current billing period.',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Resume a cancelled subscription.
+     */
+    public function resumeSubscription(User $user): array
+    {
+        try {
+            $subscription = $user->subscription('default');
+            
+            if (!$subscription || !$subscription->cancelled()) {
+                return [
+                    'success' => false,
+                    'error' => 'No cancelled subscription found',
+                ];
+            }
+
+            $subscription->resume();
+
+            return [
+                'success' => true,
+                'message' => 'Subscription resumed successfully.',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 }
