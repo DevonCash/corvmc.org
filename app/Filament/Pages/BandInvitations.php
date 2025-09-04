@@ -65,7 +65,7 @@ class BandInvitations extends Page
                 ->success()
                 ->send();
 
-            $this->redirect(route('filament.member.resources.bands.view', ['record' => $band->id]));
+            $this->redirect(route('filament.member.resources.bands.view', ['record' => $band]));
         }
     }
 

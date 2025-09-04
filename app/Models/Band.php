@@ -14,6 +14,8 @@ use Spatie\Tags\HasTags;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Image\Enums\CropPosition;
+use Spatie\Sluggable\HasSlug;
+use Spatie\Sluggable\SlugOptions;
 
 /**
  * Represents a band in the application.
@@ -22,12 +24,13 @@ use Spatie\Image\Enums\CropPosition;
  */
 class Band extends Model implements HasMedia
 {
-    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity;
+    use HasFactory, HasFlags, HasSlug, HasTags, InteractsWithMedia, LogsActivity;
 
     protected $table = 'band_profiles';
 
     protected $fillable = [
         'name',
+        'slug',
         'bio',
         'links',
         'contact',
@@ -155,6 +158,24 @@ class Band extends Model implements HasMedia
     public function getAvatarOptimizedUrlAttribute()
     {
         return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=1200';
+    }
+
+    /**
+     * Get the options for generating the slug.
+     */
+    public function getSlugOptions(): SlugOptions
+    {
+        return SlugOptions::create()
+            ->generateSlugsFrom('name')
+            ->saveSlugsTo('slug');
+    }
+
+    /**
+     * Get the route key name for model binding.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
     }
 
     /**

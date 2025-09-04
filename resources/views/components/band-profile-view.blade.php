@@ -101,7 +101,7 @@
                 </section>
             @endif
 
-            <x-profile-recordings :embeds="$record->embeds" :canEdit="$showEditButton && auth()->check() && auth()->user()->can('update', $record)" :editRoute="route('filament.member.resources.bands.edit', ['record' => $record->id])" type="band" />
+            <x-profile-recordings :embeds="$record->embeds" :canEdit="$showEditButton && auth()->check() && auth()->user()->can('update', $record)" :editRoute="route('filament.member.resources.bands.edit', ['record' => $record])" type="band" />
         </div>
 
         {{-- Program Sidebar - Band Info & Credits --}}

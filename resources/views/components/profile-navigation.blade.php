@@ -45,7 +45,7 @@
         @if ($canEdit)
             @php
                 $editRoutes = match($type) {
-                    'band' => route('filament.member.resources.bands.edit', ['record' => $record->id]),
+                    'band' => route('filament.member.resources.bands.edit', ['record' => $record]),
                     'member' => route('filament.member.resources.directory.edit', ['record' => $record->id])
                 };
             @endphp

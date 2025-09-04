@@ -127,7 +127,7 @@
                             @endphp
                             <div>
                                 @if ($isVisible && $showEditButton)
-                                    <a href="{{ route('filament.member.resources.bands.view', ['record' => $band->id]) }}"
+                                    <a href="{{ route('filament.member.resources.bands.view', ['record' => $band]) }}"
                                         class="font-medium text-primary hover:text-primary-focus">
                                         {{ $band->name }}
                                     </a>

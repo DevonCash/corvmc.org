@@ -39,7 +39,7 @@ class ViewBand extends Page
     {
         return [
             route('filament.member.resources.bands.index') => 'Band Profiles',
-            route('filament.member.resources.bands.view', ['record' => $this->record->id]) => $this->record->name,
+            route('filament.member.resources.bands.view', ['record' => $this->record]) => $this->record->name,
         ];
     }
 
