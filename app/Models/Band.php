@@ -16,6 +16,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Image\Enums\CropPosition;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
+use App\Traits\Reportable;
 
 /**
  * Represents a band in the application.
@@ -24,7 +25,12 @@ use Spatie\Sluggable\SlugOptions;
  */
 class Band extends Model implements HasMedia
 {
-    use HasFactory, HasFlags, HasSlug, HasTags, InteractsWithMedia, LogsActivity;
+    use HasFactory, HasFlags, HasSlug, HasTags, InteractsWithMedia, LogsActivity, Reportable;
+    
+    // Report configuration
+    protected static int $reportThreshold = 4;
+    protected static bool $reportAutoHide = false;
+    protected static string $reportableTypeName = 'Band Profile';
 
     protected $table = 'band_profiles';
 

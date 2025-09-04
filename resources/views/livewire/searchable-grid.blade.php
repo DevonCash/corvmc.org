@@ -26,7 +26,8 @@
                             <x-unicon name="tabler:calendar-event" class="size-4 mr-2" />
                             Upcoming
                         </button>
-                        <button wire:click="$set('scope', 'past')" class="tab {{ $scope === 'past' ? 'tab-active' : '' }}">
+                        <button wire:click="$set('scope', 'past')"
+                            class="tab {{ $scope === 'past' ? 'tab-active' : '' }}">
                             <x-unicon name="tabler:history" class="size-4 mr-2" />
                             Past Events
                         </button>
@@ -36,7 +37,8 @@
                             <x-unicon name="tabler:users" class="size-4 mr-2" />
                             All Members
                         </button>
-                        <button wire:click="$set('scope', 'teachers')" class="tab {{ $scope === 'teachers' ? 'tab-active' : '' }}">
+                        <button wire:click="$set('scope', 'teachers')"
+                            class="tab {{ $scope === 'teachers' ? 'tab-active' : '' }}">
                             <x-unicon name="tabler:school" class="size-4 mr-2" />
                             Teachers
                         </button>
@@ -50,30 +52,23 @@
             <!-- Main Search -->
             <div class="flex-1">
                 <div class="relative">
-                    <x-unicon name="tabler:search" class="absolute left-3 top-1/2 transform -translate-y-1/2 size-5 text-base-content/50"/>
-                    <input
-                        type="text"
-                        wire:model.live.debounce.300ms="search"
-                        placeholder="{{ $searchPlaceholder }}"
-                        class="input input-bordered w-full pl-10"
-                    />
+                    <x-unicon name="tabler:search"
+                        class="absolute left-3 top-1/2 transform -translate-y-1/2 size-5 text-base-content/50" />
+                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="{{ $searchPlaceholder }}"
+                        class="input input-bordered w-full pl-10" />
                 </div>
             </div>
 
             <!-- Dynamic Filters -->
-            @foreach($availableFilters as $filter)
+            @foreach ($availableFilters as $filter)
                 <div class="min-w-48">
-                    @if($filter['type'] === 'text')
-                        <input
-                            type="text"
-                            wire:model.live.debounce.300ms="filters.{{ $filter['key'] }}"
-                            placeholder="{{ $filter['placeholder'] }}"
-                            class="input input-bordered w-full"
-                        />
+                    @if ($filter['type'] === 'text')
+                        <input type="text" wire:model.live.debounce.300ms="filters.{{ $filter['key'] }}"
+                            placeholder="{{ $filter['placeholder'] }}" class="input input-bordered w-full" />
                     @elseif($filter['type'] === 'select')
                         <select wire:model.live="filters.{{ $filter['key'] }}" class="select select-bordered w-full">
                             <option value="">{{ $filter['placeholder'] }}</option>
-                            @foreach($filter['options'] as $value => $label)
+                            @foreach ($filter['options'] as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
@@ -82,11 +77,11 @@
             @endforeach
 
             <!-- Reset Button -->
-            @if(!empty($search) || !empty($filters))
-            <button wire:click="resetFilters" class="btn btn-outline btn-sm lg:btn-md">
-                <x-unicon name="tabler:x" class="size-4"/>
-                Clear
-            </button>
+            @if (!empty($search) || !empty($filters))
+                <button wire:click="resetFilters" class="btn btn-outline btn-sm lg:btn-md">
+                    <x-tabler-x class="size-4" />
+                    Clear
+                </button>
             @endif
         </div>
 
@@ -98,7 +93,7 @@
     </div>
 
     <!-- Results Grid -->
-    <div wire:loading.remove class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 mb-8">
+    <div wire:loading.remove class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
         @forelse($items as $item)
             @if ($cardComponent)
                 <x-dynamic-component :component="$cardComponent" :item="$item" />
@@ -115,7 +110,7 @@
         @empty
             <div class="col-span-full text-center py-16">
                 <div class="text-6xl mb-4">
-                    <x-unicon name="{{ $emptyIcon }}" class="size-16" />
+                    <x-unicon name="{{ $emptyIcon }}" class="size-16 mx-auto" />
                 </div>
                 <h3 class="text-2xl font-bold mb-4">{{ $emptyTitle }}</h3>
                 <p class="text-lg opacity-70">{{ $emptyMessage }}</p>

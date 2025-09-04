@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Band;
 use App\Models\User;
 use App\Notifications\UserInvitationNotification;
 use App\Notifications\NewMemberWelcomeNotification;
+use App\Notifications\BandOwnershipInvitationNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
@@ -78,6 +80,9 @@ class UserInvitationService
 
             // Clear the invitation token
             $this->clearInvitationToken($user);
+
+            // Confirm any pending band ownerships
+            $this->confirmBandOwnership($user);
 
             // Send welcome notification for new members
             $user->notify(new NewMemberWelcomeNotification($user));
@@ -177,5 +182,126 @@ class UserInvitationService
                 return $user->roles->pluck('name')->implode(', ') ?: 'member';
             })->map->count(),
         ];
+    }
+
+    /**
+     * Invite a user to join CMC and create/own a band.
+     * 
+     * @param string $email
+     * @param string $bandName
+     * @param array $bandData Additional band data (genre, description, etc.)
+     * @param array $roleNames User roles to assign
+     * @return array ['user' => User, 'band' => Band]
+     */
+    public function inviteUserWithBand(string $email, string $bandName, array $bandData = [], array $roleNames = ['band leader']): array
+    {
+        return DB::transaction(function () use ($email, $bandName, $bandData, $roleNames) {
+            // Check if user already exists
+            $existingUser = User::where('email', $email)->first();
+            
+            if ($existingUser) {
+                // User exists - just create the band and make them owner
+                $band = $this->createBandForUser($existingUser, $bandName, $bandData);
+                
+                return [
+                    'user' => $existingUser,
+                    'band' => $band,
+                    'invited_user' => false
+                ];
+            }
+            
+            // Create new user with invitation
+            $user = User::create([
+                'email' => $email,
+                'name' => $this->extractNameFromEmail($email),
+                'password' => bcrypt(Str::random(32)),
+            ]);
+
+            // Assign roles
+            if (!empty($roleNames)) {
+                $roles = Role::whereIn('name', $roleNames)->get();
+                $user->syncRoles($roles);
+            }
+
+            // Create band with user as owner (but mark as pending)
+            $band = Band::create(array_merge([
+                'name' => $bandName,
+                'owner_id' => $user->id,
+                'visibility' => 'members',
+                'status' => 'pending_owner_verification', // Custom status for this flow
+            ], $bandData));
+
+            // Generate invitation token
+            $token = $this->generateInvitationToken($user);
+
+            // Send special band ownership invitation
+            $user->notify(new BandOwnershipInvitationNotification($user, $band, $token, $roleNames));
+
+            return [
+                'user' => $user,
+                'band' => $band,
+                'invited_user' => true
+            ];
+        });
+    }
+
+    /**
+     * Create a band for an existing user.
+     */
+    private function createBandForUser(User $user, string $bandName, array $bandData = []): Band
+    {
+        $band = Band::create(array_merge([
+            'name' => $bandName,
+            'owner_id' => $user->id,
+            'visibility' => 'members',
+            'status' => 'active',
+        ], $bandData));
+
+        // Add the user as a member with 'owner' role in the pivot
+        $band->members()->attach($user->id, [
+            'role' => 'owner',
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+
+        return $band;
+    }
+
+    /**
+     * Extract a reasonable name from an email address.
+     */
+    private function extractNameFromEmail(string $email): string
+    {
+        $localPart = explode('@', $email)[0];
+        
+        // Convert common separators to spaces and title case
+        $name = str_replace(['.', '_', '-', '+'], ' ', $localPart);
+        $name = ucwords(strtolower($name));
+        
+        return $name ?: 'Band Member';
+    }
+
+    /**
+     * Confirm band ownership when user completes their invitation.
+     */
+    public function confirmBandOwnership(User $user): void
+    {
+        // Find any bands owned by this user that are pending verification
+        $pendingBands = Band::where('owner_id', $user->id)
+            ->where('status', 'pending_owner_verification')
+            ->get();
+
+        foreach ($pendingBands as $band) {
+            $band->update(['status' => 'active']);
+            
+            // Ensure user is added as a member if not already
+            if (!$band->members()->where('user_id', $user->id)->exists()) {
+                $band->members()->attach($user->id, [
+                    'role' => 'owner',
+                    'status' => 'active',
+                    'joined_at' => now(),
+                ]);
+            }
+        }
     }
 }

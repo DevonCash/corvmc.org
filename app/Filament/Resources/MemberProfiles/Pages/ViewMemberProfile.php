@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MemberProfiles\Pages;
 
+use App\Filament\Actions\ReportContentAction;
 use App\Filament\Resources\MemberProfiles\MemberProfileResource;
 use App\Models\User;
 use Filament\Actions\EditAction;
@@ -44,6 +45,8 @@ class ViewMemberProfile extends Page
                 ->visible(fn () => auth()->user()->can('update', $this->record) ||
                     $this->record->user_id === auth()->id()
                 ),
+            ReportContentAction::make()
+                ->visible(fn () => auth()->user()->id !== $this->record->user_id), // Don't show report button to profile owner
         ];
     }
 

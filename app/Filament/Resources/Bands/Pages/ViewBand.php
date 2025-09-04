@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Bands\Pages;
 
+use App\Filament\Actions\ReportContentAction;
 use App\Filament\Resources\Bands\BandResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
@@ -47,8 +48,9 @@ class ViewBand extends Page
     {
         return [
             EditAction::make()
-                ->visible(fn () => auth()->user()->can('update', $this->record)
-                ),
+                ->visible(fn () => auth()->user()->can('update', $this->record)),
+            ReportContentAction::make()
+                ->visible(fn () => auth()->user()->id !== $this->record->owner_id), // Don't show report button to owner
         ];
     }
 

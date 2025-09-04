@@ -17,10 +17,16 @@ use Spatie\Period\Precision;
 use Spatie\Tags\HasTags;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use App\Traits\Reportable;
 
 class Production extends Model implements Eventable, HasMedia
 {
-    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity, SoftDeletes;
+    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity, Reportable, SoftDeletes;
+    
+    // Report configuration
+    protected static int $reportThreshold = 3;
+    protected static bool $reportAutoHide = false;
+    protected static string $reportableTypeName = 'Production';
 
     protected $fillable = [
         'title',

@@ -8,11 +8,11 @@
                     We provide shared music resources, affordable practice space, and a supportive
                     community for local musicians to grow, collaborate, and thrive together.
                 </p>
-                <div class="flex gap-4 justify-center flex-wrap">
-                    <a href="/member/register" class="btn btn-primary btn-lg">
+                <div class="flex flex-col gap-4 justify-center flex-wrap items-center">
+                    <a href="/member/register" class="btn btn-primary btn-lg btn-wide">
                         Join Our Community!
                     </a>
-                    <a href="{{ route('programs') }}" class="btn btn-outline btn-primary">
+                    <a href="{{ route('programs') }}" class="btn btn-outline btn-primary btn-wide">
                         Explore Programs
                     </a>
                 </div>
@@ -79,7 +79,7 @@
 
     <!-- What We Do -->
     <div class="bg-base-200 py-16">
-        <div class="container mx-auto px-4">
+        <div class="container mx-auto px-4 flex flex-col items-center">
             <div class="text-center mb-12">
                 <h2 class="text-4xl font-bold mb-4">What We Do</h2>
                 <p class="text-lg opacity-70">Supporting musicians and building community through various programs</p>
@@ -88,7 +88,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body text-center">
-                        <div class="text-4xl mb-4"><x-unicon name="tabler:music" class="size-10" /></div>
+                        <x-tabler-music class="size-10 mx-auto" />
                         <h3 class="card-title justify-center">Practice Space</h3>
                         <p>Affordable hourly rehearsal space with professional equipment for bands and musicians.</p>
                     </div>
@@ -96,7 +96,7 @@
 
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body text-center">
-                        <div class="text-4xl mb-4"><x-unicon name="tabler:microphone" class="size-10" /></div>
+                        <x-tabler-microphone class="size-10 mx-auto" />
                         <h3 class="card-title justify-center">Live Events</h3>
                         <p>Regular concerts and showcases featuring local and touring musicians.</p>
                     </div>
@@ -104,7 +104,7 @@
 
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body text-center">
-                        <div class="text-4xl mb-4"><x-unicon name="tabler:heart-handshake" class="size-10" /></div>
+                        <x-tabler-heart-handshake class="size-10 mx-auto" />
                         <h3 class="card-title justify-center">Community</h3>
                         <p>Connecting musicians for collaboration, education, and mutual support.</p>
                     </div>
@@ -112,13 +112,13 @@
 
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body text-center">
-                        <div class="text-4xl mb-4"><x-unicon name="tabler:book" class="size-10" /></div>
+                        <x-tabler-book class="size-10 mx-auto" />
                         <h3 class="card-title justify-center">Education</h3>
                         <p>Workshops, masterclasses, and mentorship programs for musicians of all levels.</p>
                     </div>
                 </div>
             </div>
-            <a href="{{ route('programs') }}" class="btn btn-outline btn-primary mt-8">View All Programs</a>
+            <a href="{{ route('programs') }}" class=" btn btn-wide btn-outline btn-primary mt-8">View All Programs</a>
         </div>
     </div>
 

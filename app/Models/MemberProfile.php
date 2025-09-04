@@ -16,6 +16,7 @@ use Spatie\Tags\HasTags;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Image\Enums\CropPosition;
+use App\Traits\Reportable;
 
 /**
  * Represents a member profile in the application.
@@ -23,7 +24,12 @@ use Spatie\Image\Enums\CropPosition;
  */
 class MemberProfile extends Model implements HasMedia
 {
-    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity;
+    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity, Reportable;
+    
+    // Report configuration
+    protected static int $reportThreshold = 5;
+    protected static bool $reportAutoHide = false;
+    protected static string $reportableTypeName = 'Member Profile';
 
     public static function getGlobalSearchResultTitle(Model $record): string | Htmlable
     {

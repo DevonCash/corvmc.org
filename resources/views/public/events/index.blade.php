@@ -14,7 +14,7 @@
     @livewire('events-grid')
 
     <!-- Call to Action -->
-    <div class="container mx-auto px-4">
+    <div class="container mx-auto px-4 mb-8">
         <div class="text-center mt-8 bg-base-200 rounded-lg p-8">
             <h2 class="text-3xl font-bold mb-4">Want to Perform at CMC?</h2>
             <p class="text-lg mb-6">

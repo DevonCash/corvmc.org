@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\Models\Band;
 use App\Models\User;
+use App\Notifications\BandClaimedNotification;
 use App\Notifications\BandInvitationAcceptedNotification;
 use App\Notifications\BandInvitationNotification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class BandService
 {
@@ -358,5 +360,76 @@ class BandService
         foreach ($adminsAndOwner as $admin) {
             $admin->notify(new BandInvitationAcceptedNotification($band, $user));
         }
+    }
+
+    /**
+     * Check if a band name conflicts with an existing guest band (no owner).
+     */
+    public function findClaimableBand(string $bandName): ?Band
+    {
+        return Band::where('name', 'ilike', $bandName)
+            ->whereNull('owner_id')
+            ->first();
+    }
+
+    /**
+     * Claim ownership of a guest band.
+     */
+    public function claimBand(Band $band, User $user): bool
+    {
+        if ($band->owner_id) {
+            return false; // Band already has an owner
+        }
+
+        return DB::transaction(function () use ($band, $user) {
+            // Update band ownership
+            $band->update([
+                'owner_id' => $user->id,
+                'status' => 'active'
+            ]);
+
+            // Add user as owner/admin member
+            if (!$this->hasMember($band, $user)) {
+                $this->addMember($band, $user, 'admin');
+            } else {
+                // Update existing membership to admin
+                $this->updateMemberRole($band, $user, 'admin');
+            }
+
+            // Notify admins about the band being claimed
+            $admins = User::role(['admin', 'super admin'])->get();
+            Notification::send($admins, new BandClaimedNotification($band, $user));
+
+            return true;
+        });
+    }
+
+    /**
+     * Get similar band names for suggestion purposes.
+     */
+    public function getSimilarBandNames(string $bandName, int $limit = 5): Collection
+    {
+        return Band::where('name', 'ilike', "%{$bandName}%")
+            ->whereNull('owner_id')
+            ->limit($limit)
+            ->pluck('name', 'id');
+    }
+
+    /**
+     * Check if user can claim a specific band.
+     */
+    public function canClaimBand(Band $band, User $user): bool
+    {
+        // Band must not have an owner
+        if ($band->owner_id) {
+            return false;
+        }
+
+        // User must have permission to create bands
+        if (!$user->can('create bands')) {
+            return false;
+        }
+
+        return true;
     }
 }

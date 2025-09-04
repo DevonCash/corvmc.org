@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Productions\Pages;
 
+use App\Filament\Actions\ReportContentAction;
 use App\Filament\Resources\Productions\ProductionResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
@@ -14,6 +15,7 @@ class ViewProduction extends ViewRecord
     {
         return [
             EditAction::make(),
+            ReportContentAction::make(),
         ];
     }
 }

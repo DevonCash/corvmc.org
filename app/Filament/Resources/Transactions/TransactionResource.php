@@ -19,7 +19,7 @@ class TransactionResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'tabler-cash-register';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Admin';
+    protected static string|\UnitEnum|null $navigationGroup = 'Operations';
 
     protected static ?string $navigationLabel = 'Transactions';
 
