@@ -21,7 +21,7 @@ class CancelMembershipAction
             // ->visible(fn($record) => $record?->subscription('default')?->active())
 
             ->action(function ($record) {
-                $service = app(UserSubscriptionService::class);
+                $service = \UserSubscriptionService::getFacadeRoot();
                 $result = $service->cancelSubscription($record);
 
                 if ($result['success']) {

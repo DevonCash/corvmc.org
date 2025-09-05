@@ -38,8 +38,6 @@ class InviteUserAction
             ->modalSubmitActionLabel('Send Invitation')
             ->modalWidth('md')
             ->action(function (array $data) {
-                $invitationService = app(UserInvitationService::class);
-
                 // Extract role names from the form data
                 $roleNames = [];
                 if (isset($data['roles']) && is_array($data['roles'])) {
@@ -49,7 +47,7 @@ class InviteUserAction
                 }
 
                 // Use the invitation service to create and invite the user
-                $user = $invitationService->inviteUser($data['email'], $roleNames);
+                $user = \UserInvitationService::inviteUser($data['email'], $roleNames);
 
                 Notification::make()
                     ->title('Invitation sent')

@@ -41,7 +41,7 @@ class AdminUserControlForm
                             })
                             ->afterStateUpdated(function ($state, $record) {
                                 if ($record) {
-                                    $service = app(UserSubscriptionService::class);
+                                    $service = \UserSubscriptionService::getFacadeRoot();
                                     if ($state) {
                                         $service->grantSustainingMemberStatus($record);
                                     } else {

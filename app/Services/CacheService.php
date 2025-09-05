@@ -77,9 +77,8 @@ class CacheService
         });
 
         // Warm up subscription stats
-        $subscriptionService = app(\App\Services\UserSubscriptionService::class);
-        $subscriptionService->getSubscriptionStats();
-        $subscriptionService->getSustainingMembers();
+        \UserSubscriptionService::getSubscriptionStats();
+        \UserSubscriptionService::getSustainingMembers();
     }
 
     /**

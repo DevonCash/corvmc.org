@@ -152,7 +152,7 @@ class ViewReport extends ViewRecord
                         ->rows(3),
                 ])
                 ->action(function (Report $record, array $data): void {
-                    app(ReportService::class)->resolveReport(
+                    \ReportService::resolveReport(
                         $record,
                         User::me(),
                         'upheld',
@@ -182,7 +182,7 @@ class ViewReport extends ViewRecord
                         ->rows(3),
                 ])
                 ->action(function (Report $record, array $data): void {
-                    app(ReportService::class)->resolveReport(
+                    \ReportService::resolveReport(
                         $record,
                         User::me(),
                         'dismissed',
@@ -213,7 +213,7 @@ class ViewReport extends ViewRecord
                         ->rows(3),
                 ])
                 ->action(function (Report $record, array $data): void {
-                    app(ReportService::class)->resolveReport(
+                    \ReportService::resolveReport(
                         $record,
                         User::me(),
                         'escalated',

@@ -61,7 +61,7 @@ class InvitationAcceptForm extends Component implements HasForms
     {
         $this->form->getState();
 
-        $invitationService = app(UserInvitationService::class);
+        $invitationService = \UserInvitationService::getFacadeRoot();
         $user = $invitationService->acceptInvitation($this->token, [
             'name' => $this->data['name'],
             'password' => $this->data['password'],

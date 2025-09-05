@@ -120,7 +120,7 @@ class UsersTable
                     ->modalHeading('Resend Invitation')
                     ->modalDescription(fn($record) => "Resend invitation email to {$record->email}?")
                     ->action(function ($record) {
-                        $invitationService = app(UserInvitationService::class);
+                        $invitationService = \UserInvitationService::getFacadeRoot();
 
                         if ($invitationService->resendInvitation($record)) {
                             Notification::make()
@@ -153,7 +153,7 @@ class UsersTable
                         ->modalHeading('Cancel Pending Invitations')
                         ->modalDescription('Are you sure you want to cancel the selected pending invitations? This will delete the invited users who have not yet registered.')
                         ->action(function (Collection $records) {
-                            $invitationService = app(UserInvitationService::class);
+                            $invitationService = \UserInvitationService::getFacadeRoot();
                             $canceledCount = 0;
 
                             foreach ($records as $record) {

@@ -37,7 +37,7 @@ class ClaimBand extends Page
         }
 
         // Get similar bands for reference
-        $bandService = app(BandService::class);
+        $bandService = \BandService::getFacadeRoot();
         $this->similarBands = $bandService->getSimilarBandNames($this->claimableBand->name, 10)->toArray();
     }
 
@@ -51,7 +51,7 @@ class ClaimBand extends Page
             ->modalHeading('Claim Band Ownership')
             ->modalDescription(fn() => "Are you sure you want to claim ownership of \"{$this->claimableBand->name}\"? This will make you the owner and allow you to manage the band profile.")
             ->action(function () {
-                $bandService = app(BandService::class);
+                $bandService = \BandService::getFacadeRoot();
 
                 if ($bandService->claimBand($this->claimableBand, auth()->user())) {
                     // Update the band with any new data from the original form

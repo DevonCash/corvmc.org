@@ -49,7 +49,7 @@ class ReportContentAction
             ])
             ->action(function (Model $record, array $data): void {
                 try {
-                    $reportService = app(ReportService::class);
+                    $reportService = \ReportService::getFacadeRoot();
                     
                     $customReason = $data['reason'] === 'other' 
                         ? $data['custom_reason'] 

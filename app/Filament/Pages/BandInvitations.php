@@ -39,7 +39,7 @@ class BandInvitations extends Page
 
     public function getPendingInvitations(): Collection
     {
-        return app(BandService::class)->getPendingInvitationsForUser(auth()->user());
+        return \BandService::getPendingInvitationsForUser(auth()->user());
     }
 
     protected function getActions(): array
@@ -54,7 +54,7 @@ class BandInvitations extends Page
 
     public function acceptInvitation(int $bandId): void
     {
-        $bandService = app(BandService::class);
+        $bandService = \BandService::getFacadeRoot();
         $band = Band::findOrFail($bandId);
         $user = User::me();
 
@@ -81,7 +81,7 @@ class BandInvitations extends Page
             ->modalSubmitActionLabel('Yes, decline')
             ->modalCancelActionLabel('Cancel')
             ->action(function (array $arguments): void {
-                $bandService = app(BandService::class);
+                $bandService = \BandService::getFacadeRoot();
                 $band = Band::findOrFail($arguments['bandId']);
                 $user = auth()->user();
 

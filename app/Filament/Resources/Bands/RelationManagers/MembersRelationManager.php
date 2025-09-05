@@ -122,7 +122,7 @@ class MembersRelationManager extends RelationManager
 
             ])
             ->action(function (array $data): void {
-                $bandService = app(BandService::class);
+                $bandService = \BandService::getFacadeRoot();
 
                 if ($data['user_id']) {
                     // Existing CMC member - send invitation
@@ -293,7 +293,7 @@ class MembersRelationManager extends RelationManager
 
                         $user = User::find($data['user_id']);
                         if ($user) {
-                            $bandService = app(BandService::class);
+                            $bandService = \BandService::getFacadeRoot();
                             $bandService->resendInvitation($this->ownerRecord, $user);
                         }
                     }
@@ -309,7 +309,7 @@ class MembersRelationManager extends RelationManager
                     $updateData['status'] = 'invited';
                     $updateData['invited_at'] = now();
 
-                    $bandService = app(BandService::class);
+                    $bandService = \BandService::getFacadeRoot();
                     $bandService->resendInvitation($this->ownerRecord, $user);
                 } else {
                     // No user association - keep as non-CMC member
@@ -392,7 +392,7 @@ class MembersRelationManager extends RelationManager
                     ->modalHeading('Accept Band Invitation')
                     ->modalDescription(fn($record) => "Accept invitation to join {$this->ownerRecord->name}?")
                     ->action(function ($record): void {
-                        $bandService = app(BandService::class);
+                        $bandService = \BandService::getFacadeRoot();
                         $success = $bandService->acceptInvitation($this->ownerRecord, $record);
 
                         if ($success) {
@@ -416,7 +416,7 @@ class MembersRelationManager extends RelationManager
                     ->modalHeading('Decline Band Invitation')
                     ->modalDescription(fn($record) => "Decline invitation to join {$this->ownerRecord->name}?")
                     ->action(function ($record): void {
-                        $bandService = app(BandService::class);
+                        $bandService = \BandService::getFacadeRoot();
                         $success = $bandService->declineInvitation($this->ownerRecord, $record);
 
                         if ($success) {
@@ -437,7 +437,7 @@ class MembersRelationManager extends RelationManager
                     ->color('warning')
                     ->icon('heroicon-m-arrow-path')
                     ->action(function ($record): void {
-                        $bandService = app(BandService::class);
+                        $bandService = \BandService::getFacadeRoot();
                         $success = $bandService->resendInvitation($this->ownerRecord, $record);
 
                         if ($success) {
@@ -461,7 +461,7 @@ class MembersRelationManager extends RelationManager
                     ->modalHeading('Re-invite Member')
                     ->modalDescription(fn($record) => "Send a new invitation to {$record->name}?")
                     ->action(function ($record): void {
-                        $bandService = app(BandService::class);
+                        $bandService = \BandService::getFacadeRoot();
                         $success = $bandService->reInviteDeclinedUser($this->ownerRecord, $record);
 
                         if ($success) {

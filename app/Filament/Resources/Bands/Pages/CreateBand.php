@@ -12,7 +12,7 @@ class CreateBand extends CreateRecord
     protected function beforeCreate(): void
     {
         // Check for claimable bands with the same name
-        $bandService = app(\App\Services\BandService::class);
+        $bandService = \BandService::getFacadeRoot();
         $claimableBand = $bandService->findClaimableBand($this->data['name']);
         
         if ($claimableBand && $bandService->canClaimBand($claimableBand, auth()->user())) {

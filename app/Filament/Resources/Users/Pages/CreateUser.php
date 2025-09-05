@@ -19,7 +19,7 @@ class CreateUser extends CreateRecord
 
     protected function handleRecordCreation(array $data): User
     {
-        $invitationService = app(UserInvitationService::class);
+        $invitationService = \UserInvitationService::getFacadeRoot();
         
         // Extract role names from the form data
         $roleNames = [];

@@ -37,14 +37,14 @@ class MembershipForm
                         TextEntry::make('remaining_free_hours')
                             ->label('Free Hours Remaining This Month')
                             ->state(function ($record) {
-                                $service = app(UserSubscriptionService::class);
+                                $service = \UserSubscriptionService::getFacadeRoot();
                                 $totalHours = $service->getUserMonthlyFreeHours($record);
                                 return $record->getRemainingFreeHours() . ' / ' . $totalHours . ' hours';
                             }),
                         TextEntry::make('current_subscription')
                             ->label('Current Subscription')
                             ->state(function ($record) {
-                                $service = app(UserSubscriptionService::class);
+                                $service = \UserSubscriptionService::getFacadeRoot();
                                 $displayInfo = $service->getSubscriptionDisplayInfo($record);
 
                                 if ($displayInfo['has_subscription']) {

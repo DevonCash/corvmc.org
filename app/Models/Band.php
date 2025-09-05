@@ -246,7 +246,7 @@ class Band extends Model implements HasMedia
      */
     public function addMember(User $user, string $role = 'member', ?string $position = null): void
     {
-        app(\App\Services\BandService::class)->addMember($this, $user, $role, $position);
+        \BandService::addMember($this, $user, $role, $position);
     }
 
     /**
@@ -256,7 +256,7 @@ class Band extends Model implements HasMedia
      */
     public function inviteMember(User $user, string $role = 'member', ?string $position = null): void
     {
-        app(\App\Services\BandService::class)->inviteMember($this, $user, $role, $position);
+        \BandService::inviteMember($this, $user, $role, $position);
     }
 
     /**
@@ -276,7 +276,7 @@ class Band extends Model implements HasMedia
      */
     public function acceptInvitation(User $user): void
     {
-        app(\App\Services\BandService::class)->acceptInvitation($this, $user);
+        \BandService::acceptInvitation($this, $user);
     }
 
     /**
@@ -286,7 +286,7 @@ class Band extends Model implements HasMedia
      */
     public function declineInvitation(User $user): void
     {
-        app(\App\Services\BandService::class)->declineInvitation($this, $user);
+        \BandService::declineInvitation($this, $user);
     }
 
     /**

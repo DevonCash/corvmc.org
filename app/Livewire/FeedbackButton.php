@@ -86,7 +86,7 @@ class FeedbackButton extends Component implements HasForms, HasActions
                 $data['browser_info'] = request()->header('User-Agent') ?? '';
                 $data['environment'] = app()->environment();
 
-                $gitHubService = app(GitHubService::class);
+                $gitHubService = \GitHubService::getFacadeRoot();
                 $result = $gitHubService->createIssue($data);
 
                 if ($result['success']) {

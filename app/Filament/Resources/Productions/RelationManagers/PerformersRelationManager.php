@@ -142,7 +142,7 @@ class PerformersRelationManager extends RelationManager
                             ->helperText('Add or refine the band\'s biography.'),
                     ])
                     ->action(function ($record, array $data) {
-                        $invitationService = app(UserInvitationService::class);
+                        $invitationService = \UserInvitationService::getFacadeRoot();
 
                         // Prepare band data for updates
                         $bandData = [];

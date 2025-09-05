@@ -38,7 +38,7 @@ class CreateMembershipSubscriptionAction
                     ->helperText(function ($get) {
                         $amount = $get('amount');
                         if ($amount > 0) {
-                            $stripeService = app(StripePaymentService::class);
+                            $stripeService = \StripePaymentService::getFacadeRoot();
                             $feeInfo = $stripeService->getFeeDisplayInfo($amount);
 
                             return $feeInfo['message'];
@@ -56,7 +56,7 @@ class CreateMembershipSubscriptionAction
                             return 'Please select a contribution amount';
                         }
 
-                        $stripeService = app(StripePaymentService::class);
+                        $stripeService = \StripePaymentService::getFacadeRoot();
                         $breakdown = $stripeService->getFeeBreakdown($amount, $get('cover_fees'));
 
                         return $breakdown['description'] . ' = ' . $stripeService->formatMoney($breakdown['total_amount']) . ' total per month';
@@ -65,7 +65,7 @@ class CreateMembershipSubscriptionAction
             ])
             ->action(function (array $data, $record) {
                 $baseAmount = floatval($data['amount']);
-                $service = app(UserSubscriptionService::class);
+                $service = \UserSubscriptionService::getFacadeRoot();
                 $result = $service->createSubscription($record, $baseAmount, $data['cover_fees']);
 
                 if ($result['success']) {

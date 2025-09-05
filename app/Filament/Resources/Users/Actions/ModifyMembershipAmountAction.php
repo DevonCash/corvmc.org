@@ -32,7 +32,7 @@ class ModifyMembershipAmountAction
                     ->live()
                     ->tooltips(RawJs::make('`$${$value.toFixed(2)}`'))
                     ->default(function ($record) {
-                        $service = app(UserSubscriptionService::class);
+                        $service = \UserSubscriptionService::getFacadeRoot();
                         $displayInfo = $service->getSubscriptionDisplayInfo($record);
 
                         if ($displayInfo['has_subscription']) {
@@ -51,7 +51,7 @@ class ModifyMembershipAmountAction
                     ->helperText(function ($get) {
                         $amount = $get('amount');
                         if ($amount > 0) {
-                            $stripeService = app(StripePaymentService::class);
+                            $stripeService = \StripePaymentService::getFacadeRoot();
                             $feeInfo = $stripeService->getFeeDisplayInfo($amount);
 
                             return $feeInfo['accurate_message'];
@@ -69,7 +69,7 @@ class ModifyMembershipAmountAction
                             return 'Please select a contribution amount';
                         }
 
-                        $stripeService = app(StripePaymentService::class);
+                        $stripeService = \StripePaymentService::getFacadeRoot();
                         $breakdown = $stripeService->getFeeBreakdown($amount, $get('cover_fees'));
 
                         return $breakdown['description'] . ' = ' . $stripeService->formatMoney($breakdown['total_amount']) . ' total per month';
@@ -79,7 +79,7 @@ class ModifyMembershipAmountAction
             ->action(function (array $data, $record) {
                 $baseAmount = floatval($data['amount']);
 
-                $service = app(UserSubscriptionService::class);
+                $service = \UserSubscriptionService::getFacadeRoot();
                 $result = $service->updateSubscriptionAmount($record, $baseAmount, $data['cover_fees']);
 
                 if ($result['success']) {
