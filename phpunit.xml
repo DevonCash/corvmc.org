@@ -16,7 +16,23 @@
         <include>
             <directory>app</directory>
         </include>
+        <exclude>
+            <directory>app/Exceptions</directory>
+            <directory>app/Console/Commands</directory>
+            <file>app/Http/Kernel.php</file>
+            <file>app/Providers/AppServiceProvider.php</file>
+            <file>app/Providers/BroadcastServiceProvider.php</file>
+            <file>app/Providers/EventServiceProvider.php</file>
+            <file>app/Providers/RouteServiceProvider.php</file>
+        </exclude>
     </source>
+    <coverage>
+        <report>
+            <html outputDirectory="coverage/html" lowUpperBound="50" highLowerBound="80"/>
+            <text outputFile="coverage/coverage.txt" showUncoveredFiles="false" showOnlySummary="true"/>
+            <clover outputFile="coverage/clover.xml"/>
+        </report>
+    </coverage>
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>

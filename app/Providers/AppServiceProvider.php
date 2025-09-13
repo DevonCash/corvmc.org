@@ -25,14 +25,18 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(\App\Services\BandService::class);
         $this->app->singleton(\App\Services\CacheService::class);
+        $this->app->singleton(\App\Services\CalendarService::class);
         $this->app->singleton(\App\Services\GitHubService::class);
         $this->app->singleton(\App\Services\MemberProfileService::class);
+        $this->app->singleton(\App\Services\NotificationSchedulingService::class);
         $this->app->singleton(\App\Services\ProductionService::class);
         $this->app->singleton(\App\Services\ReportService::class);
         $this->app->singleton(\App\Services\ReservationService::class);
-        $this->app->singleton(\App\Services\StripePaymentService::class);
+        $this->app->singleton(\App\Services\PaymentService::class);
         $this->app->singleton(\App\Services\UserInvitationService::class);
         $this->app->singleton(\App\Services\UserSubscriptionService::class);
+        $this->app->singleton(\App\Services\UserService::class);
+        $this->app->singleton(\App\Services\StaffProfileService::class);
     }
 
     public function boot(): void
@@ -48,14 +52,18 @@ class AppServiceProvider extends ServiceProvider
         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
         $loader->alias('BandService', \App\Facades\BandService::class);
         $loader->alias('CacheService', \App\Facades\CacheService::class);
+        $loader->alias('CalendarService', \App\Facades\CalendarService::class);
         $loader->alias('GitHubService', \App\Facades\GitHubService::class);
         $loader->alias('MemberProfileService', \App\Facades\MemberProfileService::class);
+        $loader->alias('NotificationSchedulingService', \App\Facades\NotificationSchedulingService::class);
         $loader->alias('ProductionService', \App\Facades\ProductionService::class);
         $loader->alias('ReportService', \App\Facades\ReportService::class);
         $loader->alias('ReservationService', \App\Facades\ReservationService::class);
-        $loader->alias('StripePaymentService', \App\Facades\StripePaymentService::class);
+        $loader->alias('PaymentService', \App\Facades\PaymentService::class);
         $loader->alias('UserInvitationService', \App\Facades\UserInvitationService::class);
         $loader->alias('UserSubscriptionService', \App\Facades\UserSubscriptionService::class);
+        $loader->alias('UserService', \App\Facades\UserService::class);
+        $loader->alias('StaffProfileService', \App\Facades\StaffProfileService::class);
 
         // Automatically grant all abilities to admin users
         Gate::after(function ($user, $ability) {

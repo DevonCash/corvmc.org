@@ -4,29 +4,19 @@ namespace Tests\Unit\Services;
 
 use App\Models\Production;
 use App\Models\User;
-use App\Services\ReservationService;
+use App\Facades\ReservationService;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ProductionConflictTest extends TestCase
 {
-    use RefreshDatabase;
-
-    protected ReservationService $service;
-
     protected User $user;
 
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->service = new ReservationService;
         $this->user = User::factory()->create();
-
-        // Create roles for testing
-        \Spatie\Permission\Models\Role::create(['name' => 'sustaining member']);
     }
 
     #[Test]
@@ -51,12 +41,12 @@ class ProductionConflictTest extends TestCase
         $this->assertTrue($production->usesPracticeSpace(), 'Production should use practice space');
         $this->assertNotNull($production->getPeriod(), 'Production should have a valid period');
 
-        $conflicts = $this->service->getConflictingProductions($reservationStart, $reservationEnd);
+        $conflicts = ReservationService::getConflictingProductions($reservationStart, $reservationEnd);
         $this->assertCount(1, $conflicts, 'Should find 1 conflicting production');
         $this->assertEquals('Test Concert', $conflicts->first()->title);
 
         $this->assertFalse(
-            $this->service->isTimeSlotAvailable($reservationStart, $reservationEnd),
+            ReservationService::isTimeSlotAvailable($reservationStart, $reservationEnd),
             'Time slot should not be available due to production conflict'
         );
     }
@@ -87,10 +77,10 @@ class ProductionConflictTest extends TestCase
         $reservationEnd = $reservationStart->copy()->addHours(2);
 
         $this->assertTrue(
-            $this->service->isTimeSlotAvailable($reservationStart, $reservationEnd)
+            ReservationService::isTimeSlotAvailable($reservationStart, $reservationEnd)
         );
 
-        $conflicts = $this->service->getConflictingProductions($reservationStart, $reservationEnd);
+        $conflicts = ReservationService::getConflictingProductions($reservationStart, $reservationEnd);
         $this->assertCount(0, $conflicts);
     }
 
@@ -115,7 +105,7 @@ class ProductionConflictTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $gaps = $this->service->findAvailableGaps($date, 60); // 1 hour minimum
+        $gaps = ReservationService::findAvailableGaps($date, 60); // 1 hour minimum
 
         // Debug: check what gaps were found
         $this->assertGreaterThan(0, count($gaps), 'Should find at least one gap');
@@ -138,7 +128,7 @@ class ProductionConflictTest extends TestCase
         $production->location = \App\Data\LocationData::cmc();
         $production->save();
 
-        $slots = $this->service->getAvailableTimeSlots($date, 1);
+        $slots = ReservationService::getAvailableTimeSlots($date, 1);
 
         // Should not include any slots that overlap with 2-4 PM
         $conflictingSlots = collect($slots)->filter(function ($slot) {
@@ -166,7 +156,7 @@ class ProductionConflictTest extends TestCase
         $start = Carbon::now()->addDay()->setTime(20, 0);
         $end = $start->copy()->addHours(2);
 
-        $errors = $this->service->validateReservation($this->user, $start, $end);
+        $errors = ReservationService::validateReservation($this->user, $start, $end);
 
         $this->assertNotEmpty($errors);
         $this->assertStringContainsString('production(s): Jazz Night', $errors[0]);
@@ -186,10 +176,10 @@ class ProductionConflictTest extends TestCase
         $end = $start->copy()->addHours(2);
 
         $this->assertTrue(
-            $this->service->isTimeSlotAvailable($start, $end)
+            ReservationService::isTimeSlotAvailable($start, $end)
         );
 
-        $errors = $this->service->validateReservation($this->user, $start, $end);
+        $errors = ReservationService::validateReservation($this->user, $start, $end);
         $this->assertEmpty($errors);
     }
 }

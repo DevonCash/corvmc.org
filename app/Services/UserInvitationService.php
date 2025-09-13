@@ -2,62 +2,74 @@
 
 namespace App\Services;
 
+use App\Facades\BandService;
 use App\Models\Band;
+use App\Models\Invitation;
 use App\Models\User;
 use App\Notifications\UserInvitationNotification;
 use App\Notifications\NewMemberWelcomeNotification;
 use App\Notifications\BandOwnershipInvitationNotification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 
 class UserInvitationService
 {
+
     /**
      * Invite a new user to join the CMC.
      */
-    public function inviteUser(string $email, array $roleNames = []): User
+    public function inviteUser(string $email, array $data = []): Invitation
     {
-        return DB::transaction(function () use ($email, $roleNames) {
-            // Create the user with temporary data
-            $user = User::create([
-                'email' => $email,
-                'name' => 'Invited User',
-                'password' => bcrypt(Str::random(32)), // Temporary password
-            ]);
-
-            // Assign roles if provided
-            if (!empty($roleNames)) {
-                $roles = Role::whereIn('name', $roleNames)->get();
-                $user->syncRoles($roles);
-            }
-
+        return DB::transaction(function () use ($email, $data) {
             // Generate invitation token
-            $token = $this->generateInvitationToken($user);
+            $invitation = $this->generateInvitation($email, $data);
 
             // Send invitation notification
-            $user->notify(new UserInvitationNotification($user, $token, $roleNames));
+            Notification::route('mail', $email)
+                ->notify(new UserInvitationNotification($invitation, $data));
 
-            return $user;
+            $invitation->markAsSent();
+
+            return $invitation;
         });
     }
 
     /**
-     * Resend an invitation to an existing user.
+     * Resend an invitation to an email address.
      */
-    public function resendInvitation(User $user): bool
+    public function resendInvitation(string $email): Invitation
     {
-        // Only resend if user hasn't completed their profile
-        if ($user->email_verified_at !== null) {
-            return false;
+        $invitations = Invitation::withoutGlobalScopes()->forEmail($email)->get();
+
+        if ($invitations->some(fn($inv) => $inv->isUsed())) {
+            throw new \Exception('User has already accepted invitation.');
         }
 
-        $token = $this->generateInvitationToken($user);
-        $roleNames = $user->roles->pluck('name')->toArray();
+        $invitations = $invitations->filter(fn($inv) => !$inv->isUsed());
+        if ($invitations->isEmpty()) {
+            throw new \Exception('No invitations found for this email.');
+        }
 
-        $user->notify(new UserInvitationNotification($user, $token, $roleNames));
+        $lastInvite = $invitations->last();
 
-        return true;
+        // Delete existing invitations to avoid unique constraint violation
+        $invitations->each(fn($inv) => $inv->delete());
+
+        $newInvite = Invitation::create([
+            'email' => $email,
+            'message' => $lastInvite->message,
+            'inviter_id' => Auth::user()?->id,
+        ]);
+
+        // Send invitation notification
+        Notification::route('mail', $email)
+            ->notify(new UserInvitationNotification($newInvite, ['message' => $newInvite->message]));
+
+        $newInvite->markAsSent();
+
+        return $newInvite;
     }
 
     /**
@@ -65,24 +77,43 @@ class UserInvitationService
      */
     public function acceptInvitation(string $token, array $userData): ?User
     {
-        $user = $this->findUserByToken($token);
-        
-        if (!$user || $this->isTokenExpired($token)) {
-            return null;
+        $invite = Invitation::withoutGlobalScopes()->where('token', $token)->first();
+
+        if (!$invite) {
+            throw new \Exception('Invitation not found.');
         }
 
-        return DB::transaction(function () use ($user, $userData) {
-            $user->update([
-                'name' => $userData['name'],
-                'password' => bcrypt($userData['password']),
-                'email_verified_at' => now(),
-            ]);
+        if ($invite->isExpired()) {
+            throw new \Exception('Invitation has expired.');
+        }
 
-            // Clear the invitation token
-            $this->clearInvitationToken($user);
+        if ($invite->isUsed()) {
+            throw new \Exception('Invitation has already been used.');
+        }
+
+        return DB::transaction(function () use ($invite, $userData) {
+            // Check if user already exists
+            $user = User::where('email', $invite->email)->first();
+
+            if ($user) {
+                // User exists - just mark invitation as used and update if needed
+
+                if (!$user->email_verified_at) {
+                    $user->update(['email_verified_at' => now()]);
+                }
+            } else {
+                // Create new user
+                $user = User::create([
+                    'name' => $userData['name'],
+                    'email' => $invite->email,
+                    'password' => bcrypt($userData['password']),
+                    'email_verified_at' => now(),
+                ]);
+            }
+            $invite->markAsUsed();
 
             // Confirm any pending band ownerships
-            $this->confirmBandOwnership($user);
+            $this->confirmBandOwnership($user, $invite);
 
             // Send welcome notification for new members
             $user->notify(new NewMemberWelcomeNotification($user));
@@ -94,60 +125,34 @@ class UserInvitationService
     /**
      * Generate a signed invitation token for a user.
      */
-    public function generateInvitationToken(User $user): string
+    public function generateInvitation(string $email, array $data = []): Invitation
     {
-        return encrypt([
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'expires_at' => now()->addWeek()->timestamp,
+        return Invitation::create([
+            'inviter_id' => Auth::user()?->id,
+            'email' => $email,
+            'expires_at' => now()->addWeeks(1),
+            'message' => $data['message'] ?? 'Join me at Corvallis Music Collective!',
+            'data' => $data,
         ]);
     }
 
     /**
-     * Find user by invitation token.
+     * Find invitation by token.
      */
-    public function findUserByToken(string $token): ?User
+    public function findInvitationByToken(string $token): ?Invitation
     {
-        try {
-            $data = decrypt($token);
-            return User::where('id', $data['user_id'])
-                ->where('email', $data['email'])
-                ->first();
-        } catch (\Exception $e) {
-            return null;
-        }
+        return Invitation::withoutGlobalScopes()->where('token', $token)->first();
     }
 
-    /**
-     * Check if invitation token is expired.
-     */
-    public function isTokenExpired(string $token): bool
-    {
-        try {
-            $data = decrypt($token);
-            return now()->timestamp > $data['expires_at'];
-        } catch (\Exception $e) {
-            return true;
-        }
-    }
 
     /**
-     * Clear invitation token (mark as used).
-     */
-    protected function clearInvitationToken(User $user): void
-    {
-        // In a more complex system, you might store tokens in database
-        // For now, we just mark email as verified which invalidates the invitation
-    }
-
-    /**
-     * Get all pending invitations (unverified users).
+     * Get all pending invitations.
      */
     public function getPendingInvitations(): \Illuminate\Database\Eloquent\Collection
     {
-        return User::whereNull('email_verified_at')
-            ->where('name', 'Invited User')
-            ->with('roles')
+        return Invitation::withoutGlobalScopes()
+            ->whereNull('used_at')
+            ->with('inviter')
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -155,14 +160,14 @@ class UserInvitationService
     /**
      * Cancel a pending invitation.
      */
-    public function cancelInvitation(User $user): bool
+    public function cancelInvitation(Invitation $invitation): bool
     {
-        // Only cancel if invitation is still pending
-        if ($user->email_verified_at !== null) {
+        // Only cancel if invitation hasn't been used
+        if ($invitation->isUsed()) {
             return false;
         }
 
-        return $user->delete();
+        return $invitation->delete();
     }
 
     /**
@@ -170,138 +175,87 @@ class UserInvitationService
      */
     public function getInvitationStats(): array
     {
-        $pending = $this->getPendingInvitations();
-        $completed = User::whereNotNull('email_verified_at')->count();
-        
+        $totalInvitations = Invitation::withoutGlobalScopes()->count();
+        $pendingInvitations = Invitation::withoutGlobalScopes()->whereNull('used_at')->count();
+        $acceptedInvitations = Invitation::withoutGlobalScopes()->whereNotNull('used_at')->count();
+        $expiredInvitations = Invitation::withoutGlobalScopes()
+            ->whereNull('used_at')
+            ->where('expires_at', '<', now())
+            ->count();
+
         return [
-            'pending_invitations' => $pending->count(),
-            'completed_registrations' => $completed,
-            'total_users' => $pending->count() + $completed,
-            'acceptance_rate' => $completed > 0 ? ($completed / ($pending->count() + $completed)) * 100 : 0,
-            'pending_by_role' => $pending->groupBy(function ($user) {
-                return $user->roles->pluck('name')->implode(', ') ?: 'member';
-            })->map->count(),
+            'total_invitations' => $totalInvitations,
+            'pending_invitations' => $pendingInvitations,
+            'accepted_invitations' => $acceptedInvitations,
+            'expired_invitations' => $expiredInvitations,
+            'acceptance_rate' => $totalInvitations > 0 ? ($acceptedInvitations / $totalInvitations) * 100 : 0,
+            'pending_active' => $pendingInvitations - $expiredInvitations,
         ];
     }
 
     /**
      * Invite a user to join CMC and create/own a band.
-     * 
+     *
      * @param string $email
      * @param string $bandName
      * @param array $bandData Additional band data (genre, description, etc.)
      * @param array $roleNames User roles to assign
-     * @return array ['user' => User, 'band' => Band]
+     * @return array ['invitation' => Invitation, 'band' => Band, 'user' => User|null]
      */
-    public function inviteUserWithBand(string $email, string $bandName, array $bandData = [], array $roleNames = ['band leader']): array
+    public function inviteUserWithBand(string $email, string $bandName, array $bandData = []): Invitation
     {
-        return DB::transaction(function () use ($email, $bandName, $bandData, $roleNames) {
-            // Check if user already exists
-            $existingUser = User::where('email', $email)->first();
-            
-            if ($existingUser) {
-                // User exists - just create the band and make them owner
-                $band = $this->createBandForUser($existingUser, $bandName, $bandData);
-                
-                return [
-                    'user' => $existingUser,
-                    'band' => $band,
-                    'invited_user' => false
-                ];
+        return DB::transaction(function () use ($email, $bandName, $bandData) {
+            $band_role = $bandData['band_role'] ?? 'admin';
+
+            if (User::where('email', $email)->exists()) {
+                throw new \Exception('User with this email already exists.');
             }
-            
-            // Create new user with invitation
-            $user = User::create([
-                'email' => $email,
-                'name' => $this->extractNameFromEmail($email),
-                'password' => bcrypt(Str::random(32)),
+
+            // Create band without an owner initially (will be set when invitation is accepted)
+            $band = BandService::createBand([
+                'name' => $bandName,
+                'owner_id' => null, // Will be set when invitation is accepted
+                'visibility' => 'members',
+                'status' => 'pending_owner_verification',
             ]);
 
-            // Assign roles
-            if (!empty($roleNames)) {
-                $roles = Role::whereIn('name', $roleNames)->get();
-                $user->syncRoles($roles);
-            }
-
-            // Create band with user as owner (but mark as pending)
-            $band = Band::create(array_merge([
-                'name' => $bandName,
-                'owner_id' => $user->id,
-                'visibility' => 'members',
-                'status' => 'pending_owner_verification', // Custom status for this flow
-            ], $bandData));
-
-            // Generate invitation token
-            $token = $this->generateInvitationToken($user);
+            // Generate invitation with band data
+            $invitation = $this->generateInvitation($email, [
+                'band_id' => $band->id,
+                'band_role' => $band_role,
+                'message' => "You've been invited to join Corvallis Music Collective and create the band '{$bandName}'!"
+            ]);
 
             // Send special band ownership invitation
-            $user->notify(new BandOwnershipInvitationNotification($user, $band, $token, $roleNames));
+            Notification::route('mail', $email)
+                ->notify(new BandOwnershipInvitationNotification(
+                    Auth::user(), // inviter user
+                    $band,
+                    $invitation->token,
+                ));
 
-            return [
-                'user' => $user,
-                'band' => $band,
-                'invited_user' => true
-            ];
+            $invitation->markAsSent();
+
+            return $invitation;
         });
-    }
-
-    /**
-     * Create a band for an existing user.
-     */
-    private function createBandForUser(User $user, string $bandName, array $bandData = []): Band
-    {
-        $band = Band::create(array_merge([
-            'name' => $bandName,
-            'owner_id' => $user->id,
-            'visibility' => 'members',
-            'status' => 'active',
-        ], $bandData));
-
-        // Add the user as a member with 'owner' role in the pivot
-        $band->members()->attach($user->id, [
-            'role' => 'owner',
-            'status' => 'active',
-            'joined_at' => now(),
-        ]);
-
-        return $band;
-    }
-
-    /**
-     * Extract a reasonable name from an email address.
-     */
-    private function extractNameFromEmail(string $email): string
-    {
-        $localPart = explode('@', $email)[0];
-        
-        // Convert common separators to spaces and title case
-        $name = str_replace(['.', '_', '-', '+'], ' ', $localPart);
-        $name = ucwords(strtolower($name));
-        
-        return $name ?: 'Band Member';
     }
 
     /**
      * Confirm band ownership when user completes their invitation.
      */
-    public function confirmBandOwnership(User $user): void
+    public function confirmBandOwnership(User $user, Invitation $invitation): void
     {
-        // Find any bands owned by this user that are pending verification
-        $pendingBands = Band::where('owner_id', $user->id)
-            ->where('status', 'pending_owner_verification')
-            ->get();
+        if (!isset($invitation->data['band_id'])) {
+            return;
+        }
 
-        foreach ($pendingBands as $band) {
-            $band->update(['status' => 'active']);
-            
-            // Ensure user is added as a member if not already
-            if (!$band->members()->where('user_id', $user->id)->exists()) {
-                $band->members()->attach($user->id, [
-                    'role' => 'owner',
-                    'status' => 'active',
-                    'joined_at' => now(),
-                ]);
-            }
+        // Use BandService to handle band ownership confirmation
+        BandService::confirmBandOwnershipFromInvitation($user, $invitation->data);
+
+        // Assign any roles specified in the invitation
+        if (!empty($invitation->data['roles'])) {
+            $roles = Role::whereIn('name', $invitation->data['roles'])->get();
+            $user->syncRoles($roles);
         }
     }
 }

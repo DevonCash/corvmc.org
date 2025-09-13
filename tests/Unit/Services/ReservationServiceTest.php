@@ -4,30 +4,19 @@ namespace Tests\Unit\Services;
 
 use App\Models\Reservation;
 use App\Models\User;
-use App\Services\ReservationService;
+use App\Facades\ReservationService;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ReservationServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
-    protected ReservationService $service;
-
     protected User $regularUser;
-
     protected User $sustainingUser;
 
     protected function setUp(): void
     {
         parent::setUp();
-
-        // Create roles for testing
-        \Spatie\Permission\Models\Role::create(['name' => 'sustaining member']);
-
-        $this->service = new ReservationService;
 
         // Create test users
         $this->regularUser = User::factory()->create();
@@ -41,7 +30,7 @@ class ReservationServiceTest extends TestCase
         $start = Carbon::now()->addDay()->setTime(14, 0);
         $end = $start->copy()->addHours(2);
 
-        $result = $this->service->calculateCost($this->regularUser, $start, $end);
+        $result = ReservationService::calculateCost($this->regularUser, $start, $end);
 
         $this->assertEquals(2, $result['total_hours']);
         $this->assertEquals(0, $result['free_hours']);
@@ -58,7 +47,7 @@ class ReservationServiceTest extends TestCase
         $start = Carbon::now()->addDay()->setTime(14, 0);
         $end = $start->copy()->addHours(2);
 
-        $result = $this->service->calculateCost($this->sustainingUser, $start, $end);
+        $result = ReservationService::calculateCost($this->sustainingUser, $start, $end);
 
         $this->assertEquals(2, $result['total_hours']);
         $this->assertEquals(2, $result['free_hours']);
@@ -84,7 +73,7 @@ class ReservationServiceTest extends TestCase
         $start = Carbon::now()->addDay()->setTime(14, 0);
         $end = $start->copy()->addHours(3); // 3 hours requested
 
-        $result = $this->service->calculateCost($this->sustainingUser, $start, $end);
+        $result = ReservationService::calculateCost($this->sustainingUser, $start, $end);
 
         $this->assertEquals(3, $result['total_hours']);
         $this->assertEquals(2, $result['free_hours']); // Only 2 free hours remaining
@@ -99,7 +88,7 @@ class ReservationServiceTest extends TestCase
         $start = Carbon::parse('2025-01-01 14:00:00');
         $end = Carbon::parse('2025-01-01 16:30:00');
 
-        $hours = $this->service->calculateHours($start, $end);
+        $hours = ReservationService::calculateHours($start, $end);
 
         $this->assertEquals(2.5, $hours);
     }
@@ -111,7 +100,7 @@ class ReservationServiceTest extends TestCase
         $end = $start->copy()->addHours(2);
 
         // No existing reservations - should be available
-        $this->assertTrue($this->service->isTimeSlotAvailable($start, $end));
+        $this->assertTrue(ReservationService::isTimeSlotAvailable($start, $end));
 
         // Create overlapping reservation
         Reservation::factory()->create([
@@ -121,7 +110,7 @@ class ReservationServiceTest extends TestCase
         ]);
 
         // Should now be unavailable
-        $this->assertFalse($this->service->isTimeSlotAvailable($start, $end));
+        $this->assertFalse(ReservationService::isTimeSlotAvailable($start, $end));
     }
 
     #[Test]
@@ -137,7 +126,7 @@ class ReservationServiceTest extends TestCase
         ]);
 
         // Should be available when excluding the existing reservation
-        $this->assertTrue($this->service->isTimeSlotAvailable($start, $end, $reservation->id));
+        $this->assertTrue(ReservationService::isTimeSlotAvailable($start, $end, $reservation->id));
     }
 
     #[Test]
@@ -153,7 +142,7 @@ class ReservationServiceTest extends TestCase
         ]);
 
         // Should be available since cancelled reservations are ignored
-        $this->assertTrue($this->service->isTimeSlotAvailable($start, $end));
+        $this->assertTrue(ReservationService::isTimeSlotAvailable($start, $end));
     }
 
     #[Test]
@@ -174,7 +163,7 @@ class ReservationServiceTest extends TestCase
             'status' => 'pending',
         ]);
 
-        $conflicts = $this->service->getConflictingReservations($start, $end);
+        $conflicts = ReservationService::getConflictingReservations($start, $end);
 
         $this->assertCount(2, $conflicts);
         $this->assertTrue($conflicts->contains('id', $conflict1->id));
@@ -187,7 +176,7 @@ class ReservationServiceTest extends TestCase
         $pastStart = Carbon::now()->subHour();
         $pastEnd = $pastStart->copy()->addHours(2);
 
-        $errors = $this->service->validateReservation($this->regularUser, $pastStart, $pastEnd);
+        $errors = ReservationService::validateReservation($this->regularUser, $pastStart, $pastEnd);
 
         $this->assertContains('Reservation start time must be in the future.', $errors);
     }
@@ -198,7 +187,7 @@ class ReservationServiceTest extends TestCase
         $start = Carbon::now()->addDay()->setTime(14, 0);
         $end = $start->copy()->subHour(); // End before start
 
-        $errors = $this->service->validateReservation($this->regularUser, $start, $end);
+        $errors = ReservationService::validateReservation($this->regularUser, $start, $end);
 
         $this->assertContains('End time must be after start time.', $errors);
     }
@@ -209,7 +198,7 @@ class ReservationServiceTest extends TestCase
         $start = Carbon::now()->addDay()->setTime(14, 0);
         $end = $start->copy()->addMinutes(30); // 30 minutes
 
-        $errors = $this->service->validateReservation($this->regularUser, $start, $end);
+        $errors = ReservationService::validateReservation($this->regularUser, $start, $end);
 
         $this->assertContains('Minimum reservation duration is 1 hour(s).', $errors);
     }
@@ -220,7 +209,7 @@ class ReservationServiceTest extends TestCase
         $start = Carbon::now()->addDay()->setTime(14, 0);
         $end = $start->copy()->addHours(10); // 10 hours
 
-        $errors = $this->service->validateReservation($this->regularUser, $start, $end);
+        $errors = ReservationService::validateReservation($this->regularUser, $start, $end);
 
         $this->assertContains('Maximum reservation duration is 8 hours.', $errors);
     }
@@ -232,14 +221,14 @@ class ReservationServiceTest extends TestCase
         $earlyStart = Carbon::now()->addDay()->setTime(8, 0);
         $earlyEnd = $earlyStart->copy()->addHours(2);
 
-        $errors = $this->service->validateReservation($this->regularUser, $earlyStart, $earlyEnd);
+        $errors = ReservationService::validateReservation($this->regularUser, $earlyStart, $earlyEnd);
         $this->assertContains('Reservations are only allowed between 9 AM and 10 PM.', $errors);
 
         // Too late
         $lateStart = Carbon::now()->addDay()->setTime(21, 0);
         $lateEnd = $lateStart->copy()->addHours(2); // Ends at 11 PM
 
-        $errors = $this->service->validateReservation($this->regularUser, $lateStart, $lateEnd);
+        $errors = ReservationService::validateReservation($this->regularUser, $lateStart, $lateEnd);
         $this->assertContains('Reservations are only allowed between 9 AM and 10 PM.', $errors);
     }
 
@@ -249,7 +238,7 @@ class ReservationServiceTest extends TestCase
         $start = Carbon::now()->addDay()->setTime(14, 0);
         $end = $start->copy()->addHours(2);
 
-        $reservation = $this->service->createReservation($this->regularUser, $start, $end);
+        $reservation = ReservationService::createReservation($this->regularUser, $start, $end);
 
         $this->assertInstanceOf(Reservation::class, $reservation);
         $this->assertEquals($this->regularUser->id, $reservation->user_id);
@@ -266,7 +255,7 @@ class ReservationServiceTest extends TestCase
         $start = Carbon::now()->addDay()->setTime(14, 0);
         $end = $start->copy()->addHours(2);
 
-        $reservation = $this->service->createReservation($this->regularUser, $start, $end, [
+        $reservation = ReservationService::createReservation($this->regularUser, $start, $end, [
             'status' => 'pending',
             'notes' => 'Test reservation',
             'is_recurring' => true,
@@ -286,7 +275,7 @@ class ReservationServiceTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Validation failed:');
 
-        $this->service->createReservation($this->regularUser, $start, $end);
+        ReservationService::createReservation($this->regularUser, $start, $end);
     }
 
     #[Test]
@@ -301,7 +290,7 @@ class ReservationServiceTest extends TestCase
         $newStart = Carbon::now()->addDay()->setTime(16, 0);
         $newEnd = $newStart->copy()->addHours(3);
 
-        $updated = $this->service->updateReservation($reservation, $newStart, $newEnd);
+        $updated = ReservationService::updateReservation($reservation, $newStart, $newEnd);
 
         $this->assertEquals($newStart, $updated->reserved_at);
         $this->assertEquals($newEnd, $updated->reserved_until);
@@ -317,7 +306,7 @@ class ReservationServiceTest extends TestCase
             'notes' => 'Original notes',
         ]);
 
-        $cancelled = $this->service->cancelReservation($reservation, 'User requested cancellation');
+        $cancelled = ReservationService::cancelReservation($reservation, 'User requested cancellation');
 
         $this->assertEquals('cancelled', $cancelled->status);
         $this->assertStringContainsString('Cancellation reason: User requested cancellation', $cancelled->notes);
@@ -335,7 +324,7 @@ class ReservationServiceTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $slots = $this->service->getAvailableTimeSlots($date, 1);
+        $slots = ReservationService::getAvailableTimeSlots($date, 1);
 
         // Should have 9 available slots (13 total hours - 2 blocked hours = 11, but slot boundaries affect this)
         $this->assertCount(9, $slots);
@@ -347,7 +336,7 @@ class ReservationServiceTest extends TestCase
         $start = Carbon::now()->addWeek()->setTime(14, 0);
         $end = $start->copy()->addHours(2);
 
-        $reservations = $this->service->createRecurringReservation(
+        $reservations = ReservationService::createRecurringReservation(
             $this->sustainingUser,
             $start,
             $end,
@@ -373,7 +362,7 @@ class ReservationServiceTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Only sustaining members can create recurring reservations.');
 
-        $this->service->createRecurringReservation(
+        ReservationService::createRecurringReservation(
             $this->regularUser,
             $start,
             $end,
@@ -401,7 +390,7 @@ class ReservationServiceTest extends TestCase
             'free_hours_used' => 0,
         ]);
 
-        $stats = $this->service->getUserStats($this->sustainingUser);
+        $stats = ReservationService::getUserStats($this->sustainingUser);
 
         $this->assertEquals(2, $stats['total_reservations']);
         $this->assertEquals(1, $stats['this_month_reservations']);

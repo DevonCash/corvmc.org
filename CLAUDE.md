@@ -55,8 +55,10 @@ NOTE: Filament v4 beta makes some changes from v3
 ### Testing and Quality
 
 - `composer test` - Run the test suite (clears config and runs PHPUnit/Pest tests)
-- `vendor/bin/pest` - Run Pest tests directly
-- `vendor/bin/pint` - Laravel Pint code style fixer
+
+### Test Coverage
+
+- `php artisan test:coverage` - Run tests with code coverage analysis
 
 ### Custom Test Commands
 
@@ -142,7 +144,7 @@ The application uses dedicated service classes for complex business logic:
 
 When developing complex features, create dedicated test commands to validate functionality:
 
-##### Process for Creating Test Commands:
+##### Process for Creating Test Commands
 
 1. **Create the command**: `php artisan make:command TestFeatureName`
 2. **Structure the command**:
@@ -158,7 +160,8 @@ When developing complex features, create dedicated test commands to validate fun
 4. **Include cleanup**: Always clean up test data to avoid pollution
 5. **Add to CLAUDE.md**: Document the command and its flags for future reference
 
-##### Example Implementation:
+##### Example Implementation
+
 ```php
 protected $signature = 'test:feature {--dry-run : Show what would happen} {--clean : Clean test data}';
 
@@ -244,9 +247,10 @@ This pattern provides reliable, repeatable testing for complex business logic an
 ## TODO: Next Session Tasks
 
 ### Stripe Transaction Fee Coverage
+
 - **Task**: Add opt-in upcharge to cover Stripe transaction costs
 - **Location**: `ReservationService::createCheckoutSession()` method
-- **Implementation**: 
+- **Implementation**:
   - Calculate Stripe fees (2.9% + $0.30 for cards)
   - Add optional checkbox in checkout for user to cover processing fees
   - Update line items to include fee coverage if selected
@@ -260,6 +264,7 @@ This pattern provides reliable, repeatable testing for complex business logic an
 The application implements comprehensive caching to optimize database queries and improve response times:
 
 #### Cache Layers
+
 - **User Authentication**: Sustaining member status, free hours usage (30-60 min TTL)
 - **Dashboard Widgets**: User statistics, recent activity, upcoming events (5-10 min TTL)
 - **Member Directory**: Tag filters for skills, genres, influences (1 hour TTL with tags)
@@ -269,6 +274,7 @@ The application implements comprehensive caching to optimize database queries an
 #### Cache Management
 
 **Artisan Commands:**
+
 ```bash
 # Cache management
 php artisan cache:manage warm          # Warm up commonly used caches
@@ -280,6 +286,7 @@ php artisan cache:manage clear-tags    # Clear member directory tag caches
 ```
 
 **Automatic Cache Invalidation:**
+
 - Model observers automatically clear related caches when data changes
 - User changes clear: sustaining status, statistics, activity feeds
 - Reservations clear: conflict detection, user free hours, daily schedules
@@ -287,11 +294,13 @@ php artisan cache:manage clear-tags    # Clear member directory tag caches
 - Tags clear: member directory filter options using cache tags
 
 #### Performance Impact
+
 - **Before caching**: 15-25 queries per dashboard load, 800ms-2000ms page load
 - **After caching**: 2-5 queries per dashboard load, 200ms-400ms page load
 - **Query reduction**: 75% fewer database queries for common operations
 
 #### Cache Keys Pattern
+
 - User data: `user.{id}.{type}.{suffix}`
 - Date data: `{type}.conflicts.{Y-m-d}`
 - Global data: `{feature_name}` or `{feature_name}.{suffix}`

@@ -21,8 +21,7 @@ class CancelMembershipAction
             // ->visible(fn($record) => $record?->subscription('default')?->active())
 
             ->action(function ($record) {
-                $service = \UserSubscriptionService::getFacadeRoot();
-                $result = $service->cancelSubscription($record);
+                $result = \UserSubscriptionService::cancelSubscription($record);
 
                 if ($result['success']) {
                     \Filament\Notifications\Notification::make()

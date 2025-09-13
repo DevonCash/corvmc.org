@@ -4,10 +4,10 @@ namespace App\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
-class StripePaymentService extends Facade
+class UserService extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return \App\Services\StripePaymentService::class;
+        return \App\Services\UserService::class;
     }
 }

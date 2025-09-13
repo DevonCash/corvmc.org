@@ -19,6 +19,14 @@ class ProductionPolicy
         return null;
     }
 
+    public function manage(User $user, Production $production): ?bool
+    {
+        if($user->can('manage productions') && $user->id === $production->manager_id)
+            return true;
+
+        return null;
+    }
+
     /**
      * Determine whether the user can view the model.
      */

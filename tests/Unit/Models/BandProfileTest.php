@@ -2,15 +2,14 @@
 
 namespace Tests\Unit\Models;
 
+use App\Data\ContactData;
 use App\Models\Band;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class BandProfileTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected Band $band;
 
@@ -73,7 +72,7 @@ class BandProfileTest extends TestCase
         $activeMembers = $this->band->activeMembers;
 
         $this->assertCount(1, $activeMembers);
-        $this->assertEquals($this->member->id, $activeMembers->first()->id);
+        $this->assertEquals($this->member->id, $activeMembers->first()->user_id);
     }
 
     #[Test]
@@ -129,9 +128,9 @@ class BandProfileTest extends TestCase
     {
         $otherUser = User::factory()->create();
 
-        $this->assertTrue($this->band->isOwnedBy($this->owner));
-        $this->assertFalse($this->band->isOwnedBy($otherUser));
-        $this->assertFalse($this->band->isOwnedBy($this->member));
+        $this->assertTrue($this->band->owner()->is($this->owner));
+        $this->assertFalse($this->band->owner()->is($otherUser));
+        $this->assertFalse($this->band->owner()->is($this->member));
     }
 
     #[Test]
@@ -229,7 +228,7 @@ class BandProfileTest extends TestCase
         $this->assertEquals('guitarist', $this->band->getUserRole($this->member));
 
         // Update role
-        $this->band->updateMemberRole($this->member, 'bassist');
+        $this->band->membership()->for($this->member)->update(['role' => 'bassist']);
         $this->assertEquals('bassist', $this->band->fresh()->getUserRole($this->member));
     }
 
@@ -246,36 +245,39 @@ class BandProfileTest extends TestCase
         $this->assertEquals('rhythm', $this->band->getUserPosition($this->member));
 
         // Update position
-        $this->band->updateMemberPosition($this->member, 'lead');
+        $this->band->memberships()->for($this->member)->update(['position' => 'lead']);
         $this->assertEquals('lead', $this->band->fresh()->getUserPosition($this->member));
     }
 
     #[Test]
-    public function it_returns_null_avatar_url_when_no_media()
+    public function it_returns_fallback_avatar_url_when_no_media()
     {
-        $this->assertNull($this->band->avatar_url);
+        $expected = 'https://ui-avatars.com/api/?name=' . urlencode($this->band->name) . '&size=400';
+        $this->assertEquals($expected, $this->band->avatar_url);
     }
 
     #[Test]
     public function it_casts_attributes_correctly()
     {
         $links = ['website' => 'https://example.com', 'spotify' => 'https://spotify.com/artist/123'];
-        $contact = ['email' => 'band@example.com', 'phone' => '555-1234'];
+        $contactData = ['email' => 'band@example.com', 'phone' => '555-1234'];
 
         $this->band->update([
             'links' => $links,
-            'contact' => $contact,
+            'contact' => $contactData,
         ]);
 
         $this->assertEquals($links, $this->band->links);
-        $this->assertEquals($contact, $this->band->contact);
+        $this->assertInstanceOf(ContactData::class, $this->band->contact);
+        $this->assertEquals('band@example.com', $this->band->contact->email);
+        $this->assertEquals('555-1234', $this->band->contact->phone);
     }
 
     #[Test]
     public function it_has_correct_fillable_attributes()
     {
         $fillable = [
-            'name', 'bio', 'links', 'contact', 'hometown', 'owner_id', 'visibility',
+            'name', 'slug', 'bio', 'links', 'contact', 'embeds', 'hometown', 'owner_id', 'visibility', 'status',
         ];
 
         $this->assertEquals($fillable, $this->band->getFillable());

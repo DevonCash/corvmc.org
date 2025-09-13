@@ -2,11 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
-use App\Models\Transaction;
-use App\Notifications\MembershipRenewalReminderNotification;
-use App\Notifications\MembershipExpiredNotification;
-use Carbon\Carbon;
+use App\Services\NotificationSchedulingService;
 use Illuminate\Console\Command;
 
 class SendMembershipReminders extends Command
@@ -14,12 +10,18 @@ class SendMembershipReminders extends Command
     /**
      * The name and signature of the console command.
      */
-    protected $signature = 'memberships:send-reminders {--dry-run : Show what would be sent without actually sending}';
+    protected $signature = 'memberships:send-reminders {--dry-run : Show what would be sent without actually sending} {--inactive-days=90 : Days of inactivity before sending reminder}';
 
     /**
      * The console command description.
      */
-    protected $description = 'Send membership renewal reminders and expiry notifications';
+    protected $description = 'Send membership reminders to inactive users';
+
+    public function __construct(
+        private NotificationSchedulingService $notificationService
+    ) {
+        parent::__construct();
+    }
 
     /**
      * Execute the console command.
@@ -27,96 +29,62 @@ class SendMembershipReminders extends Command
     public function handle()
     {
         $isDryRun = $this->option('dry-run');
+        $inactiveDays = (int) $this->option('inactive-days');
         
-        $this->info('🔄 Checking membership statuses...');
-        
-        // Get users with membership status based on recurring donations
-        $usersWithMemberships = $this->getUsersWithRecentMemberships();
-        
-        $remindersSent = 0;
-        $expiredNotificationsSent = 0;
-        
-        foreach ($usersWithMemberships as $userData) {
-            $user = $userData['user'];
-            $lastTransaction = $userData['last_transaction'];
-            $daysSinceLastDonation = $userData['days_since_last'];
-            
-            // Send renewal reminders at 23 days (7 days warning) and 29 days (1 day warning)
-            // assuming 30-day renewal cycle
-            if ($daysSinceLastDonation == 23) {
-                if (!$isDryRun) {
-                    $user->notify(new MembershipRenewalReminderNotification($user, 7));
-                    $this->info("  ✓ Sent 7-day renewal reminder to {$user->email}");
-                } else {
-                    $this->line("  → Would send 7-day renewal reminder to {$user->email}");
-                }
-                $remindersSent++;
-            } elseif ($daysSinceLastDonation == 29) {
-                if (!$isDryRun) {
-                    $user->notify(new MembershipRenewalReminderNotification($user, 1));
-                    $this->info("  ✓ Sent 1-day renewal reminder to {$user->email}");
-                } else {
-                    $this->line("  → Would send 1-day renewal reminder to {$user->email}");
-                }
-                $remindersSent++;
-            } elseif ($daysSinceLastDonation >= 30) {
-                // Membership has expired
-                if (!$isDryRun) {
-                    $user->notify(new MembershipExpiredNotification($user));
-                    $this->info("  ✓ Sent membership expired notification to {$user->email}");
-                } else {
-                    $this->line("  → Would send membership expired notification to {$user->email}");
-                }
-                $expiredNotificationsSent++;
-            }
+        $this->info('💌 Sending membership reminders...');
+        $this->line('==================================');
+
+        if ($isDryRun) {
+            $this->warn('DRY RUN MODE - No notifications will be sent');
         }
 
-        $this->line('');
-        $this->info("📊 Summary:");
-        $this->line("   • Renewal reminders: {$remindersSent}");
-        $this->line("   • Expiry notifications: {$expiredNotificationsSent}");
+        $this->info("Checking for users inactive for {$inactiveDays}+ days...");
+
+        $results = $this->notificationService->sendMembershipReminders($isDryRun, $inactiveDays);
+
+        if ($results['total'] === 0) {
+            $this->info('No inactive users found that need membership reminders.');
+            return 0;
+        }
+
+        $this->info("Found {$results['total']} inactive users:");
+
+        foreach ($results['users'] as $user) {
+            $lastReservation = $user['last_reservation'] ? 
+                $user['last_reservation']->format('M j, Y') : 'Never';
+            
+            $this->line("- {$user['name']} ({$user['email']})");
+            $this->line("  Last reservation: {$lastReservation}");
+            
+            match ($user['status']) {
+                'sent' => $this->info("  ✓ Membership reminder sent"),
+                'failed' => $this->error("  ✗ Failed to send reminder: {$user['error']}"),
+                'dry_run' => $this->line("  → Would send membership reminder"),
+                default => $this->line("  ? Unknown status")
+            };
+        }
+
+        // Summary
+        $this->newLine();
+        $this->info('📊 Summary:');
+        $this->line("   Total inactive users: {$results['total']}");
+        $this->line("   Successfully sent: {$results['sent']}");
+        $this->line("   Failed: {$results['failed']}");
+
+        if (!empty($results['errors'])) {
+            $this->line("   Errors:");
+            foreach ($results['errors'] as $error) {
+                $this->line("     • {$error}");
+            }
+        }
 
         if ($isDryRun) {
             $this->warn('This was a dry run. No notifications were actually sent.');
-            $this->info('Run without --dry-run to actually send the notifications.');
+            $this->info('Run without --dry-run to actually send the reminders.');
         } else {
-            $this->info('Membership notifications have been sent!');
+            $this->info('Membership reminders have been sent!');
         }
 
-        return 0;
-    }
-
-    /**
-     * Get users with recent recurring memberships and calculate days since last donation.
-     */
-    private function getUsersWithRecentMemberships(): array
-    {
-        $users = [];
-        
-        // Get users who have made recurring donations (membership payments) in the last 60 days
-        $recentMembers = User::whereHas('transactions', function($query) {
-            $query->where('type', 'recurring')
-                  ->where('amount', '>', 10) // Sustaining member threshold
-                  ->where('created_at', '>=', now()->subDays(60));
-        })->with(['transactions' => function($query) {
-            $query->where('type', 'recurring')
-                  ->where('amount', '>', 10)
-                  ->orderBy('created_at', 'desc');
-        }])->get();
-
-        foreach ($recentMembers as $user) {
-            $lastTransaction = $user->transactions->first();
-            if ($lastTransaction) {
-                $daysSince = now()->diffInDays($lastTransaction->created_at);
-                
-                $users[] = [
-                    'user' => $user,
-                    'last_transaction' => $lastTransaction,
-                    'days_since_last' => $daysSince,
-                ];
-            }
-        }
-
-        return $users;
+        return $results['failed'] > 0 ? 1 : 0;
     }
 }

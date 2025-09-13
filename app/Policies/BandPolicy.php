@@ -34,16 +34,6 @@ class BandPolicy
 
     public function create(User $user): bool
     {
-        // Check if user has permission to create bands
-        if ($user->can('create bands')) {
-            return true;
-        }
-
-        // Check if band creation requires approval
-        if ($user->can('approve band creation')) {
-            return true;
-        }
-
         return true;
     }
 
@@ -165,11 +155,11 @@ class BandPolicy
     /**
      * Determine whether the user can leave the band.
      */
-    public function leave(User $user, Band $band): bool
+    public function leave(User $user, Band $band): ?bool
     {
         // Owner cannot leave their own band (must transfer ownership first)
         if ($band->owner_id === $user->id) {
-            return null;
+            return false;
         }
 
         // Members can leave
@@ -192,9 +182,9 @@ class BandPolicy
     /**
      * Helper method to check if user is a member or owner of the band.
      */
-    protected function isMemberOrOwner(User $user, Band $band): bool
+    protected function isMemberOrOwner(?User $user, Band $band): bool
     {
-        return $band->owner_id === $user->id || $this->isMember($user, $band);
+        return $user && ($band->owner_id === $user->id || $this->isMember($user, $band));
     }
 
     /**

@@ -17,6 +17,7 @@ use Spatie\Image\Enums\CropPosition;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 use App\Traits\Reportable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 
 /**
  * Represents a band in the application.
@@ -26,7 +27,7 @@ use App\Traits\Reportable;
 class Band extends Model implements HasMedia
 {
     use HasFactory, HasFlags, HasSlug, HasTags, InteractsWithMedia, LogsActivity, Reportable;
-    
+
     // Report configuration
     protected static int $reportThreshold = 4;
     protected static bool $reportAutoHide = false;
@@ -44,6 +45,7 @@ class Band extends Model implements HasMedia
         'hometown',
         'owner_id',
         'visibility',
+        'status',
     ];
 
     protected $casts = [
@@ -68,22 +70,9 @@ class Band extends Model implements HasMedia
             ->withTimestamps();
     }
 
-    public function allMembers()
+    public function memberships()
     {
         return $this->hasMany(BandMember::class, 'band_profile_id');
-    }
-
-    public function activeMembers()
-    {
-        return $this->hasMany(BandMember::class, 'band_profile_id')->where('status', 'active');
-    }
-
-    public function pendingInvitations()
-    {
-        return $this->belongsToMany(User::class, 'band_profile_members', 'band_profile_id', 'user_id')
-            ->withPivot('role', 'position', 'name', 'status', 'invited_at')
-            ->wherePivot('status', 'invited')
-            ->withTimestamps();
     }
 
     public function owner()
@@ -185,132 +174,11 @@ class Band extends Model implements HasMedia
     }
 
     /**
-     * Check if a user is the owner of this band.
-     */
-    public function isOwnedBy(User $user): bool
-    {
-        return $this->owner_id === $user->id;
-    }
-
-    /**
-     * Check if a user is a member of this band.
-     */
-    public function hasMember(User $user): bool
-    {
-        return $this->members()->wherePivot('user_id', $user->id)->exists();
-    }
-
-    /**
-     * Check if a user is an admin of this band.
-     */
-    public function hasAdmin(User $user): bool
-    {
-        return $this->members()
-            ->wherePivot('user_id', $user->id)
-            ->wherePivot('role', 'admin')
-            ->exists();
-    }
-
-    /**
-     * Get a user's role in this band.
-     */
-    public function getUserRole(User $user): ?string
-    {
-        if ($this->owner_id === $user->id) {
-            return 'owner';
-        }
-
-        $membership = $this->members()
-            ->wherePivot('user_id', $user->id)
-            ->first();
-
-        return $membership?->pivot->role;
-    }
-
-    /**
-     * Get a user's position in this band.
-     */
-    public function getUserPosition(User $user): ?string
-    {
-        $membership = $this->members()
-            ->wherePivot('user_id', $user->id)
-            ->first();
-
-        return $membership?->pivot->position;
-    }
-
-    /**
-     * Add a member to the band with optional role and position.
-     *
-     * @deprecated Use BandService::addMember() instead
-     */
-    public function addMember(User $user, string $role = 'member', ?string $position = null): void
-    {
-        \BandService::addMember($this, $user, $role, $position);
-    }
-
-    /**
-     * Invite a user to join the band.
-     *
-     * @deprecated Use BandService::inviteMember() instead
-     */
-    public function inviteMember(User $user, string $role = 'member', ?string $position = null): void
-    {
-        \BandService::inviteMember($this, $user, $role, $position);
-    }
-
-    /**
-     * Check if a user has been invited to this band.
-     *
-     * @deprecated Use BandService::hasInvitedUser() instead
-     */
-    public function hasInvitedUser(User $user): bool
-    {
-        return app(\App\Services\BandService::class)->hasInvitedUser($this, $user);
-    }
-
-    /**
-     * Accept an invitation to join the band.
-     *
-     * @deprecated Use BandService::acceptInvitation() instead
-     */
-    public function acceptInvitation(User $user): void
-    {
-        \BandService::acceptInvitation($this, $user);
-    }
-
-    /**
-     * Decline an invitation to join the band.
-     *
-     * @deprecated Use BandService::declineInvitation() instead
-     */
-    public function declineInvitation(User $user): void
-    {
-        \BandService::declineInvitation($this, $user);
-    }
-
-    /**
      * Remove a member from the band.
      */
     public function removeMember(User $user): void
     {
         $this->members()->detach($user->id);
-    }
-
-    /**
-     * Update a member's role in the band.
-     */
-    public function updateMemberRole(User $user, string $role): void
-    {
-        $this->members()->updateExistingPivot($user->id, ['role' => $role]);
-    }
-
-    /**
-     * Update a member's position in the band.
-     */
-    public function updateMemberPosition(User $user, ?string $position): void
-    {
-        $this->members()->updateExistingPivot($user->id, ['position' => $position]);
     }
 
     /**

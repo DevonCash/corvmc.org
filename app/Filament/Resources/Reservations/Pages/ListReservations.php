@@ -38,10 +38,9 @@ class ListReservations extends ListRecords
                 ->steps(ReservationForm::getSteps())
                 ->action(function (array $data) {
                     $user = User::find($data['user_id']);
-                    $reservationService = new ReservationService();
                     
                     // Use ReservationService to properly create reservation with notifications
-                    $reservation = $reservationService->createReservation(
+                    $reservation = \App\Facades\ReservationService::createReservation(
                         $user,
                         \Carbon\Carbon::parse($data['reserved_at']),
                         \Carbon\Carbon::parse($data['reserved_until']),

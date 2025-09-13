@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Notifications\DonationReceivedNotification;
-use App\Services\StripePaymentService;
+use App\Facades\PaymentService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -18,14 +18,11 @@ class UserSubscriptionService
     const HOURS_PER_DOLLAR_AMOUNT = 1; // Number of hours granted
     const DOLLAR_AMOUNT_FOR_HOURS = 5; // Per this dollar amount
 
-    public function __construct(
-        private StripePaymentService $stripeService
-    ) {}
 
     /**
      * Calculate free hours based on contribution amount.
      */
-    public function calculateFreeHours(float $contributionAmount): int
+    public static function calculateFreeHours(float $contributionAmount): int
     {
         return intval(floor($contributionAmount / self::DOLLAR_AMOUNT_FOR_HOURS) * self::HOURS_PER_DOLLAR_AMOUNT);
     }
@@ -33,15 +30,15 @@ class UserSubscriptionService
     /**
      * Get the user's monthly free hours based on their subscription amount.
      */
-    public function getUserMonthlyFreeHours(User $user): int
+    public static function getUserMonthlyFreeHours(User $user): int
     {
-        if (!$this->isSustainingMember($user)) {
+        if (!static::isSustainingMember($user)) {
             return 0;
         }
 
-        $displayInfo = $this->getSubscriptionDisplayInfo($user);
+        $displayInfo = static::getSubscriptionDisplayInfo($user);
         if ($displayInfo['has_subscription']) {
-            return $this->calculateFreeHours($displayInfo['amount']);
+            return static::calculateFreeHours($displayInfo['amount']);
         }
 
         // Fallback to legacy constant for role-based members without subscriptions
@@ -51,19 +48,49 @@ class UserSubscriptionService
     /**
      * Check if a user qualifies as a sustaining member.
      */
-    public function isSustainingMember(User $user): bool
+    public static function isSustainingMember(User $user): bool
     {
-        // Check if they have the role assigned
-        if ($user->hasRole('sustaining member')) {
-            return true;
+        return Cache::remember("user.{$user->id}.is_sustaining", 3600, function () use ($user) {
+            // Check if they have the role assigned
+            if ($user->hasRole('sustaining member')) {
+                return true;
+            }
+
+            // Check for recent recurring transactions over threshold
+            return $user->transactions()
+                ->where('type', 'recurring')
+                ->where('amount', '>', self::SUSTAINING_MEMBER_THRESHOLD)
+                ->where('created_at', '>=', now()->subMonth())
+                ->exists();
+        });
+    }
+
+    /**
+     * Get used free hours for user in current month.
+     */
+    public static function getUsedFreeHoursThisMonth(User $user): float
+    {
+        return Cache::remember("user.{$user->id}.free_hours." . now()->format('Y-m'), 1800, function () use ($user) {
+            return $user->reservations()
+                ->whereMonth('reserved_at', now()->month)
+                ->whereYear('reserved_at', now()->year)
+                ->sum('free_hours_used') ?? 0;
+        });
+    }
+
+    /**
+     * Get remaining free hours for sustaining members this month.
+     */
+    public static function getRemainingFreeHours(User $user): float
+    {
+        if (!static::isSustainingMember($user)) {
+            return 0;
         }
 
-        // Check for recent recurring transactions over threshold
-        return $user->transactions()
-            ->where('type', 'recurring')
-            ->where('amount', '>', self::SUSTAINING_MEMBER_THRESHOLD)
-            ->where('created_at', '>=', now()->subMonth())
-            ->exists();
+        $allocatedHours = static::getUserMonthlyFreeHours($user);
+        $usedHours = static::getUsedFreeHoursThisMonth($user);
+
+        return max(0, $allocatedHours - $usedHours);
     }
 
     /**
@@ -71,12 +98,12 @@ class UserSubscriptionService
      */
     public function getSubscriptionStatus(User $user): array
     {
-        $isSustaining = $this->isSustainingMember($user);
-        $recentTransaction = $this->getMostRecentRecurringTransaction($user);
+        $isSustaining = static::isSustainingMember($user);
+        $recentTransaction = static::getMostRecentRecurringTransaction($user);
 
         return [
             'is_sustaining_member' => $isSustaining,
-            'free_hours_per_month' => $this->getUserMonthlyFreeHours($user),
+            'free_hours_per_month' => static::getUserMonthlyFreeHours($user),
             'current_month_used_hours' => $user->getUsedFreeHoursThisMonth(),
             'remaining_free_hours' => $user->getRemainingFreeHours(),
             'last_transaction' => $recentTransaction,
@@ -90,7 +117,7 @@ class UserSubscriptionService
     /**
      * Process a new transaction and update user status if needed.
      */
-    public function processTransaction(Transaction $transaction): bool
+    public static function processTransaction(Transaction $transaction): bool
     {
         $user = $transaction->user;
         if (! $user) {
@@ -116,7 +143,7 @@ class UserSubscriptionService
     /**
      * Get all sustaining members.
      */
-    public function getSustainingMembers(): Collection
+    public static function getSustainingMembers(): Collection
     {
         return Cache::remember('sustaining_members', 1800, function() {
             return User::whereHas('roles', function ($query) {
@@ -132,11 +159,11 @@ class UserSubscriptionService
     /**
      * Get subscription statistics.
      */
-    public function getSubscriptionStats(): array
+    public static function getSubscriptionStats(): array
     {
         return Cache::remember('subscription_stats', 1800, function() {
             $totalUsers = User::count();
-            $sustainingMembers = $this->getSustainingMembers()->count();
+            $sustainingMembers = static::getSustainingMembers()->count();
 
             $recentTransactions = Transaction::where('type', 'recurring')
                 ->where('created_at', '>=', now()->subMonth())
@@ -146,8 +173,8 @@ class UserSubscriptionService
             $averageSubscription = $recentTransactions->avg('amount') ?? 0;
 
             // Calculate total allocated hours based on actual subscription amounts
-            $totalAllocatedHours = $this->getSustainingMembers()
-                ->sum(fn($user) => $this->getUserMonthlyFreeHours($user));
+            $totalAllocatedHours = static::getSustainingMembers()
+                ->sum(fn($user) => static::getUserMonthlyFreeHours($user));
 
             return [
                 'total_users' => $totalUsers,
@@ -193,7 +220,7 @@ class UserSubscriptionService
         $totalHours = $reservations->sum('hours_used');
         $totalPaid = $reservations->sum('cost');
 
-        $allocatedFreeHours = $this->getUserMonthlyFreeHours($user);
+        $allocatedFreeHours = static::getUserMonthlyFreeHours($user);
         
         return [
             'month' => $month->format('Y-m'),
@@ -210,7 +237,7 @@ class UserSubscriptionService
     /**
      * Get the most recent recurring transaction for a user.
      */
-    protected function getMostRecentRecurringTransaction(User $user): ?Transaction
+    protected static function getMostRecentRecurringTransaction(User $user): ?Transaction
     {
         return $user->transactions()
             ->where('type', 'recurring')
@@ -249,7 +276,7 @@ class UserSubscriptionService
     /**
      * Upgrade user to sustaining member based on transaction.
      */
-    public function upgradeToSustainingMember(User $user, Transaction $transaction): bool
+    public static function upgradeToSustainingMember(User $user, Transaction $transaction): bool
     {
         if (!$user->hasRole('sustaining member')) {
             $user->assignRole('sustaining member');
@@ -293,7 +320,7 @@ class UserSubscriptionService
                 $user->createAsStripeCustomer();
             }
 
-            $breakdown = $this->stripeService->getFeeBreakdown($baseAmount, $coverFees);
+            $breakdown = PaymentService::getFeeBreakdown($baseAmount, $coverFees);
             $totalAmount = $breakdown['total_amount'];
 
             // Create checkout session
@@ -301,7 +328,7 @@ class UserSubscriptionService
                 'line_items' => [[
                     'price_data' => [
                         'currency' => 'usd',
-                        'unit_amount' => $this->stripeService->dollarsToStripeAmount($totalAmount),
+                        'unit_amount' => PaymentService::dollarsToStripeAmount($totalAmount),
                         'recurring' => ['interval' => 'month'],
                         'product_data' => [
                             'name' => 'Sliding Scale Membership',
@@ -317,7 +344,7 @@ class UserSubscriptionService
                         'base_amount' => $breakdown['base_amount'],
                         'fee_amount' => $breakdown['fee_amount'],
                         'covers_fees' => $coverFees ? 'true' : 'false',
-                        'net_received' => $this->stripeService->calculateNetAmount($totalAmount),
+                        'net_received' => PaymentService::calculateNetAmount($totalAmount),
                     ],
                 ],
             ]);
@@ -350,14 +377,14 @@ class UserSubscriptionService
                 ];
             }
 
-            $breakdown = $this->stripeService->getFeeBreakdown($baseAmount, $coverFees);
+            $breakdown = PaymentService::getFeeBreakdown($baseAmount, $coverFees);
             $totalAmount = $breakdown['total_amount'];
 
             // Update the subscription with new pricing
             $subscription->swap([
                 'price_data' => [
                     'currency' => 'usd',
-                    'unit_amount' => $this->stripeService->dollarsToStripeAmount($totalAmount),
+                    'unit_amount' => PaymentService::dollarsToStripeAmount($totalAmount),
                     'recurring' => ['interval' => 'month'],
                     'product_data' => [
                         'name' => 'Sliding Scale Membership',
@@ -382,7 +409,7 @@ class UserSubscriptionService
     /**
      * Get subscription display information for a user.
      */
-    public function getSubscriptionDisplayInfo(User $user): array
+    public static function getSubscriptionDisplayInfo(User $user): array
     {
         $subscription = $user->subscription('default');
         
@@ -395,13 +422,13 @@ class UserSubscriptionService
         }
 
         $price = $subscription->items->first()?->price ?? null;
-        $amount = $price ? $this->stripeService->stripeAmountToDollars($price->unit_amount) : 0;
+        $amount = $price ? PaymentService::stripeAmountToDollars($price->unit_amount) : 0;
 
         return [
             'has_subscription' => true,
             'status' => ucfirst($subscription->stripe_status),
             'amount' => $amount,
-            'formatted_amount' => $this->stripeService->formatMoney($amount),
+            'formatted_amount' => PaymentService::formatMoney($amount),
             'interval' => $price->recurring->interval ?? 'month',
             'next_billing' => $subscription->asStripeSubscription()->current_period_end,
         ];
@@ -412,7 +439,7 @@ class UserSubscriptionService
      */
     public function getFeeCalculation(float $baseAmount, bool $coverFees = false): array
     {
-        return $this->stripeService->getFeeBreakdown($baseAmount, $coverFees);
+        return PaymentService::getFeeBreakdown($baseAmount, $coverFees);
     }
 
     /**
@@ -432,7 +459,7 @@ class UserSubscriptionService
      */
     public function getCurrentTier(User $user): ?string
     {
-        $displayInfo = $this->getSubscriptionDisplayInfo($user);
+        $displayInfo = static::getSubscriptionDisplayInfo($user);
         
         if (!$displayInfo['has_subscription']) {
             return null;

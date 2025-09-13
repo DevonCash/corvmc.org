@@ -192,11 +192,7 @@ class Reservation extends Model implements Eventable
      */
     public function getCostDisplayAttribute(): string
     {
-        if ($this->cost == 0) {
-            return 'Free';
-        }
-
-        return '$' . number_format($this->cost, 2);
+        return \App\Facades\PaymentService::getCostDisplay($this);
     }
 
     /**
@@ -212,7 +208,7 @@ class Reservation extends Model implements Eventable
      */
     public function isPaid(): bool
     {
-        return $this->payment_status === 'paid';
+        return \App\Facades\PaymentService::isReservationPaid($this);
     }
 
     /**
@@ -220,7 +216,7 @@ class Reservation extends Model implements Eventable
      */
     public function isComped(): bool
     {
-        return $this->payment_status === 'comped';
+        return \App\Facades\PaymentService::isReservationComped($this);
     }
 
     /**
@@ -228,7 +224,7 @@ class Reservation extends Model implements Eventable
      */
     public function isUnpaid(): bool
     {
-        return $this->payment_status === 'unpaid';
+        return \App\Facades\PaymentService::isReservationUnpaid($this);
     }
 
     /**
@@ -236,7 +232,7 @@ class Reservation extends Model implements Eventable
      */
     public function isRefunded(): bool
     {
-        return $this->payment_status === 'refunded';
+        return \App\Facades\PaymentService::isReservationRefunded($this);
     }
 
     /**
@@ -244,12 +240,7 @@ class Reservation extends Model implements Eventable
      */
     public function markAsPaid(?string $paymentMethod = null, ?string $notes = null): void
     {
-        $this->update([
-            'payment_status' => 'paid',
-            'payment_method' => $paymentMethod,
-            'paid_at' => now(),
-            'payment_notes' => $notes,
-        ]);
+        \App\Facades\PaymentService::markReservationAsPaid($this, $paymentMethod, $notes);
     }
 
     /**
@@ -257,12 +248,7 @@ class Reservation extends Model implements Eventable
      */
     public function markAsComped(?string $notes = null): void
     {
-        $this->update([
-            'payment_status' => 'comped',
-            'payment_method' => 'comp',
-            'paid_at' => now(),
-            'payment_notes' => $notes,
-        ]);
+        \App\Facades\PaymentService::markReservationAsComped($this, $notes);
     }
 
     /**
@@ -270,11 +256,7 @@ class Reservation extends Model implements Eventable
      */
     public function markAsRefunded(?string $notes = null): void
     {
-        $this->update([
-            'payment_status' => 'refunded',
-            'paid_at' => now(),
-            'payment_notes' => $notes,
-        ]);
+        \App\Facades\PaymentService::markReservationAsRefunded($this, $notes);
     }
 
     public function markAsCancelled()
@@ -289,13 +271,7 @@ class Reservation extends Model implements Eventable
      */
     public function getPaymentStatusBadgeAttribute(): array
     {
-        return match ($this->payment_status) {
-            'paid' => ['label' => 'Paid', 'color' => 'success'],
-            'comped' => ['label' => 'Comped', 'color' => 'info'],
-            'refunded' => ['label' => 'Refunded', 'color' => 'danger'],
-            'unpaid' => ['label' => 'Unpaid', 'color' => 'danger'],
-            default => ['label' => 'Unknown', 'color' => 'gray'],
-        };
+        return \App\Facades\PaymentService::getPaymentStatusBadge($this);
     }
 
     /**
@@ -303,59 +279,7 @@ class Reservation extends Model implements Eventable
      */
     public function toCalendarEvent(): CalendarEvent
     {
-        $currentUser = User::me();
-        $isOwnReservation = $currentUser && $currentUser->id === $this->user_id;
-        $canViewDetails = $currentUser && $currentUser->can('view reservations');
-
-        // Show full details for own reservations or if user has permission
-        if ($isOwnReservation || $canViewDetails) {
-            $title = $this->user->name;
-
-            if ($this->is_recurring) {
-                $title .= ' (Recurring)';
-            }
-
-            if ($this->status === 'pending') {
-                $title .= ' (Pending)';
-            }
-        } else {
-            // Show limited info for other users' reservations
-            $title = 'Reserved';
-
-            if ($this->status === 'pending') {
-                $title .= ' (Pending)';
-            }
-        }
-
-        $color = match ($this->status) {
-            'confirmed' => '#10b981', // green
-            'pending' => '#f59e0b',   // yellow
-            'cancelled' => '#ef4444', // red
-            default => '#6b7280',     // gray
-        };
-
-        $extendedProps = [
-            'type' => 'reservation',
-            'status' => $this->status,
-            'duration' => $this->duration,
-            'is_recurring' => $this->is_recurring,
-        ];
-
-        // Add detailed info only for own reservations or if permitted
-        if ($isOwnReservation || $canViewDetails) {
-            $extendedProps['user_name'] = $this->user->name;
-            $extendedProps['cost'] = $this->cost;
-        }
-
-        return CalendarEvent::make($this)
-            ->model(static::class)
-            ->key($this->id)
-            ->title($title)
-            ->start($this->reserved_at)
-            ->end($this->reserved_until)
-            ->backgroundColor($color)
-            ->textColor('#fff')
-            ->extendedProps($extendedProps);
+        return \App\Facades\CalendarService::reservationToCalendarEvent($this);
     }
 
     public function getActivitylogOptions(): LogOptions

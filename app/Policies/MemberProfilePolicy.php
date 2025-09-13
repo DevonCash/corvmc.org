@@ -82,21 +82,21 @@ class MemberProfilePolicy
         return false;
     }
 
-    public function viewContact(User $user, MemberProfile $memberProfile): bool
+    public function viewContact(User $user, MemberProfile $memberProfile): ?bool
     {
         // Users can view their own contact info
         if ($user->id === $memberProfile->user->id) {
             return true;
         }
 
-        if ($memberProfile->contact_visibility === 'public') {
+        if ($memberProfile->contact->visibility === 'public') {
             return true;
         }
 
-        if ($memberProfile->contact_visibility === 'members' && $user->isMember()) {
+        if ($memberProfile->contact->visibility === 'members' && $user) {
             return true;
         }
 
-        return false;
+        return null;
     }
 }

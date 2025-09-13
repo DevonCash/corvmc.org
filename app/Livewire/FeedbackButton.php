@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Services\GitHubService;
+use App\Facades\GitHubService;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -86,8 +86,7 @@ class FeedbackButton extends Component implements HasForms, HasActions
                 $data['browser_info'] = request()->header('User-Agent') ?? '';
                 $data['environment'] = app()->environment();
 
-                $gitHubService = \GitHubService::getFacadeRoot();
-                $result = $gitHubService->createIssue($data);
+                $result = GitHubService::createIssue($data);
 
                 if ($result['success']) {
                     Notification::make()

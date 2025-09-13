@@ -2,9 +2,9 @@
 
 namespace App\Filament\Pages;
 
+use App\Facades\BandService;
 use App\Models\Band;
 use App\Models\User;
-use App\Services\BandService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -39,7 +39,7 @@ class BandInvitations extends Page
 
     public function getPendingInvitations(): Collection
     {
-        return \BandService::getPendingInvitationsForUser(auth()->user());
+        return BandService::getPendingInvitationsForUser(auth()->user());
     }
 
     protected function getActions(): array
@@ -48,17 +48,16 @@ class BandInvitations extends Page
             Action::make('refresh')
                 ->label('Refresh')
                 ->icon('heroicon-m-arrow-path')
-                ->action(fn () => $this->redirect(request()->url())),
+                ->action(fn() => $this->redirect(request()->url())),
         ];
     }
 
     public function acceptInvitation(int $bandId): void
     {
-        $bandService = \BandService::getFacadeRoot();
         $band = Band::findOrFail($bandId);
         $user = User::me();
 
-        if ($bandService->acceptInvitation($band, $user)) {
+        if (BandService::acceptInvitation($band, $user)) {
             Notification::make()
                 ->title('Invitation accepted')
                 ->body("Welcome to {$band->name}!")
@@ -77,15 +76,14 @@ class BandInvitations extends Page
             ->icon('heroicon-s-x-mark')
             ->requiresConfirmation()
             ->modalHeading('Decline Band Invitation')
-            ->modalDescription(fn (array $arguments) => "Are you sure you want to decline the invitation to join " . Band::find($arguments['bandId'])->name . "?")
+            ->modalDescription(fn(array $arguments) => "Are you sure you want to decline the invitation to join " . Band::find($arguments['bandId'])->name . "?")
             ->modalSubmitActionLabel('Yes, decline')
             ->modalCancelActionLabel('Cancel')
             ->action(function (array $arguments): void {
-                $bandService = \BandService::getFacadeRoot();
                 $band = Band::findOrFail($arguments['bandId']);
                 $user = auth()->user();
 
-                if ($bandService->declineInvitation($band, $user)) {
+                if (BandService::declineInvitation($band, $user)) {
                     Notification::make()
                         ->title('Invitation declined')
                         ->body('You have declined the invitation')

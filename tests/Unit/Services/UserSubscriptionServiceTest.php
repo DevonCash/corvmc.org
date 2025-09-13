@@ -1,47 +1,25 @@
 <?php
 
-namespace Tests\Unit\Services;
-
 use App\Models\Transaction;
 use App\Models\User;
-use App\Services\UserSubscriptionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\Attributes\Test;
+use App\Facades\UserSubscriptionService;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
 
-class UserSubscriptionServiceTest extends TestCase
-{
-    use RefreshDatabase;
+beforeEach(function () {
+    $this->user = User::factory()->create();
 
-    protected UserSubscriptionService $service;
+    // Role is already created by parent TestCase
+    $this->sustainingMemberRole = Role::where('name', 'sustaining member')->first();
+});
 
-    protected User $user;
-
-    protected Role $sustainingMemberRole;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->service = new UserSubscriptionService;
-        $this->user = User::factory()->create();
-
-        // Create sustaining member role
-        $this->sustainingMemberRole = Role::create(['name' => 'sustaining member']);
-    }
-
-    #[Test]
-    public function it_identifies_sustaining_member_by_role()
-    {
+describe('Sustaining Member Identification', function () {
+    it('can identify sustaining member by role', function () {
         $this->user->assignRole('sustaining member');
 
-        $this->assertTrue($this->service->isSustainingMember($this->user));
-    }
+        expect(UserSubscriptionService::isSustainingMember($this->user))->toBeTrue();
+    });
 
-    #[Test]
-    public function it_identifies_sustaining_member_by_recent_transaction()
-    {
+    it('can identify sustaining member by recent transaction', function () {
         Transaction::factory()->create([
             'email' => $this->user->email,
             'type' => 'recurring',
@@ -49,12 +27,10 @@ class UserSubscriptionServiceTest extends TestCase
             'created_at' => now()->subDays(15),
         ]);
 
-        $this->assertTrue($this->service->isSustainingMember($this->user));
-    }
+        expect(UserSubscriptionService::isSustainingMember($this->user))->toBeTrue();
+    });
 
-    #[Test]
-    public function it_rejects_sustaining_member_with_old_transaction()
-    {
+    it('rejects sustaining member with old transaction', function () {
         Transaction::factory()->create([
             'email' => $this->user->email,
             'type' => 'recurring',
@@ -62,12 +38,10 @@ class UserSubscriptionServiceTest extends TestCase
             'created_at' => now()->subMonths(2),
         ]);
 
-        $this->assertFalse($this->service->isSustainingMember($this->user));
-    }
+        expect(UserSubscriptionService::isSustainingMember($this->user))->toBeFalse();
+    });
 
-    #[Test]
-    public function it_rejects_sustaining_member_with_low_amount()
-    {
+    it('rejects sustaining member with low amount', function () {
         Transaction::factory()->create([
             'email' => $this->user->email,
             'type' => 'recurring',
@@ -75,12 +49,10 @@ class UserSubscriptionServiceTest extends TestCase
             'created_at' => now()->subDays(15),
         ]);
 
-        $this->assertFalse($this->service->isSustainingMember($this->user));
-    }
+        expect(UserSubscriptionService::isSustainingMember($this->user))->toBeFalse();
+    });
 
-    #[Test]
-    public function it_rejects_sustaining_member_with_non_recurring_transaction()
-    {
+    it('rejects sustaining member with non recurring transaction', function () {
         Transaction::factory()->create([
             'email' => $this->user->email,
             'type' => 'one-time',
@@ -88,12 +60,12 @@ class UserSubscriptionServiceTest extends TestCase
             'created_at' => now()->subDays(15),
         ]);
 
-        $this->assertFalse($this->service->isSustainingMember($this->user));
-    }
+        expect(UserSubscriptionService::isSustainingMember($this->user))->toBeFalse();
+    });
+});
 
-    #[Test]
-    public function it_gets_subscription_status_for_sustaining_member()
-    {
+describe('Subscription Status Management', function () {
+    it('gets subscription status for sustaining member', function () {
         $this->user->assignRole('sustaining member');
 
         $transaction = Transaction::factory()->create([
@@ -103,84 +75,78 @@ class UserSubscriptionServiceTest extends TestCase
             'created_at' => now()->subDays(10),
         ]);
 
-        $status = $this->service->getSubscriptionStatus($this->user);
+        $status = UserSubscriptionService::getSubscriptionStatus($this->user);
 
-        $this->assertTrue($status['is_sustaining_member']);
-        $this->assertEquals(4, $status['free_hours_per_month']);
-        $this->assertEquals(20.00, $status['subscription_amount']);
-        $this->assertEquals($transaction->id, $status['last_transaction']->id);
-        $this->assertNotNull($status['next_billing_estimate']);
-    }
+        expect($status['is_sustaining_member'])->toBeTrue()
+            ->and($status['free_hours_per_month'])->toBe(4)
+            ->and((float) $status['subscription_amount'])->toBe(20.00)
+            ->and($status['last_transaction']->id)->toBe($transaction->id)
+            ->and($status['next_billing_estimate'])->not->toBeNull();
+    });
 
-    #[Test]
-    public function it_gets_subscription_status_for_regular_member()
-    {
-        $status = $this->service->getSubscriptionStatus($this->user);
+    it('gets subscription status for regular member', function () {
+        $status = UserSubscriptionService::getSubscriptionStatus($this->user);
 
-        $this->assertFalse($status['is_sustaining_member']);
-        $this->assertEquals(0, $status['free_hours_per_month']);
-        $this->assertEquals(0, $status['subscription_amount']);
-        $this->assertNull($status['last_transaction']);
-        $this->assertNull($status['next_billing_estimate']);
-    }
+        expect($status['is_sustaining_member'])->toBeFalse()
+            ->and($status['free_hours_per_month'])->toBe(0)
+            ->and($status['subscription_amount'])->toBe(0)
+            ->and($status['last_transaction'])->toBeNull()
+            ->and($status['next_billing_estimate'])->toBeNull();
+    });
+});
 
-    #[Test]
-    public function it_processes_qualifying_transaction()
-    {
+describe('Transaction Processing', function () {
+    it('processes qualifying transaction', function () {
         $transaction = Transaction::factory()->create([
             'email' => $this->user->email,
             'type' => 'recurring',
             'amount' => 15.00,
         ]);
 
-        $result = $this->service->processTransaction($transaction);
+        $result = UserSubscriptionService::processTransaction($transaction);
 
-        $this->assertTrue($result);
+        expect($result)->toBeTrue();
+
         $this->user->refresh();
-        $this->assertTrue($this->user->hasRole('sustaining member'));
-    }
+        expect($this->user->hasRole('sustaining member'))->toBeTrue();
+    });
 
-    #[Test]
-    public function it_does_not_process_non_qualifying_transaction()
-    {
+    it('does not process non qualifying transaction', function () {
         $transaction = Transaction::factory()->create([
             'email' => $this->user->email,
             'type' => 'one-time',
             'amount' => 5.00,
         ]);
 
-        $result = $this->service->processTransaction($transaction);
+        $result = UserSubscriptionService::processTransaction($transaction);
 
-        $this->assertTrue($result);
+        expect($result)->toBeTrue();
+
         $this->user->refresh();
-        $this->assertFalse($this->user->hasRole('sustaining member'));
-    }
+        expect($this->user->hasRole('sustaining member'))->toBeFalse();
+    });
 
-    #[Test]
-    public function it_handles_transaction_without_user()
-    {
+    it('handles transaction without user', function () {
         $transaction = Transaction::factory()->create(['email' => 'nonexistent@example.com']);
 
-        $result = $this->service->processTransaction($transaction);
+        $result = UserSubscriptionService::processTransaction($transaction);
 
-        $this->assertFalse($result);
-    }
+        expect($result)->toBeFalse();
+    });
+});
 
-    #[Test]
-    public function it_gets_sustaining_members_by_role()
-    {
+describe('Member Queries', function () {
+    it('gets sustaining members by role', function () {
         $this->user->assignRole('sustaining member');
         $user2 = User::factory()->create();
 
-        $sustainingMembers = $this->service->getSustainingMembers();
+        $sustainingMembers = UserSubscriptionService::getSustainingMembers();
 
-        $this->assertCount(1, $sustainingMembers);
-        $this->assertEquals($this->user->id, $sustainingMembers->first()->id);
-    }
+        expect($sustainingMembers)->toHaveCount(1)
+            ->and($sustainingMembers->first()->id)->toBe($this->user->id);
+    });
 
-    #[Test]
-    public function it_gets_sustaining_members_by_transaction()
-    {
+    it('gets sustaining members by transaction', function () {
         Transaction::factory()->create([
             'email' => $this->user->email,
             'type' => 'recurring',
@@ -188,15 +154,15 @@ class UserSubscriptionServiceTest extends TestCase
             'created_at' => now()->subDays(15),
         ]);
 
-        $sustainingMembers = $this->service->getSustainingMembers();
+        $sustainingMembers = UserSubscriptionService::getSustainingMembers();
 
-        $this->assertCount(1, $sustainingMembers);
-        $this->assertEquals($this->user->id, $sustainingMembers->first()->id);
-    }
+        expect($sustainingMembers)->toHaveCount(1)
+            ->and($sustainingMembers->first()->id)->toBe($this->user->id);
+    });
+});
 
-    #[Test]
-    public function it_gets_subscription_statistics()
-    {
+describe('Subscription Analytics', function () {
+    it('gets subscription statistics', function () {
         // Create sustaining member by role only
         $this->user->assignRole('sustaining member');
 
@@ -218,19 +184,17 @@ class UserSubscriptionServiceTest extends TestCase
             'created_at' => now()->subDays(10),
         ]);
 
-        $stats = $this->service->getSubscriptionStats();
+        $stats = UserSubscriptionService::getSubscriptionStats();
 
-        $this->assertEquals(3, $stats['total_users']);
-        $this->assertEquals(3, $stats['sustaining_members']); // All 3 qualify
-        $this->assertEquals(100.0, $stats['sustaining_percentage']);
-        $this->assertEquals(35.00, $stats['monthly_revenue']);
-        $this->assertEquals(17.50, $stats['average_subscription']);
-        $this->assertEquals(12, $stats['total_free_hours_allocated']); // 3 * 4 hours
-    }
+        expect($stats['total_users'])->toBe(3)
+            ->and($stats['sustaining_members'])->toBe(3) // All 3 qualify
+            ->and((float) $stats['sustaining_percentage'])->toBe(100.0)
+            ->and((float) $stats['monthly_revenue'])->toBe(35.00)
+            ->and((float) $stats['average_subscription'])->toBe(17.50)
+            ->and($stats['total_free_hours_allocated'])->toBe(12); // 3 * 4 hours
+    });
 
-    #[Test]
-    public function it_gets_expiring_subscriptions()
-    {
+    it('gets expiring subscriptions', function () {
         // Create user with old transaction (should be expiring)
         Transaction::factory()->create([
             'email' => $this->user->email,
@@ -248,15 +212,15 @@ class UserSubscriptionServiceTest extends TestCase
             'created_at' => now()->subDays(10),
         ]);
 
-        $expiring = $this->service->getExpiringSubscriptions(7);
+        $expiring = UserSubscriptionService::getExpiringSubscriptions(7);
 
-        $this->assertCount(1, $expiring);
-        $this->assertEquals($this->user->id, $expiring->first()->id);
-    }
+        expect($expiring)->toHaveCount(1)
+            ->and($expiring->first()->id)->toBe($this->user->id);
+    });
+});
 
-    #[Test]
-    public function it_calculates_free_hours_usage_for_month()
-    {
+describe('Free Hours Management', function () {
+    it('calculates free hours usage for month', function () {
         $this->user->assignRole('sustaining member');
 
         // Create reservations for the current month
@@ -274,55 +238,51 @@ class UserSubscriptionServiceTest extends TestCase
             'cost' => 7.50, // (2.0 - 1.5) * 15
         ]);
 
-        $usage = $this->service->getFreeHoursUsageForMonth($this->user, now());
+        $usage = UserSubscriptionService::getFreeHoursUsageForMonth($this->user, now());
 
-        $this->assertEquals(now()->format('Y-m'), $usage['month']);
-        $this->assertEquals(2, $usage['total_reservations']);
-        $this->assertEquals(5.5, $usage['total_hours']);
-        $this->assertEquals(3.5, $usage['free_hours_used']);
-        $this->assertEquals(2.0, $usage['paid_hours']);
-        $this->assertEquals(30.00, $usage['total_cost']);
-        $this->assertEquals(4, $usage['allocated_free_hours']);
-        $this->assertEquals(0.5, $usage['unused_free_hours']);
-    }
+        expect($usage['month'])->toBe(now()->format('Y-m'))
+            ->and($usage['total_reservations'])->toBe(2)
+            ->and($usage['total_hours'])->toBe(5.5)
+            ->and($usage['free_hours_used'])->toBe(3.5)
+            ->and($usage['paid_hours'])->toBe(2.0)
+            ->and($usage['total_cost'])->toBe(30.00)
+            ->and($usage['allocated_free_hours'])->toBe(4)
+            ->and($usage['unused_free_hours'])->toBe(0.5);
+    });
+});
 
-    #[Test]
-    public function it_revokes_sustaining_member_status()
-    {
+describe('Role Management', function () {
+    it('revokes sustaining member status', function () {
         $this->user->assignRole('sustaining member');
 
-        $result = $this->service->revokeSustainingMemberStatus($this->user);
+        $result = UserSubscriptionService::revokeSustainingMemberStatus($this->user);
 
-        $this->assertTrue($result);
+        expect($result)->toBeTrue();
+
         $this->user->refresh();
-        $this->assertFalse($this->user->hasRole('sustaining member'));
-    }
+        expect($this->user->hasRole('sustaining member'))->toBeFalse();
+    });
 
-    #[Test]
-    public function it_does_not_revoke_non_sustaining_member()
-    {
-        $result = $this->service->revokeSustainingMemberStatus($this->user);
+    it('does not revoke non sustaining member', function () {
+        $result = UserSubscriptionService::revokeSustainingMemberStatus($this->user);
 
-        $this->assertFalse($result);
-    }
+        expect($result)->toBeFalse();
+    });
 
-    #[Test]
-    public function it_grants_sustaining_member_status()
-    {
-        $result = $this->service->grantSustainingMemberStatus($this->user);
+    it('grants sustaining member status', function () {
+        $result = UserSubscriptionService::grantSustainingMemberStatus($this->user);
 
-        $this->assertTrue($result);
+        expect($result)->toBeTrue();
+
         $this->user->refresh();
-        $this->assertTrue($this->user->hasRole('sustaining member'));
-    }
+        expect($this->user->hasRole('sustaining member'))->toBeTrue();
+    });
 
-    #[Test]
-    public function it_does_not_grant_existing_sustaining_member()
-    {
+    it('does not grant existing sustaining member', function () {
         $this->user->assignRole('sustaining member');
 
-        $result = $this->service->grantSustainingMemberStatus($this->user);
+        $result = UserSubscriptionService::grantSustainingMemberStatus($this->user);
 
-        $this->assertFalse($result);
-    }
-}
+        expect($result)->toBeFalse();
+    });
+});

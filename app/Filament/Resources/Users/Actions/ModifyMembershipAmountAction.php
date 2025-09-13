@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Users\Actions;
 
-use App\Services\StripePaymentService;
+use App\Services\PaymentService;
 use App\Services\UserSubscriptionService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -32,8 +32,7 @@ class ModifyMembershipAmountAction
                     ->live()
                     ->tooltips(RawJs::make('`$${$value.toFixed(2)}`'))
                     ->default(function ($record) {
-                        $service = \UserSubscriptionService::getFacadeRoot();
-                        $displayInfo = $service->getSubscriptionDisplayInfo($record);
+                        $displayInfo = \UserSubscriptionService::getSubscriptionDisplayInfo($record);
 
                         if ($displayInfo['has_subscription']) {
                             $currentAmount = $displayInfo['amount'];
@@ -51,8 +50,7 @@ class ModifyMembershipAmountAction
                     ->helperText(function ($get) {
                         $amount = $get('amount');
                         if ($amount > 0) {
-                            $stripeService = \StripePaymentService::getFacadeRoot();
-                            $feeInfo = $stripeService->getFeeDisplayInfo($amount);
+                            $feeInfo = \PaymentService::getFeeDisplayInfo($amount);
 
                             return $feeInfo['accurate_message'];
                         }
@@ -69,18 +67,16 @@ class ModifyMembershipAmountAction
                             return 'Please select a contribution amount';
                         }
 
-                        $stripeService = \StripePaymentService::getFacadeRoot();
-                        $breakdown = $stripeService->getFeeBreakdown($amount, $get('cover_fees'));
+                        $breakdown = \PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
 
-                        return $breakdown['description'] . ' = ' . $stripeService->formatMoney($breakdown['total_amount']) . ' total per month';
+                        return $breakdown['description'] . ' = ' . \PaymentService::formatMoney($breakdown['total_amount']) . ' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])
             ->action(function (array $data, $record) {
                 $baseAmount = floatval($data['amount']);
 
-                $service = \UserSubscriptionService::getFacadeRoot();
-                $result = $service->updateSubscriptionAmount($record, $baseAmount, $data['cover_fees']);
+                $result = \UserSubscriptionService::updateSubscriptionAmount($record, $baseAmount, $data['cover_fees']);
 
                 if ($result['success']) {
                     \Filament\Notifications\Notification::make()

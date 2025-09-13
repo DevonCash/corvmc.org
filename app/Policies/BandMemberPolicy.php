@@ -10,7 +10,7 @@ class BandMemberPolicy
     /**
      * Determine whether the user can view band members.
      */
-    public function viewMembers(User $user, Band $band): bool
+    public function viewMembers(User $user, Band $band): ?bool
     {
         // Public bands - anyone can see members
         if ($band->visibility === 'public') {
@@ -75,7 +75,7 @@ class BandMemberPolicy
     /**
      * Determine whether the user can remove a specific member.
      */
-    public function removeMember(User $user, Band $band, User $targetMember): bool
+    public function removeMember(User $user, Band $band, User $targetMember): ?bool
     {
         // Cannot remove yourself (use leave instead)
         if ($user->id === $targetMember->id) {
@@ -103,7 +103,7 @@ class BandMemberPolicy
     /**
      * Determine whether the user can change a member's role.
      */
-    public function changeRole(User $user, Band $band, User $targetMember): bool
+    public function changeRole(User $user, Band $band, User $targetMember): ?bool
     {
         // Only owner can change roles
         if ($band->owner_id !== $user->id) {
@@ -141,7 +141,7 @@ class BandMemberPolicy
     /**
      * Determine whether the user can view member contact info.
      */
-    public function viewMemberContact(User $user, Band $band, User $targetMember): bool
+    public function viewMemberContact(User $user, Band $band, User $targetMember): ?bool
     {
         // Can always view own contact info
         if ($user->id === $targetMember->id) {
@@ -154,7 +154,11 @@ class BandMemberPolicy
         }
 
         // Regular members can view each other's contact if both are in the band
-        return $this->isMember($user, $band) && $this->isMember($targetMember, $band);
+        if ($this->isMember($user, $band) && $this->isMember($targetMember, $band)) {
+            return true;
+        }
+
+        return null;
     }
 
     /**

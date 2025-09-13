@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Users\Schemas;
 
 use App\Models\User;
-use App\Services\UserSubscriptionService;
+use App\Facades\UserSubscriptionService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -41,11 +41,10 @@ class AdminUserControlForm
                             })
                             ->afterStateUpdated(function ($state, $record) {
                                 if ($record) {
-                                    $service = \UserSubscriptionService::getFacadeRoot();
                                     if ($state) {
-                                        $service->grantSustainingMemberStatus($record);
+                                        UserSubscriptionService::grantSustainingMemberStatus($record);
                                     } else {
-                                        $service->revokeSustainingMemberStatus($record);
+                                        UserSubscriptionService::revokeSustainingMemberStatus($record);
                                     }
                                 }
                             })

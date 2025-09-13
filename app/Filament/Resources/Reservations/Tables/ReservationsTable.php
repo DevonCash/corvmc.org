@@ -230,8 +230,7 @@ class ReservationsTable
                         ->color('danger')
                         ->requiresConfirmation()
                         ->action(function (Reservation $record) {
-                            $reservationService = new ReservationService();
-                            $reservationService->cancelReservation($record);
+                            \App\Facades\ReservationService::cancelReservation($record);
 
                             Notification::make()
                                 ->title('Reservation Cancelled')
@@ -315,9 +314,8 @@ class ReservationsTable
                     Action::make('bulk_cancel')
                         ->requiresConfirmation()
                         ->action(function (Collection $records) {
-                            $reservationService = new ReservationService();
                             foreach ($records as $record) {
-                                $reservationService->cancelReservation($record);
+                                \App\Facades\ReservationService::cancelReservation($record);
                             }
 
                             Notification::make()

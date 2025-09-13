@@ -3,35 +3,21 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Filament\Traits\HasCrudService;
 use App\Models\User;
-use App\Services\UserInvitationService;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Support\Str;
 
 class CreateUser extends CreateRecord
 {
+    use HasCrudService;
+
     protected static string $resource = UserResource::class;
+    protected static ?string $crudService = 'UserService';
 
     protected static ?string $title = 'Invite User';
 
     protected static ?string $breadcrumb = 'Invite';
-
-    protected function handleRecordCreation(array $data): User
-    {
-        $invitationService = \UserInvitationService::getFacadeRoot();
-        
-        // Extract role names from the form data
-        $roleNames = [];
-        if (isset($data['roles']) && is_array($data['roles'])) {
-            $roleNames = \Spatie\Permission\Models\Role::whereIn('id', $data['roles'])
-                ->pluck('name')
-                ->toArray();
-        }
-
-        // Use the invitation service to create and invite the user
-        return $invitationService->inviteUser($data['email'], $roleNames);
-    }
 
     protected function getCreatedNotificationTitle(): ?string
     {

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Users\Actions;
 
-use App\Services\StripePaymentService;
+use App\Services\PaymentService;
 use App\Services\UserSubscriptionService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Slider;
@@ -38,8 +38,7 @@ class CreateMembershipSubscriptionAction
                     ->helperText(function ($get) {
                         $amount = $get('amount');
                         if ($amount > 0) {
-                            $stripeService = \StripePaymentService::getFacadeRoot();
-                            $feeInfo = $stripeService->getFeeDisplayInfo($amount);
+                            $feeInfo = \PaymentService::getFeeDisplayInfo($amount);
 
                             return $feeInfo['message'];
                         }
@@ -56,17 +55,15 @@ class CreateMembershipSubscriptionAction
                             return 'Please select a contribution amount';
                         }
 
-                        $stripeService = \StripePaymentService::getFacadeRoot();
-                        $breakdown = $stripeService->getFeeBreakdown($amount, $get('cover_fees'));
+                        $breakdown = \PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
 
-                        return $breakdown['description'] . ' = ' . $stripeService->formatMoney($breakdown['total_amount']) . ' total per month';
+                        return $breakdown['description'] . ' = ' . $paymentService->formatMoney($breakdown['total_amount']) . ' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])
             ->action(function (array $data, $record) {
                 $baseAmount = floatval($data['amount']);
-                $service = \UserSubscriptionService::getFacadeRoot();
-                $result = $service->createSubscription($record, $baseAmount, $data['cover_fees']);
+                $result = \UserSubscriptionService::createSubscription($record, $baseAmount, $data['cover_fees']);
 
                 if ($result['success']) {
                     redirect($result['checkout_url']);

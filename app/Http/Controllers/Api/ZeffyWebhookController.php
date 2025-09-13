@@ -83,16 +83,17 @@ class ZeffyWebhookController extends Controller
      */
     private function validateWebhookPayload(Request $request): \Illuminate\Validation\Validator
     {
-        // Zapier webhook validation rules - adjust based on actual Zapier/Zeffy payload structure
+        // Zapier webhook validation rules - accept both standard and alternative field names
         return Validator::make($request->all(), [
-            'donation_id' => 'required|string',
-            'donor_email' => 'required|email',
+            'donation_id' => 'required_without:id|string',
+            'id' => 'required_without:donation_id|string',
+            'donor_email' => 'required_without:email|email',
+            'email' => 'required_without:donor_email|email',
             'amount' => 'required|numeric|min:0',
             'currency' => 'sometimes|string',
             'status' => 'sometimes|string',
             'type' => 'sometimes|string',
             'is_recurring' => 'sometimes|boolean',
-            // Add more validation rules based on Zapier's actual webhook structure from Zeffy
         ]);
     }
 
@@ -183,6 +184,9 @@ class ZeffyWebhookController extends Controller
             ]);
             return;
         }
+
+        // Associate the transaction with the user
+        $transaction->update(['user_id' => $user->id]);
 
         // Check if this qualifies for sustaining membership ($10+ monthly)
         if ($this->qualifiesForSustainingMembership($transaction)) {

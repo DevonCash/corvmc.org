@@ -426,43 +426,7 @@ class Production extends Model implements Eventable, HasMedia
      */
     public function toCalendarEvent(): CalendarEvent
     {
-        // Only show productions that use the practice space
-        if (! $this->usesPracticeSpace()) {
-            return CalendarEvent::make($this)
-                ->title('')
-                ->start($this->start_time->toISOString())
-                ->end($this->end_time->toISOString())
-                ->display('none');
-        }
-
-        $title = $this->title;
-
-        if (! $this->isPublished()) {
-            $title .= ' (Draft)';
-        }
-
-        $color = match ($this->status) {
-            'pre-production' => '#8b5cf6', // purple
-            'production' => '#3b82f6',     // blue
-            'completed' => '#10b981',      // green
-            'cancelled' => '#ef4444',      // red
-            default => '#6b7280',          // gray
-        };
-
-        return CalendarEvent::make($this)
-            ->title($title)
-            ->start($this->start_time)
-            ->end($this->end_time)
-            ->backgroundColor($color)
-            ->textColor('#fff')
-            ->extendedProps([
-                'type' => 'production',
-                'manager_name' => $this->manager->name ?? '',
-                'status' => $this->status,
-                'venue_name' => $this->venue_name,
-                'is_published' => $this->isPublished(),
-                'ticket_url' => $this->ticket_url,
-            ]);
+        return \App\Facades\CalendarService::productionToCalendarEvent($this);
     }
 
     public function getActivitylogOptions(): LogOptions

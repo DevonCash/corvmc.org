@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -35,6 +36,7 @@ class UserFactory extends Factory
         ];
     }
 
+
     /**
      * Indicate that the model's email address should be unverified.
      */
@@ -43,6 +45,26 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    /**
+     * Create an admin user with the admin role.
+     */
+    public function admin(): static
+    {
+        return $this->afterCreating(function ($user) {
+            $user->assignRole('admin');
+        });
+    }
+
+    /**
+     * Create a sustaining member user.
+     */
+    public function sustainingMember(): static
+    {
+        return $this->afterCreating(function ($user) {
+            $user->assignRole('sustaining member');
+        });
     }
 
     /**

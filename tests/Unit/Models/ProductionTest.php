@@ -148,8 +148,8 @@ class ProductionTest extends TestCase
     #[Test]
     public function it_calculates_estimated_duration()
     {
-        $band1 = Band::factory()->create();
-        $band2 = Band::factory()->create();
+        $band1 = Band::factory()->create(['name' => 'Test Band 1', 'slug' => 'test-band-1']);
+        $band2 = Band::factory()->create(['name' => 'Test Band 2', 'slug' => 'test-band-2']);
 
         $this->production->performers()->attach($band1->id, ['set_length' => 30]);
         $this->production->performers()->attach($band2->id, ['set_length' => 45]);

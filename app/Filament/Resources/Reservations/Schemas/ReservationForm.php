@@ -148,9 +148,7 @@ BLADE))),
                                 return [];
                             }
 
-                            $service = new ReservationService;
-
-                            return $service->getAvailableTimeSlotsForDate(Carbon::parse($date));
+                            return \ReservationService::getAvailableTimeSlotsForDate(Carbon::parse($date));
                         })
                         ->disabled(fn(Get $get) => ! $get('reservation_date'))
                         ->required()
@@ -173,9 +171,7 @@ BLADE))),
                                 return [];
                             }
 
-                            $service = new ReservationService;
-
-                            return $service->getValidEndTimesForDateAndStart(Carbon::parse($date), $startTime);
+                            return \ReservationService::getValidEndTimesForDateAndStart(Carbon::parse($date), $startTime);
                         })
                         ->required()
                         ->live()
@@ -272,8 +268,7 @@ BLADE))),
                     $endFormatted = Carbon::parse($end)->format('g:i A');
                     $duration = Carbon::parse($start)->diffInMinutes(Carbon::parse($end)) / 60;
 
-                    $reservationService = new ReservationService;
-                    $calculation = $reservationService->calculateCost(
+                    $calculation = \ReservationService::calculateCost(
                         $user,
                         Carbon::parse($start),
                         Carbon::parse($end)
@@ -340,7 +335,7 @@ BLADE))),
     private static function updateStatus(Get $get, callable $set): void
     {
         // Check if admin has overridden status
-        $adminStatus = $get('status');
+        $adminStatus = $get('status_override');
         if ($adminStatus && $adminStatus !== 'auto') {
             return; // Don't auto-update if admin has set a specific status
         }
@@ -354,8 +349,7 @@ BLADE))),
             return;
         }
 
-        $reservationService = new ReservationService;
-        $status = $reservationService->determineInitialStatus(
+        $status = \ReservationService::determineInitialStatus(
             Carbon::parse($date),
             (bool) $isRecurring
         );
@@ -389,8 +383,7 @@ BLADE))),
             return;
         }
 
-        $reservationService = new ReservationService;
-        $calculation = $reservationService->calculateCost(
+        $calculation = \ReservationService::calculateCost(
             $user,
             Carbon::parse($start),
             Carbon::parse($end)

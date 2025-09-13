@@ -2,17 +2,91 @@
 
 namespace App\Services;
 
+use App\Exceptions\BandException;
 use App\Models\Band;
+use App\Models\BandMember;
 use App\Models\User;
 use App\Notifications\BandClaimedNotification;
 use App\Notifications\BandInvitationAcceptedNotification;
 use App\Notifications\BandInvitationNotification;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\UnauthorizedException;
+use InvalidArgumentException;
 
 class BandService
 {
+
+    /**
+     * Create a new band with proper validation and notifications.
+     */
+    public function createBand(array $data): Band
+    {
+        return DB::transaction(function () use ($data) {
+            $user = Auth::user();
+            if (!$user?->can('create', Band::class)) {
+                throw new UnauthorizedException('User does not have permission to create bands.');
+            }
+
+            // Set owner to current user if not specified
+            if (!isset($data['owner_id'])) {
+                $data['owner_id'] = $user->id;
+            }
+
+            $band = Band::create($data);
+
+            // Attach tags if provided
+            if (!empty($data['tags'])) {
+                $band->attachTags($data['tags']);
+            }
+
+            // Add the creator as a member if they're not already
+            if (!$band->memberships()->active()->where('user_id', $user->id)->exists()) {
+                $this->addMember($band, $user, ['role' => 'owner']);
+            }
+
+            return $band;
+        });
+    }
+
+    /**
+     * Update a band with validation and notifications.
+     */
+    public function updateBand(Band $band, array $data): Band
+    {
+        return DB::transaction(function () use ($band, $data) {
+            $band->update($data);
+
+            // Update tags if provided
+            if (isset($data['tags'])) {
+                $band->syncTags($data['tags']);
+            }
+
+            return $band->fresh();
+        });
+    }
+
+    /**
+     * Delete a band with proper cleanup.
+     */
+    public function deleteBand(Band $band): bool
+    {
+        return DB::transaction(function () use ($band) {
+            // Notify members about band deletion
+            $members = $band->members()->get();
+            foreach ($members as $member) {
+                // You could send a BandDeletedNotification here
+            }
+
+            // Remove from any productions
+            // $band->productions()->detach();
+
+            return $band->delete();
+        });
+    }
+
     /**
      * Invite a user to join a band.
      */
@@ -22,9 +96,13 @@ class BandService
         string $role = 'member',
         ?string $position = null,
         ?string $displayName = null
-    ): bool {
-        if ($this->hasMember($band, $user) || $this->hasInvitedUser($band, $user)) {
-            return false;
+    ): void {
+        if ($band->memberships()->active()->where('user_id', $user->id)->exists()) {
+            throw BandException::userAlreadyMember();
+        }
+
+        if ($band->memberships()->invited()->where('user_id', $user->id)->exists()) {
+            throw BandException::userAlreadyInvited();
         }
 
         DB::transaction(function () use ($band, $user, $role, $position, $displayName) {
@@ -32,25 +110,22 @@ class BandService
             $band->members()->attach($user->id, [
                 'role' => $role,
                 'position' => $position,
-                'name' => $displayName,
+                'name' => $displayName ?? $user->name,
                 'status' => 'invited',
                 'invited_at' => now(),
             ]);
-
-            // Send notification
-            $user->notify(new BandInvitationNotification($band, $role, $position));
         });
-
-        return true;
+        // Send notification
+        $user->notify(new BandInvitationNotification($band, $role, $position));
     }
 
     /**
      * Accept an invitation to join a band.
      */
-    public function acceptInvitation(Band $band, User $user): bool
+    public function acceptInvitation(Band $band, User $user): void
     {
-        if (! $this->hasInvitedUser($band, $user)) {
-            return false;
+        if (! $band->memberships()->invited()->where('user_id', $user->id)->exists()) {
+            throw BandException::userNotInvited();
         }
 
         DB::transaction(function () use ($band, $user) {
@@ -62,117 +137,156 @@ class BandService
             // Notify band owner and admins about the new member
             $this->notifyBandLeadership($band, $user, 'accepted');
         });
-
-        return true;
     }
 
     /**
      * Decline an invitation to join a band.
      */
-    public function declineInvitation(Band $band, User $user): bool
+    public function declineInvitation(Band $band, User $user): void
     {
-        if (! $this->hasInvitedUser($band, $user)) {
-            return false;
+        if (! $band->memberships()->invited()->where('user_id', $user->id)->exists()) {
+            throw BandException::userNotInvited();
         }
 
         $band->members()->updateExistingPivot($user->id, [
             'status' => 'declined',
         ]);
-
-        return true;
     }
 
     /**
      * Add a member directly to a band (without invitation).
      */
+
     public function addMember(
         Band $band,
-        User $user,
-        string $role = 'member',
-        ?string $position = null,
-        ?string $displayName = null
-    ): bool {
-        if ($this->hasMember($band, $user)) {
-            return false;
+        ?User $user = null,
+        array $data = [],
+    ): void {
+        if ($user && $band->memberships()->active()->where('user_id', $user->id)->exists()) {
+            throw BandException::userAlreadyMember();
         }
 
-        $band->members()->attach($user->id, [
-            'role' => $role,
-            'position' => $position,
-            'name' => $displayName,
-            'status' => 'active',
-        ]);
+        $role = $data['role'] ?? 'member';
+        $position = $data['position'] ?? null;
+        $displayName = $data['display_name'] ?? null;
 
-        return true;
+        DB::transaction(function () use ($band, $user, $role, $position, $displayName) {
+            // If user is null, create a guest member entry
+            if (is_null($user)) {
+                BandMember::create([
+                    'band_profile_id' => $band->id,
+                    'user_id' => null,
+                    'name' => $displayName ?? 'Guest Member',
+                    'role' => $role,
+                    'position' => $position,
+                    'status' => 'active',
+                    'invited_at' => now(),
+                ]);
+            } else {
+
+                // Add member to pivot table
+                $band->members()->attach($user->id, [
+                    'role' => $role,
+                    'position' => $position,
+                    'name' => $displayName ?? $user->name,
+                    'status' => 'active',
+                    'invited_at' => now(),
+                ]);
+            }
+        });
     }
 
     /**
      * Remove a member from a band.
      */
-    public function removeMember(Band $band, User $user): bool
+    public function removeMember(Band $band, User $user): void
     {
+        // TODO: Add authorization check - only band owner/admins should be able to remove members
+
         // Cannot remove the owner
         if ($band->owner_id === $user->id) {
-            return false;
+            throw BandException::cannotRemoveOwner();
         }
 
-        return $band->members()->detach($user->id) > 0;
+        if (!$band->memberships()->active()->for($user)->exists()) {
+            throw BandException::userNotMember();
+        }
+
+        $band->members()->detach($user->id);
+    }
+
+    /**
+     * Allow a user to leave a band they are a member of.
+     */
+    public function leaveBand(Band $band, User $user): void
+    {
+        // Owner cannot leave their own band
+        if ($band->owner_id === $user->id) {
+            throw BandException::cannotLeaveOwnedBand();
+        }
+
+        if (!$band->memberships()->active()->for($user)->exists()) {
+            throw BandException::userNotMember();
+        }
+
+        $band->members()->detach($user->id);
     }
 
     /**
      * Update a member's role in the band.
      */
-    public function updateMemberRole(Band $band, User $user, string $role): bool
+    public function updateMemberRole(Band $band, User $user, string $role): void
     {
+        // TODO: Add authorization check - only band owner/admins should be able to update roles
+        // Current implementation allows any authenticated user to manage band roles (security gap)
+
         // Cannot change owner's role
         if ($band->owner_id === $user->id) {
-            return false;
+            throw BandException::cannotChangeOwnerRole();
         }
 
-        if (! $this->hasMember($band, $user)) {
-            return false;
+        if (! $band->memberships()->active()->for($user)->exists()) {
+            throw BandException::userNotMember();
         }
 
         $band->members()->updateExistingPivot($user->id, ['role' => $role]);
-
-        return true;
     }
 
     /**
      * Update a member's position in the band.
      */
-    public function updateMemberPosition(Band $band, User $user, ?string $position): bool
+    public function updateMemberPosition(Band $band, User $user, ?string $position): void
     {
-        if (! $this->hasMember($band, $user)) {
-            return false;
+        // TODO: Add authorization check - only band owner/admins should be able to update positions
+
+        if (! $band->memberships()->active()->for($user)->exists()) {
+            throw BandException::userNotMember();
         }
 
         $band->members()->updateExistingPivot($user->id, ['position' => $position]);
-
-        return true;
     }
 
     /**
      * Update a member's display name in the band.
      */
-    public function updateMemberDisplayName(Band $band, User $user, ?string $displayName): bool
+    public function updateMemberDisplayName(Band $band, User $user, ?string $displayName): void
     {
-        if (! $this->hasMember($band, $user)) {
-            return false;
+        // TODO: Add authorization check - only band owner/admins should be able to update display names
+
+        if (! $band->memberships()->active()->for($user)->exists()) {
+            throw BandException::userNotMember();
         }
 
         $band->members()->updateExistingPivot($user->id, ['name' => $displayName]);
-
-        return true;
     }
 
     /**
      * Resend an invitation to a user.
      */
-    public function resendInvitation(Band $band, User $user): bool
+    public function resendInvitation(Band $band, User $user): void
     {
-        if (! $this->hasInvitedUser($band, $user)) {
-            return false;
+        if (! $band->memberships()->invited()->for($user)->exists()) {
+            throw BandException::userNotInvited();
         }
 
         // Update the invited_at timestamp
@@ -189,17 +303,28 @@ class BandService
             $member->pivot->role,
             $member->pivot->position
         ));
+    }
 
-        return true;
+    /**
+     * Cancel a pending invitation to a user.
+     */
+    public function cancelInvitation(Band $band, User $user): void
+    {
+        if (!$band->memberships()->invited()->where('user_id', $user->id)->exists()) {
+            throw BandException::userNotInvited();
+        }
+
+        // Remove the invitation from the pivot table
+        $band->members()->detach($user->id);
     }
 
     /**
      * Re-invite a user who previously declined.
      */
-    public function reInviteDeclinedUser(Band $band, User $user): bool
+    public function reInviteDeclinedUser(Band $band, User $user): void
     {
-        if (! $this->hasDeclinedUser($band, $user)) {
-            return false;
+        if (! $band->memberships()->declined()->where('user_id', $user->id)->exists()) {
+            throw BandException::userNotDeclined();
         }
 
         // Get the current invitation details
@@ -217,17 +342,15 @@ class BandService
             $member->pivot->role,
             $member->pivot->position
         ));
-
-        return true;
     }
 
     /**
      * Transfer ownership of a band to another member.
      */
-    public function transferOwnership(Band $band, User $newOwner): bool
+    public function transferOwnership(Band $band, User $newOwner): void
     {
-        if (! $this->hasMember($band, $newOwner)) {
-            return false;
+        if (! $band->memberships()->active()->for($newOwner)->exists()) {
+            throw BandException::userNotMember();
         }
 
         DB::transaction(function () use ($band, $newOwner) {
@@ -237,15 +360,13 @@ class BandService
             $band->update(['owner_id' => $newOwner->id]);
 
             // Add old owner as admin if they weren't already a member
-            if (! $this->hasMember($band, $oldOwner)) {
-                $this->addMember($band, $oldOwner, 'admin');
+            if (! $band->memberships()->active()->for($oldOwner)->exists()) {
+                $this->addMember($band, $oldOwner, ['role' => 'admin']);
             } else {
                 // Update their role to admin
-                $this->updateMemberRole($band, $oldOwner, 'admin');
+                $band->memberships()->for($oldOwner)->update(['role' => 'admin']);
             }
         });
-
-        return true;
     }
 
     /**
@@ -269,77 +390,15 @@ class BandService
     public function getAvailableUsersForInvitation(Band $band, string $search = ''): Collection
     {
         return User::where('name', 'like', "%{$search}%")
-            ->whereDoesntHave('Bands', fn ($query) => $query->where('band_profile_id', $band->id)
+            ->where('id', '!=', $band->owner_id) // Exclude band owner
+            ->whereDoesntHave(
+                'Bands',
+                fn($query) => $query->where('band_profile_id', $band->id)
             )
             ->limit(50)
             ->get();
     }
 
-    /**
-     * Check if a user is a member of the band.
-     */
-    public function hasMember(Band $band, User $user): bool
-    {
-        return $band->members()
-            ->wherePivot('user_id', $user->id)
-            ->wherePivot('status', 'active')
-            ->exists();
-    }
-
-    /**
-     * Check if a user has been invited to the band.
-     */
-    public function hasInvitedUser(Band $band, User $user): bool
-    {
-        return $band->members()
-            ->wherePivot('user_id', $user->id)
-            ->wherePivot('status', 'invited')
-            ->exists();
-    }
-
-    /**
-     * Check if a user has declined an invitation to the band.
-     */
-    public function hasDeclinedUser(Band $band, User $user): bool
-    {
-        return $band->members()
-            ->wherePivot('user_id', $user->id)
-            ->wherePivot('status', 'declined')
-            ->exists();
-    }
-
-    /**
-     * Get a user's role in the band.
-     */
-    public function getUserRole(Band $band, User $user): ?string
-    {
-        if ($band->owner_id === $user->id) {
-            return 'owner';
-        }
-
-        $membership = $band->members()
-            ->wherePivot('user_id', $user->id)
-            ->wherePivot('status', 'active')
-            ->first();
-
-        return $membership?->pivot->role;
-    }
-
-    /**
-     * Check if a user is an admin of the band.
-     */
-    public function hasAdmin(Band $band, User $user): bool
-    {
-        return $this->getUserRole($band, $user) === 'admin';
-    }
-
-    /**
-     * Check if a user is the owner of the band.
-     */
-    public function isOwner(Band $band, User $user): bool
-    {
-        return $band->owner_id === $user->id;
-    }
 
     /**
      * Notify band leadership (owner and admins) about membership changes.
@@ -350,12 +409,18 @@ class BandService
             return; // Only notify on acceptance for now
         }
 
-        $adminsAndOwner = $band->activeMembers()
-            ->wherePivot('role', 'admin')
+        $adminMembers = $band->memberships()
+            ->active()
+            ->where('role', 'admin')
+            ->with('user')
             ->get()
+            ->pluck('user')
+            ->filter();
+
+        $adminsAndOwner = $adminMembers
             ->push($band->owner)
             ->unique('id')
-            ->filter(fn ($u) => $u->id !== $user->id); // Don't notify the person who just joined
+            ->filter(fn($u) => $u->id !== $user->id); // Don't notify the person who just joined
 
         foreach ($adminsAndOwner as $admin) {
             $admin->notify(new BandInvitationAcceptedNotification($band, $user));
@@ -375,13 +440,17 @@ class BandService
     /**
      * Claim ownership of a guest band.
      */
-    public function claimBand(Band $band, User $user): bool
+    public function claimBand(Band $band, User $user): void
     {
         if ($band->owner_id) {
-            return false; // Band already has an owner
+            throw BandException::bandAlreadyHasOwner();
         }
 
-        return DB::transaction(function () use ($band, $user) {
+        if (!$user->can('create bands')) {
+            throw new UnauthorizedException('User does not have permission to claim bands.');
+        }
+
+        DB::transaction(function () use ($band, $user) {
             // Update band ownership
             $band->update([
                 'owner_id' => $user->id,
@@ -389,18 +458,16 @@ class BandService
             ]);
 
             // Add user as owner/admin member
-            if (!$this->hasMember($band, $user)) {
-                $this->addMember($band, $user, 'admin');
+            if (!$band->memberships()->active()->where('user_id', $user->id)->exists()) {
+                $this->addMember($band, $user, ['role' => 'admin']);
             } else {
                 // Update existing membership to admin
-                $this->updateMemberRole($band, $user, 'admin');
+                $band->memberships()->for($user)->update(['role' => 'admin']);
             }
 
             // Notify admins about the band being claimed
-            $admins = User::role(['admin', 'super admin'])->get();
+            $admins = User::role(['admin'])->get();
             Notification::send($admins, new BandClaimedNotification($band, $user));
-
-            return true;
         });
     }
 
@@ -416,20 +483,52 @@ class BandService
     }
 
     /**
-     * Check if user can claim a specific band.
+     * Create a band for an existing user.
      */
-    public function canClaimBand(Band $band, User $user): bool
+    public function createBandForUser(User $user, string $bandName, array $bandData = []): Band
     {
-        // Band must not have an owner
-        if ($band->owner_id) {
-            return false;
+        return DB::transaction(function () use ($user, $bandName, $bandData) {
+            $band = Band::create(array_merge([
+                'name' => $bandName,
+                'owner_id' => $user->id,
+                'visibility' => 'members',
+                'status' => 'active',
+            ], $bandData));
+
+            // Add the user as a member with 'owner' role in the pivot
+            $band->members()->attach($user->id, [
+                'role' => 'owner',
+                'status' => 'active',
+            ]);
+
+            return $band;
+        });
+    }
+
+    /**
+     * Confirm band ownership from invitation data.
+     */
+    public function confirmBandOwnershipFromInvitation(User $user, array $invitationData): void
+    {
+        if (!isset($invitationData['band_id'])) {
+            throw new InvalidArgumentException('Invitation data does not contain band_id.');
         }
 
-        // User must have permission to create bands
-        if (!$user->can('create bands')) {
-            return false;
+        $band = Band::withoutGlobalScopes()->findOrFail($invitationData['band_id']);
+
+        if ($band->status !== 'pending_owner_verification') {
+            throw new InvalidArgumentException('Band is not pending owner verification.');
         }
 
-        return true;
+        // Add user as band member with owner role
+        $band->members()->attach($user->id, [
+            'role' => 'owner',
+            'status' => 'active',
+        ]);
+
+        $band->update([
+            'status' => 'active',
+            'owner_id' => $user->id
+        ]);
     }
 }

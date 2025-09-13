@@ -7,6 +7,8 @@ use App\Models\Production;
 use App\Models\User;
 use App\Notifications\ProductionUpdatedNotification;
 use App\Notifications\ProductionCancelledNotification;
+use App\Notifications\ProductionCreatedNotification;
+use App\Notifications\ProductionPublishedNotification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -14,26 +16,157 @@ use Illuminate\Support\Facades\Notification;
 class ProductionService
 {
     /**
+     * Create a new production.
+     */
+    public function createProduction(array $data): Production
+    {
+        return DB::transaction(function () use ($data) {
+            // Convert location data if needed
+            if (isset($data['at_cmc'])) {
+                $data['location']['is_external'] = !$data['at_cmc'];
+                unset($data['at_cmc']);
+            }
+
+            $data['status'] ??= 'pre-production';
+
+            // Check for conflicts if this production uses the practice space
+            if (isset($data['start_time']) && isset($data['end_time'])) {
+                $isExternal = isset($data['location']['is_external']) ? $data['location']['is_external'] : false;
+                if (!$isExternal) {
+                    $conflicts = app(\App\Services\ReservationService::class)->getAllConflicts(
+                        \Carbon\Carbon::parse($data['start_time']), 
+                        \Carbon\Carbon::parse($data['end_time'])
+                    );
+                    
+                    if ($conflicts['reservations']->isNotEmpty()) {
+                        throw new \InvalidArgumentException('Production conflicts with existing reservation');
+                    }
+                }
+            }
+
+            $production = Production::create($data);
+
+            // Set flags if provided
+            if (isset($data['notaflof'])) {
+                $production->setNotaflof($data['notaflof']);
+            }
+
+            // Attach tags if provided
+            if (!empty($data['tags'])) {
+                $production->attachTags($data['tags']);
+            }
+
+            // Notify manager
+            if ($production->manager) {
+                $production->manager->notify(new ProductionCreatedNotification($production));
+            }
+
+            return $production;
+        });
+    }
+
+    /**
+     * Update a production.
+     */
+    public function updateProduction(Production $production, array $data): Production
+    {
+        return DB::transaction(function () use ($production, $data) {
+            $originalData = $production->toArray();
+
+            // Convert location data if needed
+            if (isset($data['at_cmc'])) {
+                $data['location']['is_external'] = !$data['at_cmc'];
+                unset($data['at_cmc']);
+            }
+
+            $production->update($data);
+
+            // Update flags if provided
+            if (isset($data['notaflof'])) {
+                $production->setNotaflof($data['notaflof']);
+            }
+
+            // Update tags if provided
+            if (isset($data['tags'])) {
+                $production->syncTags($data['tags']);
+            }
+
+            // Send update notification if significant changes
+            $this->sendUpdateNotificationIfNeeded($production, $originalData, $data);
+
+            return $production->fresh();
+        });
+    }
+
+    /**
+     * Delete a production.
+     */
+    public function deleteProduction(Production $production): bool
+    {
+        return DB::transaction(function () use ($production) {
+            // Notify performers and manager
+            $this->notifyProductionCancellation($production);
+
+            return $production->delete();
+        });
+    }
+
+    /**
+     * Publish a production.
+     */
+    public function publishProduction(Production $production): void
+    {
+        // Check authorization
+        if (auth()->check() && !auth()->user()->can('update', $production)) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('You are not authorized to publish this production.');
+        }
+
+        $production->update([
+            'status' => 'published',
+            'published_at' => now(),
+        ]);
+
+        // Notify performers and stakeholders
+        $this->notifyProductionPublished($production);
+    }
+
+    /**
+     * Cancel a production.
+     */
+    public function cancelProduction(Production $production, ?string $reason = null): bool
+    {
+        return DB::transaction(function () use ($production, $reason) {
+            $production->update([
+                'status' => 'cancelled',
+                'description' => $production->description . ($reason ? "\n\nCancellation reason: {$reason}" : ''),
+            ]);
+
+            // Notify all stakeholders
+            $this->notifyProductionCancellation($production, $reason);
+
+            return true;
+        });
+    }
+    /**
      * Add a performer (band) to a production.
      */
     public function addPerformer(
         Production $production,
         Band $band,
-        int $order = 0,
-        ?int $setLength = null
+        array $options = []
     ): bool {
         if ($this->hasPerformer($production, $band)) {
             return false;
         }
 
         // If no order specified, put them at the end
-        if ($order === 0) {
-            $order = $production->performers()->max('production_bands.order') + 1 ?? 1;
+        if (!isset($options['order'])) {
+            $options['order'] = $production->performers()->max('production_bands.order') + 1 ?? 1;
         }
 
         $production->performers()->attach($band->id, [
-            'order' => $order,
-            'set_length' => $setLength,
+            'order' => $options['order'],
+            'set_length' => $options['set_length'] ?? null,
         ]);
 
         return true;
@@ -95,25 +228,6 @@ class ProductionService
         return true;
     }
 
-    /**
-     * Publish a production.
-     */
-    public function publishProduction(Production $production): bool
-    {
-        if ($production->isPublished()) {
-            return false;
-        }
-
-        $production->update([
-            'status' => 'published',
-            'published_at' => now(),
-        ]);
-
-        // Notify interested users about the published production
-        $this->notifyInterestedUsers($production, 'published');
-
-        return true;
-    }
 
     /**
      * Unpublish a production.
@@ -144,23 +258,6 @@ class ProductionService
         return true;
     }
 
-    /**
-     * Cancel a production.
-     */
-    public function cancelProduction(Production $production): bool
-    {
-        $production->update([
-            'status' => 'cancelled',
-        ]);
-
-        // Send specific cancellation notifications
-        $users = $this->getInterestedUsers($production);
-        if ($users->isNotEmpty()) {
-            Notification::send($users, new ProductionCancelledNotification($production));
-        }
-
-        return true;
-    }
 
     /**
      * Transfer production management to another user.
@@ -181,10 +278,7 @@ class ProductionService
     {
         return Band::withTouringBands()
             ->where('name', 'like', "%{$search}%")
-            ->whereDoesntHave(
-                'productions',
-                fn($query) => $query->where('production_id', $production->id)
-            )
+            ->whereNotIn('id', $production->performers->pluck('id'))
             ->limit(50)
             ->get();
     }
@@ -226,12 +320,9 @@ class ProductionService
      */
     public function getProductionsForBand(Band $band): Collection
     {
-        return Production::whereHas(
-            'performers',
-            fn($query) => $query->where('band_profile_id', $band->id)
-        )
-            ->orderBy('start_time', 'desc')
-            ->get();
+        return Production::whereHas('performers', function ($query) use ($band) {
+            $query->where('band_profile_id', $band->id);
+        })->orderBy('start_time', 'desc')->get();
     }
 
     /**
@@ -354,16 +445,16 @@ class ProductionService
      */
     private function getInterestedUsers(Production $production): Collection
     {
-        $users = collect();
+        $users = User::query()->whereNull('id')->get(); // Start with empty EloquentCollection
 
         // Always notify the production manager
         if ($production->manager) {
-            $users->push($production->manager);
+            $users = $users->merge([$production->manager]);
         }
 
         // Notify all band members performing in this production
         foreach ($production->performers as $band) {
-            $bandUsers = $band->members()->with('user')->get()->pluck('user');
+            $bandUsers = $band->members()->with('user')->get()->pluck('user')->filter();
             $users = $users->merge($bandUsers);
         }
 
@@ -403,5 +494,47 @@ class ProductionService
         }
 
         return true;
+    }
+
+    /**
+     * Send update notification if significant changes occurred.
+     */
+    private function sendUpdateNotificationIfNeeded(Production $production, array $originalData, array $newData): void
+    {
+        $significantFields = ['title', 'start_time', 'end_time', 'location', 'status'];
+        $hasSignificantChanges = false;
+
+        foreach ($significantFields as $field) {
+            if (isset($newData[$field]) && $originalData[$field] !== $newData[$field]) {
+                $hasSignificantChanges = true;
+                break;
+            }
+        }
+
+        if ($hasSignificantChanges) {
+            $this->notifyInterestedUsers($production, 'updated', $newData);
+        }
+    }
+
+    /**
+     * Notify about production publication.
+     */
+    private function notifyProductionPublished(Production $production): void
+    {
+        $users = $this->getInterestedUsers($production);
+        if ($users->isNotEmpty()) {
+            Notification::send($users, new ProductionPublishedNotification($production));
+        }
+    }
+
+    /**
+     * Notify about production cancellation.
+     */
+    private function notifyProductionCancellation(Production $production, ?string $reason = null): void
+    {
+        $users = $this->getInterestedUsers($production);
+        if ($users->isNotEmpty()) {
+            Notification::send($users, new ProductionCancelledNotification($production, $reason));
+        }
     }
 }

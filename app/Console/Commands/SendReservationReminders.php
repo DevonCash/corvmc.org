@@ -2,9 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Reservation;
-use App\Notifications\ReservationReminderNotification;
-use Carbon\Carbon;
+use App\Services\NotificationSchedulingService;
 use Illuminate\Console\Command;
 
 class SendReservationReminders extends Command
@@ -19,6 +17,12 @@ class SendReservationReminders extends Command
      */
     protected $description = 'Send reminder notifications for upcoming reservations';
 
+    public function __construct(
+        private NotificationSchedulingService $notificationService
+    ) {
+        parent::__construct();
+    }
+
     /**
      * Execute the console command.
      */
@@ -26,37 +30,44 @@ class SendReservationReminders extends Command
     {
         $isDryRun = $this->option('dry-run');
         
-        // Find reservations that are:
-        // - Confirmed
-        // - Starting tomorrow (24 hours from now, with some buffer)
-        $tomorrow = Carbon::now()->addDay();
-        $startOfTomorrow = $tomorrow->copy()->startOfDay();
-        $endOfTomorrow = $tomorrow->copy()->endOfDay();
-        
-        $reservations = Reservation::with('user')
-            ->where('status', 'confirmed')
-            ->whereBetween('reserved_at', [$startOfTomorrow, $endOfTomorrow])
-            ->get();
+        $this->info('🔔 Sending reservation reminders...');
+        $this->line('==================================');
 
-        if ($reservations->isEmpty()) {
+        if ($isDryRun) {
+            $this->warn('DRY RUN MODE - No notifications will be sent');
+        }
+
+        $results = $this->notificationService->sendReservationReminders($isDryRun);
+
+        if ($results['total'] === 0) {
             $this->info('No reservations found for tomorrow that need reminders.');
             return 0;
         }
 
-        $this->info("Found {$reservations->count()} reservations for tomorrow:");
+        $this->info("Found {$results['total']} reservations for tomorrow:");
 
-        foreach ($reservations as $reservation) {
-            $this->line("- {$reservation->user->name}: {$reservation->time_range}");
+        foreach ($results['reservations'] as $reservation) {
+            $this->line("- {$reservation['user_name']}: {$reservation['time_range']}");
             
-            if (!$isDryRun) {
-                try {
-                    $reservation->user->notify(new ReservationReminderNotification($reservation));
-                    $this->info("  ✓ Reminder sent to {$reservation->user->email}");
-                } catch (\Exception $e) {
-                    $this->error("  ✗ Failed to send reminder to {$reservation->user->email}: {$e->getMessage()}");
-                }
-            } else {
-                $this->line("  → Would send reminder to {$reservation->user->email}");
+            match ($reservation['status']) {
+                'sent' => $this->info("  ✓ Reminder sent to {$reservation['user_email']}"),
+                'failed' => $this->error("  ✗ Failed to send reminder to {$reservation['user_email']}: {$reservation['error']}"),
+                'dry_run' => $this->line("  → Would send reminder to {$reservation['user_email']}"),
+                default => $this->line("  ? Unknown status for {$reservation['user_email']}")
+            };
+        }
+
+        // Summary
+        $this->newLine();
+        $this->info('📊 Summary:');
+        $this->line("   Total reservations: {$results['total']}");
+        $this->line("   Successfully sent: {$results['sent']}");
+        $this->line("   Failed: {$results['failed']}");
+
+        if (!empty($results['errors'])) {
+            $this->line("   Errors:");
+            foreach ($results['errors'] as $error) {
+                $this->line("     • {$error}");
             }
         }
 
@@ -67,6 +78,6 @@ class SendReservationReminders extends Command
             $this->info('Reservation reminders have been sent!');
         }
 
-        return 0;
+        return $results['failed'] > 0 ? 1 : 0;
     }
 }

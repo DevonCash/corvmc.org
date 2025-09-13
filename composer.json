@@ -80,7 +80,11 @@
         ],
         "test": [
             "@php artisan config:clear --ansi",
-            "@php artisan test"
+            "@php artisan test --parallel"
+        ],
+        "test:coverage": [
+            "@php artisan config:clear --ansi",
+            "XDEBUG_MODE=coverage php artisan test --coverage --parallel"
         ]
     },
     "extra": {

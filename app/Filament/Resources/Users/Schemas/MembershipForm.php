@@ -6,8 +6,7 @@ use App\Filament\Resources\Users\Actions\CancelMembershipAction;
 use App\Filament\Resources\Users\Actions\CreateMembershipSubscriptionAction;
 use App\Filament\Resources\Users\Actions\ModifyMembershipAmountAction;
 use App\Filament\Resources\Users\Actions\OpenBillingPortalAction;
-use App\Models\User;
-use App\Services\UserSubscriptionService;
+use App\Facades\UserSubscriptionService;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Section;
@@ -37,15 +36,13 @@ class MembershipForm
                         TextEntry::make('remaining_free_hours')
                             ->label('Free Hours Remaining This Month')
                             ->state(function ($record) {
-                                $service = \UserSubscriptionService::getFacadeRoot();
-                                $totalHours = $service->getUserMonthlyFreeHours($record);
+                                $totalHours = UserSubscriptionService::getUserMonthlyFreeHours($record);
                                 return $record->getRemainingFreeHours() . ' / ' . $totalHours . ' hours';
                             }),
                         TextEntry::make('current_subscription')
                             ->label('Current Subscription')
                             ->state(function ($record) {
-                                $service = \UserSubscriptionService::getFacadeRoot();
-                                $displayInfo = $service->getSubscriptionDisplayInfo($record);
+                                $displayInfo = UserSubscriptionService::getSubscriptionDisplayInfo($record);
 
                                 if ($displayInfo['has_subscription']) {
                                     return sprintf(

@@ -10,6 +10,7 @@ use Filament\Models\Contracts\HasAvatar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Activitylog\LogOptions;
@@ -24,7 +25,7 @@ use Illuminate\Support\Facades\Cache;
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, HasRoles, LogsActivity, Notifiable, Impersonate, Billable;
+    use HasFactory, HasRoles, LogsActivity, Notifiable, Impersonate, Billable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -37,11 +38,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'email',
         'email_verified_at',
         'password',
-        'staff_title',
-        'staff_bio',
-        'staff_type',
-        'staff_sort_order',
-        'staff_social_links',
     ];
 
     /**
@@ -86,15 +82,27 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         ];
     }
 
-    protected static function boot()
+    /**
+     * Get the user's profile, creating one if it doesn't exist.
+     */
+    public function getProfileAttribute()
     {
-        parent::boot();
+        // If relationship is already loaded, return it
+        if ($this->relationLoaded('profile')) {
+            return $this->getRelation('profile');
+        }
 
-        static::created(function ($user) {
-            $user->profile()->create([
-                'user_id' => $user->id,
-            ]);
-        });
+        // Load or create the profile
+        $profile = $this->profile()->first();
+
+        if (!$profile) {
+            $profile = $this->profile()->create(['user_id' => $this->id]);
+        }
+
+        // Set the relationship so subsequent calls use the loaded instance
+        $this->setRelation('profile', $profile);
+
+        return $profile;
     }
 
     public function productions()
@@ -102,10 +110,18 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(Production::class, 'manager_id');
     }
 
+    // @deprecated use bands() instead
     public function bandProfiles()
     {
         return $this->belongsToMany(Band::class, 'band_profile_members', 'user_id', 'band_profile_id')
             ->withPivot('role', 'position')
+            ->withTimestamps();
+    }
+
+    public function bands()
+    {
+        return $this->belongsToMany(Band::class, 'band_profile_members', 'user_id', 'band_profile_id')
+            ->withPivot('role', 'position', 'status')
             ->withTimestamps();
     }
 
@@ -147,14 +163,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function isSustainingMember(): bool
     {
-        return Cache::remember("user.{$this->id}.is_sustaining", 3600, function() {
-            return $this->hasRole('sustaining member') ||
-                $this->transactions()
-                ->where('type', 'recurring')
-                ->where('amount', '>', 10)
-                ->where('created_at', '>=', now()->subMonth())
-                ->exists();
-        });
+        return \App\Facades\UserSubscriptionService::isSustainingMember($this);
     }
 
     /**
@@ -162,12 +171,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function getUsedFreeHoursThisMonth(): float
     {
-        return Cache::remember("user.{$this->id}.free_hours." . now()->format('Y-m'), 1800, function() {
-            return $this->reservations()
-                ->whereMonth('reserved_at', now()->month)
-                ->whereYear('reserved_at', now()->year)
-                ->sum('free_hours_used') ?? 0;
-        });
+        return \App\Facades\UserSubscriptionService::getUsedFreeHoursThisMonth($this);
     }
 
     /**
@@ -175,11 +179,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function getRemainingFreeHours(): float
     {
-        if (! $this->isSustainingMember()) {
-            return 0;
-        }
-
-        return max(0, 4 - $this->getUsedFreeHoursThisMonth());
+        return \App\Facades\UserSubscriptionService::getRemainingFreeHours($this);
     }
 
     public function scopeStaffMembers($query)

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\MemberProfiles\Pages;
 
 use App\Filament\Resources\MemberProfiles\MemberProfileResource;
+use App\Filament\Traits\HasCrudService;
 use App\Settings\MemberDirectorySettings;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
@@ -10,8 +11,10 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditMemberProfile extends EditRecord
 {
-    protected static string $resource = MemberProfileResource::class;
+    use HasCrudService;
 
+    protected static string $resource = MemberProfileResource::class;
+    protected static ?string $crudService = 'MemberProfileService';
 
     protected function getHeaderActions(): array
     {
@@ -20,5 +23,4 @@ class EditMemberProfile extends EditRecord
             DeleteAction::make(),
         ];
     }
-
 }

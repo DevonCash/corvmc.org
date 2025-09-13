@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BandMember extends Model
 {
+    use HasFactory;
     protected $table = 'band_profile_members';
 
     protected $fillable = [
@@ -49,5 +52,35 @@ class BandMember extends Model
     public function getAvatarUrlAttribute(): ?string
     {
         return $this->user?->getFilamentAvatarUrl();
+    }
+
+    #[Scope]
+    public function active($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    #[Scope]
+    public function invited($query)
+    {
+        return $query->where('status', 'invited');
+    }
+
+    #[Scope]
+    public function declined($query)
+    {
+        return $query->where('status', 'declined');
+    }
+
+    #[Scope]
+    public function inactive($query)
+    {
+        return $query->where('status', 'inactive');
+    }
+
+    #[Scope]
+    public function for($query, User $user)
+    {
+        return $query->where('user_id', $user->id);
     }
 }

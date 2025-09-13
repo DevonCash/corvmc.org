@@ -6,22 +6,17 @@ use App\Models\Reservation;
 use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class UserTest extends TestCase
 {
-    use RefreshDatabase;
-
     protected User $user;
 
     protected function setUp(): void
     {
         parent::setUp();
-
-        // Create roles for testing
-        \Spatie\Permission\Models\Role::create(['name' => 'sustaining member']);
 
         $this->user = User::factory()->create();
     }
@@ -32,6 +27,9 @@ class UserTest extends TestCase
         $this->assertFalse($this->user->isSustainingMember());
 
         $this->user->assignRole('sustaining member');
+
+        // Clear cache to get fresh result
+        Cache::forget("user.{$this->user->id}.is_sustaining");
 
         $this->assertTrue($this->user->isSustainingMember());
     }
@@ -220,5 +218,165 @@ class UserTest extends TestCase
 
         $this->assertTrue($this->user->transactions->contains($transaction));
         $this->assertEquals($this->user->email, $transaction->email);
+    }
+
+    #[Test]
+    public function it_caches_sustaining_member_status()
+    {
+        // Clear any existing cache
+        Cache::forget("user.{$this->user->id}.is_sustaining");
+
+        $this->assertFalse($this->user->isSustainingMember());
+
+        // Assign role
+        $this->user->assignRole('sustaining member');
+
+        // Should still be false due to cache
+        $this->assertFalse($this->user->isSustainingMember());
+
+        // Clear cache and check again
+        Cache::forget("user.{$this->user->id}.is_sustaining");
+        $this->assertTrue($this->user->isSustainingMember());
+    }
+
+    #[Test]
+    public function it_handles_case_insensitive_email_for_transactions()
+    {
+        $upperCaseEmail = strtoupper($this->user->email);
+        $transaction = Transaction::factory()->create([
+            'email' => $upperCaseEmail,
+        ]);
+
+        // Should not match due to case sensitivity in database
+        $this->assertFalse($this->user->transactions->contains($transaction));
+    }
+
+    #[Test]
+    public function it_calculates_free_hours_with_partial_hours()
+    {
+        $this->user->assignRole('sustaining member');
+
+        // Use partial hours
+        Reservation::factory()->create([
+            'user_id' => $this->user->id,
+            'cost' => 0,
+            'hours_used' => 1.5,
+            'free_hours_used' => 1.5,
+            'reserved_at' => Carbon::now()->startOfMonth()->addDays(5),
+        ]);
+
+        Reservation::factory()->create([
+            'user_id' => $this->user->id,
+            'cost' => 0,
+            'hours_used' => 0.25,
+            'free_hours_used' => 0.25,
+            'reserved_at' => Carbon::now()->startOfMonth()->addDays(10),
+        ]);
+
+        $this->assertEquals(1.75, $this->user->getUsedFreeHoursThisMonth());
+        $this->assertEquals(2.25, $this->user->getRemainingFreeHours());
+    }
+
+    #[Test]
+    public function it_handles_mixed_free_and_paid_hours_in_same_reservation()
+    {
+        $this->user->assignRole('sustaining member');
+
+        // Reservation that uses both free and paid hours
+        Reservation::factory()->create([
+            'user_id' => $this->user->id,
+            'cost' => 30.00, // $15/hour for 2 hours
+            'hours_used' => 4,
+            'free_hours_used' => 2,
+            'reserved_at' => Carbon::now()->startOfMonth()->addDays(5),
+        ]);
+
+        $this->assertEquals(2, $this->user->getUsedFreeHoursThisMonth());
+        $this->assertEquals(2, $this->user->getRemainingFreeHours());
+    }
+
+    #[Test]
+    public function it_counts_cancelled_reservations_in_free_hours()
+    {
+        $this->user->assignRole('sustaining member');
+
+        // Create cancelled reservation
+        Reservation::factory()->create([
+            'user_id' => $this->user->id,
+            'cost' => 0,
+            'hours_used' => 2,
+            'free_hours_used' => 2,
+            'status' => 'cancelled',
+            'reserved_at' => Carbon::now()->startOfMonth()->addDays(5),
+        ]);
+
+        // Cancelled reservations still count towards free hours usage in the current implementation
+        $this->assertEquals(2, $this->user->getUsedFreeHoursThisMonth());
+        $this->assertEquals(2, $this->user->getRemainingFreeHours());
+    }
+
+    #[Test]
+    public function it_does_not_identify_sustaining_member_by_one_time_donation()
+    {
+        // One-time donations don't make someone a sustaining member
+        // Only recurring transactions over $10 or the role assignment
+        Transaction::factory()->create([
+            'email' => $this->user->email,
+            'type' => 'donation', // Not recurring
+            'amount' => 120.00,
+            'created_at' => Carbon::now()->subDays(5),
+        ]);
+
+        $this->assertFalse($this->user->isSustainingMember());
+    }
+
+    #[Test]
+    public function it_does_not_count_small_recurring_transactions()
+    {
+        // Recurring transactions must be over $10
+        Transaction::factory()->create([
+            'email' => $this->user->email,
+            'type' => 'recurring',
+            'amount' => 5.00, // Under $10 threshold
+            'created_at' => Carbon::now()->subDays(5),
+        ]);
+
+        $this->assertFalse($this->user->isSustainingMember());
+    }
+
+    #[Test]
+    public function it_does_not_count_old_recurring_transactions()
+    {
+        // Recurring transactions must be within the last month
+        Transaction::factory()->create([
+            'email' => $this->user->email,
+            'type' => 'recurring',
+            'amount' => 15.00,
+            'created_at' => Carbon::now()->subMonths(2), // Too old
+        ]);
+
+        $this->assertFalse($this->user->isSustainingMember());
+    }
+
+    #[Test]
+    public function it_creates_user_with_factory()
+    {
+        $user = User::factory()->create();
+
+        $this->assertNotNull($user->id);
+        $this->assertNotNull($user->name);
+        $this->assertNotNull($user->email);
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertFalse($user->isSustainingMember());
+    }
+
+    #[Test]
+    public function it_creates_sustaining_member_with_role()
+    {
+        $user = User::factory()->create();
+        $user->assignRole('sustaining member');
+
+        $this->assertTrue($user->hasRole('sustaining member'));
+        $this->assertTrue($user->isSustainingMember());
     }
 }

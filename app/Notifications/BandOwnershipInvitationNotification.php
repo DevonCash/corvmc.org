@@ -15,9 +15,8 @@ class BandOwnershipInvitationNotification extends Notification implements Should
 
     public function __construct(
         private User $user,
-        private Band $band, 
+        private Band $band,
         private string $token,
-        private array $roles = []
     ) {}
 
     /**
@@ -34,15 +33,14 @@ class BandOwnershipInvitationNotification extends Notification implements Should
     public function toMail(object $notifiable): MailMessage
     {
         $invitationUrl = route('invitation.complete', ['token' => $this->token]);
-        $rolesText = !empty($this->roles) ? ' as ' . implode(', ', $this->roles) : '';
 
         return (new MailMessage)
             ->subject("You're invited to join Corvallis Music Collective and own {$this->band->name}!")
             ->greeting("Hi there!")
-            ->line("You've been invited to join the Corvallis Music Collective{$rolesText} and take ownership of the band profile for **{$this->band->name}**.")
+            ->line("You've been invited to join the Corvallis Music Collective and take ownership of the band profile for **{$this->band->name}**.")
             ->line("As the band owner, you'll be able to:")
             ->line("• Manage your band's profile and information")
-            ->line("• Invite other members to join your band") 
+            ->line("• Invite other members to join your band")
             ->line("• Book shows and manage performances")
             ->line("• Connect with other local musicians")
             ->action('Complete Your Registration', $invitationUrl)

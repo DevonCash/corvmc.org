@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Bands\Pages;
 
 use App\Filament\Resources\Bands\BandResource;
 use App\Models\Band;
-use App\Services\BandService;
+use App\Facades\BandService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
@@ -37,8 +37,7 @@ class ClaimBand extends Page
         }
 
         // Get similar bands for reference
-        $bandService = \BandService::getFacadeRoot();
-        $this->similarBands = $bandService->getSimilarBandNames($this->claimableBand->name, 10)->toArray();
+        $this->similarBands = BandService::getSimilarBandNames($this->claimableBand->name, 10)->toArray();
     }
 
     public function claimBandAction(): Action
@@ -51,9 +50,8 @@ class ClaimBand extends Page
             ->modalHeading('Claim Band Ownership')
             ->modalDescription(fn() => "Are you sure you want to claim ownership of \"{$this->claimableBand->name}\"? This will make you the owner and allow you to manage the band profile.")
             ->action(function () {
-                $bandService = \BandService::getFacadeRoot();
 
-                if ($bandService->claimBand($this->claimableBand, auth()->user())) {
+                if (BandService::claimBand($this->claimableBand, auth()->user())) {
                     // Update the band with any new data from the original form
                     $updateData = array_filter($this->originalData, function ($value, $key) {
                         return $key !== 'name' && $value !== null && $value !== '';

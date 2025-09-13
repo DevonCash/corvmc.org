@@ -1,168 +1,155 @@
 <?php
 
-namespace Tests\Unit\Services;
-
 use App\Models\MemberProfile;
 use App\Models\User;
-use App\Services\MemberProfileService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use App\Facades\MemberProfileService;
 
-class MemberProfileServiceTest extends TestCase
-{
-    use RefreshDatabase;
+beforeEach(function () {
+    $this->user = User::factory()->createWithoutProfile();
 
-    protected MemberProfileService $service;
+    // Create profile manually for controlled testing
+    $this->profile = MemberProfile::create([
+        'user_id' => $this->user->id,
+        'visibility' => 'public',
+        'bio' => 'Test musician profile',
+    ]);
+});
 
-    protected User $user;
+describe('Profile Visibility Management', function () {
+    it('can update profile visibility', function () {
+        $result = MemberProfileService::updateVisibility($this->profile, 'private');
 
-    protected MemberProfile $profile;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->service = new MemberProfileService;
-        $this->user = User::factory()->createWithoutProfile();
-
-        // Create profile manually for controlled testing
-        $this->profile = MemberProfile::create([
-            'user_id' => $this->user->id,
-            'visibility' => 'public',
-            'bio' => 'Test musician profile',
-        ]);
-    }
-
-    #[Test]
-    public function it_updates_profile_visibility()
-    {
-        $this->assertTrue($this->service->updateVisibility($this->profile, 'private'));
+        expect($result)->toBeTrue();
 
         $this->profile->refresh();
-        $this->assertEquals('private', $this->profile->visibility);
-    }
+        expect($this->profile->visibility)->toBe('private');
+    });
 
-    #[Test]
-    public function it_rejects_invalid_visibility_values()
-    {
-        $this->assertFalse($this->service->updateVisibility($this->profile, 'invalid'));
+    it('rejects invalid visibility values', function () {
+        $result = MemberProfileService::updateVisibility($this->profile, 'invalid');
+
+        expect($result)->toBeFalse();
 
         $this->profile->refresh();
-        $this->assertEquals('public', $this->profile->visibility); // Should remain unchanged
-    }
+        expect($this->profile->visibility)->toBe('public'); // Should remain unchanged
+    });
 
-    #[Test]
-    public function it_accepts_valid_visibility_values()
-    {
+    it('accepts all valid visibility values', function () {
         $validValues = ['public', 'members', 'private'];
 
         foreach ($validValues as $value) {
-            $this->assertTrue($this->service->updateVisibility($this->profile, $value));
-            $this->profile->refresh();
-            $this->assertEquals($value, $this->profile->visibility);
-        }
-    }
+            $result = MemberProfileService::updateVisibility($this->profile, $value);
 
-    #[Test]
-    public function it_updates_profile_skills()
-    {
+            expect($result)->toBeTrue();
+
+            $this->profile->refresh();
+            expect($this->profile->visibility)->toBe($value);
+        }
+    });
+});
+
+describe('Profile Tags Management', function () {
+    it('can update profile skills', function () {
         $skills = ['guitar', 'vocals', 'songwriting'];
 
-        $this->assertTrue($this->service->updateSkills($this->profile, $skills));
+        $result = MemberProfileService::updateSkills($this->profile, $skills);
+
+        expect($result)->toBeTrue();
 
         $this->profile->refresh();
         $profileSkills = $this->profile->skills;
 
-        $this->assertCount(3, $profileSkills);
-        $this->assertContains('guitar', $profileSkills);
-        $this->assertContains('vocals', $profileSkills);
-        $this->assertContains('songwriting', $profileSkills);
-    }
+        expect($profileSkills)->toHaveCount(3)
+            ->and($profileSkills)->toContain('guitar')
+            ->and($profileSkills)->toContain('vocals')
+            ->and($profileSkills)->toContain('songwriting');
+    });
 
-    #[Test]
-    public function it_replaces_existing_skills()
-    {
+    it('replaces existing skills', function () {
         // Set initial skills
         $this->profile->attachTag('drums', 'skill');
         $this->profile->attachTag('bass', 'skill');
 
         $newSkills = ['guitar', 'vocals'];
-        $this->assertTrue($this->service->updateSkills($this->profile, $newSkills));
+        $result = MemberProfileService::updateSkills($this->profile, $newSkills);
+
+        expect($result)->toBeTrue();
 
         $this->profile->refresh();
         $profileSkills = $this->profile->skills;
 
-        $this->assertCount(2, $profileSkills);
-        $this->assertContains('guitar', $profileSkills);
-        $this->assertContains('vocals', $profileSkills);
-        $this->assertNotContains('drums', $profileSkills);
-        $this->assertNotContains('bass', $profileSkills);
-    }
+        expect($profileSkills)->toHaveCount(2)
+            ->and($profileSkills)->toContain('guitar')
+            ->and($profileSkills)->toContain('vocals')
+            ->and($profileSkills)->not->toContain('drums')
+            ->and($profileSkills)->not->toContain('bass');
+    });
 
-    #[Test]
-    public function it_updates_profile_genres()
-    {
+    it('can update profile genres', function () {
         $genres = ['rock', 'indie', 'folk'];
 
-        $this->assertTrue($this->service->updateGenres($this->profile, $genres));
+        $result = MemberProfileService::updateGenres($this->profile, $genres);
+
+        expect($result)->toBeTrue();
 
         $this->profile->refresh();
         $profileGenres = $this->profile->genres;
 
-        $this->assertCount(3, $profileGenres);
-        $this->assertContains('rock', $profileGenres);
-        $this->assertContains('indie', $profileGenres);
-        $this->assertContains('folk', $profileGenres);
-    }
+        expect($profileGenres)->toHaveCount(3)
+            ->and($profileGenres)->toContain('rock')
+            ->and($profileGenres)->toContain('indie')
+            ->and($profileGenres)->toContain('folk');
+    });
 
-    #[Test]
-    public function it_updates_profile_influences()
-    {
+    it('can update profile influences', function () {
         $influences = ['The Beatles', 'Bob Dylan', 'Radiohead'];
 
-        $this->assertTrue($this->service->updateInfluences($this->profile, $influences));
+        $result = MemberProfileService::updateInfluences($this->profile, $influences);
+
+        expect($result)->toBeTrue();
 
         $this->profile->refresh();
         $profileInfluences = $this->profile->influences;
 
-        $this->assertCount(3, $profileInfluences);
-        $this->assertContains('The Beatles', $profileInfluences);
-        $this->assertContains('Bob Dylan', $profileInfluences);
-        $this->assertContains('Radiohead', $profileInfluences);
-    }
+        expect($profileInfluences)->toHaveCount(3)
+            ->and($profileInfluences)->toContain('The Beatles')
+            ->and($profileInfluences)->toContain('Bob Dylan')
+            ->and($profileInfluences)->toContain('Radiohead');
+    });
+});
 
-    #[Test]
-    public function it_sets_profile_flags()
-    {
+describe('Profile Flags Management', function () {
+    it('can set profile flags', function () {
         $flags = ['seeking_band', 'available_for_session'];
 
-        $this->assertTrue($this->service->setFlags($this->profile, $flags));
+        $result = MemberProfileService::setFlags($this->profile, $flags);
+
+        expect($result)->toBeTrue();
 
         $this->profile->refresh();
-        $this->assertTrue($this->profile->hasFlag('seeking_band'));
-        $this->assertTrue($this->profile->hasFlag('available_for_session'));
-    }
+        expect($this->profile->hasFlag('seeking_band'))->toBeTrue()
+            ->and($this->profile->hasFlag('available_for_session'))->toBeTrue();
+    });
 
-    #[Test]
-    public function it_replaces_existing_flags()
-    {
+    it('replaces existing flags', function () {
         // Set initial flags
         $this->profile->flag('seeking_band');
         $this->profile->flag('available_for_gigs');
 
         $newFlags = ['available_for_session'];
-        $this->assertTrue($this->service->setFlags($this->profile, $newFlags));
+        $result = MemberProfileService::setFlags($this->profile, $newFlags);
+
+        expect($result)->toBeTrue();
 
         $this->profile->refresh();
-        $this->assertFalse($this->profile->hasFlag('seeking_band'));
-        $this->assertFalse($this->profile->hasFlag('available_for_gigs'));
-        $this->assertTrue($this->profile->hasFlag('available_for_session'));
-    }
+        expect($this->profile->hasFlag('seeking_band'))->toBeFalse()
+            ->and($this->profile->hasFlag('available_for_gigs'))->toBeFalse()
+            ->and($this->profile->hasFlag('available_for_session'))->toBeTrue();
+    });
+});
 
-    #[Test]
-    public function it_searches_profiles_by_query()
-    {
+describe('Profile Search and Discovery', function () {
+    it('can search profiles by query', function () {
         // Create additional profiles
         $user2 = User::factory()->createWithoutProfile(['name' => 'John Guitarist']);
         $profile2 = MemberProfile::create([
@@ -178,15 +165,13 @@ class MemberProfileServiceTest extends TestCase
             'bio' => 'Jazz enthusiast',
         ]);
 
-        $results = $this->service->searchProfiles(query: 'John');
+        $results = MemberProfileService::searchProfiles(query: 'John');
 
-        $this->assertCount(1, $results);
-        $this->assertEquals($profile2->id, $results->first()->id);
-    }
+        expect($results)->toHaveCount(1)
+            ->and($results->first()->id)->toBe($profile2->id);
+    });
 
-    #[Test]
-    public function it_searches_profiles_by_skills()
-    {
+    it('can search profiles by skills', function () {
         // Set up profiles with different skills
         $this->profile->attachTag('guitar', 'skill');
 
@@ -197,15 +182,13 @@ class MemberProfileServiceTest extends TestCase
         ]);
         $profile2->attachTag('drums', 'skill');
 
-        $results = $this->service->searchProfiles(skills: ['guitar']);
+        $results = MemberProfileService::searchProfiles(skills: ['guitar']);
 
-        $this->assertCount(1, $results);
-        $this->assertEquals($this->profile->id, $results->first()->id);
-    }
+        expect($results)->toHaveCount(1)
+            ->and($results->first()->id)->toBe($this->profile->id);
+    });
 
-    #[Test]
-    public function it_respects_visibility_in_search()
-    {
+    it('respects visibility in search', function () {
         // Create a private profile
         $user2 = User::factory()->createWithoutProfile();
         $privateProfile = MemberProfile::create([
@@ -214,27 +197,25 @@ class MemberProfileServiceTest extends TestCase
         ]);
 
         // Search without viewing user (guest)
-        $results = $this->service->searchProfiles();
+        $results = MemberProfileService::searchProfiles();
 
         $profileIds = $results->pluck('id')->toArray();
-        $this->assertContains($this->profile->id, $profileIds); // Public profile included
-        $this->assertNotContains($privateProfile->id, $profileIds); // Private profile excluded
-    }
+        expect($profileIds)->toContain($this->profile->id) // Public profile included
+            ->and($profileIds)->not->toContain($privateProfile->id); // Private profile excluded
+    });
 
-    #[Test]
-    public function it_includes_own_profile_in_search_results()
-    {
+    it('includes own profile in search results', function () {
         $this->profile->update(['visibility' => 'private']);
 
-        $results = $this->service->searchProfiles(viewingUser: $this->user);
+        $results = MemberProfileService::searchProfiles(viewingUser: $this->user);
 
-        $this->assertCount(1, $results);
-        $this->assertEquals($this->profile->id, $results->first()->id);
-    }
+        expect($results)->toHaveCount(1)
+            ->and($results->first()->id)->toBe($this->profile->id);
+    });
+});
 
-    #[Test]
-    public function it_gets_directory_stats()
-    {
+describe('Directory Statistics', function () {
+    it('can get directory stats', function () {
         // Create additional profiles with flags
         $user2 = User::factory()->createWithoutProfile();
         $profile2 = MemberProfile::create([
@@ -243,23 +224,21 @@ class MemberProfileServiceTest extends TestCase
         ]);
         $profile2->flag('seeking_band');
 
-        $stats = $this->service->getDirectoryStats();
+        $stats = MemberProfileService::getDirectoryStats();
 
-        $this->assertArrayHasKey('total_members', $stats);
-        $this->assertArrayHasKey('public_profiles', $stats);
-        $this->assertArrayHasKey('seeking_bands', $stats);
-        $this->assertArrayHasKey('available_for_session', $stats);
-        $this->assertArrayHasKey('top_skills', $stats);
-        $this->assertArrayHasKey('top_genres', $stats);
+        expect($stats)->toHaveKeys([
+            'total_members',
+            'public_profiles',
+            'seeking_bands',
+            'available_for_session',
+            'top_skills',
+            'top_genres'
+        ])->and($stats['total_members'])->toBe(2)
+            ->and($stats['public_profiles'])->toBe(2)
+            ->and($stats['seeking_bands'])->toBe(1);
+    });
 
-        $this->assertEquals(2, $stats['total_members']);
-        $this->assertEquals(2, $stats['public_profiles']);
-        $this->assertEquals(1, $stats['seeking_bands']);
-    }
-
-    #[Test]
-    public function it_gets_profiles_with_specific_flag()
-    {
+    it('can get profiles with specific flag', function () {
         $this->profile->flag('seeking_band');
 
         $user2 = User::factory()->createWithoutProfile();
@@ -269,15 +248,15 @@ class MemberProfileServiceTest extends TestCase
         ]);
         $profile2->flag('available_for_session');
 
-        $seekingBandProfiles = $this->service->getProfilesWithFlag('seeking_band');
+        $seekingBandProfiles = MemberProfileService::getProfilesWithFlag('seeking_band');
 
-        $this->assertCount(1, $seekingBandProfiles);
-        $this->assertEquals($this->profile->id, $seekingBandProfiles->first()->id);
-    }
+        expect($seekingBandProfiles)->toHaveCount(1)
+            ->and($seekingBandProfiles->first()->id)->toBe($this->profile->id);
+    });
+});
 
-    #[Test]
-    public function it_suggests_collaborators_by_genres()
-    {
+describe('Collaboration Suggestions', function () {
+    it('can suggest collaborators by genres', function () {
         // Set up main profile with genres
         $this->profile->attachTag('rock', 'genre');
         $this->profile->attachTag('indie', 'genre');
@@ -298,23 +277,19 @@ class MemberProfileServiceTest extends TestCase
         ]);
         $profile3->attachTag('jazz', 'genre');
 
-        $suggestions = $this->service->suggestCollaborators($this->profile);
+        $suggestions = MemberProfileService::suggestCollaborators($this->profile);
 
-        $this->assertCount(1, $suggestions);
-        $this->assertEquals($profile2->id, $suggestions->first()->id);
-    }
+        expect($suggestions)->toHaveCount(1)
+            ->and($suggestions->first()->id)->toBe($profile2->id);
+    });
 
-    #[Test]
-    public function it_returns_empty_suggestions_for_profile_without_tags()
-    {
-        $suggestions = $this->service->suggestCollaborators($this->profile);
+    it('returns empty suggestions for profile without tags', function () {
+        $suggestions = MemberProfileService::suggestCollaborators($this->profile);
 
-        $this->assertCount(0, $suggestions);
-    }
+        expect($suggestions)->toHaveCount(0);
+    });
 
-    #[Test]
-    public function it_excludes_private_profiles_from_suggestions()
-    {
+    it('excludes private profiles from suggestions', function () {
         $this->profile->attachTag('rock', 'genre');
 
         $user2 = User::factory()->createWithoutProfile();
@@ -324,8 +299,8 @@ class MemberProfileServiceTest extends TestCase
         ]);
         $privateProfile->attachTag('rock', 'genre');
 
-        $suggestions = $this->service->suggestCollaborators($this->profile);
+        $suggestions = MemberProfileService::suggestCollaborators($this->profile);
 
-        $this->assertCount(0, $suggestions);
-    }
-}
+        expect($suggestions)->toHaveCount(0);
+    });
+});

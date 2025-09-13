@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Productions\RelationManagers;
 
 use App\Filament\Resources\Bands\BandResource;
-use App\Services\UserInvitationService;
+use App\Facades\UserInvitationService;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\SpatieTagsInput;
@@ -142,7 +142,6 @@ class PerformersRelationManager extends RelationManager
                             ->helperText('Add or refine the band\'s biography.'),
                     ])
                     ->action(function ($record, array $data) {
-                        $invitationService = \UserInvitationService::getFacadeRoot();
 
                         // Prepare band data for updates
                         $bandData = [];
@@ -154,7 +153,7 @@ class PerformersRelationManager extends RelationManager
                         }
 
                         try {
-                            $result = $invitationService->inviteUserWithBand(
+                            $result = UserInvitationService::inviteUserWithBand(
                                 $data['email'],
                                 $record->name,
                                 $bandData,

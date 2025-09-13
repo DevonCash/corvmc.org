@@ -9,6 +9,12 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
+enum StaffProfileType: string
+{
+    case Board = 'board';
+    case Staff = 'staff';
+}
+
 class StaffProfile extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
@@ -23,11 +29,13 @@ class StaffProfile extends Model implements HasMedia
         'email',
         'social_links',
         'user_id',
+        'type',
     ];
 
     protected $casts = [
         'social_links' => 'array',
         'is_active' => 'boolean',
+        'type' => StaffProfileType::class,
     ];
 
     public function registerMediaCollections(): void

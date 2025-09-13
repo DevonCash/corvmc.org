@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,9 +15,8 @@ class UserInvitationNotification extends Notification implements ShouldQueue
     use Queueable;
 
     public function __construct(
-        public User $invitedUser,
-        public string $invitationToken,
-        public array $roles = []
+        public Invitation $invitation,
+        public array $data = []
     ) {
         //
     }
@@ -34,47 +34,26 @@ class UserInvitationNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $acceptUrl = route('invitation.accept', ['token' => $this->invitationToken]);
-        
-        $rolesText = empty($this->roles) 
-            ? 'as a member' 
-            : 'with the role(s): ' . implode(', ', $this->roles);
+        $acceptUrl = route('invitation.accept', ['token' => $this->invitation->token]);
+
+        $rolesText = empty($this->data['roles'])
+            ? 'as a member'
+            : 'with the role(s): ' . implode(', ', $this->data['roles']);
 
         return (new MailMessage)
             ->subject('Welcome to Corvallis Music Collective!')
             ->greeting('Hello!')
             ->line('You have been invited to join the Corvallis Music Collective ' . $rolesText . '.')
+            ->when(!empty($this->invitation->message), function ($message) {
+                return $message->line('Message from the inviter: "' . $this->invitation->message . '"');
+            })
+            ->when(!empty($this->invitation->inviter), function ($message) {
+                return $message->line('Invited by: ' . $this->invitation->inviter->name);
+            })
             ->line('The Corvallis Music Collective is a community-driven space for musicians to connect, collaborate, and create.')
             ->action('Accept Invitation', $acceptUrl)
             ->line('This invitation will expire in 7 days.')
             ->line('If you have any questions, feel free to contact us.')
             ->line('Welcome to the community!');
-    }
-
-    /**
-     * Get the database representation of the notification.
-     */
-    public function toDatabase(object $notifiable): array
-    {
-        return [
-            'title' => 'Invitation to Join CMC',
-            'body' => 'You have been invited to join the Corvallis Music Collective.',
-            'icon' => 'heroicon-o-paper-airplane',
-            'user_id' => $this->invitedUser->id,
-            'roles' => $this->roles,
-            'token' => $this->invitationToken,
-        ];
-    }
-
-    /**
-     * Get the array representation of the notification.
-     */
-    public function toArray(object $notifiable): array
-    {
-        return [
-            'user_id' => $this->invitedUser->id,
-            'roles' => $this->roles,
-            'token' => $this->invitationToken,
-        ];
     }
 }

@@ -25,6 +25,7 @@ class Transaction extends Model
         'currency',
         'type',
         'response',
+        'user_id',
         'transactionable_type',
         'transactionable_id',
     ];

@@ -6,6 +6,7 @@ use App\Models\Reservation;
 use App\Services\ReservationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Http\Controllers\WebhookController as CashierWebhookController;
 
@@ -18,7 +19,7 @@ class StripeWebhookController extends CashierWebhookController
     /**
      * Handle checkout session completed webhook.
      */
-    public function handleCheckoutSessionCompleted(array $payload): Response
+    public function handleCheckoutSessionCompleted(array $payload): SymfonyResponse
     {
         try {
             $session = $payload['data']['object'];
@@ -74,7 +75,7 @@ class StripeWebhookController extends CashierWebhookController
     /**
      * Handle payment intent payment failed webhook.
      */
-    public function handlePaymentIntentPaymentFailed(array $payload): Response
+    public function handlePaymentIntentPaymentFailed(array $payload): SymfonyResponse
     {
         try {
             $paymentIntent = $payload['data']['object'];

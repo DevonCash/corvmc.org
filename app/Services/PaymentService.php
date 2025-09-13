@@ -2,14 +2,148 @@
 
 namespace App\Services;
 
-class StripePaymentService
+use App\Models\Reservation;
+use Carbon\Carbon;
+
+class PaymentService
 {
     /**
      * Stripe processing fee: 2.9% + $0.30 for cards
      */
     const STRIPE_RATE = 0.029;
-
     const STRIPE_FIXED_FEE = 0.30;
+    /**
+     * Mark reservation as paid.
+     */
+    public function markReservationAsPaid(Reservation $reservation, ?string $paymentMethod = null, ?string $notes = null): void
+    {
+        $reservation->update([
+            'payment_status' => 'paid',
+            'payment_method' => $paymentMethod,
+            'paid_at' => now(),
+            'payment_notes' => $notes,
+        ]);
+    }
+
+    /**
+     * Mark reservation as comped.
+     */
+    public function markReservationAsComped(Reservation $reservation, ?string $notes = null): void
+    {
+        $reservation->update([
+            'payment_status' => 'comped',
+            'payment_method' => 'comp',
+            'paid_at' => now(),
+            'payment_notes' => $notes,
+        ]);
+    }
+
+    /**
+     * Mark reservation as refunded.
+     */
+    public function markReservationAsRefunded(Reservation $reservation, ?string $notes = null): void
+    {
+        $reservation->update([
+            'payment_status' => 'refunded',
+            'paid_at' => now(),
+            'payment_notes' => $notes,
+        ]);
+    }
+
+    /**
+     * Check if reservation is paid.
+     */
+    public function isReservationPaid(Reservation $reservation): bool
+    {
+        return $reservation->payment_status === 'paid';
+    }
+
+    /**
+     * Check if reservation is comped.
+     */
+    public function isReservationComped(Reservation $reservation): bool
+    {
+        return $reservation->payment_status === 'comped';
+    }
+
+    /**
+     * Check if reservation is unpaid.
+     */
+    public function isReservationUnpaid(Reservation $reservation): bool
+    {
+        return $reservation->payment_status === 'unpaid';
+    }
+
+    /**
+     * Check if reservation is refunded.
+     */
+    public function isReservationRefunded(Reservation $reservation): bool
+    {
+        return $reservation->payment_status === 'refunded';
+    }
+
+    /**
+     * Get payment status badge information for UI display.
+     */
+    public function getPaymentStatusBadge(Reservation $reservation): array
+    {
+        return match ($reservation->payment_status) {
+            'paid' => ['label' => 'Paid', 'color' => 'success'],
+            'comped' => ['label' => 'Comped', 'color' => 'info'],
+            'refunded' => ['label' => 'Refunded', 'color' => 'danger'],
+            'unpaid' => ['label' => 'Unpaid', 'color' => 'danger'],
+            default => ['label' => 'Unknown', 'color' => 'gray'],
+        };
+    }
+
+    /**
+     * Get formatted cost display for UI.
+     */
+    public function getCostDisplay(Reservation $reservation): string
+    {
+        if ($reservation->cost == 0) {
+            return 'Free';
+        }
+
+        return '$' . number_format($reservation->cost, 2);
+    }
+
+    /**
+     * Determine if a reservation requires payment.
+     */
+    public function requiresPayment(Reservation $reservation): bool
+    {
+        return $reservation->cost > 0 && !$this->isReservationPaid($reservation) && !$this->isReservationComped($reservation);
+    }
+
+    /**
+     * Calculate total payments received for a reservation.
+     */
+    public function getTotalPaymentsReceived(Reservation $reservation): float
+    {
+        return $reservation->transactions()
+            ->where('type', 'payment')
+            ->sum('amount');
+    }
+
+    /**
+     * Get outstanding balance for a reservation.
+     */
+    public function getOutstandingBalance(Reservation $reservation): float
+    {
+        $totalPaid = $this->getTotalPaymentsReceived($reservation);
+        return max(0, $reservation->cost - $totalPaid);
+    }
+
+    /**
+     * Check if reservation is fully paid.
+     */
+    public function isFullyPaid(Reservation $reservation): bool
+    {
+        return $this->getOutstandingBalance($reservation) <= 0;
+    }
+
+    // === STRIPE PAYMENT PROCESSING METHODS ===
 
     /**
      * Calculate the processing fee for a given amount.

@@ -18,7 +18,9 @@ class BandFactory extends Factory
         $adjectives = ['Electric', 'Midnight', 'Golden', 'Silver', 'Dark', 'Bright', 'Wild', 'Free', 'Lost', 'Found'];
         $nouns = ['Hearts', 'Souls', 'Dreams', 'Echoes', 'Shadows', 'Lights', 'Stars', 'Moons', 'Rivers', 'Mountains'];
 
-        $bandName = $this->faker->randomElement($adjectives).' '.$this->faker->randomElement($nouns);
+        // Generate unique band name by adding a random suffix to avoid collisions
+        $baseName = $this->faker->randomElement($adjectives).' '.$this->faker->randomElement($nouns);
+        $bandName = $baseName . ' ' . $this->faker->unique()->numberBetween(1000, 9999);
 
         return [
             'name' => $bandName,

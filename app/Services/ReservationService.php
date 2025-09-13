@@ -746,7 +746,7 @@ class ReservationService
                             number_format($reservation->duration, 1)
                         ),
                     ],
-                    'unit_amount' => \StripePaymentService::dollarsToStripeAmount($reservation->cost),
+                    'unit_amount' => \App\Facades\PaymentService::dollarsToStripeAmount($reservation->cost),
                 ],
                 'quantity' => 1,
             ],

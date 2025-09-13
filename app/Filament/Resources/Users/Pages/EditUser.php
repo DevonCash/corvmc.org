@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Filament\Traits\HasCrudService;
+use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\EditRecord;
@@ -11,7 +13,10 @@ use Filament\Notifications\Notification;
 
 class EditUser extends EditRecord
 {
+    use HasCrudService;
+
     protected static string $resource = UserResource::class;
+    protected static ?string $crudService = 'UserService';
 
     protected function getHeaderActions(): array
     {

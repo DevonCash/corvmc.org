@@ -10,6 +10,90 @@ use Illuminate\Support\Facades\DB;
 class MemberProfileService
 {
     /**
+     * Create a new member profile.
+     */
+    public function createMemberProfile(array $data): MemberProfile
+    {
+        return DB::transaction(function () use ($data) {
+            $profile = MemberProfile::create($data);
+
+            // Handle tags if provided
+            if (isset($data['skills'])) {
+                foreach ($data['skills'] as $skill) {
+                    $profile->attachTag($skill, 'skill');
+                }
+            }
+
+            if (isset($data['genres'])) {
+                foreach ($data['genres'] as $genre) {
+                    $profile->attachTag($genre, 'genre');
+                }
+            }
+
+            if (isset($data['influences'])) {
+                foreach ($data['influences'] as $influence) {
+                    $profile->attachTag($influence, 'influence');
+                }
+            }
+
+            // Handle media uploads if provided
+            if (isset($data['avatar'])) {
+                $profile->addMediaFromRequest('avatar')
+                    ->toMediaCollection('avatar');
+            }
+
+            return $profile;
+        });
+    }
+
+    /**
+     * Update a member profile.
+     */
+    public function updateMemberProfile(MemberProfile $profile, array $data): MemberProfile
+    {
+        return DB::transaction(function () use ($profile, $data) {
+            $profile->update($data);
+
+            // Handle tag updates
+            if (isset($data['skills'])) {
+                $this->updateSkills($profile, $data['skills']);
+            }
+
+            if (isset($data['genres'])) {
+                $this->updateGenres($profile, $data['genres']);
+            }
+
+            if (isset($data['influences'])) {
+                $this->updateInfluences($profile, $data['influences']);
+            }
+
+            // Handle media updates
+            if (isset($data['avatar'])) {
+                $profile->clearMediaCollection('avatar');
+                $profile->addMediaFromRequest('avatar')
+                    ->toMediaCollection('avatar');
+            }
+
+            return $profile->fresh();
+        });
+    }
+
+    /**
+     * Delete a member profile.
+     */
+    public function deleteMemberProfile(MemberProfile $profile): bool
+    {
+        return DB::transaction(function () use ($profile) {
+            // Clear all media
+            $profile->clearMediaCollection('avatar');
+            
+            // Detach all tags
+            $profile->detachTags();
+            
+            return $profile->delete();
+        });
+    }
+    /**
      * Update member profile visibility.
      */
     public function updateVisibility(MemberProfile $profile, string $visibility): bool

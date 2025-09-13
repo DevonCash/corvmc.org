@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Users\Tables;
 
 use App\Filament\Actions\InviteUserAction;
-use App\Services\UserInvitationService;
+use App\Facades\UserInvitationService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -120,9 +120,8 @@ class UsersTable
                     ->modalHeading('Resend Invitation')
                     ->modalDescription(fn($record) => "Resend invitation email to {$record->email}?")
                     ->action(function ($record) {
-                        $invitationService = \UserInvitationService::getFacadeRoot();
 
-                        if ($invitationService->resendInvitation($record)) {
+                        if (UserInvitationService::resendInvitation($record)) {
                             Notification::make()
                                 ->title('Invitation resent')
                                 ->body("Invitation email has been resent to {$record->email}")
@@ -153,11 +152,10 @@ class UsersTable
                         ->modalHeading('Cancel Pending Invitations')
                         ->modalDescription('Are you sure you want to cancel the selected pending invitations? This will delete the invited users who have not yet registered.')
                         ->action(function (Collection $records) {
-                            $invitationService = \UserInvitationService::getFacadeRoot();
                             $canceledCount = 0;
 
                             foreach ($records as $record) {
-                                if ($invitationService->cancelInvitation($record)) {
+                                if (UserInvitationService::cancelInvitation($record)) {
                                     $canceledCount++;
                                 }
                             }
