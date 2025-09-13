@@ -20,6 +20,7 @@
         "maatwebsite/excel": "^3.1",
         "php-http/guzzle7-adapter": "^1.1",
         "secondnetwork/blade-tabler-icons": "^3.34",
+        "sentry/sentry-laravel": "^4.16",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-data": "^4.17",
         "spatie/laravel-medialibrary": "^11.13",

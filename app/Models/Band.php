@@ -75,6 +75,16 @@ class Band extends Model implements HasMedia
         return $this->hasMany(BandMember::class, 'band_profile_id');
     }
 
+    public function activeMembers()
+    {
+        return $this->memberships()->active();
+    }
+
+    public function pendingInvitations()
+    {
+        return $this->memberships()->invited();
+    }
+
     public function owner()
     {
         return $this->belongsTo(User::class, 'owner_id');
@@ -259,5 +269,11 @@ class Band extends Model implements HasMedia
             ->setDescriptionForEvent(fn(string $eventName) => "Band profile {$eventName}")
             ->dontLogIfAttributesChangedOnly(['updated_at'])
             ->logExcept($this->visibility === 'private' ? ['bio', 'hometown'] : []); // Don't log content for private bands
+    }
+
+    public function getUserRole(User $user): ?string
+    {
+        $membership = $this->memberships()->for($user)->first();
+        return $membership ? $membership->role : null;
     }
 }

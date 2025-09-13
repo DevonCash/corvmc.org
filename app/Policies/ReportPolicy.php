@@ -11,10 +11,13 @@ class ReportPolicy
     /**
      * Determine whether the user can view any models.
      */
-    public function viewAny(User $user): bool
+    public function viewAny(User $user): ?bool
     {
         // Allow admins to view reports for moderation (or all users for testing)
-        return $user->hasRole('admin') || true; // Allow all users for now
+        if (Report::where('reported_by_id', $user->id)->exists()) {
+            return true;
+        }; // Allow all users for now
+        return null;
     }
 
     /**
@@ -23,7 +26,7 @@ class ReportPolicy
     public function view(User $user, Report $report): bool
     {
         // Allow admins to view any report, or users to view their own reports
-        return $user->hasRole('admin') || $report->reported_by_id === $user->id || true; // Allow all for testing
+        return $user->hasRole('admin') || $report->reported_by_id === $user->id; // Allow all for testing
     }
 
     /**
@@ -41,7 +44,7 @@ class ReportPolicy
     public function update(User $user, Report $report): bool
     {
         // Only admins can resolve/update reports (or all for testing)
-        return $user->hasRole('admin') || true; // Allow all for testing
+        return $user->hasRole('admin');
     }
 
     /**
@@ -68,5 +71,4 @@ class ReportPolicy
     {
         return false;
     }
-
 }
