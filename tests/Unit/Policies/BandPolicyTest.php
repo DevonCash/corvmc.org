@@ -31,8 +31,8 @@ class BandPolicyTest extends TestCase
         $this->admin = User::factory()->create();
         $this->regularUser = User::factory()->create();
 
-        // Create and assign admin role
-        $adminRole = \Spatie\Permission\Models\Role::create(['name' => 'admin']);
+        // Assign existing admin role (created by PermissionSeeder)
+        $adminRole = \Spatie\Permission\Models\Role::where('name', 'admin')->first();
         $this->admin->assignRole($adminRole);
 
         // Create test bands with different visibility levels

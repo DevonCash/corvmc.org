@@ -23,7 +23,7 @@ describe('Staff Profile Creation', function () {
         expect($staffProfile)->toBeInstanceOf(StaffProfile::class)
             ->and($staffProfile->name)->toBe('John Doe')
             ->and($staffProfile->title)->toBe('Operations Manager')
-            ->and($staffProfile->type)->toBe('staff')
+            ->and($staffProfile->type->value)->toBe('staff')
             ->and($staffProfile->is_active)->toBeTrue()
             ->and($staffProfile->email)->toBe('john@example.com');
     });
@@ -42,13 +42,19 @@ describe('Staff Profile Creation', function () {
 
         $staffProfile = StaffProfileService::createStaffProfile($data);
 
-        expect($staffProfile->type)->toBe('board')
+        expect($staffProfile->type->value)->toBe('board')
             ->and($staffProfile->title)->toBe('Board President');
     });
 });
 
 describe('Staff Profile Updates', function () {
     it('can update a staff profile', function () {
+        // Authenticate an admin user who can update restricted fields
+        $admin = User::factory()->create();
+        $adminRole = \Spatie\Permission\Models\Role::where('name', 'admin')->first();
+        $admin->assignRole($adminRole);
+        $this->actingAs($admin);
+
         $staffProfile = StaffProfile::factory()->create([
             'name' => 'Original Name',
             'title' => 'Original Title',
@@ -69,6 +75,12 @@ describe('Staff Profile Updates', function () {
     });
 
     it('returns fresh instance after update', function () {
+        // Authenticate an admin user
+        $admin = User::factory()->create();
+        $adminRole = \Spatie\Permission\Models\Role::where('name', 'admin')->first();
+        $admin->assignRole($adminRole);
+        $this->actingAs($admin);
+
         $staffProfile = StaffProfile::factory()->create(['name' => 'Original']);
 
         $result = StaffProfileService::updateStaffProfile($staffProfile, ['name' => 'Updated']);
@@ -116,11 +128,11 @@ describe('Staff Profile Queries', function () {
             ->and($boardProfiles)->toHaveCount(1);
 
         foreach ($staffProfiles as $profile) {
-            expect($profile->type)->toBe('staff');
+            expect($profile->type->value)->toBe('staff');
         }
 
         foreach ($boardProfiles as $profile) {
-            expect($profile->type)->toBe('board');
+            expect($profile->type->value)->toBe('board');
         }
     });
 
@@ -135,7 +147,7 @@ describe('Staff Profile Queries', function () {
         expect($boardMembers)->toHaveCount(2);
 
         foreach ($boardMembers as $member) {
-            expect($member->type)->toBe('board')
+            expect($member->type->value)->toBe('board')
                 ->and($member->is_active)->toBeTrue();
         }
     });
@@ -151,7 +163,7 @@ describe('Staff Profile Queries', function () {
         expect($staffMembers)->toHaveCount(2);
 
         foreach ($staffMembers as $member) {
-            expect($member->type)->toBe('staff')
+            expect($member->type->value)->toBe('staff')
                 ->and($member->is_active)->toBeTrue();
         }
     });

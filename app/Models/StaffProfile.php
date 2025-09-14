@@ -78,6 +78,11 @@ class StaffProfile extends Model implements HasMedia
         return $query->where('is_active', true);
     }
 
+    public function scopeInactive($query)
+    {
+        return $query->where('is_active', false);
+    }
+
     public function scopeBoard($query)
     {
         return $query->where('type', 'board');

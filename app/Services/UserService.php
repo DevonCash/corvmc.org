@@ -26,9 +26,14 @@ class UserService
                     ->toArray();
             }
 
+            // Validate required data
+            if (!isset($data['password']) || empty($data['password'])) {
+                throw new \InvalidArgumentException('Password is required');
+            }
+
             // Create user directly
             $userData = array_merge($data, [
-                'password' => isset($data['password']) ? Hash::make($data['password']) : null,
+                'password' => Hash::make($data['password']),
                 'email_verified_at' => $data['email_verified_at'] ?? now(),
             ]);
 

@@ -23,9 +23,9 @@ class NotificationSchedulingService
         $tomorrow = Carbon::now()->addDay();
         $startOfTomorrow = $tomorrow->copy()->startOfDay();
         $endOfTomorrow = $tomorrow->copy()->endOfDay();
-        
+
         $reservations = $this->getUpcomingReservations($startOfTomorrow, $endOfTomorrow);
-        
+
         $results = [
             'total' => $reservations->count(),
             'sent' => 0,
@@ -48,7 +48,7 @@ class NotificationSchedulingService
                     $reservation->user->notify(new ReservationReminderNotification($reservation));
                     $reservationData['status'] = 'sent';
                     $results['sent']++;
-                    
+
                     Log::info('Reservation reminder sent', [
                         'reservation_id' => $reservation->id,
                         'user_email' => $reservation->user->email,
@@ -58,7 +58,7 @@ class NotificationSchedulingService
                     $reservationData['error'] = $e->getMessage();
                     $results['failed']++;
                     $results['errors'][] = "Reservation {$reservation->id}: {$e->getMessage()}";
-                    
+
                     Log::error('Failed to send reservation reminder', [
                         'reservation_id' => $reservation->id,
                         'user_email' => $reservation->user->email,
@@ -82,7 +82,7 @@ class NotificationSchedulingService
     {
         // Find reservations that are pending and created more than 24 hours ago
         $cutoffDate = Carbon::now()->subDay();
-        
+
         $pendingReservations = Reservation::with('user')
             ->where('status', 'pending')
             ->where('created_at', '<=', $cutoffDate)
@@ -112,7 +112,7 @@ class NotificationSchedulingService
                     $reservation->user->notify(new ReservationConfirmationNotification($reservation));
                     $reservationData['status'] = 'sent';
                     $results['sent']++;
-                    
+
                     Log::info('Reservation confirmation reminder sent', [
                         'reservation_id' => $reservation->id,
                         'user_email' => $reservation->user->email,
@@ -122,7 +122,7 @@ class NotificationSchedulingService
                     $reservationData['error'] = $e->getMessage();
                     $results['failed']++;
                     $results['errors'][] = "Reservation {$reservation->id}: {$e->getMessage()}";
-                    
+
                     Log::error('Failed to send reservation confirmation reminder', [
                         'reservation_id' => $reservation->id,
                         'user_email' => $reservation->user->email,
@@ -150,7 +150,7 @@ class NotificationSchedulingService
 
         try {
             $cutoffDate = Carbon::now()->subDays($inactiveDays);
-        
+
         // Find users who:
         // - Have not made a reservation recently
         // - Are not sustaining members
@@ -186,7 +186,7 @@ class NotificationSchedulingService
                     $user->notify(new MembershipReminderNotification($user));
                     $userData['status'] = 'sent';
                     $results['sent']++;
-                    
+
                     Log::info('Membership reminder sent', [
                         'user_id' => $user->id,
                         'user_email' => $user->email,
@@ -196,7 +196,7 @@ class NotificationSchedulingService
                     $userData['error'] = $e->getMessage();
                     $results['failed']++;
                     $results['errors'][] = "User {$user->id}: {$e->getMessage()}";
-                    
+
                     Log::error('Failed to send membership reminder', [
                         'user_id' => $user->id,
                         'user_email' => $user->email,
@@ -285,7 +285,7 @@ class NotificationSchedulingService
                     'notification_class' => get_class($notification),
                     'send_at' => $sendAt,
                 ]);
-                
+
                 // TODO: Implement queue job for future delivery
                 return true;
             } else {
@@ -303,11 +303,8 @@ class NotificationSchedulingService
                 'notification_class' => get_class($notification),
                 'error' => $e->getMessage(),
             ]);
-            throw NotificationSchedulingException::notificationDeliveryFailed(
-                get_class($notification),
-                $user->email ?? 'unknown',
-                $e->getMessage()
-            );
+
+            return false;
         }
     }
 }

@@ -52,16 +52,27 @@ describe('User Creation', function () {
         // TODO: Fix notification assertion - Notification::assertSentTo($user, UserCreatedNotification::class);
     });
 
-    it('can create user without password', function () {
+    it('requires password when creating user', function () {
         $data = [
-            'name' => 'No Password User',
+            'name' => 'User Without Password',
             'email' => 'nopass@example.com',
+        ];
+
+        expect(fn() => UserService::createUser($data))
+            ->toThrow(InvalidArgumentException::class, 'Password is required');
+    });
+
+    it('can create user with password', function () {
+        $data = [
+            'name' => 'User With Password',
+            'email' => 'withpass@example.com',
+            'password' => 'securepassword123',
         ];
 
         $user = UserService::createUser($data);
 
         expect($user)->toBeInstanceOf(User::class)
-            ->and($user->password)->toBeNull()
+            ->and($user->password)->not->toBeNull()
             ->and($user->profile)->not->toBeNull();
     });
 
@@ -69,6 +80,7 @@ describe('User Creation', function () {
         $data = [
             'name' => 'Verified User',
             'email' => 'verified@example.com',
+            'password' => 'testpassword123',
         ];
 
         $user = UserService::createUser($data);
@@ -83,6 +95,7 @@ describe('User Creation', function () {
         $data = [
             'name' => 'Custom Verified User',
             'email' => 'custom@example.com',
+            'password' => 'testpassword123',
             'email_verified_at' => $customVerificationDate,
         ];
 

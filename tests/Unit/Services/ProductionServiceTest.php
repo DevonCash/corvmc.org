@@ -125,9 +125,8 @@ describe('ProductionService Status Management', function () {
     it('can publish a production', function () {
         $production = Production::factory()->create(['status' => 'pre-production']);
 
-        $result = ProductionService::publishProduction($production);
+        ProductionService::publishProduction($production);
 
-        expect($result)->toBeTrue();
         expect($production->fresh()->status)->toBe('published')
             ->and($production->fresh()->published_at)->not->toBeNull();
     });
@@ -193,7 +192,7 @@ describe('ProductionService Performer Management', function () {
         $production = Production::factory()->create();
         $band = Band::factory()->create();
 
-        $result = ProductionService::addPerformer($production, $band, 1, 30);
+        $result = ProductionService::addPerformer($production, $band, ['order' => 1, 'set_length' => 30]);
 
         expect($result)->toBeTrue();
         expect($production->performers)->toHaveCount(1);
@@ -209,7 +208,7 @@ describe('ProductionService Performer Management', function () {
         $band2 = Band::factory()->create();
 
         // Add first band with explicit order
-        ProductionService::addPerformer($production, $band1, 1);
+        ProductionService::addPerformer($production, $band1, ['order' => 1]);
 
         // Add second band with auto order
         ProductionService::addPerformer($production, $band2);
@@ -244,7 +243,7 @@ describe('ProductionService Performer Management', function () {
         $production = Production::factory()->create();
         $band = Band::factory()->create();
 
-        ProductionService::addPerformer($production, $band, 1);
+        ProductionService::addPerformer($production, $band, ['order' => 1]);
         $result = ProductionService::updatePerformerOrder($production, $band, 3);
 
         expect($result)->toBeTrue();
@@ -281,9 +280,9 @@ describe('ProductionService Performer Management', function () {
         $band2 = Band::factory()->create();
         $band3 = Band::factory()->create();
 
-        ProductionService::addPerformer($production, $band1, 1);
-        ProductionService::addPerformer($production, $band2, 2);
-        ProductionService::addPerformer($production, $band3, 3);
+        ProductionService::addPerformer($production, $band1, ['order' => 1]);
+        ProductionService::addPerformer($production, $band2, ['order' => 2]);
+        ProductionService::addPerformer($production, $band3, ['order' => 3]);
 
         // Reorder: band3, band1, band2
         $newOrder = [$band3->id, $band1->id, $band2->id];
@@ -522,7 +521,7 @@ describe('ProductionService Duplication', function () {
         ]);
 
         $band = Band::factory()->create();
-        ProductionService::addPerformer($original, $band, 1, 30);
+        ProductionService::addPerformer($original, $band, ['order' => 1, 'set_length' => 30]);
         $original->attachTag('rock', 'genre');
 
         $newStartTime = new \DateTime('2024-12-25 20:00:00');
