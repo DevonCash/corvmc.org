@@ -175,7 +175,7 @@
                         <div class="grid grid-cols-2 gap-4 mb-4">
                             <div>
                                 <h5 class="font-bold text-amber-700">When</h5>
-                                <p class="text-sm">Every other Thursday<br>7:00 PM - 9:30 PM</p>
+                                <p class="text-sm">1st Thursday of every month<br>6:30 PM - 8:00 PM</p>
                             </div>
                             <div>
                                 <h5 class="font-bold text-amber-700">Format</h5>
@@ -219,16 +219,16 @@
                         <div class="card-body">
                             <div class="flex items-center gap-3 mb-3">
                                 <x-unicon name="tabler:microphone" class="size-6 text-secondary" />
-                                <h4 class="card-title">Vocal Workshop</h4>
+                                <h4 class="card-title">Monthly Meetup</h4>
                             </div>
                             <p class="text-sm mb-3">
-                                Technique sessions, group warm-ups, and performance coaching for vocalists of all
-                                styles.
+                                Come chat with - or just listen to - other local musicians about gear, gigs, and
+                                everything music-related. Everyone is welcome!
                             </p>
-                            <div class="badge badge-secondary badge-outline">1st Wednesday • 6:30 PM</div>
+                            <div class="badge badge-secondary badge-outline">Last Thursday • 6:30 PM</div>
                         </div>
                     </div>
-
+{{--
                     <div class="card bg-base-100 shadow-lg">
                         <div class="card-body">
                             <div class="flex items-center gap-3 mb-3">
@@ -241,7 +241,7 @@
                             </p>
                             <div class="badge badge-accent badge-outline">3rd Friday • 7:00 PM</div>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
 
@@ -249,6 +249,83 @@
                 <a href="{{ route('contact') }}?topic=general" class="btn btn-primary btn-lg">Join a Meetup</a>
                 <a href="{{ route('members.index') }}" class="btn btn-outline btn-secondary btn-lg">Connect with
                     Members</a>
+            </div>
+        </section>
+
+        <!-- Gear Lending Library Section -->
+        <section class="mb-20 bg-gradient-to-br from-info/5 to-cyan/10 rounded-3xl p-8 lg:p-12">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">Gear Lending Library</h2>
+                <p class="text-lg max-w-3xl mx-auto">
+                    Access professional music equipment through our member gear lending program. Try before you buy, or use quality gear for your performances and recordings.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-12">
+                <div>
+                    <h3 class="text-2xl font-bold mb-4">Quality Gear When You Need It</h3>
+                    <p class="text-lg mb-4">
+                        Our lending library features carefully maintained instruments and equipment available to CMC members for short-term use.
+                    </p>
+                    <p class="text-lg mb-4">
+                        Perfect for trying new instruments, covering for repairs, or accessing specialized gear for recording projects and performances.
+                    </p>
+                    <div class="alert alert-info">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span><strong>Members Only</strong><br /> Gear lending requires CMC membership and good standing</span>
+                    </div>
+                </div>
+
+                <div class="card bg-base-100 shadow-xl">
+                    <figure>
+                        <img src="https://via.placeholder.com/400x300/06b6d4/ffffff?text=Gear+Library"
+                            alt="Gear Lending Library" class="w-full h-64 object-cover" />
+                    </figure>
+                    <div class="card-body">
+                        <h4 class="card-title">Available Equipment</h4>
+                        <ul class="space-y-2 list-disc list-inside">
+                            <li>Electric guitars & basses</li>
+                            <li>Acoustic instruments</li>
+                            <li>Amplifiers & effects pedals</li>
+                            <li>Recording equipment</li>
+                            <li>Percussion instruments</li>
+                            <li>Specialty instruments</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lending Terms ---->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card bg-base-100 shadow-lg">
+                    <div class="card-body text-center">
+                        <h4 class="card-title justify-center">Borrowing Period</h4>
+                        <div class="text-2xl font-bold text-info">1-2 Weeks</div>
+                        <p class="text-sm">Renewable based on availability</p>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-lg">
+                    <div class="card-body text-center">
+                        <h4 class="card-title justify-center">Security Deposit</h4>
+                        <div class="text-2xl font-bold text-info">Varies</div>
+                        <p class="text-sm">Refundable upon return</p>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-lg">
+                    <div class="card-body text-center">
+                        <h4 class="card-title justify-center">Rental Fee</h4>
+                        <div class="text-2xl font-bold text-info">Low Cost</div>
+                        <p class="text-sm">Covers maintenance & replacement</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <a href="{{ route('contact') }}?topic=gear" class="btn btn-info btn-lg">Browse Available Gear</a>
+                <a href="{{ route('contact') }}?topic=gear" class="btn btn-outline btn-info btn-lg">Donate Equipment</a>
             </div>
         </section>
 
