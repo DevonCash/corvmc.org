@@ -5,9 +5,6 @@ namespace Tests\Feature;
 use App\Models\Band;
 use App\Models\Invitation;
 use App\Models\User;
-use App\Notifications\BandOwnershipInvitationNotification;
-use App\Notifications\NewMemberWelcomeNotification;
-use App\Notifications\UserInvitationNotification;
 use App\Facades\UserInvitationService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -265,14 +262,13 @@ describe('Band Invitation Workflows', function () {
     it('can invite user with band for new user', function () {
         Notification::fake();
 
-        $admin = User::factory()->create();
+        $admin = User::factory()->withRole('admin')->create();
         Auth::login($admin);
 
         $invitation = UserInvitationService::inviteUserWithBand(
             'bandleader@example.com',
             'The Rock Band',
             ['genre' => 'rock', 'description' => 'A rock band'],
-            ['band leader']
         );
 
         expect($invitation)->not->toBeNull()

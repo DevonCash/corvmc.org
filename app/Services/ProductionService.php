@@ -34,10 +34,10 @@ class ProductionService
                 $isExternal = isset($data['location']['is_external']) ? $data['location']['is_external'] : false;
                 if (!$isExternal) {
                     $conflicts = app(\App\Services\ReservationService::class)->getAllConflicts(
-                        \Carbon\Carbon::parse($data['start_time']), 
+                        \Carbon\Carbon::parse($data['start_time']),
                         \Carbon\Carbon::parse($data['end_time'])
                     );
-                    
+
                     if ($conflicts['reservations']->isNotEmpty()) {
                         throw new \InvalidArgumentException('Production conflicts with existing reservation');
                     }
@@ -454,8 +454,7 @@ class ProductionService
 
         // Notify all band members performing in this production
         foreach ($production->performers as $band) {
-            $bandUsers = $band->members()->with('user')->get()->pluck('user')->filter();
-            $users = $users->merge($bandUsers);
+            $users = $band->members()->get();
         }
 
         // For published events, optionally notify all sustaining members

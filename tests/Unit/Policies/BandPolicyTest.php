@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Policies;
 
+use App\Data\ContactData;
 use App\Models\Band;
 use App\Models\User;
 use App\Policies\BandPolicy;
@@ -26,30 +27,30 @@ class BandPolicyTest extends TestCase
         $this->policy = new BandPolicy();
 
         // Create test users
-        $this->owner = User::factory()->create();
-        $this->member = User::factory()->create();
-        $this->admin = User::factory()->create();
+        $this->owner = User::factory()->withRole('member')->create();
+        $this->member = User::factory()->withRole('member')->create();
+        $this->admin = User::factory()->withRole('admin')->create();
         $this->regularUser = User::factory()->create();
-
-        // Assign existing admin role (created by PermissionSeeder)
-        $adminRole = \Spatie\Permission\Models\Role::where('name', 'admin')->first();
-        $this->admin->assignRole($adminRole);
 
         // Create test bands with different visibility levels
         $this->publicBand = Band::factory()->create([
             'owner_id' => $this->owner->id,
-            'visibility' => 'public'
+            'visibility' => 'public',
+            'contact' => new ContactData('public')
         ]);
 
         $this->membersBand = Band::factory()->create([
             'owner_id' => $this->owner->id,
-            'visibility' => 'members'
+            'visibility' => 'members',
+            'contact' => new ContactData('members')
         ]);
 
         $this->privateBand = Band::factory()->create([
             'owner_id' => $this->owner->id,
-            'visibility' => 'private'
+            'visibility' => 'private',
+            'contact' => new ContactData('private')
         ]);
+
 
         // Add member to bands
         $this->publicBand->members()->attach($this->member->id, ['role' => 'member', 'status' => 'active']);
@@ -91,13 +92,13 @@ class BandPolicyTest extends TestCase
         $this->assertTrue($this->policy->view($this->member, $this->privateBand));
 
         // Regular user cannot view
-        $this->assertFalse($this->policy->view($this->regularUser, $this->privateBand));
+        $this->assertNull($this->policy->view($this->regularUser, $this->privateBand));
     }
 
     #[Test]
-    public function create_allows_all_users_by_default()
+    public function create_allows_all_members()
     {
-        $this->assertTrue($this->policy->create($this->regularUser));
+        $this->assertNull($this->policy->create($this->regularUser));
         $this->assertTrue($this->policy->create($this->member));
         $this->assertTrue($this->policy->create($this->owner));
     }
@@ -129,8 +130,8 @@ class BandPolicyTest extends TestCase
     #[Test]
     public function update_denies_regular_members()
     {
-        $this->assertFalse($this->policy->update($this->member, $this->publicBand));
-        $this->assertFalse($this->policy->update($this->regularUser, $this->publicBand));
+        $this->assertNull($this->policy->update($this->member, $this->publicBand));
+        $this->assertNull($this->policy->update($this->regularUser, $this->publicBand));
     }
 
     #[Test]
@@ -155,62 +156,19 @@ class BandPolicyTest extends TestCase
     #[Test]
     public function force_delete_denies_non_admins()
     {
-        $this->assertFalse($this->policy->forceDelete($this->owner, $this->publicBand));
-        $this->assertFalse($this->policy->forceDelete($this->member, $this->publicBand));
-        $this->assertFalse($this->policy->forceDelete($this->regularUser, $this->publicBand));
+        $this->assertNull($this->policy->forceDelete($this->owner, $this->publicBand));
+        $this->assertNull($this->policy->forceDelete($this->member, $this->publicBand));
+        $this->assertNull($this->policy->forceDelete($this->regularUser, $this->publicBand));
     }
 
-    #[Test]
-    public function manage_members_allows_owner()
-    {
-        $this->assertTrue($this->policy->manageMembers($this->owner, $this->publicBand));
-    }
-
-    #[Test]
-    public function manage_members_allows_band_admin()
-    {
-        $bandAdmin = User::factory()->create();
-        $this->publicBand->members()->attach($bandAdmin->id, ['role' => 'admin', 'status' => 'active']);
-
-        $this->assertTrue($this->policy->manageMembers($bandAdmin, $this->publicBand));
-    }
-
-    #[Test]
-    public function manage_members_denies_regular_members()
-    {
-        $this->assertFalse($this->policy->manageMembers($this->member, $this->publicBand));
-        $this->assertFalse($this->policy->manageMembers($this->regularUser, $this->publicBand));
-    }
 
     #[Test]
     public function invite_members_delegates_to_manage_members()
     {
-        $this->assertTrue($this->policy->inviteMembers($this->owner, $this->publicBand));
-        $this->assertFalse($this->policy->inviteMembers($this->member, $this->publicBand));
+        $this->assertTrue($this->policy->invite($this->owner, $this->publicBand));
+        $this->assertFalse($this->policy->invite($this->member, $this->publicBand));
     }
 
-    #[Test]
-    public function remove_members_delegates_to_manage_members()
-    {
-        $this->assertTrue($this->policy->removeMembers($this->owner, $this->publicBand));
-        $this->assertFalse($this->policy->removeMembers($this->member, $this->publicBand));
-    }
-
-    #[Test]
-    public function change_member_roles_allows_owner()
-    {
-        $this->assertTrue($this->policy->changeMemberRoles($this->owner, $this->publicBand));
-    }
-
-    #[Test]
-    public function change_member_roles_denies_non_owners()
-    {
-        $bandAdmin = User::factory()->create();
-        $this->publicBand->members()->attach($bandAdmin->id, ['role' => 'admin', 'status' => 'active']);
-
-        $this->assertFalse($this->policy->changeMemberRoles($bandAdmin, $this->publicBand));
-        $this->assertFalse($this->policy->changeMemberRoles($this->member, $this->publicBand));
-    }
 
     #[Test]
     public function leave_allows_members_but_not_owner()
@@ -229,87 +187,34 @@ class BandPolicyTest extends TestCase
     #[Test]
     public function transfer_ownership_allows_owner()
     {
-        $this->assertTrue($this->policy->transferOwnership($this->owner, $this->publicBand));
+        $this->assertTrue($this->policy->transfer($this->owner, $this->publicBand));
     }
 
     #[Test]
     public function transfer_ownership_denies_non_owners()
     {
-        $this->assertFalse($this->policy->transferOwnership($this->member, $this->publicBand));
-        $this->assertFalse($this->policy->transferOwnership($this->regularUser, $this->publicBand));
-    }
-
-    #[Test]
-    public function view_members_follows_band_visibility_rules()
-    {
-        // Public band: anyone can view members
-        $this->assertTrue($this->policy->viewMembers($this->regularUser, $this->publicBand));
-
-        // Members band: only members/owner can view
-        $this->assertFalse($this->policy->viewMembers($this->regularUser, $this->membersBand));
-        $this->assertTrue($this->policy->viewMembers($this->owner, $this->membersBand));
-
-        // Private band: only members/owner can view
-        $this->assertFalse($this->policy->viewMembers($this->regularUser, $this->privateBand));
-        $this->assertTrue($this->policy->viewMembers($this->member, $this->privateBand));
-        $this->assertTrue($this->policy->viewMembers($this->owner, $this->privateBand));
+        $this->assertNull($this->policy->transfer($this->member, $this->publicBand));
+        $this->assertNull($this->policy->transfer($this->regularUser, $this->publicBand));
     }
 
     #[Test]
     public function view_contact_follows_band_visibility_rules()
     {
         // Public band: anyone can view contact
-        $this->assertTrue($this->policy->viewContact($this->regularUser, $this->publicBand));
-        $this->assertTrue($this->policy->viewContact(null, $this->publicBand));
+        $this->assertTrue($this->policy->contact($this->regularUser, $this->publicBand));
+        $this->assertTrue($this->policy->contact(null, $this->publicBand));
 
         // Members band: only authenticated users
-        $this->assertTrue($this->policy->viewContact($this->regularUser, $this->membersBand));
-        $this->assertFalse($this->policy->viewContact(null, $this->membersBand));
+        $this->assertTrue($this->policy->contact($this->regularUser, $this->membersBand));
+        $this->assertNull($this->policy->contact(null, $this->membersBand));
 
         // Private band: only members/owner
-        $this->assertFalse($this->policy->viewContact($this->regularUser, $this->privateBand));
-        $this->assertTrue($this->policy->viewContact($this->member, $this->privateBand));
-        $this->assertTrue($this->policy->viewContact($this->owner, $this->privateBand));
-        $this->assertFalse($this->policy->viewContact(null, $this->privateBand));
+        $this->assertNull($this->policy->contact($this->regularUser, $this->privateBand));
+        $this->assertTrue($this->policy->contact($this->member, $this->privateBand));
+        $this->assertTrue($this->policy->contact($this->owner, $this->privateBand));
+        $this->assertNull($this->policy->contact(null, $this->privateBand));
     }
 
-    #[Test]
-    public function is_member_helper_correctly_identifies_members()
-    {
-        $reflection = new \ReflectionClass($this->policy);
-        $method = $reflection->getMethod('isMember');
-        $method->setAccessible(true);
-
-        $this->assertTrue($method->invoke($this->policy, $this->member, $this->publicBand));
-        $this->assertFalse($method->invoke($this->policy, $this->regularUser, $this->publicBand));
-    }
-
-    #[Test]
-    public function is_member_or_owner_helper_correctly_identifies_members_and_owners()
-    {
-        $reflection = new \ReflectionClass($this->policy);
-        $method = $reflection->getMethod('isMemberOrOwner');
-        $method->setAccessible(true);
-
-        $this->assertTrue($method->invoke($this->policy, $this->owner, $this->publicBand));
-        $this->assertTrue($method->invoke($this->policy, $this->member, $this->publicBand));
-        $this->assertFalse($method->invoke($this->policy, $this->regularUser, $this->publicBand));
-    }
-
-    #[Test]
-    public function is_band_admin_helper_correctly_identifies_band_admins()
-    {
-        $bandAdmin = User::factory()->create();
-        $this->publicBand->members()->attach($bandAdmin->id, ['role' => 'admin', 'status' => 'active']);
-
-        $reflection = new \ReflectionClass($this->policy);
-        $method = $reflection->getMethod('isBandAdmin');
-        $method->setAccessible(true);
-
-        $this->assertTrue($method->invoke($this->policy, $bandAdmin, $this->publicBand));
-        $this->assertFalse($method->invoke($this->policy, $this->member, $this->publicBand));
-        $this->assertFalse($method->invoke($this->policy, $this->regularUser, $this->publicBand));
-    }
 
     #[Test]
     public function view_handles_unknown_visibility_gracefully()

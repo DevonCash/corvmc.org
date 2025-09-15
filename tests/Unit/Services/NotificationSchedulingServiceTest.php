@@ -2,6 +2,8 @@
 
 use App\Notifications\ReservationReminderNotification;
 use App\Facades\NotificationSchedulingService;
+use App\Models\Reservation;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Notification;
 
@@ -11,11 +13,11 @@ beforeEach(function () {
 
 describe('sendReservationReminders', function () {
     it('sends reminders for confirmed reservations tomorrow', function () {
-        $user = $this->createUser();
+        $user = User::factory()->create();
         $tomorrow = Carbon::now()->addDay();
 
         // Create confirmed reservation for tomorrow
-        $reservation = $this->createReservation([
+        Reservation::factory()->create([
             'user_id' => $user->id,
             'status' => 'confirmed',
             'reserved_at' => $tomorrow->copy()->setHour(14),
@@ -23,7 +25,7 @@ describe('sendReservationReminders', function () {
         ]);
 
         // Create reservation for different day (should be ignored)
-        $this->createReservation([
+        Reservation::factory()->create([
             'user_id' => $user->id,
             'status' => 'confirmed',
             'reserved_at' => Carbon::now()->addDays(2)->setHour(14),
@@ -43,11 +45,11 @@ describe('sendReservationReminders', function () {
     });
 
     it('ignores pending and cancelled reservations', function () {
-        $user = $this->createUser();
+        $user = User::factory()->create();
         $tomorrow = Carbon::now()->addDay();
 
         // Create pending reservation
-        $this->createReservation([
+        Reservation::factory()->create([
             'user_id' => $user->id,
             'status' => 'pending',
             'reserved_at' => $tomorrow->copy()->setHour(14),
@@ -55,7 +57,7 @@ describe('sendReservationReminders', function () {
         ]);
 
         // Create cancelled reservation
-        $this->createReservation([
+        Reservation::factory()->create([
             'user_id' => $user->id,
             'status' => 'cancelled',
             'reserved_at' => $tomorrow->copy()->setHour(18),
@@ -71,10 +73,11 @@ describe('sendReservationReminders', function () {
     });
 
     it('handles dry run mode', function () {
-        $user = $this->createUser();
+        $user = User::factory()->create();
+
         $tomorrow = Carbon::now()->addDay();
 
-        $this->createReservation([
+        Reservation::factory()->create([
             'user_id' => $user->id,
             'status' => 'confirmed',
             'reserved_at' => $tomorrow->copy()->setHour(14),
@@ -91,10 +94,11 @@ describe('sendReservationReminders', function () {
     });
 
     it('tracks failed notifications', function () {
-        $user = $this->createUser();
+        $user = User::factory()->create();
+
         $tomorrow = Carbon::now()->addDay();
 
-        $this->createReservation([
+        Reservation::factory()->create([
             'user_id' => $user->id,
             'status' => 'confirmed',
             'reserved_at' => $tomorrow->copy()->setHour(14),
@@ -117,10 +121,11 @@ describe('sendReservationReminders', function () {
 
 describe('sendReservationConfirmationReminders', function () {
     it('sends confirmation reminders for old pending reservations', function () {
-        $user = $this->createUser();
+        $user = User::factory()->create();
+
 
         // Create pending reservation from 2 days ago
-        $reservation = $this->createReservation([
+        $reservation = Reservation::factory()->create([
             'user_id' => $user->id,
             'status' => 'pending',
             'reserved_at' => Carbon::now()->addWeek(),
@@ -138,10 +143,11 @@ describe('sendReservationConfirmationReminders', function () {
     });
 
     it('ignores recently created pending reservations', function () {
-        $user = $this->createUser();
+        $user = User::factory()->create();
+
 
         // Create pending reservation from 12 hours ago (too recent)
-        $this->createReservation([
+        Reservation::factory()->create([
             'user_id' => $user->id,
             'status' => 'pending',
             'reserved_at' => Carbon::now()->addWeek(),
@@ -157,10 +163,11 @@ describe('sendReservationConfirmationReminders', function () {
     });
 
     it('ignores past reservations even if pending', function () {
-        $user = $this->createUser();
+        $user = User::factory()->create();
+
 
         // Create pending reservation in the past
-        $this->createReservation([
+        Reservation::factory()->create([
             'user_id' => $user->id,
             'status' => 'pending',
             'reserved_at' => Carbon::now()->subDay(),
@@ -176,10 +183,11 @@ describe('sendReservationConfirmationReminders', function () {
     });
 
     it('ignores confirmed reservations', function () {
-        $user = $this->createUser();
+        $user = User::factory()->create();
+
 
         // Create confirmed reservation (should be ignored)
-        $this->createReservation([
+        Reservation::factory()->create([
             'user_id' => $user->id,
             'status' => 'confirmed',
             'reserved_at' => Carbon::now()->addWeek(),
@@ -198,7 +206,7 @@ describe('sendReservationConfirmationReminders', function () {
 describe('sendMembershipReminders', function () {
     it('sends reminders to inactive non-sustaining users', function () {
         // Use dry run to avoid sending to other test users
-        $user = $this->createUser([
+        $user = User::factory()->create([
             'email_verified_at' => Carbon::now(),
         ]);
 
@@ -218,12 +226,12 @@ describe('sendMembershipReminders', function () {
     });
 
     it('ignores users with recent reservations', function () {
-        $user = $this->createUser([
+        $user = User::factory()->create([
             'email_verified_at' => Carbon::now(),
         ]);
 
         // Create recent reservation
-        $this->createReservation([
+        Reservation::factory()->create([
             'user_id' => $user->id,
             'created_at' => Carbon::now()->subDays(30),
         ]);
@@ -243,7 +251,9 @@ describe('sendMembershipReminders', function () {
     });
 
     it('ignores sustaining members', function () {
-        $sustainingMember = $this->createSustainingMember();
+        $sustainingMember = User::factory()
+            ->withRole(role: 'sustaining member')
+            ->create();
 
         $results = NotificationSchedulingService::sendMembershipReminders(dryRun: false, inactiveDays: 90);
 
@@ -253,7 +263,7 @@ describe('sendMembershipReminders', function () {
     });
 
     it('ignores users without verified email', function () {
-        $user = $this->createUser([
+        $user = User::factory()->create([
             'email_verified_at' => null,
         ]);
 
@@ -265,23 +275,23 @@ describe('sendMembershipReminders', function () {
     });
 
     it('respects custom inactive days parameter', function () {
-        $user1 = $this->createUser([
+        $user1 = User::factory()->create([
             'email' => 'user1@test.com',
             'email_verified_at' => Carbon::now(),
         ]);
-        $user2 = $this->createUser([
+        $user2 = User::factory()->create([
             'email' => 'user2@test.com',
             'email_verified_at' => Carbon::now(),
         ]);
 
         // User1 has reservation 45 days ago
-        $this->createReservation([
+        Reservation::factory()->create([
             'user_id' => $user1->id,
             'created_at' => Carbon::now()->subDays(45),
         ]);
 
         // User2 has reservation 75 days ago
-        $this->createReservation([
+        Reservation::factory()->create([
             'user_id' => $user2->id,
             'created_at' => Carbon::now()->subDays(75),
         ]);
@@ -308,14 +318,14 @@ describe('sendMembershipReminders', function () {
 describe('getNotificationStats', function () {
     it('returns correct statistics', function () {
         // Create reservation for tomorrow
-        $this->createReservation([
+        Reservation::factory()->create([
             'status' => 'confirmed',
             'reserved_at' => Carbon::now()->addDay()->setHour(14),
             'reserved_until' => Carbon::now()->addDay()->setHour(16),
         ]);
 
         // Create old pending reservation
-        $this->createReservation([
+        Reservation::factory()->create([
             'status' => 'pending',
             'reserved_at' => Carbon::now()->addWeek(),
             'reserved_until' => Carbon::now()->addWeek()->addHours(2),
@@ -323,7 +333,7 @@ describe('getNotificationStats', function () {
         ]);
 
         // Create inactive user (no recent reservations)
-        $inactiveUser = $this->createUser();
+        $inactiveUser = User::factory()->create();
         // Don't create any reservations for this user to make them truly inactive
 
         $stats = NotificationSchedulingService::getNotificationStats();
@@ -336,9 +346,10 @@ describe('getNotificationStats', function () {
 
 describe('scheduleCustomNotification', function () {
     it('sends notification immediately when no future date specified', function () {
-        $user = $this->createUser();
+        $user = User::factory()->create();
+
         $notification = new ReservationReminderNotification(
-            $this->createReservation(['user_id' => $user->id])
+            Reservation::factory()->create(['user_id' => $user->id])
         );
 
         $result = NotificationSchedulingService::scheduleCustomNotification($user, $notification);
@@ -349,9 +360,10 @@ describe('scheduleCustomNotification', function () {
     });
 
     it('logs future notification scheduling', function () {
-        $user = $this->createUser();
+        $user = User::factory()->create();
+
         $notification = new ReservationReminderNotification(
-            $this->createReservation(['user_id' => $user->id])
+            Reservation::factory()->create(['user_id' => $user->id])
         );
         $futureDate = Carbon::now()->addHours(2);
 
@@ -364,9 +376,10 @@ describe('scheduleCustomNotification', function () {
     });
 
     it('handles notification failures gracefully', function () {
-        $user = $this->createUser();
+        $user = User::factory()->create();
+
         $notification = new ReservationReminderNotification(
-            $this->createReservation(['user_id' => $user->id])
+            Reservation::factory()->create(['user_id' => $user->id])
         );
 
         // Mock notification failure
@@ -384,8 +397,8 @@ describe('integration scenarios', function () {
         $tomorrow = Carbon::now()->addDay();
 
         // User with confirmed reservation tomorrow
-        $user1 = $this->createUser();
-        $this->createReservation([
+        $user1 = User::factory()->create();
+        Reservation::factory()->create([
             'user_id' => $user1->id,
             'status' => 'confirmed',
             'reserved_at' => $tomorrow->copy()->setHour(14),
@@ -393,8 +406,8 @@ describe('integration scenarios', function () {
         ]);
 
         // User with pending reservation tomorrow (should be ignored for reminders)
-        $user2 = $this->createUser();
-        $this->createReservation([
+        $user2 = User::factory()->create();
+        Reservation::factory()->create([
             'user_id' => $user2->id,
             'status' => 'pending',
             'reserved_at' => $tomorrow->copy()->setHour(18),
@@ -402,8 +415,8 @@ describe('integration scenarios', function () {
         ]);
 
         // User with confirmed reservation next week (should be ignored for tomorrow reminders)
-        $user3 = $this->createUser();
-        $this->createReservation([
+        $user3 = User::factory()->create();
+        Reservation::factory()->create([
             'user_id' => $user3->id,
             'status' => 'confirmed',
             'reserved_at' => Carbon::now()->addWeek(),

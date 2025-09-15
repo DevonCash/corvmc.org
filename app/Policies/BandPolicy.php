@@ -2,8 +2,11 @@
 
 namespace App\Policies;
 
+use App\Data\ContactData;
 use App\Models\Band;
+use App\Models\BandMember;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 class BandPolicy
 {
@@ -14,51 +17,52 @@ class BandPolicy
 
     public function view(User $user, Band $band): ?bool
     {
+        if ($user->can('view private bands')) {
+            return true;
+        }
+
         // Public bands are viewable by anyone
         if ($band->visibility === 'public') {
             return true;
         }
 
-        // Members-only bands are viewable by authenticated users
-        if ($band->visibility === 'members') {
+        // Members-only bands are viewable by authenticated users with permission
+        if ($band->visibility === 'members' && $user) {
             return true;
         }
 
-        // Private bands are only viewable by members and owners
-        if ($band->visibility === 'private') {
-            return $this->isMemberOrOwner($user, $band);
+        // Private bands are viewable by members
+        if ($band->visibility === 'private' && $band->membership($user)) {
+            return true;
         }
 
         return null;
     }
 
-    public function create(User $user): bool
+    public function create(User $user): ?bool
     {
-        return true;
+        if ($user?->can('create bands')) {
+            return true;
+        };
+        return null;
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Band $band): bool
+    public function update(User $user, Band $band): ?bool
     {
-        // Owner can always update
-        if ($band->owner_id === $user->id) {
+        // Context check: admin members can update
+        if ($band->membership($user)?->role === 'admin') {
             return true;
         }
 
-        // Check if user has permission to update bands
+        // Cross-cutting permission to update any band
         if ($user->can('update bands')) {
             return true;
         }
 
-        // System admins and moderators can update
-        if ($user->hasRole(['admin', 'moderator'])) {
-            return true;
-        }
-
-        // Band admins can update
-        return $this->isBandAdmin($user, $band);
+        return null;
     }
 
     /**
@@ -66,7 +70,13 @@ class BandPolicy
      */
     public function delete(User $user, Band $band): ?bool
     {
-        if ($user->id === $band->owner->id || $user->can('delete bands')) {
+        // Context check: only owner can delete their band
+        if ($user->is($band->owner)) {
+            return true;
+        }
+
+        // Cross-cutting permission to delete any band
+        if ($user->can('delete bands')) {
             return true;
         }
 
@@ -78,7 +88,13 @@ class BandPolicy
      */
     public function restore(User $user, Band $band): ?bool
     {
-        if ($user->id === $band->owner->id || $user->can('restore bands')) {
+        // Context check: only owner can restore their band
+        if ($user->is($band->owner)) {
+            return true;
+        }
+
+        // Cross-cutting permission to restore bands
+        if ($user->can('restore bands')) {
             return true;
         }
 
@@ -88,68 +104,78 @@ class BandPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Band $band): bool
+    public function forceDelete(User $user, Band $band): ?bool
     {
-        return $user->hasRole(['admin']) || $user->can('force delete bands');
-    }
-
-    /**
-     * Determine whether the user can manage band members.
-     */
-    public function manageMembers(User $user, Band $band): bool
-    {
-        // Owner can manage members
-        if ($band->owner_id === $user->id) {
+        // Only global permission for force delete (admins only)
+        if ($user->can('force delete bands')) {
             return true;
         }
 
-        // Check if user has permission to manage band members
-        if ($user->can('manage band members')) {
-            return true;
-        }
-
-        // Band admins can manage members
-        return $this->isBandAdmin($user, $band);
+        return null;
     }
 
     /**
      * Determine whether the user can invite members to the band.
      */
-    public function inviteMembers(User $user, Band $band): bool
+    public function invite(User $user, Band $band): ?bool
     {
-        // Check specific invite permission
-        if ($user->can('invite band members')) {
+        // Context check: owner or admin member can invite
+        if ($band->membership($user)->role === 'admin') {
+            return true;
+        }
+        return Gate::allows('create', BandMember::class);
+    }
+
+
+    /**
+     * Determine whether the user can transfer ownership of the band.
+     */
+    public function transfer(User $user, Band $band): ?bool
+    {
+        // Must be owner AND have transfer permission (AND logic)
+        if ($user->is($band->owner)) {
             return true;
         }
 
-        return $this->manageMembers($user, $band);
+        return null;
+    }
+
+
+    public function contact(?User $user, Band $band): ?bool
+    {
+        /**
+         * @var ContactData $contact
+         */
+        $contact = $band->contact;
+        // Public bands: anyone can view contact info
+        if ($contact->visibility === 'public') {
+            return true;
+        }
+
+        // Members-only bands: users with permission can view
+        if ($contact->visibility === 'members' && $user) {
+            return true;
+        }
+
+        // Private bands: band members can view contact info
+        if ($contact->visibility === 'private' && $band->membership($user)) {
+            return true;
+        }
+
+        return null;
     }
 
     /**
-     * Determine whether the user can remove members from the band.
+     * Determine whether the user can join the band.
      */
-    public function removeMembers(User $user, Band $band): bool
+    public function join(User $user, Band $band): ?bool
     {
-        // Check specific remove permission
-        if ($user->can('remove band members')) {
+        // Check for existing invitation through pivot table
+        if ($band->membership($user)->status === 'invited') {
             return true;
         }
 
-        return $this->manageMembers($user, $band);
-    }
-
-    /**
-     * Determine whether the user can change member roles.
-     */
-    public function changeMemberRoles(User $user, Band $band): bool
-    {
-        // Check specific permission
-        if ($user->can('change member roles')) {
-            return true;
-        }
-
-        // Only owner can change roles
-        return $band->owner_id === $user->id;
+        return null;
     }
 
     /**
@@ -157,90 +183,14 @@ class BandPolicy
      */
     public function leave(User $user, Band $band): ?bool
     {
-        // Owner cannot leave their own band (must transfer ownership first)
-        if ($band->owner_id === $user->id) {
+        // Owner cannot leave (must transfer ownership first)
+        if ($user->is($band->owner)) {
             return false;
         }
 
-        // Members can leave
-        return $this->isMember($user, $band);
-    }
-
-    /**
-     * Determine whether the user can transfer ownership of the band.
-     */
-    public function transferOwnership(User $user, Band $band): bool
-    {
-        // Check specific permission
-        if ($user->can('transfer band ownership')) {
+        // Can leave if they have a band membership
+        if ($band->membership($user)) {
             return true;
-        }
-
-        return $band->owner_id === $user->id;
-    }
-
-    /**
-     * Helper method to check if user is a member or owner of the band.
-     */
-    protected function isMemberOrOwner(?User $user, Band $band): bool
-    {
-        return $user && ($band->owner_id === $user->id || $this->isMember($user, $band));
-    }
-
-    /**
-     * Helper method to check if user is a member of the band.
-     */
-    protected function isMember(User $user, Band $band): bool
-    {
-        return $band->members()->wherePivot('user_id', $user->id)->exists();
-    }
-
-    /**
-     * Helper method to check if user is a band admin.
-     */
-    protected function isBandAdmin(User $user, Band $band): bool
-    {
-        return $band->members()
-            ->wherePivot('user_id', $user->id)
-            ->wherePivot('role', 'admin')
-            ->exists();
-    }
-
-    public function viewMembers(User $user, Band $band): bool
-    {
-        // Public bands: anyone can view members
-        if ($band->visibility === 'public') {
-            return true;
-        }
-
-        // Members-only bands: only members and owner can view members
-        if ($band->visibility === 'members') {
-            return $this->isMemberOrOwner($user, $band);
-        }
-
-        // Private bands: only members and owner can view members
-        if ($band->visibility === 'private') {
-            return $this->isMemberOrOwner($user, $band);
-        }
-
-        return false;
-    }
-
-    public function viewContact(?User $user, Band $band): bool
-    {
-        // Public bands: anyone can view contact info
-        if ($band->visibility === 'public') {
-            return true;
-        }
-
-        // Members-only bands: only members and owner can view contact info
-        if ($band->visibility === 'members') {
-            return $user !== null;
-        }
-
-        // Private bands: only members and owner can view contact info
-        if ($band->visibility === 'private') {
-            return $this->isMemberOrOwner($user, $band);
         }
 
         return false;

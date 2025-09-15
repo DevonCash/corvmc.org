@@ -19,6 +19,83 @@ use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use App\Traits\Reportable;
 
+/**
+ * @property int $id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string $title
+ * @property string|null $description
+ * @property \Illuminate\Support\Carbon $start_time
+ * @property \Illuminate\Support\Carbon|null $end_time
+ * @property \Illuminate\Support\Carbon|null $doors_time
+ * @property \Spatie\LaravelData\Contracts\BaseData|\Spatie\LaravelData\Contracts\TransformableData|null $location
+ * @property string|null $ticket_url
+ * @property string|null $ticket_price
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $published_at
+ * @property int $manager_id
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
+ * @property-read int|null $activities_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\ModelFlags\Models\Flag> $flags
+ * @property-read int|null $flags_count
+ * @property-read string $date_range
+ * @property-read float $duration
+ * @property-read int $estimated_duration
+ * @property-read mixed $genres
+ * @property-read mixed $poster_large_url
+ * @property-read mixed $poster_optimized_url
+ * @property-read mixed $poster_thumb_url
+ * @property-read mixed $poster_url
+ * @property-read string $ticket_price_display
+ * @property-read string $venue_details
+ * @property-read string $venue_name
+ * @property-read \App\Models\User $manager
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
+ * @property-read int|null $media_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Band> $performers
+ * @property-read int|null $performers_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $reports
+ * @property-read int|null $reports_count
+ * @property \Illuminate\Database\Eloquent\Collection<int, \Spatie\Tags\Tag> $tags
+ * @property-read int|null $tags_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production dateRange($range)
+ * @method static \Database\Factories\ProductionFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production flagged(\BackedEnum|string $name)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production notFlagged(\BackedEnum|string $name)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production publishedPast()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production publishedToday()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production publishedUpcoming()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production venue($venueType)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereDoorsTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereEndTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereLocation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereManagerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production wherePublishedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereStartTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereTicketPrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereTicketUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production withAllTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production withAllTagsOfAnyType($tags)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production withAnyTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production withAnyTagsOfAnyType($tags)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production withAnyTagsOfType(array|string $type)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production withoutTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Production withoutTrashed()
+ * @mixin \Eloquent
+ */
 class Production extends Model implements Eventable, HasMedia
 {
     use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity, Reportable, SoftDeletes;

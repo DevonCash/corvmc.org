@@ -8,9 +8,9 @@ use App\Models\StaffProfileType;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
-    $this->admin = $this->createUser(['name' => 'Site Administrator']);
-    $this->staffMember = $this->createUser(['name' => 'Staff Member']);
-    $this->boardMember = $this->createUser(['name' => 'Board Member']);
+    $this->admin = \App\Models\User::factory()->create(['name' => 'Site Administrator']);
+    $this->staffMember = \App\Models\User::factory()->create(['name' => 'Staff Member']);
+    $this->boardMember = \App\Models\User::factory()->create(['name' => 'Board Member']);
 
     // Assign roles (using existing roles from the system)
     $this->admin->assignRole('admin');
@@ -88,7 +88,7 @@ describe('Story 1: Create Staff Profile', function () {
             'name' => 'Former Member',
             'title' => 'Former Staff',
             'is_active' => false,
-            'user_id' => $this->createUser(['name' => 'Former Staff'])->id,
+            'user_id' => \App\Models\User::factory()->create(['name' => 'Former Staff'])->id,
         ]);
 
         expect($activeProfile->is_active)->toBeTrue()
@@ -206,7 +206,7 @@ describe('Story 3: Admin Profile Approval Workflow', function () {
             'is_active' => true,
         ]);
 
-        $staffMember2 = $this->createUser(['name' => 'Staff Two']);
+        $staffMember2 = \App\Models\User::factory()->create(['name' => 'Staff Two']);
         $profile2 = StaffProfileService::createProfile([
             'name' => 'Staff Two',
             'user_id' => $staffMember2->id,
@@ -395,7 +395,7 @@ describe('Story 5: Staff Profile Organization', function () {
             'type' => 'board',
             'sort_order' => 2,
             'is_active' => true,
-            'user_id' => $this->createUser(['name' => 'Another Board Member'])->id,
+            'user_id' => \App\Models\User::factory()->create(['name' => 'Another Board Member'])->id,
         ]);
 
         $staff1 = StaffProfileService::createStaffProfile([
@@ -431,7 +431,7 @@ describe('Story 5: Staff Profile Organization', function () {
         $inactiveProfile = StaffProfileService::createStaffProfile([
             'name' => 'Inactive Staff',
             'is_active' => false,
-            'user_id' => $this->createUser(['name' => 'Inactive Staff'])->id,
+            'user_id' => \App\Models\User::factory()->create(['name' => 'Inactive Staff'])->id,
         ]);
 
         // Public view should only show active profiles
@@ -466,7 +466,7 @@ describe('Story 5: Staff Profile Organization', function () {
             'type' => 'staff',
             'sort_order' => 2,
             'is_active' => true,
-            'user_id' => $this->createUser(['name' => 'Second Staff'])->id,
+            'user_id' => \App\Models\User::factory()->create(['name' => 'Second Staff'])->id,
         ]);
 
         // Reorder profiles (swap positions)

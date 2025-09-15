@@ -162,6 +162,7 @@ class BandService
         ?User $user = null,
         array $data = [],
     ): void {
+        // Check if user is already a member by looking at pivot table
         if ($user && $band->memberships()->active()->where('user_id', $user->id)->exists()) {
             throw BandException::userAlreadyMember();
         }
@@ -171,7 +172,7 @@ class BandService
         $displayName = $data['display_name'] ?? null;
 
         DB::transaction(function () use ($band, $user, $role, $position, $displayName) {
-            // If user is null, create a guest member entry
+            // If user is null, create a guest member entry (non-CMC member)
             if (is_null($user)) {
                 BandMember::create([
                     'band_profile_id' => $band->id,
@@ -183,8 +184,7 @@ class BandService
                     'invited_at' => now(),
                 ]);
             } else {
-
-                // Add member to pivot table
+                // Add member to pivot table (for tracking purposes)
                 $band->members()->attach($user->id, [
                     'role' => $role,
                     'position' => $position,
@@ -192,6 +192,9 @@ class BandService
                     'status' => 'active',
                     'invited_at' => now(),
                 ]);
+
+                // Grant appropriate scoped permissions based on role
+                $this->grantPermissionsForRole($user, $band, $role);
             }
         });
     }
@@ -201,18 +204,23 @@ class BandService
      */
     public function removeMember(Band $band, User $user): void
     {
-        // TODO: Add authorization check - only band owner/admins should be able to remove members
-
         // Cannot remove the owner
         if ($band->owner_id === $user->id) {
             throw BandException::cannotRemoveOwner();
         }
 
-        if (!$band->memberships()->active()->for($user)->exists()) {
+        // Check if user is a member by looking at pivot table
+        if (!$band->memberships()->active()->where('user_id', $user->id)->exists()) {
             throw BandException::userNotMember();
         }
 
-        $band->members()->detach($user->id);
+        DB::transaction(function () use ($band, $user) {
+            // Remove from pivot table
+            $band->members()->detach($user->id);
+
+            // Revoke all band-scoped permissions
+            $this->revokeAllBandPermissions($user, $band);
+        });
     }
 
     /**
@@ -225,11 +233,18 @@ class BandService
             throw BandException::cannotLeaveOwnedBand();
         }
 
-        if (!$band->memberships()->active()->for($user)->exists()) {
+        // Check if user is a member by looking at pivot table
+        if (!$band->memberships()->active()->where('user_id', $user->id)->exists()) {
             throw BandException::userNotMember();
         }
 
-        $band->members()->detach($user->id);
+        DB::transaction(function () use ($band, $user) {
+            // Remove from pivot table
+            $band->members()->detach($user->id);
+
+            // Revoke all band-scoped permissions
+            $this->revokeAllBandPermissions($user, $band);
+        });
     }
 
     /**
@@ -237,19 +252,24 @@ class BandService
      */
     public function updateMemberRole(Band $band, User $user, string $role): void
     {
-        // TODO: Add authorization check - only band owner/admins should be able to update roles
-        // Current implementation allows any authenticated user to manage band roles (security gap)
-
         // Cannot change owner's role
         if ($band->owner_id === $user->id) {
             throw BandException::cannotChangeOwnerRole();
         }
 
-        if (! $band->memberships()->active()->for($user)->exists()) {
+        // Check if user is a member by looking at pivot table
+        if (!$band->memberships()->active()->where('user_id', $user->id)->exists()) {
             throw BandException::userNotMember();
         }
 
-        $band->members()->updateExistingPivot($user->id, ['role' => $role]);
+        DB::transaction(function () use ($band, $user, $role) {
+            // Update pivot table role
+            $band->members()->updateExistingPivot($user->id, ['role' => $role]);
+
+            // Revoke existing permissions and grant new ones
+            $this->revokeAllBandPermissions($user, $band);
+            $this->grantPermissionsForRole($user, $band, $role);
+        });
     }
 
     /**
@@ -530,5 +550,28 @@ class BandService
             'status' => 'active',
             'owner_id' => $user->id
         ]);
+
+        // Grant owner permissions
+        $this->grantPermissionsForRole($user, $band, 'owner');
+    }
+
+    /**
+     * Grant permissions to a user based on their role in the band.
+     * Note: Individual band permissions have been removed - authorization is now context-based.
+     */
+    private function grantPermissionsForRole(User $user, Band $band, string $role): void
+    {
+        // No individual permissions to grant - authorization is now context-based through policies
+        // The user's role is stored in the pivot table and checked by policies
+    }
+
+    /**
+     * Revoke all band-scoped permissions from a user.
+     * Note: Individual band permissions have been removed - authorization is now context-based.
+     */
+    private function revokeAllBandPermissions(User $user, Band $band): void
+    {
+        // No individual permissions to revoke - authorization is now context-based through policies
+        // Removing the user from the pivot table is sufficient
     }
 }

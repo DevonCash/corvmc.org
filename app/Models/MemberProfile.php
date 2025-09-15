@@ -20,7 +20,65 @@ use App\Traits\Reportable;
 
 /**
  * Represents a member profile in the application.
+ * 
  * It includes details about the user, their bio, links, and contact information.
+ *
+ * @property int $id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $deleted_at
+ * @property int $user_id
+ * @property string|null $hometown
+ * @property string|null $bio
+ * @property array<array-key, mixed>|null $links
+ * @property \Spatie\LaravelData\Contracts\BaseData|\Spatie\LaravelData\Contracts\TransformableData|null $contact
+ * @property string $visibility
+ * @property array<array-key, mixed>|null $embeds
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
+ * @property-read int|null $activities_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\ModelFlags\Models\Flag> $flags
+ * @property-read int|null $flags_count
+ * @property-read string|null $avatar
+ * @property-read string $avatar_large_url
+ * @property-read string $avatar_optimized_url
+ * @property-read string $avatar_thumb_url
+ * @property-read string $avatar_url
+ * @property-read mixed $genres
+ * @property-read array $influences
+ * @property-read string $name
+ * @property-read array $skills
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
+ * @property-read int|null $media_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $reports
+ * @property-read int|null $reports_count
+ * @property \Illuminate\Database\Eloquent\Collection<int, \Spatie\Tags\Tag> $tags
+ * @property-read int|null $tags_count
+ * @property-read \App\Models\User $user
+ * @method static \Database\Factories\MemberProfileFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile flagged(\BackedEnum|string $name)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile notFlagged(\BackedEnum|string $name)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile whereBio($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile whereContact($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile whereEmbeds($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile whereHometown($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile whereLinks($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile whereVisibility($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile withAllTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile withAllTagsOfAnyType($tags)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile withAnyTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile withAnyTagsOfAnyType($tags)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile withAnyTagsOfType(array|string $type)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile withFlag(string $flag)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile withoutTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
+ * @mixin \Eloquent
  */
 class MemberProfile extends Model implements HasMedia
 {

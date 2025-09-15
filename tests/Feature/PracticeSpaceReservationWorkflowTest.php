@@ -39,8 +39,13 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $costBreakdown = ReservationService::calculateCost($user, $startTime, $endTime);
 
             expect($costBreakdown)->toHaveKeys([
-                'total_hours', 'free_hours', 'paid_hours', 'cost',
-                'hourly_rate', 'is_sustaining_member', 'remaining_free_hours'
+                'total_hours',
+                'free_hours',
+                'paid_hours',
+                'cost',
+                'hourly_rate',
+                'is_sustaining_member',
+                'remaining_free_hours'
             ])
                 ->and($costBreakdown['total_hours'])->toBe(2.0)
                 ->and($costBreakdown['free_hours'])->toBe(0)
@@ -595,7 +600,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
     describe('Integration Scenarios', function () {
         it('handles complex multi-user booking workflow', function () {
             $regularUser = User::factory()->create();
-            $sustainingUser = $this->createSustainingMember();
+            $sustainingUser = User::factory()->withRole('sustaining member')->create();
 
             // Create recurring transaction to make them a sustaining member
             Transaction::factory()->create([

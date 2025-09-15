@@ -20,8 +20,10 @@
 /storage/*.key
 /storage/pail
 /vendor
+/reports
 Homestead.json
 Homestead.yaml
 Thumbs.db
 
 .vemto_settings
+_ide_helper.php

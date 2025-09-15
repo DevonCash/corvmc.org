@@ -33,7 +33,7 @@ describe('CalendarService Exception Handling', function () {
         });
 
         it('throws exception for reservation with null times', function () {
-            $user = $this->createUser();
+            $user = User::factory()->create();
             $reservation = Reservation::factory()->create([
                 'user_id' => $user->id,
                 'reserved_at' => null,
@@ -45,7 +45,7 @@ describe('CalendarService Exception Handling', function () {
         });
 
         it('throws exception for invalid date range', function () {
-            $user = $this->createUser();
+            $user = User::factory()->create();
             $startTime = Carbon::now()->addDay();
             $endTime = $startTime->copy()->subHour(); // End before start
 
@@ -74,7 +74,7 @@ describe('CalendarService Exception Handling', function () {
         });
 
         it('throws exception for production with null start_time', function () {
-            $manager = $this->createUser();
+            $manager = User::factory()->create();
             $production = Production::factory()->create([
                 'manager_id' => $manager->id,
                 'start_time' => Carbon::now()->addDay(),
@@ -92,7 +92,7 @@ describe('CalendarService Exception Handling', function () {
         });
 
         it('throws exception for production with invalid date range', function () {
-            $manager = $this->createUser();
+            $manager = User::factory()->create();
             $startTime = Carbon::now()->addDay();
             $endTime = $startTime->copy()->subHour(); // End before start
 
@@ -121,8 +121,8 @@ describe('CalendarService Exception Handling', function () {
             $end = Carbon::now()->addDay()->endOfDay();
 
             // Create a valid reservation
-            $user = $this->createUser();
-            $validReservation = $this->createReservation([
+            $user = User::factory()->create();
+            $validReservation = Reservation::factory()->create([
                 'user_id' => $user->id,
                 'reserved_at' => Carbon::now()->addDay()->setHour(14),
                 'reserved_until' => Carbon::now()->addDay()->setHour(16),
@@ -148,7 +148,7 @@ describe('CalendarService Exception Handling', function () {
 
     describe('event generation failures', function () {
         it('wraps unexpected exceptions in CalendarServiceException', function () {
-            $user = $this->createUser();
+            $user = User::factory()->create();
 
             // Create a reservation but force an error by corrupting the user relationship
             $reservation = Reservation::factory()->create([

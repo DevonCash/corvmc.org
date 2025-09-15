@@ -1,19 +1,22 @@
 <?php
 
 use App\Facades\CalendarService;
+use App\Models\Production;
+use App\Models\Reservation;
+use App\Models\User;
 use Carbon\Carbon;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 
-beforeEach(function () {
-    $this->user = $this->createUser();
-    $this->otherUser = $this->createUser();
+beforeEach(function (): void {
+    $this->user = \App\Models\User::factory()->create();
+    $this->otherUser = \App\Models\User::factory()->create();
 });
 
 describe('reservationToCalendarEvent', function () {
     it('shows full details for own reservation', function () {
         $this->actingAs($this->user);
 
-        $reservation = $this->createReservation([
+        $reservation = \App\Models\Reservation::factory()->create([
             'user_id' => $this->user->id,
             'status' => 'confirmed',
             'is_recurring' => true,
@@ -33,7 +36,7 @@ describe('reservationToCalendarEvent', function () {
     it('shows limited details for other users reservations', function () {
         $this->actingAs($this->otherUser);
 
-        $reservation = $this->createReservation([
+        $reservation = Reservation::factory()->create([
             'user_id' => $this->user->id,
             'status' => 'confirmed',
             'reserved_at' => Carbon::now()->addDay(),
@@ -48,11 +51,11 @@ describe('reservationToCalendarEvent', function () {
     });
 
     it('shows full details for users with view reservations permission', function () {
-        $adminUser = $this->createUser();
+        $adminUser = User::factory()->create();
         $adminUser->givePermissionTo('view reservations');
         $this->actingAs($adminUser);
 
-        $reservation = $this->createReservation([
+        $reservation = Reservation::factory()->create([
             'user_id' => $this->user->id,
             'status' => 'confirmed',
             'reserved_at' => Carbon::now()->addDay(),
@@ -68,7 +71,7 @@ describe('reservationToCalendarEvent', function () {
     it('shows pending status in title', function () {
         $this->actingAs($this->user);
 
-        $reservation = $this->createReservation([
+        $reservation = Reservation::factory()->create([
             'user_id' => $this->user->id,
             'status' => 'pending',
             'reserved_at' => Carbon::now()->addDay(),
@@ -83,21 +86,21 @@ describe('reservationToCalendarEvent', function () {
     it('uses correct colors for different statuses', function () {
         $this->actingAs($this->user);
 
-        $confirmedReservation = $this->createReservation([
+        $confirmedReservation = Reservation::factory()->create([
             'user_id' => $this->user->id,
             'status' => 'confirmed',
             'reserved_at' => Carbon::now()->addDay(),
             'reserved_until' => Carbon::now()->addDay()->addHours(2),
         ]);
 
-        $pendingReservation = $this->createReservation([
+        $pendingReservation = Reservation::factory()->create([
             'user_id' => $this->user->id,
             'status' => 'pending',
             'reserved_at' => Carbon::now()->addDays(2),
             'reserved_until' => Carbon::now()->addDays(2)->addHours(2),
         ]);
 
-        $cancelledReservation = $this->createReservation([
+        $cancelledReservation = Reservation::factory()->create([
             'user_id' => $this->user->id,
             'status' => 'cancelled',
             'reserved_at' => Carbon::now()->addDays(3),
@@ -116,8 +119,8 @@ describe('reservationToCalendarEvent', function () {
 
 describe('productionToCalendarEvent', function () {
     it('creates calendar event for CMC productions', function () {
-        $manager = $this->createUser();
-        $production = $this->createProduction([
+        $manager = User::factory()->create();
+        $production = Production::factory()->create([
             'manager_id' => $manager->id,
             'title' => 'Test Show',
             'status' => 'published',
@@ -137,7 +140,7 @@ describe('productionToCalendarEvent', function () {
     });
 
     it('shows draft status for unpublished productions', function () {
-        $production = $this->createProduction([
+        $production = Production::factory()->create([
             'title' => 'Draft Show',
             'status' => 'pre-production',
             'start_time' => Carbon::now()->addDay(),
@@ -153,7 +156,7 @@ describe('productionToCalendarEvent', function () {
     });
 
     it('hides external venue productions', function () {
-        $production = $this->createProduction([
+        $production = Production::factory()->create([
             'title' => 'External Show',
             'start_time' => Carbon::now()->addDay(),
             'end_time' => Carbon::now()->addDay()->addHours(3),
@@ -175,7 +178,7 @@ describe('productionToCalendarEvent', function () {
         ];
 
         foreach ($statuses as $status => $expectedColor) {
-            $production = $this->createProduction([
+            $production = Production::factory()->create([
                 'status' => $status,
                 'start_time' => Carbon::now()->addDay(),
                 'end_time' => Carbon::now()->addDay()->addHours(3),
@@ -195,25 +198,25 @@ describe('getEventsForDateRange', function () {
         $endDate = Carbon::now()->addDays(7)->endOfDay();
 
         // Create reservations in range
-        $reservation1 = $this->createReservation([
+        $reservation1 = Reservation::factory()->create([
             'reserved_at' => Carbon::now()->addDay(),
             'reserved_until' => Carbon::now()->addDay()->addHours(2),
         ]);
 
-        $reservation2 = $this->createReservation([
+        $reservation2 = Reservation::factory()->create([
             'reserved_at' => Carbon::now()->addDays(3),
             'reserved_until' => Carbon::now()->addDays(3)->addHours(2),
         ]);
 
         // Create production in range
-        $production = $this->createProduction([
+        $production = Production::factory()->create([
             'start_time' => Carbon::now()->addDays(5),
             'end_time' => Carbon::now()->addDays(5)->addHours(3),
             'location' => \App\Data\LocationData::cmc(),
         ]);
 
         // Create items outside range (should be excluded)
-        $this->createReservation([
+        Reservation::factory()->create([
             'reserved_at' => Carbon::now()->addDays(10),
             'reserved_until' => Carbon::now()->addDays(10)->addHours(2),
         ]);
@@ -235,7 +238,7 @@ describe('hasConflicts', function () {
         $baseTime = Carbon::tomorrow()->setHour(14);
 
         // Create existing confirmed reservation
-        $existingReservation = $this->createReservation([
+        $existingReservation = Reservation::factory()->create([
             'status' => 'confirmed',
             'reserved_at' => $baseTime,
             'reserved_until' => $baseTime->copy()->addHours(2),
@@ -256,7 +259,7 @@ describe('hasConflicts', function () {
         $baseTime = Carbon::tomorrow()->setHour(19);
 
         // Create existing production at CMC
-        $existingProduction = $this->createProduction([
+        $existingProduction = Production::factory()->create([
             'start_time' => $baseTime,
             'end_time' => $baseTime->copy()->addHours(3),
             'location' => \App\Data\LocationData::cmc(),
@@ -277,7 +280,7 @@ describe('hasConflicts', function () {
         $baseTime = Carbon::tomorrow()->setHour(19);
 
         // Create production at external venue
-        $this->createProduction([
+        Production::factory()->create([
             'start_time' => $baseTime,
             'end_time' => $baseTime->copy()->addHours(3),
             'location' => \App\Data\LocationData::external('External Venue', '123 Main St'),
@@ -295,7 +298,7 @@ describe('hasConflicts', function () {
     it('excludes specified reservation from conflict check', function () {
         $baseTime = Carbon::tomorrow()->setHour(14);
 
-        $reservation = $this->createReservation([
+        $reservation = Reservation::factory()->create([
             'status' => 'confirmed',
             'reserved_at' => $baseTime,
             'reserved_until' => $baseTime->copy()->addHours(2),
@@ -314,7 +317,7 @@ describe('hasConflicts', function () {
     it('excludes specified production from conflict check', function () {
         $baseTime = Carbon::tomorrow()->setHour(19);
 
-        $production = $this->createProduction([
+        $production = Production::factory()->create([
             'start_time' => $baseTime,
             'end_time' => $baseTime->copy()->addHours(3),
             'location' => \App\Data\LocationData::cmc(),
@@ -335,14 +338,14 @@ describe('hasConflicts', function () {
         $baseTime = Carbon::tomorrow()->setHour(14);
 
         // Create pending reservation (should not conflict)
-        $this->createReservation([
+        Reservation::factory()->create([
             'status' => 'pending',
             'reserved_at' => $baseTime,
             'reserved_until' => $baseTime->copy()->addHours(2),
         ]);
 
         // Create cancelled reservation (should not conflict)
-        $this->createReservation([
+        Reservation::factory()->create([
             'status' => 'cancelled',
             'reserved_at' => $baseTime->copy()->addHour(),
             'reserved_until' => $baseTime->copy()->addHours(3),

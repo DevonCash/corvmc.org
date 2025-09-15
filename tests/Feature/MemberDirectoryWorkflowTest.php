@@ -2,9 +2,10 @@
 
 use App\Models\User;
 use App\Models\MemberProfile;
+use Illuminate\Support\Facades\Auth;
 
 beforeEach(function () {
-    $this->user = $this->createUser();
+    $this->user = User::factory()->create();
     $this->actingAs($this->user);
 });
 
@@ -27,12 +28,12 @@ describe('Member Profile Creation and Management', function () {
 
         // Add skills, genres, and influences as tags
         $this->user->profile->syncTagsWithType($profileData['skills'], 'skill');
-        $this->user->profile->syncTagsWithType($profileData['genres'], 'genre'); 
+        $this->user->profile->syncTagsWithType($profileData['genres'], 'genre');
         $this->user->profile->syncTagsWithType($profileData['influences'], 'influence');
 
         // Verify the profile was created with all expected information
         $this->user->profile->refresh();
-        
+
         expect($this->user->profile->bio)->toBe($profileData['bio'])
             ->and($this->user->profile->visibility)->toBe('public')
             ->and($this->user->profile->skills)->toContain('guitar')
@@ -47,7 +48,7 @@ describe('Member Profile Creation and Management', function () {
         // Story 2: Update Profile Information - "I can edit my bio and personal information anytime"
         $originalBio = 'Original bio content';
         $updatedBio = 'Updated bio with new musical experiences and collaborations';
-        
+
         $this->user->profile->update(['bio' => $originalBio]);
         expect($this->user->profile->bio)->toBe($originalBio);
 
@@ -68,7 +69,7 @@ describe('Member Profile Creation and Management', function () {
         foreach ($visibilityOptions as $visibility) {
             $this->user->profile->update(['visibility' => $visibility]);
             $this->user->profile->refresh();
-            
+
             expect($this->user->profile->visibility)->toBe($visibility);
         }
     });
@@ -77,7 +78,7 @@ describe('Member Profile Creation and Management', function () {
 describe('Member Directory Search and Discovery', function () {
     beforeEach(function () {
         // Create additional test members with varied profiles
-        $this->guitarist = $this->createUser(['name' => 'Jane Guitarist']);
+        $this->guitarist = User::factory()->create(['name' => 'Jane Guitarist']);
         $this->guitarist->profile->update([
             'bio' => 'Rock guitarist looking for band members',
             'visibility' => 'public'
@@ -85,7 +86,7 @@ describe('Member Directory Search and Discovery', function () {
         $this->guitarist->profile->syncTagsWithType(['guitar', 'vocals'], 'skill');
         $this->guitarist->profile->syncTagsWithType(['rock', 'metal'], 'genre');
 
-        $this->drummer = $this->createUser(['name' => 'Mike Drummer']);
+        $this->drummer = User::factory()->create(['name' => 'Mike Drummer']);
         $this->drummer->profile->update([
             'bio' => 'Jazz drummer with classical training',
             'visibility' => 'public'
@@ -93,7 +94,7 @@ describe('Member Directory Search and Discovery', function () {
         $this->drummer->profile->syncTagsWithType(['drums', 'percussion'], 'skill');
         $this->drummer->profile->syncTagsWithType(['jazz', 'fusion'], 'genre');
 
-        $this->privateUser = $this->createUser(['name' => 'Private User']);
+        $this->privateUser = User::factory()->create(['name' => 'Private User']);
         $this->privateUser->profile->update([
             'bio' => 'This should not appear in searches',
             'visibility' => 'private'
@@ -116,7 +117,7 @@ describe('Member Directory Search and Discovery', function () {
 
     it('allows searching members by name and bio content', function () {
         // Story 4: Browse Member Directory - "I can search members by name or bio content"
-        
+
         // Search by name
         $nameResults = MemberProfile::with('user')
             ->where('visibility', '!=', 'private')
@@ -140,7 +141,7 @@ describe('Member Directory Search and Discovery', function () {
 
     it('allows filtering members by skills', function () {
         // Story 5: Advanced Member Search - "I can search by multiple skills simultaneously"
-        
+
         // Search for guitar players
         $guitarPlayers = MemberProfile::with('user')
             ->where('visibility', '!=', 'private')
@@ -162,7 +163,7 @@ describe('Member Directory Search and Discovery', function () {
 
     it('allows filtering members by genres', function () {
         // Story 5: Advanced Member Search - "I can search by multiple genres to find stylistic matches"
-        
+
         // Search for rock musicians
         $rockMusicians = MemberProfile::with('user')
             ->where('visibility', '!=', 'private')
@@ -184,7 +185,7 @@ describe('Member Directory Search and Discovery', function () {
 
     it('combines skill and genre searches for precise results', function () {
         // Story 5: Advanced Member Search - "I can combine skill and genre searches for precise results"
-        
+
         // Search for rock guitar players specifically
         $rockGuitarists = MemberProfile::with('user')
             ->where('visibility', '!=', 'private')
@@ -209,10 +210,10 @@ describe('Member Directory Search and Discovery', function () {
 describe('Member Profile Flags and Availability', function () {
     it('allows setting and displaying availability flags', function () {
         // Story 6: Member Profile Flags - "I can flag myself as 'seeking band'"
-        
+
         // Set profile to public so it can be found in searches
         $this->user->profile->update(['visibility' => 'public']);
-        
+
         $this->user->profile->flag('seeking_band');
         $this->user->profile->flag('available_for_session');
 
@@ -231,7 +232,7 @@ describe('Member Profile Flags and Availability', function () {
 
     it('allows multiple flags simultaneously', function () {
         // Story 6: Member Profile Flags - "I can set multiple flags simultaneously"
-        
+
         $this->user->profile->flag('seeking_band');
         $this->user->profile->flag('available_for_session');
         $this->user->profile->flag('open_to_collaboration');
@@ -245,19 +246,19 @@ describe('Member Profile Flags and Availability', function () {
 describe('Privacy and Visibility Enforcement', function () {
     beforeEach(function () {
         // Create users with different visibility levels
-        $this->publicUser = $this->createUser(['name' => 'Public Member']);
+        $this->publicUser = User::factory()->create(['name' => 'Public Member']);
         $this->publicUser->profile->update(['visibility' => 'public', 'bio' => 'Public bio']);
 
-        $this->membersUser = $this->createUser(['name' => 'Members Only']);
+        $this->membersUser = User::factory()->create(['name' => 'Members Only']);
         $this->membersUser->profile->update(['visibility' => 'members', 'bio' => 'Members-only bio']);
 
-        $this->privateUser = $this->createUser(['name' => 'Private Member']);
+        $this->privateUser = User::factory()->create(['name' => 'Private Member']);
         $this->privateUser->profile->update(['visibility' => 'private', 'bio' => 'Private bio']);
     });
 
     it('enforces privacy settings throughout the system for logged-in members', function () {
         // Story 3: Profile Privacy Controls - "Privacy settings are enforced throughout the system"
-        
+
         // Logged-in member should see public and members-only profiles
         $visibleProfiles = MemberProfile::with('user')
             ->whereIn('visibility', ['public', 'members'])
@@ -271,8 +272,7 @@ describe('Privacy and Visibility Enforcement', function () {
 
     it('shows only public profiles to guests', function () {
         // Simulate guest user (not logged in)
-        auth()->logout();
-        
+        Auth::logout();
         // Guest should only see public profiles
         $guestVisibleProfiles = MemberProfile::with('user')
             ->where('visibility', 'public')

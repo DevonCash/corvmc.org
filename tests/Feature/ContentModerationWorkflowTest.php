@@ -11,13 +11,14 @@ use App\Notifications\ReportResolvedNotification;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
-    $this->reporter = $this->createUser(['name' => 'Report Submitter']);
-    $this->moderator = $this->createUser(['name' => 'Community Moderator']);
-    $this->admin = $this->createUser(['name' => 'Site Administrator']);
+    $this->reporter = User::factory()->create(['name' => 'Report Submitter']);
+    $this->moderator = User::factory()
+        ->withRole('moderator')
+        ->create(['name' => 'Community Moderator']);
+    $this->admin = User::factory()
+        ->withRole('admin')
+        ->create(['name' => 'Site Administrator']);
 
-    // Assign appropriate roles
-    $this->moderator->assignRole('moderator');
-    $this->admin->assignRole('admin');
 
     Notification::fake();
 });
@@ -27,7 +28,7 @@ describe('Story 1: Report Inappropriate Content', function () {
         // Story 1: "I can report various types of content (member profiles, band profiles, productions, etc.)"
         $this->actingAs($this->reporter);
 
-        $reportedUser = $this->createUser(['name' => 'Reported Member']);
+        $reportedUser = User::factory()->create(['name' => 'Reported Member']);
         $reportedProfile = $reportedUser->profile;
 
         // Story 1: "I can select from predefined reasons (harassment, inappropriate content, spam, etc.)"
@@ -54,7 +55,7 @@ describe('Story 1: Report Inappropriate Content', function () {
         // Story 1: "Valid reasons are contextual to the type of content being reported"
         $this->actingAs($this->reporter);
 
-        $production = $this->createProduction([
+        $production = Production::factory()->create([
             'title' => 'Controversial Show',
             'description' => 'Potentially inappropriate content for venue'
         ]);
@@ -73,8 +74,8 @@ describe('Story 1: Report Inappropriate Content', function () {
     it('allows reporting bands with valid reasons', function () {
         $this->actingAs($this->reporter);
 
-        $bandOwner = $this->createUser();
-        $band = $this->createBand(['name' => 'Problematic Band'], $bandOwner);
+        $bandOwner = User::factory()->create();
+        $band = Band::factory()->create(['name' => 'Problematic Band'], $bandOwner);
 
         $report = ReportService::submitReport(
             $band,
@@ -91,7 +92,7 @@ describe('Story 1: Report Inappropriate Content', function () {
         // Story 1: "I cannot submit duplicate reports for the same content"
         $this->actingAs($this->reporter);
 
-        $reportedUser = $this->createUser();
+        $reportedUser = User::factory()->create();
         $reportedProfile = $reportedUser->profile;
 
         // Submit first report
@@ -114,9 +115,9 @@ describe('Story 1: Report Inappropriate Content', function () {
     });
 
     it('allows different users to report the same content', function () {
-        $reporter1 = $this->createUser(['name' => 'First Reporter']);
-        $reporter2 = $this->createUser(['name' => 'Second Reporter']);
-        $reportedUser = $this->createUser();
+        $reporter1 = User::factory()->create(['name' => 'First Reporter']);
+        $reporter2 = User::factory()->create(['name' => 'Second Reporter']);
+        $reportedUser = User::factory()->create();
         $reportedProfile = $reportedUser->profile;
 
         // First user reports
@@ -146,7 +147,7 @@ describe('Story 1: Report Inappropriate Content', function () {
         // Story 1: "I can provide custom explanation when 'Other' reason is selected"
         $this->actingAs($this->reporter);
 
-        $reportedUser = $this->createUser();
+        $reportedUser = User::factory()->create();
         $reportedProfile = $reportedUser->profile;
 
         $report = ReportService::submitReport(
@@ -166,8 +167,8 @@ describe('Story 2: Track My Reports', function () {
         // Story 2: "I can see reports I've submitted and their current status (pending, resolved, dismissed)"
         $this->actingAs($this->reporter);
 
-        $reportedUser1 = $this->createUser(['name' => 'First Reported User']);
-        $reportedUser2 = $this->createUser(['name' => 'Second Reported User']);
+        $reportedUser1 = User::factory()->create(['name' => 'First Reported User']);
+        $reportedUser2 = User::factory()->create(['name' => 'Second Reported User']);
 
         // Submit multiple reports
         $report1 = ReportService::submitReport(
@@ -198,7 +199,7 @@ describe('Story 2: Track My Reports', function () {
         // Story 2: "I can see moderator notes explaining resolution decisions when appropriate"
         $this->actingAs($this->reporter);
 
-        $reportedUser = $this->createUser();
+        $reportedUser = User::factory()->create();
         $report = ReportService::submitReport(
             $reportedUser->profile,
             $this->reporter,
@@ -227,7 +228,7 @@ describe('Story 2: Track My Reports', function () {
         // Story 2: "I receive notifications when my reports are resolved"
         $this->actingAs($this->reporter);
 
-        $reportedUser = $this->createUser();
+        $reportedUser = User::factory()->create();
         $report = ReportService::submitReport(
             $reportedUser->profile,
             $this->reporter,
@@ -253,8 +254,8 @@ describe('Story 2: Track My Reports', function () {
 
     it('protects privacy by not showing other members reports', function () {
         // Story 2: "I cannot see reports submitted by other members to protect their privacy"
-        $otherReporter = $this->createUser(['name' => 'Other Reporter']);
-        $reportedUser = $this->createUser();
+        $otherReporter = User::factory()->create(['name' => 'Other Reporter']);
+        $reportedUser = User::factory()->create();
 
         // Other user submits report
         $this->actingAs($otherReporter);
@@ -277,9 +278,9 @@ describe('Story 2: Track My Reports', function () {
 describe('Story 4: Review Reported Content (Moderator)', function () {
     it('allows moderators to see all pending reports in queue', function () {
         // Story 4: "I can see all pending reports in a prioritized queue"
-        $reporter1 = $this->createUser(['name' => 'Reporter One']);
-        $reporter2 = $this->createUser(['name' => 'Reporter Two']);
-        $reportedUser = $this->createUser();
+        $reporter1 = User::factory()->create(['name' => 'Reporter One']);
+        $reporter2 = User::factory()->create(['name' => 'Reporter Two']);
+        $reportedUser = User::factory()->create();
 
         // Create multiple reports
         $this->actingAs($reporter1);
@@ -310,7 +311,7 @@ describe('Story 4: Review Reported Content (Moderator)', function () {
 
     it('shows full context of reported content for informed decisions', function () {
         // Story 4: "I can view the full context of reported content to make informed decisions"
-        $reportedUser = $this->createUser(['name' => 'Reported User']);
+        $reportedUser = User::factory()->create(['name' => 'Reported User']);
         $reportedUser->profile->update([
             'bio' => 'This is the full bio content that needs review',
             'visibility' => 'public'
@@ -338,10 +339,10 @@ describe('Story 4: Review Reported Content (Moderator)', function () {
 
     it('identifies multiple reports for same content', function () {
         // Story 4: "I can see if content has been reported by multiple members"
-        $reporter1 = $this->createUser(['name' => 'Reporter One']);
-        $reporter2 = $this->createUser(['name' => 'Reporter Two']);
-        $reporter3 = $this->createUser(['name' => 'Reporter Three']);
-        $reportedUser = $this->createUser();
+        $reporter1 = User::factory()->create(['name' => 'Reporter One']);
+        $reporter2 = User::factory()->create(['name' => 'Reporter Two']);
+        $reporter3 = User::factory()->create(['name' => 'Reporter Three']);
+        $reportedUser = User::factory()->create();
 
         // Multiple users report the same profile
         $this->actingAs($reporter1);
@@ -383,7 +384,7 @@ describe('Story 4: Review Reported Content (Moderator)', function () {
 describe('Story 5: Resolve Reports (Moderator)', function () {
     it('allows moderators to dismiss reports with explanatory notes', function () {
         // Story 5: "I can dismiss reports that don't violate guidelines with explanatory notes"
-        $reportedUser = $this->createUser();
+        $reportedUser = User::factory()->create();
 
         $this->actingAs($this->reporter);
         $report = ReportService::submitReport(
@@ -408,7 +409,7 @@ describe('Story 5: Resolve Reports (Moderator)', function () {
 
     it('allows moderators to uphold reports and take action', function () {
         // Story 5: "I can uphold reports and take appropriate action on content"
-        $reportedUser = $this->createUser();
+        $reportedUser = User::factory()->create();
 
         $this->actingAs($this->reporter);
         $report = ReportService::submitReport(
@@ -433,7 +434,7 @@ describe('Story 5: Resolve Reports (Moderator)', function () {
 
     it('allows moderators to escalate complex reports to admins', function () {
         // Story 5: "I can escalate complex or serious reports to admin level"
-        $reportedUser = $this->createUser();
+        $reportedUser = User::factory()->create();
 
         $this->actingAs($this->reporter);
         $report = ReportService::submitReport(
@@ -459,7 +460,7 @@ describe('Story 5: Resolve Reports (Moderator)', function () {
     it('sends notifications to reporters and content creators on resolution', function () {
         // Story 5: "Reporters are automatically notified of resolution outcomes"
         // Story 5: "Content creators are notified when action is taken against their content"
-        $reportedUser = $this->createUser();
+        $reportedUser = User::factory()->create();
 
         $this->actingAs($this->reporter);
         $report = ReportService::submitReport(
@@ -487,7 +488,7 @@ describe('Story 5: Resolve Reports (Moderator)', function () {
 
     it('logs resolution actions for audit and consistency', function () {
         // Story 5: "Resolution actions are logged for audit and consistency"
-        $reportedUser = $this->createUser();
+        $reportedUser = User::factory()->create();
 
         $this->actingAs($this->reporter);
         $report = ReportService::submitReport(
@@ -515,7 +516,7 @@ describe('Story 5: Resolve Reports (Moderator)', function () {
 describe('Story 6: Handle Escalated Reports (Admin)', function () {
     it('allows admins to review escalated reports with full context', function () {
         // Story 6: "I can see all reports escalated by moderators with full context"
-        $reportedUser = $this->createUser();
+        $reportedUser = User::factory()->create();
 
         // Create and escalate a report
         $this->actingAs($this->reporter);
@@ -544,7 +545,7 @@ describe('Story 6: Handle Escalated Reports (Admin)', function () {
 
     it('provides escalation reasons and moderator concerns', function () {
         // Story 6: "I can see escalation reasons and moderator concerns"
-        $reportedUser = $this->createUser();
+        $reportedUser = User::factory()->create();
 
         $this->actingAs($this->reporter);
         $report = ReportService::submitReport(
@@ -572,9 +573,9 @@ describe('Story 6: Handle Escalated Reports (Admin)', function () {
 
 describe('Integration: Multiple Content Types', function () {
     it('handles reports across different content types appropriately', function () {
-        $reportedUser = $this->createUser();
-        $band = $this->createBand(['name' => 'Test Band'], $reportedUser);
-        $production = $this->createProduction(['title' => 'Test Show']);
+        $reportedUser = User::factory()->create();
+        $band = Band::factory()->create(['name' => 'Test Band'], $reportedUser);
+        $production = Production::factory()->create(['title' => 'Test Show']);
 
         $this->actingAs($this->reporter);
 
@@ -614,12 +615,12 @@ describe('Integration: Multiple Content Types', function () {
     });
 
     it('supports bulk resolution of similar reports', function () {
-        $reportedUser = $this->createUser();
+        $reportedUser = User::factory()->create();
 
         // Create multiple similar reports
-        $reporter1 = $this->createUser(['name' => 'Reporter 1']);
-        $reporter2 = $this->createUser(['name' => 'Reporter 2']);
-        $reporter3 = $this->createUser(['name' => 'Reporter 3']);
+        $reporter1 = User::factory()->create(['name' => 'Reporter 1']);
+        $reporter2 = User::factory()->create(['name' => 'Reporter 2']);
+        $reporter3 = User::factory()->create(['name' => 'Reporter 3']);
 
         $this->actingAs($reporter1);
         $report1 = ReportService::submitReport(

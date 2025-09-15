@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -27,7 +28,13 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'pronouns' => fake()->randomElement([
-                null, 'he/him', 'she/her', 'they/them', 'he/they', 'she/they', 'ze/zir',
+                null,
+                'he/him',
+                'she/her',
+                'they/them',
+                'he/they',
+                'she/they',
+                'ze/zir',
             ]),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
@@ -42,7 +49,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
         ]);
     }
@@ -64,6 +71,16 @@ class UserFactory extends Factory
     {
         return $this->afterCreating(function ($user) {
             $user->assignRole('sustaining member');
+        });
+    }
+
+    public function withRole(string $role): static
+    {
+        return $this->afterCreating(function ($user) use ($role) {
+            if (!Role::where('name', $role)->exists()) {
+                throw new \InvalidArgumentException("Role '{$role}' does not exist.");
+            }
+            $user->assignRole($role);
         });
     }
 
@@ -393,13 +410,40 @@ class UserFactory extends Factory
 
         // Add random skills tags
         $skills = [
-            'Vocalist', 'Guitarist', 'Bassist', 'Drummer', 'Keyboardist', 'Pianist',
-            'Producer', 'Songwriter', 'Audio Engineer', 'Mixing', 'Mastering',
-            'DJ', 'Beat Making', 'Sound Design', 'Composer', 'Arranger',
-            'Violin', 'Saxophone', 'Trumpet', 'Flute', 'Harmonica', 'Banjo',
-            'Ukulele', 'Mandolin', 'Accordion', 'Cello', 'Double Bass',
-            'Session Musician', 'Live Performance', 'Studio Recording',
-            'Music Theory', 'Improvisation', 'Backup Vocals', 'Lead Vocals',
+            'Vocalist',
+            'Guitarist',
+            'Bassist',
+            'Drummer',
+            'Keyboardist',
+            'Pianist',
+            'Producer',
+            'Songwriter',
+            'Audio Engineer',
+            'Mixing',
+            'Mastering',
+            'DJ',
+            'Beat Making',
+            'Sound Design',
+            'Composer',
+            'Arranger',
+            'Violin',
+            'Saxophone',
+            'Trumpet',
+            'Flute',
+            'Harmonica',
+            'Banjo',
+            'Ukulele',
+            'Mandolin',
+            'Accordion',
+            'Cello',
+            'Double Bass',
+            'Session Musician',
+            'Live Performance',
+            'Studio Recording',
+            'Music Theory',
+            'Improvisation',
+            'Backup Vocals',
+            'Lead Vocals',
         ];
 
         $numSkills = fake()->numberBetween(1, 6);
@@ -410,12 +454,39 @@ class UserFactory extends Factory
 
         // Add random genre tags
         $genres = [
-            'Rock', 'Pop', 'Jazz', 'Blues', 'Folk', 'Country', 'Classical',
-            'Electronic', 'Hip Hop', 'R&B', 'Soul', 'Funk', 'Reggae',
-            'Punk', 'Metal', 'Alternative', 'Indie', 'Ambient', 'House',
-            'Techno', 'Dubstep', 'Drum & Bass', 'Experimental', 'World',
-            'Latin', 'Acoustic', 'Singer-Songwriter', 'Progressive',
-            'Psychedelic', 'Garage', 'Grunge', 'Ska', 'Bluegrass',
+            'Rock',
+            'Pop',
+            'Jazz',
+            'Blues',
+            'Folk',
+            'Country',
+            'Classical',
+            'Electronic',
+            'Hip Hop',
+            'R&B',
+            'Soul',
+            'Funk',
+            'Reggae',
+            'Punk',
+            'Metal',
+            'Alternative',
+            'Indie',
+            'Ambient',
+            'House',
+            'Techno',
+            'Dubstep',
+            'Drum & Bass',
+            'Experimental',
+            'World',
+            'Latin',
+            'Acoustic',
+            'Singer-Songwriter',
+            'Progressive',
+            'Psychedelic',
+            'Garage',
+            'Grunge',
+            'Ska',
+            'Bluegrass',
         ];
 
         $numGenres = fake()->numberBetween(1, 5);
@@ -426,14 +497,43 @@ class UserFactory extends Factory
 
         // Add random influence tags
         $influences = [
-            'The Beatles', 'Bob Dylan', 'Miles Davis', 'Jimi Hendrix', 'Joni Mitchell',
-            'Prince', 'Stevie Wonder', 'David Bowie', 'Radiohead', 'Nirvana',
-            'Led Zeppelin', 'Pink Floyd', 'The Rolling Stones', 'Johnny Cash',
-            'Aretha Franklin', 'John Coltrane', 'Billie Holiday', 'Elvis Presley',
-            'The Clash', 'Talking Heads', 'Kraftwerk', 'Aphex Twin', 'Björk',
-            'Tori Amos', 'Fiona Apple', 'Jeff Buckley', 'Nick Drake', 'Leonard Cohen',
-            'Tom Waits', 'Frank Zappa', 'Captain Beefheart', 'Velvet Underground',
-            'Patti Smith', 'Television', 'Wire', 'Can', 'Brian Eno',
+            'The Beatles',
+            'Bob Dylan',
+            'Miles Davis',
+            'Jimi Hendrix',
+            'Joni Mitchell',
+            'Prince',
+            'Stevie Wonder',
+            'David Bowie',
+            'Radiohead',
+            'Nirvana',
+            'Led Zeppelin',
+            'Pink Floyd',
+            'The Rolling Stones',
+            'Johnny Cash',
+            'Aretha Franklin',
+            'John Coltrane',
+            'Billie Holiday',
+            'Elvis Presley',
+            'The Clash',
+            'Talking Heads',
+            'Kraftwerk',
+            'Aphex Twin',
+            'Björk',
+            'Tori Amos',
+            'Fiona Apple',
+            'Jeff Buckley',
+            'Nick Drake',
+            'Leonard Cohen',
+            'Tom Waits',
+            'Frank Zappa',
+            'Captain Beefheart',
+            'Velvet Underground',
+            'Patti Smith',
+            'Television',
+            'Wire',
+            'Can',
+            'Brian Eno',
         ];
 
         $numInfluences = fake()->numberBetween(0, 4);
