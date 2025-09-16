@@ -126,24 +126,24 @@ class MembersRelationManager extends RelationManager
                 if ($data['user_id']) {
                     // Existing CMC member - send invitation
                     $user = User::find($data['user_id']);
-                    $success = BandService::inviteMember(
-                        $this->ownerRecord,
-                        $user,
-                        $data['role'],
-                        $data['position'] ?? null,
-                        $data['name'] ?? null
-                    );
+                    try {
+                        BandService::inviteMember(
+                            $this->ownerRecord,
+                            $user,
+                            $data['role'],
+                            $data['position'] ?? null,
+                            $data['name'] ?? null
+                        );
 
-                    if ($success) {
                         Notification::make()
                             ->title('Invitation sent')
                             ->body("Invitation sent to {$user->name}")
                             ->success()
                             ->send();
-                    } else {
+                    } catch (\Exception $e) {
                         Notification::make()
                             ->title('Cannot send invitation')
-                            ->body('User is already a member or has a pending invitation')
+                            ->body($e->getMessage())
                             ->warning()
                             ->send();
                     }
@@ -155,19 +155,25 @@ class MembersRelationManager extends RelationManager
                         'password' => bcrypt(Str::random(32)), // Temporary password, they'll set it via invitation
                     ]);
 
-                    $success = BandService::inviteMember(
-                        $this->ownerRecord,
-                        $user,
-                        $data['role'],
-                        $data['position'] ?? null,
-                        $data['name']
-                    );
+                    try {
+                        BandService::inviteMember(
+                            $this->ownerRecord,
+                            $user,
+                            $data['role'],
+                            $data['position'] ?? null,
+                            $data['name']
+                        );
 
-                    if ($success) {
                         Notification::make()
                             ->title('User created and invitation sent')
                             ->body("Created CMC account for {$user->email} and sent band invitation")
                             ->success()
+                            ->send();
+                    } catch (\Exception $e) {
+                        Notification::make()
+                            ->title('Error creating user or sending invitation')
+                            ->body($e->getMessage())
+                            ->danger()
                             ->send();
                     }
                 } else {
@@ -389,13 +395,19 @@ class MembersRelationManager extends RelationManager
                     ->modalHeading('Accept Band Invitation')
                     ->modalDescription(fn($record) => "Accept invitation to join {$this->ownerRecord->name}?")
                     ->action(function ($record): void {
-                        $success = BandService::acceptInvitation($this->ownerRecord, $record);
+                        try {
+                            BandService::acceptInvitation($this->ownerRecord, $record);
 
-                        if ($success) {
                             Notification::make()
                                 ->title('Invitation accepted')
                                 ->body("Welcome to {$this->ownerRecord->name}!")
                                 ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Error accepting invitation')
+                                ->body($e->getMessage())
+                                ->danger()
                                 ->send();
                         }
                     })
@@ -412,13 +424,19 @@ class MembersRelationManager extends RelationManager
                     ->modalHeading('Decline Band Invitation')
                     ->modalDescription(fn($record) => "Decline invitation to join {$this->ownerRecord->name}?")
                     ->action(function ($record): void {
-                        $success = BandService::declineInvitation($this->ownerRecord, $record);
+                        try {
+                            BandService::declineInvitation($this->ownerRecord, $record);
 
-                        if ($success) {
                             Notification::make()
                                 ->title('Invitation declined')
                                 ->body('You have declined the invitation')
                                 ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Error declining invitation')
+                                ->body($e->getMessage())
+                                ->danger()
                                 ->send();
                         }
                     })

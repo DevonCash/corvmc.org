@@ -57,7 +57,9 @@ class BandInvitations extends Page
         $band = Band::findOrFail($bandId);
         $user = User::me();
 
-        if (BandService::acceptInvitation($band, $user)) {
+        try {
+            BandService::acceptInvitation($band, $user);
+            
             Notification::make()
                 ->title('Invitation accepted')
                 ->body("Welcome to {$band->name}!")
@@ -65,6 +67,12 @@ class BandInvitations extends Page
                 ->send();
 
             $this->redirect(route('filament.member.resources.bands.view', ['record' => $band]));
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Error accepting invitation')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
         }
     }
 
@@ -83,7 +91,9 @@ class BandInvitations extends Page
                 $band = Band::findOrFail($arguments['bandId']);
                 $user = auth()->user();
 
-                if (BandService::declineInvitation($band, $user)) {
+                try {
+                    BandService::declineInvitation($band, $user);
+                    
                     Notification::make()
                         ->title('Invitation declined')
                         ->body('You have declined the invitation')
@@ -95,6 +105,12 @@ class BandInvitations extends Page
                     if ($remainingInvitations->isEmpty()) {
                         $this->redirect(route('filament.member.resources.bands.index'));
                     }
+                } catch (\Exception $e) {
+                    Notification::make()
+                        ->title('Error declining invitation')
+                        ->body($e->getMessage())
+                        ->danger()
+                        ->send();
                 }
             });
     }
