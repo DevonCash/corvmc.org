@@ -189,51 +189,79 @@
             </div>
         @endif
 
-        <!-- How to Borrow Section -->
+        <!-- How to Borrow/Contact Section -->
+        @php
+            $equipmentSettings = app(\App\Settings\EquipmentSettings::class);
+        @endphp
         <div class="bg-gradient-to-br from-primary/5 to-secondary/10 rounded-3xl p-8 mt-16">
             <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold mb-4">How to Borrow Equipment</h2>
-                <p class="text-lg max-w-3xl mx-auto">
-                    Ready to borrow some gear? Here's how our lending library works.
-                </p>
+                @if($equipmentSettings->enable_rental_features)
+                    <h2 class="text-3xl font-bold mb-4">How to Borrow Equipment</h2>
+                    <p class="text-lg max-w-3xl mx-auto">
+                        Ready to borrow some gear? Here's how our lending library works.
+                    </p>
+                @else
+                    <h2 class="text-3xl font-bold mb-4">Interested in Our Equipment?</h2>
+                    <p class="text-lg max-w-3xl mx-auto">
+                        Explore our gear collection and contact us to learn about availability and access.
+                    </p>
+                @endif
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center">
-                    <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                        <x-unicon name="tabler:user-check" class="size-8 text-primary-content" />
+            @if($equipmentSettings->enable_rental_features)
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                            <x-unicon name="tabler:user-check" class="size-8 text-primary-content" />
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">1. Be a Member</h3>
+                        <p class="text-base-content/70">
+                            Equipment lending is available to CMC members in good standing.
+                        </p>
                     </div>
-                    <h3 class="text-xl font-bold mb-2">1. Be a Member</h3>
-                    <p class="text-base-content/70">
-                        Equipment lending is available to CMC members in good standing.
-                    </p>
-                </div>
 
-                <div class="text-center">
-                    <div class="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                        <x-unicon name="tabler:message" class="size-8 text-secondary-content" />
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                            <x-unicon name="tabler:message" class="size-8 text-secondary-content" />
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">2. Contact Us</h3>
+                        <p class="text-base-content/70">
+                            Reach out via email or in person to request equipment loans.
+                        </p>
                     </div>
-                    <h3 class="text-xl font-bold mb-2">2. Contact Us</h3>
-                    <p class="text-base-content/70">
-                        Reach out via email or in person to request equipment loans.
-                    </p>
-                </div>
 
-                <div class="text-center">
-                    <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                        <x-unicon name="tabler:calendar" class="size-8 text-accent-content" />
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
+                            <x-unicon name="tabler:calendar" class="size-8 text-accent-content" />
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">3. Schedule Pickup</h3>
+                        <p class="text-base-content/70">
+                            We'll coordinate pickup times and handle any deposits or fees.
+                        </p>
                     </div>
-                    <h3 class="text-xl font-bold mb-2">3. Schedule Pickup</h3>
-                    <p class="text-base-content/70">
-                        We'll coordinate pickup times and handle any deposits or fees.
+                </div>
+            @else
+                <div class="text-center max-w-2xl mx-auto">
+                    <div class="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <x-unicon name="tabler:info-circle" class="size-10 text-primary" />
+                    </div>
+                    <p class="text-lg text-base-content/80 mb-4">
+                        This equipment catalog showcases instruments and gear available through CMC. 
+                        Contact us to learn more about access and availability for members.
                     </p>
                 </div>
-            </div>
+            @endif
 
             <div class="text-center mt-8">
-                <a href="{{ route('contact') }}?topic=gear" class="btn btn-primary btn-lg">
-                    Request Equipment Loan
-                </a>
+                @if($equipmentSettings->enable_rental_features)
+                    <a href="{{ route('contact') }}?topic=gear" class="btn btn-primary btn-lg">
+                        Request Equipment Loan
+                    </a>
+                @else
+                    <a href="{{ route('contact') }}?topic=gear" class="btn btn-primary btn-lg">
+                        Contact About Equipment
+                    </a>
+                @endif
                 <a href="{{ route('members.index') }}" class="btn btn-outline btn-secondary btn-lg">
                     Become a Member
                 </a>

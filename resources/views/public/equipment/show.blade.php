@@ -130,18 +130,29 @@
                 @endif
 
                 <!-- Actions -->
+                @php
+                    $equipmentSettings = app(\App\Settings\EquipmentSettings::class);
+                @endphp
                 <div class="space-y-3">
-                    @if($equipment->is_available)
+                    @if($equipmentSettings->enable_rental_features)
+                        @if($equipment->is_available)
+                            <a href="{{ route('contact') }}?topic=gear&equipment={{ $equipment->id }}" 
+                               class="btn btn-primary btn-lg w-full">
+                                <x-unicon name="tabler:calendar-plus" class="size-5" />
+                                Request to Borrow
+                            </a>
+                        @else
+                            <button class="btn btn-disabled btn-lg w-full">
+                                <x-unicon name="tabler:clock" class="size-5" />
+                                Currently Unavailable
+                            </button>
+                        @endif
+                    @else
                         <a href="{{ route('contact') }}?topic=gear&equipment={{ $equipment->id }}" 
                            class="btn btn-primary btn-lg w-full">
-                            <x-unicon name="tabler:calendar-plus" class="size-5" />
-                            Request to Borrow
+                            <x-unicon name="tabler:info-circle" class="size-5" />
+                            Contact About This Item
                         </a>
-                    @else
-                        <button class="btn btn-disabled btn-lg w-full">
-                            <x-unicon name="tabler:clock" class="size-5" />
-                            Currently Unavailable
-                        </button>
                     @endif
                     
                     <a href="{{ route('equipment.index') }}" class="btn btn-outline w-full">

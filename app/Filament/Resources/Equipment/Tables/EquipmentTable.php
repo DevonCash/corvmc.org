@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Equipment\Tables;
 
 use App\Filament\Resources\Equipment\Actions\CheckoutToMemberAction;
 use App\Models\Equipment;
+use App\Settings\EquipmentSettings;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -180,7 +181,8 @@ class EquipmentTable
             ])
             ->recordActions([
                 ViewAction::make(),
-                CheckoutToMemberAction::make(),
+                CheckoutToMemberAction::make()
+                    ->visible(fn($record) => app(EquipmentSettings::class)->enable_rental_features && $record->isAvailable())
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

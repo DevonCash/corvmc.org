@@ -9,6 +9,7 @@ use App\Filament\Resources\Equipment\EquipmentLoans\Schemas\EquipmentLoanForm;
 use App\Filament\Resources\Equipment\EquipmentLoans\Tables\EquipmentLoansTable;
 use App\Models\EquipmentLoan;
 use App\Models\User;
+use App\Settings\EquipmentSettings;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -35,6 +36,12 @@ class EquipmentLoanResource extends Resource
         return config('filament-icons.app-equipment-loan');
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        $equipmentSettings = app(EquipmentSettings::class);
+        return $equipmentSettings->enable_rental_features;
+    }
+
     public static function canCreate(): bool
     {
         return User::me()?->can('create equipment loans') ?? false;
@@ -55,10 +62,6 @@ class EquipmentLoanResource extends Resource
         return User::me()?->can('view equipment loans') ?? true;
     }
 
-    public static function shouldRegisterNavigation(): bool
-    {
-        return true;
-    }
 
     public static function form(Schema $schema): Schema
     {

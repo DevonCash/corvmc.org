@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\User;
 use App\Settings\OrganizationSettings;
 use App\Settings\FooterSettings;
+use App\Settings\EquipmentSettings;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms;
@@ -38,6 +39,7 @@ class ManageOrganizationSettings extends Page implements HasForms
     {
         $settings = app(OrganizationSettings::class);
         $footerSettings = app(FooterSettings::class);
+        $equipmentSettings = app(EquipmentSettings::class);
 
         $this->form->fill([
             'name' => $settings->name,
@@ -48,6 +50,7 @@ class ManageOrganizationSettings extends Page implements HasForms
             'email' => $settings->email,
             'footer_links' => $footerSettings->getLinks(),
             'social_links' => $footerSettings->getSocialLinks(),
+            'enable_rental_features' => $equipmentSettings->enable_rental_features,
         ]);
     }
 
@@ -98,6 +101,14 @@ class ManageOrganizationSettings extends Page implements HasForms
                             ->email()
                             ->required()
                             ->maxLength(255),
+                    ]),
+
+                Section::make('Features')
+                    ->schema([
+                        Forms\Components\Toggle::make('enable_rental_features')
+                            ->label('Enable Equipment Rental Features')
+                            ->helperText('When enabled, members can checkout and return equipment through the system. When disabled, only the equipment catalog view is available.')
+                            ->default(false),
                     ]),
 
                 Section::make('Footer Links')
@@ -224,6 +235,7 @@ class ManageOrganizationSettings extends Page implements HasForms
 
         $settings = app(OrganizationSettings::class);
         $footerSettings = app(FooterSettings::class);
+        $equipmentSettings = app(EquipmentSettings::class);
 
         $settings->name = $data['name'];
         $settings->description = $data['description'];
@@ -235,8 +247,11 @@ class ManageOrganizationSettings extends Page implements HasForms
         $footerSettings->links = $data['footer_links'] ?? [];
         $footerSettings->social_links = $data['social_links'] ?? [];
 
+        $equipmentSettings->enable_rental_features = $data['enable_rental_features'] ?? false;
+
         $settings->save();
         $footerSettings->save();
+        $equipmentSettings->save();
 
         Notification::make()
             ->success()

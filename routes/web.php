@@ -120,6 +120,10 @@ Route::get('/contact', function () {
     return view('public.contact');
 })->name('contact');
 
+// Equipment Library routes (public gear catalog)
+Route::get('/equipment', [\App\Http\Controllers\PublicEquipmentController::class, 'index'])->name('equipment.index');
+Route::get('/equipment/{equipment}', [\App\Http\Controllers\PublicEquipmentController::class, 'show'])->name('equipment.show');
+
 Route::get('/privacy-policy', function () {
     return view('public.privacy-policy');
 })->name('privacy-policy');

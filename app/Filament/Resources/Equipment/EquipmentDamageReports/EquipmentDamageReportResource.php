@@ -8,6 +8,7 @@ use App\Filament\Resources\Equipment\EquipmentDamageReports\Pages\ListEquipmentD
 use App\Filament\Resources\Equipment\EquipmentDamageReports\Schemas\EquipmentDamageReportForm;
 use App\Filament\Resources\Equipment\EquipmentDamageReports\Tables\EquipmentDamageReportsTable;
 use App\Models\EquipmentDamageReport;
+use App\Settings\EquipmentSettings;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -32,6 +33,12 @@ class EquipmentDamageReportResource extends Resource
     public static function getNavigationIcon(): string|BackedEnum|Htmlable|null
     {
         return config('filament-icons.app-equipment-damage-report');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $equipmentSettings = app(EquipmentSettings::class);
+        return $equipmentSettings->enable_rental_features;
     }
 
     public static function form(Schema $schema): Schema
