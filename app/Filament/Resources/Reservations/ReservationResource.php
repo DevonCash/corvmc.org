@@ -21,7 +21,7 @@ class ReservationResource extends Resource
 {
     protected static ?string $model = Reservation::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'tabler-piano';
+    protected static string|BackedEnum|null $navigationIcon = 'tabler-metronome';
 
 
     protected static ?string $navigationLabel = 'Practice Space';

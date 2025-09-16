@@ -19,7 +19,7 @@ class ProductionResource extends Resource
 {
     protected static ?string $model = Production::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'tabler-calendar-event';
+    protected static string|\BackedEnum|null $navigationIcon = 'tabler-music';
     protected static ?string $recordTitleAttribute = 'title';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Operations';

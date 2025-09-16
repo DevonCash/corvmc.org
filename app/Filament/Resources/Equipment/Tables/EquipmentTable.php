@@ -21,6 +21,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class EquipmentTable
 {
@@ -45,7 +46,7 @@ class EquipmentTable
                         collect([$record->brand, $record->model])->filter()->join(' ')
                     ),
 
-                BadgeColumn::make('type')
+                TextColumn::make('type')
                     ->formatStateUsing(
                         fn(string $state): string =>
                         ucwords(str_replace('_', ' ', $state))
@@ -59,7 +60,9 @@ class EquipmentTable
                         'gray' => 'specialty',
                     ]),
 
-                BadgeColumn::make('status')
+                TextColumn::make('status')
+                    ->badge()
+                    ->visible(fn() => app(EquipmentSettings::class)->enable_rental_features)
                     ->formatStateUsing(function (string $state, $record): string {
                         if ($record->is_kit && $record->children->isNotEmpty()) {
                             $available = $record->children->where('status', 'available')->count();
@@ -102,7 +105,8 @@ class EquipmentTable
                         },
                     ]),
 
-                BadgeColumn::make('condition')
+                TextColumn::make('condition')
+                    ->badge()
                     ->formatStateUsing(
                         fn(string $state): string =>
                         ucfirst(str_replace('_', ' ', $state))
@@ -115,20 +119,11 @@ class EquipmentTable
                     ])
                     ->toggleable(),
 
-                TextColumn::make('kit_info')
-                    ->label('Kit Info')
-                    ->getStateUsing(function ($record) {
-                        if (!$record->is_kit || $record->children->isEmpty()) {
-                            return $record->location ?? '—';
-                        }
-                        return $record->children->count() . ' pieces';
-                    })
-                    ->placeholder('—'),
 
                 TextColumn::make('location')
                     ->toggleable()
                     ->placeholder('Not specified')
-                    ->visible(fn($record) => !$record?->is_kit),
+                    ->visible(fn($record) => Auth::user()->can('manage equipment')),
             ])
             ->filters([
                 SelectFilter::make('type')

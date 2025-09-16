@@ -17,7 +17,7 @@ class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'tabler-cash-register';
+    protected static string|BackedEnum|null $navigationIcon = 'tabler-receipt-2';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Operations';
 
