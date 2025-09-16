@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ReservationSeeder::class,
             StaffProfileSeeder::class,
             TransactionSeeder::class,
+            EquipmentSeeder::class,
         ]);
     }
 }

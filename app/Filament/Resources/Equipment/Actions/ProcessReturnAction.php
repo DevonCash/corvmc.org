@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Filament\Resources\Equipment\Actions;
+
+use App\Services\EquipmentService;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
+
+class ProcessReturnAction
+{
+    public static function make(): Action
+    {
+        return Action::make('process_return')
+            ->label('Process Return')
+            ->icon('heroicon-o-arrow-uturn-left')
+            ->color('primary')
+            ->modalWidth('md')
+            ->modalHeading('Process Equipment Return')
+            ->modalDescription('Record the return of this equipment')
+            ->schema([
+                Select::make('condition_in')
+                    ->label('Condition When Returned')
+                    ->options([
+                        'excellent' => 'Excellent',
+                        'good' => 'Good',
+                        'fair' => 'Fair',
+                        'poor' => 'Poor',
+                        'needs_repair' => 'Needs Repair',
+                    ])
+                    ->required()
+                    ->reactive(),
+                    
+                Textarea::make('damage_notes')
+                    ->label('Damage/Condition Notes')
+                    ->placeholder('Describe any damage or condition changes')
+                    ->rows(3)
+                    ->visible(fn (callable $get) => 
+                        in_array($get('condition_in'), ['fair', 'poor', 'needs_repair'])
+                    ),
+            ])
+            ->action(function (array $data, $record) {
+                try {
+                    $equipmentService = app(EquipmentService::class);
+                    $currentLoan = $record->currentLoan;
+                    
+                    if (!$currentLoan) {
+                        throw new \Exception('No active loan found for this equipment.');
+                    }
+                    
+                    $loan = $equipmentService->processReturn(
+                        loan: $currentLoan,
+                        conditionIn: $data['condition_in'],
+                        damageNotes: $data['damage_notes'] ?? null
+                    );
+                    
+                    // Update equipment condition if it changed
+                    if ($data['condition_in'] !== $record->condition) {
+                        $record->update(['condition' => $data['condition_in']]);
+                    }
+                    
+                    Notification::make()
+                        ->title('Equipment Returned')
+                        ->body("Successfully processed return of {$record->name}")
+                        ->success()
+                        ->send();
+                        
+                } catch (\Exception $e) {
+                    Notification::make()
+                        ->title('Return Failed')
+                        ->body($e->getMessage())
+                        ->danger()
+                        ->send();
+                }
+            })
+            ->requiresConfirmation()
+            ->modalIcon('heroicon-o-arrow-uturn-left')
+            ->visible(fn ($record) => $record->is_checked_out && $record->currentLoan);
+    }
+}

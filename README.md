@@ -1,3 +1,4 @@
+
 # Corvallis Music Collective
 
 This is a site for the Corvallis Music Collective, a nonprofit organization operating out of Corvallis, Oregon.

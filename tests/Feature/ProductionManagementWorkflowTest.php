@@ -19,12 +19,10 @@ test('user can create production and becomes manager', function () {
     $productionData = [
         'title' => 'Rock Concert 2024',
         'description' => 'An amazing rock concert featuring local bands',
-        'event_date' => Carbon::now()->addMonth(),
-        'doors_open' => '19:00',
-        'start_time' => '20:00',
-        'venue' => 'The Music Hall',
+        'start_time' => Carbon::now()->addMonth()->setTime(20, 0),
+        'end_time' => Carbon::now()->addMonth()->setTime(23, 0),
+        'doors_time' => Carbon::now()->addMonth()->setTime(19, 0),
         'ticket_price' => 25.00,
-        'capacity' => 200,
         'manager_id' => $user->id
     ];
 

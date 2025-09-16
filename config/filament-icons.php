@@ -177,4 +177,9 @@ return [
 
     // WidgetsIconAlias - All 1 constant
     WidgetsIconAlias::CHART_WIDGET_FILTER => 'tabler-filter',
+
+    'app-equipment' => "tabler-device-speaker",
+    'app-equipment-loan' => "icon-speaker-share",
+    'app-equipment-damage-report' => "icon-speaker-exclamation",
+
 ];
