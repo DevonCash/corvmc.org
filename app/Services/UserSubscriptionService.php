@@ -334,7 +334,7 @@ class UserSubscriptionService
                 'line_items' => [[
                     'price_data' => [
                         'currency' => 'usd',
-                        'unit_amount' => PaymentService::dollarsToStripeAmount($totalAmount),
+                        'unit_amount' => $totalAmount->getMinorAmount()->toInt(),
                         'recurring' => ['interval' => 'month'],
                         'product_data' => [
                             'name' => 'Sliding Scale Membership',
@@ -347,10 +347,7 @@ class UserSubscriptionService
                 'cancel_url' => route('filament.member.auth.profile') . '?membership=cancelled',
                 'subscription_data' => [
                     'metadata' => [
-                        'base_amount' => $breakdown['base_amount'],
-                        'fee_amount' => $breakdown['fee_amount'],
                         'covers_fees' => $coverFees ? 'true' : 'false',
-                        'net_received' => PaymentService::calculateNetAmount($totalAmount),
                     ],
                 ],
             ]);
