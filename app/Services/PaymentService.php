@@ -155,6 +155,16 @@ class PaymentService
     }
 
     /**
+     * Calculate the processing fee for a given amount in cents.
+     * Works with integer cents to avoid floating point precision issues.
+     */
+    public function calculateProcessingFeeCents(int $baseAmountCents): int
+    {
+        $stripeFeeInCents = 30; // $0.30 in cents
+        return intval(($baseAmountCents * self::STRIPE_RATE) + $stripeFeeInCents);
+    }
+
+    /**
      * Calculate the total amount needed to cover both the base amount
      * and the processing fees. This accounts for the fee applying to itself.
      *
@@ -166,6 +176,17 @@ class PaymentService
         // Calculate what the total needs to be so that after Stripe's fee,
         // we receive the full base amount
         return ($baseAmount + self::STRIPE_FIXED_FEE) / (1 - self::STRIPE_RATE);
+    }
+
+    /**
+     * Calculate the total amount needed to cover both the base amount
+     * and the processing fees using cents for precision.
+     */
+    public function calculateTotalWithFeeCoverageCents(int $baseAmountCents): int
+    {
+        $stripeFeeInCents = 30; // $0.30 in cents
+        // Formula: Total = (Base + Fixed Fee) / (1 - Rate)
+        return intval(($baseAmountCents + $stripeFeeInCents) / (1 - self::STRIPE_RATE));
     }
 
     /**
@@ -184,8 +205,14 @@ class PaymentService
             ];
         }
 
-        $totalWithFeeCoverage = $this->calculateTotalWithFeeCoverage($baseAmount);
-        $actualFeeAmount = $totalWithFeeCoverage - $baseAmount;
+        // Use cents-based calculations for precision
+        $baseAmountCents = $this->dollarsToStripeAmount($baseAmount);
+        $totalWithFeeCoverageCents = $this->calculateTotalWithFeeCoverageCents($baseAmountCents);
+        $actualFeeAmountCents = $totalWithFeeCoverageCents - $baseAmountCents;
+        
+        // Convert back to dollars for display
+        $totalWithFeeCoverage = $this->stripeAmountToDollars($totalWithFeeCoverageCents);
+        $actualFeeAmount = $this->stripeAmountToDollars($actualFeeAmountCents);
         $displayFee = $this->calculateProcessingFee($baseAmount);
 
         return [
@@ -206,9 +233,14 @@ class PaymentService
      */
     public function getFeeDisplayInfo(float $baseAmount): array
     {
-        $fee = $this->calculateProcessingFee($baseAmount);
-        $totalWithCoverage = $this->calculateTotalWithFeeCoverage($baseAmount);
-        $actualFeeAmount = $totalWithCoverage - $baseAmount;
+        // Use cents-based calculations for precision
+        $baseAmountCents = $this->dollarsToStripeAmount($baseAmount);
+        $totalWithCoverageCents = $this->calculateTotalWithFeeCoverageCents($baseAmountCents);
+        $actualFeeAmountCents = $totalWithCoverageCents - $baseAmountCents;
+        
+        // Convert back to dollars for display
+        $totalWithCoverage = $this->stripeAmountToDollars($totalWithCoverageCents);
+        $actualFeeAmount = $this->stripeAmountToDollars($actualFeeAmountCents);
 
         return [
             'display_fee' => $actualFeeAmount,
@@ -230,7 +262,7 @@ class PaymentService
      */
     public function formatMoney(float $amount): string
     {
-        return '$'.number_format($amount, 2);
+        return '$' . number_format($amount, 2);
     }
 
     /**
