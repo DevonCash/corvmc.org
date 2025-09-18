@@ -81,7 +81,7 @@ class DonationReceivedNotification extends Notification implements ShouldQueue
 
         return [
             'title' => $isRecurring ? 'Monthly Donation Received' : 'Donation Received',
-            'body' => 'Thank you for your $' . number_format($this->transaction->amount, 2) . ' ' . ($isRecurring ? 'monthly donation' : 'donation') . '!',
+            'body' => 'Thank you for your $' . number_format($this->transaction->amount->getAmount()->toFloat(), 2) . ' ' . ($isRecurring ? 'monthly donation' : 'donation') . '!',
             'icon' => 'heroicon-o-heart',
             'transaction_id' => $this->transaction->id,
             'amount' => $this->transaction->amount,
