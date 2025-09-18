@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\MoneyCast;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,7 +17,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $transaction_id
  * @property string $email
- * @property string $amount
  * @property string $currency
  * @property string $type
  * @property array<array-key, mixed> $response
@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $transactionable_type
  * @property int|null $transactionable_id
  * @property int|null $user_id
+ * @property \Brick\Money\Money $amount
  * @property-read Model|\Eloquent|null $transactionable
  * @property-read \App\Models\User|null $user
  * @method static \Database\Factories\TransactionFactory factory($count = null, $state = [])
@@ -61,9 +62,13 @@ class Transaction extends Model
         'transactionable_id',
     ];
 
-    protected $casts = [
-        'response' => 'array',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'amount' => MoneyCast::class . ':USD',
+            'response' => 'array',
+        ];
+    }
 
     public function user()
     {

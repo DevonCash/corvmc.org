@@ -175,7 +175,7 @@ class ReservationTest extends TestCase
 
         $this->assertInstanceOf(Carbon::class, $reservation->reserved_at);
         $this->assertInstanceOf(Carbon::class, $reservation->reserved_until);
-        $this->assertIsNumeric($reservation->cost);
+        $this->assertInstanceOf(\Brick\Money\Money::class, $reservation->cost);
         $this->assertIsNumeric($reservation->hours_used);
         $this->assertIsNumeric($reservation->free_hours_used);
         $this->assertIsBool($reservation->is_recurring);
@@ -224,7 +224,7 @@ class ReservationTest extends TestCase
     {
         $reservation = Reservation::factory()->free()->create();
 
-        $this->assertEquals(0, $reservation->cost);
+        $this->assertTrue($reservation->cost->isZero());
         $this->assertEquals('Free', $reservation->cost_display);
     }
 

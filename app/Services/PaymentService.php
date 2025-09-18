@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Reservation;
+use Brick\Money\Money;
 use Carbon\Carbon;
 
 class PaymentService
@@ -11,7 +12,7 @@ class PaymentService
      * Stripe processing fee: 2.9% + $0.30 for cards
      */
     const STRIPE_RATE = 0.029;
-    const STRIPE_FIXED_FEE = 0.30;
+    const STRIPE_FIXED_FEE_CENTS = 30;
     /**
      * Mark reservation as paid.
      */
@@ -101,11 +102,11 @@ class PaymentService
      */
     public function getCostDisplay(Reservation $reservation): string
     {
-        if ($reservation->cost == 0) {
+        if ($reservation->cost->isZero()) {
             return 'Free';
         }
 
-        return '$' . number_format($reservation->cost, 2);
+        return '$' . number_format($reservation->cost->getAmount()->toFloat(), 2);
     }
 
     /**
@@ -113,26 +114,32 @@ class PaymentService
      */
     public function requiresPayment(Reservation $reservation): bool
     {
-        return $reservation->cost > 0 && !$this->isReservationPaid($reservation) && !$this->isReservationComped($reservation);
+        return $reservation->cost->isPositive() && !$this->isReservationPaid($reservation) && !$this->isReservationComped($reservation);
     }
 
     /**
      * Calculate total payments received for a reservation.
      */
-    public function getTotalPaymentsReceived(Reservation $reservation): float
+    public function getTotalPaymentsReceived(Reservation $reservation): Money
     {
-        return $reservation->transactions()
+        $transactions = $reservation->transactions()
             ->where('type', 'payment')
-            ->sum('amount');
+            ->get();
+
+        $totalCents = $transactions->sum(fn($transaction) => $transaction->amount->getMinorAmount()->toInt());
+
+        return Money::ofMinor($totalCents, 'USD');
     }
 
     /**
      * Get outstanding balance for a reservation.
      */
-    public function getOutstandingBalance(Reservation $reservation): float
+    public function getOutstandingBalance(Reservation $reservation): Money
     {
         $totalPaid = $this->getTotalPaymentsReceived($reservation);
-        return max(0, $reservation->cost - $totalPaid);
+        $outstanding = $reservation->cost->minus($totalPaid);
+
+        return $outstanding->isPositive() ? $outstanding : Money::zero('USD');
     }
 
     /**
@@ -140,28 +147,20 @@ class PaymentService
      */
     public function isFullyPaid(Reservation $reservation): bool
     {
-        return $this->getOutstandingBalance($reservation) <= 0;
+        return $this->getOutstandingBalance($reservation)->isZero();
     }
 
     // === STRIPE PAYMENT PROCESSING METHODS ===
 
     /**
-     * Calculate the processing fee for a given amount.
-     * This fee should be added to the base amount.
+     * Calculate the processing fee for a given Money amount.
      */
-    public function calculateProcessingFee(float $baseAmount): float
+    public function calculateProcessingFee(Money $baseAmount): Money
     {
-        return ($baseAmount * self::STRIPE_RATE) + self::STRIPE_FIXED_FEE;
-    }
-
-    /**
-     * Calculate the processing fee for a given amount in cents.
-     * Works with integer cents to avoid floating point precision issues.
-     */
-    public function calculateProcessingFeeCents(int $baseAmountCents): int
-    {
-        $stripeFeeInCents = 30; // $0.30 in cents
-        return intval(($baseAmountCents * self::STRIPE_RATE) + $stripeFeeInCents);
+        $percentageFee = $baseAmount->multipliedBy(self::STRIPE_RATE, \Brick\Math\RoundingMode::HALF_UP);
+        $fixedFee = Money::ofMinor(self::STRIPE_FIXED_FEE_CENTS, 'USD');
+        
+        return $percentageFee->plus($fixedFee);
     }
 
     /**
@@ -171,59 +170,42 @@ class PaymentService
      * Formula: Total = (Base + Fixed Fee) / (1 - Rate)
      * This ensures that after Stripe takes their cut, we net the full base amount.
      */
-    public function calculateTotalWithFeeCoverage(float $baseAmount): float
+    public function calculateTotalWithFeeCoverage(Money $baseAmount): Money
     {
-        // Calculate what the total needs to be so that after Stripe's fee,
-        // we receive the full base amount
-        return ($baseAmount + self::STRIPE_FIXED_FEE) / (1 - self::STRIPE_RATE);
+        $fixedFee = Money::ofMinor(self::STRIPE_FIXED_FEE_CENTS, 'USD');
+        $numerator = $baseAmount->plus($fixedFee);
+        $denominator = 1 - self::STRIPE_RATE;
+        
+        return $numerator->dividedBy($denominator, \Brick\Math\RoundingMode::HALF_UP);
     }
 
     /**
-     * Calculate the total amount needed to cover both the base amount
-     * and the processing fees using cents for precision.
+     * Calculate fee breakdown with accurate accounting using Money objects.
      */
-    public function calculateTotalWithFeeCoverageCents(int $baseAmountCents): int
-    {
-        $stripeFeeInCents = 30; // $0.30 in cents
-        // Formula: Total = (Base + Fixed Fee) / (1 - Rate)
-        return intval(($baseAmountCents + $stripeFeeInCents) / (1 - self::STRIPE_RATE));
-    }
-
-    /**
-     * Calculate fee breakdown with accurate accounting.
-     * Returns both the simple fee (for display) and the actual total needed.
-     */
-    public function getFeeBreakdown(float $baseAmount, bool $coverFees = false): array
+    public function getFeeBreakdown(Money $baseAmount, bool $coverFees = false): array
     {
         if (! $coverFees) {
             return [
-                'base_amount' => $baseAmount,
+                'base_amount' => $baseAmount->getAmount()->toFloat(),
                 'fee_amount' => 0,
-                'total_amount' => $baseAmount,
+                'total_amount' => $baseAmount->getAmount()->toFloat(),
                 'display_fee' => 0,
-                'description' => sprintf('$%.2f membership', $baseAmount),
+                'description' => sprintf('$%.2f membership', $baseAmount->getAmount()->toFloat()),
             ];
         }
 
-        // Use cents-based calculations for precision
-        $baseAmountCents = $this->dollarsToStripeAmount($baseAmount);
-        $totalWithFeeCoverageCents = $this->calculateTotalWithFeeCoverageCents($baseAmountCents);
-        $actualFeeAmountCents = $totalWithFeeCoverageCents - $baseAmountCents;
-        
-        // Convert back to dollars for display
-        $totalWithFeeCoverage = $this->stripeAmountToDollars($totalWithFeeCoverageCents);
-        $actualFeeAmount = $this->stripeAmountToDollars($actualFeeAmountCents);
-        $displayFee = $this->calculateProcessingFee($baseAmount);
+        $totalWithFeeCoverage = $this->calculateTotalWithFeeCoverage($baseAmount);
+        $actualFeeAmount = $totalWithFeeCoverage->minus($baseAmount);
 
         return [
-            'base_amount' => $baseAmount,
-            'fee_amount' => $actualFeeAmount,
-            'total_amount' => $totalWithFeeCoverage,
-            'display_fee' => $displayFee,
+            'base_amount' => $baseAmount->getAmount()->toFloat(),
+            'fee_amount' => $actualFeeAmount->getAmount()->toFloat(),
+            'total_amount' => $totalWithFeeCoverage->getAmount()->toFloat(),
+            'display_fee' => $actualFeeAmount->getAmount()->toFloat(),
             'description' => sprintf(
                 '$%.2f membership + $%.2f processing fees',
-                $baseAmount,
-                $actualFeeAmount
+                $baseAmount->getAmount()->toFloat(),
+                $actualFeeAmount->getAmount()->toFloat()
             ),
         ];
     }
@@ -231,28 +213,22 @@ class PaymentService
     /**
      * Get fee information for display purposes (helper text, tooltips, etc.)
      */
-    public function getFeeDisplayInfo(float $baseAmount): array
+    public function getFeeDisplayInfo(Money $baseAmount): array
     {
-        // Use cents-based calculations for precision
-        $baseAmountCents = $this->dollarsToStripeAmount($baseAmount);
-        $totalWithCoverageCents = $this->calculateTotalWithFeeCoverageCents($baseAmountCents);
-        $actualFeeAmountCents = $totalWithCoverageCents - $baseAmountCents;
-        
-        // Convert back to dollars for display
-        $totalWithCoverage = $this->stripeAmountToDollars($totalWithCoverageCents);
-        $actualFeeAmount = $this->stripeAmountToDollars($actualFeeAmountCents);
+        $totalWithCoverage = $this->calculateTotalWithFeeCoverage($baseAmount);
+        $actualFeeAmount = $totalWithCoverage->minus($baseAmount);
 
         return [
-            'display_fee' => $actualFeeAmount,
-            'total_with_coverage' => $totalWithCoverage,
+            'display_fee' => $actualFeeAmount->getAmount()->toFloat(),
+            'total_with_coverage' => $totalWithCoverage->getAmount()->toFloat(),
             'message' => sprintf(
                 'Add $%.2f to cover fees (Total: $%.2f)',
-                $actualFeeAmount,
-                $totalWithCoverage
+                $actualFeeAmount->getAmount()->toFloat(),
+                $totalWithCoverage->getAmount()->toFloat()
             ),
             'accurate_message' => sprintf(
                 'Covers processing fees (Total: $%.2f)',
-                $totalWithCoverage
+                $totalWithCoverage->getAmount()->toFloat()
             ),
         ];
     }
@@ -260,43 +236,44 @@ class PaymentService
     /**
      * Format a money amount for display
      */
-    public function formatMoney(float $amount): string
+    public function formatMoney(Money $amount): string
     {
-        return '$' . number_format($amount, 2);
+        return '$' . number_format($amount->getAmount()->toFloat(), 2);
     }
 
     /**
-     * Convert dollars to cents for Stripe API
+     * Convert Money to cents for Stripe API
      */
-    public function dollarsToStripeAmount(float $dollars): int
+    public function toStripeAmount(Money $amount): int
     {
-        return intval($dollars * 100);
+        return $amount->getMinorAmount()->toInt();
     }
 
     /**
-     * Convert cents from Stripe API to dollars
+     * Convert cents from Stripe API to Money
      */
-    public function stripeAmountToDollars(int $cents): float
+    public function fromStripeAmount(int $cents): Money
     {
-        return $cents / 100;
+        return Money::ofMinor($cents, 'USD');
     }
 
     /**
      * Calculate what amount we'll actually receive after Stripe processes a payment
      */
-    public function calculateNetAmount(float $totalCharged): float
+    public function calculateNetAmount(Money $totalCharged): Money
     {
-        return $totalCharged - (($totalCharged * self::STRIPE_RATE) + self::STRIPE_FIXED_FEE);
+        $processingFee = $this->calculateProcessingFee($totalCharged);
+        return $totalCharged->minus($processingFee);
     }
 
     /**
      * Validate that fee coverage actually results in the base amount being received
      */
-    public function validateFeeCoverage(float $baseAmount, float $totalCharged): bool
+    public function validateFeeCoverage(Money $baseAmount, Money $totalCharged): bool
     {
         $netReceived = $this->calculateNetAmount($totalCharged);
-        $tolerance = 0.01; // 1 cent tolerance for rounding
+        $tolerance = Money::ofMinor(1, 'USD'); // 1 cent tolerance for rounding
 
-        return abs($netReceived - $baseAmount) <= $tolerance;
+        return $netReceived->minus($baseAmount)->abs()->isLessThanOrEqualTo($tolerance);
     }
 }

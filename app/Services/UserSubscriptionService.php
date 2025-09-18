@@ -126,8 +126,10 @@ class UserSubscriptionService
 
         // If this is a recurring transaction over the threshold,
         // potentially assign sustaining member role
-        if ($transaction->type === 'recurring' &&
-            $transaction->amount > self::SUSTAINING_MEMBER_THRESHOLD) {
+        if (
+            $transaction->type === 'recurring' &&
+            $transaction->amount->getAmount()->toFloat() > self::SUSTAINING_MEMBER_THRESHOLD
+        ) {
 
             if (! $user->hasRole('sustaining member')) {
                 $user->assignRole('sustaining member');
@@ -145,7 +147,7 @@ class UserSubscriptionService
      */
     public static function getSustainingMembers(): Collection
     {
-        return Cache::remember('sustaining_members', 1800, function() {
+        return Cache::remember('sustaining_members', 1800, function () {
             return User::whereHas('roles', function ($query) {
                 $query->where('name', 'sustaining member');
             })->orWhereHas('transactions', function ($query) {
@@ -161,7 +163,7 @@ class UserSubscriptionService
      */
     public static function getSubscriptionStats(): array
     {
-        return Cache::remember('subscription_stats', 1800, function() {
+        return Cache::remember('subscription_stats', 1800, function () {
             $totalUsers = User::count();
             $sustainingMembers = static::getSustainingMembers()->count();
 
@@ -169,8 +171,11 @@ class UserSubscriptionService
                 ->where('created_at', '>=', now()->subMonth())
                 ->get();
 
-            $totalMonthlyRevenue = $recentTransactions->sum('amount');
-            $averageSubscription = $recentTransactions->avg('amount') ?? 0;
+            $totalMonthlyRevenue = $recentTransactions->reduce(fn($carry, $item) => $carry + $item->amount->getMinorAmount()->toInt(), 0);
+
+            $averageSubscription = $sustainingMembers > 0
+                ? $totalMonthlyRevenue / $sustainingMembers / 100
+                : 0;
 
             // Calculate total allocated hours based on actual subscription amounts
             $totalAllocatedHours = static::getSustainingMembers()
@@ -221,7 +226,7 @@ class UserSubscriptionService
         $totalPaid = $reservations->sum('cost');
 
         $allocatedFreeHours = static::getUserMonthlyFreeHours($user);
-        
+
         return [
             'month' => $month->format('Y-m'),
             'total_reservations' => $reservations->count(),
@@ -280,7 +285,7 @@ class UserSubscriptionService
     {
         if (!$user->hasRole('sustaining member')) {
             $user->assignRole('sustaining member');
-            
+
             // Log the upgrade
             \Log::info('User upgraded to sustaining member via webhook', [
                 'user_id' => $user->id,
@@ -369,7 +374,7 @@ class UserSubscriptionService
     {
         try {
             $subscription = $user->subscription('default');
-            
+
             if (!$subscription || !$subscription->active()) {
                 return [
                     'success' => false,
@@ -412,7 +417,7 @@ class UserSubscriptionService
     public static function getSubscriptionDisplayInfo(User $user): array
     {
         $subscription = $user->subscription('default');
-        
+
         if (!$subscription || !$subscription->active()) {
             return [
                 'has_subscription' => false,
@@ -460,13 +465,13 @@ class UserSubscriptionService
     public function getCurrentTier(User $user): ?string
     {
         $displayInfo = static::getSubscriptionDisplayInfo($user);
-        
+
         if (!$displayInfo['has_subscription']) {
             return null;
         }
 
         $amount = $displayInfo['amount'];
-        
+
         return match (true) {
             $amount >= 45 && $amount <= 55 => 'suggested_50',
             $amount >= 20 && $amount <= 30 => 'suggested_25',
@@ -482,7 +487,7 @@ class UserSubscriptionService
     {
         try {
             $subscription = $user->subscription('default');
-            
+
             if (!$subscription || !$subscription->active()) {
                 return [
                     'success' => false,
@@ -511,7 +516,7 @@ class UserSubscriptionService
     {
         try {
             $subscription = $user->subscription('default');
-            
+
             if (!$subscription || !$subscription->cancelled()) {
                 return [
                     'success' => false,

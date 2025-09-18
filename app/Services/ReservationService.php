@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\ReservationCancelledNotification;
 use App\Notifications\ReservationConfirmedNotification;
 use App\Notifications\ReservationCreatedNotification;
+use Brick\Money\Money;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +40,7 @@ class ReservationService
         $freeHours = $user->isSustainingMember() ? min($hours, $remainingFreeHours) : 0;
         $paidHours = max(0, $hours - $freeHours);
 
-        $cost = $paidHours * self::HOURLY_RATE;
+        $cost = Money::of(self::HOURLY_RATE, 'USD')->multipliedBy($paidHours);
 
         return [
             'total_hours' => $hours,
@@ -97,10 +98,10 @@ class ReservationService
         $cacheKey = "reservations.conflicts." . $startTime->format('Y-m-d');
 
         // Cache all day's reservations, then filter for specific conflicts
-        $dayReservations = Cache::remember($cacheKey, 1800, function() use ($startTime) {
+        $dayReservations = Cache::remember($cacheKey, 1800, function () use ($startTime) {
             $dayStart = $startTime->copy()->startOfDay();
             $dayEnd = $startTime->copy()->endOfDay();
-            
+
             return Reservation::with('user')
                 ->where('status', '!=', 'cancelled')
                 ->where('reserved_until', '>', $dayStart)
@@ -113,7 +114,7 @@ class ReservationService
             if ($excludeReservationId && $reservation->id === $excludeReservationId) {
                 return false;
             }
-            
+
             return $reservation->reserved_until > $startTime && $reservation->reserved_at < $endTime;
         });
 
@@ -136,10 +137,10 @@ class ReservationService
         $cacheKey = "productions.conflicts." . $startTime->format('Y-m-d');
 
         // Cache all day's productions, then filter for specific conflicts
-        $dayProductions = Cache::remember($cacheKey, 3600, function() use ($startTime) {
+        $dayProductions = Cache::remember($cacheKey, 3600, function () use ($startTime) {
             $dayStart = $startTime->copy()->startOfDay();
             $dayEnd = $startTime->copy()->endOfDay();
-            
+
             return Production::query()
                 ->where('end_time', '>', $dayStart)
                 ->where('start_time', '<', $dayEnd)
@@ -206,12 +207,12 @@ class ReservationService
 
         // Check minimum duration
         if ($hours < self::MIN_RESERVATION_DURATION) {
-            $errors[] = 'Minimum reservation duration is '.self::MIN_RESERVATION_DURATION.' hour(s).';
+            $errors[] = 'Minimum reservation duration is ' . self::MIN_RESERVATION_DURATION . ' hour(s).';
         }
 
         // Check maximum duration
         if ($hours > self::MAX_RESERVATION_DURATION) {
-            $errors[] = 'Maximum reservation duration is '.self::MAX_RESERVATION_DURATION.' hours.';
+            $errors[] = 'Maximum reservation duration is ' . self::MAX_RESERVATION_DURATION . ' hours.';
         }
 
         // Check for conflicts
@@ -221,19 +222,19 @@ class ReservationService
 
             if ($allConflicts['reservations']->isNotEmpty()) {
                 $reservationConflicts = $allConflicts['reservations']->map(function ($r) {
-                    return $r->user->name.' ('.$r->reserved_at->format('M j, g:i A').' - '.$r->reserved_until->format('g:i A').')';
+                    return $r->user->name . ' (' . $r->reserved_at->format('M j, g:i A') . ' - ' . $r->reserved_until->format('g:i A') . ')';
                 })->join(', ');
-                $conflictMessages[] = 'existing reservation(s): '.$reservationConflicts;
+                $conflictMessages[] = 'existing reservation(s): ' . $reservationConflicts;
             }
 
             if ($allConflicts['productions']->isNotEmpty()) {
                 $productionConflicts = $allConflicts['productions']->map(function ($p) {
-                    return $p->title.' ('.$p->start_time->format('M j, g:i A').' - '.$p->end_time->format('g:i A').')';
+                    return $p->title . ' (' . $p->start_time->format('M j, g:i A') . ' - ' . $p->end_time->format('g:i A') . ')';
                 })->join(', ');
-                $conflictMessages[] = 'production(s): '.$productionConflicts;
+                $conflictMessages[] = 'production(s): ' . $productionConflicts;
             }
 
-            $errors[] = 'Time slot conflicts with '.implode(' and ', $conflictMessages);
+            $errors[] = 'Time slot conflicts with ' . implode(' and ', $conflictMessages);
         }
 
         // Business hours check (9 AM to 10 PM)
@@ -252,7 +253,7 @@ class ReservationService
         $errors = $this->validateReservation($user, $startTime, $endTime);
 
         if (! empty($errors)) {
-            throw new \InvalidArgumentException('Validation failed: '.implode(' ', $errors));
+            throw new \InvalidArgumentException('Validation failed: ' . implode(' ', $errors));
         }
 
         $costCalculation = $this->calculateCost($user, $startTime, $endTime);
@@ -292,7 +293,7 @@ class ReservationService
         $errors = $this->validateReservation($reservation->user, $startTime, $endTime, $reservation->id);
 
         if (! empty($errors)) {
-            throw new \InvalidArgumentException('Validation failed: '.implode(' ', $errors));
+            throw new \InvalidArgumentException('Validation failed: ' . implode(' ', $errors));
         }
 
         $costCalculation = $this->calculateCost($reservation->user, $startTime, $endTime);
@@ -336,7 +337,7 @@ class ReservationService
     {
         $reservation->update([
             'status' => 'cancelled',
-            'notes' => $reservation->notes.($reason ? "\nCancellation reason: ".$reason : ''),
+            'notes' => $reservation->notes . ($reason ? "\nCancellation reason: " . $reason : ''),
         ]);
 
         // Send cancellation notification
@@ -457,7 +458,7 @@ class ReservationService
         $gaps = $periodCollection->gaps($businessPeriod);
 
         return collect($gaps)
-            ->filter(fn (Period $gap) => $gap->length() >= $minimumDurationMinutes)
+            ->filter(fn(Period $gap) => $gap->length() >= $minimumDurationMinutes)
             ->values()
             ->toArray();
     }
@@ -666,14 +667,14 @@ class ReservationService
         if ($duration < self::MIN_RESERVATION_DURATION) {
             return [
                 'valid' => false,
-                'errors' => ['Minimum reservation duration is '.self::MIN_RESERVATION_DURATION.' hour'],
+                'errors' => ['Minimum reservation duration is ' . self::MIN_RESERVATION_DURATION . ' hour'],
             ];
         }
 
         if ($duration > self::MAX_RESERVATION_DURATION) {
             return [
                 'valid' => false,
-                'errors' => ['Maximum reservation duration is '.self::MAX_RESERVATION_DURATION.' hours'],
+                'errors' => ['Maximum reservation duration is ' . self::MAX_RESERVATION_DURATION . ' hours'],
             ];
         }
 
@@ -682,11 +683,11 @@ class ReservationService
         $errors = [];
 
         if ($conflicts['reservations']->isNotEmpty()) {
-            $errors[] = 'Conflicts with '.$conflicts['reservations']->count().' existing reservation(s)';
+            $errors[] = 'Conflicts with ' . $conflicts['reservations']->count() . ' existing reservation(s)';
         }
 
         if ($conflicts['productions']->isNotEmpty()) {
-            $errors[] = 'Conflicts with '.$conflicts['productions']->count().' production(s)';
+            $errors[] = 'Conflicts with ' . $conflicts['productions']->count() . ' production(s)';
         }
 
         return [
@@ -746,7 +747,7 @@ class ReservationService
                             number_format($reservation->duration, 1)
                         ),
                     ],
-                    'unit_amount' => \App\Facades\PaymentService::dollarsToStripeAmount($reservation->cost),
+                    'unit_amount' => $reservation->cost->getAmount()->toInt(),
                 ],
                 'quantity' => 1,
             ],
@@ -774,7 +775,7 @@ class ReservationService
             'payment_method_types' => ['card'],
             'line_items' => $lineItems,
             'mode' => 'payment',
-            'success_url' => route('reservations.payment.success', ['reservation' => $reservation->id]).'?session_id={CHECKOUT_SESSION_ID}',
+            'success_url' => route('reservations.payment.success', ['reservation' => $reservation->id]) . '?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => route('reservations.payment.cancel', ['reservation' => $reservation->id]),
             'customer' => $user->stripe_id,
             'metadata' => [
@@ -823,9 +824,8 @@ class ReservationService
             ]);
 
             return $transaction;
-
         } catch (ApiErrorException $e) {
-            throw new \Exception('Failed to process Stripe payment: '.$e->getMessage());
+            throw new \Exception('Failed to process Stripe payment: ' . $e->getMessage());
         }
     }
 

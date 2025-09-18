@@ -50,7 +50,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
                 ->and($costBreakdown['total_hours'])->toBe(2.0)
                 ->and($costBreakdown['free_hours'])->toBe(0)
                 ->and($costBreakdown['paid_hours'])->toBe(2.0)
-                ->and($costBreakdown['cost'])->toBe(30.0) // $15 * 2 hours
+                ->and($costBreakdown['cost']->getAmount()->toFloat())->toBe(30.0) // $15 * 2 hours
                 ->and($costBreakdown['hourly_rate'])->toBe(15.0)
                 ->and($costBreakdown['is_sustaining_member'])->toBeFalse();
         });
@@ -312,7 +312,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             expect($costBreakdown['is_sustaining_member'])->toBeTrue()
                 ->and($costBreakdown['free_hours'])->toBe(2.0) // All 2 hours are free
                 ->and($costBreakdown['paid_hours'])->toBe(0)
-                ->and((float) $costBreakdown['cost'])->toBe(0.0);
+                ->and($costBreakdown['cost']->isZero())->toBe(true);
         });
 
         it('handles partial free hours usage', function () {
@@ -335,7 +335,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             expect($costBreakdown['total_hours'])->toBe(3.0)
                 ->and($costBreakdown['free_hours'])->toBe(1.0) // Only 1 hour free
                 ->and($costBreakdown['paid_hours'])->toBe(2.0) // 2 hours paid
-                ->and($costBreakdown['cost'])->toBe(30.0); // $15 * 2 hours
+                ->and($costBreakdown['cost']->getAmount()->toFloat())->toBe(30.0); // $15 * 2 hours
         });
 
         it('handles exhausted free hours', function () {
@@ -357,7 +357,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
 
             expect($costBreakdown['free_hours'])->toBe(0.0)
                 ->and($costBreakdown['paid_hours'])->toBe(2.0)
-                ->and($costBreakdown['cost'])->toBe(30.0);
+                ->and($costBreakdown['cost']->getAmount()->toFloat())->toBe(30.0);
         });
     });
 
@@ -572,7 +572,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
                 ->get();
 
             expect($outstandingPayments)->toHaveCount(1)
-                ->and($outstandingPayments->first()->amount)->toBe(30);
+                ->and($outstandingPayments->first()->amount->getAmount()->toFloat())->toBe(30.00);
         });
 
         it('blocks new reservations with outstanding payments', function () {
@@ -618,7 +618,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
                 $baseTime,
                 $baseTime->copy()->addHours(2)
             );
-            expect($sustainingCost['cost'])->toBe(0.0);
+            expect($sustainingCost['cost']->isZero())->toBe(true);
 
             // Create the sustaining member's reservation
             Reservation::factory()->create([
@@ -643,7 +643,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             expect($isAfterAvailable)->toBeTrue();
 
             $regularCost = ReservationService::calculateCost($regularUser, $afterStart, $afterEnd);
-            expect($regularCost['cost'])->toBe(30.0);
+            expect($regularCost['cost']->getAmount()->toFloat())->toBe(30.0);
         });
 
         it('handles cancellation and rebooking workflow', function () {

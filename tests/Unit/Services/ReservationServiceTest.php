@@ -35,7 +35,7 @@ class ReservationServiceTest extends TestCase
         $this->assertEquals(2, $result['total_hours']);
         $this->assertEquals(0, $result['free_hours']);
         $this->assertEquals(2, $result['paid_hours']);
-        $this->assertEquals(30.00, $result['cost']);
+        $this->assertEquals(3000, $result['cost']->getMinorAmount()->toInt());
         $this->assertEquals(15.00, $result['hourly_rate']);
         $this->assertFalse($result['is_sustaining_member']);
         $this->assertEquals(0, $result['remaining_free_hours']);
@@ -52,7 +52,7 @@ class ReservationServiceTest extends TestCase
         $this->assertEquals(2, $result['total_hours']);
         $this->assertEquals(2, $result['free_hours']);
         $this->assertEquals(0, $result['paid_hours']);
-        $this->assertEquals(0.00, $result['cost']);
+        $this->assertTrue($result['cost']->isZero());
         $this->assertTrue($result['is_sustaining_member']);
         $this->assertEquals(4, $result['remaining_free_hours']);
     }
@@ -78,7 +78,7 @@ class ReservationServiceTest extends TestCase
         $this->assertEquals(3, $result['total_hours']);
         $this->assertEquals(2, $result['free_hours']); // Only 2 free hours remaining
         $this->assertEquals(1, $result['paid_hours']); // 1 hour paid
-        $this->assertEquals(15.00, $result['cost']);
+        $this->assertEquals(1500, $result['cost']->getMinorAmount()->toInt() );
         $this->assertEquals(2, $result['remaining_free_hours']);
     }
 
@@ -244,7 +244,7 @@ class ReservationServiceTest extends TestCase
         $this->assertEquals($this->regularUser->id, $reservation->user_id);
         $this->assertEquals($start, $reservation->reserved_at);
         $this->assertEquals($end, $reservation->reserved_until);
-        $this->assertEquals(30.00, $reservation->cost);
+        $this->assertEquals(30.00, $reservation->cost->getAmount()->toFloat());
         $this->assertEquals(2, $reservation->hours_used);
         $this->assertEquals('confirmed', $reservation->status);
     }
@@ -294,7 +294,7 @@ class ReservationServiceTest extends TestCase
 
         $this->assertEquals($newStart, $updated->reserved_at);
         $this->assertEquals($newEnd, $updated->reserved_until);
-        $this->assertEquals(45.00, $updated->cost); // 3 hours * $15
+        $this->assertEquals(45.00, $updated->cost->getAmount()->toFloat()); // 3 hours * $15
         $this->assertEquals(3, $updated->hours_used);
     }
 
@@ -398,7 +398,7 @@ class ReservationServiceTest extends TestCase
         $this->assertEquals(2, $stats['this_month_hours']); // Only the first reservation is this month
         $this->assertEquals(2, $stats['free_hours_used']);
         $this->assertEquals(2, $stats['remaining_free_hours']); // 4 - 2
-        $this->assertEquals(45.00, $stats['total_spent']);
+        $this->assertEquals(4500, $stats['total_spent']);
         $this->assertTrue($stats['is_sustaining_member']);
     }
 }

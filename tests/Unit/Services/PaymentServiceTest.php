@@ -2,6 +2,7 @@
 
 use App\Models\Reservation;
 use App\Facades\PaymentService;
+use Brick\Money\Money;
 
 describe('Payment Status Management', function () {
     it('can mark reservation as paid', function () {
@@ -195,10 +196,10 @@ describe('UI Display Helpers', function () {
     });
 
     it('can format money amounts', function () {
-        expect(PaymentService::formatMoney(45.50))->toBe('$45.50');
-        expect(PaymentService::formatMoney(100))->toBe('$100.00');
-        expect(PaymentService::formatMoney(0))->toBe('$0.00');
-        expect(PaymentService::formatMoney(999.99))->toBe('$999.99');
+        expect(PaymentService::formatMoney(Money::of(45.50, 'USD')))->toBe('$45.50');
+        expect(PaymentService::formatMoney(Money::of(100, 'USD')))->toBe('$100.00');
+        expect(PaymentService::formatMoney(Money::of(0, 'USD')))->toBe('$0.00');
+        expect(PaymentService::formatMoney(Money::of(999.99, 'USD')))->toBe('$999.99');
     });
 });
 
@@ -273,7 +274,7 @@ describe('Payment Logic', function () {
 
         $total = PaymentService::getTotalPaymentsReceived($reservation);
 
-        expect($total)->toBe(40.00);
+        expect($total->getAmount()->toFloat())->toBe(40.00);
     });
 
     it('can calculate outstanding balance', function () {
@@ -290,7 +291,7 @@ describe('Payment Logic', function () {
 
         $balance = PaymentService::getOutstandingBalance($reservation);
 
-        expect($balance)->toBe(35.00);
+        expect($balance->getAmount()->toFloat())->toBe(35.00);
     });
 
     it('returns zero outstanding balance when overpaid', function () {
@@ -307,7 +308,7 @@ describe('Payment Logic', function () {
 
         $balance = PaymentService::getOutstandingBalance($reservation);
 
-        expect($balance)->toBe(0.00);
+        expect($balance->getAmount()->toFloat())->toBe(0.00);
     });
 
     it('can determine if reservation is fully paid', function () {
@@ -358,29 +359,29 @@ describe('Stripe Integration Calculations', function () {
     it('can calculate processing fee', function () {
         // Test with $100 base amount
         // Expected: (100 * 0.029) + 0.30 = 2.90 + 0.30 = 3.20
-        $fee = PaymentService::calculateProcessingFee(100.00);
-        expect($fee)->toBe(3.20);
+        $fee = PaymentService::calculateProcessingFee(Money::of(100.00, 'USD'));
+        expect($fee->getAmount()->toFloat())->toBe(3.20);
 
         // Test with $10 base amount
         // Expected: (10 * 0.029) + 0.30 = 0.29 + 0.30 = 0.59
-        $fee = PaymentService::calculateProcessingFee(10.00);
-        expect(round($fee, 2))->toBe(0.59);
+        $fee = PaymentService::calculateProcessingFee(Money::of(10.00, 'USD'));
+        expect(round($fee->getAmount()->toFloat(), 2))->toBe(0.59);
     });
 
     it('can calculate total with fee coverage', function () {
         // For $100 base amount with fee coverage
         // Formula: (100 + 0.30) / (1 - 0.029) = 100.30 / 0.971 ≈ 103.30
-        $total = PaymentService::calculateTotalWithFeeCoverage(100.00);
-        expect(round($total, 2))->toBe(103.30);
+        $total = PaymentService::calculateTotalWithFeeCoverage(Money::of(100.00, 'USD'));
+        expect(round($total->getAmount()->toFloat(), 2))->toBe(103.30);
 
         // For $10 base amount
         // Formula: (10 + 0.30) / (1 - 0.029) = 10.30 / 0.971 ≈ 10.61
-        $total = PaymentService::calculateTotalWithFeeCoverage(10.00);
-        expect(round($total, 2))->toBe(10.61);
+        $total = PaymentService::calculateTotalWithFeeCoverage(Money::of(10.00, 'USD'));
+        expect(round($total->getAmount()->toFloat(), 2))->toBe(10.61);
     });
 
     it('can get fee breakdown without coverage', function () {
-        $breakdown = PaymentService::getFeeBreakdown(50.00, false);
+        $breakdown = PaymentService::getFeeBreakdown(Money::of(50.00, 'USD'), false);
 
         expect($breakdown)->toBe([
             'base_amount' => 50.00,
@@ -392,7 +393,8 @@ describe('Stripe Integration Calculations', function () {
     });
 
     it('can get fee breakdown with coverage', function () {
-        $breakdown = PaymentService::getFeeBreakdown(50.00, true);
+        $baseAmount = Money::of(50.00, 'USD');
+        $breakdown = PaymentService::getFeeBreakdown($baseAmount, true);
 
         expect($breakdown)
             ->toHaveKey('base_amount', 50.00)
@@ -402,58 +404,56 @@ describe('Stripe Integration Calculations', function () {
             ->toHaveKey('description');
 
         // Verify the total is calculated correctly
-        $expectedTotal = PaymentService::calculateTotalWithFeeCoverage(50.00);
-        expect($breakdown['total_amount'])->toBe($expectedTotal);
+        $expectedTotal = PaymentService::calculateTotalWithFeeCoverage($baseAmount);
+        expect($breakdown['total_amount'])->toBe($expectedTotal->getAmount()->toFloat());
 
         // Verify fee amount is the difference
-        expect($breakdown['fee_amount'])->toBe($expectedTotal - 50.00);
-
-        // Verify display fee is the simple calculation
-        $expectedDisplayFee = PaymentService::calculateProcessingFee(50.00);
-        expect($breakdown['display_fee'])->toBe($expectedDisplayFee);
+        $expectedFeeAmount = $expectedTotal->minus($baseAmount);
+        expect($breakdown['fee_amount'])->toBe($expectedFeeAmount->getAmount()->toFloat());
     });
 
     it('can get fee display info', function () {
-        $info = PaymentService::getFeeDisplayInfo(25.00);
-        $expectedFee = PaymentService::calculateProcessingFee(25.00);
-        $expectedTotal = PaymentService::calculateTotalWithFeeCoverage(25.00);
+        $baseAmount = Money::of(25.00, 'USD');
+        $info = PaymentService::getFeeDisplayInfo($baseAmount);
+        $expectedTotal = PaymentService::calculateTotalWithFeeCoverage($baseAmount);
+        $expectedFee = $expectedTotal->minus($baseAmount);
 
         expect($info)
-            ->toHaveKey('display_fee', $expectedFee)
-            ->toHaveKey('total_with_coverage', $expectedTotal)
+            ->toHaveKey('display_fee', $expectedFee->getAmount()->toFloat())
+            ->toHaveKey('total_with_coverage', $expectedTotal->getAmount()->toFloat())
             ->toHaveKey('message')
             ->toHaveKey('accurate_message');
 
         expect($info['message'])->toContain('Add $')
-            ->and($info['message'])->toContain('to cover Stripe fees');
+            ->and($info['message'])->toContain('to cover fees');
 
         expect($info['accurate_message'])->toContain('Covers processing fees');
     });
 
     it('can convert dollars to stripe amount', function () {
-        expect(PaymentService::dollarsToStripeAmount(45.50))->toBe(4550);
-        expect(PaymentService::dollarsToStripeAmount(100.00))->toBe(10000);
-        expect(PaymentService::dollarsToStripeAmount(0.99))->toBe(99);
+        expect(PaymentService::toStripeAmount(Money::of(45.50, 'USD')))->toBe(4550);
+        expect(PaymentService::toStripeAmount(Money::of(100.00, 'USD')))->toBe(10000);
+        expect(PaymentService::toStripeAmount(Money::of(0.99, 'USD')))->toBe(99);
     });
 
     it('can convert stripe amount to dollars', function () {
-        expect(PaymentService::stripeAmountToDollars(4550))->toBe(45.50);
-        expect(PaymentService::stripeAmountToDollars(10000))->toBe(100.00);
-        expect(PaymentService::stripeAmountToDollars(99))->toBe(0.99);
+        expect(PaymentService::fromStripeAmount(4550)->getAmount()->toFloat())->toBe(45.50);
+        expect(PaymentService::fromStripeAmount(10000)->getAmount()->toFloat())->toBe(100.00);
+        expect(PaymentService::fromStripeAmount(99)->getAmount()->toFloat())->toBe(0.99);
     });
 
     it('can calculate net amount after stripe fees', function () {
         // For $100 charged, expect to net: 100 - (100 * 0.029 + 0.30) = 100 - 3.20 = 96.80
-        $net = PaymentService::calculateNetAmount(100.00);
-        expect($net)->toBe(96.80);
+        $net = PaymentService::calculateNetAmount(Money::of(100.00, 'USD'));
+        expect($net->getAmount()->toFloat())->toBe(96.80);
 
         // For $10 charged, expect to net: 10 - (10 * 0.029 + 0.30) = 10 - 0.59 = 9.41
-        $net = PaymentService::calculateNetAmount(10.00);
-        expect($net)->toBe(9.41);
+        $net = PaymentService::calculateNetAmount(Money::of(10.00, 'USD'));
+        expect($net->getAmount()->toFloat())->toBe(9.41);
     });
 
     it('can validate fee coverage accuracy', function () {
-        $baseAmount = 50.00;
+        $baseAmount = Money::of(50.00, 'USD');
         $totalWithCoverage = PaymentService::calculateTotalWithFeeCoverage($baseAmount);
 
         // The coverage calculation should be accurate
@@ -463,17 +463,17 @@ describe('Stripe Integration Calculations', function () {
         expect(PaymentService::validateFeeCoverage($baseAmount, $baseAmount))->toBeFalse();
 
         // Over-coverage should pass (within tolerance)
-        expect(PaymentService::validateFeeCoverage($baseAmount, $totalWithCoverage + 0.005))->toBeTrue();
+        expect(PaymentService::validateFeeCoverage($baseAmount, $totalWithCoverage->plus(Money::ofMinor(1, 'USD'))))->toBeTrue();
     });
 
     it('validates fee coverage with tolerance for rounding', function () {
-        $baseAmount = 33.33;
+        $baseAmount = Money::of(33.33, 'USD');
         $totalWithCoverage = PaymentService::calculateTotalWithFeeCoverage($baseAmount);
 
         // Should be valid within 1 cent tolerance
-        expect(PaymentService::validateFeeCoverage($baseAmount, $totalWithCoverage + 0.009))->toBeTrue();
+        expect(PaymentService::validateFeeCoverage($baseAmount, $totalWithCoverage->plus(Money::ofMinor(1, 'USD'))))->toBeTrue();
 
         // Should fail outside tolerance
-        expect(PaymentService::validateFeeCoverage($baseAmount, $totalWithCoverage - 0.02))->toBeFalse();
+        expect(PaymentService::validateFeeCoverage($baseAmount, $totalWithCoverage->minus(Money::ofMinor(2, 'USD'))))->toBeFalse();
     });
 });

@@ -10,6 +10,7 @@ use Filament\Forms\Components\Slider\Enums\PipsMode;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Support\RawJs;
+use Illuminate\Support\Facades\Log;
 
 class CreateMembershipSubscriptionAction
 {
@@ -68,6 +69,10 @@ class CreateMembershipSubscriptionAction
                 if ($result['success']) {
                     redirect($result['checkout_url']);
                 } else {
+                    Log::error('Failed to create membership subscription', [
+                        'user_id' => $record->id,
+                        'error' => $result['error'] ?? 'Unknown error',
+                    ]);
                     \Filament\Notifications\Notification::make()
                         ->title('Failed to create membership checkout')
                         ->body($result['error'])

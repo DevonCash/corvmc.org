@@ -50,8 +50,12 @@ use App\Traits\Revisionable;
  * @property-read array $skills
  * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
  * @property-read int|null $media_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $pendingRevisions
+ * @property-read int|null $pending_revisions_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $reports
  * @property-read int|null $reports_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $revisions
+ * @property-read int|null $revisions_count
  * @property \Illuminate\Database\Eloquent\Collection<int, \Spatie\Tags\Tag> $tags
  * @property-read int|null $tags_count
  * @property-read \App\Models\User $user

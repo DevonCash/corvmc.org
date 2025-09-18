@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\MoneyCast;
 use Guava\Calendar\Contracts\Eventable;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Represents a reservation at the practice space.
- * 
+ *
  * It includes details about the user who made the reservation
  * and the status of the reservation.
  *
@@ -23,7 +24,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property string|null $deleted_at
  * @property int $user_id
  * @property string $status
- * @property numeric $cost
  * @property string $payment_status
  * @property string|null $payment_method
  * @property \Illuminate\Support\Carbon|null $paid_at
@@ -35,6 +35,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property string|null $notes
  * @property \Illuminate\Support\Carbon|null $reserved_at
  * @property \Illuminate\Support\Carbon|null $reserved_until
+ * @property \Brick\Money\Money $cost
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
  * @property-read int|null $activities_count
  * @property-read string $cost_display
@@ -95,16 +96,19 @@ class Reservation extends Model implements Eventable
         'payment_status' => 'unpaid',
     ];
 
-    protected $casts = [
-        'reserved_at' => 'datetime',
-        'reserved_until' => 'datetime',
-        'cost' => 'decimal:2',
-        'paid_at' => 'datetime',
-        'hours_used' => 'decimal:2',
-        'free_hours_used' => 'decimal:2',
-        'is_recurring' => 'boolean',
-        'recurrence_pattern' => 'array',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'reserved_at' => 'datetime',
+            'reserved_until' => 'datetime',
+            'cost' => MoneyCast::class . ':USD',
+            'paid_at' => 'datetime',
+            'hours_used' => 'decimal:2',
+            'free_hours_used' => 'decimal:2',
+            'is_recurring' => 'boolean',
+            'recurrence_pattern' => 'array',
+        ];
+    }
 
     public function user()
     {
@@ -246,7 +250,11 @@ class Reservation extends Model implements Eventable
      */
     public function getCostDisplayAttribute(): string
     {
-        return \App\Facades\PaymentService::getCostDisplay($this);
+        if ($this->cost->isZero()) {
+            return 'Free';
+        }
+
+        return '$' . number_format($this->cost->getAmount()->toFloat(), 2);
     }
 
     /**

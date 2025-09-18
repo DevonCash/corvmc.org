@@ -23,7 +23,7 @@ class ReservationCreatedNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $subject = $this->reservation->status === 'pending' 
+        $subject = $this->reservation->status === 'pending'
             ? 'Practice Space Reservation Request Received'
             : 'Practice Space Reservation Created';
 
@@ -43,7 +43,7 @@ class ReservationCreatedNotification extends Notification implements ShouldQueue
         $message->line("**Reservation Details:**")
             ->line("Date & Time: {$this->reservation->time_range}")
             ->line("Duration: {$this->reservation->hours_used} hours")
-            ->line("Cost: $" . number_format($this->reservation->cost, 2));
+            ->line("Cost: " . $this->reservation->cost_display);
 
         if ($this->reservation->free_hours_used > 0) {
             $message->line("Free Hours Used: {$this->reservation->free_hours_used} hours");
@@ -63,10 +63,10 @@ class ReservationCreatedNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => $this->reservation->status === 'pending' 
-                ? 'Reservation Request Received' 
+            'title' => $this->reservation->status === 'pending'
+                ? 'Reservation Request Received'
                 : 'Reservation Created',
-            'message' => $this->reservation->status === 'pending' 
+            'message' => $this->reservation->status === 'pending'
                 ? "Practice space reservation request for {$this->reservation->time_range} received. We'll send a confirmation reminder 3 days before."
                 : "Practice space reservation for {$this->reservation->time_range} has been created.",
             'action_url' => route('filament.member.pages.dashboard'),

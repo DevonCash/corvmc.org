@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Cache;
  * @property string|null $pronouns
  * @property string $email
  * @property \Illuminate\Support\Carbon|null $email_verified_at
- * @property string|null $password
+ * @property string $password
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -37,6 +37,8 @@ use Illuminate\Support\Facades\Cache;
  * @property string|null $pm_last_four
  * @property string|null $trial_ends_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property int $community_event_trust_points
+ * @property array<array-key, mixed>|null $trust_points
  * @property \Spatie\LaravelData\Contracts\BaseData|\Spatie\LaravelData\Contracts\TransformableData $settings
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
  * @property-read int|null $activities_count
@@ -76,6 +78,7 @@ use Illuminate\Support\Facades\Cache;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User staffMembers()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User staffOnly()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User staffOrdered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCommunityEventTrustPoints($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmail($value)
@@ -89,6 +92,7 @@ use Illuminate\Support\Facades\Cache;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereStripeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTrialEndsAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTrustPoints($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutPermission($permissions)

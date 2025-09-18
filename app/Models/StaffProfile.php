@@ -33,6 +33,10 @@ enum StaffProfileType: string
  * @property-read string|null $profile_image_url
  * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
  * @property-read int|null $media_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $pendingRevisions
+ * @property-read int|null $pending_revisions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $revisions
+ * @property-read int|null $revisions_count
  * @property-read \App\Models\User $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile board()

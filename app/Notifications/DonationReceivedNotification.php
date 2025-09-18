@@ -32,8 +32,8 @@ class DonationReceivedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $isRecurring = $this->transaction->type === 'recurring';
-        $subject = $isRecurring 
-            ? 'Thank you for your ongoing support!' 
+        $subject = $isRecurring
+            ? 'Thank you for your ongoing support!'
             : 'Thank you for your donation!';
 
         $message = (new MailMessage)
@@ -41,7 +41,7 @@ class DonationReceivedNotification extends Notification implements ShouldQueue
             ->greeting('Hello!')
             ->line('Thank you so much for your generous ' . ($isRecurring ? 'monthly contribution' : 'donation') . ' to the Corvallis Music Collective!')
             ->line('**Donation Details:**')
-            ->line('Amount: $' . number_format($this->transaction->amount, 2))
+            ->line('Amount: $' . number_format($this->transaction->amount->getAmount()->toFloat(), 2))
             ->line('Date: ' . $this->transaction->created_at->format('M j, Y g:i A'));
 
         if ($isRecurring) {
@@ -58,7 +58,7 @@ class DonationReceivedNotification extends Notification implements ShouldQueue
             ->line('• Support local musicians and artists')
             ->line('• Keep our programs accessible to everyone');
 
-        if ($isRecurring && $this->transaction->user && $this->transaction->amount >= 10) {
+        if ($isRecurring && $this->transaction->user && $this->transaction->amount->isGreaterThanOrEqualTo(10)) {
             $message->line('**Sustaining Member Benefits:**')
                 ->line('As a sustaining member, you now have access to:')
                 ->line('• 4 free practice space hours each month')
@@ -78,7 +78,7 @@ class DonationReceivedNotification extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): array
     {
         $isRecurring = $this->transaction->type === 'recurring';
-        
+
         return [
             'title' => $isRecurring ? 'Monthly Donation Received' : 'Donation Received',
             'body' => 'Thank you for your $' . number_format($this->transaction->amount, 2) . ' ' . ($isRecurring ? 'monthly donation' : 'donation') . '!',

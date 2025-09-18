@@ -26,8 +26,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property string $severity
  * @property string $status
  * @property string $priority
- * @property string|null $estimated_cost
- * @property string|null $actual_cost
  * @property string|null $repair_notes
  * @property \Illuminate\Support\Carbon $discovered_at
  * @property \Illuminate\Support\Carbon|null $started_at
@@ -35,13 +33,55 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \App\Models\Equipment $equipment
- * @property-read \App\Models\EquipmentLoan|null $loan
- * @property-read \App\Models\User $reportedBy
+ * @property int|null $estimated_cost
+ * @property int|null $actual_cost
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
+ * @property-read int|null $activities_count
  * @property-read \App\Models\User|null $assignedTo
- * @property-read bool $is_open
- * @property-read bool $is_high_priority
+ * @property-read \App\Models\Equipment $equipment
  * @property-read int $days_open
+ * @property-read bool $is_high_priority
+ * @property-read bool $is_open
+ * @property-read string $priority_color
+ * @property-read string $severity_color
+ * @property-read string $status_color
+ * @property-read \App\Models\EquipmentLoan|null $loan
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
+ * @property-read \App\Models\User $reportedBy
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport assigned()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport bySeverity(string $severity)
+ * @method static \Database\Factories\EquipmentDamageReportFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport forEquipment(\App\Models\Equipment $equipment)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport highPriority()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport open()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport unassigned()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereActualCost($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereAssignedToId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereCompletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereDiscoveredAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereEquipmentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereEquipmentLoanId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereEstimatedCost($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport wherePriority($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereRepairNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereReportedById($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereSeverity($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereStartedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport withoutTrashed()
+ * @mixin \Eloquent
  */
 class EquipmentDamageReport extends Model implements HasMedia
 {

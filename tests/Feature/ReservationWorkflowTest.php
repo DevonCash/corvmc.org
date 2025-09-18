@@ -29,7 +29,7 @@ class ReservationWorkflowTest extends TestCase
 
         $reservation = ReservationService::createReservation($user, $start, $end);
 
-        $this->assertEquals(30.00, $reservation->cost);
+        $this->assertEquals(30.00, $reservation->cost->getAmount()->toFloat()); // 2 hours * $15
         $this->assertEquals(2, $reservation->hours_used);
         $this->assertEquals('confirmed', $reservation->status);
         $this->assertFalse($reservation->is_recurring);
@@ -46,7 +46,7 @@ class ReservationWorkflowTest extends TestCase
 
         $reservation = ReservationService::createReservation($user, $start, $end);
 
-        $this->assertEquals(0.00, $reservation->cost);
+        $this->assertTrue($reservation->cost->isZero());
         $this->assertEquals(2, $reservation->hours_used);
         $this->assertEquals(2, $user->getRemainingFreeHours());
     }
@@ -77,7 +77,7 @@ class ReservationWorkflowTest extends TestCase
 
         $reservation = ReservationService::createReservation($user, $start, $end);
 
-        $this->assertEquals(30.00, $reservation->cost); // 2 hours * $15
+        $this->assertEquals(30.00, $reservation->cost->getAmount()->toFloat()); // 2 hours * $15
         $this->assertEquals(3, $reservation->hours_used);
         $this->assertEquals(0, $user->getRemainingFreeHours());
     }
@@ -98,7 +98,7 @@ class ReservationWorkflowTest extends TestCase
 
         $reservation = ReservationService::createReservation($user, $start, $end);
 
-        $this->assertEquals(0.00, $reservation->cost);
+        $this->assertTrue($reservation->cost->isZero());
         $this->assertTrue($user->isSustainingMember());
     }
 
@@ -142,7 +142,7 @@ class ReservationWorkflowTest extends TestCase
 
         $this->assertEquals($newStart, $updated->reserved_at);
         $this->assertEquals($newEnd, $updated->reserved_until);
-        $this->assertEquals(45.00, $updated->cost); // 3 hours * $15
+        $this->assertEquals(45.00, $updated->cost->getAmount()->toFloat()); // 3 hours * $15
         $this->assertEquals(3, $updated->hours_used);
     }
 
@@ -300,7 +300,7 @@ class ReservationWorkflowTest extends TestCase
         $this->assertEquals(5, $stats['this_month_hours']); // 2 + 3
         $this->assertEquals(2, $stats['free_hours_used']);
         $this->assertEquals(2, $stats['remaining_free_hours']); // 4 - 2
-        $this->assertEquals(30.00, $stats['total_spent']); // 15 + 15
+        $this->assertEquals(3000, $stats['total_spent']); // 15 + 15
         $this->assertTrue($stats['is_sustaining_member']);
     }
 
@@ -358,7 +358,7 @@ class ReservationWorkflowTest extends TestCase
 
         $reservation = ReservationService::createReservation($user, $start, $end);
 
-        $this->assertEquals(0.00, $reservation->cost);
+        $this->assertTrue($reservation->cost->isZero());
         $this->assertEquals(2, $user->fresh()->getRemainingFreeHours());
     }
 }

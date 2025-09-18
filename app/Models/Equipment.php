@@ -30,31 +30,89 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property string $condition
  * @property string $acquisition_type
  * @property int|null $provider_id
- * @property ContactData|null $provider_contact
+ * @property \Spatie\LaravelData\Contracts\BaseData|\Spatie\LaravelData\Contracts\TransformableData|null $provider_contact
  * @property \Illuminate\Support\Carbon $acquisition_date
  * @property \Illuminate\Support\Carbon|null $return_due_date
  * @property string|null $acquisition_notes
  * @property string $ownership_status
  * @property string $status
- * @property string|null $estimated_value
+ * @property numeric|null $estimated_value
  * @property string|null $location
  * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property int|null $parent_equipment_id
  * @property bool $can_lend_separately
  * @property bool $is_kit
  * @property int $sort_order
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \App\Models\User|null $provider
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EquipmentLoan> $loans
+ * @property EquipmentState $state
+ * @property bool $loanable
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
+ * @property-read int|null $activities_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Equipment> $children
+ * @property-read int|null $children_count
  * @property-read \App\Models\EquipmentLoan|null $currentLoan
- * @property-read \App\Models\Equipment|null $parentEquipment
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Equipment> $components
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EquipmentDamageReport> $damageReports
+ * @property-read int|null $damage_reports_count
  * @property-read bool $is_available
  * @property-read bool $is_checked_out
  * @property-read bool $is_overdue
  * @property-read string $provider_display
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EquipmentLoan> $loans
+ * @property-read int|null $loans_count
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EquipmentDamageReport> $openDamageReports
+ * @property-read int|null $open_damage_reports_count
+ * @property-read Equipment|null $parent
+ * @property-read \App\Models\User|null $provider
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment available()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment components()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment donated()
+ * @method static \Database\Factories\EquipmentFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment kits()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment ofType(string $type)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment onLoanToCmc()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment orWhereNotState(string $column, $states)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment orWhereState(string $column, $states)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment standalone()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereAcquisitionDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereAcquisitionNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereAcquisitionType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereBrand($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereCanLendSeparately($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereCondition($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereEstimatedValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereIsKit($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereLoanable($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereLocation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereModel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereNotState(string $column, $states)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereOwnershipStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereParentEquipmentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereProviderContact($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereProviderId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereReturnDueDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereSerialNumber($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereSortOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment withoutTrashed()
+ * @mixin \Eloquent
  */
 class Equipment extends Model implements HasMedia
 {

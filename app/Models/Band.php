@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 
 /**
  * Represents a band in the application.
- *
+ * 
  * It includes details about the band's name, bio, links, and contact information.
  * The band can have multiple members and exactly one owner.
  *
@@ -57,8 +57,12 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\BandMember> $memberships
  * @property-read int|null $memberships_count
  * @property-read \App\Models\User|null $owner
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $pendingRevisions
+ * @property-read int|null $pending_revisions_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $reports
  * @property-read int|null $reports_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $revisions
+ * @property-read int|null $revisions_count
  * @property \Illuminate\Database\Eloquent\Collection<int, \Spatie\Tags\Tag> $tags
  * @property-read int|null $tags_count
  * @method static \Database\Factories\BandFactory factory($count = null, $state = [])

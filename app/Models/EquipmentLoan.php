@@ -30,27 +30,71 @@ use Spatie\Period\Precision;
  * @property int $id
  * @property int $equipment_id
  * @property int $borrower_id
- * @property \Illuminate\Support\Carbon $reserved_from
  * @property \Illuminate\Support\Carbon|null $checked_out_at
  * @property \Illuminate\Support\Carbon $due_at
  * @property \Illuminate\Support\Carbon|null $returned_at
- * @property string $status
- * @property string $condition_out
  * @property string|null $condition_in
- * @property string $security_deposit
- * @property string $rental_fee
+ * @property numeric $security_deposit
+ * @property numeric $rental_fee
  * @property string|null $notes
  * @property string|null $damage_notes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Equipment $equipment
+ * @property EquipmentLoanState $state
+ * @property \Illuminate\Support\Carbon $reserved_from
+ * @property string|null $condition_out
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
+ * @property-read int|null $activities_count
  * @property-read \App\Models\User $borrower
- * @property-read bool $is_active
- * @property-read bool $is_overdue
- * @property-read bool $is_returned
+ * @property-read \App\Models\Equipment $equipment
  * @property-read int $days_out
  * @property-read int $days_overdue
+ * @property-read bool $is_active
+ * @property-read bool $is_overdue
+ * @property-read bool $is_reservation_active
+ * @property-read bool $is_reservation_expired
+ * @property-read bool $is_reservation_upcoming
+ * @property-read bool $is_returned
+ * @property-read string $total_fees
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Transaction> $transactions
+ * @property-read int|null $transactions_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan byBorrower(\App\Models\User $borrower)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan cancelled()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan checkedOut()
+ * @method static \Database\Factories\EquipmentLoanFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan forEquipment(\App\Models\Equipment $equipment)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan onDate($date)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan orWhereNotState(string $column, $states)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan orWhereState(string $column, $states)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan overdue()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan overlappingPeriod(\Spatie\Period\Period $period)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan requiringMemberAction()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan requiringStaffAction()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan returned()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan upcomingReservations()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereBorrowerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereCheckedOutAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereConditionIn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereConditionOut($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereDamageNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereDueAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereEquipmentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereNotState(string $column, $states)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereRentalFee($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereReservedFrom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereReturnedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereSecurityDeposit($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan withActiveReservations()
+ * @mixin \Eloquent
  */
 class EquipmentLoan extends Model
 {
