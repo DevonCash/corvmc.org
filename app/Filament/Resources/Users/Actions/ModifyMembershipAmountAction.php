@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Users\Actions;
 
-use App\Services\PaymentService;
-use App\Services\UserSubscriptionService;
+use App\Facades\PaymentService;
+use App\Facades\UserSubscriptionService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\Actions;
@@ -32,7 +32,7 @@ class ModifyMembershipAmountAction
                     ->live()
                     ->tooltips(RawJs::make('`$${$value.toFixed(2)}`'))
                     ->default(function ($record) {
-                        $displayInfo = \UserSubscriptionService::getSubscriptionDisplayInfo($record);
+                        $displayInfo = UserSubscriptionService::getSubscriptionDisplayInfo($record);
 
                         if ($displayInfo['has_subscription']) {
                             $currentAmount = $displayInfo['amount'];
@@ -50,7 +50,7 @@ class ModifyMembershipAmountAction
                     ->helperText(function ($get) {
                         $amount = $get('amount');
                         if ($amount > 0) {
-                            $feeInfo = \PaymentService::getFeeDisplayInfo($amount);
+                            $feeInfo = PaymentService::getFeeDisplayInfo($amount);
 
                             return $feeInfo['accurate_message'];
                         }
@@ -67,16 +67,16 @@ class ModifyMembershipAmountAction
                             return 'Please select a contribution amount';
                         }
 
-                        $breakdown = \PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
+                        $breakdown = PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
 
-                        return $breakdown['description'] . ' = ' . \PaymentService::formatMoney($breakdown['total_amount']) . ' total per month';
+                        return $breakdown['description'] . ' = ' . PaymentService::formatMoney($breakdown['total_amount']) . ' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])
             ->action(function (array $data, $record) {
                 $baseAmount = floatval($data['amount']);
 
-                $result = \UserSubscriptionService::updateSubscriptionAmount($record, $baseAmount, $data['cover_fees']);
+                $result = UserSubscriptionService::updateSubscriptionAmount($record, $baseAmount, $data['cover_fees']);
 
                 if ($result['success']) {
                     \Filament\Notifications\Notification::make()

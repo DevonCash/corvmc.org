@@ -17,6 +17,7 @@ use Spatie\Image\Enums\CropPosition;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 use App\Traits\Reportable;
+use App\Traits\Revisionable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 
 /**
@@ -90,7 +91,7 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
  */
 class Band extends Model implements HasMedia
 {
-    use HasFactory, HasFlags, HasSlug, HasTags, InteractsWithMedia, LogsActivity, Reportable;
+    use HasFactory, HasFlags, HasSlug, HasTags, InteractsWithMedia, LogsActivity, Reportable, Revisionable;
 
     // Report configuration
     protected static int $reportThreshold = 4;
@@ -117,6 +118,22 @@ class Band extends Model implements HasMedia
         'contact' => ContactData::class,
         'embeds' => 'array',
     ];
+    
+    /**
+     * Auto-approval mode for bands - personal content
+     */
+    protected string $autoApprove = 'personal';
+    
+    /**
+     * Get revision exempt fields for bands.
+     */
+    protected function getRevisionExemptFields(): array
+    {
+        return [
+            'owner_id', // Don't allow changing ownership through revisions
+            'slug', // Slug changes are system-managed
+        ];
+    }
 
     /**
      * The "booted" method of the model.

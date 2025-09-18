@@ -8,6 +8,16 @@ use App\Models\StaffProfileType;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
+    // Create minimal permissions needed for tests
+    \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'approve revisions']);
+    \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'reject revisions']);
+    \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'view revisions']);
+    \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'manage staff profiles']);
+    
+    // Create admin role and assign permissions
+    $adminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
+    $adminRole->givePermissionTo(['approve revisions', 'reject revisions', 'view revisions', 'manage staff profiles']);
+
     $this->admin = \App\Models\User::factory()->create(['name' => 'Site Administrator']);
     $this->staffMember = \App\Models\User::factory()->create(['name' => 'Staff Member']);
     $this->boardMember = \App\Models\User::factory()->create(['name' => 'Board Member']);

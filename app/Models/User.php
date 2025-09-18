@@ -112,6 +112,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'email',
         'email_verified_at',
         'password',
+        'trust_points',
+        'community_event_trust_points',
     ];
 
     /**
@@ -153,6 +155,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             'password' => 'hashed',
             'settings' => UserSettingsData::class,
             'staff_social_links' => 'array',
+            'trust_points' => 'array',
         ];
     }
 

@@ -17,6 +17,7 @@ use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Image\Enums\CropPosition;
 use App\Traits\Reportable;
+use App\Traits\Revisionable;
 
 /**
  * Represents a member profile in the application.
@@ -82,12 +83,25 @@ use App\Traits\Reportable;
  */
 class MemberProfile extends Model implements HasMedia
 {
-    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity, Reportable;
+    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity, Reportable, Revisionable;
     
     // Report configuration
     protected static int $reportThreshold = 5;
     protected static bool $reportAutoHide = false;
     protected static string $reportableTypeName = 'Member Profile';
+    
+    /**
+     * Auto-approval mode for member profiles - personal content
+     */
+    protected string $autoApprove = 'personal';
+    
+    // Revision configuration - override trait method
+    protected function getRevisionExemptFields(): array
+    {
+        return [
+            'user_id', // Don't allow changing ownership through revisions
+        ];
+    }
 
     public static function getGlobalSearchResultTitle(Model $record): string | Htmlable
     {

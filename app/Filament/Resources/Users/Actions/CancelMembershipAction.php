@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Users\Actions;
 
-use App\Services\UserSubscriptionService;
+use App\Facades\UserSubscriptionService;
 use Filament\Actions\Action;
 
 class CancelMembershipAction
@@ -21,7 +21,7 @@ class CancelMembershipAction
             // ->visible(fn($record) => $record?->subscription('default')?->active())
 
             ->action(function ($record) {
-                $result = \UserSubscriptionService::cancelSubscription($record);
+                $result = UserSubscriptionService::cancelSubscription($record);
 
                 if ($result['success']) {
                     \Filament\Notifications\Notification::make()

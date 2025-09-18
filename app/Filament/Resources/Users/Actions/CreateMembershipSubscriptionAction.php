@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Users\Actions;
 
-use App\Services\PaymentService;
-use App\Services\UserSubscriptionService;
+use App\Facades\PaymentService;
+use App\Facades\UserSubscriptionService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Slider;
 use Filament\Forms\Components\Slider\Enums\PipsMode;
@@ -38,7 +38,7 @@ class CreateMembershipSubscriptionAction
                     ->helperText(function ($get) {
                         $amount = $get('amount');
                         if ($amount > 0) {
-                            $feeInfo = \PaymentService::getFeeDisplayInfo($amount);
+                            $feeInfo = PaymentService::getFeeDisplayInfo($amount);
 
                             return $feeInfo['message'];
                         }
@@ -55,15 +55,15 @@ class CreateMembershipSubscriptionAction
                             return 'Please select a contribution amount';
                         }
 
-                        $breakdown = \PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
+                        $breakdown = PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
 
-                        return $breakdown['description'] . ' = ' . $paymentService->formatMoney($breakdown['total_amount']) . ' total per month';
+                        return $breakdown['description'] . ' = ' . PaymentService::formatMoney($breakdown['total_amount']) . ' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])
             ->action(function (array $data, $record) {
                 $baseAmount = floatval($data['amount']);
-                $result = \UserSubscriptionService::createSubscription($record, $baseAmount, $data['cover_fees']);
+                $result = UserSubscriptionService::createSubscription($record, $baseAmount, $data['cover_fees']);
 
                 if ($result['success']) {
                     redirect($result['checkout_url']);

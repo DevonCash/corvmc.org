@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Reports\Tables;
 
 use App\Models\Report;
 use App\Models\User;
-use App\Services\ReportService;
+use App\Facades\ReportService;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Table;
@@ -108,7 +108,7 @@ class ReportsTable
                             ->rows(3),
                     ])
                     ->action(function ($records, array $data): void {
-                        $count = \ReportService::bulkResolveReports(
+                        $count = ReportService::bulkResolveReports(
                             $records->pluck('id')->toArray(),
                             User::me(),
                             'upheld',
@@ -133,7 +133,7 @@ class ReportsTable
                             ->rows(3),
                     ])
                     ->action(function ($records, array $data): void {
-                        $count = \ReportService::bulkResolveReports(
+                        $count = ReportService::bulkResolveReports(
                             $records->pluck('id')->toArray(),
                             User::me(),
                             'dismissed',

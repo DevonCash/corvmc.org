@@ -5,7 +5,9 @@ use App\Models\MemberProfile;
 use Illuminate\Support\Facades\Auth;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create([
+        'trust_points' => ['App\Models\MemberProfile' => 0, 'global' => 0]
+    ]);
     $this->actingAs($this->user);
 });
 
@@ -50,6 +52,7 @@ describe('Member Profile Creation and Management', function () {
         $updatedBio = 'Updated bio with new musical experiences and collaborations';
 
         $this->user->profile->update(['bio' => $originalBio]);
+        $this->user->profile->refresh();
         expect($this->user->profile->bio)->toBe($originalBio);
 
         // Update the profile
@@ -79,7 +82,7 @@ describe('Member Directory Search and Discovery', function () {
     beforeEach(function () {
         // Create additional test members with varied profiles
         $this->guitarist = User::factory()->create(['name' => 'Jane Guitarist']);
-        $this->guitarist->profile->update([
+        $this->guitarist->profile->forceUpdate([
             'bio' => 'Rock guitarist looking for band members',
             'visibility' => 'public'
         ]);
@@ -87,7 +90,7 @@ describe('Member Directory Search and Discovery', function () {
         $this->guitarist->profile->syncTagsWithType(['rock', 'metal'], 'genre');
 
         $this->drummer = User::factory()->create(['name' => 'Mike Drummer']);
-        $this->drummer->profile->update([
+        $this->drummer->profile->forceUpdate([
             'bio' => 'Jazz drummer with classical training',
             'visibility' => 'public'
         ]);
@@ -95,7 +98,7 @@ describe('Member Directory Search and Discovery', function () {
         $this->drummer->profile->syncTagsWithType(['jazz', 'fusion'], 'genre');
 
         $this->privateUser = User::factory()->create(['name' => 'Private User']);
-        $this->privateUser->profile->update([
+        $this->privateUser->profile->forceUpdate([
             'bio' => 'This should not appear in searches',
             'visibility' => 'private'
         ]);
@@ -247,13 +250,13 @@ describe('Privacy and Visibility Enforcement', function () {
     beforeEach(function () {
         // Create users with different visibility levels
         $this->publicUser = User::factory()->create(['name' => 'Public Member']);
-        $this->publicUser->profile->update(['visibility' => 'public', 'bio' => 'Public bio']);
+        $this->publicUser->profile->forceUpdate(['visibility' => 'public', 'bio' => 'Public bio']);
 
         $this->membersUser = User::factory()->create(['name' => 'Members Only']);
-        $this->membersUser->profile->update(['visibility' => 'members', 'bio' => 'Members-only bio']);
+        $this->membersUser->profile->forceUpdate(['visibility' => 'members', 'bio' => 'Members-only bio']);
 
         $this->privateUser = User::factory()->create(['name' => 'Private Member']);
-        $this->privateUser->profile->update(['visibility' => 'private', 'bio' => 'Private bio']);
+        $this->privateUser->profile->forceUpdate(['visibility' => 'private', 'bio' => 'Private bio']);
     });
 
     it('enforces privacy settings throughout the system for logged-in members', function () {

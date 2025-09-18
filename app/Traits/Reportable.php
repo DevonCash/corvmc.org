@@ -3,6 +3,8 @@
 namespace App\Traits;
 
 use App\Models\Report;
+use App\Models\User;
+use App\Services\TrustService;
 
 trait Reportable
 {
@@ -74,5 +76,154 @@ trait Reportable
             ->first();
             
         return $mostCommon?->reason;
+    }
+
+    // Trust System Integration
+
+    /**
+     * Get the content creator/owner for trust calculations.
+     */
+    public function getContentCreator(): ?User
+    {
+        // Try common relationship names
+        if (method_exists($this, 'organizer') && $this->organizer) {
+            return $this->organizer;
+        }
+        
+        if (method_exists($this, 'user') && $this->user) {
+            return $this->user;
+        }
+        
+        if (method_exists($this, 'creator') && $this->creator) {
+            return $this->creator;
+        }
+        
+        if (method_exists($this, 'owner') && $this->owner) {
+            return $this->owner;
+        }
+        
+        // Check for direct user_id field
+        if (isset($this->user_id)) {
+            return User::find($this->user_id);
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get the content type for trust system.
+     */
+    public function getTrustContentType(): string
+    {
+        return match(class_basename($this)) {
+            'CommunityEvent' => 'community_events',
+            'MemberProfile' => 'member_profiles',
+            'Band' => 'bands',
+            'Production' => 'productions',
+            default => 'global'
+        };
+    }
+
+    /**
+     * Get trust level information for the content creator.
+     */
+    public function getCreatorTrustInfo(): ?array
+    {
+        $creator = $this->getContentCreator();
+        if (!$creator) {
+            return null;
+        }
+
+        $trustService = app(TrustService::class);
+        return $trustService->getTrustLevelInfo($creator, $this->getTrustContentType());
+    }
+
+    /**
+     * Get trust badge for the content creator.
+     */
+    public function getCreatorTrustBadge(): ?array
+    {
+        $creator = $this->getContentCreator();
+        if (!$creator) {
+            return null;
+        }
+
+        $trustService = app(TrustService::class);
+        return $trustService->getTrustBadge($creator, $this->getTrustContentType());
+    }
+
+    /**
+     * Determine approval workflow based on creator's trust level.
+     */
+    public function getApprovalWorkflow(): array
+    {
+        $creator = $this->getContentCreator();
+        if (!$creator) {
+            return [
+                'requires_approval' => true,
+                'auto_publish' => false,
+                'review_priority' => 'standard',
+                'estimated_review_time' => 72
+            ];
+        }
+
+        $trustService = app(TrustService::class);
+        return $trustService->determineApprovalWorkflow($creator, $this->getTrustContentType());
+    }
+
+    /**
+     * Award trust points to creator for successful content.
+     */
+    public function awardCreatorTrustPoints(): void
+    {
+        $creator = $this->getContentCreator();
+        if (!$creator) {
+            return;
+        }
+
+        $trustService = app(TrustService::class);
+        $trustService->awardSuccessfulContent($creator, $this, $this->getTrustContentType());
+    }
+
+    /**
+     * Penalize creator for content violations.
+     */
+    public function penalizeCreatorTrust(string $violationType, string $reason = ''): void
+    {
+        $creator = $this->getContentCreator();
+        if (!$creator) {
+            return;
+        }
+
+        $trustService = app(TrustService::class);
+        $trustService->penalizeViolation($creator, $violationType, $this->getTrustContentType(), $reason);
+    }
+
+    /**
+     * Check if content can be auto-approved based on creator trust.
+     */
+    public function canAutoApprove(): bool
+    {
+        $creator = $this->getContentCreator();
+        if (!$creator) {
+            return false;
+        }
+
+        $trustService = app(TrustService::class);
+        return $trustService->canAutoApprove($creator, $this->getTrustContentType());
+    }
+
+    /**
+     * Check if content gets fast-track approval.
+     */
+    public function getFastTrackApproval(): bool
+    {
+        $creator = $this->getContentCreator();
+        if (!$creator) {
+            return false;
+        }
+
+        $trustService = app(TrustService::class);
+        return $trustService->getFastTrackApproval($creator, $this->getTrustContentType());
     }
 }

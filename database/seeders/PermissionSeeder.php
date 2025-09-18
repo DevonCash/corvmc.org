@@ -54,6 +54,14 @@ class PermissionSeeder extends Seeder
             'moderate bands',
             'approve band creation',
 
+            // Content Revision Management
+            'view revisions',
+            'approve revisions',
+            'reject revisions',
+
+            // Staff Profile Management
+            'manage staff profiles',
+
             // Band Membership
             'manage band members',
             'invite band members',
@@ -121,6 +129,10 @@ class PermissionSeeder extends Seeder
             'manage band links',
             'manage band contact info',
             'view private member profiles',
+            'view revisions',
+            'approve revisions',
+            'reject revisions',
+            'manage staff profiles',
         ]);
 
         // Production Manager - Event and show management

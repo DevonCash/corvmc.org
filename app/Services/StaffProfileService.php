@@ -43,8 +43,13 @@ class StaffProfileService
             // }
         }
 
-        return DB::transaction(function () use ($staffProfile, $data) {
-            $staffProfile->update($data);
+        return DB::transaction(function () use ($staffProfile, $data, $user) {
+            // Admin users can make direct updates, bypassing the revision system
+            if ($user?->hasPermissionTo('manage staff profiles')) {
+                $staffProfile->forceUpdate($data);
+            } else {
+                $staffProfile->update($data);
+            }
 
             // Handle profile image upload if provided
             if (isset($data['profile_image'])) {

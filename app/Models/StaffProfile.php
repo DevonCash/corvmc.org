@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Traits\Revisionable;
 
 enum StaffProfileType: string
 {
@@ -58,7 +59,12 @@ enum StaffProfileType: string
  */
 class StaffProfile extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, Revisionable;
+
+    /**
+     * Auto-approval mode for staff profiles - organizational content never auto-approves
+     */
+    protected string $autoApprove = 'never';
 
     protected $fillable = [
         'name',
