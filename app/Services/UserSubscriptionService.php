@@ -334,7 +334,7 @@ class UserSubscriptionService
                 'line_items' => [[
                     'price_data' => [
                         'currency' => 'usd',
-                        'unit_amount' => (int) $totalAmount->getMinorAmount(),
+                        'unit_amount' => $totalAmount->getMinorAmount()->toInt(),
                         'recurring' => ['interval' => 'month'],
                         'product_data' => [
                             'name' => 'Sliding Scale Membership',
