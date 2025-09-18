@@ -196,7 +196,7 @@ class PaymentService
             'description' => sprintf(
                 '$%.2f membership + $%.2f processing fees',
                 $baseAmount,
-                $displayFee
+                $actualFeeAmount
             ),
         ];
     }
@@ -208,13 +208,14 @@ class PaymentService
     {
         $fee = $this->calculateProcessingFee($baseAmount);
         $totalWithCoverage = $this->calculateTotalWithFeeCoverage($baseAmount);
+        $actualFeeAmount = $totalWithCoverage - $baseAmount;
 
         return [
-            'display_fee' => $fee,
+            'display_fee' => $actualFeeAmount,
             'total_with_coverage' => $totalWithCoverage,
             'message' => sprintf(
-                'Add $%.2f to cover Stripe fees (Total: $%.2f)',
-                $fee,
+                'Add $%.2f to cover fees (Total: $%.2f)',
+                $actualFeeAmount,
                 $totalWithCoverage
             ),
             'accurate_message' => sprintf(
