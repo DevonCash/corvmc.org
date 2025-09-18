@@ -6,6 +6,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Notifications\DonationReceivedNotification;
 use App\Facades\PaymentService;
+use Brick\Money\Money;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -317,7 +318,7 @@ class UserSubscriptionService
     /**
      * Create a Stripe subscription with sliding scale pricing.
      */
-    public function createSubscription(User $user, float $baseAmount, bool $coverFees = false): array
+    public function createSubscription(User $user, Money $baseAmount, bool $coverFees = false): array
     {
         try {
             // Ensure user has Stripe customer ID

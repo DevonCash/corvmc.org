@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Actions;
 
 use App\Facades\PaymentService;
 use App\Facades\UserSubscriptionService;
+use Brick\Money\Money;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Slider;
 use Filament\Forms\Components\Slider\Enums\PipsMode;
@@ -37,8 +38,8 @@ class CreateMembershipSubscriptionAction
                     ->label('Cover Processing Fees')
                     ->columnSpan(2)
                     ->helperText(function ($get) {
-                        $amount = $get('amount');
-                        if ($amount > 0) {
+                        $amount = Money::of($get('amount'), 'USD');
+                        if (!$amount->isZero()) {
                             $feeInfo = PaymentService::getFeeDisplayInfo($amount);
 
                             return $feeInfo['message'];
@@ -51,19 +52,17 @@ class CreateMembershipSubscriptionAction
                 TextEntry::make('total_preview')
                     ->label('Monthly Total')
                     ->state(function ($get) {
-                        $amount = $get('amount') ?: 0;
-                        if ($amount <= 0) {
+                        $amount = Money::of($get('amount') ?: 0, 'USD');
+                        if ($amount->isZero()) {
                             return 'Please select a contribution amount';
                         }
-
                         $breakdown = PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
-
                         return $breakdown['description'] . ' = ' . PaymentService::formatMoney($breakdown['total_amount']) . ' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])
             ->action(function (array $data, $record) {
-                $baseAmount = floatval($data['amount']);
+                $baseAmount = Money::of($data['amount'], 'USD');
                 $result = UserSubscriptionService::createSubscription($record, $baseAmount, $data['cover_fees']);
 
                 if ($result['success']) {

@@ -159,7 +159,7 @@ class PaymentService
     {
         $percentageFee = $baseAmount->multipliedBy(self::STRIPE_RATE, \Brick\Math\RoundingMode::HALF_UP);
         $fixedFee = Money::ofMinor(self::STRIPE_FIXED_FEE_CENTS, 'USD');
-        
+
         return $percentageFee->plus($fixedFee);
     }
 
@@ -175,7 +175,7 @@ class PaymentService
         $fixedFee = Money::ofMinor(self::STRIPE_FIXED_FEE_CENTS, 'USD');
         $numerator = $baseAmount->plus($fixedFee);
         $denominator = 1 - self::STRIPE_RATE;
-        
+
         return $numerator->dividedBy($denominator, \Brick\Math\RoundingMode::HALF_UP);
     }
 
@@ -186,9 +186,8 @@ class PaymentService
     {
         if (! $coverFees) {
             return [
-                'base_amount' => $baseAmount->getAmount()->toFloat(),
-                'fee_amount' => 0,
-                'total_amount' => $baseAmount->getAmount()->toFloat(),
+                'base_amount' => $baseAmount,
+                'total_amount' => $baseAmount,
                 'display_fee' => 0,
                 'description' => sprintf('$%.2f membership', $baseAmount->getAmount()->toFloat()),
             ];
@@ -198,10 +197,10 @@ class PaymentService
         $actualFeeAmount = $totalWithFeeCoverage->minus($baseAmount);
 
         return [
-            'base_amount' => $baseAmount->getAmount()->toFloat(),
-            'fee_amount' => $actualFeeAmount->getAmount()->toFloat(),
-            'total_amount' => $totalWithFeeCoverage->getAmount()->toFloat(),
-            'display_fee' => $actualFeeAmount->getAmount()->toFloat(),
+            'base_amount' => $baseAmount,
+            'fee_amount' => $actualFeeAmount,
+            'total_amount' => $totalWithFeeCoverage,
+            'display_fee' => $actualFeeAmount,
             'description' => sprintf(
                 '$%.2f membership + $%.2f processing fees',
                 $baseAmount->getAmount()->toFloat(),
@@ -222,13 +221,8 @@ class PaymentService
             'display_fee' => $actualFeeAmount->getAmount()->toFloat(),
             'total_with_coverage' => $totalWithCoverage->getAmount()->toFloat(),
             'message' => sprintf(
-                'Add $%.2f to cover fees (Total: $%.2f)',
-                $actualFeeAmount->getAmount()->toFloat(),
-                $totalWithCoverage->getAmount()->toFloat()
-            ),
-            'accurate_message' => sprintf(
-                'Covers processing fees (Total: $%.2f)',
-                $totalWithCoverage->getAmount()->toFloat()
+                'Add $%.2f to cover fees',
+                $actualFeeAmount->getAmount()->toFloat()
             ),
         ];
     }
