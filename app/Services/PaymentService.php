@@ -215,7 +215,7 @@ class PaymentService
             'message' => sprintf(
                 'Add $%.2f to cover Stripe fees (Total: $%.2f)',
                 $fee,
-                $fee + $baseAmount
+                $totalWithCoverage
             ),
             'accurate_message' => sprintf(
                 'Covers processing fees (Total: $%.2f)',
