@@ -106,7 +106,7 @@ class PaymentService
             return 'Free';
         }
 
-        return '$' . number_format($reservation->cost->getAmount()->toFloat(), 2);
+        return $reservation->cost->formatTo('en_US');
     }
 
     /**
@@ -186,8 +186,9 @@ class PaymentService
     {
         if (! $coverFees) {
             return [
-                'base_amount' => $baseAmount,
-                'total_amount' => $baseAmount,
+                'base_amount' => $baseAmount->getAmount()->toFloat(),
+                'fee_amount' => 0,
+                'total_amount' => $baseAmount->getAmount()->toFloat(),
                 'display_fee' => 0,
                 'description' => sprintf('$%.2f membership', $baseAmount->getAmount()->toFloat()),
             ];
@@ -197,10 +198,10 @@ class PaymentService
         $actualFeeAmount = $totalWithFeeCoverage->minus($baseAmount);
 
         return [
-            'base_amount' => $baseAmount,
-            'fee_amount' => $actualFeeAmount,
-            'total_amount' => $totalWithFeeCoverage,
-            'display_fee' => $actualFeeAmount,
+            'base_amount' => $baseAmount->getAmount()->toFloat(),
+            'fee_amount' => $actualFeeAmount->getAmount()->toFloat(),
+            'total_amount' => $totalWithFeeCoverage->getAmount()->toFloat(),
+            'display_fee' => $actualFeeAmount->getAmount()->toFloat(),
             'description' => sprintf(
                 '$%.2f membership + $%.2f processing fees',
                 $baseAmount->getAmount()->toFloat(),
@@ -221,7 +222,7 @@ class PaymentService
             'display_fee' => $actualFeeAmount->getAmount()->toFloat(),
             'total_with_coverage' => $totalWithCoverage->getAmount()->toFloat(),
             'message' => sprintf(
-                'Add $%.2f to cover fees',
+                'Add $%.2f to cover processing fees (2.9%% + $0.30)',
                 $actualFeeAmount->getAmount()->toFloat()
             ),
         ];
@@ -232,7 +233,7 @@ class PaymentService
      */
     public function formatMoney(Money $amount): string
     {
-        return '$' . number_format($amount->getAmount()->toFloat(), 2);
+        return $amount->formatTo('en_US');
     }
 
     /**

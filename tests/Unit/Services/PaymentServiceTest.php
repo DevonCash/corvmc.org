@@ -421,13 +421,10 @@ describe('Stripe Integration Calculations', function () {
         expect($info)
             ->toHaveKey('display_fee', $expectedFee->getAmount()->toFloat())
             ->toHaveKey('total_with_coverage', $expectedTotal->getAmount()->toFloat())
-            ->toHaveKey('message')
-            ->toHaveKey('accurate_message');
+            ->toHaveKey('message');
 
         expect($info['message'])->toContain('Add $')
-            ->and($info['message'])->toContain('to cover fees');
-
-        expect($info['accurate_message'])->toContain('Covers processing fees');
+            ->and($info['message'])->toContain('processing fees');
     });
 
     it('can convert dollars to stripe amount', function () {

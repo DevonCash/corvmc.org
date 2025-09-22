@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "export-kv": "deno run --allow-net --allow-read --allow-env --allow-write --unstable-kv --env-file scripts/denoKvExport.ts"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

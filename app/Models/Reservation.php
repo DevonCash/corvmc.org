@@ -254,7 +254,7 @@ class Reservation extends Model implements Eventable
             return 'Free';
         }
 
-        return '$' . number_format($this->cost->getAmount()->toFloat(), 2);
+        return $this->cost->formatTo('en_US');
     }
 
     /**

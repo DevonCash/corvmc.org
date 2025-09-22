@@ -41,7 +41,7 @@ class DonationReceivedNotification extends Notification implements ShouldQueue
             ->greeting('Hello!')
             ->line('Thank you so much for your generous ' . ($isRecurring ? 'monthly contribution' : 'donation') . ' to the Corvallis Music Collective!')
             ->line('**Donation Details:**')
-            ->line('Amount: $' . number_format($this->transaction->amount->getAmount()->toFloat(), 2))
+            ->line('Amount: ' . $this->transaction->amount->formatTo('en_US'))
             ->line('Date: ' . $this->transaction->created_at->format('M j, Y g:i A'));
 
         if ($isRecurring) {
@@ -81,7 +81,7 @@ class DonationReceivedNotification extends Notification implements ShouldQueue
 
         return [
             'title' => $isRecurring ? 'Monthly Donation Received' : 'Donation Received',
-            'body' => 'Thank you for your $' . number_format($this->transaction->amount->getAmount()->toFloat(), 2) . ' ' . ($isRecurring ? 'monthly donation' : 'donation') . '!',
+            'body' => 'Thank you for your ' . $this->transaction->amount->formatTo('en_US') . ' ' . ($isRecurring ? 'monthly donation' : 'donation') . '!',
             'icon' => 'heroicon-o-heart',
             'transaction_id' => $this->transaction->id,
             'amount' => $this->transaction->amount,

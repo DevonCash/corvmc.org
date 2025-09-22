@@ -167,6 +167,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('reservations.payment.success');
     Route::get('/reservations/{reservation}/payment/cancel', [\App\Http\Controllers\ReservationPaymentController::class, 'cancel'])
         ->name('reservations.payment.cancel');
+    
+    // Subscription checkout routes
+    Route::get('/subscriptions/checkout/success', [\App\Http\Controllers\SubscriptionCheckoutController::class, 'success'])
+        ->name('subscriptions.checkout.success');
+    Route::get('/subscriptions/checkout/cancel', [\App\Http\Controllers\SubscriptionCheckoutController::class, 'cancel'])
+        ->name('subscriptions.checkout.cancel');
 });
 
 // Email template preview (development only)

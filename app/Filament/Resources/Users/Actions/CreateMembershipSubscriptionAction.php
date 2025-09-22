@@ -57,7 +57,8 @@ class CreateMembershipSubscriptionAction
                             return 'Please select a contribution amount';
                         }
                         $breakdown = PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
-                        return $breakdown['description'] . ' = ' . PaymentService::formatMoney($breakdown['total_amount']) . ' total per month';
+                        $totalAmount = Money::of($breakdown['total_amount'], 'USD');
+                        return $breakdown['description'] . ' = ' . PaymentService::formatMoney($totalAmount) . ' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Production;
 use App\Models\Reservation;
+use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Observers\ProductionObserver;
@@ -14,6 +15,7 @@ use App\Observers\UserObserver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Cashier\Cashier;
 use Spatie\Tags\Tag;
 
 class AppServiceProvider extends ServiceProvider
@@ -41,6 +43,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Register custom Cashier models
+        Cashier::useSubscriptionModel(Subscription::class);
+
         // Register model observers for cache invalidation
         User::observe(UserObserver::class);
         Reservation::observe(ReservationObserver::class);
