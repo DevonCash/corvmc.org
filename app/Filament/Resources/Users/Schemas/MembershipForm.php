@@ -8,6 +8,7 @@ use App\Filament\Resources\Users\Actions\ModifyMembershipAmountAction;
 use App\Filament\Resources\Users\Actions\OpenBillingPortalAction;
 use App\Filament\Resources\Users\Actions\ResumeMembershipAction;
 use App\Facades\UserSubscriptionService;
+use App\Facades\MemberBenefitsService;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Section;
@@ -34,13 +35,13 @@ class MembershipForm
                     ->description('Your sustaining membership is active! You can change your contribution amount or access billing details below.')
                     ->columns(2)
                     ->visible(function ($record) {
-                        return $record->isSustainingMember() && !static::isSubscriptionCancelled($record);
+                        return $record->isSustainingMember();
                     })
                     ->schema([
                         TextEntry::make('remaining_free_hours')
                             ->label('Free Hours Remaining This Month')
                             ->state(function ($record) {
-                                $totalHours = UserSubscriptionService::getUserMonthlyFreeHours($record);
+                                $totalHours = MemberBenefitsService::getUserMonthlyFreeHours($record);
                                 return $record->getRemainingFreeHours() . ' / ' . $totalHours . ' hours';
                             }),
                         TextEntry::make('current_subscription')
@@ -88,7 +89,7 @@ class MembershipForm
                         TextEntry::make('remaining_free_hours')
                             ->label('Free Hours Remaining This Month')
                             ->state(function ($record) {
-                                $totalHours = UserSubscriptionService::getUserMonthlyFreeHours($record);
+                                $totalHours = MemberBenefitsService::getUserMonthlyFreeHours($record);
                                 return $record->getRemainingFreeHours() . ' / ' . $totalHours . ' hours';
                             }),
                         TextEntry::make('cancellation_info')

@@ -295,19 +295,32 @@ class ImportUsersFromDenoKv extends Command
         }
 
         if ($sendInvites) {
-            // Create invitation instead of user
-            $invitation = UserInvitationService::inviteUser($email, [
+            // Create invitation directly for imports (system-generated)
+            $invitation = Invitation::create([
+                'inviter_id' => null, // System-generated invitation
+                'email' => $email,
+                'expires_at' => now()->addWeeks(2), // Longer expiry for imports
                 'message' => $invitationMessage,
-                'imported_from_deno_kv' => true,
-                'original_data' => [
-                    'name' => $name,
-                    'pronouns' => $userData['pronouns'] ?? null,
-                    'deno_id' => $userData['deno_id'] ?? null,
-                    'created_at' => $userData['created_at'] ?? null,
-                    'trust_points' => $userData['trust_points'] ?? null,
-                    'community_event_trust_points' => $userData['community_event_trust_points'] ?? 0,
+                'data' => [
+                    'imported_from_deno_kv' => true,
+                    'original_data' => [
+                        'name' => $name,
+                        'pronouns' => $userData['pronouns'] ?? null,
+                        'deno_id' => $userData['deno_id'] ?? null,
+                        'created_at' => $userData['created_at'] ?? null,
+                        'trust_points' => $userData['trust_points'] ?? null,
+                        'community_event_trust_points' => $userData['community_event_trust_points'] ?? 0,
+                    ]
                 ]
             ]);
+
+            // Send the notification manually
+            \Notification::route('mail', $email)
+                ->notify(new \App\Notifications\UserInvitationNotification($invitation, [
+                    'message' => $invitationMessage
+                ]));
+
+            $invitation->markAsSent();
 
             return [
                 'status' => 'invited',

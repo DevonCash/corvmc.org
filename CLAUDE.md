@@ -52,6 +52,11 @@ NOTE: Filament v4 beta makes some changes from v3
 - `npm run dev` - Start Vite development server for assets
 - `npm run build` - Build production assets
 
+### Stripe Subscription Management
+
+- `php artisan subscription:create-prices` - Create Stripe price objects for sliding scale membership ($10-$50) and fee coverage
+- `php artisan subscription:create-prices --dry-run` - Preview what prices would be created without making API calls
+
 ### Testing and Quality
 
 - `composer test` - Run the test suite (clears config and runs PHPUnit/Pest tests)

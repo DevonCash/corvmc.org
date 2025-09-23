@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Actions;
 
 use App\Facades\PaymentService;
 use App\Facades\UserSubscriptionService;
+use Brick\Money\Money;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\Actions;
@@ -48,11 +49,11 @@ class ModifyMembershipAmountAction
                     ->label('Cover Processing Fees')
                     ->columnSpan(2)
                     ->helperText(function ($get) {
-                        $amount = $get('amount');
-                        if ($amount > 0) {
+                        $amount = Money::of($get('amount'), 'USD');
+                        if (!$amount->isZero()) {
                             $feeInfo = PaymentService::getFeeDisplayInfo($amount);
 
-                            return $feeInfo['accurate_message'];
+                            return $feeInfo['message'];
                         }
 
                         return 'Add processing fees to support the organization';
@@ -62,19 +63,20 @@ class ModifyMembershipAmountAction
                 TextEntry::make('total_preview')
                     ->label('New Monthly Total')
                     ->state(function ($get) {
-                        $amount = $get('amount') ?: 0;
-                        if ($amount <= 0) {
+                        $amount = Money::of($get('amount') ?: 0, 'USD');
+                        if ($amount->isZero()) {
                             return 'Please select a contribution amount';
                         }
 
                         $breakdown = PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
+                        $totalAmount = Money::of($breakdown['total_amount'], 'USD');
 
-                        return $breakdown['description'] . ' = ' . PaymentService::formatMoney($breakdown['total_amount']) . ' total per month';
+                        return $breakdown['description'] . ' = ' . PaymentService::formatMoney($totalAmount) . ' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])
             ->action(function (array $data, $record) {
-                $baseAmount = floatval($data['amount']);
+                $baseAmount = Money::of($data['amount'], 'USD');
 
                 $result = UserSubscriptionService::updateSubscriptionAmount($record, $baseAmount, $data['cover_fees']);
 

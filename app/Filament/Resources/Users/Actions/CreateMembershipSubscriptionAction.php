@@ -41,7 +41,6 @@ class CreateMembershipSubscriptionAction
                         $amount = Money::of($get('amount'), 'USD');
                         if (!$amount->isZero()) {
                             $feeInfo = PaymentService::getFeeDisplayInfo($amount);
-
                             return $feeInfo['message'];
                         }
 
@@ -64,18 +63,17 @@ class CreateMembershipSubscriptionAction
             ])
             ->action(function (array $data, $record) {
                 $baseAmount = Money::of($data['amount'], 'USD');
-                $result = UserSubscriptionService::createSubscription($record, $baseAmount, $data['cover_fees']);
-
-                if ($result['success']) {
-                    redirect($result['checkout_url']);
-                } else {
+                try {
+                    $checkout = UserSubscriptionService::createSubscription($record, $baseAmount, $data['cover_fees']);
+                    redirect($checkout->url);
+                } catch (\Exception $e) {
                     Log::error('Failed to create membership subscription', [
                         'user_id' => $record->id,
-                        'error' => $result['error'] ?? 'Unknown error',
+                        'error' => $e->getMessage(),
                     ]);
                     \Filament\Notifications\Notification::make()
-                        ->title('Failed to create membership checkout')
-                        ->body($result['error'])
+                        ->title('Error creating checkout')
+                        ->body($e->getMessage())
                         ->danger()
                         ->send();
                 }

@@ -179,6 +179,13 @@ class PaymentService
         return $numerator->dividedBy($denominator, \Brick\Math\RoundingMode::HALF_UP);
     }
 
+    public function calculateFeeCoverage(int $baseAmountCents): Money
+    {
+        $baseAmount = Money::ofMinor($baseAmountCents, 'USD');
+        $totalWithCoverage = $this->calculateTotalWithFeeCoverage($baseAmount);
+        return $totalWithCoverage->minus($baseAmount);
+    }
+
     /**
      * Calculate fee breakdown with accurate accounting using Money objects.
      */

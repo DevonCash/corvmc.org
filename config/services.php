@@ -43,6 +43,8 @@ return [
             'secret' => env('STRIPE_WEBHOOK_SECRET'),
             'tolerance' => env('STRIPE_WEBHOOK_TOLERANCE', 300),
         ],
+        'membership_product_id' => env('STRIPE_MEMBERSHIP_PRODUCT_ID'),
+        'fee_coverage_product_id' => env('STRIPE_FEE_COVERAGE_PRODUCT_ID'),
     ],
 
     'zeffy' => [

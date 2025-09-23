@@ -74,8 +74,8 @@ class Invitation extends Model
             if (empty($invitation->message)) {
                 $invitation->message = 'Join me at Corvallis Music Collective!';
             }
-            if (empty($invitation->inviter_id)) {
-                $invitation->inviter_id = Auth::user()?->id;
+            if (empty($invitation->inviter_id) && Auth::check()) {
+                $invitation->inviter_id = Auth::user()->id;
             }
         });
 
@@ -95,6 +95,11 @@ class Invitation extends Model
     public function inviter()
     {
         return $this->belongsTo(User::class, 'inviter_id');
+    }
+
+    public function getInviterNameAttribute(): string
+    {
+        return $this->inviter?->name ?? 'System';
     }
 
     public function user()

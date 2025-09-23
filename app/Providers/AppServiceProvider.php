@@ -29,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\CacheService::class);
         $this->app->singleton(\App\Services\CalendarService::class);
         $this->app->singleton(\App\Services\GitHubService::class);
+        $this->app->singleton(\App\Services\MemberBenefitsService::class);
         $this->app->singleton(\App\Services\MemberProfileService::class);
         $this->app->singleton(\App\Services\NotificationSchedulingService::class);
         $this->app->singleton(\App\Services\ProductionService::class);
@@ -59,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
         $loader->alias('CacheService', \App\Facades\CacheService::class);
         $loader->alias('CalendarService', \App\Facades\CalendarService::class);
         $loader->alias('GitHubService', \App\Facades\GitHubService::class);
+        $loader->alias('MemberBenefitsService', \App\Facades\MemberBenefitsService::class);
         $loader->alias('MemberProfileService', \App\Facades\MemberProfileService::class);
         $loader->alias('NotificationSchedulingService', \App\Facades\NotificationSchedulingService::class);
         $loader->alias('ProductionService', \App\Facades\ProductionService::class);
