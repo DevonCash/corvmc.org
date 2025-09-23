@@ -117,7 +117,7 @@ class ProductionService
     public function publishProduction(Production $production): void
     {
         // Check authorization
-        if (auth()->check() && !auth()->user()->can('update', $production)) {
+        if (auth()->check() && !Auth::user()->can('update', $production)) {
             throw new \Illuminate\Auth\Access\AuthorizationException('You are not authorized to publish this production.');
         }
 

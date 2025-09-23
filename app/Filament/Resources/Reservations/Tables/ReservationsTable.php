@@ -38,7 +38,7 @@ class ReservationsTable
                 TextColumn::make('user.name')
                     ->label('Member')
                     ->toggleable()
-                    ->toggleable(isToggledHiddenByDefault: !User::me()->can('manage practice space'))
+                    ->toggleable(isToggledHiddenByDefault: !Auth::user()->can('manage practice space'))
                     ->searchable()
                     ->sortable(),
 
@@ -122,7 +122,7 @@ class ReservationsTable
                     ->multiple(),
 
                 SelectFilter::make('user')
-                    ->visible(User::me()->can('manage practice space'))
+                    ->visible(Auth::user()->can('manage practice space'))
                     ->relationship('user', 'name')
                     ->searchable()
                     ->preload(),

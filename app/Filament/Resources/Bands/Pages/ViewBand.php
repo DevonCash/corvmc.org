@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 
 class ViewBand extends Page
 {
@@ -48,9 +49,9 @@ class ViewBand extends Page
     {
         return [
             EditAction::make()
-                ->visible(fn () => auth()->user()->can('update', $this->record)),
+                ->visible(fn () => Auth::user()->can('update', $this->record)),
             ReportContentAction::make()
-                ->visible(fn () => auth()->user()->id !== $this->record->owner_id), // Don't show report button to owner
+                ->visible(fn () => Auth::user()->id !== $this->record->owner_id), // Don't show report button to owner
         ];
     }
 
@@ -59,7 +60,7 @@ class ViewBand extends Page
         $this->record = $this->resolveRecord($record);
 
         // Check if user can view this profile
-        if (! auth()->user()->can('view', $this->record)) {
+        if (! Auth::user()->can('view', $this->record)) {
             abort(403, 'You do not have permission to view this band profile.');
         }
     }

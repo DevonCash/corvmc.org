@@ -16,7 +16,7 @@ class QuickActionsWidget extends Widget
 
     public function getQuickActions(): array
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (!$user) {
             return [];

@@ -19,7 +19,7 @@ class ActivityFeedWidget extends Widget
 
     public function getActivities()
     {
-        $currentUser = User::me();
+        $currentUser = Auth::user();
 
         $activities = Activity::with(['subject', 'causer'])
             ->latest()
@@ -94,7 +94,7 @@ class ActivityFeedWidget extends Widget
 
     protected function formatReservationDescription(Activity $activity, string $causerName, string $action): string
     {
-        $currentUser = auth()->user();
+        $currentUser = Auth::user();
         $reservation = $activity->subject;
 
         // Only show details for own reservations or if user has permission

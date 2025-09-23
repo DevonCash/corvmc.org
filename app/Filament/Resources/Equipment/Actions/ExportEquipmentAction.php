@@ -169,6 +169,6 @@ class ExportEquipmentAction
                 }
             })
             ->modalIcon('heroicon-o-arrow-down-tray')
-            ->visible(fn () => auth()->user()->can('export equipment'));
+            ->visible(fn () => Auth::user()->can('export equipment'));
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Components;
 
 use App\Models\User;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Spatie\Activitylog\Models\Activity;
 
@@ -22,7 +23,7 @@ class ActivitySidebar
 
     protected static function getContextualActivities()
     {
-        $currentUser = User::me();
+        $currentUser = Auth::user();
         if (!$currentUser) {
             return collect();
         }
@@ -231,7 +232,7 @@ class ActivitySidebar
 
     protected static function formatReservationDescription(Activity $activity, string $causerName, string $action): string
     {
-        $currentUser = auth()->user();
+        $currentUser = Auth::user();
         $reservation = $activity->subject;
 
         if (

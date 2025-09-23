@@ -9,6 +9,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class BandInvitations extends Page
 {
@@ -39,7 +40,7 @@ class BandInvitations extends Page
 
     public function getPendingInvitations(): Collection
     {
-        return BandService::getPendingInvitationsForUser(auth()->user());
+        return BandService::getPendingInvitationsForUser(Auth::user());
     }
 
     protected function getActions(): array
@@ -55,7 +56,7 @@ class BandInvitations extends Page
     public function acceptInvitation(int $bandId): void
     {
         $band = Band::findOrFail($bandId);
-        $user = User::me();
+        $user = Auth::user();
 
         if (BandService::acceptInvitation($band, $user)) {
             Notification::make()
@@ -81,7 +82,7 @@ class BandInvitations extends Page
             ->modalCancelActionLabel('Cancel')
             ->action(function (array $arguments): void {
                 $band = Band::findOrFail($arguments['bandId']);
-                $user = auth()->user();
+                $user = Auth::user();
 
                 if (BandService::declineInvitation($band, $user)) {
                     Notification::make()

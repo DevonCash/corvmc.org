@@ -6,6 +6,7 @@ use App\Models\CommunityEvent;
 use App\Models\User;
 use App\Data\VenueLocationData;
 use App\Services\CommunityEventTrustService;
+use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Card;
 use Filament\Schemas\Components\Grid;
@@ -18,9 +19,9 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Fieldset;
-use Filament\Forms\Components\Actions;
-use Filament\Forms\Components\Actions\Action;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Actions;
+use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class CommunityEventForm
@@ -197,7 +198,7 @@ class CommunityEventForm
                                     ->searchable()
                                     ->preload()
                                     ->required()
-                                    ->default(auth()->id()),
+                                    ->default(Auth::id()),
 
                                 Select::make('status')
                                     ->options([
@@ -241,7 +242,7 @@ class CommunityEventForm
                             ->native(false)
                             ->visible(fn ($get) => $get('status') === CommunityEvent::STATUS_APPROVED),
                     ])
-                    ->visible(fn () => auth()->user()->can('manage community events'))
+                    ->visible(fn () => Auth::user()->can('manage community events'))
                     ->collapsible()
                     ->collapsed(),
             ]);

@@ -37,7 +37,7 @@ class MyBandsWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('role')
                     ->label('Role')
                     ->formatStateUsing(function (Band $record): string {
-                        $user = User::me();
+                        $user = Auth::user();
 
                         // Owner
                         if ($record->owner_id === $user->id) {
@@ -134,14 +134,14 @@ class MyBandsWidget extends BaseWidget
                     ->label('Create Your First Band')
                     ->icon('tabler-plus')
                     ->url(route('filament.member.resources.bands.create'))
-                    ->visible(fn() => User::me()?->can('create bands') ?? false),
+                    ->visible(fn() => Auth::user()?->can('create bands') ?? false),
             ])
             ->paginated(false);
     }
 
     protected function getTableQuery(): Builder
     {
-        $user = User::me();
+        $user = Auth::user();
 
         if (!$user) {
             return Band::query()->whereRaw('1=0'); // Empty query
@@ -162,7 +162,7 @@ class MyBandsWidget extends BaseWidget
 
     protected function canEditBand(Band $band): bool
     {
-        $user = User::me();
+        $user = Auth::user();
 
         if (!$user) {
             return false;
@@ -185,7 +185,7 @@ class MyBandsWidget extends BaseWidget
 
     protected function canManageBand(Band $band): bool
     {
-        $user = User::me();
+        $user = Auth::user();
 
         if (!$user) {
             return false;

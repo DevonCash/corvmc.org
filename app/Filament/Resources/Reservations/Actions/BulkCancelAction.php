@@ -12,7 +12,7 @@ class BulkCancelAction
     public static function make(): Action
     {
         return Action::make('bulk_cancel')
-            ->visible(fn() => User::me()->can('manage reservations'))
+            ->visible(fn() => Auth::user()->can('manage reservations'))
             ->requiresConfirmation()
             ->action(function (Collection $records) {
                 foreach ($records as $record) {

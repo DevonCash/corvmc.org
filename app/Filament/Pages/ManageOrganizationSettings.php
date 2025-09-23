@@ -17,6 +17,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class ManageOrganizationSettings extends Page implements HasForms
@@ -56,7 +57,7 @@ class ManageOrganizationSettings extends Page implements HasForms
 
     public static function canAccess(): bool
     {
-        return User::me()->can('manage site settings');
+        return Auth::user()->can('manage site settings');
     }
     public function form(Schema $form): Schema
     {
@@ -130,22 +131,22 @@ class ManageOrganizationSettings extends Page implements HasForms
                                                 if (empty($value)) {
                                                     return;
                                                 }
-                                                
+
                                                 // Accept relative URLs (starting with /)
                                                 if (str_starts_with($value, '/')) {
                                                     return;
                                                 }
-                                                
+
                                                 // Accept fragment URLs (starting with #)
                                                 if (str_starts_with($value, '#')) {
                                                     return;
                                                 }
-                                                
+
                                                 // Accept absolute URLs
                                                 if (filter_var($value, FILTER_VALIDATE_URL)) {
                                                     return;
                                                 }
-                                                
+
                                                 $fail('The URL must be a valid absolute URL, relative path starting with /, or fragment starting with #.');
                                             };
                                         },
@@ -190,22 +191,22 @@ class ManageOrganizationSettings extends Page implements HasForms
                                                 if (empty($value)) {
                                                     return;
                                                 }
-                                                
+
                                                 // Accept relative URLs (starting with /)
                                                 if (str_starts_with($value, '/')) {
                                                     return;
                                                 }
-                                                
+
                                                 // Accept fragment URLs (starting with #)
                                                 if (str_starts_with($value, '#')) {
                                                     return;
                                                 }
-                                                
+
                                                 // Accept absolute URLs
                                                 if (filter_var($value, FILTER_VALIDATE_URL)) {
                                                     return;
                                                 }
-                                                
+
                                                 $fail('The URL must be a valid absolute URL, relative path starting with /, or fragment starting with #.');
                                             };
                                         },

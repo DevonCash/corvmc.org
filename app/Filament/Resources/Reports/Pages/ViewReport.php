@@ -15,6 +15,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\Auth;
 
 class ViewReport extends ViewRecord
 {
@@ -97,7 +98,7 @@ class ViewReport extends ViewRecord
 
                                 TextEntry::make('reportedBy.email')
                                     ->label('Reporter Email')
-                                    ->visible(fn() => auth()->user()->hasRole('admin')),
+                                    ->visible(fn() => Auth::user()->hasRole('admin')),
                             ]),
                     ]),
 
@@ -141,7 +142,7 @@ class ViewReport extends ViewRecord
                 ->color('danger')
                 ->visible(
                     fn(Report $record): bool =>
-                    $record->status === 'pending' && User::me()->can('uphold', [$record])
+                    $record->status === 'pending' && Auth::user()->can('uphold', [$record])
                 )
                 ->requiresConfirmation()
                 ->schema([
@@ -154,7 +155,7 @@ class ViewReport extends ViewRecord
                 ->action(function (Report $record, array $data): void {
                     \ReportService::resolveReport(
                         $record,
-                        User::me(),
+                        Auth::user(),
                         'upheld',
                         $data['resolution_notes']
                     );
@@ -171,7 +172,7 @@ class ViewReport extends ViewRecord
                 ->icon('heroicon-o-x-circle')
                 ->color('success')
                 ->visible(
-                    fn(Report $record): bool => $record->status === 'pending' && User::me()->can('dismiss', [$record])
+                    fn(Report $record): bool => $record->status === 'pending' && Auth::user()->can('dismiss', [$record])
                 )
                 ->requiresConfirmation()
                 ->schema([
@@ -184,7 +185,7 @@ class ViewReport extends ViewRecord
                 ->action(function (Report $record, array $data): void {
                     \ReportService::resolveReport(
                         $record,
-                        User::me(),
+                        Auth::user(),
                         'dismissed',
                         $data['resolution_notes']
                     );
@@ -202,7 +203,7 @@ class ViewReport extends ViewRecord
                 ->color('warning')
                 ->visible(
                     fn(Report $record): bool =>
-                    $record->status === 'pending' && User::me()->can('escalate', [$record])
+                    $record->status === 'pending' && Auth::user()->can('escalate', [$record])
                 )
                 ->requiresConfirmation()
                 ->schema([
@@ -215,7 +216,7 @@ class ViewReport extends ViewRecord
                 ->action(function (Report $record, array $data): void {
                     \ReportService::resolveReport(
                         $record,
-                        User::me(),
+                        Auth::user(),
                         'escalated',
                         $data['resolution_notes']
                     );

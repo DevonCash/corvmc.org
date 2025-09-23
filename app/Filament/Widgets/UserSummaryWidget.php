@@ -15,7 +15,7 @@ class UserSummaryWidget extends Widget
 
     public function getUserStats(): array
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (!$user) {
             return [];
@@ -48,7 +48,7 @@ class UserSummaryWidget extends Widget
 
     public function getRecentActivity(): array
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (!$user) {
             return [];

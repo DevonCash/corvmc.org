@@ -16,7 +16,7 @@ class MarkCompedBulkAction
             ->label('Comp Reservations')
             ->icon('tabler-gift')
             ->color('info')
-            ->visible(fn() => User::me()->can('manage reservations'))
+            ->visible(fn() => Auth::user()->can('manage reservations'))
             ->schema([
                 Textarea::make('comp_reason')
                     ->label('Comp Reason')

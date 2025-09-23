@@ -20,7 +20,7 @@ class TodayReservationsWidget extends BaseWidget
 
     public function table(Table $table): Table
     {
-        $user = User::me();
+        $user = Auth::user();
         $canViewAll = $user?->can('view reservations');
 
         return $table

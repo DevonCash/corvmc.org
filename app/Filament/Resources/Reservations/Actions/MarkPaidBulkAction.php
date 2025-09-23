@@ -17,7 +17,7 @@ class MarkPaidBulkAction
             ->label('Mark as Paid')
             ->icon('tabler-cash')
             ->color('success')
-            ->visible(fn() => User::me()->can('manage reservations'))
+            ->visible(fn() => Auth::user()->can('manage reservations'))
             ->schema([
                 Select::make('payment_method')
                     ->label('Payment Method')

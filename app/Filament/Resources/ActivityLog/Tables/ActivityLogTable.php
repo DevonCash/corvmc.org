@@ -142,12 +142,12 @@ class ActivityLogTable
                     ->visible(fn(Activity $record): bool => $record->subject !== null),
 
                 Actions\DeleteAction::make()
-                    ->visible(fn(): bool => User::me()?->can('delete activity log') ?? false),
+                    ->visible(fn(): bool => Auth::user()?->can('delete activity log') ?? false),
             ])
             ->toolbarActions([
                 Actions\BulkActionGroup::make([
                     Actions\DeleteBulkAction::make()
-                        ->visible(fn(): bool => User::me()?->can('delete activity log') ?? false),
+                        ->visible(fn(): bool => Auth::user()?->can('delete activity log') ?? false),
                 ]),
             ])
             ->defaultSort('created_at', 'desc')

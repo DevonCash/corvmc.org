@@ -16,6 +16,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Auth;
 
 class EquipmentLoanResource extends Resource
 {
@@ -44,22 +45,22 @@ class EquipmentLoanResource extends Resource
 
     public static function canCreate(): bool
     {
-        return User::me()?->can('create equipment loans') ?? false;
+        return Auth::user()?->can('create equipment loans') ?? false;
     }
 
     public static function canEdit($record): bool
     {
-        return User::me()?->can('edit equipment loans') ?? false;
+        return Auth::user()?->can('edit equipment loans') ?? false;
     }
 
     public static function canDelete($record): bool
     {
-        return User::me()?->can('delete equipment loans') ?? false;
+        return Auth::user()?->can('delete equipment loans') ?? false;
     }
 
     public static function canView($record): bool
     {
-        return User::me()?->can('view equipment loans') ?? true;
+        return Auth::user()?->can('view equipment loans') ?? true;
     }
 
 

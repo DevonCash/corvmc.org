@@ -28,7 +28,7 @@ class UserResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return User::me()?->can('view users') ?? false;
+        return Auth::user()?->can('view users') ?? false;
     }
 
     public static function getRecordTitle($record): string
@@ -44,22 +44,22 @@ class UserResource extends Resource
 
     public static function canCreate(): bool
     {
-        return User::me()?->can('invite users') ?? null;
+        return Auth::user()?->can('invite users') ?? null;
     }
 
     public static function canView($record): bool
     {
-        return auth()->user()->is($record) || User::me()?->can('view users') ?? false;
+        return Auth::user()->is($record) || Auth::user()?->can('view users') ?? false;
     }
 
     public static function canEdit($record): bool
     {
-        return auth()->user()->is($record) || User::me()?->can('update users') ?? null;
+        return Auth::user()->is($record) || Auth::user()?->can('update users') ?? null;
     }
 
     public static function canDelete($record): bool
     {
-        return User::me()?->can('delete users') ?? null;
+        return Auth::user()?->can('delete users') ?? null;
     }
 
     public static function form(Schema $schema): Schema
@@ -72,7 +72,7 @@ class UserResource extends Resource
         $table = UsersTable::configure($table);
 
         // Restrict table to current user if they don't have view users permission
-        if (!User::me()?->can('view users')) {
+        if (!Auth::user()?->can('view users')) {
             $table->modifyQueryUsing(fn($query) => $query->where('id', auth()->id()));
         }
 

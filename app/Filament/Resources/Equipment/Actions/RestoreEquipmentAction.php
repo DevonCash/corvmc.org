@@ -36,7 +36,7 @@ class RestoreEquipmentAction
                     ->body('Equipment has been restored to the active library.')
             )
             ->visible(fn ($record) => 
-                auth()->user()->can('restore equipment') && 
+                Auth::user()->can('restore equipment') && 
                 $record->trashed()
             );
     }

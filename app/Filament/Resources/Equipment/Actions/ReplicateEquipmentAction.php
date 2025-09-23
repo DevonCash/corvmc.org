@@ -49,7 +49,7 @@ class ReplicateEquipmentAction
                 route('filament.member.resources.equipment.edit', $replica)
             )
             ->visible(fn ($record) => 
-                auth()->user()->can('create equipment')
+                Auth::user()->can('create equipment')
             );
     }
 }

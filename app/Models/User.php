@@ -150,14 +150,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasOne(MemberProfile::class);
     }
 
-    public static function me(): ?User
-    {
-        /** @var User|null $user */
-        $user = auth()->user();
-
-        return $user;
-    }
-
     /**
      * Check if user is a sustaining member (has monthly donation > $10).
      */

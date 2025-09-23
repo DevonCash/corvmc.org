@@ -17,7 +17,7 @@ class MarkCompedAction
             ->icon('tabler-gift')
             ->color('info')
             ->visible(fn(Reservation $record) =>
-                User::me()->can('manage reservations') &&
+                Auth::user()->can('manage reservations') &&
                 $record->cost > 0 && $record->isUnpaid())
             ->schema([
                 Textarea::make('comp_reason')

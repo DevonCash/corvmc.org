@@ -48,7 +48,7 @@ class ReservationResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        if (!User::me()->can('manage reservations')) return null;
+        if (!Auth::user()->can('manage reservations')) return null;
         return Reservation::whereToday('reserved_at')->count() || null;
     }
 

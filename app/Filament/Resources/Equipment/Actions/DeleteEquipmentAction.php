@@ -73,7 +73,7 @@ class DeleteEquipmentAction
                     ->body('Equipment has been permanently deleted from the library.')
             )
             ->visible(fn ($record) => 
-                auth()->user()->can('delete equipment') && 
+                Auth::user()->can('delete equipment') && 
                 !$record->is_checked_out
             );
     }

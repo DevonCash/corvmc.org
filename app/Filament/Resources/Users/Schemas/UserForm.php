@@ -82,7 +82,7 @@ class UserForm
                                 MemberProfileForm::configure(Section::make('')->relationship('profile')),
                             ]),
                         Tab::make('Staff Profile')
-                            ->visible(fn($record) => $record?->staffProfile && (User::me()?->can('manage staff profiles') || User::me()->is($record)))
+                            ->visible(fn($record) => $record?->staffProfile && (Auth::user()?->can('manage staff profiles') || Auth::user()->is($record)))
                             ->schema([
                                 StaffProfileForm::configure(Section::make('')
                                     ->schema([
@@ -94,7 +94,7 @@ class UserForm
                                     ->relationship('staffProfile')),
                             ]),
                         Tab::make('Administration')
-                            ->visible(fn($record) => User::me()?->can('update user roles') || User::me()?->can('manage subscriptions'))
+                            ->visible(fn($record) => Auth::user()?->can('update user roles') || Auth::user()?->can('manage subscriptions'))
                             ->schema([
                                 AdminUserControlForm::configure(Grid::make(1)),
                             ]),

@@ -59,7 +59,7 @@ BLADE))),
     }
     public static function reservationStep(): array
     {
-        $isAdmin = User::me()?->can('manage practice space');
+        $isAdmin = Auth::user()?->can('manage practice space');
 
         return [
             // Admin-only member selection at the top if needed
@@ -67,7 +67,7 @@ BLADE))),
                 Select::make('user_id')
                     ->label('Member (Admin Only)')
                     ->relationship('user', 'name')
-                    ->default(User::me()->id)
+                    ->default(Auth::user()->id)
                     ->searchable()
                     ->preload()
                     ->required()
@@ -96,7 +96,7 @@ BLADE))),
                     }),
             ] : [
                 Hidden::make('user_id')
-                    ->default(User::me()?->id)
+                    ->default(Auth::user()?->id)
                     ->required(),
             ],
 

@@ -39,7 +39,7 @@ class ForceDeleteEquipmentAction
                 // Log the permanent deletion for audit purposes
                 activity()
                     ->performedOn($record)
-                    ->causedBy(auth()->user())
+                    ->causedBy(Auth::user())
                     ->withProperties([
                         'equipment_name' => $record->name,
                         'equipment_type' => $record->type,
@@ -61,7 +61,7 @@ class ForceDeleteEquipmentAction
                     ->body('Equipment and all associated data has been permanently removed.')
             )
             ->visible(fn ($record) => 
-                auth()->user()->can('force delete equipment') && 
+                Auth::user()->can('force delete equipment') && 
                 $record->trashed()
             );
     }

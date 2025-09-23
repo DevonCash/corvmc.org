@@ -17,6 +17,7 @@ use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class BandForm
 {
@@ -179,11 +180,11 @@ class BandForm
                             ->options(
                                 fn (?Band $record) => $record
                                     ? $record->members()->select(['users.name', 'users.id'])->pluck('name', 'id')->toArray()
-                                    : [User::me()->id => User::me()->name]
+                                    : [Auth::user()->id => Auth::user()->name]
                             )
                             ->preload()
-                            ->default(fn () => User::me()->id)
-                            ->disabled(fn (?Band $record) => $record && ! User::me()->can('transferOwnership', $record))
+                            ->default(fn () => Auth::user()->id)
+                            ->disabled(fn (?Band $record) => $record && ! Auth::user()->can('transferOwnership', $record))
                             ->helperText('The primary contact and administrator for this band'),
                     ]),
             ]);

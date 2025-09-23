@@ -22,6 +22,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Filament\Tables\Enums\FiltersLayout;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -34,7 +35,7 @@ class MembersRelationManager extends RelationManager
     public function canViewAny(): bool
     {
         // Allow viewing if user can view the parent record
-        return auth()->user()->can('view', $this->ownerRecord);
+        return Auth::user()->can('view', $this->ownerRecord);
     }
 
     public function makeAddMember(): Action
@@ -263,7 +264,7 @@ class MembersRelationManager extends RelationManager
                             ->default(fn($record) => $record->role)
                             ->required()
                             ->disabled(
-                                fn($record): bool => ! auth()->user()->can('changeMemberRoles', $this->ownerRecord) ||
+                                fn($record): bool => ! Auth::user()->can('changeMemberRoles', $this->ownerRecord) ||
                                     $record->user_id === $this->ownerRecord->owner_id
                             ),
 
@@ -321,8 +322,8 @@ class MembersRelationManager extends RelationManager
                 $record->update($updateData);
             })
             ->visible(
-                fn($record): bool => auth()->user()->can('manageMembers', $this->ownerRecord) ||
-                    $record->user_id === auth()->id()
+                fn($record): bool => Auth::user()->can('manageMembers', $this->ownerRecord) ||
+                    $record->user_id === Auth::user()->id
             );
     }
 
@@ -377,7 +378,7 @@ class MembersRelationManager extends RelationManager
             ->filtersLayout(FiltersLayout::BelowContent)
             ->headerActions([
                 $this->makeAddMember()
-                    ->visible(fn(): bool => auth()->user()->can('manageMembers', $this->ownerRecord))
+                    ->visible(fn(): bool => Auth::user()->can('manageMembers', $this->ownerRecord))
 
             ])
             ->recordActions([
@@ -401,7 +402,7 @@ class MembersRelationManager extends RelationManager
                     })
                     ->visible(
                         fn($record): bool => $record->status === 'invited' &&
-                            $record->user_id === auth()->id()
+                            $record->user_id === Auth::user()->id
                     ),
 
                 Action::make('decline_invitation')
@@ -424,7 +425,7 @@ class MembersRelationManager extends RelationManager
                     })
                     ->visible(
                         fn($record): bool => $record->status === 'invited' &&
-                            $record->user_id === auth()->id()
+                            $record->user_id === Auth::user()->id
                     ),
 
                 Action::make('resend_invitation')
@@ -442,7 +443,7 @@ class MembersRelationManager extends RelationManager
                     })
                     ->visible(
                         fn($record): bool => $record->status === 'invited' &&
-                            auth()->user()->can('manageMembers', $this->ownerRecord)
+                            Auth::user()->can('manageMembers', $this->ownerRecord)
                     ),
 
                 Action::make('reinvite_declined')
@@ -463,7 +464,7 @@ class MembersRelationManager extends RelationManager
                     })
                     ->visible(
                         fn($record): bool => $record->status === 'declined' &&
-                            auth()->user()->can('manageMembers', $this->ownerRecord)
+                            Auth::user()->can('manageMembers', $this->ownerRecord)
                     ),
 
                 $this->makeEditMember(),
@@ -475,7 +476,7 @@ class MembersRelationManager extends RelationManager
                     ->modalDescription('Are you sure you want to remove this member from the band?')
                     ->using(fn($record) => $record->delete())
                     ->visible(
-                        fn($record): bool => auth()->user()->can('removeMembers', $this->ownerRecord) &&
+                        fn($record): bool => Auth::user()->can('removeMembers', $this->ownerRecord) &&
                             $record->user_id !== $this->ownerRecord->owner_id // Can't remove owner
                     ),
             ])

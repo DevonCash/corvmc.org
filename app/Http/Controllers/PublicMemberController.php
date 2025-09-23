@@ -17,7 +17,7 @@ class PublicMemberController extends Controller
 
     public function show(MemberProfile $memberProfile)
     {
-        abort_unless($memberProfile->isVisible(auth()->user()), 404);
+        abort_unless($memberProfile->isVisible(Auth::user()), 404);
 
         $memberProfile->load(['user', 'tags', 'user.bandProfiles', 'media']);
 

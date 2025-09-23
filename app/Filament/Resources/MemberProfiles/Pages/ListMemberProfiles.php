@@ -13,6 +13,7 @@ use Filament\Forms\Components\Select;
 use Filament\Resources\Pages\Page;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class ListMemberProfiles extends Page
 {
@@ -51,7 +52,7 @@ class ListMemberProfiles extends Page
             InviteUserAction::make(),
             EditAction::make()
                 ->label('Edit My Profile')
-                ->record(fn(): MemberProfile => auth()->user()->profile),
+                ->record(fn(): MemberProfile => Auth::user()->profile),
         ];
     }
 
@@ -162,14 +163,14 @@ class ListMemberProfiles extends Page
                         $settings = app(MemberDirectorySettings::class);
                         return $settings->getAvailableFlags();
                     })
-                    ->columnSpan(fn() => User::me()?->can('view private member profiles') ? 2 : 3)
+                    ->columnSpan(fn() => Auth::user()?->can('view private member profiles') ? 2 : 3)
                     ->columns(function () {
-                        return User::me()?->can('view private member profiles') ? 2 : 4;
+                        return Auth::user()?->can('view private member profiles') ? 2 : 4;
                     }),
 
                 Select::make('visibility')
                     ->label('Visibility 🛡️')
-                    ->visible(fn() => User::me()?->can('view private member profiles'))
+                    ->visible(fn() => Auth::user()?->can('view private member profiles'))
                     ->live()
                     ->options([
                         'public' => 'Public',

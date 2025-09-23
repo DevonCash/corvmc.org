@@ -6,8 +6,9 @@ use App\Filament\Resources\CommunityEvents\CommunityEventResource;
 use App\Models\CommunityEvent;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Resources\Components\Tab;
+use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class ListCommunityEvents extends ListRecords
 {
@@ -40,8 +41,8 @@ class ListCommunityEvents extends ListRecords
                 ->modifyQueryUsing(fn (Builder $query) => $query->local()),
             
             'my_events' => Tab::make('My Events')
-                ->modifyQueryUsing(fn (Builder $query) => $query->byOrganizer(auth()->id()))
-                ->visible(fn () => auth()->user()->can('create community events')),
+                ->modifyQueryUsing(fn (Builder $query) => $query->byOrganizer(Auth::user()->id))
+                ->visible(fn () => Auth::user()->can('create community events')),
         ];
     }
 

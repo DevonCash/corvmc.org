@@ -77,7 +77,7 @@ class FeedbackButton extends Component implements HasForms, HasActions
             ])
             ->action(function (array $data) {
                 // Add user information automatically
-                $user = auth()->user();
+                $user = Auth::user();
                 if ($user) {
                     $data['user_id'] = $user->id;
                 }

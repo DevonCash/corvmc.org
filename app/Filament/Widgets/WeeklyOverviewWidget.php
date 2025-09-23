@@ -37,7 +37,7 @@ class WeeklyOverviewWidget extends ChartWidget
                 return $reservation->reserved_at->format('Y-m-d');
             });
 
-        $user = User::me();
+        $user = Auth::user();
         $dailyData = [];
         $personalData = [];
         $labels = [];

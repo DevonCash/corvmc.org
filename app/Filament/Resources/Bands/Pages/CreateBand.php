@@ -6,6 +6,7 @@ use App\Filament\Resources\Bands\BandResource;
 use App\Filament\Traits\HasCrudService;
 use App\Models\Band;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Auth;
 
 class CreateBand extends CreateRecord
 {
@@ -20,7 +21,7 @@ class CreateBand extends CreateRecord
         $bandService = $this->getCrudService();
         $claimableBand = $bandService->findClaimableBand($data['name']);
         
-        if ($claimableBand && $bandService->canClaimBand($claimableBand, auth()->user())) {
+        if ($claimableBand && $bandService->canClaimBand($claimableBand, Auth::user())) {
             // Redirect to claiming workflow instead of creating duplicate
             session()->flash('claimable_band', [
                 'id' => $claimableBand->id,
@@ -28,7 +29,7 @@ class CreateBand extends CreateRecord
                 'data' => $data
             ]);
             
-            $this->redirect(static::getUrl('claim'));
+            $this->redirect(static::getUrl(['claim']));
         }
 
         // Use the parent trait method to create the band

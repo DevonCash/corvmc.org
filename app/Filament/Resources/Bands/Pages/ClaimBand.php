@@ -8,6 +8,7 @@ use App\Facades\BandService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 class ClaimBand extends Page
@@ -51,7 +52,7 @@ class ClaimBand extends Page
             ->modalDescription(fn() => "Are you sure you want to claim ownership of \"{$this->claimableBand->name}\"? This will make you the owner and allow you to manage the band profile.")
             ->action(function () {
 
-                if (BandService::claimBand($this->claimableBand, auth()->user())) {
+                if (BandService::claimBand($this->claimableBand, Auth::user())) {
                     // Update the band with any new data from the original form
                     $updateData = array_filter($this->originalData, function ($value, $key) {
                         return $key !== 'name' && $value !== null && $value !== '';

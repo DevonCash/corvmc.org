@@ -6,13 +6,14 @@ use App\Filament\Resources\CommunityEvents\CommunityEventResource;
 use App\Models\CommunityEvent;
 use App\Services\CommunityEventTrustService;
 use Filament\Actions;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Schema;
-use Filament\Schemas\Components\TextEntry;
-use Filament\Schemas\Components\ImageEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 
 class ViewCommunityEvent extends ViewRecord
 {
@@ -28,7 +29,7 @@ class ViewCommunityEvent extends ViewRecord
                 ->color('success')
                 ->visible(fn (CommunityEvent $record): bool => 
                     $record->status === CommunityEvent::STATUS_PENDING && 
-                    auth()->user()->can('approve community events'))
+                    Auth::user()->can('approve community events'))
                 ->requiresConfirmation()
                 ->action(function (CommunityEvent $record) {
                     $record->update([
@@ -49,7 +50,7 @@ class ViewCommunityEvent extends ViewRecord
                 ->color('danger')
                 ->visible(fn (CommunityEvent $record): bool => 
                     $record->status === CommunityEvent::STATUS_PENDING && 
-                    auth()->user()->can('approve community events'))
+                    Auth::user()->can('approve community events'))
                 ->requiresConfirmation()
                 ->action(function (CommunityEvent $record) {
                     $record->update(['status' => CommunityEvent::STATUS_REJECTED]);
@@ -184,7 +185,7 @@ class ViewCommunityEvent extends ViewRecord
 
                                 TextEntry::make('ticket_url')
                                     ->label('Tickets')
-                                    ->url()
+                                    ->url(null)
                                     ->openUrlInNewTab(),
                             ]),
                     ])
@@ -226,7 +227,7 @@ class ViewCommunityEvent extends ViewRecord
                                     ->dateTime('M j, Y g:i A'),
                             ]),
                     ])
-                    ->visible(fn () => auth()->user()->can('view admin info')),
+                    ->visible(fn () => Auth::user()->can('view admin info')),
             ]);
     }
 }

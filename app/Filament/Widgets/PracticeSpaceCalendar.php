@@ -36,7 +36,7 @@ class PracticeSpaceCalendar extends CalendarWidget
             ->where('reserved_at', '<=', $end)
             ->get()
             ->map(function (Reservation $reservation) {
-                $currentUser = User::me();
+                $currentUser = Auth::user();
                 $isOwnReservation = $currentUser?->id === $reservation->user_id;
                 $canViewDetails = $currentUser?->can('view reservations');
 

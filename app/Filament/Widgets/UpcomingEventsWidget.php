@@ -55,8 +55,8 @@ class UpcomingEventsWidget extends Widget
                         })->sortBy('order'),
                         'manager_name' => $production->manager?->name,
                         'genres' => $production->genres->pluck('name')->toArray(),
-                        'edit_url' => auth()->user() && 
-                            (auth()->user()->can('update productions') || $production->isManageredBy(auth()->user())) 
+                        'edit_url' => Auth::user() && 
+                            (Auth::user()->can('update productions') || $production->isManageredBy(Auth::user())) 
                             ? route('filament.member.resources.productions.edit', $production) 
                             : null,
                         'public_url' => route('events.show', $production),
@@ -67,7 +67,7 @@ class UpcomingEventsWidget extends Widget
 
     protected function canViewBand($band): bool
     {
-        $currentUser = auth()->user();
+        $currentUser = Auth::user();
         
         if ($band->visibility === 'public') {
             return true;

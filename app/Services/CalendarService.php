@@ -33,7 +33,7 @@ class CalendarService
         }
 
         try {
-            $currentUser = User::me();
+            $currentUser = Auth::user();
             $isOwnReservation = $currentUser && $currentUser->id === $reservation->user_id;
             $canViewDetails = $currentUser && $currentUser->can('view reservations');
 

@@ -17,7 +17,7 @@ class PayStripeAction
             ->visible(fn(Reservation $record) =>
                 $record->cost > 0 &&
                 $record->isUnpaid() &&
-                ($record->user_id === User::me()->id || User::me()->can('manage reservations'))
+                ($record->user_id === Auth::user()->id || Auth::user()->can('manage reservations'))
             )
             ->url(fn(Reservation $record) => route('reservations.payment.checkout', $record))
             ->openUrlInNewTab(false);

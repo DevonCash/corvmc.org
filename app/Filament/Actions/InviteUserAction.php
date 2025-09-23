@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 
 class InviteUserAction
@@ -27,7 +28,7 @@ class InviteUserAction
                     ->placeholder('Enter email address'),
 
                 CheckboxList::make('roles')
-                    ->visible(fn() => auth()->user()->hasRole('admin'))
+                    ->visible(fn() => Auth::user()->hasRole('admin'))
                     ->label('Assign Roles')
                     ->options(Role::all()->pluck('name', 'id'))
                     ->descriptions(Role::all()->pluck('name', 'id')->map(fn($name) => "Assign {$name} role"))

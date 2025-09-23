@@ -98,7 +98,7 @@ trait Revisionable
         string $type = Revision::TYPE_UPDATE
     ): Revision {
         $changes = $changes ?? $this->getDirty();
-        $submitter = $submitter ?? auth()->user();
+        $submitter = $submitter ?? Auth::user();
 
         if (!$submitter) {
             throw new \InvalidArgumentException('Cannot create revision without a submitter user');
@@ -171,7 +171,7 @@ trait Revisionable
         }
 
         // Create a revision instead of updating directly
-        $revision = $this->createRevision($attributes, auth()->user());
+        $revision = $this->createRevision($attributes, Auth::user());
 
         // If revision was auto-approved, the changes have been applied
         $revision->refresh();
@@ -347,7 +347,7 @@ trait Revisionable
                 break;
                 
             case 'personal':
-                $currentUser = auth()->user();
+                $currentUser = Auth::user();
                 if ($currentUser) {
                     // Use fully qualified classname as trust points key
                     $trustPointsKey = static::class;
@@ -372,7 +372,7 @@ trait Revisionable
                 
             case 'trusted':
             default:
-                $currentUser = auth()->user();
+                $currentUser = Auth::user();
                 if ($currentUser) {
                     $trustService = app(\App\Services\TrustService::class);
                     $trustWorkflow = $trustService->determineApprovalWorkflow($currentUser, static::class);

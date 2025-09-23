@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class ReportContentAction
 {
@@ -21,7 +22,7 @@ class ReportContentAction
             ->visible(
                 fn(Model $record) =>
                 // Don't show if user already reported this content
-                !$record->hasBeenReportedBy(auth()->user())
+                !$record->hasBeenReportedBy(Auth::user())
             )
             ->schema(fn(Model $record) => [
                 Select::make('reason')
@@ -57,7 +58,7 @@ class ReportContentAction
 
                     $report = ReportService::submitReport(
                         $record,
-                        auth()->user(),
+                        Auth::user(),
                         $data['reason'],
                         $customReason
                     );

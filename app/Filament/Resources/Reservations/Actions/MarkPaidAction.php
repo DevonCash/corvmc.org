@@ -18,7 +18,7 @@ class MarkPaidAction
             ->icon('tabler-cash')
             ->color('success')
             ->visible(fn(Reservation $record) =>
-                User::me()->can('manage reservations') &&
+                Auth::user()->can('manage reservations') &&
                 $record->cost > 0 && $record->isUnpaid())
             ->schema([
                 Select::make('payment_method')

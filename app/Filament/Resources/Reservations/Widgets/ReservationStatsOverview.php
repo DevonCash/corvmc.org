@@ -16,7 +16,7 @@ class ReservationStatsOverview extends BaseWidget
 
     protected function getStats(): array
     {
-        $user = User::me();
+        $user = Auth::user();
         $today = Carbon::today();
         $startOfWeek = Carbon::now()->startOfWeek();
         $endOfWeek = Carbon::now()->endOfWeek();
@@ -97,7 +97,7 @@ class ReservationStatsOverview extends BaseWidget
     {
         // Simple chart showing hourly activity for today
         $hourlyData = [];
-        $user = User::me();
+        $user = Auth::user();
 
         for ($hour = 9; $hour <= 21; $hour++) {
             $hasReservation = Reservation::where('user_id', $user->id)

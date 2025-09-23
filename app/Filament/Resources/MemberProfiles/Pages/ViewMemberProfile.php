@@ -42,11 +42,11 @@ class ViewMemberProfile extends Page
     {
         return [
             EditAction::make()
-                ->visible(fn () => auth()->user()->can('update', $this->record) ||
+                ->visible(fn () => Auth::user()->can('update', $this->record) ||
                     $this->record->user_id === auth()->id()
                 ),
             ReportContentAction::make()
-                ->visible(fn () => auth()->user()->id !== $this->record->user_id), // Don't show report button to profile owner
+                ->visible(fn () => Auth::user()->id !== $this->record->user_id), // Don't show report button to profile owner
         ];
     }
 
@@ -55,7 +55,7 @@ class ViewMemberProfile extends Page
         $this->record = $this->resolveRecord($record);
 
         // Check if user can view this profile
-        if (! $this->record->isVisible(auth()->user())) {
+        if (! $this->record->isVisible(Auth::user())) {
             abort(403, 'You do not have permission to view this profile.');
         }
     }

@@ -75,6 +75,6 @@ class BulkDeleteEquipmentAction
                 }
             })
             ->requiresConfirmation()
-            ->visible(fn () => auth()->user()->can('delete equipment'));
+            ->visible(fn () => Auth::user()->can('delete equipment'));
     }
 }

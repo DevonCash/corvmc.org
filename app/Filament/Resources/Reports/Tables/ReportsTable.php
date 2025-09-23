@@ -110,7 +110,7 @@ class ReportsTable
                     ->action(function ($records, array $data): void {
                         $count = ReportService::bulkResolveReports(
                             $records->pluck('id')->toArray(),
-                            User::me(),
+                            Auth::user(),
                             'upheld',
                             $data['resolution_notes'] ?? null
                         );
@@ -135,7 +135,7 @@ class ReportsTable
                     ->action(function ($records, array $data): void {
                         $count = ReportService::bulkResolveReports(
                             $records->pluck('id')->toArray(),
-                            User::me(),
+                            Auth::user(),
                             'dismissed',
                             $data['resolution_notes'] ?? null
                         );

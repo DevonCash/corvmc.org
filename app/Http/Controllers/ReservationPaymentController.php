@@ -21,7 +21,7 @@ class ReservationPaymentController extends Controller
     public function checkout(Reservation $reservation): RedirectResponse
     {
         // Ensure user owns the reservation or has permission
-        if ($reservation->user_id !== auth()->id() && !auth()->user()->can('manage reservations')) {
+        if ($reservation->user_id !== auth()->id() && !Auth::user()->can('manage reservations')) {
             abort(403);
         }
 
