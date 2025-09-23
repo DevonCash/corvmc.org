@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Data\Reservation\ReservationUsageData;
 use App\Models\Production;
 use App\Models\Reservation;
 use App\Models\Transaction;
@@ -9,6 +10,7 @@ use App\Models\User;
 use App\Notifications\ReservationCancelledNotification;
 use App\Notifications\ReservationConfirmedNotification;
 use App\Notifications\ReservationCreatedNotification;
+use App\Facades\MemberBenefitsService;
 use Brick\Money\Money;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,6 +30,7 @@ class ReservationService
     public const MIN_RESERVATION_DURATION = 1; // hours
 
     public const MAX_RESERVATION_DURATION = 8; // hours
+
 
     /**
      * Calculate the cost for a reservation.
@@ -519,6 +522,33 @@ class ReservationService
     }
 
     /**
+     * Get user's reservation usage for a specific month.
+     */
+    public function getUserUsageForMonth(User $user, Carbon $month): ReservationUsageData
+    {
+        $reservations = $user->reservations()
+            ->whereMonth('reserved_at', $month->month)
+            ->whereYear('reserved_at', $month->year)
+            ->where('free_hours_used', '>', 0)
+            ->get();
+
+        $totalFreeHours = $reservations->sum('free_hours_used');
+        $totalHours = $reservations->sum('hours_used');
+        $totalPaid = $reservations->sum('cost');
+
+        $allocatedFreeHours = MemberBenefitsService::getUserMonthlyFreeHours($user);
+
+        return new ReservationUsageData(
+            month: $month->format('Y-m'),
+            total_reservations: $reservations->count(),
+            total_hours: $totalHours,
+            free_hours_used: $totalFreeHours,
+            total_cost: $totalPaid,
+            allocated_free_hours: $allocatedFreeHours,
+        );
+    }
+
+    /**
      * Determine the initial status for a reservation based on business rules.
      */
     public function determineInitialStatus(Carbon $reservationDate, bool $isRecurring = false): string
@@ -791,39 +821,21 @@ class ReservationService
     /**
      * Handle successful payment and update reservation.
      */
-    public function handleSuccessfulPayment(Reservation $reservation, string $sessionId): Transaction
+    public function handleSuccessfulPayment(Reservation $reservation, string $sessionId): bool
     {
         try {
             $session = StripeSession::retrieve($sessionId);
 
-            // Create transaction record
-            $transaction = Transaction::create([
-                'transaction_id' => $session->payment_intent,
-                'email' => $reservation->user->email,
-                'amount' => $reservation->cost,
-                'currency' => $session->currency,
-                'type' => 'payment',
-                'response' => [
-                    'stripe_session_id' => $sessionId,
-                    'stripe_payment_intent' => $session->payment_intent,
-                    'stripe_payment_status' => $session->payment_status,
-                    'stripe_customer_id' => $session->customer,
-                    'metadata' => $session->metadata->toArray(),
-                ],
-                'transactionable_type' => Reservation::class,
-                'transactionable_id' => $reservation->id,
-            ]);
-
-            // Update reservation payment status
+            // Update reservation payment status (Transaction model removed)
             $reservation->update([
                 'payment_status' => 'paid',
                 'payment_method' => 'stripe',
                 'paid_at' => now(),
-                'payment_notes' => "Paid via Stripe (Session: {$sessionId})",
+                'payment_notes' => "Paid via Stripe (Session: {$sessionId}, Payment Intent: {$session->payment_intent})",
                 'status' => 'confirmed', // Automatically confirm paid reservations
             ]);
 
-            return $transaction;
+            return true;
         } catch (ApiErrorException $e) {
             throw new \Exception('Failed to process Stripe payment: ' . $e->getMessage());
         }

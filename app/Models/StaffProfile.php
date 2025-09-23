@@ -16,51 +16,6 @@ enum StaffProfileType: string
     case Staff = 'staff';
 }
 
-/**
- * @property int $id
- * @property string $name
- * @property int $user_id
- * @property string|null $title
- * @property string|null $bio
- * @property \App\Models\StaffProfileType $type
- * @property int $sort_order
- * @property bool $is_active
- * @property string|null $email
- * @property array<array-key, mixed>|null $social_links
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read string|null $profile_image_thumb_url
- * @property-read string|null $profile_image_url
- * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
- * @property-read int|null $media_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $pendingRevisions
- * @property-read int|null $pending_revisions_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $revisions
- * @property-read int|null $revisions_count
- * @property-read \App\Models\User $user
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile active()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile board()
- * @method static \Database\Factories\StaffProfileFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile inactive()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile ordered()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile staff()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereBio($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereIsActive($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereSocialLinks($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereSortOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereUserId($value)
- * @mixin \Eloquent
- */
 class StaffProfile extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia, Revisionable;

@@ -5,12 +5,10 @@ namespace App\Providers;
 use App\Models\Production;
 use App\Models\Reservation;
 use App\Models\Subscription;
-use App\Models\Transaction;
 use App\Models\User;
 use App\Observers\ProductionObserver;
 use App\Observers\ReservationObserver;
 use App\Observers\TagObserver;
-use App\Observers\TransactionObserver;
 use App\Observers\UserObserver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
@@ -51,7 +49,6 @@ class AppServiceProvider extends ServiceProvider
         User::observe(UserObserver::class);
         Reservation::observe(ReservationObserver::class);
         Production::observe(ProductionObserver::class);
-        Transaction::observe(TransactionObserver::class);
         Tag::observe(TagObserver::class);
 
         // Register facade aliases

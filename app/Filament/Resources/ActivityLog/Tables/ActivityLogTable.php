@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Filament\Resources\ActivityLogResource\Tables;
+namespace App\Filament\Resources\ActivityLog\Tables;
 
 use App\Filament\Widgets\ActivityFeedWidget;
 use App\Models\User;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\Models\Activity;
 use Filament\Forms;
 use Filament\Actions;
@@ -157,7 +158,6 @@ class ActivityLogTable
 
     protected static function formatActivityDescription(Activity $activity): string
     {
-        $currentUser = auth()->user();
         $causerName = $activity->causer?->name ?? 'System';
 
         return match ($activity->description) {
@@ -199,7 +199,7 @@ class ActivityLogTable
 
     protected static function formatReservationDescription(Activity $activity, string $causerName, string $action): string
     {
-        $currentUser = auth()->user();
+        $currentUser = Auth::user();
         $reservation = $activity->subject;
 
         // Only show details for own reservations or if user has permission
@@ -228,7 +228,7 @@ class ActivityLogTable
             'User account created' => 'tabler-user-plus',
             'User account updated' => 'tabler-user-edit',
             'Production created' => 'tabler-calendar-plus',
-            'Production updated' => 'tabler-calendar-edit',
+            'Production updated' => 'tabler-calendar',
             'Production deleted' => 'tabler-calendar-minus',
             'Band profile created' => 'tabler-users-plus',
             'Band profile updated' => 'tabler-users',

@@ -25,7 +25,6 @@ class CommunityEventResource extends Resource
     protected static ?string $modelLabel = 'Community Event';
     protected static ?string $pluralModelLabel = 'Community Events';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Community';
     protected static ?int $navigationSort = 10;
 
     public static function form(Schema $schema): Schema

@@ -17,59 +17,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *
  * It includes details about the user who made the reservation
  * and the status of the reservation.
- *
- * @property int $id
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $deleted_at
- * @property int $user_id
- * @property string $status
- * @property string $payment_status
- * @property string|null $payment_method
- * @property \Illuminate\Support\Carbon|null $paid_at
- * @property string|null $payment_notes
- * @property numeric $hours_used
- * @property numeric $free_hours_used
- * @property bool $is_recurring
- * @property array<array-key, mixed>|null $recurrence_pattern
- * @property string|null $notes
- * @property \Illuminate\Support\Carbon|null $reserved_at
- * @property \Illuminate\Support\Carbon|null $reserved_until
- * @property \Brick\Money\Money $cost
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
- * @property-read int|null $activities_count
- * @property-read string $cost_display
- * @property-read float $duration
- * @property-read array $payment_status_badge
- * @property-read string $status_display
- * @property-read string $time_range
- * @property-read \App\Models\Transaction|null $paymentTransaction
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Transaction> $transactions
- * @property-read int|null $transactions_count
- * @property-read \App\Models\User $user
- * @method static \Database\Factories\ReservationFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereCost($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereFreeHoursUsed($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereHoursUsed($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereIsRecurring($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereNotes($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation wherePaidAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation wherePaymentMethod($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation wherePaymentNotes($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation wherePaymentStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereRecurrencePattern($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereReservedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereReservedUntil($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reservation whereUserId($value)
- * @mixin \Eloquent
  */
 class Reservation extends Model implements Eventable
 {
@@ -115,22 +62,6 @@ class Reservation extends Model implements Eventable
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the reservation's transactions.
-     */
-    public function transactions()
-    {
-        return $this->morphMany(Transaction::class, 'transactionable');
-    }
-
-    /**
-     * Get the payment transaction for this reservation.
-     */
-    public function paymentTransaction()
-    {
-        return $this->morphOne(Transaction::class, 'transactionable')
-            ->where('type', 'payment');
-    }
 
     /**
      * Get the reservation as a Period object.

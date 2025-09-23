@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\ActivityLogResource\Widgets;
+namespace App\Filament\Resources\ActivityLog\Widgets;
 
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;

@@ -133,7 +133,6 @@ class UserService
         return DB::transaction(function () use ($user) {
             // Clean up related data
             $user->reservations()->forceDelete();
-            $user->transactions()->delete();
             $user->profile?->delete();
 
             return $user->forceDelete();

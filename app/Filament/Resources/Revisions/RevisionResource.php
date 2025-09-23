@@ -17,7 +17,7 @@ class RevisionResource extends Resource
 {
     protected static ?string $model = Revision::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentDuplicate;
+    protected static string|BackedEnum|null $navigationIcon = 'tabler-clipboard-check';
     
     protected static ?string $navigationLabel = 'Revisions';
     

@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Models\Band;
 use App\Models\Production;
 use App\Models\MemberProfile;
+use Illuminate\Support\Facades\Auth;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -93,7 +94,7 @@ Route::get('/bands', function () {
 })->name('bands.index');
 
 Route::get('/bands/{band}', function (Band $band) {
-    abort_unless($band->isVisible(auth()->user()), 404);
+    abort_unless($band->isVisible(Auth::user()), 404);
 
     $band->load(['members', 'tags', 'media']);
 

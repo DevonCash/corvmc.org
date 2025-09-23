@@ -26,4 +26,7 @@ Homestead.yaml
 Thumbs.db
 
 .vemto_settings
-_ide_helper.php
+_ide_helper*.php
+.phpstorm.meta.php
+.claude
+.github

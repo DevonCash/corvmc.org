@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Filament\Resources\ActivityLogResource\Pages;
+namespace App\Filament\Resources\ActivityLog\Pages;
 
-use App\Filament\Resources\ActivityLogResource;
+use App\Filament\Resources\ActivityLog\ActivityLogResource;
+use App\Filament\Resources\ActivityLog\Widgets\ActivityStatsWidget;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Facades\Auth;
 
 class ListActivityLogs extends ListRecords
 {
@@ -30,14 +32,14 @@ class ListActivityLogs extends ListRecords
                         ->success()
                         ->send();
                 })
-                ->visible(fn (): bool => auth()->user()?->can('delete activity log') ?? false),
+                ->visible(fn (): bool => Auth::user()?->can('delete activity log') ?? false),
         ];
     }
 
     protected function getHeaderWidgets(): array
     {
         return [
-            ActivityLogResource\Widgets\ActivityStatsWidget::class,
+            ActivityStatsWidget::class,
         ];
     }
 

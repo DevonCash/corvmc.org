@@ -74,22 +74,7 @@ class UserSummaryWidget extends Widget
                 ];
             }
 
-            $recentTransactions = $user->transactions()
-                ->where('created_at', '>', now()->subDays(30))
-                ->orderBy('created_at', 'desc')
-                ->limit(2)
-                ->get();
-
-            foreach ($recentTransactions as $transaction) {
-                $activities[] = [
-                    'type' => 'transaction',
-                    'date' => $transaction->created_at,
-                    'description' => ucfirst($transaction->type) . ' - $' . number_format($transaction->amount, 2),
-                    'icon' => 'tabler-credit-card',
-                    'url' => route('filament.member.resources.transactions.view', ['record' => $transaction->id]),
-                    'model' => $transaction,
-                ];
-            }
+            // Transaction functionality removed
 
             return collect($activities)
                 ->sortByDesc('date')

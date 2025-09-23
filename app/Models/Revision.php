@@ -12,54 +12,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * 
  * Represents pending changes to any model that require moderator approval.
  * Stores original data, proposed changes, and approval workflow state.
- *
- * @property int $id
- * @property string $revisionable_type
- * @property int $revisionable_id
- * @property array<array-key, mixed> $original_data
- * @property array<array-key, mixed> $proposed_changes
- * @property string $status
- * @property int $submitted_by_id
- * @property int|null $reviewed_by_id
- * @property \Illuminate\Support\Carbon|null $reviewed_at
- * @property string|null $review_reason
- * @property string|null $submission_reason
- * @property string $revision_type
- * @property bool $auto_approved
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
- * @property-read int|null $activities_count
- * @property-read \App\Models\User|null $reviewedBy
- * @property-read Model|\Eloquent $revisionable
- * @property-read \App\Models\User $submittedBy
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision approved()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision autoApproved()
- * @method static \Database\Factories\RevisionFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision forModelType(string $modelType)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision olderThan(int $days)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision pending()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision rejected()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision submittedBy(\App\Models\User $user)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereAutoApproved($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereOriginalData($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereProposedChanges($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereReviewReason($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereReviewedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereReviewedById($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereRevisionType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereRevisionableId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereRevisionableType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereSubmissionReason($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereSubmittedById($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereUpdatedAt($value)
- * @mixin \Eloquent
  */
 class Revision extends Model
 {

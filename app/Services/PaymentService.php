@@ -122,13 +122,8 @@ class PaymentService
      */
     public function getTotalPaymentsReceived(Reservation $reservation): Money
     {
-        $transactions = $reservation->transactions()
-            ->where('type', 'payment')
-            ->get();
-
-        $totalCents = $transactions->sum(fn($transaction) => $transaction->amount->getMinorAmount()->toInt());
-
-        return Money::ofMinor($totalCents, 'USD');
+        // Since Transaction model is removed, return zero
+        return Money::ofMinor(0, 'USD');
     }
 
     /**

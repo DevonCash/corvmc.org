@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\User;
 use App\Models\Reservation;
-use App\Models\Transaction;
 use App\Models\Band;
 use App\Services\ReservationService;
 use App\Services\UserSubscriptionService;
@@ -14,7 +13,6 @@ use App\Notifications\ReservationCreatedNotification;
 use App\Notifications\ReservationConfirmationReminderNotification;
 use App\Notifications\ReservationReminderNotification;
 use App\Notifications\ReservationCancelledNotification;
-use App\Notifications\DonationReceivedNotification;
 use App\Notifications\BandInvitationNotification;
 use App\Notifications\MembershipExpiredNotification;
 use App\Notifications\MembershipRenewalReminderNotification;
@@ -57,9 +55,7 @@ class TestNotificationSystem extends Command
             $this->info('🏠 1. Testing Reservation Notifications...');
             $this->testReservationNotifications($testUser, $shouldSend);
 
-            // 2. Test Donation Notifications
-            $this->info('💰 2. Testing Donation Notifications...');
-            $this->testDonationNotifications($testUser, $shouldSend);
+            // 2. Donation Notifications removed (Transaction model removed)
 
             // 3. Test Band Invitation Notifications
             $this->info('🎵 3. Testing Band Invitation Notifications...');
@@ -176,49 +172,6 @@ class TestNotificationSystem extends Command
         $reservation->delete();
     }
 
-    protected function testDonationNotifications(User $user, bool $shouldSend): void
-    {
-        // Create test transactions
-        $oneTimeTransaction = Transaction::create([
-            'transaction_id' => 'test-' . uniqid(),
-            'email' => $user->email,
-            'amount' => 25.00,
-            'currency' => 'USD',
-            'type' => 'one-time',
-            'response' => ['test' => 'data'],
-        ]);
-
-        $recurringTransaction = Transaction::create([
-            'transaction_id' => 'test-recurring-' . uniqid(),
-            'email' => $user->email,
-            'amount' => 15.00,
-            'currency' => 'USD',
-            'type' => 'recurring',
-            'response' => ['test' => 'data'],
-        ]);
-
-        $this->line("   • Created test transactions: one-time ($25) and recurring ($15)");
-
-        // Test one-time donation notification
-        if ($shouldSend) {
-            $user->notify(new DonationReceivedNotification($oneTimeTransaction));
-            $this->line("   ✓ Sent one-time donation thank you notification");
-        } else {
-            $this->line("   → Would send one-time donation thank you notification");
-        }
-
-        // Test recurring donation notification
-        if ($shouldSend) {
-            $user->notify(new DonationReceivedNotification($recurringTransaction));
-            $this->line("   ✓ Sent recurring donation thank you notification");
-        } else {
-            $this->line("   → Would send recurring donation thank you notification");
-        }
-
-        // Clean up
-        $oneTimeTransaction->delete();
-        $recurringTransaction->delete();
-    }
 
     protected function testBandNotifications(User $user, bool $shouldSend): void
     {

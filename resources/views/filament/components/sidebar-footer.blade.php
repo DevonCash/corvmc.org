@@ -1,6 +1,6 @@
 <div class="fi-sidebar-footer border-t border-gray-200 dark:border-gray-700 mt-auto">
     <a href="{{ route('filament.member.resources.users.edit', ['record' => auth()->user()->id]) }}" 
-       class="flex items-center space-x-3 p-4 group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+       class="flex items-center space-x-3 p-4 group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-lg m-2 border border-transparent hover:border-gray-200 dark:hover:border-gray-600">
         <!-- User Avatar -->
         <div class="flex-shrink-0">
             @if(auth()->user()->getFilamentAvatarUrl())
@@ -24,6 +24,11 @@
             <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
                 {{ auth()->user()->email }}
             </p>
+        </div>
+        
+        <!-- Edit Icon -->
+        <div class="flex-shrink-0">
+            <x-tabler-user-cog class="size-5 text-gray-400 dark:text-gray-500 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" />
         </div>
     </a>
 </div>

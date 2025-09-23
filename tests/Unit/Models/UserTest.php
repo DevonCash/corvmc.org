@@ -3,7 +3,6 @@
 namespace Tests\Unit\Models;
 
 use App\Models\Reservation;
-use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -155,16 +154,7 @@ class UserTest extends TestCase
         $this->assertEquals($this->user->id, $reservation->user_id);
     }
 
-    #[Test]
-    public function it_has_transactions_relationship()
-    {
-        $transaction = Transaction::factory()->create([
-            'email' => $this->user->email,
-        ]);
-
-        $this->assertTrue($this->user->transactions->contains($transaction));
-        $this->assertEquals($this->user->email, $transaction->email);
-    }
+    // Transaction relationship test removed (Transaction model removed)
 
     #[Test]
     public function it_creates_user_with_factory()

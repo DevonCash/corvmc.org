@@ -23,14 +23,7 @@ return new class extends Migration
             $table->index(['user_id', 'created_at'], 'idx_reservations_user_created');
         });
 
-        // Transactions performance indexes  
-        Schema::table('transactions', function (Blueprint $table) {
-            // For sustaining member detection (isSustainingMember)
-            $table->index(['email', 'type', 'amount', 'created_at'], 'idx_transactions_sustaining_members');
-            
-            // For subscription statistics
-            $table->index(['type', 'created_at'], 'idx_transactions_type_date');
-        });
+        // Transactions table indexes removed (Transaction model removed)
 
         // Productions performance indexes
         Schema::table('productions', function (Blueprint $table) {
@@ -79,10 +72,7 @@ return new class extends Migration
             $table->dropIndex('idx_reservations_user_created');
         });
 
-        Schema::table('transactions', function (Blueprint $table) {
-            $table->dropIndex('idx_transactions_sustaining_members');
-            $table->dropIndex('idx_transactions_type_date');
-        });
+        // Transactions table indexes removed (Transaction model removed)
 
         Schema::table('productions', function (Blueprint $table) {
             $table->dropIndex('idx_productions_time_range');

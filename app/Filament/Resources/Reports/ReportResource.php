@@ -27,7 +27,7 @@ class ReportResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Reports';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Admin';
+    protected static string|\UnitEnum|null $navigationGroup = 'Moderation';
 
     protected static ?int $navigationSort = 90;
 
