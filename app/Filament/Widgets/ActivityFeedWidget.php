@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\User;
 use Filament\Widgets\Widget;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\Models\Activity;
 
 class ActivityFeedWidget extends Widget

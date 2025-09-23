@@ -15,6 +15,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class UserForm
 {
@@ -68,8 +69,8 @@ class UserForm
                                                 ->modalDescription(fn($record) => "Send a password reset email to {$record->email}?")
                                                 ->modalSubmitActionLabel('Send Reset Email')
                                                 ->action(function (User $record) {
-
-                                                    $record->sendPasswordResetNotification();
+                                                    $token = \Password::createToken($record);
+                                                    $record->sendPasswordResetNotification($token);
                                                 }),
                                         ])->verticalAlignment('end')
                                     ]),

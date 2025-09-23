@@ -16,6 +16,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class UserResource extends Resource
@@ -73,7 +74,7 @@ class UserResource extends Resource
 
         // Restrict table to current user if they don't have view users permission
         if (!Auth::user()?->can('view users')) {
-            $table->modifyQueryUsing(fn($query) => $query->where('id', auth()->id()));
+            $table->modifyQueryUsing(fn($query) => $query->where('id', Auth::id()));
         }
 
         return $table;

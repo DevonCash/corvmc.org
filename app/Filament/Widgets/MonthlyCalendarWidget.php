@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Closure;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 use Guava\Calendar\Widgets\CalendarWidget;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 
 class MonthlyCalendarWidget extends CalendarWidget

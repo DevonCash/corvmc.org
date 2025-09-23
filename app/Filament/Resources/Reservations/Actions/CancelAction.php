@@ -6,6 +6,7 @@ use App\Models\Reservation;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 
 class CancelAction
 {
@@ -15,7 +16,7 @@ class CancelAction
             ->icon('tabler-calendar-x')
             ->color('danger')
             ->visible(fn(Reservation $record) =>
-                $record->user_id === Auth::user()->id || Auth::user()->can('manage reservations'))
+                $record->user_id === Auth::id() || Auth::user()->can('manage reservations'))
             ->requiresConfirmation()
             ->action(function (Reservation $record) {
                 \App\Facades\ReservationService::cancelReservation($record);

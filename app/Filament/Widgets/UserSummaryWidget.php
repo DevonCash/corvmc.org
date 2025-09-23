@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use Filament\Widgets\Widget;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class UserSummaryWidget extends Widget

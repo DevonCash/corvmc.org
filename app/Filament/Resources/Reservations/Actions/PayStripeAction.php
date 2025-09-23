@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Reservations\Actions;
 use App\Models\Reservation;
 use App\Models\User;
 use Filament\Actions\Action;
+use Illuminate\Support\Facades\Auth;
 
 class PayStripeAction
 {
@@ -17,7 +18,7 @@ class PayStripeAction
             ->visible(fn(Reservation $record) =>
                 $record->cost > 0 &&
                 $record->isUnpaid() &&
-                ($record->user_id === Auth::user()->id || Auth::user()->can('manage reservations'))
+                ($record->user_id === Auth::id() || Auth::user()->can('manage reservations'))
             )
             ->url(fn(Reservation $record) => route('reservations.payment.checkout', $record))
             ->openUrlInNewTab(false);
