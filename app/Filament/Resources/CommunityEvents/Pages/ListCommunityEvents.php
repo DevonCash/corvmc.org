@@ -29,10 +29,12 @@ class ListCommunityEvents extends ListRecords
             'pending' => Tab::make('Pending Approval')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', CommunityEvent::STATUS_PENDING))
                 ->badge(CommunityEvent::where('status', CommunityEvent::STATUS_PENDING)->count())
-                ->badgeColor('warning'),
+                ->badgeColor('warning')
+                ->visible(fn () => Auth::user()->can('approve community events')),
             
             'approved' => Tab::make('Approved')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', CommunityEvent::STATUS_APPROVED)),
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', CommunityEvent::STATUS_APPROVED))
+                ->visible(fn () => Auth::user()->can('approve community events')),
             
             'upcoming' => Tab::make('Upcoming')
                 ->modifyQueryUsing(fn (Builder $query) => $query->approvedUpcoming()),
