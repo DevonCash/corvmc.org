@@ -99,7 +99,7 @@ class ReportsTable
             ->toolbarActions([
                 \Filament\Actions\BulkAction::make('bulk_uphold')
                     ->label('Uphold Selected')
-                    ->icon('heroicon-o-check-circle')
+                    ->icon('tabler-circle-check')
                     ->color('danger')
                     ->requiresConfirmation()
                     ->schema([
@@ -124,7 +124,7 @@ class ReportsTable
 
                 \Filament\Actions\BulkAction::make('bulk_dismiss')
                     ->label('Dismiss Selected')
-                    ->icon('heroicon-o-x-circle')
+                    ->icon('tabler-circle-x')
                     ->color('success')
                     ->requiresConfirmation()
                     ->schema([

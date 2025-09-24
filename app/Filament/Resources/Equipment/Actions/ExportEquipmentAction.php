@@ -16,7 +16,7 @@ class ExportEquipmentAction
     {
         return Action::make('export_equipment')
             ->label('Export Equipment')
-            ->icon('heroicon-o-arrow-down-tray')
+            ->icon('tabler-file-export')
             ->color('info')
             ->modalWidth('md')
             ->modalHeading('Export Equipment Data')
@@ -30,7 +30,7 @@ class ExportEquipmentAction
                     ])
                     ->default('csv')
                     ->required(),
-                    
+
                 Select::make('scope')
                     ->label('Equipment to Export')
                     ->options([
@@ -44,7 +44,7 @@ class ExportEquipmentAction
                     ])
                     ->default('all')
                     ->required(),
-                    
+
                 CheckboxList::make('fields')
                     ->label('Fields to Include')
                     ->options([
@@ -68,7 +68,7 @@ class ExportEquipmentAction
                         'notes' => 'Notes',
                     ])
                     ->default([
-                        'name', 'type', 'brand', 'model', 'condition', 
+                        'name', 'type', 'brand', 'model', 'condition',
                         'status', 'estimated_value', 'acquisition_type'
                     ])
                     ->required()
@@ -78,7 +78,7 @@ class ExportEquipmentAction
                 try {
                     // Build query based on scope
                     $query = Equipment::query();
-                    
+
                     switch ($data['scope']) {
                         case 'available':
                             $query->available();
@@ -99,14 +99,14 @@ class ExportEquipmentAction
                             $query->onLoanToCmc();
                             break;
                     }
-                    
+
                     // Get equipment with relationships
                     $equipment = $query->with(['provider', 'currentLoan.borrower', 'parent'])->get();
-                    
+
                     // Prepare data
                     $exportData = $equipment->map(function ($item) use ($data) {
                         $row = [];
-                        
+
                         foreach ($data['fields'] as $field) {
                             $row[$field] = match($field) {
                                 'name' => $item->name,
@@ -130,22 +130,22 @@ class ExportEquipmentAction
                                 default => $item->$field ?? '',
                             };
                         }
-                        
+
                         return $row;
                     });
-                    
+
                     // Generate filename
                     $timestamp = now()->format('Y-m-d_H-i-s');
                     $scope = $data['scope'] === 'all' ? 'equipment' : $data['scope'] . '_equipment';
                     $filename = "cmc_{$scope}_export_{$timestamp}.{$data['format']}";
-                    
+
                     // Create headers
                     $headers = array_map(fn($field) => ucwords(str_replace('_', ' ', $field)), $data['fields']);
-                    
+
                     if ($data['format'] === 'csv') {
                         // Generate CSV
                         $output = fopen('php://output', 'w');
-                        
+
                         return Response::streamDownload(function () use ($output, $headers, $exportData) {
                             fputcsv($output, $headers);
                             foreach ($exportData as $row) {
@@ -156,11 +156,11 @@ class ExportEquipmentAction
                             'Content-Type' => 'text/csv',
                         ]);
                     }
-                    
+
                     // For Excel format, you'd need a package like maatwebsite/excel
                     // This is a placeholder for now
                     throw new \Exception('Excel export not yet implemented. Please use CSV format.');
-                    
+
                 } catch (\Exception $e) {
                     Notification::make()
                         ->danger()
@@ -169,7 +169,7 @@ class ExportEquipmentAction
                         ->send();
                 }
             })
-            ->modalIcon('heroicon-o-arrow-down-tray')
+            ->modalIcon('tabler-file-export')
             ->visible(fn () => Auth::user()->can('export equipment'));
     }
 }

@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Reports\Pages;
 
 use App\Filament\Resources\Reports\ReportResource;
 use App\Models\Report;
-use App\Models\User;
 use App\Services\ReportService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -138,7 +137,7 @@ class ViewReport extends ViewRecord
         return [
             Action::make('uphold')
                 ->label('Uphold')
-                ->icon('heroicon-o-check-circle')
+                ->icon('tabler-circle-check')
                 ->color('danger')
                 ->visible(
                     fn(Report $record): bool =>
@@ -169,7 +168,7 @@ class ViewReport extends ViewRecord
 
             Action::make('dismiss')
                 ->label('Dismiss')
-                ->icon('heroicon-o-x-circle')
+                ->icon('tabler-circle-x')
                 ->color('success')
                 ->visible(
                     fn(Report $record): bool => $record->status === 'pending' && Auth::user()->can('dismiss', [$record])
@@ -199,7 +198,7 @@ class ViewReport extends ViewRecord
 
             Action::make('escalate')
                 ->label('Escalate')
-                ->icon('heroicon-o-arrow-up-circle')
+                ->icon('tabler-circle-arrow-up')
                 ->color('warning')
                 ->visible(
                     fn(Report $record): bool =>

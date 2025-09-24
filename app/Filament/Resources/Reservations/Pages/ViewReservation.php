@@ -21,14 +21,14 @@ class ViewReservation extends ViewRecord
         // Add payment action if reservation requires payment and user owns it or has permission
         $reservation = $this->getRecord();
         $user = Auth::user();
-        
-        if ($reservation->cost > 0 && 
-            !$reservation->isPaid() && 
+
+        if ($reservation->cost > 0 &&
+            !$reservation->isPaid() &&
             ($reservation->user_id === $user->id || $user->can('manage reservations'))) {
-            
+
             $actions[] = Action::make('payNow')
                 ->label('Pay Now')
-                ->icon('heroicon-o-credit-card')
+                ->icon('tabler-credit-card')
                 ->color('success')
                 ->url(route('reservations.payment.checkout', $reservation))
                 ->openUrlInNewTab(false);

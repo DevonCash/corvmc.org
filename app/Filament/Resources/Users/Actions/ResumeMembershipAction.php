@@ -11,7 +11,7 @@ class ResumeMembershipAction
     {
         return Action::make('resume_membership')
             ->label('Resume Contribution')
-            ->icon('heroicon-o-arrow-path')
+            ->icon('tabler-restore')
             ->outlined()
             ->color('success')
             ->requiresConfirmation()

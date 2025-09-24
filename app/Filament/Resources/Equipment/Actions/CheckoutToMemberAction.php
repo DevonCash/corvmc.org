@@ -21,7 +21,7 @@ class CheckoutToMemberAction
     {
         return Action::make('checkout_to_member')
             ->label('Checkout')
-            ->icon('heroicon-o-user-circle')
+            ->icon('tabler-user')
             ->color('success')
             ->modalWidth('md')
             ->modalHeading('Checkout Equipment')
@@ -94,7 +94,7 @@ class CheckoutToMemberAction
                 }
             })
             ->requiresConfirmation()
-            ->modalIcon('heroicon-o-user-circle')
+            ->modalIcon('tabler-user')
             ->visible(fn($record) => $record->is_available);
     }
 }

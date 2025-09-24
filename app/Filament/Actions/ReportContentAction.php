@@ -17,7 +17,7 @@ class ReportContentAction
     {
         return Action::make($name)
             ->label('Report Content')
-            ->icon('heroicon-o-flag')
+            ->icon('tabler-flag')
             ->color('danger')
             ->visible(
                 fn(Model $record) =>

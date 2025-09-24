@@ -156,7 +156,7 @@ class ProductionForm
             ->numeric()
             ->step(0.01)
             ->helperText('Leave blank for multiple prices')
-            ->hintIcon('heroicon-s-information-circle')
+            ->hintIcon('tabler-info-circle')
             ->hintIconTooltip('Use the heart button to toggle NOTAFLOF')
             ->placeholder('15.00')
             ->live()
@@ -164,7 +164,7 @@ class ProductionForm
                 Action::make('toggle_notaflof')
                     ->label('NOTAFLOF')
                     ->icon(function ($get) {
-                        return $get('notaflof') ? 'heroicon-s-heart' : 'heroicon-o-heart';
+                        return $get('notaflof') ? 'tabler-heart-filled' : 'tabler-heart';
                     })
                     ->color(function ($get) {
                         return $get('notaflof') ? 'danger' : 'gray';
@@ -200,7 +200,7 @@ class ProductionForm
     {
         return Checkbox::make('at_cmc')
             ->label('At Corvallis Music Collective')
-            ->hintIcon('heroicon-s-information-circle')
+            ->hintIcon('tabler-building-circus')
             ->hintIconTooltip('Uncheck this box if the show is at an external venue')
             ->default(true)
             ->live()
@@ -239,16 +239,16 @@ class ProductionForm
             })
             ->prefixIcon(function ($state) {
                 if (! $state) {
-                    return 'heroicon-s-x-circle';
+                    return 'tabler-circle-x';
                 }
                 $date = is_string($state) ? \Carbon\Carbon::parse($state) : $state;
 
-                return $date->isFuture() ? 'heroicon-s-clock' : 'heroicon-s-check';
+                return $date->isFuture() ? 'tabler-clock' : 'tabler-circle-check';
             })
             ->suffixAction(
                 Action::make('setNow')
                     ->label('Publish Now')
-                    ->icon('heroicon-m-clock')
+                    ->icon('tabler-clock-down')
                     ->action(function ($set, $livewire, $component) {
                         $now = now();
                         $formatted = $now->format('Y-m-d\TH:i');

@@ -38,7 +38,7 @@ class ListReservations extends ListRecords
                 ->steps(ReservationForm::getSteps())
                 ->action(function (array $data) {
                     $user = User::find($data['user_id']);
-                    
+
                     // Use ReservationService to properly create reservation with notifications
                     $reservation = \App\Facades\ReservationService::createReservation(
                         $user,
@@ -65,13 +65,13 @@ class ListReservations extends ListRecords
     {
         return [
             'upcoming' => Tab::make('Upcoming')
-                ->icon('heroicon-o-clock')
+                ->icon('tabler-calendar-clock')
                 ->modifyQueryUsing(fn(Builder $query) => $query
                     ->where('status', '!=', 'cancelled')
                     ->where('reserved_at', '>', now())),
 
             'all' => Tab::make('All')
-                ->icon('heroicon-o-queue-list'),
+                ->icon('tabler-calendar'),
         ];
     }
 

@@ -45,7 +45,7 @@ class ClaimBand extends Page
     {
         return Action::make('claimBand')
             ->label('Claim This Band')
-            ->icon('heroicon-o-check-circle')
+            ->icon('tabler-circle-check')
             ->color('success')
             ->requiresConfirmation()
             ->modalHeading('Claim Band Ownership')
@@ -85,7 +85,7 @@ class ClaimBand extends Page
     {
         return Action::make('createNewBand')
             ->label('Create New Band Instead')
-            ->icon('heroicon-o-plus-circle')
+            ->icon('tabler-circle-plus')
             ->color('gray')
             ->action(function () {
                 Session::forget('claimable_band');

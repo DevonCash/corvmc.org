@@ -19,7 +19,7 @@ class CreateMembershipSubscriptionAction
     {
         return Action::make('create_membership_subscription')
             ->label('Become a Sustaining Member')
-            ->icon('heroicon-o-credit-card')
+            ->icon('tabler-user-heart')
             ->color('primary')
             ->modalWidth('lg')
             ->schema([

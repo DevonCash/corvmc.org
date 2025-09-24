@@ -14,7 +14,7 @@ class ProcessReturnAction
     {
         return Action::make('process_return')
             ->label('Process Return')
-            ->icon('heroicon-o-arrow-uturn-left')
+            ->icon('tabler-receipt-refund')
             ->color('primary')
             ->modalWidth('md')
             ->modalHeading('Process Equipment Return')
@@ -31,12 +31,12 @@ class ProcessReturnAction
                     ])
                     ->required()
                     ->reactive(),
-                    
+
                 Textarea::make('damage_notes')
                     ->label('Damage/Condition Notes')
                     ->placeholder('Describe any damage or condition changes')
                     ->rows(3)
-                    ->visible(fn (callable $get) => 
+                    ->visible(fn (callable $get) =>
                         in_array($get('condition_in'), ['fair', 'poor', 'needs_repair'])
                     ),
             ])
@@ -44,28 +44,28 @@ class ProcessReturnAction
                 try {
                     $equipmentService = app(EquipmentService::class);
                     $currentLoan = $record->currentLoan;
-                    
+
                     if (!$currentLoan) {
                         throw new \Exception('No active loan found for this equipment.');
                     }
-                    
+
                     $loan = $equipmentService->processReturn(
                         loan: $currentLoan,
                         conditionIn: $data['condition_in'],
                         damageNotes: $data['damage_notes'] ?? null
                     );
-                    
+
                     // Update equipment condition if it changed
                     if ($data['condition_in'] !== $record->condition) {
                         $record->update(['condition' => $data['condition_in']]);
                     }
-                    
+
                     Notification::make()
                         ->title('Equipment Returned')
                         ->body("Successfully processed return of {$record->name}")
                         ->success()
                         ->send();
-                        
+
                 } catch (\Exception $e) {
                     Notification::make()
                         ->title('Return Failed')
@@ -75,7 +75,7 @@ class ProcessReturnAction
                 }
             })
             ->requiresConfirmation()
-            ->modalIcon('heroicon-o-arrow-uturn-left')
+            ->modalIcon('tabler-receipt-refund')
             ->visible(fn ($record) => $record->is_checked_out && $record->currentLoan);
     }
 }

@@ -50,7 +50,7 @@ class UserForm
                                                     fn($record) => $record?->email_verified_at ?
                                                         null :
                                                         Action::make('send_verification')
-                                                        ->icon('heroicon-o-envelope')
+                                                        ->icon('tabler-send')
                                                         ->color('primary')
                                                         ->tooltip('Send verification email')
                                                         ->action(function ($record) {
@@ -62,7 +62,7 @@ class UserForm
                                                 ->hint(fn($record) => $record?->email_verified_at ? 'Verified' : 'Unverified'),
                                             Action::make('send_password_reset')
                                                 ->label('Reset Password')
-                                                ->icon('heroicon-o-key')
+                                                ->icon('tabler-lock-share')
                                                 ->color('info')
                                                 ->requiresConfirmation()
                                                 ->modalHeading('Reset Password')

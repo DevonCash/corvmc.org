@@ -19,7 +19,7 @@ class ListBands extends ListRecords
         return [
             Action::make('band_invites')
                 ->label('Band Invites')
-                ->icon('heroicon-o-envelope')
+                ->icon('tabler-mail')
                 ->color('warning')
                 ->badge(fn () => $this->getPendingInvitationsCount())
                 ->badgeColor('danger')

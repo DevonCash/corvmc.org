@@ -19,7 +19,7 @@ class CheckoutKitComponentsAction
     {
         return Action::make('checkout_kit_components')
             ->label('Checkout Components')
-            ->icon('heroicon-o-squares-2x2')
+            ->icon('tabler-category')
             ->color('primary')
             ->modalWidth('lg')
             ->modalHeading('Checkout Kit Components')
@@ -27,14 +27,14 @@ class CheckoutKitComponentsAction
             ->schema([
                 CheckboxList::make('component_ids')
                     ->label('Select Components to Check Out')
-                    ->options(fn ($record) => 
+                    ->options(fn ($record) =>
                         $record->children
                             ->where('status', 'available')
                             ->where('can_lend_separately', true)
                             ->pluck('name', 'id')
                             ->toArray()
                     )
-                    ->descriptions(fn ($record) => 
+                    ->descriptions(fn ($record) =>
                         $record->children
                             ->where('status', 'available')
                             ->where('can_lend_separately', true)
@@ -48,7 +48,7 @@ class CheckoutKitComponentsAction
                     ->required()
                     ->minItems(1)
                     ->columns(2),
-                    
+
                 Select::make('borrower_id')
                     ->label('Member')
                     ->relationship('borrower', 'name')
@@ -56,14 +56,14 @@ class CheckoutKitComponentsAction
                     ->preload()
                     ->required()
                     ->placeholder('Select a member'),
-                    
+
                 DateTimePicker::make('due_at')
                     ->label('Due Date & Time')
                     ->required()
                     ->default(now()->addWeeks(2))
                     ->minDate(now()->addDay())
                     ->displayFormat('M j, Y g:i A'),
-                    
+
                 Select::make('condition_out')
                     ->label('General Condition')
                     ->options([
@@ -74,21 +74,21 @@ class CheckoutKitComponentsAction
                     ])
                     ->default('good')
                     ->required(),
-                    
+
                 TextInput::make('security_deposit')
                     ->label('Security Deposit (Total)')
                     ->numeric()
                     ->prefix('$')
                     ->step(0.01)
                     ->default(0),
-                    
+
                 TextInput::make('rental_fee')
                     ->label('Rental Fee (Total)')
                     ->numeric()
                     ->prefix('$')
                     ->step(0.01)
                     ->default(0),
-                    
+
                 Textarea::make('notes')
                     ->label('Checkout Notes')
                     ->placeholder('Any special instructions or conditions')
@@ -100,18 +100,18 @@ class CheckoutKitComponentsAction
                     $borrower = User::find($data['borrower_id']);
                     $componentIds = $data['component_ids'];
                     $components = $record->children()->whereIn('id', $componentIds)->get();
-                    
+
                     $checkedOutCount = 0;
                     $totalDeposit = (float) ($data['security_deposit'] ?? 0);
                     $totalFee = (float) ($data['rental_fee'] ?? 0);
                     $depositPerItem = count($components) > 0 ? $totalDeposit / count($components) : 0;
                     $feePerItem = count($components) > 0 ? $totalFee / count($components) : 0;
-                    
+
                     foreach ($components as $component) {
                         if (!$component->is_available || !$component->can_lend_separately) {
                             continue;
                         }
-                        
+
                         $equipmentService->checkoutToMember(
                             equipment: $component,
                             borrower: $borrower,
@@ -121,10 +121,10 @@ class CheckoutKitComponentsAction
                             rentalFee: $feePerItem,
                             notes: $data['notes'] ?? null
                         );
-                        
+
                         $checkedOutCount++;
                     }
-                    
+
                     if ($checkedOutCount > 0) {
                         Notification::make()
                             ->title('Kit Components Checked Out')
@@ -134,7 +134,7 @@ class CheckoutKitComponentsAction
                     } else {
                         throw new \Exception('No components were available for checkout.');
                     }
-                        
+
                 } catch (\Exception $e) {
                     Notification::make()
                         ->title('Checkout Failed')
@@ -144,9 +144,9 @@ class CheckoutKitComponentsAction
                 }
             })
             ->requiresConfirmation()
-            ->modalIcon('heroicon-o-squares-2x2')
-            ->visible(fn ($record) => 
-                $record->is_kit && 
+            ->modalIcon('tabler-category')
+            ->visible(fn ($record) =>
+                $record->is_kit &&
                 $record->children
                     ->where('status', 'available')
                     ->where('can_lend_separately', true)

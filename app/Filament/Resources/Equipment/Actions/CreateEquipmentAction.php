@@ -6,13 +6,13 @@ use App\Models\Equipment;
 use App\Models\User;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Group;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Section;
 
 class CreateEquipmentAction
 {
@@ -20,13 +20,13 @@ class CreateEquipmentAction
     {
         return CreateAction::make()
             ->label('Add Equipment')
-            ->icon('heroicon-o-plus-circle')
+            ->icon('tabler-circle-plus')
             ->color('primary')
             ->modalWidth('2xl')
             ->modalHeading('Add New Equipment')
             ->modalDescription('Add equipment to the lending library')
             ->model(Equipment::class)
-            ->form([
+            ->schema([
                 Section::make('Basic Information')
                     ->schema([
                         Group::make([
@@ -52,7 +52,7 @@ class CreateEquipmentAction
                                 ])
                                 ->searchable(),
                         ])->columns(2),
-                        
+
                         Group::make([
                             TextInput::make('brand')
                                 ->maxLength(255)
@@ -61,7 +61,7 @@ class CreateEquipmentAction
                                 ->maxLength(255)
                                 ->placeholder('e.g., Stratocaster, Les Paul'),
                         ])->columns(2),
-                        
+
                         Group::make([
                             TextInput::make('serial_number')
                                 ->maxLength(255)
@@ -70,20 +70,20 @@ class CreateEquipmentAction
                                 ->maxLength(255)
                                 ->placeholder('e.g., Storage Room A, Shelf 2'),
                         ])->columns(2),
-                        
+
                         Textarea::make('description')
                             ->rows(3)
                             ->placeholder('Detailed description of the equipment')
                             ->columnSpanFull(),
                     ]),
-                    
+
                 Section::make('Kit Configuration')
                     ->schema([
                         Toggle::make('is_kit')
                             ->label('This is a kit/set')
                             ->helperText('Check if this represents multiple pieces (e.g., drum kit)')
                             ->reactive(),
-                            
+
                         Select::make('parent_equipment_id')
                             ->label('Parent Kit')
                             ->relationship('parent', 'name', fn($query) => $query->where('is_kit', true))
@@ -91,7 +91,7 @@ class CreateEquipmentAction
                             ->preload()
                             ->placeholder('Select parent kit if this is a component')
                             ->hidden(fn (callable $get) => $get('is_kit')),
-                            
+
                         Group::make([
                             Toggle::make('can_lend_separately')
                                 ->label('Can be lent separately')
@@ -106,7 +106,7 @@ class CreateEquipmentAction
                         ->hidden(fn (callable $get) => $get('is_kit')),
                     ])
                     ->collapsible(),
-                    
+
                 Section::make('Condition & Valuation')
                     ->schema([
                         Group::make([
@@ -114,7 +114,7 @@ class CreateEquipmentAction
                                 ->required()
                                 ->options([
                                     'excellent' => 'Excellent',
-                                    'good' => 'Good', 
+                                    'good' => 'Good',
                                     'fair' => 'Fair',
                                     'poor' => 'Poor',
                                     'needs_repair' => 'Needs Repair',
@@ -129,21 +129,21 @@ class CreateEquipmentAction
                                 ])
                                 ->default('available'),
                         ])->columns(2),
-                        
+
                         TextInput::make('estimated_value')
                             ->label('Estimated Value')
                             ->numeric()
                             ->prefix('$')
                             ->step(0.01)
                             ->placeholder('0.00'),
-                            
+
                         Textarea::make('notes')
                             ->rows(3)
                             ->placeholder('Any additional notes or special instructions')
                             ->columnSpanFull(),
                     ])
                     ->collapsible(),
-                    
+
                 Section::make('Acquisition Information')
                     ->schema([
                         Group::make([
@@ -160,7 +160,7 @@ class CreateEquipmentAction
                                 ->required()
                                 ->default(now()),
                         ])->columns(2),
-                        
+
                         Select::make('provider_id')
                             ->label('Provider (if member)')
                             ->relationship('provider', 'name')
@@ -168,12 +168,12 @@ class CreateEquipmentAction
                             ->preload()
                             ->placeholder('Select if donated/loaned by a member')
                             ->visible(fn (callable $get) => in_array($get('acquisition_type'), ['donated', 'loaned_to_us'])),
-                            
+
                         DatePicker::make('return_due_date')
                             ->label('Return Due Date')
                             ->minDate(now())
                             ->visible(fn (callable $get) => $get('acquisition_type') === 'loaned_to_us'),
-                            
+
                         Textarea::make('acquisition_notes')
                             ->label('Acquisition Notes')
                             ->rows(3)
@@ -188,7 +188,7 @@ class CreateEquipmentAction
                     'loaned_to_us' => 'on_loan_to_cmc',
                     default => 'cmc_owned',
                 };
-                
+
                 return $data;
             })
             ->successNotification(

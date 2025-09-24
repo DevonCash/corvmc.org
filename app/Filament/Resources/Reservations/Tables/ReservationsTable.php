@@ -48,7 +48,7 @@ class ReservationsTable
                     ->state(function (Reservation $record): string {
                         return $record->time_range;
                     })
-                    ->icon(fn($record) => $record->is_recurring ? 'heroicon-o-arrow-path' : null)
+                    ->icon(fn($record) => $record->is_recurring ? 'tabler-repeat' : null)
                     ->iconPosition(IconPosition::After)
                     ->searchable()
                     ->sortable(['reserved_at']),

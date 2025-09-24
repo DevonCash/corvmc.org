@@ -48,7 +48,7 @@ class BandInvitationAcceptedNotification extends Notification
         return [
             'title' => 'New Band Member',
             'body' => "{$this->newMember->name} has joined {$this->band->name}",
-            'icon' => 'heroicon-o-user-plus',
+            'icon' => 'tabler-user-plus',
             'band_id' => $this->band->id,
             'band_name' => $this->band->name,
             'new_member_id' => $this->newMember->id,

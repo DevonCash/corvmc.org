@@ -21,18 +21,18 @@ class EquipmentLoansTable
                 TextColumn::make('id')
                     ->label('Loan #')
                     ->sortable(),
-                
+
                 TextColumn::make('equipment.name')
                     ->label('Equipment')
                     ->searchable()
                     ->sortable()
                     ->limit(30),
-                
+
                 TextColumn::make('borrower.name')
                     ->label('Borrower')
                     ->searchable()
                     ->sortable(),
-                
+
                 BadgeColumn::make('state')
                     ->label('Status')
                     ->formatStateUsing(fn($state) => match($state) {
@@ -57,32 +57,32 @@ class EquipmentLoansTable
                         'success' => 'returned',
                         'gray' => 'cancelled',
                     ]),
-                
+
                 TextColumn::make('checked_out_at')
                     ->label('Checked Out')
                     ->date()
                     ->sortable()
                     ->placeholder('—'),
-                
+
                 TextColumn::make('due_at')
                     ->label('Due Date')
                     ->date()
                     ->sortable()
                     ->color(fn($record) => $record->due_at && $record->due_at->isPast() && !$record->returned_at ? 'danger' : null),
-                
+
                 TextColumn::make('returned_at')
                     ->label('Returned')
                     ->date()
                     ->sortable()
                     ->placeholder('—'),
-                
+
                 TextColumn::make('days_out')
                     ->label('Days Out')
                     ->badge()
                     ->color(fn($state) => $state > 14 ? 'danger' : ($state > 7 ? 'warning' : 'success'))
                     ->sortable()
                     ->placeholder('—'),
-                
+
                 BadgeColumn::make('condition_out')
                     ->label('Condition Out')
                     ->colors([
@@ -92,7 +92,7 @@ class EquipmentLoansTable
                         'danger' => 'poor',
                     ])
                     ->placeholder('—'),
-                
+
                 BadgeColumn::make('condition_in')
                     ->label('Condition In')
                     ->colors([
@@ -102,7 +102,7 @@ class EquipmentLoansTable
                         'danger' => ['poor', 'damaged'],
                     ])
                     ->placeholder('—'),
-                
+
                 TextColumn::make('security_deposit')
                     ->label('Deposit')
                     ->prefix('$')
@@ -110,7 +110,7 @@ class EquipmentLoansTable
                     ->sortable()
                     ->toggleable()
                     ->placeholder('$0.00'),
-                
+
                 TextColumn::make('rental_fee')
                     ->label('Fee')
                     ->prefix('$')
@@ -118,13 +118,13 @@ class EquipmentLoansTable
                     ->sortable()
                     ->toggleable()
                     ->placeholder('$0.00'),
-                
+
                 TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 TextColumn::make('updated_at')
                     ->label('Updated')
                     ->dateTime()
@@ -148,19 +148,19 @@ class EquipmentLoansTable
                         'cancelled' => 'Cancelled',
                     ])
                     ->multiple(),
-                
+
                 SelectFilter::make('equipment_id')
                     ->label('Equipment')
                     ->relationship('equipment', 'name')
                     ->searchable()
                     ->preload(),
-                
+
                 SelectFilter::make('borrower_id')
                     ->label('Borrower')
                     ->relationship('borrower', 'name')
                     ->searchable()
                     ->preload(),
-                
+
                 SelectFilter::make('condition_out')
                     ->label('Condition Out')
                     ->options([
@@ -176,21 +176,21 @@ class EquipmentLoansTable
                 EditAction::make(),
                 Action::make('advance_state')
                     ->label('Advance Status')
-                    ->icon('heroicon-o-arrow-right')
+                    ->icon('tabler-arrow-right')
                     ->color('primary')
                     ->visible(fn($record) => in_array($record->state, [
-                        'requested', 'staff_preparing', 'ready_for_pickup', 
+                        'requested', 'staff_preparing', 'ready_for_pickup',
                         'dropoff_scheduled', 'staff_processing_return'
                     ]))
                     ->action(function ($record) {
                         $nextStates = [
                             'requested' => 'staff_preparing',
-                            'staff_preparing' => 'ready_for_pickup', 
+                            'staff_preparing' => 'ready_for_pickup',
                             'ready_for_pickup' => 'checked_out',
                             'dropoff_scheduled' => 'staff_processing_return',
                             'staff_processing_return' => 'returned',
                         ];
-                        
+
                         if (isset($nextStates[$record->state])) {
                             $record->update(['state' => $nextStates[$record->state]]);
                         }

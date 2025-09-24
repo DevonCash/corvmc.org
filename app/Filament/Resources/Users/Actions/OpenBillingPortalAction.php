@@ -11,7 +11,7 @@ class OpenBillingPortalAction
     {
         return Action::make('open_billing_portal')
             ->label('Manage Billing')
-            ->icon('heroicon-o-credit-card')
+            ->icon('tabler-credit-card')
             ->color('info')
             ->action(function ($record) {
                 if (!$record->stripe_id) {
@@ -27,7 +27,7 @@ class OpenBillingPortalAction
                     // Return to the user's view page after billing portal
                     $returnUrl = url("/member/users/{$record->id}");
                     $billingPortal = $record->billingPortalUrl($returnUrl);
-                    
+
                     // Redirect to the billing portal
                     return redirect()->away($billingPortal);
                 } catch (\Exception $e) {
@@ -37,7 +37,7 @@ class OpenBillingPortalAction
                         'stripe_id' => $record->stripe_id,
                         'error' => $e->getMessage()
                     ]);
-                    
+
                     Notification::make()
                         ->title('Unable to access billing portal')
                         ->body('The billing portal is currently unavailable. Please contact support.')

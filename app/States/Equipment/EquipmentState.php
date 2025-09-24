@@ -17,17 +17,17 @@ abstract class EquipmentState extends State
             ->allowTransition(Loaned::class, Maintenance::class)
             ->allowTransition(Maintenance::class, Available::class);
     }
-    
+
     public function color(): string
     {
         return 'gray';
     }
-    
+
     public function icon(): string
     {
-        return 'heroicon-o-question-mark-circle';
+        return 'tabler-help';
     }
-    
+
     public function description(): string
     {
         return 'Unknown status';

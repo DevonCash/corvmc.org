@@ -28,7 +28,7 @@ class EditUser extends EditRecord
         if ($this->getRecord()->id === auth()->id()) {
             $actions[] = Action::make('logout')
                 ->label('Logout')
-                ->icon('heroicon-m-arrow-left-on-rectangle')
+                ->icon('tabler-logout')
                 ->color('danger')
                 ->outlined()
                 ->requiresConfirmation()
@@ -49,7 +49,7 @@ class EditUser extends EditRecord
     public function sendPasswordReset(): void
     {
         $user = $this->getRecord();
-        
+
         $status = Password::sendResetLink(['email' => $user->email]);
 
         if ($status === Password::RESET_LINK_SENT) {

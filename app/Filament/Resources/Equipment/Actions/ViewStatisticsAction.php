@@ -4,10 +4,9 @@ namespace App\Filament\Resources\Equipment\Actions;
 
 use App\Services\EquipmentService;
 use Filament\Actions\Action;
-use Filament\Infolists\Components\Grid;
-use Filament\Infolists\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Schemas\Schema;
 
 class ViewStatisticsAction
@@ -16,9 +15,9 @@ class ViewStatisticsAction
     {
         return Action::make('view_statistics')
             ->label('Equipment Statistics')
-            ->icon('heroicon-o-chart-bar')
+            ->icon('tabler-chart-infographic')
             ->color('info')
-            ->modalWidth('3xl')
+            ->modalWidth(width: '3xl')
             ->modalHeading('Equipment Library Statistics')
             ->schema(function (): Schema {
                 $equipmentService = app(EquipmentService::class);
@@ -143,6 +142,6 @@ class ViewStatisticsAction
                             ->visible($popular->isNotEmpty()),
                     ]);
             })
-            ->modalIcon('heroicon-o-chart-bar');
+            ->modalIcon('tabler-chart-infographic');
     }
 }

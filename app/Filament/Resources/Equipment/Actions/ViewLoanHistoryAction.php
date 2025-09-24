@@ -4,11 +4,11 @@ namespace App\Filament\Resources\Equipment\Actions;
 
 use App\Services\EquipmentService;
 use Filament\Actions\Action;
-use Filament\Infolists\Components\Grid;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 
 class ViewLoanHistoryAction
 {
@@ -16,15 +16,15 @@ class ViewLoanHistoryAction
     {
         return Action::make('view_loan_history')
             ->label('Loan History')
-            ->icon('heroicon-o-clock')
+            ->icon('tabler-history')
             ->color('gray')
             ->modalWidth('4xl')
             ->modalHeading(fn ($record) => "Loan History - {$record->name}")
-            ->infolist(function ($record): Infolist {
+            ->schema(function ($record): Schema {
                 $equipmentService = app(EquipmentService::class);
                 $loanHistory = $equipmentService->getLoanHistoryForEquipment($record);
-                
-                return Infolist::make()
+
+                return Schema::make()
                     ->record($record)
                     ->schema([
                         Section::make('Equipment Overview')
@@ -34,7 +34,7 @@ class ViewLoanHistoryAction
                                         TextEntry::make('name')
                                             ->weight('bold'),
                                         TextEntry::make('type')
-                                            ->formatStateUsing(fn (string $state): string => 
+                                            ->formatStateUsing(fn (string $state): string =>
                                                 ucwords(str_replace('_', ' ', $state))
                                             ),
                                         TextEntry::make('status')
@@ -47,7 +47,7 @@ class ViewLoanHistoryAction
                                             }),
                                     ]),
                             ]),
-                            
+
                         Section::make('Loan History')
                             ->schema([
                                 RepeatableEntry::make('loan_history')
@@ -75,26 +75,26 @@ class ViewLoanHistoryAction
                                                         default => 'gray',
                                                     }),
                                             ]),
-                                            
+
                                         Grid::make(2)
                                             ->schema([
                                                 TextEntry::make('condition_out')
                                                     ->label('Condition Out')
-                                                    ->formatStateUsing(fn (?string $state): string => 
+                                                    ->formatStateUsing(fn (?string $state): string =>
                                                         $state ? ucfirst($state) : 'Not recorded'
                                                     ),
                                                 TextEntry::make('condition_in')
                                                     ->label('Condition In')
-                                                    ->formatStateUsing(fn (?string $state): string => 
+                                                    ->formatStateUsing(fn (?string $state): string =>
                                                         $state ? ucfirst($state) : 'Not recorded'
                                                     ),
                                             ]),
-                                            
+
                                         TextEntry::make('notes')
                                             ->columnSpanFull()
                                             ->placeholder('No notes')
                                             ->visible(fn ($state) => !empty($state['notes'])),
-                                            
+
                                         TextEntry::make('damage_notes')
                                             ->label('Damage Notes')
                                             ->columnSpanFull()
@@ -103,12 +103,12 @@ class ViewLoanHistoryAction
                                             ->color('danger'),
                                     ])
                                     ->contained(false)
-                                    ->itemLabel(fn (array $state): ?string => 
+                                    ->itemLabel(fn (array $state): ?string =>
                                         $state['borrower']['name'] ?? 'Unknown Borrower'
                                     ),
                             ])
                             ->visible($loanHistory->isNotEmpty()),
-                            
+
                         Section::make('No Loan History')
                             ->schema([
                                 TextEntry::make('no_history')
@@ -119,6 +119,6 @@ class ViewLoanHistoryAction
                             ->visible($loanHistory->isEmpty()),
                     ]);
             })
-            ->modalIcon('heroicon-o-clock');
+            ->modalIcon('tabler-history');
     }
 }

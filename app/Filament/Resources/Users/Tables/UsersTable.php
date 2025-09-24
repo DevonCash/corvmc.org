@@ -113,7 +113,7 @@ class UsersTable
                 EditAction::make(),
                 Action::make('resend_invitation')
                     ->label('Resend Invitation')
-                    ->icon('heroicon-o-paper-airplane')
+                    ->icon('tabler-send')
                     ->color('info')
                     ->visible(fn($record) => $record->email_verified_at === null && $record->name === 'Invited User')
                     ->requiresConfirmation()
@@ -146,7 +146,7 @@ class UsersTable
                     DeleteBulkAction::make(),
                     BulkAction::make('cancel_pending_invitations')
                         ->label('Cancel Pending Invitations')
-                        ->icon('heroicon-o-x-circle')
+                        ->icon('tabler-circle-x')
                         ->color('danger')
                         ->requiresConfirmation()
                         ->modalHeading('Cancel Pending Invitations')

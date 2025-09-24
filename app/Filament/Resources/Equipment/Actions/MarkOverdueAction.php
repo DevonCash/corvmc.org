@@ -12,29 +12,29 @@ class MarkOverdueAction
     {
         return Action::make('mark_overdue')
             ->label('Mark Overdue')
-            ->icon('heroicon-o-exclamation-triangle')
+            ->icon('tabler-alert-triangle')
             ->color('warning')
             ->modalHeading('Mark Equipment as Overdue')
-            ->modalDescription(fn ($record) => 
+            ->modalDescription(fn ($record) =>
                 "Mark the current loan of '{$record->name}' as overdue. This will send notifications to the borrower."
             )
             ->action(function ($record) {
                 try {
                     $equipmentService = app(EquipmentService::class);
                     $currentLoan = $record->currentLoan;
-                    
+
                     if (!$currentLoan) {
                         throw new \Exception('No active loan found for this equipment.');
                     }
-                    
+
                     $equipmentService->markOverdue($currentLoan);
-                    
+
                     Notification::make()
                         ->title('Loan Marked Overdue')
                         ->body("Successfully marked {$record->name} loan as overdue")
                         ->warning()
                         ->send();
-                        
+
                 } catch (\Exception $e) {
                     Notification::make()
                         ->title('Failed to Mark Overdue')
@@ -44,10 +44,10 @@ class MarkOverdueAction
                 }
             })
             ->requiresConfirmation()
-            ->modalIcon('heroicon-o-exclamation-triangle')
-            ->visible(fn ($record) => 
-                $record->is_checked_out && 
-                $record->currentLoan && 
+            ->modalIcon('tabler-alert-triangle')
+            ->visible(fn ($record) =>
+                $record->is_checked_out &&
+                $record->currentLoan &&
                 $record->currentLoan->due_at->isPast() &&
                 $record->currentLoan->status !== 'overdue'
             );

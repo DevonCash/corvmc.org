@@ -52,7 +52,7 @@ class AdminUserControlForm
                             ->live(),
                         Action::make('create_admin_subscription')
                             ->label('Create Admin Subscription')
-                            ->icon('heroicon-o-plus')
+                            ->icon('tabler-plus')
                             ->color('warning')
                             ->schema([
                                 Select::make('price_id')
@@ -125,7 +125,7 @@ class AdminUserControlForm
                     ->headerActions([
                         Action::make('create_staff_profile')
                             ->label('Add Staff Profile')
-                            ->icon('heroicon-o-plus')
+                            ->icon('tabler-plus')
                             ->color('primary')
                             ->visible(fn($record) => ! $record?->staffProfile)
                             ->action(function ($livewire) {

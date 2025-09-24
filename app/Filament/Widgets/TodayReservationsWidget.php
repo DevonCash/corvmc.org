@@ -38,7 +38,7 @@ class TodayReservationsWidget extends BaseWidget
             ->description('Reservations for ' . Carbon::today()->format('l, F j, Y'))
             ->emptyStateHeading('No reservations today')
             ->emptyStateDescription('The practice space is available all day!')
-            ->emptyStateIcon('heroicon-o-calendar-days')
+            ->emptyStateIcon('tabler-calendar-smile')
             ->columns([
                 TextColumn::make('reserved_at')
                     ->label('Time')
@@ -67,7 +67,7 @@ class TodayReservationsWidget extends BaseWidget
                         return 'Reserved';
                     })
                     ->icon(function (Reservation $record) use ($user) {
-                        return $record->user_id === $user?->id ? 'heroicon-m-user' : 'heroicon-m-users';
+                        return $record->user_id === $user?->id ? 'tabler-user' : 'tabler-users';
                     })
                     ->iconColor(function (Reservation $record) use ($user) {
                         return $record->user_id === $user?->id ? 'success' : 'gray';

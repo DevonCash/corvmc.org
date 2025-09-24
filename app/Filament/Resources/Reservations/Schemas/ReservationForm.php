@@ -46,14 +46,14 @@ BLADE))),
             // Step 1: Reservation Details
             Wizard\Step::make('Details')
                 ->description('Set up your reservation')
-                ->icon('heroicon-o-calendar-days')
+                ->icon('tabler-calendar-time')
                 ->schema(static::reservationStep())
                 ->columns(2),
 
             // Step 2: Confirmation
             Wizard\Step::make('Confirm')
                 ->description('Review and confirm your reservation')
-                ->icon('heroicon-o-check-circle')
+                ->icon('tabler-circle-check')
                 ->schema(static::confirmationStep())
 
         ];
@@ -78,7 +78,7 @@ BLADE))),
                     }),
                 Select::make('status_override')
                     ->label('Status (Admin Only)')
-                    ->hintIcon('heroicon-o-information-circle')
+                    ->hintIcon('tabler-circle-info')
                     ->hintIconTooltip('Override the default status based on your selection.')
                     ->options([
                         'auto' => 'Default (based on date/type)',
@@ -109,16 +109,16 @@ BLADE))),
                         $startTime = $get('start_time');
                         $endTime = $get('end_time');
                         if (! $date) {
-                            return 'heroicon-o-calendar';
+                            return 'tabler-calendar';
                         }
                         if (! $startTime) {
-                            return 'heroicon-o-clock';
+                            return 'tabler-clock-play';
                         }
                         if (! $endTime) {
-                            return 'heroicon-o-clock';
+                            return 'tabler-clock-pause';
                         }
 
-                        return 'heroicon-o-check';
+                        return 'tabler-circle-check';
                     })
                         ->color(fn(Get $get) => match (true) {
                             ! $get('reservation_date') => 'gray',

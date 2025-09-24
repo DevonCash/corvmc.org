@@ -66,7 +66,7 @@ class MemberProfilesTable
         return TextColumn::make('hometown')
             ->grow(false)
             ->label('')
-            ->icon('heroicon-s-map-pin')
+            ->icon('tabler-map-pin')
             ->color('gray')
             ->size('sm');
     }

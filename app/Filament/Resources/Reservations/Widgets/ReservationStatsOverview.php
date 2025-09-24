@@ -65,18 +65,18 @@ class ReservationStatsOverview extends BaseWidget
         return [
             Stat::make('Today', $todayReservations)
                 ->description($todayHours > 0 ? number_format($todayHours, 1) . ' hours booked' : 'No practice time today')
-                ->descriptionIcon($todayReservations > 0 ? 'heroicon-m-clock' : 'heroicon-m-calendar')
+                ->descriptionIcon('tabler-calendar-clock')
                 ->color($todayReservations > 0 ? 'success' : 'gray')
                 ->chart($this->getTodayChart()),
 
             Stat::make('This Week', $weekReservations)
                 ->description($weekHours > 0 ? number_format($weekHours, 1) . ' hours total' : 'No bookings this week')
-                ->descriptionIcon('heroicon-m-calendar-days')
+                ->descriptionIcon('tabler-calendar-week')
                 ->color($weekReservations > 0 ? 'info' : 'gray'),
 
             Stat::make('This Month', $monthReservations)
                 ->description($monthHours > 0 ? number_format($monthHours, 1) . ' hours total' : 'No bookings this month')
-                ->descriptionIcon('heroicon-m-calendar-days')
+                ->descriptionIcon('tabler-calendar-month')
                 ->color($monthReservations > 0 ? 'primary' : 'gray'),
 
             Stat::make('Free Hours', $remainingFreeHours . '/' . $totalFreeHours)
@@ -85,7 +85,7 @@ class ReservationStatsOverview extends BaseWidget
                         ? ($usedFreeHours > 0 ? 'Used ' . number_format($usedFreeHours, 1) . ' this month' : 'None used this month')
                         : 'Learn More'
                 )
-                ->descriptionIcon($user->isSustainingMember() ? 'heroicon-m-gift' : 'heroicon-m-arrow-up-circle')
+                ->descriptionIcon($user->isSustainingMember() ? 'tabler-user-heart' : 'tabler-heart')
                 ->color(
                     $user->isSustainingMember()
                         ? ($remainingFreeHours > 0 ? 'success' : 'warning')

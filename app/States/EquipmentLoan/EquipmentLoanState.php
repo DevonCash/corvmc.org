@@ -24,41 +24,41 @@ abstract class EquipmentLoanState extends State
             ->allowTransition(StaffProcessingReturn::class, Returned::class)
             ->allowTransition(StaffProcessingReturn::class, DamageReported::class)
             ->allowTransition(DamageReported::class, Returned::class)
-            
+
             // Allow direct return from various states
             ->allowTransition(Requested::class, Returned::class) // Direct return from requested
-            
+
             // Allow cancellation from most states
             ->allowTransition(Requested::class, Cancelled::class)
             ->allowTransition(StaffPreparing::class, Cancelled::class)
             ->allowTransition(ReadyForPickup::class, Cancelled::class);
     }
-    
+
     public function color(): string
     {
         return 'gray';
     }
-    
+
     public function icon(): string
     {
-        return 'heroicon-o-question-mark-circle';
+        return 'tabler-help';
     }
-    
+
     public function description(): string
     {
         return 'Unknown loan status';
     }
-    
+
     public function canBeCancelledByMember(): bool
     {
         return false;
     }
-    
+
     public function requiresStaffAction(): bool
     {
         return false;
     }
-    
+
     public function requiresMemberAction(): bool
     {
         return false;

@@ -48,13 +48,13 @@ class ProductionsTable
                     ->alignCenter()
                     ->icon(function ($state) {
                         if (! $state) {
-                            return 'heroicon-o-pencil-square';
+                            return 'tabler-clock-edit';
                         }
                         if ($state->isFuture()) {
-                            return 'heroicon-o-clock';
+                            return 'tabler-clock';
                         }
 
-                        return 'heroicon-o-check-circle';
+                        return 'tabler-circle-check';
                     })
                     ->color(function ($state) {
                         if (! $state) {

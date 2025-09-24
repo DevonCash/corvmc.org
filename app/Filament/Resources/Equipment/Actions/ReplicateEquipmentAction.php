@@ -13,7 +13,7 @@ class ReplicateEquipmentAction
     {
         return ReplicateAction::make()
             ->label('Duplicate Equipment')
-            ->icon('heroicon-o-document-duplicate')
+            ->icon('tabler-copy')
             ->color('secondary')
             ->modalHeading(fn ($record) => "Duplicate {$record->name}")
             ->modalDescription('Create a copy of this equipment with similar specifications')
@@ -27,13 +27,13 @@ class ReplicateEquipmentAction
             ->beforeReplicaSaved(function (Equipment $replica, Equipment $original): void {
                 // Modify the name to indicate it's a duplicate
                 $replica->name = $original->name . ' (Copy)';
-                
+
                 // Clear serial number since it should be unique
                 $replica->serial_number = null;
-                
+
                 // Set status to available for new equipment
                 $replica->status = 'available';
-                
+
                 // Don't copy kit relationships - make it standalone
                 $replica->parent_equipment_id = null;
                 $replica->is_kit = false;
@@ -46,10 +46,10 @@ class ReplicateEquipmentAction
                     ->title('Equipment Duplicated')
                     ->body(fn ($replica) => "Created duplicate: {$replica->name}")
             )
-            ->successRedirectUrl(fn ($replica) => 
+            ->successRedirectUrl(fn ($replica) =>
                 route('filament.member.resources.equipment.edit', $replica)
             )
-            ->visible(fn ($record) => 
+            ->visible(fn ($record) =>
                 Auth::user()->can('create equipment')
             );
     }

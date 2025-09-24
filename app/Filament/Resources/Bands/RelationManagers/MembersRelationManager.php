@@ -385,7 +385,7 @@ class MembersRelationManager extends RelationManager
                 Action::make('accept_invitation')
                     ->label('Accept')
                     ->color('success')
-                    ->icon('heroicon-m-check')
+                    ->icon('tabler-check')
                     ->requiresConfirmation()
                     ->modalHeading('Accept Band Invitation')
                     ->modalDescription(fn($record) => "Accept invitation to join {$this->ownerRecord->name}?")
@@ -408,7 +408,7 @@ class MembersRelationManager extends RelationManager
                 Action::make('decline_invitation')
                     ->label('Decline')
                     ->color('danger')
-                    ->icon('heroicon-m-x-mark')
+                    ->icon('tabler-x')
                     ->requiresConfirmation()
                     ->modalHeading('Decline Band Invitation')
                     ->modalDescription(fn($record) => "Decline invitation to join {$this->ownerRecord->name}?")
@@ -431,7 +431,7 @@ class MembersRelationManager extends RelationManager
                 Action::make('resend_invitation')
                     ->label('Resend')
                     ->color('warning')
-                    ->icon('heroicon-m-arrow-path')
+                    ->icon('tabler-mail-forward')
                     ->action(function ($record): void {
                         BandService::resendInvitation($this->ownerRecord, $record);
 
@@ -449,7 +449,7 @@ class MembersRelationManager extends RelationManager
                 Action::make('reinvite_declined')
                     ->label('Re-invite')
                     ->color('primary')
-                    ->icon('heroicon-m-envelope')
+                    ->icon('tabler-mail')
                     ->requiresConfirmation()
                     ->modalHeading('Re-invite Member')
                     ->modalDescription(fn($record) => "Send a new invitation to {$record->name}?")

@@ -122,11 +122,11 @@ class ProductionUpdatedNotification extends Notification
     private function getIcon(): string
     {
         return match ($this->updateType) {
-            'published' => 'heroicon-o-calendar',
-            'updated' => 'heroicon-o-pencil-square',
-            'cancelled' => 'heroicon-o-x-circle',
-            'completed' => 'heroicon-o-check-circle',
-            default => 'heroicon-o-bell',
+            'published' => 'tabler-clock-check',
+            'updated' => 'tabler-circle-arrow-up',
+            'cancelled' => 'tabler-circle-x',
+            'completed' => 'tabler-circle-check',
+            default => 'tabler-bell',
         };
     }
 }

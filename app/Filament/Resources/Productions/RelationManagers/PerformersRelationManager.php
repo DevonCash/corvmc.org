@@ -120,10 +120,10 @@ class PerformersRelationManager extends RelationManager
             ->recordActions([
                 Action::make('invite_band_owner')
                     ->label('Invite Owner')
-                    ->icon('heroicon-o-user-plus')
+                    ->icon('tabler-user-plus')
                     ->color('success')
                     ->visible(fn($record) => !$record->owner_id) // Only show for bands without owners (touring bands)
-                    ->form([
+                    ->schema([
                         TextInput::make('email')
                             ->label('Band Owner Email')
                             ->email()

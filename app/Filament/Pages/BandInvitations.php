@@ -48,7 +48,7 @@ class BandInvitations extends Page
         return [
             Action::make('refresh')
                 ->label('Refresh')
-                ->icon('heroicon-m-arrow-path')
+                ->icon('tabler-refresh')
                 ->action(fn() => $this->redirect(request()->url())),
         ];
     }
@@ -74,7 +74,7 @@ class BandInvitations extends Page
         return Action::make('declineInvitation')
             ->label('Decline')
             ->color('gray')
-            ->icon('heroicon-s-x-mark')
+            ->icon('tabler-x')
             ->requiresConfirmation()
             ->modalHeading('Decline Band Invitation')
             ->modalDescription(fn(array $arguments) => "Are you sure you want to decline the invitation to join " . Band::find($arguments['bandId'])->name . "?")
