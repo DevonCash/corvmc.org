@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Traits;
+namespace App\Concerns;
 
 use App\Models\Report;
 use App\Models\User;

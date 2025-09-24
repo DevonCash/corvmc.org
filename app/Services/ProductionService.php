@@ -10,6 +10,7 @@ use App\Notifications\ProductionCancelledNotification;
 use App\Notifications\ProductionCreatedNotification;
 use App\Notifications\ProductionPublishedNotification;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
@@ -117,7 +118,7 @@ class ProductionService
     public function publishProduction(Production $production): void
     {
         // Check authorization
-        if (auth()->check() && !Auth::user()->can('update', $production)) {
+        if (!Auth::user()?->can('update', $production)) {
             throw new \Illuminate\Auth\Access\AuthorizationException('You are not authorized to publish this production.');
         }
 

@@ -805,8 +805,8 @@ class ReservationService
             'payment_method_types' => ['card'],
             'line_items' => $lineItems,
             'mode' => 'payment',
-            'success_url' => route('reservations.payment.success', ['reservation' => $reservation->id]) . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('reservations.payment.cancel', ['reservation' => $reservation->id]),
+            'success_url' => route('checkout.success') . '?session_id={CHECKOUT_SESSION_ID}&user_id=' . $reservation->user_id,
+            'cancel_url' => route('checkout.cancel') . '?user_id=' . $reservation->user_id . '&type=practice_space_reservation',
             'customer' => $user->stripe_id,
             'metadata' => [
                 'reservation_id' => $reservation->id,

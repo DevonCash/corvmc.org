@@ -76,8 +76,8 @@ class UserSubscriptionService
         // Use Cashier's multi-product subscription support
         return $user->newSubscription('default', $subscriptionPrices)
             ->checkout([
-                'success_url' => route('subscriptions.checkout.success') . '?user_id=' . $user->id . '&session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => route('subscriptions.checkout.cancel') . '?user_id=' . $user->id,
+                'success_url' => route('checkout.success') . '?user_id=' . $user->id . '&session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => route('checkout.cancel') . '?user_id=' . $user->id . '&type=sliding_scale_membership',
             ]);
     }
 

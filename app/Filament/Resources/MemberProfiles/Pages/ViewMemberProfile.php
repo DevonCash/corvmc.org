@@ -9,6 +9,7 @@ use Filament\Actions\EditAction;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 
 class ViewMemberProfile extends Page
 {
@@ -43,7 +44,7 @@ class ViewMemberProfile extends Page
         return [
             EditAction::make()
                 ->visible(fn () => Auth::user()->can('update', $this->record) ||
-                    $this->record->user_id === auth()->id()
+                    $this->record->user_id === Auth::id()
                 ),
             ReportContentAction::make()
                 ->visible(fn () => Auth::user()->id !== $this->record->user_id), // Don't show report button to profile owner

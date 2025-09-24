@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Equipment\Actions;
 
 use Filament\Actions\DeleteBulkAction;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 
 class BulkDeleteEquipmentAction
 {

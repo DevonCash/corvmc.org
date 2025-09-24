@@ -8,6 +8,7 @@ use App\Models\Reservation;
 use App\Models\CommunityEvent;
 use App\Models\User;
 use Guava\Calendar\ValueObjects\CalendarEvent;
+use Illuminate\Support\Facades\Auth;
 
 class CalendarService
 {

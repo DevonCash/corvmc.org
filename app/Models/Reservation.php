@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use App\Concerns\HasTimePeriod;
 use Guava\Calendar\Contracts\Eventable;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,7 +21,23 @@ use Spatie\Activitylog\Traits\LogsActivity;
  */
 class Reservation extends Model implements Eventable
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsActivity, HasTimePeriod;
+
+    /**
+     * Get the name of the start time field for this model.
+     */
+    protected function getStartTimeField(): string
+    {
+        return 'reserved_at';
+    }
+    
+    /**
+     * Get the name of the end time field for this model.
+     */
+    protected function getEndTimeField(): string
+    {
+        return 'reserved_until';
+    }
 
     protected $fillable = [
         'user_id',
@@ -65,32 +82,12 @@ class Reservation extends Model implements Eventable
 
     /**
      * Get the reservation as a Period object.
+     * 
+     * @deprecated Use createPeriod() instead
      */
     public function getPeriod(): ?Period
     {
-        if (! $this->reserved_at || ! $this->reserved_until) {
-            return null;
-        }
-
-        return Period::make(
-            $this->reserved_at,
-            $this->reserved_until,
-            Precision::MINUTE()
-        );
-    }
-
-    /**
-     * Check if this reservation overlaps with another period.
-     */
-    public function overlapsWith(Period $period): bool
-    {
-        $thisPeriod = $this->getPeriod();
-
-        if (! $thisPeriod) {
-            return false;
-        }
-
-        return $thisPeriod->overlapsWith($period);
+        return $this->createPeriod();
     }
 
     /**

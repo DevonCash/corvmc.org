@@ -103,7 +103,7 @@ class ActivityLogTable
                 Tables\Filters\SelectFilter::make('causer_id')
                     ->label('User')
                     ->options(
-                        \App\Models\User::pluck('name', 'id')->toArray()
+                        User::pluck('name', 'id')->toArray()
                     )
                     ->searchable(),
 

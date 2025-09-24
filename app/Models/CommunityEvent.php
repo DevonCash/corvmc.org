@@ -15,8 +15,9 @@ use Spatie\ModelFlags\Models\Concerns\HasFlags;
 use Spatie\Tags\HasTags;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
-use App\Traits\Reportable;
-use App\Traits\Revisionable;
+use App\Concerns\Reportable;
+use App\Concerns\Revisionable;
+use Spatie\Image\Enums\CropPosition;
 
 /**
  * Community Event Model
@@ -27,12 +28,12 @@ use App\Traits\Revisionable;
 class CommunityEvent extends Model implements Eventable, HasMedia
 {
     use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity, Reportable, Revisionable, SoftDeletes;
-    
+
     // Report configuration
     protected static int $reportThreshold = 3;
     protected static bool $reportAutoHide = true;
     protected static string $reportableTypeName = 'Community Event';
-    
+
     /**
      * Auto-approval mode for community events - public content requires trust
      */
@@ -130,18 +131,14 @@ class CommunityEvent extends Model implements Eventable, HasMedia
     {
         // Thumbnail for lists and cards
         $this->addMediaConversion('thumb')
-            ->width(200)
-            ->height(258)
-            ->crop('crop-center')
+            ->crop(200, 250, CropPosition::Center)
             ->quality(90)
             ->sharpen(10)
             ->performOnCollections('poster');
-        
+
         // Medium size for event listings
         $this->addMediaConversion('medium')
-            ->width(400)
-            ->height(517)
-            ->crop('crop-center')
+            ->crop(400, 517, CropPosition::Center)
             ->quality(85)
             ->performOnCollections('poster');
     }
@@ -191,9 +188,9 @@ class CommunityEvent extends Model implements Eventable, HasMedia
      */
     public function isPublished(): bool
     {
-        return $this->status === self::STATUS_APPROVED && 
-               $this->published_at !== null && 
-               $this->published_at->isPast();
+        return $this->status === self::STATUS_APPROVED &&
+            $this->published_at !== null &&
+            $this->published_at->isPast();
     }
 
     /**
@@ -344,7 +341,7 @@ class CommunityEvent extends Model implements Eventable, HasMedia
             if ($event->status === null) {
                 $event->status = self::STATUS_PENDING;
             }
-            
+
             if ($event->visibility === null) {
                 $event->visibility = self::VISIBILITY_PUBLIC;
             }

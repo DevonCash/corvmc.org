@@ -216,7 +216,7 @@ class Equipment extends Model implements HasMedia
         return $this->isOnLoanToCmc() && 
                $this->ownership_status === 'on_loan_to_cmc' &&
                $this->return_due_date && 
-               $this->return_due_date->isPast();
+               $this->return_due_date?->isPast();
     }
 
     /**

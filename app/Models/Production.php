@@ -3,30 +3,28 @@
 namespace App\Models;
 
 use App\Data\LocationData;
+use App\Models\ContentModel;
+use App\Concerns\HasTimePeriod;
+use App\Concerns\HasPublishing;
 use Guava\Calendar\Contracts\Eventable;
 use Guava\Calendar\ValueObjects\CalendarEvent;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\Image\Enums\CropPosition;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Spatie\ModelFlags\Models\Concerns\HasFlags;
 use Spatie\Period\Period;
-use Spatie\Period\Precision;
-use Spatie\Tags\HasTags;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
-use App\Traits\Reportable;
 
-class Production extends Model implements Eventable, HasMedia
+class Production extends ContentModel implements Eventable
 {
-    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity, Reportable, SoftDeletes;
-    
+    use SoftDeletes, HasTimePeriod, HasPublishing;
+
     // Report configuration
     protected static int $reportThreshold = 3;
     protected static bool $reportAutoHide = false;
     protected static string $reportableTypeName = 'Production';
+
+    // Activity logging configuration
+    protected static array $loggedFields = ['title', 'description', 'start_time', 'end_time', 'status', 'visibility'];
+    protected static string $logTitle = 'Production';
 
     protected $fillable = [
         'title',
@@ -80,34 +78,27 @@ class Production extends Model implements Eventable, HasMedia
     {
         // Thumbnail for lists and cards (8.5:11 aspect ratio)
         $this->addMediaConversion('thumb')
-            ->width(200)
-            ->height(258) // 8.5:11 ratio (200 * 1.294)
-            ->crop('crop-center')
+            ->crop(200, 258, CropPosition::Center)
+
             ->quality(90)
             ->sharpen(10)
             ->performOnCollections('poster');
-        
+
         // Medium size for event listings (8.5:11 aspect ratio)
         $this->addMediaConversion('medium')
-            ->width(400)
-            ->height(517) // 8.5:11 ratio (400 * 1.294)
-            ->crop('crop-center')
+            ->crop(400, 517, CropPosition::Center)
             ->quality(85)
             ->performOnCollections('poster');
-        
+
         // Large size for event detail pages (8.5:11 aspect ratio)
         $this->addMediaConversion('large')
-            ->width(600)
-            ->height(776) // 8.5:11 ratio (600 * 1.294)
-            ->crop('crop-center')
+            ->crop(600, 776, CropPosition::Center)
             ->quality(80)
             ->performOnCollections('poster');
-        
+
         // Optimized original for high-res displays (8.5:11 aspect ratio)
         $this->addMediaConversion('optimized')
-            ->width(850)
-            ->height(1100) // Exact 8.5:11 ratio
-            ->crop('crop-center')
+            ->crop(850, 1100, CropPosition::Center)
             ->quality(75)
             ->performOnCollections('poster');
     }
@@ -156,13 +147,6 @@ class Production extends Model implements Eventable, HasMedia
         return $this->start_time ? $this->start_time->format('M j, Y g:i A') : 'TBD';
     }
 
-    /**
-     * Check if production is published.
-     */
-    public function isPublished(): bool
-    {
-        return $this->published_at !== null && $this->published_at->isPast();
-    }
 
     /**
      * Check if production is upcoming.
@@ -346,19 +330,13 @@ class Production extends Model implements Eventable, HasMedia
     }
 
     /**
-     * Get the production time as a Period object.
+     * Get the production as a Period object.
+     * 
+     * @deprecated Use createPeriod() instead
      */
     public function getPeriod(): ?Period
     {
-        if (! $this->start_time || ! $this->end_time) {
-            return null;
-        }
-
-        return Period::make(
-            $this->start_time,
-            $this->end_time,
-            Precision::MINUTE()
-        );
+        return $this->createPeriod();
     }
 
     /**
@@ -427,14 +405,5 @@ class Production extends Model implements Eventable, HasMedia
     public function toCalendarEvent(): CalendarEvent
     {
         return \App\Facades\CalendarService::productionToCalendarEvent($this);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['title', 'description', 'start_time', 'end_time', 'location', 'status', 'published_at'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "Production {$eventName}");
     }
 }

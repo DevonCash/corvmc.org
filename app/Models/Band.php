@@ -3,22 +3,12 @@
 namespace App\Models;
 
 use App\Data\ContactData;
+use App\Models\ContentModel;
 use App\Models\Scopes\OwnedBandsScope;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Spatie\ModelFlags\Models\Concerns\HasFlags;
-use Spatie\Tags\HasTags;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Image\Enums\CropPosition;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
-use App\Traits\Reportable;
-use App\Traits\Revisionable;
-use Illuminate\Database\Eloquent\Attributes\Scope;
 
 /**
  * Represents a band in the application.
@@ -26,14 +16,18 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
  * It includes details about the band's name, bio, links, and contact information.
  * The band can have multiple members and exactly one owner.
  */
-class Band extends Model implements HasMedia
+class Band extends ContentModel
 {
-    use HasFactory, HasFlags, HasSlug, HasTags, InteractsWithMedia, LogsActivity, Reportable, Revisionable;
+    use HasSlug;
 
     // Report configuration
     protected static int $reportThreshold = 4;
     protected static bool $reportAutoHide = false;
     protected static string $reportableTypeName = 'Band Profile';
+
+    // Activity logging configuration
+    protected static array $loggedFields = ['name', 'bio', 'hometown', 'visibility'];
+    protected static string $logTitle = 'Band profile';
 
     protected $table = 'band_profiles';
 
@@ -55,12 +49,12 @@ class Band extends Model implements HasMedia
         'contact' => ContactData::class,
         'embeds' => 'array',
     ];
-    
+
     /**
      * Auto-approval mode for bands - personal content
      */
     protected string $autoApprove = 'personal';
-    
+
     /**
      * Get revision exempt fields for bands.
      */
@@ -130,38 +124,17 @@ class Band extends Model implements HasMedia
     }
 
 
-    public function registerMediaCollections(): void
-    {
-        $this->addMediaCollection('avatar')
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
-            ->singleFile()
-            ->onlyKeepLatest(1);
-    }
-
+    /**
+     * Register additional media conversions specific to bands.
+     */
     public function registerMediaConversions(?Media $media = null): void
     {
-        // Thumbnail for lists and small displays
-        $this->addMediaConversion('thumb')
-            ->width(150)
-            ->height(150)
-            ->crop(150, 150, CropPosition::Center)
-            ->quality(90)
-            ->sharpen(10)
-            ->performOnCollections('avatar');
-
-        // Medium size for band cards and directory
-        $this->addMediaConversion('medium')
-            ->width(400)
-            ->height(400)
-            ->crop(400, 400, CropPosition::Center)
-            ->quality(85)
-            ->performOnCollections('avatar');
+        parent::registerMediaConversions($media);
 
         // Large size for band profile pages
         $this->addMediaConversion('large')
-            ->width(800)
             ->height(800)
-            ->crop(800, 800, CropPosition::Center)
+            ->width(800)
             ->quality(80)
             ->performOnCollections('avatar');
 
@@ -169,7 +142,6 @@ class Band extends Model implements HasMedia
         $this->addMediaConversion('optimized')
             ->width(1200)
             ->height(1200)
-            ->crop(1200, 1200, CropPosition::Center)
             ->quality(75)
             ->performOnCollections('avatar');
     }
@@ -257,6 +229,7 @@ class Band extends Model implements HasMedia
 
     /**
      * Check if the band profile is visible to the given user.
+     * Override trait method to include band member logic.
      */
     public function isVisible(?User $user = null): bool
     {
@@ -284,16 +257,22 @@ class Band extends Model implements HasMedia
         };
     }
 
-    public function getActivitylogOptions(): LogOptions
+    /**
+     * Override trait method to define band ownership logic.
+     */
+    protected function isOwnedBy(User $user): bool
     {
-        return LogOptions::defaults()
-            ->logOnly(['name', 'bio', 'hometown', 'visibility'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "Band profile {$eventName}")
-            ->dontLogIfAttributesChangedOnly(['updated_at'])
-            ->logExcept($this->visibility === 'private' ? ['bio', 'hometown'] : []); // Don't log content for private bands
+        return $this->owner_id === $user->id || $this->members->contains($user);
     }
+
+    /**
+     * Override trait method for band-specific permission.
+     */
+    protected function getViewPrivatePermission(): string
+    {
+        return 'view private band profiles';
+    }
+
 
     public function getUserRole(User $user): ?string
     {

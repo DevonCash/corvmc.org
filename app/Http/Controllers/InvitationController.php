@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\UserInvitationService;
+use App\Facades\UserInvitationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -10,9 +10,6 @@ use Illuminate\Validation\Rules\Password;
 
 class InvitationController extends Controller
 {
-    public function __construct(
-        protected UserInvitationService $invitationService
-    ) {}
 
     /**
      * Show the invitation acceptance form.
@@ -20,9 +17,9 @@ class InvitationController extends Controller
     public function show(string $token)
     {
         // Validate the token and get user info
-        $user = $this->invitationService->findUserByToken($token);
-        
-        if (!$user || $this->invitationService->isTokenExpired($token)) {
+        $user = UserInvitationService::findUserByToken($token);
+
+        if (!$user || UserInvitationService::isTokenExpired($token)) {
             return view('auth.invitation-expired');
         }
 
@@ -49,7 +46,7 @@ class InvitationController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        $user = $this->invitationService->acceptInvitation($token, $validated);
+        $user = UserInvitationService::acceptInvitation($token, $validated);
 
         if (!$user) {
             return back()->withErrors([

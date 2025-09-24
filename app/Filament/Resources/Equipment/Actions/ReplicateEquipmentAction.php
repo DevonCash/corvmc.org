@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Equipment\Actions;
 use App\Models\Equipment;
 use Filament\Actions\ReplicateAction;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 
 class ReplicateEquipmentAction
 {

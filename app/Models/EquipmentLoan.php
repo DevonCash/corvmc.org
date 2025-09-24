@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\ModelStates\HasStates;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use App\Concerns\HasTimePeriod;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
 
@@ -29,7 +30,23 @@ use Spatie\Period\Precision;
  */
 class EquipmentLoan extends Model
 {
-    use HasFactory, LogsActivity, HasStates;
+    use HasFactory, LogsActivity, HasStates, HasTimePeriod;
+
+    /**
+     * Get the name of the start time field for this model.
+     */
+    protected function getStartTimeField(): string
+    {
+        return 'reserved_from';
+    }
+    
+    /**
+     * Get the name of the end time field for this model.
+     */
+    protected function getEndTimeField(): string
+    {
+        return 'due_at';
+    }
 
     protected $fillable = [
         'equipment_id',
@@ -192,10 +209,12 @@ class EquipmentLoan extends Model
 
     /**
      * Get the reservation period for this loan.
+     * 
+     * @deprecated Use createPeriod() instead
      */
     public function getReservationPeriod(): Period
     {
-        return Period::make($this->reserved_from, $this->due_at, Precision::MINUTE());
+        return $this->createPeriod();
     }
 
     /**

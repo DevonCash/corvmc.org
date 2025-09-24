@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Production;
 use Filament\Widgets\Widget;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class UpcomingEventsWidget extends Widget
@@ -16,7 +17,7 @@ class UpcomingEventsWidget extends Widget
 
     public function getUpcomingEvents()
     {
-        $userId = auth()->id();
+        $userId = Auth::id();
         $cacheKey = "upcoming_events" . ($userId ? ".user_{$userId}" : '');
         
         return Cache::remember($cacheKey, 600, function() {

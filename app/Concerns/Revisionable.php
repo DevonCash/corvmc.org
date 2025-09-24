@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Traits;
+namespace App\Concerns;
 
 use App\Models\Revision;
 use App\Models\User;
 use App\Services\RevisionService;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Revisionable Trait
@@ -194,7 +195,7 @@ trait Revisionable
         }
 
         // Don't create revisions if no user is authenticated (system updates)
-        if (!auth()->check()) {
+        if (!Auth::id()) {
             return false;
         }
 

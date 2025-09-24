@@ -16,6 +16,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class ReservationResource extends Resource
 {

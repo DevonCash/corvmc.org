@@ -160,20 +160,12 @@ Route::get('/invitation/accept/{token}', [\App\Http\Controllers\InvitationContro
 Route::post('/stripe/webhook', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook'])
     ->name('stripe.webhook');
 
-// Reservation payment routes (requires authentication)
+// Checkout success/cancel handling (unified for all checkout types)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/reservations/{reservation}/checkout', [\App\Http\Controllers\ReservationPaymentController::class, 'checkout'])
-        ->name('reservations.payment.checkout');
-    Route::get('/reservations/{reservation}/payment/success', [\App\Http\Controllers\ReservationPaymentController::class, 'success'])
-        ->name('reservations.payment.success');
-    Route::get('/reservations/{reservation}/payment/cancel', [\App\Http\Controllers\ReservationPaymentController::class, 'cancel'])
-        ->name('reservations.payment.cancel');
-    
-    // Subscription checkout routes
-    Route::get('/subscriptions/checkout/success', [\App\Http\Controllers\SubscriptionCheckoutController::class, 'success'])
-        ->name('subscriptions.checkout.success');
-    Route::get('/subscriptions/checkout/cancel', [\App\Http\Controllers\SubscriptionCheckoutController::class, 'cancel'])
-        ->name('subscriptions.checkout.cancel');
+    Route::get('/checkout/success', [\App\Http\Controllers\CheckoutController::class, 'success'])
+        ->name('checkout.success');
+    Route::get('/checkout/cancel', [\App\Http\Controllers\CheckoutController::class, 'cancel'])
+        ->name('checkout.cancel');
 });
 
 // Email template preview (development only)

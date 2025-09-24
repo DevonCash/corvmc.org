@@ -13,6 +13,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class FeedbackButton extends Component implements HasForms, HasActions

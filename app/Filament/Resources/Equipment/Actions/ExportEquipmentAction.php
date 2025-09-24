@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
 
 class ExportEquipmentAction

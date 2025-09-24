@@ -5,14 +5,15 @@ namespace App\Filament\Resources\Equipment\Actions;
 use App\Models\Equipment;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Section;
+use Illuminate\Support\Facades\Auth;
 
 class EditEquipmentAction
 {

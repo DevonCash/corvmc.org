@@ -78,20 +78,19 @@ class ModifyMembershipAmountAction
             ->action(function (array $data, $record) {
                 $baseAmount = Money::of($data['amount'], 'USD');
 
-                $result = UserSubscriptionService::updateSubscriptionAmount($record, $baseAmount, $data['cover_fees']);
-
-                if ($result['success']) {
+                try {
+                    $result = UserSubscriptionService::updateSubscriptionAmount($record, $baseAmount, $data['cover_fees']);
                     \Filament\Notifications\Notification::make()
                         ->title('Membership Updated')
-                        ->body($result['message'])
                         ->success()
                         ->send();
-                } else {
+                } catch (\Exception $e) {
                     \Filament\Notifications\Notification::make()
-                        ->title('Failed to update membership')
-                        ->body($result['error'])
+                        ->title('Error Updating Membership')
+                        ->body('An error occurred while updating the membership: ' . $e->getMessage())
                         ->danger()
                         ->send();
+                    return;
                 }
             });
     }

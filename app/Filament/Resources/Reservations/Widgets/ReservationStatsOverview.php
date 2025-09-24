@@ -7,6 +7,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Auth;
 
 class ReservationStatsOverview extends BaseWidget
 {

@@ -9,6 +9,7 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Actions;
+use Illuminate\Support\Facades\Auth;
 
 class MyBandsWidget extends BaseWidget
 {
@@ -220,6 +221,6 @@ class MyBandsWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return auth()->check(); // Only authenticated users can see their bands
+        return Auth::id() !== null; // Only authenticated users can see their bands
     }
 }

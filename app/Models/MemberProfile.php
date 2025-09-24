@@ -3,41 +3,34 @@
 namespace App\Models;
 
 use App\Data\ContactData;
+use App\Models\ContentModel;
 use App\Models\Scopes\MemberVisibilityScope;
 use App\Settings\MemberDirectorySettings;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Spatie\ModelFlags\Models\Concerns\HasFlags;
-use Spatie\Tags\HasTags;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Image\Enums\CropPosition;
-use App\Traits\Reportable;
-use App\Traits\Revisionable;
 
 /**
  * Represents a member profile in the application.
  * 
  * It includes details about the user, their bio, links, and contact information.
  */
-class MemberProfile extends Model implements HasMedia
+class MemberProfile extends ContentModel
 {
-    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity, Reportable, Revisionable;
-    
     // Report configuration
     protected static int $reportThreshold = 5;
     protected static bool $reportAutoHide = false;
     protected static string $reportableTypeName = 'Member Profile';
-    
+
+    // Activity logging configuration
+    protected static array $loggedFields = ['bio', 'hometown', 'visibility', 'pronouns'];
+    protected static string $logTitle = 'Member profile';
+
     /**
      * Auto-approval mode for member profiles - personal content
      */
     protected string $autoApprove = 'personal';
-    
+
     // Revision configuration - override trait method
     protected function getRevisionExemptFields(): array
     {
@@ -116,30 +109,12 @@ class MemberProfile extends Model implements HasMedia
             !empty($this->skills);
     }
 
-    public function isVisible(?User $user = null): bool
+    /**
+     * Override trait method for member profile-specific permission.
+     */
+    protected function getViewPrivatePermission(): string
     {
-        if (! $user) {
-            // Only public profiles are visible to guests
-            return $this->visibility === 'public';
-        }
-
-        // User can always see their own profile
-        if ($this->user_id === $user->id) {
-            return true;
-        }
-
-        // Staff can see all profiles if they have permission
-        if ($user->can('view private member profiles')) {
-            return true;
-        }
-
-        // Check visibility settings
-        return match ($this->visibility) {
-            'public' => true,
-            'members' => true, // All logged-in users are considered members
-            'private' => false,
-            default => false,
-        };
+        return 'view private member profiles';
     }
 
     public function getSkillsAttribute(): array
@@ -157,44 +132,26 @@ class MemberProfile extends Model implements HasMedia
         return $this->tagsWithType('genre')->pluck('name')->toArray();
     }
 
-    public function registerMediaCollections(): void
-    {
-        $this->addMediaCollection('avatar')
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
-            ->singleFile()
-            ->onlyKeepLatest(1);
-    }
-
+    /**
+     * Register media conversions for member profiles.
+     */
     public function registerMediaConversions(?Media $media = null): void
     {
-        // Thumbnail for lists and small displays
-        $this->addMediaConversion('thumb')
-            ->width(100)
-            ->height(100)
-            ->crop(100, 100, CropPosition::Center)
-            ->quality(90)
-            ->sharpen(10);
-
-        // Medium size for member cards and directory
-        $this->addMediaConversion('medium')
-            ->width(300)
-            ->height(300)
-            ->crop(300, 300, CropPosition::Center)
-            ->quality(85);
+        parent::registerMediaConversions($media);
 
         // Large size for profile pages
         $this->addMediaConversion('large')
             ->width(600)
             ->height(600)
-            ->crop(600, 600, CropPosition::Center)
-            ->quality(80);
+            ->quality(80)
+            ->performOnCollections('avatar');
 
         // Optimized original for high-res displays
         $this->addMediaConversion('optimized')
             ->width(1200)
             ->height(1200)
-            ->crop(1200, 1200, CropPosition::Center)
-            ->quality(75);
+            ->quality(75)
+            ->performOnCollections('avatar');
     }
 
     public function getAvailableFlags(): array
@@ -230,16 +187,5 @@ class MemberProfile extends Model implements HasMedia
         return $query->whereHas('flags', function ($q) use ($flag) {
             $q->where('name', $flag);
         });
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['bio', 'hometown', 'visibility'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "Member profile {$eventName}")
-            ->dontLogIfAttributesChangedOnly(['updated_at']) // Don't log if only timestamps changed
-            ->logExcept($this->visibility === 'private' ? ['bio', 'hometown'] : []); // Don't log profile content for private profiles
     }
 }
