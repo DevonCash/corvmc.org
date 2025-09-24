@@ -48,18 +48,7 @@ class MemberProfileForm
                                 ->columnSpan(1)
                                 ->datalist(fn() => MemberProfile::withoutGlobalScope(\App\Models\Scopes\MemberVisibilityScope::class)->distinct()->pluck('hometown')->concat(['Corvallis', 'Albany', 'Philomath', 'Monroe', 'Lebanon', 'Sweet Home', 'Eugene', 'Springfield', 'Portland', 'Salem'])),
                         ])->columns(4)->columnSpanFull(),
-                        RichEditor::make('bio')
-                            ->label('Bio')
-                            ->placeholder('Tell us about yourself')
-                            ->toolbarButtons([
-                                ['bold', 'italic', 'underline', 'strike', 'link'],
-                                ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
-                                ['blockquote', 'bulletList', 'orderedList'],
-                                ['table'], // The `customBlocks` and `mergeTags` tools are also added here if those features are used.
-                                ['undo', 'redo'],
-                            ])
-                            ->columnSpanFull(),
-                        Fieldset::make('Contact Information')
+                        Grid::make(2)
                             ->columnSpanFull()
                             ->schema([
                                 TextInput::make('contact.email')
@@ -73,6 +62,18 @@ class MemberProfileForm
                                     ->placeholder('(555) 123-4567'),
                             ])
                             ->columns(2),
+                        RichEditor::make('bio')
+                            ->label('Bio')
+                            ->placeholder('Tell us about yourself')
+                            ->toolbarButtons([
+                                ['bold', 'italic', 'underline', 'strike', 'link'],
+                                ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                                ['blockquote', 'bulletList', 'orderedList'],
+                                ['table'], // The `customBlocks` and `mergeTags` tools are also added here if those features are used.
+                                ['undo', 'redo'],
+                            ])
+                            ->columnSpanFull(),
+
 
                         Fieldset::make('Embeds & Media')
                             ->columnSpanFull()

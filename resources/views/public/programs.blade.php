@@ -1,6 +1,6 @@
 <x-public.layout title="Programs | Corvallis Music Collective">
     <!-- Hero Section -->
-    <div class="hero min-h-96 bg-gradient-to-r from-success/10 to-warning/10">
+    <div class="hero min-h-96">
         <div class="hero-content text-center">
             <div class="max-w-2xl">
                 <h1 class="text-5xl font-bold">Programs</h1>
@@ -13,7 +13,7 @@
 
     <div class="container mx-auto px-4 py-16">
         <!-- Practice Space Section -->
-        <section class="mb-20 bg-gradient-to-br from-success/5 to-success/10 rounded-3xl p-8 lg:p-12">
+        <section class="mb-20 bg-success/10 p-8 lg:p-12">
             <div class="text-center mb-12">
                 <h2 class="text-4xl font-bold mb-4">Practice Space</h2>
                 <p class="text-lg max-w-3xl mx-auto">
@@ -34,12 +34,9 @@
                         a PA system, microphones, and all the essentials for a productive practice session.
                     </p>
                     <div class="alert alert-info">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span><strong>Members Only</strong><br /> Practice space access requires CMC membership (it's
-                            free!)</span>
+                        <x-tabler-user-circle class="size-6" />
+                        <span><strong>Members Only</strong><br /> Practice space access requires a free CMC membership
+                        </span>
                     </div>
                 </div>
 
@@ -82,7 +79,7 @@
         </section>
 
         <!-- Shows/Performances Section -->
-        <section class="mb-20 bg-gradient-to-br from-primary/5 to-secondary/10 rounded-3xl p-8 lg:p-12">
+        <section class="mb-20 bg-primary/10 p-8 lg:p-12">
             <div class="text-center mb-12">
                 <h2 class="text-4xl font-bold mb-4">Shows & Performances</h2>
                 <p class="text-lg max-w-3xl mx-auto">
@@ -147,7 +144,7 @@
         </section>
 
         <!-- Meetups & Clubs Section -->
-        <section class="mb-20 bg-gradient-to-br from-accent/5 to-warning/10 rounded-3xl p-8 lg:p-12">
+        <section class="mb-20 bg-warning/20 p-8 lg:p-12">
             <div class="text-center mb-12">
                 <h2 class="text-4xl font-bold mb-4">Meetups & Clubs</h2>
                 <p class="text-lg max-w-3xl mx-auto">
@@ -158,7 +155,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
                 <!-- Real Book Club -->
-                <div class="card bg-gradient-to-br from-amber/10 to-orange/10 shadow-xl border-2 border-amber/20">
+                <div class="card shadow-xl border-2">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
                             <div class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center">
@@ -228,7 +225,7 @@
                             <div class="badge badge-secondary badge-outline">Last Thursday • 6:30 PM</div>
                         </div>
                     </div>
-{{--
+                    {{--
                     <div class="card bg-base-100 shadow-lg">
                         <div class="card-body">
                             <div class="flex items-center gap-3 mb-3">
@@ -253,11 +250,12 @@
         </section>
 
         <!-- Gear Lending Library Section -->
-        <section class="mb-20 bg-gradient-to-br from-info/5 to-cyan/10 rounded-3xl p-8 lg:p-12">
+        <section class="mb-20 bg-info/20 p-8 lg:p-12">
             <div class="text-center mb-12">
                 <h2 class="text-4xl font-bold mb-4">Gear Lending Library</h2>
                 <p class="text-lg max-w-3xl mx-auto">
-                    Access professional music equipment through our member gear lending program. Try before you buy, or use quality gear for your performances and recordings.
+                    Access professional music equipment through our member gear lending program. Try before you buy, or
+                    use quality gear for your performances and recordings.
                 </p>
             </div>
 
@@ -265,17 +263,17 @@
                 <div>
                     <h3 class="text-2xl font-bold mb-4">Quality Gear When You Need It</h3>
                     <p class="text-lg mb-4">
-                        Our lending library features carefully maintained instruments and equipment available to CMC members for short-term use.
+                        Our lending library features carefully maintained instruments and equipment available to CMC
+                        members for short-term use.
                     </p>
                     <p class="text-lg mb-4">
-                        Perfect for trying new instruments, covering for repairs, or accessing specialized gear for recording projects and performances.
+                        Perfect for trying new instruments, covering for repairs, or accessing specialized gear for
+                        recording projects and performances.
                     </p>
                     <div class="alert alert-info">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span><strong>Members Only</strong><br /> Gear lending requires CMC membership and good standing</span>
+                        <x-tabler-user-circle class="size-6" />
+                        <span><strong>Members Only</strong><br /> Gear lending requires CMC membership and good
+                            standing</span>
                     </div>
                 </div>
 
@@ -325,12 +323,13 @@
 
             <div class="text-center">
                 <a href="{{ route('contact') }}?topic=gear" class="btn btn-info btn-lg">Browse Available Gear</a>
-                <a href="{{ route('contact') }}?topic=gear" class="btn btn-outline btn-info btn-lg">Donate Equipment</a>
+                <a href="{{ route('contact') }}?topic=gear" class="btn btn-outline btn-info btn-lg">Donate
+                    Equipment</a>
             </div>
         </section>
 
         <!-- Call to Action -->
-        <div class="text-center bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-12">
+        <div class="text-center bg-primary/20 rounded-lg p-12">
             <h2 class="text-4xl font-bold mb-6">Ready to Get Involved?</h2>
             <p class="text-lg mb-8 max-w-2xl mx-auto">
                 Join the Corvallis Music Collective to access all our programs and connect with a vibrant community of

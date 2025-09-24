@@ -1,6 +1,6 @@
 <x-public.layout title="Music Events & Shows | Corvallis Music Collective">
     <!-- Hero Section -->
-    <div class="hero min-h-96 bg-gradient-to-r from-secondary/10 to-accent/10">
+    <div class="hero min-h-96 bg-accent/20">
         <div class="hero-content text-center">
             <div class="max-w-2xl">
                 <h1 class="text-5xl font-bold">Live Music Events</h1>

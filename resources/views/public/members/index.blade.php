@@ -1,6 +1,6 @@
 <x-public.layout title="Musicians Directory | Corvallis Music Collective">
     <!-- Hero Section -->
-    <div class="hero min-h-96 bg-gradient-to-r from-primary/10 to-secondary/10">
+    <div class="hero min-h-96 bg-secondary/10">
         <div class="hero-content text-center">
             <div class="max-w-2xl">
                 <h1 class="text-5xl font-bold">Our Musicians</h1>

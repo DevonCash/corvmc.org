@@ -1,6 +1,6 @@
 <x-public.layout title="Volunteer with CMC - Help Local Musicians | Corvallis Music Collective">
     <!-- Hero Section -->
-    <div class="hero min-h-96 bg-gradient-to-r from-warning/10 to-error/10">
+    <div class="hero min-h-96 bg-warning/20">
         <div class="hero-content text-center">
             <div class="max-w-2xl">
                 <h1 class="text-5xl font-bold">Volunteer with CMC</h1>

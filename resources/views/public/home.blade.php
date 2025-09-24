@@ -1,6 +1,6 @@
 <x-public.layout title="Corvallis Music Collective - Supporting Local Musicians & Community">
     <!-- Hero Section -->
-    <div class="hero min-h-screen bg-gradient-to-r from-primary/10 to-secondary/10">
+    <div class="hero min-h-screen bg-secondary/10">
         <div class="hero-content text-center">
             <div class="max-w-2xl">
                 <h1 class="text-5xl font-bold">Building and Connecting Music Communities in Corvallis</h1>

@@ -28,7 +28,7 @@
                 </div>
             @else
                 <div
-                    class="bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg  flex items-center justify-center h-full w-full">
+                    class="bg-secondary/20 rounded-lg  flex items-center justify-center h-full w-full">
                     <div class="text-center opacity-30">
                         <x-unicon name="tabler:music" class="size-32 mx-auto mb-6" />
                         <p class="text-2xl font-bold">{{ $production->title }}</p>
@@ -124,7 +124,7 @@
         <!-- Performers -->
         @if ($production->performers && $production->performers->count() > 0)
             <h2 class="font-bold text-2xl mb-6">Featured Artists</h2>
-            <div class="grid grid-cols-1 
+            <div class="grid grid-cols-1
                      @if($production->performers->count() == 4) sm:grid-cols-2 gap-6
                      @else sm:grid-cols-2 md:grid-cols-3 gap-6 @endif">
                 @foreach ($production->performers as $performer)
@@ -166,7 +166,7 @@
                                         class="h-64 w-auto aspect-[8.5/11] object-cover rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                                 @else
                                     <div
-                                        class="h-64 w-40 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300 flex items-center justify-center">
+                                        class="h-64 w-40 bg-secondary/20 rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300 flex items-center justify-center">
                                         <div class="text-center opacity-50">
                                             <x-unicon name="tabler:music" class="size-16 mx-auto mb-2" />
                                             <p class="text-sm font-bold px-2 text-center">{{ $event->title }}</p>

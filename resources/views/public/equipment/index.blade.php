@@ -1,6 +1,6 @@
 <x-public.layout title="Equipment Library | Corvallis Music Collective">
     <!-- Hero Section -->
-    <div class="hero min-h-96 bg-gradient-to-r from-info/10 to-cyan/10">
+    <div class="hero min-h-96 bg-info/20">
         <div class="hero-content text-center">
             <div class="max-w-2xl">
                 <h1 class="text-5xl font-bold">Equipment Library</h1>
@@ -34,10 +34,10 @@
                     <label class="label">
                         <span class="label-text font-semibold">Search Equipment</span>
                     </label>
-                    <input type="text" 
-                           name="search" 
+                    <input type="text"
+                           name="search"
                            value="{{ request('search') }}"
-                           placeholder="Search by name, brand, or model..." 
+                           placeholder="Search by name, brand, or model..."
                            class="input input-bordered w-full" />
                 </div>
 
@@ -49,7 +49,7 @@
                     <select name="type" class="select select-bordered w-full max-w-xs">
                         <option value="">All Types</option>
                         @foreach($equipmentTypes as $type)
-                            <option value="{{ $type }}" 
+                            <option value="{{ $type }}"
                                     {{ request('type') === $type ? 'selected' : '' }}>
                                 {{ ucfirst($type) }}
                             </option>
@@ -100,8 +100,8 @@
                         <!-- Equipment Photo -->
                         <figure class="px-4 pt-4">
                             @if($item->getFirstMediaUrl('equipment-photos'))
-                                <img src="{{ $item->getFirstMediaUrl('equipment-photos', 'thumb') }}" 
-                                     alt="{{ $item->name }}" 
+                                <img src="{{ $item->getFirstMediaUrl('equipment-photos', 'thumb') }}"
+                                     alt="{{ $item->name }}"
                                      class="rounded-xl h-48 w-full object-cover" />
                             @else
                                 <div class="bg-base-200 rounded-xl h-48 w-full flex items-center justify-center">
@@ -118,7 +118,7 @@
 
                             <!-- Equipment Name -->
                             <h3 class="card-title text-lg">{{ $item->name }}</h3>
-                            
+
                             <!-- Brand & Model -->
                             @if($item->brand || $item->model)
                                 <p class="text-sm text-base-content/70">
@@ -161,7 +161,7 @@
 
                             <!-- Actions -->
                             <div class="card-actions justify-end mt-4">
-                                <a href="{{ route('equipment.show', $item) }}" 
+                                <a href="{{ route('equipment.show', $item) }}"
                                    class="btn btn-primary btn-sm">
                                     View Details
                                 </a>
@@ -193,7 +193,7 @@
         @php
             $equipmentSettings = app(\App\Settings\EquipmentSettings::class);
         @endphp
-        <div class="bg-gradient-to-br from-primary/5 to-secondary/10 rounded-3xl p-8 mt-16">
+        <div class="bg-secondary/10 rounded-3xl p-8 mt-16">
             <div class="text-center mb-8">
                 @if($equipmentSettings->enable_rental_features)
                     <h2 class="text-3xl font-bold mb-4">How to Borrow Equipment</h2>
@@ -246,7 +246,7 @@
                         <x-unicon name="tabler:info-circle" class="size-10 text-primary" />
                     </div>
                     <p class="text-lg text-base-content/80 mb-4">
-                        This equipment catalog showcases instruments and gear available through CMC. 
+                        This equipment catalog showcases instruments and gear available through CMC.
                         Contact us to learn more about access and availability for members.
                     </p>
                 </div>

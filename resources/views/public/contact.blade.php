@@ -1,6 +1,6 @@
 <x-public.layout title="Contact CMC - Get in Touch | Corvallis Music Collective">
     <!-- Hero Section -->
-    <div class="hero min-h-96 bg-gradient-to-r from-info/10 to-success/10">
+    <div class="hero min-h-96 bg-success/10">
         <div class="hero-content text-center">
             <div class="max-w-2xl">
                 <h1 class="text-5xl font-bold">Get in Touch</h1>

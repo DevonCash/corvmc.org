@@ -52,21 +52,40 @@
 
     /* CMC Brand Colors - Light Theme */
     --color-primary: oklch(67% 0.18 43); /* #e5771e - CMC Orange */
+    --color-primary-content: oklch(
+        20% 0.03 270
+    ); /* dark text on light elements */
     --color-secondary: oklch(25% 0.09 250); /* #003b5c - CMC Blue */
+    --color-secondary-content: oklch(
+        90% 0.02 270
+    ); /* light text on dark elements */
     --color-accent: oklch(85% 0.05 200); /* #B8DDE1 - CMC Light Blue */
+    --color-accent-content: oklch(
+        20% 0.03 270
+    ); /* dark text on light elements */
     --color-neutral: oklch(24% 0.03 270); /* #1f2937 */
+    --color-neutral-content: oklch(
+        90% 0.02 270
+    ); /* light text on dark elements */
+
     --color-base-100: oklch(99% 0.015 65); /* warm cream white */
     --color-base-200: oklch(96% 0.02 60); /* light parchment */
     --color-base-300: oklch(92% 0.025 55); /* aged paper tone */
+
     --color-info: oklch(85% 0.05 200); /* #B8DDE1 */
+    --color-info-content: oklch(20% 0.03 270);
     --color-success: oklch(70% 0.14 160); /* #36d399 */
+    --color-success-content: oklch(20% 0.03 270);
     --color-warning: oklch(90% 0.08 85); /* #ffe28a - CMC Yellow */
+    --color-warning-content: oklch(20% 0.03 270);
     --color-error: oklch(70% 0.18 15); /* #f87272 */
+    --color-error-content: oklch(20% 0.03 270);
 
     --cmc-orange: #e5771e;
     --cmc-yellow: #ffe28a;
     --cmc-blue: #003b5c;
     --cmc-light-blue: #b8dde1;
+
     --speaker-case: oklch(var(--p, 0.66 0.15 40));
     --speaker-fill: oklch(var(--a, 0.92 0.09 85));
     --sound-lines: oklch(var(--s, 0.53 0.13 210));
@@ -76,8 +95,17 @@
 @plugin "daisyui/theme" {
     name: "corvmc-dark";
     --color-primary: oklch(75% 0.18 43); /* Brighter CMC Orange for dark bg */
+    --color-primary-content: oklch(
+        20% 0.03 270
+    ); /* Dark text on light elements */
     --color-secondary: oklch(70% 0.08 200); /* Lighter CMC Blue variant */
+    --color-secondary-content: oklch(
+        20% 0.03 270
+    ); /* Dark text on light elements */
     --color-accent: oklch(75% 0.06 200); /* Brighter CMC Light Blue */
+    --color-accent-content: oklch(
+        20% 0.03 270
+    ); /* Dark text on light elements */
     --color-neutral: oklch(85% 0.02 270); /* Light text */
     --color-neutral-content: oklch(
         20% 0.03 270
@@ -87,9 +115,13 @@
     --color-base-300: oklch(28% 0.03 60); /* lighter warm brown */
     --color-base-content: oklch(85% 0.02 270); /* Light text */
     --color-info: oklch(75% 0.06 200);
+    --color-info-content: oklch(20% 0.03 270);
     --color-success: oklch(75% 0.14 160);
+    --color-success-content: oklch(20% 0.03 270);
     --color-warning: oklch(80% 0.1 85); /* Slightly dimmed yellow */
+    --color-warning-content: oklch(20% 0.03 270);
     --color-error: oklch(75% 0.18 15);
+    --color-error-content: oklch(20% 0.03 270);
 
     --cmc-orange: #ff8c42; /* Brighter orange for dark theme */
     --cmc-yellow: #ffeaa7;
@@ -142,7 +174,6 @@
     transition: z-index 0s 0s;
 }
 
-
 /* Enhanced styling for better dark mode experience */
 @media (prefers-color-scheme: dark) {
     .card {
@@ -188,7 +219,7 @@
 }
 
 .fi-main {
-    padding:0 !important;
+    padding: 0 !important;
 }
 
 .fi-page {

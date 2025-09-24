@@ -90,23 +90,24 @@ class MemberPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
-                fn (): string => view('livewire.feedback-button-wrapper')->render()
+                fn(): string => view('filament.components.dark-mode-toggle')->render()
+            )
+            ->renderHook(
+                PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
+                fn(): string => view('livewire.feedback-button-wrapper')->render()
             )
             ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,
-                fn (): string => view('filament.components.activity-toggle-button')->render()
+                fn(): string => view('filament.components.activity-toggle-button')->render()
             )
-            ->renderHook(
-                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
-                fn (): string => view('filament.components.dark-mode-toggle')->render()
-            )
+
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn (): string => ActivitySidebar::render()
+                fn(): string => ActivitySidebar::render()
             )
             ->renderHook(
                 PanelsRenderHook::SIDEBAR_FOOTER,
-                fn (): string => view('filament.components.sidebar-footer')->render()
+                fn(): string => view('filament.components.sidebar-footer')->render()
             )
             ->viteTheme('resources/css/app.css');
     }

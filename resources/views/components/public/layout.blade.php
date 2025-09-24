@@ -5,13 +5,13 @@
     (function() {
         const savedTheme = localStorage.getItem('theme') || 'auto';
         let isDark;
-        
+
         if (savedTheme === 'auto') {
             isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         } else {
             isDark = savedTheme === 'dark';
         }
-        
+
         // Force theme setting to override DaisyUI auto-detection
         const theme = isDark ? 'corvmc-dark' : 'corvmc';
         document.documentElement.setAttribute('data-theme', theme);
@@ -21,7 +21,7 @@
         } else {
             document.documentElement.classList.remove('dark');
         }
-        
+
         // Listen for system theme changes when in auto mode
         if (savedTheme === 'auto') {
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
@@ -41,7 +41,9 @@
 
     @php
         $organizationSettings = app(\App\Settings\OrganizationSettings::class);
-        $metaDescription = $organizationSettings->description ?: 'Corvallis Music Collective (CMC) supports local musicians with affordable practice space, events, and community connections. Join Oregon\'s premier music collective.';
+        $metaDescription =
+            $organizationSettings->description ?:
+            'Corvallis Music Collective (CMC) supports local musicians with affordable practice space, events, and community connections. Join Oregon\'s premier music collective.';
     @endphp
 
     <title>{{ $title ?? $organizationSettings->name }}</title>
@@ -64,6 +66,17 @@
     <script src="https://zeffy-scripts.s3.ca-central-1.amazonaws.com/embed-form-script.min.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+
+@php
+    $links = [
+        ['label' => 'About Us', 'route' => 'about', 'pattern' => 'about', 'icon' => 'tabler-info-circle'],
+        ['label' => 'Events', 'route' => 'events.index', 'pattern' => 'events.*', 'icon' => 'tabler-calendar'],
+        ['label' => 'Members', 'route' => 'members.index', 'pattern' => 'members.*', 'icon' => 'tabler-users'],
+        ['label' => 'Bands', 'route' => 'bands.index', 'pattern' => 'bands.*', 'icon' => 'tabler-microphone-2'],
+        ['label' => 'Programs', 'route' => 'programs', 'pattern' => 'programs', 'icon' => 'tabler-apps'],
+        ['label' => 'Contact', 'route' => 'contact', 'pattern' => 'contact', 'icon' => 'tabler-mail'],
+    ];
+@endphp
 
 <body class="min-h-screen bg-base-100">
     <!-- Mobile Drawer -->
@@ -92,10 +105,12 @@
                         <!-- Right: Dashboard -->
                         @auth
                             <a href="/member" class="btn btn-ghost btn-square" title="Dashboard">
-                                <x-unicon name="tabler:layout-dashboard-filled" class="size-6" />
+                                <x-tabler-layout-dashboard-filled class='size-6' />
                             </a>
                         @else
-                            <a href="/member/login" class="btn btn-ghost btn-square text-xs">Login</a>
+                            <a href="/member/login" class="btn btn-ghost btn-square text-xs">
+                                <x-tabler-login class='size-6' />
+                            </a>
                         @endauth
                     </div>
                 </div>
@@ -121,49 +136,42 @@
                 </div>
 
                 <!-- Navigation Menu -->
-                <ul class="menu menu-lg w-full grow">
-                    <li><a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">
-                            <x-unicon name="tabler:home" class="w-5 h-5" />
-                            Home
-                        </a></li>
-                    <li><a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'active' : '' }}">
-                            <x-unicon name="tabler:info-circle" class="w-5 h-5" />
-                            About Us
-                        </a></li>
-                    <li><a href="{{ route('events.index') }}"
-                            class="{{ request()->routeIs('events.*') ? 'active' : '' }}">
-                            <x-unicon name="tabler:calendar" class="w-5 h-5" />
-                            Events
-                        </a></li>
-                    <li><a href="{{ route('members.index') }}"
-                            class="{{ request()->routeIs('members.*') ? 'active' : '' }}">
-                            <x-unicon name="tabler:users" class="w-5 h-5" />
-                            Members
-                        </a></li>
-                    <li><a href="{{ route('bands.index') }}"
-                            class="{{ request()->routeIs('bands.*') ? 'active' : '' }}">
-                            <x-unicon name="tabler:music" class="w-5 h-5" />
-                            Bands
-                        </a></li>
-                    <li><a href="{{ route('programs') }}"
-                            class="{{ request()->routeIs('programs') ? 'active' : '' }}">
-                            <x-unicon name="tabler:apps" class="w-5 h-5" />
-                            Programs
-                        </a></li>
-                    <li><a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'active' : '' }}">
-                            <x-unicon name="tabler:mail" class="w-5 h-5" />
-                            Contact
-                        </a></li>
-                    <li><a href="{{ route('contribute') }}"
-                            class="{{ request()->routeIs('contribute') ? 'active text-primary' : 'text-primary outline outline-1 outline-primary ' }} mt-4">
-                            <x-unicon name="tabler:heart-handshake" class="w-5 h-5" />
-                            Contribute
-                        </a></li>
+                <ul class="menu menu-lg w-full">
+                    @foreach ($links as $link)
+                        <li>
+                            <a href="{{ route($link['route']) }}"
+                                class="{{ request()->routeIs($link['pattern']) ? 'menu-active' : '' }}">
+                                <x-filament::icon icon="{{ $link['icon'] }}" class='size-5' />
+                                {{ $link['label'] }}
+                            </a>
+                        </li>
+                    @endforeach
                 </ul>
-
+                <a href="{{ route('contribute') }}" class="btn btn-primary btn-outline mt-4">
+                    <x-tabler-heart-handshake class='size-5' />
+                    Contribute
+                </a>
                 <!-- Sidebar Footer -->
                 <div class="mt-auto pt-8">
                     <div class="divider"></div>
+                    @guest
+                    <a href='/member/login' class='btn btn-outline btn-block'>
+                        <x-tabler-login class='size-6' />
+                        Login
+                    </a>
+                    @endguest
+                    @auth
+                    <div class='flex gap-2 items-center justify-center'>
+                        <img src={{ Auth::user()->getFilamentAvatarUrl() }} alt="User Avatar" class="size-10 rounded-full"/>
+                        <div class='font-medium text-sm grow'>
+                            <p >{{ Auth::user()->name }}</p>
+                            <p >{{ Auth::user()->email }}</p>
+                        </div>
+                        <a class='btn btn-ghost btn-square mt-2 row-span-2' href='/member'>
+                            <x-tabler-layout-dashboard-filled class='size-5' />
+                        </a>
+                    </div>
+                    @endauth
                 </div>
             </aside>
         </div>
@@ -190,30 +198,31 @@
             <div class="flex items-center gap-2" style="grid-row: 2; grid-column: 3;">
                 @auth
                     <a href="/member" class="btn btn-ghost" title="Dashboard">
-                        <x-unicon name="tabler:layout-dashboard-filled" class="w-5 h-5" />
+                        <x-tabler-layout-dashboard-filled class='size-5' />
                         <span class="ml-1">Dashboard</span>
                     </a>
                 @else
-                    <a href="/member/login" class="btn btn-ghost">Login</a>
+                    <a href="/member/login" class="btn btn-ghost">
+                        <x-tabler-login class='size-5' />
+                        <span class="ml-1">Login</span>
+                    </a>
                 @endauth
             </div>
 
             <!-- Navigation - second row, spans columns 2-3 -->
             <div class="flex items-center" style="grid-row: 2; grid-column: 2;">
-                <ul class="menu menu-horizontal px-1 w-full -ml-4">
-                    <li><a href="{{ route('about') }}"
-                            class="{{ request()->routeIs('about') ? 'active' : '' }}">About Us</a></li>
-                    <li><a href="{{ route('events.index') }}"
-                            class="{{ request()->routeIs('events.*') ? 'active' : '' }}">Events</a></li>
-                    <li><a href="{{ route('members.index') }}"
-                            class="{{ request()->routeIs('members.*') ? 'active' : '' }}">Members</a></li>
-                    <li><a href="{{ route('bands.index') }}"
-                            class="{{ request()->routeIs('bands.*') ? 'active' : '' }}">Bands</a></li>
-                    <li><a href="{{ route('programs') }}"
-                            class="{{ request()->routeIs('programs') ? 'active' : '' }}">Programs</a></li>
-                    <li><a href="{{ route('contribute') }}"
-                            class="{{ request()->routeIs('contribute') ? 'active text-primary ml-2' : 'text-primary outline outline-1 outline-primary ml-2' }}">
-                            <x-unicon name="tabler:heart-handshake" class="w-5 h-5" />
+
+                <ul class="menu menu-horizontal px-1 w-full -ml-4 items-center">
+                    @foreach ($links as $link)
+                        <li>
+                            <a href="{{ route($link['route']) }}"
+                                class="{{ request()->routeIs($link['pattern']) ? 'active' : '' }}">
+                                {{ $link['label'] }}
+                            </a>
+                        </li>
+                    @endforeach
+                    <li><a href="{{ route('contribute') }}" class="btn btn-primary btn-outline ml-2">
+                            <x-tabler-heart-handshake class='size-5' />
                             Contribute</a></li>
                 </ul>
             </div>
@@ -236,7 +245,7 @@
         $socialLinks = $footerSettings->getSocialLinks();
     @endphp
     <footer
-        class="footer footer-center bg-base-200 text-base-content p-10 flex justify-between flex-wrap items-center">
+        class="footer footer-center bg-base-200 text-base-content p-10 flex justify-between flex-wrap items-center mt-8">
         <div class="grid grid-flow-col gap-4 mx-auto">
             @foreach ($footerLinks as $link)
                 <a href="{{ $link['url'] }}" class="link link-hover">{{ $link['label'] }}</a>

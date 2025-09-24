@@ -1,6 +1,6 @@
 <x-public.layout title="Local Bands Directory | Corvallis Music Collective">
     <!-- Hero Section -->
-    <div class="hero min-h-96 bg-gradient-to-r from-accent/10 to-primary/10">
+    <div class="hero min-h-96 bg-primary/10">
         <div class="hero-content text-center">
             <div class="max-w-2xl">
                 <h1 class="text-5xl font-bold">Local Bands</h1>

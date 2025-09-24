@@ -63,7 +63,7 @@ class MembershipForm
                                     try {
                                         $stripeSubscription = $subscription->asStripeSubscription();
                                         $nextBillingDate = \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_end)->format('n/j/Y');
-                                        return sprintf('Next billing %s', $nextBillingDate);
+                                        return sprintf('Next bill %s', $nextBillingDate);
                                     } catch (\Exception $e) {
                                         return null;
                                     }
