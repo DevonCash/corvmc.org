@@ -1,5 +1,7 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui" {
+    themes: corvmc --default, corvmc-dark --prefersdark;
+}
 
 @import "../../vendor/filament/filament/resources/css/index.css";
 
@@ -72,8 +74,7 @@
 }
 
 @plugin "daisyui/theme" {
-    prefersdark: true;
-    color-scheme: dark;
+    name: "corvmc-dark";
     --color-primary: oklch(75% 0.18 43); /* Brighter CMC Orange for dark bg */
     --color-secondary: oklch(70% 0.08 200); /* Lighter CMC Blue variant */
     --color-accent: oklch(75% 0.06 200); /* Brighter CMC Light Blue */
@@ -100,8 +101,6 @@
     --speaker-front: oklch(
         78% 0.035 204.51
     ); /* Dimmed version of light speaker-front */
-
-    color-scheme: dark;
 }
 
 /* CMC Brand Styles */

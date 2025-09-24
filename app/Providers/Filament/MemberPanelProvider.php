@@ -33,7 +33,6 @@ class MemberPanelProvider extends PanelProvider
             ->default()
             ->id('member')
             ->path('member')
-            ->profile()
             ->userMenu(false)
             ->login()
             ->registration()
@@ -96,6 +95,10 @@ class MemberPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,
                 fn (): string => view('filament.components.activity-toggle-button')->render()
+            )
+            ->renderHook(
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn (): string => view('filament.components.dark-mode-toggle')->render()
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,

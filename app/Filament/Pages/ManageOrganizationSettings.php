@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Settings\OrganizationSettings;
 use App\Settings\FooterSettings;
 use App\Settings\EquipmentSettings;
+use App\Settings\CommunityCalendarSettings;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms;
@@ -41,6 +42,7 @@ class ManageOrganizationSettings extends Page implements HasForms
         $settings = app(OrganizationSettings::class);
         $footerSettings = app(FooterSettings::class);
         $equipmentSettings = app(EquipmentSettings::class);
+        $communityCalendarSettings = app(CommunityCalendarSettings::class);
 
         $this->form->fill([
             'name' => $settings->name,
@@ -51,7 +53,9 @@ class ManageOrganizationSettings extends Page implements HasForms
             'email' => $settings->email,
             'footer_links' => $footerSettings->getLinks(),
             'social_links' => $footerSettings->getSocialLinks(),
+            'enable_equipment_features' => $equipmentSettings->enable_equipment_features,
             'enable_rental_features' => $equipmentSettings->enable_rental_features,
+            'enable_community_calendar' => $communityCalendarSettings->enable_community_calendar,
         ]);
     }
 
@@ -106,9 +110,21 @@ class ManageOrganizationSettings extends Page implements HasForms
 
                 Section::make('Features')
                     ->schema([
+                        Forms\Components\Toggle::make('enable_equipment_features')
+                            ->label('Enable Equipment Features')
+                            ->helperText('When enabled, the equipment section appears in navigation. When disabled, all equipment features are hidden.')
+                            ->default(false)
+                            ->live(),
+                        
                         Forms\Components\Toggle::make('enable_rental_features')
                             ->label('Enable Equipment Rental Features')
                             ->helperText('When enabled, members can checkout and return equipment through the system. When disabled, only the equipment catalog view is available.')
+                            ->default(false)
+                            ->visible(fn (callable $get) => $get('enable_equipment_features')),
+                        
+                        Forms\Components\Toggle::make('enable_community_calendar')
+                            ->label('Enable Community Calendar')
+                            ->helperText('When enabled, members can submit and view community events on the calendar. When disabled, the community calendar is hidden from navigation.')
                             ->default(false),
                     ]),
 
@@ -237,6 +253,7 @@ class ManageOrganizationSettings extends Page implements HasForms
         $settings = app(OrganizationSettings::class);
         $footerSettings = app(FooterSettings::class);
         $equipmentSettings = app(EquipmentSettings::class);
+        $communityCalendarSettings = app(CommunityCalendarSettings::class);
 
         $settings->name = $data['name'];
         $settings->description = $data['description'];
@@ -248,11 +265,14 @@ class ManageOrganizationSettings extends Page implements HasForms
         $footerSettings->links = $data['footer_links'] ?? [];
         $footerSettings->social_links = $data['social_links'] ?? [];
 
+        $equipmentSettings->enable_equipment_features = $data['enable_equipment_features'] ?? false;
         $equipmentSettings->enable_rental_features = $data['enable_rental_features'] ?? false;
+        $communityCalendarSettings->enable_community_calendar = $data['enable_community_calendar'] ?? false;
 
         $settings->save();
         $footerSettings->save();
         $equipmentSettings->save();
+        $communityCalendarSettings->save();
 
         Notification::make()
             ->success()

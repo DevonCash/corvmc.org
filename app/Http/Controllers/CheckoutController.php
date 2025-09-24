@@ -54,7 +54,7 @@ class CheckoutController extends Controller
         try {
             // Retrieve the checkout session to verify it was successful and determine type
             $session = Cashier::stripe()->checkout->sessions->retrieve($sessionId);
-            $metadata = $session->metadata ?? [];
+            $metadata = $session->metadata ? $session->metadata->toArray() : [];
             $checkoutType = $metadata['type'] ?? 'unknown';
             
             if ($session->payment_status === 'paid') {

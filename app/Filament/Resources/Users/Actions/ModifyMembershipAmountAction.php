@@ -6,12 +6,11 @@ use App\Facades\PaymentService;
 use App\Facades\UserSubscriptionService;
 use Brick\Money\Money;
 use Filament\Actions\Action;
-use Filament\Actions\ActionGroup;
-use Filament\Actions\Actions;
 use Filament\Forms\Components\Slider;
 use Filament\Forms\Components\Slider\Enums\PipsMode;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Actions;
 use Filament\Support\RawJs;
 
 class ModifyMembershipAmountAction
@@ -19,8 +18,8 @@ class ModifyMembershipAmountAction
     public static function make(): Action
     {
         return Action::make('modify_membership_amount')
-            ->label('Change Contribution')
-            ->icon('heroicon-o-banknotes')
+            ->label('Update Contribution')
+            ->icon('tabler-cash-banknote')
             ->color('primary')
             ->modalWidth('lg')
             ->schema([
@@ -33,12 +32,25 @@ class ModifyMembershipAmountAction
                     ->live()
                     ->tooltips(RawJs::make('`$${$value.toFixed(2)}`'))
                     ->default(function ($record) {
-                        $displayInfo = UserSubscriptionService::getSubscriptionDisplayInfo($record);
+                        $subscription = UserSubscriptionService::getActiveSubscription($record);
 
-                        if ($displayInfo['has_subscription']) {
-                            $currentAmount = $displayInfo['amount'];
-                            // Clamp to slider range
-                            return max(10, min(50, $currentAmount));
+                        if ($subscription) {
+                            try {
+                                // Get the Stripe subscription object with pricing info
+                                $stripeSubscription = $subscription->asStripeSubscription();
+                                $firstItem = $stripeSubscription->items->data[0];
+                                $currentAmount = $firstItem->price->unit_amount / 100; // Convert from cents to dollars
+                                // Clamp to slider range
+                                return max(10, min(50, $currentAmount));
+                            } catch (\Exception $e) {
+                                \Log::warning('Failed to get current subscription amount for slider default', [
+                                    'user_id' => $record->id,
+                                    'subscription_id' => $subscription->id,
+                                    'error' => $e->getMessage()
+                                ]);
+                                // Fallback to middle value
+                                return 25;
+                            }
                         }
 
                         return 25;
@@ -59,7 +71,17 @@ class ModifyMembershipAmountAction
                         return 'Add processing fees to support the organization';
                     })
                     ->live()
-                    ->default(false),
+                    ->default(function ($record) {
+                        $subscription = UserSubscriptionService::getActiveSubscription($record);
+                        
+                        if ($subscription) {
+                            // Check if subscription has multiple items (base + fee coverage)
+                            $stripeSubscription = $subscription->asStripeSubscription();
+                            return count($stripeSubscription->items->data) > 1;
+                        }
+                        
+                        return false;
+                    }),
                 TextEntry::make('total_preview')
                     ->label('New Monthly Total')
                     ->state(function ($get) {
@@ -75,6 +97,8 @@ class ModifyMembershipAmountAction
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])
+            ->modalSubmitActionLabel('Update Contribution')
+            ->modalCancelAction(false)
             ->action(function (array $data, $record) {
                 $baseAmount = Money::of($data['amount'], 'USD');
 

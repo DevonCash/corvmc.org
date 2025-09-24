@@ -38,7 +38,7 @@ class EquipmentDamageReportResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         $equipmentSettings = app(EquipmentSettings::class);
-        return $equipmentSettings->enable_rental_features;
+        return $equipmentSettings->enable_equipment_features && $equipmentSettings->enable_rental_features;
     }
 
     public static function form(Schema $schema): Schema

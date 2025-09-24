@@ -30,9 +30,21 @@ class MemberBenefitsService
         }
 
         // Use facade to avoid circular dependency
-        $displayInfo = \App\Facades\UserSubscriptionService::getSubscriptionDisplayInfo($user);
-        if ($displayInfo['has_subscription']) {
-            return $this->calculateFreeHours($displayInfo['amount']);
+        $subscription = \App\Facades\UserSubscriptionService::getActiveSubscription($user);
+        if ($subscription) {
+            try {
+                // Get the maximum contribution amount for this billing period
+                $peakAmount = \App\Facades\UserSubscriptionService::getBillingPeriodPeakAmount($subscription);
+                return $this->calculateFreeHours($peakAmount);
+            } catch (\Exception $e) {
+                \Log::warning('Failed to get billing period peak amount for free hours calculation', [
+                    'user_id' => $user->id,
+                    'subscription_id' => $subscription->id,
+                    'error' => $e->getMessage()
+                ]);
+                // Fallback to default for active subscription
+                return self::FREE_HOURS_PER_MONTH;
+            }
         }
 
         // Fallback to legacy constant for role-based members without subscriptions
@@ -80,13 +92,25 @@ class MemberBenefitsService
      */
     public function getCurrentTier(User $user): ?string
     {
-        $displayInfo = \App\Facades\UserSubscriptionService::getSubscriptionDisplayInfo($user);
+        $subscription = \App\Facades\UserSubscriptionService::getActiveSubscription($user);
 
-        if (!$displayInfo['has_subscription']) {
+        if (!$subscription) {
             return null;
         }
 
-        $amount = $displayInfo['amount'];
+        try {
+            // Get the Stripe subscription object with pricing info
+            $stripeSubscription = $subscription->asStripeSubscription();
+            $firstItem = $stripeSubscription->items->data[0];
+            $amount = $firstItem->price->unit_amount / 100; // Convert from cents to dollars
+        } catch (\Exception $e) {
+            \Log::warning('Failed to get subscription amount for tier calculation', [
+                'user_id' => $user->id,
+                'subscription_id' => $subscription->id,
+                'error' => $e->getMessage()
+            ]);
+            return 'custom';
+        }
 
         return match (true) {
             $amount >= 45 && $amount <= 55 => 'suggested_50',

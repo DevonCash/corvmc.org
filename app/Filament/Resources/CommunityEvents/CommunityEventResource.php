@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CommunityEvents;
 
+use App\Settings\CommunityCalendarSettings;
 use App\Filament\Resources\CommunityEvents\Pages\CreateCommunityEvent;
 use App\Filament\Resources\CommunityEvents\Pages\EditCommunityEvent;
 use App\Filament\Resources\CommunityEvents\Pages\ListCommunityEvents;
@@ -71,5 +72,11 @@ class CommunityEventResource extends Resource
     public static function getNavigationBadgeColor(): ?string
     {
         return 'warning';
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $communityCalendarSettings = app(CommunityCalendarSettings::class);
+        return $communityCalendarSettings->enable_community_calendar;
     }
 }

@@ -1,5 +1,38 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="corvmc">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<script>
+    // Initialize theme from localStorage with auto mode support
+    (function() {
+        const savedTheme = localStorage.getItem('theme') || 'auto';
+        let isDark;
+        
+        if (savedTheme === 'auto') {
+            isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        } else {
+            isDark = savedTheme === 'dark';
+        }
+        
+        // Force theme setting to override DaisyUI auto-detection
+        const theme = isDark ? 'corvmc-dark' : 'corvmc';
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.style.setProperty('color-scheme', isDark ? 'dark' : 'light');
+        if (isDark) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        
+        // Listen for system theme changes when in auto mode
+        if (savedTheme === 'auto') {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                const theme = e.matches ? 'corvmc-dark' : 'corvmc';
+                document.documentElement.setAttribute('data-theme', theme);
+                document.documentElement.style.setProperty('color-scheme', e.matches ? 'dark' : 'light');
+                document.documentElement.classList.toggle('dark', e.matches);
+            });
+        }
+    })();
+</script>
 
 <head>
     <meta charset="utf-8">

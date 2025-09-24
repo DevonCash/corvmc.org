@@ -6,6 +6,7 @@ use App\Filament\Resources\Bands\BandResource;
 use App\Filament\Traits\HasCrudService;
 use App\Models\Band;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class CreateBand extends CreateRecord
@@ -15,7 +16,7 @@ class CreateBand extends CreateRecord
     protected static string $resource = BandResource::class;
     protected static ?string $crudService = 'BandService';
 
-    protected function handleRecordCreation(array $data): Band
+    protected function handleRecordCreation(array $data): Model
     {
         // Check for claimable bands with the same name first
         $bandService = $this->getCrudService();

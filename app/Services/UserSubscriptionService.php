@@ -69,8 +69,8 @@ class UserSubscriptionService
         $subscriptionPrices = [$basePrice->id];
 
         if ($coverFees) {
-            $feeCoveragePriceId = $this->getFeeCoverage($basePrice->id);
-            $subscriptionPrices[] = $feeCoveragePriceId;
+            $feeCoveragePrice = $this->getFeeCoverage($basePrice->id);
+            $subscriptionPrices[] = $feeCoveragePrice->id;
         }
 
         // Use Cashier's multi-product subscription support
@@ -93,12 +93,12 @@ class UserSubscriptionService
         $basePrice = $this->getBasePrice($baseAmount);
 
         // Build new subscription prices array
-        $newPrices = [$basePrice];
+        $newPrices = [$basePrice->id];
 
         if ($coverFees) {
-            $feeCoveragePriceId = $this->getFeeCoverage($basePrice->id);
+            $feeCoveragePrice = $this->getFeeCoverage($basePrice->id);
 
-            $newPrices[] = $feeCoveragePriceId;
+            $newPrices[] = $feeCoveragePrice->id;
         }
 
         // Get user's active membership subscription
@@ -113,7 +113,7 @@ class UserSubscriptionService
 
         $newTotal = $baseAmount;
         if ($coverFees) {
-            $newTotal = $newTotal->plus(PaymentService::calculateFees($baseAmount));
+            $newTotal = $newTotal->plus(PaymentService::calculateProcessingFee($baseAmount));
         }
         $billingPeriodPeak = $this->getBillingPeriodPeakAmount($subscription);
 
@@ -216,7 +216,7 @@ class UserSubscriptionService
             return collect(Cashier::stripe()->prices->all(['product' => config('services.stripe.membership_product_id'), 'active' => true])->data);
         });
 
-        $price = $basePrices->find(fn($price) => $price->unit_amount === $amount->getMinorAmount()->toInt());
+        $price = $basePrices->first(fn($price) => $price->unit_amount === $amount->getMinorAmount()->toInt());
         if (!$price) {
             throw new SubscriptionPriceNotFoundException($amount->getMinorAmount()->toInt(), false);
         }
@@ -232,7 +232,7 @@ class UserSubscriptionService
             return collect(Cashier::stripe()->prices->all([
                 'active' => true,
                 'product' => config('services.stripe.fee_coverage_product_id'),
-                'lookup_key' => ['fee_' . $forProductId]
+                'lookup_keys' => ['fee_' . $forProductId]
             ])->data);
         });
 
@@ -275,7 +275,7 @@ class UserSubscriptionService
     /**
      * Get the highest amount charged for this subscription in the current billing period.
      */
-    private function getBillingPeriodPeakAmount($subscription): float
+    public function getBillingPeriodPeakAmount($subscription): float
     {
         $stripeSubscription = Cashier::stripe()->subscriptions->retrieve($subscription->stripe_id);
         $currentPeriodStart = $stripeSubscription->current_period_start;

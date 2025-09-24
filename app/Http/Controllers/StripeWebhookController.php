@@ -294,9 +294,6 @@ class StripeWebhookController extends CashierWebhookController
      */
     protected function handleInvoicePaymentSucceeded(array $payload): SymfonyResponse
     {
-        // Let Cashier handle the invoice payment first
-        $response = parent::handleInvoicePaymentSucceeded($payload);
-
         try {
             $invoice = $payload['data']['object'];
             $customerId = $invoice['customer'];
@@ -321,6 +318,6 @@ class StripeWebhookController extends CashierWebhookController
             ]);
         }
 
-        return $response;
+        return $this->successMethod();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Equipment;
 
+use App\Settings\EquipmentSettings;
 use App\Filament\Resources\Equipment\Pages\CreateEquipment;
 use App\Filament\Resources\Equipment\Pages\EditEquipment;
 use App\Filament\Resources\Equipment\Pages\ListEquipment;
@@ -67,5 +68,11 @@ class EquipmentResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $equipmentSettings = app(EquipmentSettings::class);
+        return $equipmentSettings->enable_equipment_features;
     }
 }
