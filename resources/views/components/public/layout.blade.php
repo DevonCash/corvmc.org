@@ -102,7 +102,7 @@
                             </div>
                         </a>
 
-                        <!-- Right: Dashboard -->
+                        <!-- Right: Dashboard only on mobile (theme selector in sidebar) -->
                         @auth
                             <a href="/member" class="btn btn-ghost btn-square" title="Dashboard">
                                 <x-tabler-layout-dashboard-filled class='size-6' />
@@ -127,12 +127,15 @@
             <label for="mobile-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
             <aside class="bg-base-100 text-base-content min-h-full w-72 p-4 flex flex-col">
                 <!-- Sidebar Header -->
-                <div class="flex items-center gap-3 mb-8 px-2">
-                    <x-logo class="h-10" :soundLines="false" />
-                    <div class="text-left leading-tight">
-                        <div class="text-primary font-bold text-lg">Corvallis</div>
-                        <div class="text-secondary font-bold text-sm">Music Collective</div>
+                <div class="flex items-center justify-between mb-8 px-2">
+                    <div class="flex items-center gap-3">
+                        <x-logo class="h-10" :soundLines="false" />
+                        <div class="text-left leading-tight">
+                            <div class="text-primary font-bold text-lg">Corvallis</div>
+                            <div class="text-secondary font-bold text-sm">Music Collective</div>
+                        </div>
                     </div>
+                    <x-theme-selector />
                 </div>
 
                 <!-- Navigation Menu -->
@@ -197,16 +200,17 @@
             <!-- Action Buttons - first row, third column -->
             <div class="flex items-center gap-2" style="grid-row: 2; grid-column: 3;">
                 @auth
-                    <a href="/member" class="btn btn-ghost" title="Dashboard">
-                        <x-tabler-layout-dashboard-filled class='size-5' />
-                        <span class="ml-1">Dashboard</span>
-                    </a>
+                <a href="/member" class="btn btn-ghost" title="Dashboard">
+                    <x-tabler-layout-dashboard-filled class='size-5' />
+                    <span class="ml-1">Dashboard</span>
+                </a>
                 @else
-                    <a href="/member/login" class="btn btn-ghost">
-                        <x-tabler-login class='size-5' />
-                        <span class="ml-1">Login</span>
-                    </a>
+                <a href="/member/login" class="btn btn-ghost">
+                    <x-tabler-login class='size-5' />
+                    <span class="ml-1">Login</span>
+                </a>
                 @endauth
+                <x-theme-selector />
             </div>
 
             <!-- Navigation - second row, spans columns 2-3 -->

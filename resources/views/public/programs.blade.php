@@ -72,7 +72,7 @@
                     <div class="card-body text-center">
                         <h4 class="card-title justify-center">Sustaining Members</h4>
                         <div class="text-2xl font-bold">up to 10 Free Hours</div>
-                        <p class="text-sm">+ $15/hour after</p>
+                        <p class="text-sm">then $15/hour</p>
                     </div>
                 </div>
             </div>
