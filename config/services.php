@@ -45,6 +45,8 @@ return [
         ],
         'membership_product_id' => env('STRIPE_MEMBERSHIP_PRODUCT_ID'),
         'fee_coverage_product_id' => env('STRIPE_FEE_COVERAGE_PRODUCT_ID'),
+        'practice_space_product_id' => env('STRIPE_PRACTICE_SPACE_PRODUCT_ID'),
+        'practice_space_price_id' => env('STRIPE_PRACTICE_SPACE_PRICE_ID'),
     ],
 
     'zeffy' => [

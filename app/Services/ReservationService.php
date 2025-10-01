@@ -823,23 +823,25 @@ class ReservationService
             $user->createAsStripeCustomer();
         }
 
-        $lineItems = [
-            [
-                'price_data' => [
-                    'currency' => config('cashier.currency', 'usd'),
-                    'product_data' => [
-                        'name' => 'Practice Space Reservation',
-                        'description' => sprintf(
-                            'Practice space reservation for %s (%s hours)',
-                            $reservation->time_range,
-                            number_format($reservation->duration, 1)
-                        ),
-                    ],
-                    'unit_amount' => $reservation->cost->getAmount()->toInt(),
-                ],
-                'quantity' => 1,
-            ],
-        ];
+        $priceId = config('services.stripe.practice_space_price_id');
+
+        if (! $priceId) {
+            throw new \Exception('Practice space price not configured. Run: php artisan practice-space:create-price');
+        }
+
+        // Calculate paid hours and convert to 30-minute blocks
+        $paidHours = $reservation->hours_used - $reservation->free_hours_used;
+        $paidBlocks = $this->hoursToBlocks($paidHours);
+
+        $lineItems = [];
+
+        // Only add line item if there are paid blocks
+        if ($paidBlocks > 0) {
+            $lineItems[] = [
+                'price' => $priceId,
+                'quantity' => $paidBlocks,
+            ];
+        }
 
         // Add free hours information if applicable
         if ($reservation->free_hours_used > 0) {
