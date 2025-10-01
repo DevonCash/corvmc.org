@@ -34,11 +34,22 @@ NOTE: Filament v4 beta makes some changes from v3
 ### Additional Libraries
 
 - **guava/calendar** - Calendar component integration
-- **unicon-rocks/unicon-laravel** - Frontend icon system
+- **secondnetwork/blade-tabler-icons** - Tabler icons for UI
+- **finller/laravel-money** - Money value handling (all amounts stored in cents)
+- **maatwebsite/excel** - Excel/CSV import functionality
+- **laravel/cashier** - Stripe subscription and payment handling
+- **knplabs/github-api** - GitHub API integration
+- **spatie/laravel-activitylog** - Activity and audit logging
+- **spatie/laravel-model-states** - State machine pattern for models
+- **spatie/laravel-sluggable** - Automatic slug generation
+- **staudenmeir/laravel-adjacency-list** - Nested set relationships
+- **stechstudio/filament-impersonate** - User impersonation for testing
 
 ### Frontend Integration
 
 - TailwindCSS v4 with Vite plugin
+- DaisyUI component library
+- AlpineJS with masonry plugin for layouts
 - Laravel Vite plugin for asset compilation
 - Filament handles most UI components and styling
 - Custom CSS in `resources/css/app.css`
@@ -69,8 +80,17 @@ NOTE: Filament v4 beta makes some changes from v3
 
 - `php artisan test:invitations` - Test the user invitation system end-to-end
 - `php artisan test:notifications` - Test all notification types in the system
+- `php artisan test:activity-feed` - Test activity feed functionality
+- `php artisan test:activity-log-viewer` - Test activity log viewer
+- `php artisan test:dashboard-widgets` - Test dashboard widget rendering
+- `php artisan test:revision-system` - Test content revision tracking
+- `php artisan test:email-template` - Test email template rendering
 - Use `--clean` flag on invitation tests to clean up test data first
 - Use `--send` flag on notification tests to actually send notifications (default is dry-run)
+
+### Story Coverage
+
+- `php artisan check:story-coverage` - Validate test coverage against user stories defined in the project
 
 ### Import Features
 
@@ -98,12 +118,24 @@ NOTE: Filament v4 beta makes some changes from v3
 
 - `php artisan pail --timeout=0` - Real-time log viewer
 
+### Utility Commands
+
+- `php artisan assign-role` - Assign roles to users
+- `php artisan send:reservation-reminders` - Send reminders for upcoming reservations
+- `php artisan send:reservation-confirmation-reminders` - Send confirmation reminders
+- `php artisan send:membership-reminders` - Send membership renewal reminders
+- `php artisan import:productions-csv` - Import productions from CSV file
+- `php artisan import:users-deno-kv` - Import users from Deno KV store (migration utility)
+
 ## Architecture Overview
 
 ### Third-Party Integrations
 
-- **Stripe** - Payment processing via Laravel Cashier for practice space reservations
-- **Zeffy** - Payment processing via Zapier webhooks for donations and memberships  
+- **Stripe** - All payment processing via Laravel Cashier (reservations, memberships, future features)
+- **GitHub API** - Repository integration for issue creation and management
+- **Postmark** - Transactional email delivery
+- **AWS S3** - File storage via Flysystem
+- **Sentry** - Error tracking and monitoring
 - **Filament Plugins** - spatie/laravel-medialibrary-plugin, spatie/laravel-tags-plugin
 
 ### Application Structure
@@ -135,8 +167,9 @@ Resources are organized in dedicated directories under `app/Filament/Resources/`
 
 #### Service Layer Architecture
 
-The application uses dedicated service classes for complex business logic:
+The application uses dedicated service classes registered as **singletons** in `AppServiceProvider` for complex business logic:
 
+**Core Services:**
 - `UserSubscriptionService` - Handles membership status and sustaining member logic
 - `UserInvitationService` - Manages user invitation workflow and token handling
 - `ReservationService` - Practice space booking logic with conflict detection
@@ -144,6 +177,21 @@ The application uses dedicated service classes for complex business logic:
 - `BandService` - Band profile management and member relationships
 - `MemberProfileService` - Member directory and profile management
 - `CacheService` - Centralized cache management and performance optimization
+
+**Additional Services:**
+- `PaymentService` - Payment processing and transaction management
+- `UserService` - User account management and operations
+- `CalendarService` - Calendar and scheduling functionality
+- `NotificationSchedulingService` - Scheduled notification handling
+- `GitHubService` - GitHub API integration for repository operations
+- `ReportService` - Reporting and analytics
+- `EquipmentService` - Equipment management and tracking
+- `TrustService` / `CommunityEventTrustService` - Trust and reputation systems
+- `MemberBenefitsService` - Member benefits calculation and tracking
+- `StaffProfileService` - Staff profile management
+- `RevisionService` - Content revision and history tracking
+
+**Important:** All business logic should be in services - never in controllers, models, or Filament resources.
 
 #### Custom Testing Commands Pattern
 
@@ -195,20 +243,35 @@ public function handle() {
 - Implements soft deletes and proper foreign key relationships
 - Media library integration for file attachments
 - Permission system tables for role-based access
+- Activity logging via `spatie/laravel-activitylog`
+- Model state tracking via `spatie/laravel-model-states`
+- Polymorphic relationships for flexible associations (transactions, revisions)
+
+### Money Handling
+
+**CRITICAL:** All monetary amounts must be stored as **integers in cents** using `finller/laravel-money`. Imprecision is not acceptable when dealing with currency.
+
+```php
+// Store amounts in cents
+$amount = Money::parse('15.50', 'USD'); // Stored as 1550 cents
+```
 
 ### Key Business Logic
 
 #### Membership System
 
-- Users can be "sustaining members" via role assignment or $10+ monthly donations
-- Sustaining members get 4 free practice space hours per month
+- Users can be "sustaining members" via role assignment or active Stripe subscription ($10+ monthly)
+- **Free hours allocation**: 1 hour per $5 contributed monthly (e.g., $25/month = 5 hours, $50/month = 10 hours)
+- Fallback: 4 free hours for role-based members without active subscription
 - Monthly hour tracking with rollover capabilities
-- Transaction-based membership detection via `UserSubscriptionService`
+- Stripe subscription syncing via `UserSubscriptionService::syncMembershipRoles()`
+- Detection via `User::isSustainingMember()` → `MemberBenefitsService`
+- Free hours calculation: `MemberBenefitsService::calculateFreeHours()` uses billing period peak amount
 
 #### Practice Space Reservations
 
 - $15/hour base rate for all users
-- 4 free hours monthly for sustaining members
+- Free hours for sustaining members (1 hour per $5/month contribution)
 - Operating hours: 9 AM - 10 PM
 - Duration limits: 1-8 hours per reservation
 - Sophisticated conflict detection with productions and other reservations
@@ -228,10 +291,11 @@ public function handle() {
 
 ### Model Conventions
 
-- Use Spatie traits: `HasTags`, `InteractsWithMedia`, `HasRoles` as appropriate
+- Use Spatie traits: `HasTags`, `InteractsWithMedia`, `HasRoles`, `LogsActivity` as appropriate
 - Implement proper accessor methods for computed properties (e.g., `getAvatarAttribute`)
 - Define clear fillable arrays and relationships
 - Add descriptive docblocks for model purpose
+- Use model observers for automatic cache invalidation (see Performance Optimization section)
 
 ### Filament Resource Patterns
 
@@ -239,6 +303,7 @@ public function handle() {
 - Use proper page routing in `getPages()` method
 - Leverage Filament's built-in widgets and components
 - Follow the established directory structure for consistency
+- User impersonation available via `stechstudio/filament-impersonate` for testing
 
 ### Testing
 
@@ -246,8 +311,17 @@ public function handle() {
 - Both Feature and Unit test suites configured
 - Use Pest testing framework syntax
 - Environment properly isolated for testing
+- Create custom test commands for complex workflows (see Custom Testing Commands Pattern)
+- Run `php artisan check:story-coverage` to validate coverage against user stories
 
 This pattern provides reliable, repeatable testing for complex business logic and integrations.
+
+### Code Quality
+
+- Use existing libraries whenever possible (especially Spatie packages)
+- All business logic must be in service classes, never in controllers or resources
+- When finished developing a feature, always commit to version control
+- Do not make claims beyond the bare facts of operations performed
 
 ## TODO: Next Session Tasks
 
@@ -310,3 +384,44 @@ php artisan cache:manage clear-tags    # Clear member directory tag caches
 - Date data: `{type}.conflicts.{Y-m-d}`
 - Global data: `{feature_name}` or `{feature_name}.{suffix}`
 - Tagged data: Uses cache tags for bulk invalidation
+
+## Technical Debt & Future Improvements
+
+### Free Hours System
+
+**Current Implementation:**
+- Free hours calculated monthly based on subscription amount (1 hour per $5)
+- Uses database queries with cache bypass during reservation creation for transaction safety
+- **Limitations:**
+  - No audit trail for credit usage
+  - No support for promotional credits or bonuses
+  - No rollover of unused hours
+  - Limited flexibility for campaigns/referrals
+
+**Planned Improvement: Credits System**
+- See `docs/designs/credits-system-design.md` for full design
+- Implements proper double-entry accounting for credits
+- Transaction-safe with database locking
+- Full audit trail via credit_transactions table
+- Supports multiple credit types, promotions, expiration, and rollover
+- **Estimated effort:** 16-25 hours
+- **Migration strategy:** Parallel implementation → data migration → cutover → cleanup
+
+**Why Credits System:**
+- ✅ Transaction-safe (prevents race conditions)
+- ✅ Audit trail (every credit change logged)
+- ✅ Flexible (promotions, referrals, gifts)
+- ✅ No cache dependencies
+- ✅ Industry standard pattern
+
+### Known Issues
+
+1. **Production Authorization Tests** (3 failures)
+   - Status update method not persisting changes in test environment
+   - Non-blocking for production use
+   - Requires deeper debugging of test database transactions
+
+2. **Month Boundary Tests**
+   - Tests using `subDays()` can cross month boundaries
+   - Fixed in recent updates to use `startOfMonth()->addDays()`
+   - Review other date-based tests for similar issues

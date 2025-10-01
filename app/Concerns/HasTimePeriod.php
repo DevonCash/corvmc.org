@@ -41,21 +41,27 @@ trait HasTimePeriod
     }
     
     /**
-     * Check if this model's time period overlaps with another model's period.
+     * Check if this model's time period overlaps with another model's period or Period object.
      */
     public function overlapsWith($other): bool
     {
+        // If it's a Period object, use periodOverlapsWith directly
+        if ($other instanceof Period) {
+            return $this->periodOverlapsWith($other);
+        }
+
+        // Otherwise, expect an object with createPeriod() method
         if (!method_exists($other, 'createPeriod')) {
             return false;
         }
-        
+
         $otherPeriod = $other->createPeriod();
-        
+
         if (!$otherPeriod) {
             return false;
         }
-        
-        return $this->overlapsWithPeriod($otherPeriod);
+
+        return $this->periodOverlapsWith($otherPeriod);
     }
     
     /**

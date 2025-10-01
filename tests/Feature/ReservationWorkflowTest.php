@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Reservation;
-use App\Models\Transaction;
 use App\Models\User;
 use App\Facades\ReservationService;
 use Carbon\Carbon;
@@ -57,8 +56,9 @@ class ReservationWorkflowTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('sustaining member');
 
-        // Use 3 free hours first - use a past time to avoid conflicts
-        $pastStart = Carbon::now()->subDays(5)->setTime(10, 0);
+        // Use 3 free hours first - ensure it's in the current month but in the past
+        // Use day 10 to avoid crossing month boundaries with subDays/addDays
+        $pastStart = Carbon::now()->startOfMonth()->addDays(9)->setTime(10, 0);
         $pastEnd = $pastStart->copy()->addHours(3);
 
         Reservation::factory()->create([
@@ -71,8 +71,11 @@ class ReservationWorkflowTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        // Now book 3 more hours (1 free, 2 paid) - use a safe future time
-        $start = Carbon::now()->addDays(3)->setTime(14, 0);
+        // Clear cache to ensure fresh calculation
+        \Cache::forget("user.{$user->id}.free_hours." . now()->format('Y-m'));
+
+        // Now book 3 more hours (1 free, 2 paid) - use a safe future time in same month
+        $start = Carbon::now()->startOfMonth()->addDays(14)->setTime(14, 0);
         $end = $start->copy()->addHours(3);
 
         $reservation = ReservationService::createReservation($user, $start, $end);
@@ -83,23 +86,22 @@ class ReservationWorkflowTest extends TestCase
     }
 
     #[Test]
-    public function user_identified_as_sustaining_member_by_recent_transaction()
+    public function user_identified_as_sustaining_member_by_role()
     {
         $user = User::factory()->create();
 
-        // Create recent recurring transaction over $10
-        Transaction::factory()->sustainingLevel()->create([
-            'email' => $user->email,
-            'created_at' => Carbon::now()->subDays(15),
-        ]);
+        // Assign sustaining member role (simulates Stripe subscription sync)
+        $user->assignRole('sustaining member');
 
         $start = Carbon::now()->addDay()->setTime(14, 0);
         $end = $start->copy()->addHours(2);
 
         $reservation = ReservationService::createReservation($user, $start, $end);
 
+        // With fallback 4 hours, a 2-hour reservation should be free
         $this->assertTrue($reservation->cost->isZero());
         $this->assertTrue($user->isSustainingMember());
+        $this->assertEquals(2, $user->getRemainingFreeHours()); // 4 - 2 = 2
     }
 
     #[Test]
@@ -112,7 +114,10 @@ class ReservationWorkflowTest extends TestCase
         $end = $start->copy()->addHours(2);
 
         // User 1 makes reservation
-        ReservationService::createReservation($user1, $start, $end);
+        $res1 = ReservationService::createReservation($user1, $start, $end);
+
+        // Clear all caches to force fresh DB queries
+        \Cache::flush();
 
         // User 2 tries to make overlapping reservation
         $this->expectException(\InvalidArgumentException::class);

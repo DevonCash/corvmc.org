@@ -124,6 +124,15 @@ class Production extends ContentModel implements Eventable
     }
 
     /**
+     * Get fields that should not trigger revision workflow.
+     * Status and published_at changes are workflow states, not content changes.
+     */
+    protected function getRevisionExemptFields(): array
+    {
+        return ['status', 'published_at'];
+    }
+
+    /**
      * Check if a user is the manager of this production.
      */
     public function isManageredBy(User $user): bool

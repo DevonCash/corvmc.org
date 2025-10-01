@@ -160,18 +160,22 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     /**
      * Get used free hours for the current month.
+     *
+     * @param bool $fresh If true, bypass cache for transaction-safe calculation
      */
-    public function getUsedFreeHoursThisMonth(): float
+    public function getUsedFreeHoursThisMonth(bool $fresh = false): float
     {
-        return \App\Facades\MemberBenefitsService::getUsedFreeHoursThisMonth($this);
+        return \App\Facades\MemberBenefitsService::getUsedFreeHoursThisMonth($this, $fresh);
     }
 
     /**
      * Get remaining free hours for sustaining members this month.
+     *
+     * @param bool $fresh If true, bypass cache for transaction-safe calculation
      */
-    public function getRemainingFreeHours(): float
+    public function getRemainingFreeHours(bool $fresh = false): float
     {
-        return \App\Facades\MemberBenefitsService::getRemainingFreeHours($this);
+        return \App\Facades\MemberBenefitsService::getRemainingFreeHours($this, $fresh);
     }
 
     public function scopeStaffMembers($query)

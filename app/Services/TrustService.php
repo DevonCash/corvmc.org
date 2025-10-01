@@ -90,17 +90,17 @@ class TrustService
     public function canAutoApprove(User $user, string $contentType = 'global'): bool
     {
         // Check if the content type is a model class with auto-approval configuration
-        if (class_exists($contentType) && in_array(\App\Traits\Revisionable::class, class_uses_recursive($contentType))) {
+        if (class_exists($contentType) && in_array(\App\Concerns\Revisionable::class, class_uses_recursive($contentType))) {
             // Create a temporary instance to check auto-approval mode
             $tempInstance = new $contentType();
             $autoApproveMode = $tempInstance->getAutoApproveMode();
-            
+
             // If the model never auto-approves, return false regardless of trust level
             if ($autoApproveMode === 'never') {
                 return false;
             }
         }
-        
+
         return $this->getTrustPoints($user, $contentType) >= self::TRUST_AUTO_APPROVED;
     }
 

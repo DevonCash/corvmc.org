@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Data\Reservation\ReservationUsageData;
 use App\Models\Production;
 use App\Models\Reservation;
-use App\Models\Transaction;
 use App\Models\User;
 use App\Notifications\ReservationCancelledNotification;
 use App\Notifications\ReservationConfirmedNotification;
@@ -38,7 +37,9 @@ class ReservationService
     public function calculateCost(User $user, Carbon $startTime, Carbon $endTime): array
     {
         $hours = $this->calculateHours($startTime, $endTime);
-        $remainingFreeHours = $user->getRemainingFreeHours();
+
+        // Use fresh calculation (bypass cache) for transaction safety during reservation creation
+        $remainingFreeHours = $user->getRemainingFreeHours($fresh = true);
 
         $freeHours = $user->isSustainingMember() ? min($hours, $remainingFreeHours) : 0;
         $paidHours = max(0, $hours - $freeHours);

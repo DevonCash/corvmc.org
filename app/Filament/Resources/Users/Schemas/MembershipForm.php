@@ -12,6 +12,7 @@ use App\Models\User;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
 use Filament\Support\Enums\IconPosition;
 
 class MembershipForm
@@ -23,25 +24,36 @@ class MembershipForm
 
                 // No sustaining membership section - show signup with benefits summary
                 Section::make('Become a Sustaining Member')
-                    ->description('Support the Corvallis Music Collective with a sliding scale monthly contribution. Choose an amount that fits your budget and unlock member benefits.')
+                    ->description('Support the Corvallis Music Collective with a monthly contribution!')
                     ->visible(function ($record) {
                         return !$record->isSustainingMember() && !static::hasActiveOrCancelledSubscription($record);
                     })
+                    ->columns(3)
                     ->schema([
-                        TextEntry::make('benefits_summary')
-                            ->label('Member Benefits')
-                            ->state(function () {
-                                return collect([
-                                    '🎵 Free practice space hours each month (1 hour per $5 contributed)',
-                                    '🎸 Member directory access to connect with other musicians',
-                                    '📅 Priority booking for practice spaces during peak hours',
-                                    '🎤 Access to member-only events and workshops',
-                                    '🌟 Support a thriving local music community',
-                                    '💰 Sliding scale: $10-$50/month (or custom amount)',
-                                ])->join("\n");
-                            })
-                            ->columnSpanFull()
-                            ->helperText('At $10/month minimum, you\'ll receive 2 free practice hours. At $25/month, you\'ll get 5 free hours. At $50/month, you\'ll receive 10 free hours!')
+                        TextEntry::make('Practice')
+                            ->listWithLineBreaks()
+                            ->bulleted()
+                            ->state([
+                                "Free reservation hours every month (1 hour per $5 contributed)",
+                                "Recurring practice reservations"
+                            ]),
+                        TextEntry::make('Equipment')
+                            ->listWithLineBreaks()
+                            ->bulleted()
+                            ->state([
+                                "Free accessory rentals (cables, stands, etc.)",
+                                "Monthly equipment credits equal to your contribution"
+                            ]),
+                        TextEntry::make('Community')
+                            ->listWithLineBreaks()
+                            ->bulleted()
+                            ->state([
+                                "50% off admission to CMC events",
+                                "Support local music!"
+                            ]),
+
+                        Text::make('Sustaining memberships start at $10/month and can be changed or cancelled anytime.')->columnSpanFull()
+
                     ])
                     ->headerActions([
                         CreateMembershipSubscriptionAction::make()

@@ -61,10 +61,27 @@ class MemberBenefitsService
 
     /**
      * Get used free hours for user in current month.
+     *
+     * @param bool $fresh If true, bypass cache for transaction-safe calculation
      */
-    public function getUsedFreeHoursThisMonth(User $user): float
+    public function getUsedFreeHoursThisMonth(User $user, bool $fresh = false): float
     {
-        return Cache::remember("user.{$user->id}.free_hours." . now()->format('Y-m'), 1800, function () use ($user) {
+        $cacheKey = "user.{$user->id}.free_hours." . now()->format('Y-m');
+
+        // For fresh calculations (during reservation creation), bypass cache
+        if ($fresh) {
+            $value = $user->reservations()
+                ->whereMonth('reserved_at', now()->month)
+                ->whereYear('reserved_at', now()->year)
+                ->sum('free_hours_used') ?? 0;
+
+            // Update cache with fresh value
+            Cache::put($cacheKey, $value, 1800);
+            return $value;
+        }
+
+        // For display purposes, use cached value
+        return Cache::remember($cacheKey, 1800, function () use ($user) {
             return $user->reservations()
                 ->whereMonth('reserved_at', now()->month)
                 ->whereYear('reserved_at', now()->year)
@@ -74,15 +91,17 @@ class MemberBenefitsService
 
     /**
      * Get remaining free hours for sustaining members this month.
+     *
+     * @param bool $fresh If true, bypass cache for transaction-safe calculation
      */
-    public function getRemainingFreeHours(User $user): float
+    public function getRemainingFreeHours(User $user, bool $fresh = false): float
     {
         if (!$this->isSustainingMember($user)) {
             return 0;
         }
 
         $allocatedHours = $this->getUserMonthlyFreeHours($user);
-        $usedHours = $this->getUsedFreeHoursThisMonth($user);
+        $usedHours = $this->getUsedFreeHoursThisMonth($user, $fresh);
 
         return max(0, $allocatedHours - $usedHours);
     }

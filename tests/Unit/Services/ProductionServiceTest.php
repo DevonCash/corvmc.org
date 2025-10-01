@@ -123,7 +123,14 @@ describe('ProductionService Core CRUD Operations', function () {
 
 describe('ProductionService Status Management', function () {
     it('can publish a production', function () {
-        $production = Production::factory()->create(['status' => 'pre-production']);
+        $manager = User::factory()->create();
+        $manager->givePermissionTo('manage productions');
+        $production = Production::factory()->create([
+            'status' => 'pre-production',
+            'manager_id' => $manager->id,
+        ]);
+
+        $this->actingAs($manager);
 
         ProductionService::publishProduction($production);
 
@@ -557,10 +564,13 @@ describe('ProductionService Duplication', function () {
 describe('ProductionService Notification Integration', function () {
     it('sends notification when production is published', function () {
         $manager = User::factory()->create();
+        $manager->givePermissionTo('manage productions');
         $production = Production::factory()->create([
             'manager_id' => $manager->id,
             'status' => 'pre-production',
         ]);
+
+        $this->actingAs($manager);
 
         ProductionService::publishProduction($production);
 

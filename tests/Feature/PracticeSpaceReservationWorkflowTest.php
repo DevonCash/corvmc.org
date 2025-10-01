@@ -6,11 +6,11 @@ use App\Models\User;
 use App\Models\Band;
 use App\Models\Production;
 use App\Models\Reservation;
-use App\Models\Transaction;
 use App\Notifications\ReservationConfirmedNotification;
 use App\Notifications\ReservationCancelledNotification;
 use App\Facades\ReservationService;
-use App\Facades\UserSubscriptionService;
+use App\Facades\MemberBenefitsService;
+use Brick\Money\Money;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -194,14 +194,11 @@ describe('Practice Space Reservation Workflow Tests', function () {
                 'status' => 'confirmed'
             ]);
 
-            // Create associated paid transaction
-            $transaction = Transaction::factory()->create([
-                'email' => $user->email,
-                'user_id' => $user->id,
-                'transactionable_type' => Reservation::class,
-                'transactionable_id' => $reservation->id,
-                'amount' => 30.00,
-                'response' => ['status' => 'completed', 'payment_method' => 'stripe']
+            // Mark reservation as paid via payment_status field
+            $reservation->update([
+                'payment_status' => 'paid',
+                'payment_method' => 'stripe',
+                'paid_at' => now(),
             ]);
 
             // Cancel reservation (simulating cancellation process)
@@ -296,12 +293,12 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $user = User::factory()->create();
             $user->assignRole('sustaining member');
 
-            // Mock sustaining member with 4 free hours
-            UserSubscriptionService::shouldReceive('isSustainingMember')
+            // Mock sustaining member with 4 free hours (fallback for role-based member)
+            MemberBenefitsService::shouldReceive('isSustainingMember')
                 ->with($user)
                 ->andReturn(true);
-            UserSubscriptionService::shouldReceive('getRemainingFreeHours')
-                ->with($user)
+            MemberBenefitsService::shouldReceive('getRemainingFreeHours')
+                ->with($user, true)
                 ->andReturn(4.0);
 
             $startTime = now()->addDays(1)->setHour(14);
@@ -320,11 +317,11 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $user->assignRole('sustaining member');
 
             // Mock sustaining member with only 1 free hour remaining
-            UserSubscriptionService::shouldReceive('isSustainingMember')
+            MemberBenefitsService::shouldReceive('isSustainingMember')
                 ->with($user)
                 ->andReturn(true);
-            UserSubscriptionService::shouldReceive('getRemainingFreeHours')
-                ->with($user)
+            MemberBenefitsService::shouldReceive('getRemainingFreeHours')
+                ->with($user, true)
                 ->andReturn(1.0);
 
             $startTime = now()->addDays(1)->setHour(14);
@@ -343,11 +340,11 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $user->assignRole('sustaining member');
 
             // Mock sustaining member with no remaining free hours
-            UserSubscriptionService::shouldReceive('isSustainingMember')
+            MemberBenefitsService::shouldReceive('isSustainingMember')
                 ->with($user)
                 ->andReturn(true);
-            UserSubscriptionService::shouldReceive('getRemainingFreeHours')
-                ->with($user)
+            MemberBenefitsService::shouldReceive('getRemainingFreeHours')
+                ->with($user, true)
                 ->andReturn(0.0);
 
             $startTime = now()->addDays(1)->setHour(14);
@@ -433,11 +430,11 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $user->assignRole('sustaining member');
 
             // Mock user with free hours
-            UserSubscriptionService::shouldReceive('isSustainingMember')
+            MemberBenefitsService::shouldReceive('isSustainingMember')
                 ->with($user)
                 ->andReturn(true);
-            UserSubscriptionService::shouldReceive('getRemainingFreeHours')
-                ->with($user)
+            MemberBenefitsService::shouldReceive('getRemainingFreeHours')
+                ->with($user, true)
                 ->andReturn(4.0);
 
             // Test off-hours time slot
@@ -549,41 +546,37 @@ describe('Practice Space Reservation Workflow Tests', function () {
         it('identifies outstanding payments correctly', function () {
             $user = User::factory()->create();
 
-            // Create reservation with failed payment
+            // Create reservation with unpaid status (cost stored as integer cents in DB)
             $reservation = Reservation::factory()->create([
                 'user_id' => $user->id,
                 'reserved_at' => now()->subDays(1),
                 'reserved_until' => now()->subDays(1)->addHours(2),
-                'status' => 'confirmed'
+                'status' => 'confirmed',
+                'payment_status' => 'unpaid',
+                'cost' => 3000, // Stored as 3000 cents ($30) in database
             ]);
 
-            $failedTransaction = Transaction::factory()->create([
-                'email' => $user->email,
-                'user_id' => $user->id,
-                'transactionable_type' => Reservation::class,
-                'transactionable_id' => $reservation->id,
-                'amount' => 30.00,
-                'response' => ['status' => 'failed', 'payment_method' => 'stripe']
-            ]);
-
-            // Check for outstanding payments
-            $outstandingPayments = Transaction::where('user_id', $user->id)
-                ->whereJsonContains('response->status', 'failed')
+            // Check for outstanding payments via reservation payment_status
+            $outstandingReservations = Reservation::where('user_id', $user->id)
+                ->where('payment_status', 'unpaid')
                 ->get();
 
-            expect($outstandingPayments)->toHaveCount(1)
-                ->and($outstandingPayments->first()->amount->getAmount()->toFloat())->toBe(30.00);
+            // Cost is cast to Money object (stored as minor units/cents)
+            expect($outstandingReservations)->toHaveCount(1)
+                ->and($outstandingReservations->first()->cost->getAmount()->toFloat())->toBe(3000.0); // 3000 cents = $30
         });
 
         it('blocks new reservations with outstanding payments', function () {
             $user = User::factory()->create();
 
-            // Create outstanding payment
-            Transaction::factory()->create([
-                'email' => $user->email,
+            // Create reservation with outstanding payment
+            Reservation::factory()->create([
                 'user_id' => $user->id,
-                'amount' => 30.00,
-                'response' => ['status' => 'failed', 'payment_method' => 'stripe']
+                'reserved_at' => now()->subDays(2),
+                'reserved_until' => now()->subDays(2)->addHours(2),
+                'status' => 'confirmed',
+                'payment_status' => 'unpaid',
+                'cost' => 3000, // Stored as 3000 cents ($30) in database
             ]);
 
             $startTime = now()->addDays(1)->setHour(14);
@@ -601,14 +594,6 @@ describe('Practice Space Reservation Workflow Tests', function () {
         it('handles complex multi-user booking workflow', function () {
             $regularUser = User::factory()->create();
             $sustainingUser = User::factory()->withRole('sustaining member')->create();
-
-            // Create recurring transaction to make them a sustaining member
-            Transaction::factory()->create([
-                'email' => $sustainingUser->email,
-                'user_id' => $sustainingUser->id,
-                'amount' => 20.00, // Above $10 sustaining threshold
-                'type' => 'recurring',
-            ]);
 
             $baseTime = now()->addDays(1)->setHour(14);
 
