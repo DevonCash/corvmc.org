@@ -28,6 +28,11 @@ class RecurringReservationResource extends Resource
 
     protected static ?string $slug = 'recurring-reservations';
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasRole('admin') ?? false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return RecurringReservationForm::configure($schema);
