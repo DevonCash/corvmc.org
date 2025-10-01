@@ -51,7 +51,7 @@ class CreateSubscriptionPrices extends Command
             $this->warn('DRY RUN mode - no prices will be created');
         }
 
-        $amounts = [10, 15, 20, 25, 30, 35, 40, 45, 50];
+        $amounts = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
 
         foreach ($amounts as $amount) {
             $product = $this->createBasePrice($amount);
