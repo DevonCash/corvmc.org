@@ -172,8 +172,10 @@ The application uses dedicated service classes registered as **singletons** in `
 **Core Services:**
 - `UserSubscriptionService` - Handles membership status and sustaining member logic
 - `UserInvitationService` - Manages user invitation workflow and token handling
-- `ReservationService` - Practice space booking logic with conflict detection
+- `ReservationService` - Practice space booking logic with conflict detection, credit deduction
 - `ProductionService` - Event management and production workflows
+- `CreditService` - Transaction-safe credit operations and balance management
+- `MemberBenefitsService` - Calculate and allocate member benefits based on subscriptions
 - `BandService` - Band profile management and member relationships
 - `MemberProfileService` - Member directory and profile management
 - `CacheService` - Centralized cache management and performance optimization
@@ -256,6 +258,43 @@ public function handle() {
 $amount = Money::parse('15.50', 'USD'); // Stored as 1550 cents
 ```
 
+### Credits System
+
+The application uses a robust Credits System for managing practice space hours and other benefits:
+
+**Database Schema:**
+- `user_credits` - User credit balances by type (free_hours, equipment_credits)
+- `credit_transactions` - Immutable audit trail of all credit changes
+- `credit_allocations` - Scheduled recurring credit grants
+- `promo_codes` / `promo_code_redemptions` - Promotional code system
+
+**Key Features:**
+- **Transaction-safe:** DB locking prevents race conditions
+- **Complete audit trail:** Every credit change is logged
+- **Multiple credit types:** Practice space hours, equipment credits, promos
+- **Smart allocation:** Practice space resets monthly, equipment credits rollover with cap
+- **Block-based:** Practice space credits stored in 30-minute blocks
+
+**Usage:**
+```php
+// Check balance
+$blocks = CreditService::getBalance($user, 'free_hours');
+$hours = ReservationService::blocksToHours($blocks);
+
+// Allocate monthly credits to sustaining members
+MemberBenefitsService::allocateMonthlyCredits($user);
+
+// Manual allocation command
+php artisan credits:allocate              # All sustaining members
+php artisan credits:allocate --dry-run    # Preview without changes
+php artisan credits:allocate --user-id=123 # Specific user
+```
+
+**Integration:**
+- Credits automatically deducted when creating reservations
+- Backward compatible with legacy free_hours_used tracking
+- Ready for Stripe webhook integration (subscription updates)
+
 ### Key Business Logic
 
 #### Membership System
@@ -263,10 +302,15 @@ $amount = Money::parse('15.50', 'USD'); // Stored as 1550 cents
 - Users can be "sustaining members" via role assignment or active Stripe subscription ($10+ monthly)
 - **Free hours allocation**: 1 hour per $5 contributed monthly (e.g., $25/month = 5 hours, $50/month = 10 hours)
 - Fallback: 4 free hours for role-based members without active subscription
-- Monthly hour tracking with rollover capabilities
+- **Credits System**: Practice space hours managed via transaction-safe Credits System
+  - Credits stored in 30-minute blocks for precision
+  - Reset monthly (no rollover for practice space)
+  - Automatic deduction when creating reservations
+  - Complete audit trail of all credit changes
 - Stripe subscription syncing via `UserSubscriptionService::syncMembershipRoles()`
 - Detection via `User::isSustainingMember()` → `MemberBenefitsService`
 - Free hours calculation: `MemberBenefitsService::calculateFreeHours()` uses billing period peak amount
+- Monthly allocation: `MemberBenefitsService::allocateMonthlyCredits()` or `php artisan credits:allocate`
 
 #### Practice Space Reservations
 
