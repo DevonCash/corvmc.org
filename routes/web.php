@@ -158,7 +158,7 @@ Route::get('/invitation/accept/{token}', [\App\Http\Controllers\InvitationContro
 
 // Stripe webhook (no authentication needed - Stripe validates with signature)
 Route::post('/stripe/webhook', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook'])
-    ->name('stripe.webhook');
+    ->name('cashier.webhook');
 
 // Checkout success/cancel handling (unified for all checkout types)
 Route::middleware(['auth'])->group(function () {
