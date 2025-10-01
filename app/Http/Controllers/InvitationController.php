@@ -16,48 +16,30 @@ class InvitationController extends Controller
      */
     public function show(string $token)
     {
-        // Validate the token and get user info
-        $user = UserInvitationService::findUserByToken($token);
+        // Find and validate the invitation
+        $invitation = UserInvitationService::findInvitationByToken($token);
 
-        if (!$user || UserInvitationService::isTokenExpired($token)) {
-            return view('auth.invitation-expired');
-        }
-
-        // If user has already completed registration, redirect to login
-        if ($user->email_verified_at !== null) {
-            return redirect()->route('login')
-                ->with('info', 'You have already completed your registration. Please log in.');
-        }
-
-        return view('auth.invitation-accept', [
-            'token' => $token,
-            'email' => $user->email,
-            'roles' => $user->roles->pluck('name')->toArray(),
-        ]);
-    }
-
-    /**
-     * Process the invitation acceptance.
-     */
-    public function store(Request $request, string $token)
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'confirmed', Password::defaults()],
-        ]);
-
-        $user = UserInvitationService::acceptInvitation($token, $validated);
-
-        if (!$user) {
-            return back()->withErrors([
-                'token' => 'This invitation is invalid or has expired.'
+        if (!$invitation) {
+            return view('auth.invitation-expired', [
+                'message' => 'This invitation link is invalid.'
             ]);
         }
 
-        // Log the user in automatically
-        Auth::login($user);
+        if ($invitation->isExpired()) {
+            return view('auth.invitation-expired', [
+                'message' => 'This invitation has expired. Please contact us for a new invitation.'
+            ]);
+        }
 
-        // Redirect to member dashboard with welcome message
-        return redirect('/member')->with('success', 'Welcome to the Corvallis Music Collective! Your account has been created successfully.');
+        if ($invitation->isUsed()) {
+            return redirect()->route('filament.member.auth.login')
+                ->with('info', 'This invitation has already been used. Please log in.');
+        }
+
+        // Redirect to Filament registration with email prefilled
+        return redirect()->route('filament.member.auth.register', [
+            'email' => $invitation->email,
+            'invitation' => $token,
+        ])->with('invitation_message', $invitation->message);
     }
 }

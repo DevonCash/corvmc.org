@@ -1,0 +1,94 @@
+<?php
+
+namespace App\Filament\Pages\Auth;
+
+use App\Facades\UserInvitationService;
+use App\Models\Invitation;
+use Filament\Forms\Components\Component;
+use Filament\Forms\Components\TextInput;
+use Filament\Pages\Auth\Register as BaseRegister;
+use Illuminate\Database\Eloquent\Model;
+
+class Register extends BaseRegister
+{
+    protected ?string $invitationToken = null;
+
+    public function mount(): void
+    {
+        parent::mount();
+
+        // Check for invitation token in request
+        $this->invitationToken = request()->query('invitation');
+
+        if ($this->invitationToken) {
+            $invitation = UserInvitationService::findInvitationByToken($this->invitationToken);
+
+            if ($invitation && !$invitation->isExpired() && !$invitation->isUsed()) {
+                // Prefill email from invitation
+                $this->form->fill([
+                    'email' => $invitation->email,
+                ]);
+            } else {
+                // Clear invalid token
+                $this->invitationToken = null;
+            }
+        } else {
+            // Check for email query parameter (direct from redirect)
+            $email = request()->query('email');
+            if ($email) {
+                $this->form->fill(['email' => $email]);
+            }
+        }
+    }
+
+    protected function getForms(): array
+    {
+        return [
+            'form' => $this->form(
+                $this->makeForm()
+                    ->schema([
+                        $this->getNameFormComponent(),
+                        $this->getEmailFormComponent(),
+                        $this->getPasswordFormComponent(),
+                        $this->getPasswordConfirmationFormComponent(),
+                    ])
+                    ->statePath('data'),
+            ),
+        ];
+    }
+
+    protected function getEmailFormComponent(): Component
+    {
+        return TextInput::make('email')
+            ->label(__('filament-panels::pages/auth/register.form.email.label'))
+            ->email()
+            ->required()
+            ->maxLength(255)
+            ->unique($this->getUserModel())
+            ->disabled(fn() => !empty($this->invitationToken)) // Disable if from invitation
+            ->dehydrated();
+    }
+
+    protected function handleRegistration(array $data): Model
+    {
+        $user = parent::handleRegistration($data);
+
+        // If this was from an invitation, mark it as used
+        if ($this->invitationToken) {
+            $invitation = Invitation::withoutGlobalScopes()
+                ->where('token', $this->invitationToken)
+                ->first();
+
+            if ($invitation) {
+                $invitation->markAsUsed();
+
+                // Handle band ownership if invitation includes band data
+                if (isset($invitation->data['band_id'])) {
+                    UserInvitationService::confirmBandOwnership($user, $invitation);
+                }
+            }
+        }
+
+        return $user;
+    }
+}

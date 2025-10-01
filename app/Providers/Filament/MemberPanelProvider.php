@@ -35,7 +35,7 @@ class MemberPanelProvider extends PanelProvider
             ->path('member')
             ->userMenu(false)
             ->login()
-            ->registration()
+            ->registration(\App\Filament\Pages\Auth\Register::class)
             ->passwordReset()
             ->emailVerification()
             ->font('Lexend')

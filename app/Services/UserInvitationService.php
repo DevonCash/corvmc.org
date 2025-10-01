@@ -72,55 +72,6 @@ class UserInvitationService
         return $newInvite;
     }
 
-    /**
-     * Accept an invitation using a token.
-     */
-    public function acceptInvitation(string $token, array $userData): ?User
-    {
-        $invite = Invitation::withoutGlobalScopes()->where('token', $token)->first();
-
-        if (!$invite) {
-            throw new \Exception('Invitation not found.');
-        }
-
-        if ($invite->isExpired()) {
-            throw new \Exception('Invitation has expired.');
-        }
-
-        if ($invite->isUsed()) {
-            throw new \Exception('Invitation has already been used.');
-        }
-
-        return DB::transaction(function () use ($invite, $userData) {
-            // Check if user already exists
-            $user = User::where('email', $invite->email)->first();
-
-            if ($user) {
-                // User exists - just mark invitation as used and update if needed
-
-                if (!$user->email_verified_at) {
-                    $user->update(['email_verified_at' => now()]);
-                }
-            } else {
-                // Create new user
-                $user = User::create([
-                    'name' => $userData['name'],
-                    'email' => $invite->email,
-                    'password' => bcrypt($userData['password']),
-                    'email_verified_at' => now(),
-                ]);
-            }
-            $invite->markAsUsed();
-
-            // Confirm any pending band ownerships
-            $this->confirmBandOwnership($user, $invite);
-
-            // Send welcome notification for new members
-            $user->notify(new NewMemberWelcomeNotification($user));
-
-            return $user;
-        });
-    }
 
     /**
      * Generate a signed invitation token for a user.
