@@ -26,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\BandService::class);
         $this->app->singleton(\App\Services\CacheService::class);
         $this->app->singleton(\App\Services\CalendarService::class);
+        $this->app->singleton(\App\Services\CreditService::class);
         $this->app->singleton(\App\Services\GitHubService::class);
         $this->app->singleton(\App\Services\MemberBenefitsService::class);
         $this->app->singleton(\App\Services\MemberProfileService::class);
