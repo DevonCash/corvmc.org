@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class MemberBenefitsService
 {
@@ -37,7 +38,7 @@ class MemberBenefitsService
                 $peakAmount = \App\Facades\UserSubscriptionService::getBillingPeriodPeakAmount($subscription);
                 return $this->calculateFreeHours($peakAmount);
             } catch (\Exception $e) {
-                \Log::warning('Failed to get billing period peak amount for free hours calculation', [
+                Log::warning('Failed to get billing period peak amount for free hours calculation', [
                     'user_id' => $user->id,
                     'subscription_id' => $subscription->id,
                     'error' => $e->getMessage()
@@ -152,7 +153,7 @@ class MemberBenefitsService
             $firstItem = $stripeSubscription->items->data[0];
             $amount = $firstItem->price->unit_amount / 100; // Convert from cents to dollars
         } catch (\Exception $e) {
-            \Log::warning('Failed to get subscription amount for tier calculation', [
+            Log::warning('Failed to get subscription amount for tier calculation', [
                 'user_id' => $user->id,
                 'subscription_id' => $subscription->id,
                 'error' => $e->getMessage()

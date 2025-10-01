@@ -21,7 +21,7 @@ class AllocateCreditsCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Allocate monthly credits to sustaining members';
+    protected $description = 'Allocate monthly credits to all sustaining members (idempotent - safe to run daily)';
 
     /**
      * Execute the console command.
@@ -44,6 +44,7 @@ class AllocateCreditsCommand extends Command
             }
         } else {
             // Get all sustaining members
+            // Operation is idempotent - won't double-allocate in same month
             $users = User::role('sustaining member')->get();
         }
 

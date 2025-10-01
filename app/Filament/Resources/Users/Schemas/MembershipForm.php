@@ -8,12 +8,12 @@ use App\Filament\Resources\Users\Actions\OpenBillingPortalAction;
 use App\Filament\Resources\Users\Actions\ResumeMembershipAction;
 use App\Facades\UserSubscriptionService;
 use App\Facades\MemberBenefitsService;
-use App\Models\User;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Support\Enums\IconPosition;
+use Illuminate\Support\Facades\Log;
 
 class MembershipForm
 {
@@ -114,7 +114,7 @@ class MembershipForm
                                             $price->recurring->interval
                                         );
                                     } catch (\Exception $e) {
-                                        \Log::warning('Failed to retrieve subscription display info', [
+                                        Log::warning('Failed to retrieve subscription display info', [
                                             'subscription_id' => $subscription->id,
                                             'error' => $e->getMessage()
                                         ]);

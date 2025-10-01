@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Facades\CreditService;
+use App\Facades\MemberBenefitsService;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Services\ReservationService;
@@ -122,6 +124,8 @@ class StripeWebhookController extends CashierWebhookController
 
             // Update user membership status (Cashier handles the subscription sync automatically)
             $this->userSubscriptionService->updateUserMembershipStatus($user);
+
+            MemberBenefitsService::allocateMonthlyCredits($user);
 
             Log::info('Stripe webhook: Successfully processed subscription checkout', [
                 'user_id' => $userId,
@@ -304,6 +308,17 @@ class StripeWebhookController extends CashierWebhookController
             if ($user) {
                 // Update membership status in case this payment qualifies them
                 $this->userSubscriptionService->updateUserMembershipStatus($user);
+
+                // Allocate monthly credits if they're a sustaining member
+                // This is idempotent - won't double-allocate in same month
+                if ($user->hasRole('sustaining member')) {
+                    \App\Facades\MemberBenefitsService::allocateMonthlyCredits($user);
+
+                    Log::info('Stripe webhook: Allocated monthly credits after invoice payment', [
+                        'user_id' => $user->id,
+                        'invoice_id' => $invoice['id'],
+                    ]);
+                }
 
                 Log::info('Stripe webhook: Updated membership status after invoice payment', [
                     'user_id' => $user->id,
