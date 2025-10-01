@@ -57,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
         $loader->alias('BandService', \App\Facades\BandService::class);
         $loader->alias('CacheService', \App\Facades\CacheService::class);
         $loader->alias('CalendarService', \App\Facades\CalendarService::class);
+        $loader->alias('CreditService', \App\Facades\CreditService::class);
         $loader->alias('GitHubService', \App\Facades\GitHubService::class);
         $loader->alias('MemberBenefitsService', \App\Facades\MemberBenefitsService::class);
         $loader->alias('MemberProfileService', \App\Facades\MemberProfileService::class);

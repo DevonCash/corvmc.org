@@ -17,11 +17,6 @@ use Illuminate\Support\Facades\Cache;
 
 class CreditService
 {
-    const PRACTICE_SPACE_BLOCKS_PER_DOLLAR = 2; // 2 blocks (1 hour) per $5
-    const PRACTICE_SPACE_DOLLAR_AMOUNT = 5;
-    const EQUIPMENT_CREDITS_PER_DOLLAR = 1;
-    const MINUTES_PER_BLOCK = 30;
-
     /**
      * Get user's current credit balance.
      */
@@ -34,22 +29,6 @@ class CreditService
                   ->orWhere('expires_at', '>', now());
             })
             ->value('balance') ?? 0;
-    }
-
-    /**
-     * Convert blocks to hours for display.
-     */
-    public function blocksToHours(int $blocks): float
-    {
-        return ($blocks * self::MINUTES_PER_BLOCK) / 60;
-    }
-
-    /**
-     * Convert hours to blocks for storage.
-     */
-    public function hoursToBlocks(float $hours): int
-    {
-        return (int) ceil(($hours * 60) / self::MINUTES_PER_BLOCK);
     }
 
     /**

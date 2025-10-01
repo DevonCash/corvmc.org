@@ -30,6 +30,24 @@ class ReservationService
 
     public const MAX_RESERVATION_DURATION = 8; // hours
 
+    public const MINUTES_PER_BLOCK = 30; // Practice space credits are in 30-minute blocks
+
+    /**
+     * Convert hours to blocks for credit system.
+     */
+    public function hoursToBlocks(float $hours): int
+    {
+        return (int) ceil(($hours * 60) / self::MINUTES_PER_BLOCK);
+    }
+
+    /**
+     * Convert blocks to hours for display.
+     */
+    public function blocksToHours(int $blocks): float
+    {
+        return ($blocks * self::MINUTES_PER_BLOCK) / 60;
+    }
+
 
     /**
      * Calculate the cost for a reservation.

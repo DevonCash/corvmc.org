@@ -52,6 +52,23 @@ class MemberBenefitsService
     }
 
     /**
+     * Allocate monthly credits to a sustaining member.
+     * This should be called when a user becomes a sustaining member or at the start of each billing period.
+     */
+    public function allocateMonthlyCredits(User $user): void
+    {
+        if (!$this->isSustainingMember($user)) {
+            return;
+        }
+
+        $hours = $this->getUserMonthlyFreeHours($user);
+        $blocks = \App\Facades\ReservationService::hoursToBlocks($hours);
+
+        // Use CreditService to allocate the credits (handles reset logic)
+        \App\Facades\CreditService::allocateMonthlyCredits($user, $blocks, 'free_hours');
+    }
+
+    /**
      * Check if a user qualifies as a sustaining member.
      */
     public function isSustainingMember(User $user): bool
@@ -63,9 +80,12 @@ class MemberBenefitsService
      * Get used free hours for user in current month.
      *
      * @param bool $fresh If true, bypass cache for transaction-safe calculation
+     * @deprecated Use CreditService::getBalance() instead
      */
     public function getUsedFreeHoursThisMonth(User $user, bool $fresh = false): float
     {
+        // Legacy method for backward compatibility
+        // TODO: Remove after full migration to Credits System
         $cacheKey = "user.{$user->id}.free_hours." . now()->format('Y-m');
 
         // For fresh calculations (during reservation creation), bypass cache
@@ -100,6 +120,15 @@ class MemberBenefitsService
             return 0;
         }
 
+        // Try Credits System first (new system)
+        $balanceInBlocks = \App\Facades\CreditService::getBalance($user, 'free_hours');
+
+        if ($balanceInBlocks > 0) {
+            // User has credits allocated - use Credits System
+            return \App\Facades\ReservationService::blocksToHours($balanceInBlocks);
+        }
+
+        // Fallback to legacy calculation for users not yet migrated
         $allocatedHours = $this->getUserMonthlyFreeHours($user);
         $usedHours = $this->getUsedFreeHoursThisMonth($user, $fresh);
 
