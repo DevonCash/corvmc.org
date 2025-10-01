@@ -4,7 +4,7 @@ namespace App\Filament\Resources\CommunityEvents\Pages;
 
 use App\Filament\Resources\CommunityEvents\CommunityEventResource;
 use App\Models\CommunityEvent;
-use App\Services\CommunityEventTrustService;
+use App\Services\TrustService;
 use Filament\Actions;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -171,8 +171,8 @@ class ViewCommunityEvent extends ViewRecord
                         TextEntry::make('organizer_trust_points')
                             ->label('Trust Points')
                             ->formatStateUsing(function (CommunityEvent $record) {
-                                $trustService = app(CommunityEventTrustService::class);
-                                return $trustService->getTrustPoints($record->organizer);
+                                $trustService = app(TrustService::class);
+                                return $trustService->getTrustPoints($record->organizer, 'App\\Models\\CommunityEvent');
                             }),
                     ]),
 

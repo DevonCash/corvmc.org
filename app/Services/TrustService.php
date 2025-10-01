@@ -2,22 +2,25 @@
 
 namespace App\Services;
 
+use App\Models\TrustAchievement;
+use App\Models\TrustTransaction;
 use App\Models\User;
+use App\Models\UserTrustBalance;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Unified Trust System for Content Moderation
- * 
- * Provides trust-based approval workflows for all reportable content types,
- * not just community events. Users build trust through successful content
- * submissions and lose trust through violations.
+ *
+ * Transaction-safe trust management with full audit trail.
+ * Replaces JSON-based storage with dedicated tables.
  */
 class TrustService
 {
     /**
-     * Trust level thresholds (same as CommunityEventTrustService)
+     * Trust level thresholds
      */
     const TRUST_TRUSTED = 5;
     const TRUST_VERIFIED = 15;
@@ -32,28 +35,30 @@ class TrustService
     const POINTS_SPAM_VIOLATION = -10;
 
     /**
-     * Cache TTL for trust calculations
+     * Get user's current trust balance.
      */
-    const CACHE_TTL = 3600; // 1 hour
+    public function getBalance(User $user, string $contentType = 'global'): int
+    {
+        return UserTrustBalance::where('user_id', $user->id)
+            ->where('content_type', $contentType)
+            ->value('balance') ?? 0;
+    }
 
     /**
-     * Available content types for trust tracking
+     * Alias for getBalance() - maintains backward compatibility.
      */
-    protected array $contentTypes = [
-        'App\\Models\\CommunityEvent',
-        'App\\Models\\MemberProfile', 
-        'App\\Models\\Band',
-        'App\\Models\\Production',
-        'global', // Overall trust across all content types
-    ];
+    public function getTrustPoints(User $user, string $contentType = 'global'): int
+    {
+        return $this->getBalance($user, $contentType);
+    }
 
     /**
-     * Get the current trust level for a user in a specific content area.
+     * Get the current trust level.
      */
     public function getTrustLevel(User $user, string $contentType = 'global'): string
     {
-        $points = $this->getTrustPoints($user, $contentType);
-        
+        $points = $this->getBalance($user, $contentType);
+
         if ($points >= self::TRUST_AUTO_APPROVED) {
             return 'auto-approved';
         } elseif ($points >= self::TRUST_VERIFIED) {
@@ -61,99 +66,115 @@ class TrustService
         } elseif ($points >= self::TRUST_TRUSTED) {
             return 'trusted';
         }
-        
+
         return 'pending';
     }
 
     /**
-     * Get the trust points for a user in a specific content area.
+     * Award trust points (transaction-safe).
      */
-    public function getTrustPoints(User $user, string $contentType = 'global'): int
-    {
-        // Skip caching in test environment to avoid cache issues
-        if (app()->environment('testing')) {
-            $trustPoints = $user->fresh()->trust_points ?? [];
-            return $trustPoints[$contentType] ?? 0;
-        }
-        
-        $cacheKey = "trust_points_{$contentType}_{$user->id}";
-        
-        return Cache::remember($cacheKey, self::CACHE_TTL, function() use ($user, $contentType) {
-            $trustPoints = $user->trust_points ?? [];
-            return $trustPoints[$contentType] ?? 0;
+    public function awardPoints(
+        User $user,
+        int $points,
+        string $contentType,
+        string $sourceType,
+        ?int $sourceId = null,
+        string $reason = '',
+        ?User $awardedBy = null
+    ): TrustTransaction {
+        return DB::transaction(function () use ($user, $points, $contentType, $sourceType, $sourceId, $reason, $awardedBy) {
+            // Lock balance record for update
+            $balance = UserTrustBalance::lockForUpdate()
+                ->firstOrCreate(
+                    ['user_id' => $user->id, 'content_type' => $contentType],
+                    ['balance' => 0]
+                );
+
+            $oldBalance = $balance->balance;
+            $newBalance = $oldBalance + $points;
+
+            // Special case: content-type trust can't go below 0, but global can
+            if ($contentType !== 'global') {
+                $newBalance = max(0, $newBalance);
+            }
+
+            $balance->balance = $newBalance;
+            $balance->save();
+
+            // Check if achievement unlocked
+            $this->checkAchievement($user, $contentType, $oldBalance, $newBalance);
+
+            // Record transaction
+            $transaction = TrustTransaction::create([
+                'user_id' => $user->id,
+                'content_type' => $contentType,
+                'points' => $points,
+                'balance_after' => $newBalance,
+                'reason' => $reason,
+                'source_type' => $sourceType,
+                'source_id' => $sourceId,
+                'awarded_by_id' => $awardedBy?->id,
+            ]);
+
+            // Update global trust if this is a specific content type
+            if ($contentType !== 'global') {
+                $this->updateGlobalTrust($user);
+            }
+
+            return $transaction;
         });
     }
 
     /**
-     * Check if a user can auto-approve content.
-     */
-    public function canAutoApprove(User $user, string $contentType = 'global'): bool
-    {
-        // Check if the content type is a model class with auto-approval configuration
-        if (class_exists($contentType) && in_array(\App\Concerns\Revisionable::class, class_uses_recursive($contentType))) {
-            // Create a temporary instance to check auto-approval mode
-            $tempInstance = new $contentType();
-            $autoApproveMode = $tempInstance->getAutoApproveMode();
-
-            // If the model never auto-approves, return false regardless of trust level
-            if ($autoApproveMode === 'never') {
-                return false;
-            }
-        }
-
-        return $this->getTrustPoints($user, $contentType) >= self::TRUST_AUTO_APPROVED;
-    }
-
-    /**
-     * Check if a user gets fast-track approval (trusted+ users).
-     */
-    public function getFastTrackApproval(User $user, string $contentType = 'global'): bool
-    {
-        return $this->getTrustPoints($user, $contentType) >= self::TRUST_TRUSTED;
-    }
-
-    /**
-     * Award trust points for successful content (no upheld reports).
+     * Award points for successful content.
      */
     public function awardSuccessfulContent(User $user, Model $content, string $contentType = null, bool $forceAward = false): void
     {
         $contentType = $contentType ?? $this->getContentTypeFromModel($content);
-        
-        // Only award points for content that should be evaluated (unless forced)
+
+        // Only award if content should be evaluated
         if (!$forceAward && !$this->shouldEvaluateContent($content)) {
             return;
         }
 
-        // Check if content has any upheld reports
+        // Check for upheld reports
         if (method_exists($content, 'reports')) {
             $hasUpheldReports = $content->reports()
                 ->where('status', 'upheld')
                 ->exists();
 
             if (!$hasUpheldReports) {
-                $this->adjustTrustPoints(
-                    $user, 
-                    $contentType, 
-                    self::POINTS_SUCCESSFUL_CONTENT, 
-                    'Successful content: ' . ($content->title ?? $content->name ?? class_basename($content))
+                $this->awardPoints(
+                    $user,
+                    self::POINTS_SUCCESSFUL_CONTENT,
+                    $contentType,
+                    'successful_content',
+                    $content->id,
+                    'Successful content: ' . ($content->title ?? $content->name ?? $content->id)
                 );
-                
+
                 Log::info('Trust points awarded for successful content', [
                     'user_id' => $user->id,
                     'content_type' => $contentType,
                     'content_id' => $content->id,
                     'points_awarded' => self::POINTS_SUCCESSFUL_CONTENT,
-                    'new_total' => $this->getTrustPoints($user, $contentType)
+                    'new_total' => $this->getBalance($user, $contentType)
                 ]);
             }
         }
     }
 
     /**
-     * Deduct trust points for a content violation.
+     * Penalize user for violation.
      */
-    public function penalizeViolation(User $user, string $violationType, string $contentType = 'global', string $reason = ''): void
-    {
+    public function penalizeViolation(
+        User $user,
+        string $violationType,
+        string $contentType = 'global',
+        ?int $sourceId = null,
+        string $reason = '',
+        ?User $penalizedBy = null
+    ): void {
         $points = match($violationType) {
             'spam' => self::POINTS_SPAM_VIOLATION,
             'major' => self::POINTS_MAJOR_VIOLATION,
@@ -161,80 +182,279 @@ class TrustService
             default => self::POINTS_MINOR_VIOLATION,
         };
 
-        $this->adjustTrustPoints($user, $contentType, $points, "Violation: {$violationType} - {$reason}");
-        
+        $this->awardPoints(
+            $user,
+            $points,
+            $contentType,
+            "{$violationType}_violation",
+            $sourceId,
+            "Violation: {$violationType} - {$reason}",
+            $penalizedBy
+        );
+
         Log::warning('Trust points deducted for violation', [
             'user_id' => $user->id,
             'content_type' => $contentType,
             'violation_type' => $violationType,
             'points_deducted' => abs($points),
             'reason' => $reason,
-            'new_total' => $this->getTrustPoints($user, $contentType)
+            'new_total' => $this->getBalance($user, $contentType)
         ]);
     }
 
     /**
-     * Adjust trust points for a user in a specific content area.
+     * Handle content violation and adjust trust points accordingly.
      */
-    protected function adjustTrustPoints(User $user, string $contentType, int $points, string $reason = ''): void
+    public function handleContentViolation(User $user, Model $content, string $violationType, string $contentType = 'global'): void
     {
-        $trustPoints = $user->trust_points ?? [];
-        $oldPoints = $trustPoints[$contentType] ?? 0;
-        $newPoints = $oldPoints + $points; // Allow negative points for users in poor standing
-        
-        $trustPoints[$contentType] = $newPoints;
-        $user->update(['trust_points' => $trustPoints]);
-        
-        // Also update global trust points as an aggregate
-        if ($contentType !== 'global') {
-            $this->updateGlobalTrustPoints($user);
-        }
-        
-        // Clear cache
-        $cacheKey = "trust_points_{$contentType}_{$user->id}";
-        Cache::forget($cacheKey);
+        $reason = "Content violation for " . ($content->title ?? $content->name ?? class_basename($content));
 
-        // Log the change if it's significant
-        if (abs($points) > 0) {
-            Log::info('Trust points adjusted', [
-                'user_id' => $user->id,
-                'content_type' => $contentType,
-                'old_points' => $oldPoints,
-                'new_points' => $newPoints,
-                'adjustment' => $points,
-                'reason' => $reason
-            ]);
-        }
+        $this->penalizeViolation($user, $violationType, $contentType, $content->id, $reason);
+
+        Log::warning('Content violation handled', [
+            'user_id' => $user->id,
+            'content_type' => $contentType,
+            'content_id' => $content->id,
+            'violation_type' => $violationType,
+            'new_trust_points' => $this->getBalance($user, $contentType)
+        ]);
     }
 
     /**
-     * Update global trust points as an average of all content type trust points.
+     * Update global trust as weighted average of content-type trusts.
      */
-    protected function updateGlobalTrustPoints(User $user): void
+    protected function updateGlobalTrust(User $user): void
     {
-        $contentTypes = ['App\\Models\\CommunityEvent', 'App\\Models\\MemberProfile', 'App\\Models\\Band', 'App\\Models\\Production'];
+        $contentTypes = [
+            'App\\Models\\CommunityEvent',
+            'App\\Models\\MemberProfile',
+            'App\\Models\\Band',
+            'App\\Models\\Production'
+        ];
+
         $totalPoints = 0;
         $activeTypes = 0;
 
         foreach ($contentTypes as $type) {
-            $points = $this->getTrustPoints($user, $type);
-            
+            $points = $this->getBalance($user, $type);
+
             if ($points > 0) {
                 $totalPoints += $points;
                 $activeTypes++;
             }
         }
 
-        // Calculate weighted average, giving more weight to higher trust levels
         $globalPoints = $activeTypes > 0 ? intval($totalPoints / $activeTypes) : 0;
-        
-        // Update global trust points in JSON field
-        $trustPoints = $user->trust_points ?? [];
-        $trustPoints['global'] = $globalPoints;
-        $user->update(['trust_points' => $trustPoints]);
-        
-        // Clear global cache
-        Cache::forget("trust_points_global_{$user->id}");
+
+        // Update global balance directly (no transaction needed, already in parent transaction)
+        UserTrustBalance::updateOrCreate(
+            ['user_id' => $user->id, 'content_type' => 'global'],
+            ['balance' => $globalPoints]
+        );
+    }
+
+    /**
+     * Check and record achievement if threshold crossed.
+     */
+    protected function checkAchievement(User $user, string $contentType, int $oldBalance, int $newBalance): void
+    {
+        $levels = [
+            'trusted' => self::TRUST_TRUSTED,
+            'verified' => self::TRUST_VERIFIED,
+            'auto_approved' => self::TRUST_AUTO_APPROVED,
+        ];
+
+        foreach ($levels as $level => $threshold) {
+            // Check if user just crossed threshold
+            if ($oldBalance < $threshold && $newBalance >= $threshold) {
+                TrustAchievement::firstOrCreate([
+                    'user_id' => $user->id,
+                    'content_type' => $contentType,
+                    'level' => $level,
+                ], [
+                    'achieved_at' => now(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Determine if content should be evaluated for trust.
+     */
+    protected function shouldEvaluateContent(Model $content): bool
+    {
+        if ($content instanceof \App\Models\CommunityEvent) {
+            return $content->isPublished() && !$content->isUpcoming();
+        }
+
+        if ($content instanceof \App\Models\Production) {
+            return $content->status === 'completed';
+        }
+
+        if ($content instanceof \App\Models\MemberProfile || $content instanceof \App\Models\Band) {
+            return true;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if user can auto-approve content.
+     */
+    public function canAutoApprove(User $user, string $contentType = 'global'): bool
+    {
+        // Check if content type allows auto-approval
+        if (class_exists($contentType) && in_array(\App\Concerns\Revisionable::class, class_uses_recursive($contentType))) {
+            $tempInstance = new $contentType();
+            if ($tempInstance->getAutoApproveMode() === 'never') {
+                return false;
+            }
+        }
+
+        return $this->getBalance($user, $contentType) >= self::TRUST_AUTO_APPROVED;
+    }
+
+    /**
+     * Check if user gets fast-track approval (trusted+ users).
+     */
+    public function getFastTrackApproval(User $user, string $contentType = 'global'): bool
+    {
+        return $this->getBalance($user, $contentType) >= self::TRUST_TRUSTED;
+    }
+
+    /**
+     * Get users by trust level for queries/admin.
+     */
+    public function getUsersByTrustLevel(string $level, string $contentType = 'global'): Collection
+    {
+        $minPoints = match($level) {
+            'auto-approved' => self::TRUST_AUTO_APPROVED,
+            'verified' => self::TRUST_VERIFIED,
+            'trusted' => self::TRUST_TRUSTED,
+            default => 0
+        };
+
+        $maxPoints = match($level) {
+            'verified' => self::TRUST_AUTO_APPROVED - 1,
+            'trusted' => self::TRUST_VERIFIED - 1,
+            'pending' => self::TRUST_TRUSTED - 1,
+            default => null
+        };
+
+        $query = UserTrustBalance::where('content_type', $contentType)
+            ->where('balance', '>=', $minPoints);
+
+        if ($maxPoints !== null) {
+            $query->where('balance', '<=', $maxPoints);
+        }
+
+        return User::whereIn('id', $query->pluck('user_id'))
+            ->get();
+    }
+
+    /**
+     * Get trust transaction history for user.
+     */
+    public function getTransactionHistory(
+        User $user,
+        ?string $contentType = null,
+        ?int $limit = 50
+    ): Collection {
+        $query = TrustTransaction::where('user_id', $user->id);
+
+        if ($contentType) {
+            $query->where('content_type', $contentType);
+        }
+
+        return $query->latest()
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get trust statistics for reporting.
+     */
+    public function getStatistics(?string $contentType = null): array
+    {
+        $query = UserTrustBalance::query();
+
+        if ($contentType) {
+            $query->where('content_type', $contentType);
+        }
+
+        return [
+            'total_users' => $query->distinct('user_id')->count(),
+            'auto_approved_users' => (clone $query)->where('balance', '>=', self::TRUST_AUTO_APPROVED)->count(),
+            'verified_users' => (clone $query)->whereBetween('balance', [self::TRUST_VERIFIED, self::TRUST_AUTO_APPROVED - 1])->count(),
+            'trusted_users' => (clone $query)->whereBetween('balance', [self::TRUST_TRUSTED, self::TRUST_VERIFIED - 1])->count(),
+            'pending_users' => (clone $query)->where('balance', '<', self::TRUST_TRUSTED)->count(),
+            'average_trust' => round($query->avg('balance') ?? 0, 2),
+            'total_points_awarded' => TrustTransaction::where('points', '>', 0)->sum('points'),
+            'total_points_deducted' => abs(TrustTransaction::where('points', '<', 0)->sum('points')),
+        ];
+    }
+
+    /**
+     * Reset user's trust (admin function).
+     */
+    public function resetTrustPoints(User $user, string $contentType = 'global', string $reason = 'Admin reset', ?User $admin = null): void
+    {
+        $currentBalance = $this->getBalance($user, $contentType);
+
+        if ($currentBalance != 0) {
+            $this->awardPoints(
+                $user,
+                -$currentBalance, // Negative of current balance
+                $contentType,
+                'reset',
+                null,
+                "Admin reset: {$reason}",
+                $admin
+            );
+
+            Log::warning('Trust points reset by admin', [
+                'user_id' => $user->id,
+                'content_type' => $contentType,
+                'old_points' => $currentBalance,
+                'reason' => $reason,
+                'admin_id' => $admin?->id
+            ]);
+        }
+    }
+
+    /**
+     * Bulk award points for past successful content (migration/backfill).
+     */
+    public function bulkAwardPastContent(User $user, string $contentType = 'global'): int
+    {
+        $totalPoints = 0;
+
+        if ($contentType === 'App\\Models\\CommunityEvent' || $contentType === 'global') {
+            $successfulEvents = \App\Models\CommunityEvent::where('organizer_id', $user->id)
+                ->where('status', \App\Models\CommunityEvent::STATUS_APPROVED)
+                ->where('start_time', '<', now())
+                ->whereDoesntHave('reports', function($query) {
+                    $query->where('status', 'upheld');
+                })
+                ->count();
+
+            if ($successfulEvents > 0) {
+                $points = $successfulEvents * self::POINTS_SUCCESSFUL_CONTENT;
+                $this->awardPoints(
+                    $user,
+                    $points,
+                    'App\\Models\\CommunityEvent',
+                    'bulk_award',
+                    null,
+                    "Bulk award for {$successfulEvents} successful events"
+                );
+                $totalPoints += $points;
+            }
+        }
+
+        // Add similar logic for other content types as needed
+
+        return $totalPoints;
     }
 
     /**
@@ -242,9 +462,9 @@ class TrustService
      */
     public function getTrustLevelInfo(User $user, string $contentType = 'global'): array
     {
-        $points = $this->getTrustPoints($user, $contentType);
+        $points = $this->getBalance($user, $contentType);
         $level = $this->getTrustLevel($user, $contentType);
-        
+
         $info = [
             'level' => $level,
             'points' => $points,
@@ -283,7 +503,7 @@ class TrustService
     {
         $level = $this->getTrustLevel($user, $contentType);
         $typeName = $this->getContentTypeName($contentType);
-        
+
         return match($level) {
             'auto-approved' => [
                 'label' => "Auto-Approved {$typeName}",
@@ -293,7 +513,7 @@ class TrustService
             ],
             'verified' => [
                 'label' => "Verified {$typeName}",
-                'color' => 'info', 
+                'color' => 'info',
                 'icon' => 'tabler-shield',
                 'description' => "Trusted community member"
             ],
@@ -313,7 +533,7 @@ class TrustService
     public function determineApprovalWorkflow(User $user, string $contentType = 'global'): array
     {
         $trustLevel = $this->getTrustLevel($user, $contentType);
-        
+
         switch ($trustLevel) {
             case 'auto-approved':
                 return [
@@ -322,7 +542,7 @@ class TrustService
                     'review_priority' => 'none',
                     'estimated_review_time' => 0
                 ];
-                
+
             case 'verified':
             case 'trusted':
                 return [
@@ -331,7 +551,7 @@ class TrustService
                     'review_priority' => 'fast-track',
                     'estimated_review_time' => 24 // hours
                 ];
-                
+
             default:
                 return [
                     'requires_approval' => true,
@@ -341,61 +561,6 @@ class TrustService
                 ];
         }
     }
-
-    /**
-     * Get users by trust level for admin interface.
-     */
-    public function getUsersByTrustLevel(string $level, string $contentType = 'global'): \Illuminate\Database\Eloquent\Collection
-    {
-        $minPoints = match($level) {
-            'auto-approved' => self::TRUST_AUTO_APPROVED,
-            'verified' => self::TRUST_VERIFIED,
-            'trusted' => self::TRUST_TRUSTED,
-            default => 0
-        };
-
-        $maxPoints = match($level) {
-            'verified' => self::TRUST_AUTO_APPROVED - 1,
-            'trusted' => self::TRUST_VERIFIED - 1,
-            'pending' => self::TRUST_TRUSTED - 1,
-            default => null
-        };
-
-        // Use JSON field queries
-        $query = User::whereRaw("JSON_EXTRACT(trust_points, '$.{$contentType}') >= ?", [$minPoints]);
-        
-        if ($maxPoints !== null) {
-            $query->whereRaw("JSON_EXTRACT(trust_points, '$.{$contentType}') <= ?", [$maxPoints]);
-        }
-
-        return $query->get()->sortByDesc(function($user) use ($contentType) {
-            return $this->getTrustPoints($user, $contentType);
-        })->values();
-    }
-
-    /**
-     * Reset trust points for a user (admin function).
-     */
-    public function resetTrustPoints(User $user, string $contentType = 'global', string $reason = 'Admin reset'): void
-    {
-        $trustPoints = $user->trust_points ?? [];
-        $oldPoints = $trustPoints[$contentType] ?? 0;
-        
-        $trustPoints[$contentType] = 0;
-        $user->update(['trust_points' => $trustPoints]);
-        
-        // Clear cache
-        $cacheKey = "trust_points_{$contentType}_{$user->id}";
-        Cache::forget($cacheKey);
-
-        Log::warning('Trust points reset by admin', [
-            'user_id' => $user->id,
-            'content_type' => $contentType,
-            'old_points' => $oldPoints,
-            'reason' => $reason
-        ]);
-    }
-
 
     /**
      * Get human-readable content type name.
@@ -418,74 +583,5 @@ class TrustService
     protected function getContentTypeFromModel(Model $content): string
     {
         return get_class($content);
-    }
-
-    /**
-     * Determine if content should be evaluated for trust points.
-     */
-    protected function shouldEvaluateContent(Model $content): bool
-    {
-        // For CommunityEvents, only evaluate published events that have passed
-        if ($content instanceof \App\Models\CommunityEvent) {
-            return $content->isPublished() && !$content->isUpcoming();
-        }
-
-        // For Productions, only evaluate completed productions
-        if ($content instanceof \App\Models\Production) {
-            return $content->status === 'completed';
-        }
-
-        // For MemberProfiles and Bands, evaluate active profiles
-        if ($content instanceof \App\Models\MemberProfile || $content instanceof \App\Models\Band) {
-            return true; // These are evaluated immediately upon creation/update
-        }
-
-        return true;
-    }
-
-    /**
-     * Handle content violation and adjust trust points accordingly.
-     */
-    public function handleContentViolation(User $user, Model $content, string $violationType, string $contentType = 'global'): void
-    {
-        $reason = "Content violation: {$violationType} for " . ($content->title ?? $content->name ?? class_basename($content));
-        
-        $this->penalizeViolation($user, $violationType, $contentType, $reason);
-        
-        Log::warning('Content violation handled', [
-            'user_id' => $user->id,
-            'content_type' => $contentType,
-            'content_id' => $content->id,
-            'violation_type' => $violationType,
-            'new_trust_points' => $this->getTrustPoints($user, $contentType)
-        ]);
-    }
-
-    /**
-     * Bulk award points for past successful content.
-     */
-    public function bulkAwardPastContent(User $user, string $contentType = 'global'): int
-    {
-        $totalPoints = 0;
-
-        if ($contentType === 'App\\Models\\CommunityEvent' || $contentType === 'global') {
-            $successfulEvents = \App\Models\CommunityEvent::where('organizer_id', $user->id)
-                ->where('status', \App\Models\CommunityEvent::STATUS_APPROVED)
-                ->where('start_time', '<', now())
-                ->whereDoesntHave('reports', function($query) {
-                    $query->where('status', 'upheld');
-                })
-                ->count();
-
-            if ($successfulEvents > 0) {
-                $points = $successfulEvents * self::POINTS_SUCCESSFUL_CONTENT;
-                $this->adjustTrustPoints($user, 'App\\Models\\CommunityEvent', $points, "Bulk award for {$successfulEvents} successful events");
-                $totalPoints += $points;
-            }
-        }
-
-        // Add similar logic for other content types as needed
-        
-        return $totalPoints;
     }
 }

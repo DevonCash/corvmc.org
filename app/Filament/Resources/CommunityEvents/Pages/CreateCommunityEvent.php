@@ -4,7 +4,7 @@ namespace App\Filament\Resources\CommunityEvents\Pages;
 
 use App\Filament\Resources\CommunityEvents\CommunityEventResource;
 use App\Models\CommunityEvent;
-use App\Services\CommunityEventTrustService;
+use App\Services\TrustService;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Notifications\Notification;
 
@@ -20,11 +20,11 @@ class CreateCommunityEvent extends CreateRecord
         }
 
         // Determine approval workflow based on trust level
-        $trustService = app(CommunityEventTrustService::class);
+        $trustService = app(TrustService::class);
         $organizer = \App\Models\User::find($data['organizer_id']);
-        
+
         if ($organizer) {
-            $workflow = $trustService->determineApprovalWorkflow($organizer, new CommunityEvent());
+            $workflow = $trustService->determineApprovalWorkflow($organizer, 'App\\Models\\CommunityEvent');
             
             if ($workflow['auto_publish']) {
                 $data['status'] = CommunityEvent::STATUS_APPROVED;
@@ -38,8 +38,8 @@ class CreateCommunityEvent extends CreateRecord
     protected function afterCreate(): void
     {
         $record = $this->record;
-        $trustService = app(CommunityEventTrustService::class);
-        $workflow = $trustService->determineApprovalWorkflow($record->organizer, $record);
+        $trustService = app(TrustService::class);
+        $workflow = $trustService->determineApprovalWorkflow($record->organizer, 'App\\Models\\CommunityEvent');
 
         if ($workflow['auto_publish']) {
             Notification::make()

@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\CommunityEvents\Tables;
 
 use App\Models\CommunityEvent;
-use App\Services\CommunityEventTrustService;
+use App\Services\TrustService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\DeleteAction;
