@@ -53,6 +53,9 @@ class Reservation extends Model implements Eventable
         'free_hours_used',
         'is_recurring',
         'recurrence_pattern',
+        'recurring_reservation_id',
+        'instance_date',
+        'cancellation_reason',
         'notes',
     ];
 
@@ -71,12 +74,21 @@ class Reservation extends Model implements Eventable
             'free_hours_used' => 'decimal:2',
             'is_recurring' => 'boolean',
             'recurrence_pattern' => 'array',
+            'instance_date' => 'date',
         ];
     }
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Recurring reservation series this is an instance of (if applicable)
+     */
+    public function recurringSeries()
+    {
+        return $this->belongsTo(RecurringReservation::class, 'recurring_reservation_id');
     }
 
 

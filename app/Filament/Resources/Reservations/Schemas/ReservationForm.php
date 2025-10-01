@@ -3,22 +3,21 @@
 namespace App\Filament\Resources\Reservations\Schemas;
 
 use App\Models\User;
-use App\Services\ReservationService;
+use App\Facades\ReservationService;
 use Carbon\Carbon;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Infolists\Components\TextEntry;
+use Filament\Forms\Components\ViewField;
 use Filament\Schemas\Components\Icon;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\HtmlString;
 
 class ReservationForm
 {
@@ -26,18 +25,43 @@ class ReservationForm
     {
         return $schema
             ->components([
-                Wizard::make()->columnSpanFull()
+                Wizard::make()
+                    ->columnSpanFull()
                     ->steps(static::getSteps())
-                    ->submitAction(new HtmlString(Blade::render(<<<'BLADE'
-    <x-filament::button
-        type="submit"
-        size="sm"
-    >
-        Submit
-    </x-filament::button>
-BLADE))),
-
+                    ->submitAction(fn (Action $action, Get $get) => $action
+                        ->label(fn () => static::shouldShowCheckout($get) ? 'Checkout with Stripe' : 'Request Reservation')
+                        ->icon(fn () => static::shouldShowCheckout($get) ? 'tabler-credit-card' : null)
+                        ->color(fn () => static::shouldShowCheckout($get) ? 'primary' : 'gray')
+                    ),
             ]);
+    }
+
+    protected static function shouldShowCheckout(Get $get): bool
+    {
+        $cost = $get('cost');
+        $reservationDate = $get('reservation_date');
+        $isRecurring = $get('is_recurring');
+
+        // Must have a positive cost
+        if (!$cost || $cost <= 0) {
+            return false;
+        }
+
+        // Cannot be recurring
+        if ($isRecurring) {
+            return false;
+        }
+
+        // Must have a reservation date
+        if (!$reservationDate) {
+            return false;
+        }
+
+        // Must be within auto-confirm range (next 7 days)
+        $resDate = Carbon::parse($reservationDate);
+        $oneWeekFromNow = Carbon::now()->addWeek();
+
+        return $resDate->lte($oneWeekFromNow);
     }
 
     public static function getSteps(): array
@@ -149,7 +173,7 @@ BLADE))),
                                 return [];
                             }
 
-                            return \ReservationService::getAvailableTimeSlotsForDate(Carbon::parse($date));
+                            return ReservationService::getAvailableTimeSlotsForDate(Carbon::parse($date));
                         })
                         ->disabled(fn(Get $get) => ! $get('reservation_date'))
                         ->required()
@@ -172,7 +196,7 @@ BLADE))),
                                 return [];
                             }
 
-                            return \ReservationService::getValidEndTimesForDateAndStart(Carbon::parse($date), $startTime);
+                            return ReservationService::getValidEndTimesForDateAndStart(Carbon::parse($date), $startTime);
                         })
                         ->required()
                         ->live()
@@ -247,70 +271,10 @@ BLADE))),
             Hidden::make('cost')->default(0),
             Hidden::make('free_hours_used')->default(0),
             Hidden::make('hours_used')->default(0),
-            TextEntry::make('final_summary')
+
+            ViewField::make('reservation_summary')
                 ->label('Reservation Summary')
-                ->state(function (Get $get): string {
-                    $start = $get('reserved_at');
-                    $end = $get('reserved_until');
-                    $userId = $get('user_id');
-                    $notes = $get('notes');
-                    $isRecurring = $get('is_recurring');
-
-                    if (! $start || ! $end || ! $userId) {
-                        return 'Complete previous step to see summary';
-                    }
-
-                    $user = User::find($userId);
-                    if (! $user) {
-                        return 'User not found';
-                    }
-
-                    $startFormatted = Carbon::parse($start)->format('l, M j, Y \a\t g:i A');
-                    $endFormatted = Carbon::parse($end)->format('g:i A');
-                    $duration = Carbon::parse($start)->diffInMinutes(Carbon::parse($end)) / 60;
-
-                    $calculation = \ReservationService::calculateCost(
-                        $user,
-                        Carbon::parse($start),
-                        Carbon::parse($end)
-                    );
-
-                    $summary = "📅 {$startFormatted} - {$endFormatted}\n";
-                    $summary .= '⏱️ Duration: ' . number_format($duration, 1) . " hours\n";
-
-                    if ($calculation['free_hours'] > 0) {
-                        $summary .= '🎁 Free hours: ' . number_format($calculation['free_hours'], 1) . "\n";
-                    }
-
-                    $paidHours = $calculation['total_hours'] - $calculation['free_hours'];
-                    if ($paidHours > 0) {
-                        $summary .= '💳 Paid hours: ' . number_format($paidHours, 1) . "\n";
-                    }
-
-                    $summary .= '💰 Total cost: $' . number_format($calculation['cost'], 2) . "\n";
-
-                    if ($isRecurring) {
-                        $summary .= "🔄 Recurring weekly reservation\n";
-                    }
-
-                    if ($notes) {
-                        $summary .= "📝 Notes: {$notes}\n";
-                    }
-
-                    // Add confirmation process info
-                    $reservationDate = Carbon::parse($start);
-                    if ($isRecurring) {
-                        $summary .= "\n📋 This recurring reservation requires manual approval.";
-                    } elseif ($reservationDate->isAfter(Carbon::now()->addWeek())) {
-                        $confirmationDate = $reservationDate->copy()->subDays(3);
-                        $summary .= "\n📧 We'll send you a confirmation reminder on " . $confirmationDate->format('M j') . '.';
-                        $summary .= "\n⚠️  You must confirm within 24 hours or the reservation will be cancelled.";
-                    } else {
-                        $summary .= "\n✅ This reservation will be immediately confirmed.";
-                    }
-
-                    return $summary;
-                })
+                ->view('filament.components.reservation-summary')
                 ->columnSpanFull(),
         ];
     }
@@ -350,7 +314,7 @@ BLADE))),
             return;
         }
 
-        $status = \ReservationService::determineInitialStatus(
+        $status = ReservationService::determineInitialStatus(
             Carbon::parse($date),
             (bool) $isRecurring
         );
@@ -384,13 +348,14 @@ BLADE))),
             return;
         }
 
-        $calculation = \ReservationService::calculateCost(
+        $calculation = ReservationService::calculateCost(
             $user,
             Carbon::parse($start),
             Carbon::parse($end)
         );
 
-        $set('cost', $calculation['cost']);
+        // Store cost as cents (integer) for Livewire compatibility
+        $set('cost', $calculation['cost']->getMinorAmount()->toInt());
         $set('free_hours_used', $calculation['free_hours']);
         $set('hours_used', $calculation['total_hours']);
     }

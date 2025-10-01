@@ -32,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\MemberProfileService::class);
         $this->app->singleton(\App\Services\NotificationSchedulingService::class);
         $this->app->singleton(\App\Services\ProductionService::class);
+        $this->app->singleton(\App\Services\RecurringReservationService::class);
         $this->app->singleton(\App\Services\ReportService::class);
         $this->app->singleton(\App\Services\ReservationService::class);
         $this->app->singleton(\App\Services\PaymentService::class);
@@ -63,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
         $loader->alias('MemberProfileService', \App\Facades\MemberProfileService::class);
         $loader->alias('NotificationSchedulingService', \App\Facades\NotificationSchedulingService::class);
         $loader->alias('ProductionService', \App\Facades\ProductionService::class);
+        $loader->alias('RecurringReservationService', \App\Facades\RecurringReservationService::class);
         $loader->alias('ReportService', \App\Facades\ReportService::class);
         $loader->alias('ReservationService', \App\Facades\ReservationService::class);
         $loader->alias('PaymentService', \App\Facades\PaymentService::class);

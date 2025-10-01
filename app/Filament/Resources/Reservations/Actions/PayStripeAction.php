@@ -18,7 +18,7 @@ class PayStripeAction
             ->icon('tabler-credit-card')
             ->color('success')
             ->visible(fn(Reservation $record) =>
-                $record->cost > 0 &&
+                $record->cost->isPositive() &&
                 $record->isUnpaid() &&
                 ($record->user_id === Auth::id() || Auth::user()->can('manage reservations'))
             )
@@ -34,7 +34,7 @@ class PayStripeAction
                 }
 
                 // Check if reservation needs payment
-                if ($record->cost <= 0) {
+                if ($record->cost->isZero() || $record->cost->isNegative()) {
                     Notification::make()
                         ->title('Payment Not Required')
                         ->body('This reservation does not require payment.')

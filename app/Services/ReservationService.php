@@ -642,7 +642,7 @@ class ReservationService
     }
 
     /**
-     * Get all time slots for the practice space (15-minute intervals).
+     * Get all time slots for the practice space (30-minute intervals).
      */
     public function getAllTimeSlots(): array
     {
@@ -656,7 +656,7 @@ class ReservationService
         while ($current->lessThanOrEqualTo($end)) {
             $timeString = $current->format('H:i');
             $slots[$timeString] = $current->format('g:i A');
-            $current->addMinutes(15);
+            $current->addMinutes(self::MINUTES_PER_BLOCK);
         }
 
         return $slots;
@@ -684,7 +684,7 @@ class ReservationService
         while ($current->lessThanOrEqualTo($latestEnd)) {
             $timeString = $current->format('H:i');
             $slots[$timeString] = $current->format('g:i A');
-            $current->addMinutes(15);
+            $current->addMinutes(self::MINUTES_PER_BLOCK);
         }
 
         return $slots;
@@ -719,7 +719,7 @@ class ReservationService
                 $slots[$timeString] = $current->format('g:i A');
             }
 
-            $current->addMinutes(15);
+            $current->addMinutes(self::MINUTES_PER_BLOCK);
         }
 
         return $slots;

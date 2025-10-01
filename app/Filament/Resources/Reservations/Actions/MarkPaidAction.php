@@ -20,7 +20,7 @@ class MarkPaidAction
             ->color('success')
             ->visible(fn(Reservation $record) =>
                 Auth::user()->can('manage reservations') &&
-                $record->cost > 0 && $record->isUnpaid())
+                !$record->cost->isZero() && $record->isUnpaid())
             ->schema([
                 Select::make('payment_method')
                     ->label('Payment Method')

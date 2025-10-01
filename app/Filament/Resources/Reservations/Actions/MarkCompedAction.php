@@ -19,7 +19,7 @@ class MarkCompedAction
             ->color('info')
             ->visible(fn(Reservation $record) =>
                 Auth::user()->can('manage reservations') &&
-                $record->cost > 0 && $record->isUnpaid())
+                !$record->cost->isZero() && $record->isUnpaid())
             ->schema([
                 Textarea::make('comp_reason')
                     ->label('Comp Reason')

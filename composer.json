@@ -20,6 +20,7 @@
         "league/flysystem-aws-s3-v3": "^3.29",
         "maatwebsite/excel": "^3.1",
         "php-http/guzzle7-adapter": "^1.1",
+        "rlanvin/php-rrule": "^2.6",
         "secondnetwork/blade-tabler-icons": "^3.34",
         "sentry/sentry-laravel": "^4.16",
         "spatie/laravel-activitylog": "^4.10",

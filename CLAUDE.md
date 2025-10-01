@@ -36,6 +36,7 @@ NOTE: Filament v4 beta makes some changes from v3
 - **guava/calendar** - Calendar component integration
 - **secondnetwork/blade-tabler-icons** - Tabler icons for UI
 - **finller/laravel-money** - Money value handling (all amounts stored in cents)
+- **rlanvin/php-rrule** - RRULE recurrence rule handling for recurring reservations
 - **maatwebsite/excel** - Excel/CSV import functionality
 - **laravel/cashier** - Stripe subscription and payment handling
 - **knplabs/github-api** - GitHub API integration
@@ -85,7 +86,8 @@ NOTE: Filament v4 beta makes some changes from v3
 - `php artisan test:dashboard-widgets` - Test dashboard widget rendering
 - `php artisan test:revision-system` - Test content revision tracking
 - `php artisan test:email-template` - Test email template rendering
-- Use `--clean` flag on invitation tests to clean up test data first
+- `php artisan test:recurring-reservations` - Test recurring reservations system end-to-end
+- Use `--clean` flag on invitation or recurring reservation tests to clean up test data first
 - Use `--send` flag on notification tests to actually send notifications (default is dry-run)
 
 ### Story Coverage
@@ -173,6 +175,7 @@ The application uses dedicated service classes registered as **singletons** in `
 - `UserSubscriptionService` - Handles membership status and sustaining member logic
 - `UserInvitationService` - Manages user invitation workflow and token handling
 - `ReservationService` - Practice space booking logic with conflict detection, credit deduction
+- `RecurringReservationService` - Recurring reservation series management with RRULE parsing
 - `ProductionService` - Event management and production workflows
 - `CreditService` - Transaction-safe credit operations and balance management
 - `MemberBenefitsService` - Calculate and allocate member benefits based on subscriptions
@@ -319,9 +322,20 @@ php artisan credits:allocate --user-id=123 # Specific user
 - Operating hours: 9 AM - 10 PM
 - Duration limits: 1-8 hours per reservation
 - Sophisticated conflict detection with productions and other reservations
-- Support for recurring reservations (sustaining members only)
 - **Stripe Integration**: Online payments via Laravel Cashier with checkout sessions
 - Polymorphic relationship: reservations linked to transactions via `transactionable`
+
+**Recurring Reservations** (sustaining members only):
+- Parent-child relationship: `RecurringReservation` (pattern) → `Reservation` (instances)
+- Uses RRULE standard (RFC 5545) via `rlanvin/php-rrule` for pattern definition
+- Supports weekly and monthly patterns (e.g., "Every Tuesday 7-9pm")
+- Auto-generates instances up to 90 days ahead (configurable per series)
+- Daily scheduled job generates future instances as dates approach
+- Series management: extend end date, skip individual instances, cancel entire series
+- Conflict detection: auto-skips conflicting instances with tracking
+- Service: `RecurringReservationService` (singleton)
+- Resource: `RecurringReservationResource` at `/member/recurring-reservations`
+- Test: `php artisan test:recurring-reservations --clean`
 
 #### Event Management (Productions)
 
