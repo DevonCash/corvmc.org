@@ -281,6 +281,30 @@ class ReservationService
         $costCalculation = $this->calculateCost($user, $startTime, $endTime);
 
         return DB::transaction(function () use ($user, $startTime, $endTime, $costCalculation, $options) {
+            // Deduct credits if user is using free hours (Credits System integration)
+            if ($costCalculation['free_hours'] > 0) {
+                $blocks = $this->hoursToBlocks($costCalculation['free_hours']);
+
+                // Check if user has credits in the new system
+                $creditsBalance = \App\Facades\CreditService::getBalance($user, 'free_hours');
+
+                if ($creditsBalance > 0) {
+                    // User is on new Credits System - deduct credits
+                    try {
+                        \App\Facades\CreditService::deductCredits(
+                            $user,
+                            $blocks,
+                            'reservation_usage',
+                            null, // Will update with reservation ID after creation
+                            'free_hours'
+                        );
+                    } catch (\App\Exceptions\InsufficientCreditsException $e) {
+                        throw new \InvalidArgumentException('Insufficient credits available.');
+                    }
+                }
+                // Otherwise, legacy system will track via free_hours_used field
+            }
+
             $reservation = Reservation::create([
                 'user_id' => $user->id,
                 'reserved_at' => $startTime,
@@ -293,6 +317,21 @@ class ReservationService
                 'is_recurring' => $options['is_recurring'] ?? false,
                 'recurrence_pattern' => $options['recurrence_pattern'] ?? null,
             ]);
+
+            // Update the credit transaction with the reservation ID
+            if ($costCalculation['free_hours'] > 0 && \App\Facades\CreditService::getBalance($user, 'free_hours') >= 0) {
+                // Find the most recent deduction transaction and update its source_id
+                $latestTransaction = \App\Models\CreditTransaction::where('user_id', $user->id)
+                    ->where('credit_type', 'free_hours')
+                    ->where('source', 'reservation_usage')
+                    ->whereNull('source_id')
+                    ->latest('created_at')
+                    ->first();
+
+                if ($latestTransaction) {
+                    $latestTransaction->update(['source_id' => $reservation->id]);
+                }
+            }
 
             // Send appropriate notification based on status
             if ($reservation->status === 'confirmed') {
