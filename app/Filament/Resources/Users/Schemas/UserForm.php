@@ -100,7 +100,7 @@ class UserForm
                                 AdminUserControlForm::configure(Grid::make(1)),
                             ]),
 
-                    ]),
+                    ])->persistTabInQueryString(),
 
             ]);
     }

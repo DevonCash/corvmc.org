@@ -1,9 +1,11 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @plugin "daisyui" {
     themes: corvmc --default, corvmc-dark --prefersdark;
 }
 
 @import "../../vendor/filament/filament/resources/css/index.css";
+@import "./filament-public-overrides.css";
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../vendor/filament/filament/resources/views/**/*.blade.php';
@@ -172,6 +174,23 @@
 .vinyl-card:hover {
     z-index: 20;
     transition: z-index 0s 0s;
+}
+
+.fi-topbar-ctn {
+    top: calc(var(--impersonate-banner-height, 0px) + var(--spacing) * 0)
+}
+
+.fi-topbar {
+    top: 0 !important;
+}
+
+html, body {
+    height: auto !important;
+    min-height: 100dvh;
+}
+
+.fi-body {
+    min-height: calc(100dvh - var(--impersonate-banner-height));
 }
 
 /* Enhanced styling for better dark mode experience */

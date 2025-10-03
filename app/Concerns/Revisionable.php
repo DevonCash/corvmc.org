@@ -146,7 +146,11 @@ trait Revisionable
         $this->setRequiresRevisions(false);
 
         try {
-            $result = $this->update($revision->proposed_changes);
+            // Decode any JSON strings in proposed changes
+            $changes = $this->decodeJsonStrings($revision->proposed_changes);
+
+            // Let Laravel's normal casting handle it
+            $result = $this->update($changes);
 
             // Mark revision as applied
             $revision->update([
@@ -159,6 +163,38 @@ trait Revisionable
             // Re-enable revision checking
             $this->setRequiresRevisions(true);
         }
+    }
+
+    /**
+     * Decode JSON strings in attributes array.
+     */
+    protected function decodeJsonStrings(array $attributes): array
+    {
+        $decoded = [];
+
+        foreach ($attributes as $key => $value) {
+            // If value is a JSON string, decode it to array
+            if (is_string($value) && $this->isJson($value)) {
+                $decoded[$key] = json_decode($value, true);
+            } else {
+                $decoded[$key] = $value;
+            }
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * Check if a string is valid JSON.
+     */
+    protected function isJson(string $value): bool
+    {
+        if (!str_starts_with($value, '{') && !str_starts_with($value, '[')) {
+            return false;
+        }
+
+        json_decode($value);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 
     /**
@@ -255,6 +291,8 @@ trait Revisionable
         static::$requiresRevisions = false;
 
         try {
+            // Decode any JSON strings
+            $attributes = $this->decodeJsonStrings($attributes);
             return parent::update($attributes, $options);
         } finally {
             static::$requiresRevisions = $originalRequirement;

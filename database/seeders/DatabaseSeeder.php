@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ReservationSeeder::class,
             StaffProfileSeeder::class,
             EquipmentSeeder::class,
+            SponsorSeeder::class,
         ]);
     }
 }

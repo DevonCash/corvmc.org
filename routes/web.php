@@ -29,7 +29,11 @@ Route::get('/', function () {
             })
     ];
 
-    return view('public.home', compact('upcomingEvents', 'stats'));
+    // Get major sponsors for display
+    $sponsorService = app(\App\Services\SponsorService::class);
+    $majorSponsors = $sponsorService->getMajorSponsors();
+
+    return view('public.home', compact('upcomingEvents', 'stats', 'majorSponsors'));
 })->name('home');
 
 Route::get('/about', function () {
@@ -121,6 +125,19 @@ Route::get('/contact', function () {
     return view('public.contact');
 })->name('contact');
 
+Route::get('/sponsors', function () {
+    $sponsorService = app(\App\Services\SponsorService::class);
+    $sponsors = $sponsorService->getActiveSponsors();
+
+    return view('public.sponsors', compact('sponsors'));
+})->name('sponsors');
+
+Route::get('/about/bylaws', function () {
+    $bylaws = app(\App\Settings\BylawsSettings::class);
+
+    return view('public.bylaws', compact('bylaws'));
+})->name('bylaws');
+
 // Equipment Library routes (public gear catalog)
 Route::get('/equipment', [\App\Http\Controllers\PublicEquipmentController::class, 'index'])->name('equipment.index');
 Route::get('/equipment/{equipment}', [\App\Http\Controllers\PublicEquipmentController::class, 'show'])->name('equipment.show');
@@ -128,28 +145,6 @@ Route::get('/equipment/{equipment}', [\App\Http\Controllers\PublicEquipmentContr
 Route::get('/privacy-policy', function () {
     return view('public.privacy-policy');
 })->name('privacy-policy');
-
-Route::post('/contact', function () {
-    $validated = request()->validate([
-        'first_name' => ['required', 'string', 'max:255'],
-        'last_name' => ['required', 'string', 'max:255'],
-        'email' => ['required', 'email', 'max:255'],
-        'phone' => ['nullable', 'string', 'max:20'],
-        'subject' => ['required', 'string', 'in:general,membership,practice_space,performance,volunteer,donation'],
-        'message' => ['required', 'string', 'max:2000']
-    ]);
-
-    // Log the contact submission
-    logger('Contact form submission', $validated);
-
-    // Send email notification to organization contact email
-    $organizationEmail = app(\App\Settings\OrganizationSettings::class)->email;
-    $staffEmail = $organizationEmail ?? config('mail.from.address');
-    \Illuminate\Support\Facades\Notification::route('mail', $staffEmail)
-        ->notify(new \App\Notifications\ContactFormSubmissionNotification($validated));
-
-    return back()->with('success', 'Thank you for your message! We\'ll get back to you soon.');
-})->name('contact.store');
 
 // User invitation routes (public, no auth required)
 Route::get('/invitation/accept/{token}', [\App\Http\Controllers\InvitationController::class, 'show'])

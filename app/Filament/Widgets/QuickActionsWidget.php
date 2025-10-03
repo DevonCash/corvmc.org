@@ -63,6 +63,17 @@ class QuickActionsWidget extends Widget
             'url' => route('filament.member.resources.directory.index'),
         ];
 
+        // Membership action for non-sustaining members
+        if (!$user->isSustainingMember()) {
+            $actions[] = [
+                'label' => 'Become a Sustaining Member',
+                'description' => 'Support the collective and get benefits',
+                'icon' => 'tabler-heart',
+                'color' => 'warning',
+                'url' => route('filament.member.resources.users.edit', ['record' => $user->id]) . '?tab=account%3A%3Adata%3A%3Atab',
+            ];
+        }
+
         return collect($actions)->take(6)->toArray();
     }
 

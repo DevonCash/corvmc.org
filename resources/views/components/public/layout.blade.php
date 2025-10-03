@@ -65,6 +65,8 @@
 
     <script src="https://zeffy-scripts.s3.ca-central-1.amazonaws.com/embed-form-script.min.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @livewireStyles
 </head>
 
 @php
@@ -79,6 +81,9 @@
 @endphp
 
 <body class="min-h-screen bg-base-100">
+    <!-- Development Banner -->
+    @livewire('development-banner')
+
     <!-- Mobile Drawer -->
     <div class="drawer lg:hidden">
         <input id="mobile-drawer" type="checkbox" class="drawer-toggle" />
@@ -270,6 +275,9 @@
                 {{ app(\App\Settings\OrganizationSettings::class)->getFullNonprofitDescription() }}</p>
         </div>
     </footer>
+
+    @livewireScripts
+    @filamentScripts
 </body>
 
 </html>

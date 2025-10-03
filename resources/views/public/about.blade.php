@@ -39,6 +39,12 @@
                         <li><strong>Growth:</strong> Supporting artistic and personal development</li>
                         <li><strong>Sustainability:</strong> Creating a lasting resource for our community</li>
                     </ul>
+                    <div class="card-actions justify-end mt-4">
+                        <a href="{{ route('bylaws') }}" class="btn btn-outline">
+                            <x-tabler-file-text class="size-5" />
+                            Read Our Bylaws
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

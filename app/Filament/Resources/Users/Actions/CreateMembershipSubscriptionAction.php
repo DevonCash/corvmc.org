@@ -22,6 +22,7 @@ class CreateMembershipSubscriptionAction
             ->icon('tabler-user-heart')
             ->color('primary')
             ->modalWidth('lg')
+            ->modalSubmitActionLabel('Checkout')
             ->schema([
                 Slider::make('amount')
                     ->label('Monthly Contribution ($10 - $50)')

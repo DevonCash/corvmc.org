@@ -40,7 +40,7 @@
                         <div class="relative aspect-[3/4] bg-primary">
                             @if($event['poster_thumb_url'] || $event['poster_url'])
                                 <img src="{{ $event['poster_thumb_url'] ?: $event['poster_url'] }}"
-                                     alt="{{ $event['title'] }} poster"
+                                     alt="{{ $event['title'] }} poster "
                                      class="w-full h-full object-cover">
                             @else
                                 {{-- Fallback poster design --}}
@@ -86,7 +86,7 @@
 
                         {{-- Event Info --}}
                         <div class="p-3">
-                            <h4 class="font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 leading-tight mb-2">
+                            <h4 class="font-semibold text-sm text-gray-900 dark:text-white line-clamp-1 leading-tight mb-2 truncate text-ellipsis">
                                 {{ $event['title'] }}
                             </h4>
 

@@ -96,11 +96,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return $this->getRelation('profile');
         }
 
-        // Load or create the profile
-        $profile = $this->profile()->first();
-
-        if (!$profile) {
-            $profile = $this->profile()->create(['user_id' => $this->id]);
+        // Load or create the profile with error handling for race conditions
+        try {
+            $profile = $this->profile()->firstOrCreate(['user_id' => $this->id]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle duplicate key violation (race condition)
+            if ($e->getCode() === '23505') {
+                $profile = $this->profile()->first();
+            } else {
+                throw $e;
+            }
         }
 
         // Set the relationship so subsequent calls use the loaded instance

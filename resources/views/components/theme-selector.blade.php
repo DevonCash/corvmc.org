@@ -8,9 +8,9 @@
     title="Toggle Theme"
     data-theme-selector="{{ $id }}"
 >
-    <x-tabler-brightness-2 class="theme-icon theme-light size-5" style="display: none;" />
-    <x-tabler-brightness-auto class="theme-icon theme-auto size-5" style="display: none;" />
-    <x-tabler-brightness-half class="theme-icon theme-dark size-5" style="display: none;" />
+    <x-tabler-brightness-2 class="theme-icon theme-light size-5" style="display: none !important;" />
+    <x-tabler-brightness-auto class="theme-icon theme-auto size-5" style="display: none !important;" />
+    <x-tabler-brightness-half class="theme-icon theme-dark size-5" style="display: none !important;" />
 </button>
 
 <script>
@@ -21,28 +21,32 @@
             isApplying: false
         };
 
-        // Create isolated scope for this theme selector
-        const button = document.querySelector('[data-theme-selector="{{ $id }}"]');
-        const lightIcon = button.querySelector('.theme-light');
-        const autoIcon = button.querySelector('.theme-auto');
-        const darkIcon = button.querySelector('.theme-dark');
+        // Wait for DOM to be ready
+        function initThemeSelector() {
+            // Create isolated scope for this theme selector
+            const button = document.querySelector('[data-theme-selector="{{ $id }}"]');
+            if (!button) return;
+
+            const lightIcon = button.querySelector('.theme-light');
+            const autoIcon = button.querySelector('.theme-auto');
+            const darkIcon = button.querySelector('.theme-dark');
 
         function updateIcon() {
             // Hide all icons in this selector
-            lightIcon.style.display = 'none';
-            autoIcon.style.display = 'none';
-            darkIcon.style.display = 'none';
-            
+            lightIcon.style.cssText = 'display: none !important;';
+            autoIcon.style.cssText = 'display: none !important;';
+            darkIcon.style.cssText = 'display: none !important;';
+
             // Show current theme icon
             switch(window.globalThemeState.currentTheme) {
                 case 'light':
-                    lightIcon.style.display = 'block';
+                    lightIcon.style.cssText = 'display: block !important;';
                     break;
                 case 'auto':
-                    autoIcon.style.display = 'block';
+                    autoIcon.style.cssText = 'display: block !important;';
                     break;
                 case 'dark':
-                    darkIcon.style.display = 'block';
+                    darkIcon.style.cssText = 'display: block !important;';
                     break;
             }
         }
@@ -76,11 +80,19 @@
             applyTheme();
         }
 
-        // Add click handler
-        button.addEventListener('click', cycleTheme);
+            // Add click handler
+            button.addEventListener('click', cycleTheme);
 
-        // Initialize
-        updateIcon();
+            // Initialize
+            updateIcon();
+        }
+
+        // Run immediately if DOM is ready, otherwise wait
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initThemeSelector);
+        } else {
+            initThemeSelector();
+        }
 
         // Global function for syncing all selectors
         window.updateAllThemeSelectors = window.updateAllThemeSelectors || function() {
@@ -88,20 +100,20 @@
                 const light = selector.querySelector('.theme-light');
                 const auto = selector.querySelector('.theme-auto');
                 const dark = selector.querySelector('.theme-dark');
-                
-                light.style.display = 'none';
-                auto.style.display = 'none';
-                dark.style.display = 'none';
-                
+
+                light.style.cssText = 'display: none !important;';
+                auto.style.cssText = 'display: none !important;';
+                dark.style.cssText = 'display: none !important;';
+
                 switch(window.globalThemeState.currentTheme) {
                     case 'light':
-                        light.style.display = 'block';
+                        light.style.cssText = 'display: block !important;';
                         break;
                     case 'auto':
-                        auto.style.display = 'block';
+                        auto.style.cssText = 'display: block !important;';
                         break;
                     case 'dark':
-                        dark.style.display = 'block';
+                        dark.style.cssText = 'display: block !important;';
                         break;
                 }
             });

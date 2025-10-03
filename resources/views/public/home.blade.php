@@ -62,7 +62,7 @@
                     <h2 class="text-4xl font-bold mb-4">Upcoming Events</h2>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto items-center justify-center">
                     @foreach ($upcomingEvents as $event)
                         <x-event-card :item="$event" />
                     @endforeach
@@ -121,6 +121,55 @@
             <a href="{{ route('programs') }}" class=" btn btn-wide btn-outline btn-primary mt-8">View All Programs</a>
         </div>
     </div>
+
+    <!-- Major Sponsors -->
+    @if ($majorSponsors->count() > 0)
+        <div class="bg-base-200 py-16">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Our Sponsors</h2>
+                    <p class="text-lg opacity-70">Thank you to our community partners!</p>
+                </div>
+
+                <div class="flex flex-wrap w-full gap-3 justify-center">
+                    @foreach ($majorSponsors as $sponsor)
+                        @php
+                            $logo = $sponsor->getFirstMediaUrl('logo');
+                        @endphp
+                        @if ($sponsor->website_url)
+                            <a href="{{ $sponsor->website_url }}" target="_blank" rel="noopener noreferrer"
+                                class="transition-transform hover:scale-105 flex flex-col items-center justify-center p-2 bg-base-100 w-48 ">
+                                @if ($logo)
+                                    <img src="{{ $logo }}" alt="{{ $sponsor->name }}"
+                                        class="w-full max-h-full object-contain">
+                                @endif
+                                <div class="text-center grow flex justify-center items-center">
+                                    <span class="text-wrap text-sm">{{ $sponsor->name }}</span>
+                                </div>
+                            </a>
+                        @else
+                            <div class="flex items-center justify-center w-full h-32">
+                                @if ($logo)
+                                    <img src="{{ $logo }}" alt="{{ $sponsor->name }}"
+                                        class="max-w-full max-h-full object-contain">
+                                @else
+                                    <div class="text-center p-4 border-2 border-dashed rounded-lg">
+                                        <span class="font-semibold">{{ $sponsor->name }}</span>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+
+                <div class="text-center mt-8">
+                    <a href="{{ route('sponsors') }}" class="btn btn-outline btn-primary">
+                        View All Sponsors
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Get Involved -->
     <div class="py-16">

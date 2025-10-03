@@ -40,13 +40,12 @@
                     </div>
                 </div>
 
-                <div class="card bg-base-100 shadow-xl">
-                    <figure>
-                        <img src="https://via.placeholder.com/400x300/f59e0b/ffffff?text=Practice+Room"
-                            alt="Practice Room" class="w-full h-64 object-cover" />
-                    </figure>
+                <div class="card bg-success text-success-content shadow-xl">
                     <div class="card-body">
-                        <h4 class="card-title">Room Features</h4>
+                        <div class="flex justify-center mb-4">
+                            <x-tabler-music class="size-24 opacity-30" />
+                        </div>
+                        <h4 class="card-title justify-center">Room Features</h4>
                         <ul class="space-y-2 list-disc list-inside">
                             <li>Sound treated walls</li>
                             <li>Full PA system</li>
@@ -89,13 +88,12 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-12">
-                <div class="card bg-base-100 shadow-xl">
-                    <figure>
-                        <img src="https://via.placeholder.com/400x300/8b5cf6/ffffff?text=Live+Performance"
-                            alt="Live Performance" class="w-full h-64 object-cover" />
-                    </figure>
+                <div class="card bg-primary text-primary-content shadow-xl">
                     <div class="card-body">
-                        <h4 class="card-title">Performance Opportunities</h4>
+                        <div class="flex justify-center mb-4">
+                            <x-tabler-microphone-2 class="size-24 opacity-30" />
+                        </div>
+                        <h4 class="card-title justify-center">Performance Opportunities</h4>
                         <ul class="space-y-2 list-disc list-inside">
                             <li>Monthly showcase events</li>
                             <li>Open mic nights</li>
@@ -277,13 +275,12 @@
                     </div>
                 </div>
 
-                <div class="card bg-base-100 shadow-xl">
-                    <figure>
-                        <img src="https://via.placeholder.com/400x300/06b6d4/ffffff?text=Gear+Library"
-                            alt="Gear Lending Library" class="w-full h-64 object-cover" />
-                    </figure>
+                <div class="card bg-info text-info-content shadow-xl">
                     <div class="card-body">
-                        <h4 class="card-title">Available Equipment</h4>
+                        <div class="flex justify-center mb-4">
+                            <x-tabler-guitar-pick class="size-24 opacity-30" />
+                        </div>
+                        <h4 class="card-title justify-center">Available Equipment</h4>
                         <ul class="space-y-2 list-disc list-inside">
                             <li>Electric guitars & basses</li>
                             <li>Acoustic instruments</li>

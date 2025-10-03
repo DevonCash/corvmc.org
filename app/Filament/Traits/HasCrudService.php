@@ -23,7 +23,13 @@ trait HasCrudService
         }
 
         try {
-            // Support both facade and direct class names
+            // Try as direct service class first
+            $serviceClass = "\\App\\Services\\" . static::$crudService;
+            if (class_exists($serviceClass)) {
+                return app($serviceClass);
+            }
+
+            // Support full class names
             if (class_exists(static::$crudService)) {
                 return app(static::$crudService);
             }
@@ -31,7 +37,7 @@ trait HasCrudService
             // Try as facade
             $facadeClass = "\\App\\Facades\\" . static::$crudService;
             if (class_exists($facadeClass)) {
-                return $facadeClass::getFacadeRoot();
+                return app($facadeClass::getFacadeAccessor());
             }
 
             throw CrudServiceException::serviceClassNotFound(static::$crudService);

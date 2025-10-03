@@ -4,9 +4,9 @@ namespace App\Filament\Pages\Auth;
 
 use App\Facades\UserInvitationService;
 use App\Models\Invitation;
-use Filament\Forms\Components\Component;
+use Filament\Auth\Pages\Register as BaseRegister;
 use Filament\Forms\Components\TextInput;
-use Filament\Pages\Auth\Register as BaseRegister;
+use Filament\Schemas\Components\Component;
 use Illuminate\Database\Eloquent\Model;
 
 class Register extends BaseRegister

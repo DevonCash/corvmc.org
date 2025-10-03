@@ -1,0 +1,111 @@
+/* Filament Component Overrides for Public Site - Match DaisyUI Styling */
+
+:root {
+    --radius-xl: 0;
+    --radius-lg: 0;
+    --radius-md: 0;
+    --radius-sm: 0;
+}
+
+/* Match DaisyUI border radius (0 for sharp corners) */
+
+/* Form inputs - match DaisyUI input styling */
+.fi-input-wrapper input,
+.fi-input-wrapper textarea,
+.fi-input-wrapper select,
+.fi-fo-text-input input,
+.fi-fo-textarea textarea,
+.fi-fo-select select {
+    border-color: var(--color-base-300) !important;
+}
+
+.fi-input-wrapper input:focus,
+.fi-input-wrapper textarea:focus,
+.fi-input-wrapper select:focus {
+    border-color: var(--color-primary);
+    outline: 2px solid color-mix(in oklch, var(--color-primary), transparent 80%);
+    outline-offset: 2px;
+}
+
+/* Buttons - match DaisyUI button styling */
+.fi-btn {
+    text-transform: none;
+    font-weight: 600;
+}
+
+/* Primary button colors */
+.fi-btn-color-primary {
+    background-color: var(--color-primary) !important;
+    color: var(--color-primary-content) !important;
+}
+
+.fi-btn-color-primary:hover {
+    background-color: color-mix(in oklch, var(--color-primary), black 10%) !important;
+}
+
+/* Modals - match DaisyUI modal styling */
+.fi-modal,
+.fi-modal-window,
+.fi-modal-content {
+    background-color: var(--color-base-100) !important;
+}
+
+.fi-modal-header {
+    border-bottom: 1px solid var(--color-base-300) !important;
+    background-color: var(--color-base-100) !important;
+    padding: 1rem 1.5rem;
+}
+
+.fi-modal-footer {
+    border-top: 1px solid var(--color-base-300) !important;
+    background-color: var(--color-base-100) !important;
+    padding: 1rem 1.5rem;
+}
+
+/* Modal backdrop */
+.fi-modal-close-overlay {
+    background-color: rgb(0 0 0 / 0.5) !important;
+}
+
+/* Notifications - match DaisyUI alert styling */
+.fi-notification {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+
+/* Form field labels - match DaisyUI typography */
+.fi-fo-field-wrp-label {
+    font-weight: 600 !important;
+    color: var(--color-base-content) !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* Error messages - match DaisyUI error color */
+.fi-fo-field-wrp-error-message {
+    color: var(--color-error) !important;
+}
+
+/* Dark mode adjustments */
+.dark .fi-input-wrapper input,
+.dark .fi-input-wrapper textarea,
+.dark .fi-input-wrapper select {
+    background-color: var(--color-base-200) !important;
+    color: var(--color-base-content) !important;
+}
+
+
+/* Remove excessive shadows in favor of DaisyUI's simpler approach */
+.fi-input-wrapper,
+.fi-select,
+.fi-textarea {
+    box-shadow: none !important;
+}
+
+/* Grid layouts */
+.fi-fo-grid {
+    gap: 1rem !important;
+}
+
+/* Action buttons in forms */
+.fi-ac-btn-group {
+    gap: 0.5rem !important;
+}

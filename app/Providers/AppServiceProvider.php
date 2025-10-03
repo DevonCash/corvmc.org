@@ -36,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\ReportService::class);
         $this->app->singleton(\App\Services\ReservationService::class);
         $this->app->singleton(\App\Services\PaymentService::class);
+        $this->app->singleton(\App\Services\SponsorService::class);
         $this->app->singleton(\App\Services\UserInvitationService::class);
         $this->app->singleton(\App\Services\UserSubscriptionService::class);
         $this->app->singleton(\App\Services\UserService::class);
