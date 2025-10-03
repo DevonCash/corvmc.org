@@ -28,7 +28,7 @@ class MarkCompedBulkAction
             ->action(function (Collection $records, array $data) {
                 $count = 0;
                 foreach ($records as $record) {
-                    if ($record->cost > 0 && $record->isUnpaid()) {
+                    if ($record->cost->isPositive() && $record->isUnpaid()) {
                         $record->markAsComped($data['comp_reason']);
                         $count++;
                     }

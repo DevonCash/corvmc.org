@@ -93,7 +93,7 @@ class ReservationInfolist
                             ->columnSpanFull(),
                     ])
                     ->columns(3)
-                    ->visible(fn (Reservation $record): bool => $record->cost > 0),
+                    ->visible(fn (Reservation $record): bool => $record->cost->isPositive()),
 
                 Section::make('Additional Information')
                     ->schema([

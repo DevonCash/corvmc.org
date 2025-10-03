@@ -17,8 +17,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
-use Stripe\Checkout\Session as StripeSession;
-use Stripe\Exception\ApiErrorException;
 
 class ReservationService
 {
@@ -814,7 +812,7 @@ class ReservationService
     /**
      * Create a Stripe checkout session for a reservation payment.
      */
-    public function createCheckoutSession(Reservation $reservation): StripeSession
+    public function createCheckoutSession(Reservation $reservation)
     {
         $user = $reservation->user;
 
@@ -833,49 +831,25 @@ class ReservationService
         $paidHours = $reservation->hours_used - $reservation->free_hours_used;
         $paidBlocks = $this->hoursToBlocks($paidHours);
 
-        $lineItems = [];
-
-        // Only add line item if there are paid blocks
-        if ($paidBlocks > 0) {
-            $lineItems[] = [
-                'price' => $priceId,
-                'quantity' => $paidBlocks,
-            ];
+        if ($paidBlocks <= 0) {
+            throw new \Exception('No payment required for this reservation.');
         }
 
-        // Add free hours information if applicable
-        if ($reservation->free_hours_used > 0) {
-            $lineItems[] = [
-                'price_data' => [
-                    'currency' => config('cashier.currency', 'usd'),
-                    'product_data' => [
-                        'name' => 'Free Hours Applied',
-                        'description' => sprintf(
-                            'Sustaining member benefit: %.1f free hours',
-                            $reservation->free_hours_used
-                        ),
-                    ],
-                    'unit_amount' => 0, // Free
-                ],
-                'quantity' => 1,
-            ];
-        }
-
-        $sessionData = [
-            'payment_method_types' => ['card'],
-            'line_items' => $lineItems,
-            'mode' => 'payment',
+        // Use Cashier's checkout method
+        $checkout = $user->checkout([
+            $priceId => $paidBlocks,
+        ], [
             'success_url' => route('checkout.success') . '?session_id={CHECKOUT_SESSION_ID}&user_id=' . $reservation->user_id,
             'cancel_url' => route('checkout.cancel') . '?user_id=' . $reservation->user_id . '&type=practice_space_reservation',
-            'customer' => $user->stripe_id,
             'metadata' => [
                 'reservation_id' => $reservation->id,
                 'user_id' => $user->id,
                 'type' => 'practice_space_reservation',
+                'free_hours_used' => $reservation->free_hours_used,
             ],
-        ];
+        ]);
 
-        return StripeSession::create($sessionData);
+        return $checkout;
     }
 
     /**
@@ -883,22 +857,16 @@ class ReservationService
      */
     public function handleSuccessfulPayment(Reservation $reservation, string $sessionId): bool
     {
-        try {
-            $session = StripeSession::retrieve($sessionId);
+        // Update reservation payment status
+        $reservation->update([
+            'payment_status' => 'paid',
+            'payment_method' => 'stripe',
+            'paid_at' => now(),
+            'payment_notes' => "Paid via Stripe (Session: {$sessionId})",
+            'status' => 'confirmed', // Automatically confirm paid reservations
+        ]);
 
-            // Update reservation payment status (Transaction model removed)
-            $reservation->update([
-                'payment_status' => 'paid',
-                'payment_method' => 'stripe',
-                'paid_at' => now(),
-                'payment_notes' => "Paid via Stripe (Session: {$sessionId}, Payment Intent: {$session->payment_intent})",
-                'status' => 'confirmed', // Automatically confirm paid reservations
-            ]);
-
-            return true;
-        } catch (ApiErrorException $e) {
-            throw new \Exception('Failed to process Stripe payment: ' . $e->getMessage());
-        }
+        return true;
     }
 
     /**
@@ -912,13 +880,5 @@ class ReservationService
             'payment_status' => 'unpaid',
             'payment_notes' => $notes,
         ]);
-    }
-
-    /**
-     * Get checkout session details.
-     */
-    public function getCheckoutSession(string $sessionId): StripeSession
-    {
-        return StripeSession::retrieve($sessionId);
     }
 }

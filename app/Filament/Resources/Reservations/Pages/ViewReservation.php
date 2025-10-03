@@ -22,7 +22,7 @@ class ViewReservation extends ViewRecord
         $reservation = $this->getRecord();
         $user = Auth::user();
 
-        if ($reservation->cost > 0 &&
+        if ($reservation->cost->isPositive() &&
             !$reservation->isPaid() &&
             ($reservation->user_id === $user->id || $user->can('manage reservations'))) {
 

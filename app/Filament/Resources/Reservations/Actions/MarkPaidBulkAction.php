@@ -40,7 +40,7 @@ class MarkPaidBulkAction
             ->action(function (Collection $records, array $data) {
                 $count = 0;
                 foreach ($records as $record) {
-                    if ($record->cost > 0 && $record->isUnpaid()) {
+                    if ($record->cost->isPositive() && $record->isUnpaid()) {
                         $record->markAsPaid($data['payment_method'], $data['payment_notes']);
                         $count++;
                     }
