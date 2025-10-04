@@ -18,14 +18,15 @@ class PayStripeAction
             ->icon('tabler-credit-card')
             ->color('success')
             ->visible(fn(Reservation $record) =>
+                $record instanceof \App\Models\RehearsalReservation &&
                 $record->cost->isPositive() &&
                 $record->isUnpaid() &&
                 $record->status !== 'cancelled' &&
-                ($record->user_id === Auth::id() || Auth::user()->can('manage reservations'))
+                ($record->reservable_id === Auth::id() || Auth::user()->can('manage reservations'))
             )
             ->action(function (Reservation $record) {
                 // Ensure user owns the reservation or has permission
-                if ($record->user_id !== Auth::id() && !Auth::user()->can('manage reservations')) {
+                if ($record->reservable_id !== Auth::id() && !Auth::user()->can('manage reservations')) {
                     Notification::make()
                         ->title('Access Denied')
                         ->body('You do not have permission to pay for this reservation.')

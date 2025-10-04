@@ -16,7 +16,8 @@ class CancelAction
             ->icon('tabler-calendar-x')
             ->color('danger')
             ->visible(fn(Reservation $record) =>
-                $record->user_id === Auth::id() || Auth::user()->can('manage reservations'))
+                ($record instanceof \App\Models\RehearsalReservation && $record->reservable_id === Auth::id()) ||
+                Auth::user()->can('manage reservations'))
             ->requiresConfirmation()
             ->action(function (Reservation $record) {
                 \App\Facades\ReservationService::cancelReservation($record);

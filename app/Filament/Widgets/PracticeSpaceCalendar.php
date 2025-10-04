@@ -31,19 +31,20 @@ class PracticeSpaceCalendar extends CalendarWidget
         @['start' => $start,'end' => $end] = $fetchInfo;
 
         $reservations = Reservation::withoutGlobalScopes()
-            ->with('user')
+            ->with('reservable')
             ->where('status', '!=', 'cancelled')
             ->where('reserved_until', '>=', $start)
             ->where('reserved_at', '<=', $end)
             ->get()
             ->map(function (Reservation $reservation) {
                 $currentUser = Auth::user();
-                $isOwnReservation = $currentUser?->id === $reservation->user_id;
+                $isOwnReservation = $reservation->reservable_type === User::class &&
+                    $currentUser?->id === $reservation->reservable_id;
                 $canViewDetails = $currentUser?->can('view reservations');
 
                 // Show full details for own reservations or if user has permission
                 if ($isOwnReservation) {
-                    $title = $reservation->user->name;
+                    $title = $reservation->reservable->name ?? 'Reserved';
                     if ($reservation->notes) {
                         $title .= ' - '.$reservation->notes;
                     }

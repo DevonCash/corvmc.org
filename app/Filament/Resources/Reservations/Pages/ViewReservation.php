@@ -23,9 +23,10 @@ class ViewReservation extends ViewRecord
         $reservation = $this->getRecord();
         $user = Auth::user();
 
-        if ($reservation->cost->isPositive() &&
+        if ($reservation instanceof \App\Models\RehearsalReservation &&
+            $reservation->cost->isPositive() &&
             !$reservation->isPaid() &&
-            ($reservation->user_id === $user->id || $user->can('manage reservations'))) {
+            ($reservation->reservable_id === $user->id || $user->can('manage reservations'))) {
 
             $actions[] = Action::make('payNow')
                 ->label('Pay Now')
