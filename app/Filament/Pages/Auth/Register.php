@@ -60,7 +60,7 @@ class Register extends BaseRegister
     protected function getEmailFormComponent(): Component
     {
         return TextInput::make('email')
-            ->label(__('filament-panels::pages/auth/register.form.email.label'))
+            ->label(__('filament-panels::auth/pages/register.form.email.label'))
             ->email()
             ->required()
             ->maxLength(255)
