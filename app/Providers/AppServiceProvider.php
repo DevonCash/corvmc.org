@@ -50,7 +50,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Register model observers for cache invalidation
         User::observe(UserObserver::class);
-        Reservation::observe(ReservationObserver::class);
+        \App\Models\RehearsalReservation::observe(ReservationObserver::class);
+        \App\Models\ProductionReservation::observe(ReservationObserver::class);
         Production::observe(ProductionObserver::class);
         Tag::observe(TagObserver::class);
 

@@ -7,6 +7,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
 
 class ViewReservation extends ViewRecord
 {

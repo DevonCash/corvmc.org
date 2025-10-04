@@ -10,7 +10,7 @@ use App\Filament\Resources\Reservations\Pages\ViewReservation;
 use App\Filament\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\ReservationsTable;
-use App\Models\Reservation;
+use App\Models\RehearsalReservation;
 use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ReservationResource extends Resource
 {
-    protected static ?string $model = Reservation::class;
+    protected static ?string $model = RehearsalReservation::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'tabler-metronome';
 
@@ -49,8 +49,12 @@ class ReservationResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        if (!Auth::user()->can('manage reservations')) return null;
-        return Reservation::whereToday('reserved_at')->count() || null;
+        // Show count of current user's upcoming reservations
+        return RehearsalReservation::where('reservable_type', \App\Models\User::class)
+            ->where('reservable_id', Auth::id())
+            ->where('status', '!=', 'cancelled')
+            ->where('reserved_at', '>', now())
+            ->count() ?: null;
     }
 
     public static function getPages(): array

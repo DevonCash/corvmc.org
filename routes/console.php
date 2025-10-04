@@ -20,6 +20,8 @@ Schedule::command('memberships:send-reminders')->dailyAt('11:00');
 // Schedule monthly credit allocation
 Schedule::command('credits:allocate')->daily();
 
+Schedule::command('cloudflare:reload')->daily();
+
 // Generate future instances for recurring reservations daily
 Schedule::call(function () {
     app(\App\Services\RecurringReservationService::class)->generateFutureInstances();

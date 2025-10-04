@@ -268,7 +268,7 @@ class ReservationService
     /**
      * Create a new reservation.
      */
-    public function createReservation(User $user, Carbon $startTime, Carbon $endTime, array $options = []): Reservation
+    public function createReservation(User $user, Carbon $startTime, Carbon $endTime, array $options = []): \App\Models\RehearsalReservation
     {
         $errors = $this->validateReservation($user, $startTime, $endTime);
 
@@ -303,8 +303,9 @@ class ReservationService
                 // Otherwise, legacy system will track via free_hours_used field
             }
 
-            $reservation = Reservation::create([
-                'user_id' => $user->id,
+            $reservation = \App\Models\RehearsalReservation::create([
+                'reservable_type' => \App\Models\User::class,
+                'reservable_id' => $user->id,
                 'reserved_at' => $startTime,
                 'reserved_until' => $endTime,
                 'cost' => $costCalculation['cost'],
@@ -347,7 +348,7 @@ class ReservationService
     /**
      * Update an existing reservation.
      */
-    public function updateReservation(Reservation $reservation, Carbon $startTime, Carbon $endTime, array $options = []): Reservation
+    public function updateReservation(\App\Models\RehearsalReservation $reservation, Carbon $startTime, Carbon $endTime, array $options = []): \App\Models\RehearsalReservation
     {
         $errors = $this->validateReservation($reservation->user, $startTime, $endTime, $reservation->id);
 
@@ -375,7 +376,7 @@ class ReservationService
     /**
      * Confirm a pending reservation.
      */
-    public function confirmReservation(Reservation $reservation): Reservation
+    public function confirmReservation(\App\Models\RehearsalReservation $reservation): \App\Models\RehearsalReservation
     {
         if ($reservation->status !== 'pending') {
             return $reservation;
@@ -392,7 +393,7 @@ class ReservationService
     /**
      * Cancel a reservation.
      */
-    public function cancelReservation(Reservation $reservation, ?string $reason = null): Reservation
+    public function cancelReservation(\App\Models\RehearsalReservation $reservation, ?string $reason = null): \App\Models\RehearsalReservation
     {
         $reservation->update([
             'status' => 'cancelled',
@@ -812,7 +813,7 @@ class ReservationService
     /**
      * Create a Stripe checkout session for a reservation payment.
      */
-    public function createCheckoutSession(Reservation $reservation)
+    public function createCheckoutSession(\App\Models\RehearsalReservation $reservation)
     {
         $user = $reservation->user;
 
@@ -839,8 +840,8 @@ class ReservationService
         $checkout = $user->checkout([
             $priceId => $paidBlocks,
         ], [
-            'success_url' => route('checkout.success') . '?session_id={CHECKOUT_SESSION_ID}&user_id=' . $reservation->user_id,
-            'cancel_url' => route('checkout.cancel') . '?user_id=' . $reservation->user_id . '&type=practice_space_reservation',
+            'success_url' => route('checkout.success') . '?session_id={CHECKOUT_SESSION_ID}&user_id=' . $reservation->getResponsibleUser()->id,
+            'cancel_url' => route('checkout.cancel') . '?user_id=' . $reservation->getResponsibleUser()->id . '&type=practice_space_reservation',
             'metadata' => [
                 'reservation_id' => $reservation->id,
                 'user_id' => $user->id,
@@ -855,7 +856,7 @@ class ReservationService
     /**
      * Handle successful payment and update reservation.
      */
-    public function handleSuccessfulPayment(Reservation $reservation, string $sessionId): bool
+    public function handleSuccessfulPayment(\App\Models\RehearsalReservation $reservation, string $sessionId): bool
     {
         // Update reservation payment status
         $reservation->update([
@@ -872,7 +873,7 @@ class ReservationService
     /**
      * Handle failed or cancelled payment.
      */
-    public function handleFailedPayment(Reservation $reservation, ?string $sessionId = null): void
+    public function handleFailedPayment(\App\Models\RehearsalReservation $reservation, ?string $sessionId = null): void
     {
         $notes = $sessionId ? "Payment failed/cancelled (Session: {$sessionId})" : 'Payment cancelled by user';
 

@@ -144,10 +144,17 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(Band::class, 'owner_id');
     }
 
+    public function rehearsals()
+    {
+        return $this->morphMany(RehearsalReservation::class, 'reservable');
+    }
 
+    /**
+     * Alias for rehearsals() for backward compatibility.
+     */
     public function reservations()
     {
-        return $this->hasMany(Reservation::class);
+        return $this->rehearsals();
     }
 
     public function profile()

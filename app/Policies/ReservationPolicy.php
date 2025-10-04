@@ -25,7 +25,7 @@ class ReservationPolicy
      */
     public function view(User $user, Reservation $reservation): ?bool
     {
-        if ($user->id === $reservation->user_id || $user->can('view reservations')) {
+        if ($user->id === $reservation->getResponsibleUser()?->id || $user->can('view reservations')) {
             return true;
         }
 
@@ -51,7 +51,7 @@ class ReservationPolicy
         }
 
         // Users can update their own reservations (within time limits)
-        return $user->id === $reservation->user_id;
+        return $user->id === $reservation->getResponsibleUser()?->id;
     }
 
     /**
@@ -59,7 +59,7 @@ class ReservationPolicy
      */
     public function delete(User $user, Reservation $reservation): ?bool
     {
-        if ($user->id === $reservation->user_id || $user->can('delete reservations')) {
+        if ($user->id === $reservation->getResponsibleUser()?->id || $user->can('delete reservations')) {
             return true;
         }
 
@@ -71,7 +71,7 @@ class ReservationPolicy
      */
     public function restore(User $user, Reservation $reservation): ?bool
     {
-        if ($user->id === $reservation->user_id || $user->can('restore reservations')) {
+        if ($user->id === $reservation->getResponsibleUser()?->id || $user->can('restore reservations')) {
             return true;
         }
 

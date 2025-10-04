@@ -7,7 +7,7 @@ use App\Filament\Resources\Reservations\Widgets\ReservationStatsOverview;
 use App\Models\User;
 use Filament\Actions\CreateAction;
 use App\Filament\Resources\Reservations\Schemas\ReservationForm;
-use App\Models\Reservation;
+use App\Models\RehearsalReservation;
 use App\Services\ReservationService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Wizard\Step;
@@ -78,5 +78,15 @@ class ListReservations extends ListRecords
     public function getDefaultActiveTab(): string | int | null
     {
         return 'upcoming';
+    }
+
+    /**
+     * Scope reservations to current user only
+     */
+    protected function getTableQuery(): Builder
+    {
+        return parent::getTableQuery()
+            ->where('reservable_type', \App\Models\User::class)
+            ->where('reservable_id', auth()->id());
     }
 }

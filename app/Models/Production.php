@@ -61,6 +61,14 @@ class Production extends ContentModel implements Eventable
             ->withTimestamps();
     }
 
+    /**
+     * Space reservation for this production (if using practice space).
+     */
+    public function spaceReservation()
+    {
+        return $this->morphOne(ProductionReservation::class, 'reservable');
+    }
+
     public function getGenresAttribute()
     {
         return $this->tagsWithType('genre');
@@ -406,6 +414,34 @@ class Production extends ContentModel implements Eventable
                 $production->location = LocationData::cmc();
             }
         });
+
+        static::saved(function (Production $production) {
+            // Sync space reservation if using practice space
+            if ($production->usesPracticeSpace()) {
+                $production->syncSpaceReservation();
+            }
+        });
+    }
+
+    /**
+     * Create or update the space reservation for this production.
+     */
+    protected function syncSpaceReservation(): void
+    {
+        // Default: 2 hours setup before event, 1 hour breakdown after
+        $reservedAt = $this->start_time->copy()->subHours(2);
+        $reservedUntil = $this->end_time?->copy()->addHour() ?? $this->start_time->copy()->addHours(3);
+
+        $this->spaceReservation()->updateOrCreate(
+            [],
+            [
+                'type' => ProductionReservation::class,
+                'reserved_at' => $reservedAt,
+                'reserved_until' => $reservedUntil,
+                'status' => $this->status ?? 'confirmed',
+                'notes' => "Setup/breakdown for production: {$this->title}",
+            ]
+        );
     }
 
     /**

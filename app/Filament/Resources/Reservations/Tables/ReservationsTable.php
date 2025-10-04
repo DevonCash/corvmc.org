@@ -36,13 +36,6 @@ class ReservationsTable
     {
         return $table
             ->columns([
-                TextColumn::make('user.name')
-                    ->label('Member')
-                    ->toggleable()
-                    ->toggleable(isToggledHiddenByDefault: !Auth::user()->can('manage practice space'))
-                    ->searchable()
-                    ->sortable(),
-
                 TextColumn::make('time_range')
                     ->label('Time Range')
                     ->state(function (Reservation $record): string {
@@ -121,12 +114,6 @@ class ReservationsTable
                         'refunded' => 'Refunded',
                     ])
                     ->multiple(),
-
-                SelectFilter::make('user')
-                    ->visible(Auth::user()->can('manage practice space'))
-                    ->relationship('user', 'name')
-                    ->searchable()
-                    ->preload(),
 
                 Filter::make('date_range')
                     ->schema([

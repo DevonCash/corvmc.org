@@ -47,13 +47,14 @@ class ReservationObserver
         // Clear conflict detection cache for the reservation date
         $date = $reservation->reserved_at ? $reservation->reserved_at->format('Y-m-d') : now()->format('Y-m-d');
         Cache::forget("reservations.conflicts.{$date}");
-        
-        // Clear user-specific caches
-        if ($reservation->user_id) {
+
+        // Clear user-specific caches (for RehearsalReservation)
+        $responsibleUser = $reservation->getResponsibleUser();
+        if ($responsibleUser) {
             $month = $reservation->reserved_at ? $reservation->reserved_at->format('Y-m') : now()->format('Y-m');
-            Cache::forget("user.{$reservation->user_id}.free_hours.{$month}");
-            Cache::forget("user_stats.{$reservation->user_id}");
-            Cache::forget("user_activity.{$reservation->user_id}");
+            Cache::forget("user.{$responsibleUser->id}.free_hours.{$month}");
+            Cache::forget("user_stats.{$responsibleUser->id}");
+            Cache::forget("user_activity.{$responsibleUser->id}");
         }
     }
 }

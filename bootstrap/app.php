@@ -17,6 +17,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             '/stripe/*',
         ]);
+
+        if(env('APP_ENV') !== 'local') {
+            $middleware->replace(
+                \Illuminate\Http\Middleware\TrustProxies::class,
+                \Monicahq\Cloudflare\Http\Middleware\TrustProxies::class
+            );
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //->withExceptions(function (Exceptions $exceptions) {
