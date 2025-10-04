@@ -28,7 +28,7 @@ use Illuminate\Support\Str;
 
 class MembersRelationManager extends RelationManager
 {
-    protected static string $relationship = 'allMembers';
+    protected static string $relationship = 'memberships';
 
     protected static ?string $recordTitleAttribute = 'name';
 

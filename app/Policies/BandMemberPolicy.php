@@ -40,6 +40,8 @@ class BandMemberPolicy
      */
     public function update(User $user, BandMember $bandMember): bool
     {
+        // Delegate to BandPolicy::manageMembers for proper scoped permission check
+        return $user->can('manage band members', $bandMember->band);
     }
 
     /**
