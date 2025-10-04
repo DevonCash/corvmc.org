@@ -13,7 +13,7 @@ class ProductionReservation extends Reservation
 {
     use HasFactory, HasTimePeriod;
 
-    protected $table = 'reservations';
+    // Table and primary key are inherited from parent
 
     /**
      * Get the name of the start time field for this model.
@@ -31,29 +31,15 @@ class ProductionReservation extends Reservation
         return 'reserved_until';
     }
 
-    protected $fillable = [
-        'reservable_type',
-        'reservable_id',
-        'status',
-        'reserved_at',
-        'reserved_until',
-        'notes',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'reserved_at' => 'datetime',
-            'reserved_until' => 'datetime',
-        ];
-    }
+    // Guarded is inherited from parent - using $guarded = ['id'] from Reservation
+    // Casts are inherited from parent Reservation class
 
     /**
      * The production that owns this space reservation.
      */
     public function production()
     {
-        return $this->reservable();
+        return $this->morphTo(__FUNCTION__, 'reservable_type', 'reservable_id');
     }
 
     // STI Abstract Method Implementations

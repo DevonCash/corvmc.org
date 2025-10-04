@@ -17,6 +17,8 @@ class Reservation extends Model
 {
     use HasFactory;
 
+    protected $table = 'reservations';
+    protected $primaryKey = 'id';
     protected $guarded = ['id'];
 
     protected function casts(): array
@@ -35,7 +37,7 @@ class Reservation extends Model
     }
 
     /**
-     * Boot method to handle STI type column.
+     * Boot method to handle STI type column and scoping.
      */
     protected static function boot()
     {
@@ -46,6 +48,13 @@ class Reservation extends Model
                 $model->type = get_class($model);
             }
         });
+
+        // Only add type scope for child classes, not the base Reservation class
+        if (static::class !== self::class) {
+            static::addGlobalScope('type', function (Builder $builder) {
+                $builder->where('type', static::class);
+            });
+        }
     }
 
     /**
@@ -70,22 +79,6 @@ class Reservation extends Model
         }
 
         return parent::newFromBuilder($attributes, $connection);
-    }
-
-    /**
-     * Scope queries to this reservation type automatically.
-     * Only applies to child classes, not the base Reservation class.
-     */
-    public function newQuery(): Builder
-    {
-        $query = parent::newQuery();
-
-        // Only apply type filter for child classes, not base Reservation
-        if (static::class !== self::class) {
-            $query->where('type', static::class);
-        }
-
-        return $query;
     }
 
     /**

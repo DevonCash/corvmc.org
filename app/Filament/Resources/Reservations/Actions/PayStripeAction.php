@@ -20,6 +20,7 @@ class PayStripeAction
             ->visible(fn(Reservation $record) =>
                 $record->cost->isPositive() &&
                 $record->isUnpaid() &&
+                $record->status !== 'cancelled' &&
                 ($record->user_id === Auth::id() || Auth::user()->can('manage reservations'))
             )
             ->action(function (Reservation $record) {

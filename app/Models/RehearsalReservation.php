@@ -18,7 +18,7 @@ class RehearsalReservation extends Reservation implements Eventable
 {
     use HasFactory, LogsActivity, HasTimePeriod;
 
-    protected $table = 'reservations';
+    // Table and primary key are inherited from parent
 
     /**
      * Get the name of the start time field for this model.
@@ -36,26 +36,7 @@ class RehearsalReservation extends Reservation implements Eventable
         return 'reserved_until';
     }
 
-    protected $fillable = [
-        'reservable_type',
-        'reservable_id',
-        'status',
-        'reserved_at',
-        'reserved_until',
-        'cost',
-        'payment_status',
-        'payment_method',
-        'paid_at',
-        'payment_notes',
-        'hours_used',
-        'free_hours_used',
-        'is_recurring',
-        'recurrence_pattern',
-        'recurring_reservation_id',
-        'instance_date',
-        'cancellation_reason',
-        'notes',
-    ];
+    // Guarded is inherited from parent - using $guarded = ['id'] from Reservation
 
     protected $attributes = [
         'payment_status' => 'unpaid',
@@ -68,7 +49,7 @@ class RehearsalReservation extends Reservation implements Eventable
      */
     public function user()
     {
-        return $this->reservable();
+        return $this->morphTo(__FUNCTION__, 'reservable_type', 'reservable_id');
     }
 
     /**

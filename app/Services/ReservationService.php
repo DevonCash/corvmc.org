@@ -122,7 +122,7 @@ class ReservationService
             $dayStart = $startTime->copy()->startOfDay();
             $dayEnd = $startTime->copy()->endOfDay();
 
-            return Reservation::with('user')
+            return Reservation::with('reservable')
                 ->where('status', '!=', 'cancelled')
                 ->where('reserved_until', '>', $dayStart)
                 ->where('reserved_at', '<', $dayEnd)
@@ -419,7 +419,7 @@ class ReservationService
         $dayStart = $date->copy()->setTime(0, 0);
         $dayEnd = $date->copy()->setTime(23, 59);
 
-        $existingReservations = Reservation::with('user')
+        $existingReservations = Reservation::with('reservable')
             ->where('status', '!=', 'cancelled')
             ->where('reserved_until', '>', $dayStart)
             ->where('reserved_at', '<', $dayEnd)

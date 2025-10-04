@@ -9,26 +9,15 @@ use App\Filament\Resources\Reservations\Actions\MarkCompedBulkAction;
 use App\Filament\Resources\Reservations\Actions\MarkPaidAction;
 use App\Filament\Resources\Reservations\Actions\MarkPaidBulkAction;
 use App\Filament\Resources\Reservations\Actions\PayStripeAction;
-use App\Models\Reservation;
-use App\Models\User;
-use App\Services\ReservationService;
-use Filament\Actions\Action;
+use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Notifications\Notification;
-use Filament\Support\Enums\IconPosition;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Auth;
 
 class ReservationsTable
 {
@@ -36,64 +25,12 @@ class ReservationsTable
     {
         return $table
             ->columns([
-                TextColumn::make('time_range')
-                    ->label('Time Range')
-                    ->state(function (Reservation $record): string {
-                        return $record->time_range;
-                    })
-                    ->icon(fn($record) => $record->is_recurring ? 'tabler-repeat' : null)
-                    ->iconPosition(IconPosition::After)
-                    ->searchable()
-                    ->sortable(['reserved_at']),
-
-                TextColumn::make('duration')
-                    ->label('Duration')
-                    ->getStateUsing(function (Reservation $record): string {
-                        return number_format($record->duration, 1) . ' hrs';
-                    })
-                    ->sortable(['reserved_at', 'reserved_until']),
-
-                TextColumn::make('status_display')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn(Reservation $record): string => match ($record->status) {
-                        'pending' => 'warning',
-                        'confirmed' => 'success',
-                        'cancelled' => 'danger',
-                        default => 'gray',
-                    })
-                    ->searchable(['status'])
-                    ->sortable(['status']),
-
-                TextColumn::make('cost_display')
-                    ->label('Cost')
-                    ->getStateUsing(function (Reservation $record): string {
-                        return $record->cost_display;
-                    })
-                    ->sortable(['cost']),
-
-                TextColumn::make('payment_status')
-                    ->label('Payment')
-                    ->badge()
-                    ->formatStateUsing(function (string $state, Reservation $record): string {
-                        return $record->payment_status_badge['label'];
-                    })
-                    ->color(function (string $state, Reservation $record): string {
-                        return $record->payment_status_badge['color'];
-                    })
-                    ->sortable(),
-
-                TextColumn::make('created_at')
-                    ->label('Created')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                TextColumn::make('updated_at')
-                    ->label('Updated')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                ReservationColumns::timeRange(),
+                ReservationColumns::duration(),
+                ReservationColumns::statusDisplay(),
+                ReservationColumns::costDisplay(),
+                ReservationColumns::createdAt(),
+                ReservationColumns::updatedAt(),
             ])
             ->defaultSort('reserved_at', 'asc')
             ->filters([

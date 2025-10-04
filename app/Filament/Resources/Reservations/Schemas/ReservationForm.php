@@ -91,10 +91,9 @@ class ReservationForm
             ...$isAdmin ? [
                 Select::make('user_id')
                     ->label('Member (Admin Only)')
-                    ->relationship('user', 'name')
+                    ->options(User::query()->orderBy('name')->pluck('name', 'id'))
                     ->default(Auth::user()->id)
                     ->searchable()
-                    ->preload()
                     ->required()
                     ->live()
                     ->afterStateUpdated(function ($state, callable $set, Get $get) {
