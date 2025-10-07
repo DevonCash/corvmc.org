@@ -8,6 +8,7 @@ use Filament\Actions\Action;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\Reservations\Actions\PayStripeAction;
 
 class ViewReservation extends ViewRecord
 {
@@ -28,12 +29,7 @@ class ViewReservation extends ViewRecord
             !$reservation->isPaid() &&
             ($reservation->reservable_id === $user->id || $user->can('manage reservations'))) {
 
-            $actions[] = Action::make('payNow')
-                ->label('Pay Now')
-                ->icon('tabler-credit-card')
-                ->color('success')
-                ->url(route('reservations.payment.checkout', $reservation))
-                ->openUrlInNewTab(false);
+            $actions[] = PayStripeAction::make(); 
         }
 
         return $actions;
