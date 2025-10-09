@@ -1,6 +1,6 @@
 <x-public.layout :title="$production->title . ' | Corvallis Music Collective'">
     <!-- Hero Section: Full Height Poster + Event Details -->
-    <div class="flex flex-col items-center lg:grid grid-cols-2 gap-x-8 justify-center md:mx-auto p-8"
+    <div class="flex flex-col items-center lg:grid grid-cols-2 gap-x-8 justify-center md:mx-auto p-8 max-w-screen"
         style="grid-template-columns: min(calc(90vh * 8.5/11), calc(100vw - var(--container-xs) - 12rem)) min-content; place-content: center;">
         <!-- Poster Section - Takes most of the height -->
         <div
@@ -94,21 +94,6 @@
                 </div>
             </div>
             <!-- Prominent Ticket Button at bottom of card -->
-
-            <div class="flex gap-4 justify-center sm:hidden lg:flex">
-                <a href="https://facebook.com/sharer/sharer.php?u={{ urlencode(request()->url()) }}" target="_blank"
-                    class="btn btn-outline btn-circle btn-lg">
-                    <x-unicon name="tabler:brand-facebook" class="size-6" />
-                </a>
-                <a href="https://twitter.com/intent/tweet?url={{ urlencode(request()->url()) }}&text={{ urlencode($production->title) }}"
-                    target="_blank" class="btn btn-outline btn-circle btn-lg">
-                    <x-unicon name="tabler:brand-x" class="size-6" />
-                </a>
-                <button onclick="navigator.share({title: '{{ $production->title }}', url: '{{ request()->url() }}'})"
-                    class="btn btn-outline btn-circle btn-lg">
-                    <x-unicon name="tabler:share" class="size-6" />
-                </button>
-            </div>
         </div>
     </div>
     <div class="space-y-8 container mx-auto p-4">
@@ -117,7 +102,7 @@
         @if ($production->description)
             <h2 class="font-bold text-2xl mb-4">About This Event</h2>
             <div class="prose max-w-none">
-                {!! nl2br(e($production->description)) !!}
+                {!! $production->description !!}
             </div>
         @endif
 

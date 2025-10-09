@@ -212,13 +212,11 @@ class UserSubscriptionService
      */
     private function getBasePrice(Money $amount): Price
     {
-        $basePrices = Cache::remember('stripe_membership_base_prices', 3600, function () {
-            return collect(Cashier::stripe()->prices->all(['product' => config('services.stripe.membership_product_id'), 'active' => true])->data);
-        });
+        $basePrices = collect(Cashier::stripe()->prices->all(['product' => config('services.stripe.membership_product_id'), 'active' => true, 'limit' => 100])->data);
 
         $price = $basePrices->first(fn($price) => $price->unit_amount === $amount->getMinorAmount()->toInt());
         if (!$price) {
-            throw new SubscriptionPriceNotFoundException($amount->getMinorAmount()->toInt(), false);
+            throw new SubscriptionPriceNotFoundException($amount->getAmount()->toInt(), false);
         }
         return $price;
     }

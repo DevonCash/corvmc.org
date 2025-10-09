@@ -86,27 +86,26 @@ class Production extends ContentModel implements Eventable
     {
         // Thumbnail for lists and cards (8.5:11 aspect ratio)
         $this->addMediaConversion('thumb')
-            ->crop(200, 258, CropPosition::Center)
-
+            ->fit('contain', 200, 258)
             ->quality(90)
             ->sharpen(10)
             ->performOnCollections('poster');
 
         // Medium size for event listings (8.5:11 aspect ratio)
         $this->addMediaConversion('medium')
-            ->crop(400, 517, CropPosition::Center)
+            ->fit('contain', 400, 517)
             ->quality(85)
             ->performOnCollections('poster');
 
         // Large size for event detail pages (8.5:11 aspect ratio)
         $this->addMediaConversion('large')
-            ->crop(600, 776, CropPosition::Center)
+            ->fit('contain', 600, 776)
             ->quality(80)
             ->performOnCollections('poster');
 
         // Optimized original for high-res displays (8.5:11 aspect ratio)
         $this->addMediaConversion('optimized')
-            ->crop(850, 1100, CropPosition::Center)
+            ->fit('contain', 850, 1100)
             ->quality(75)
             ->performOnCollections('poster');
     }
@@ -325,7 +324,7 @@ class Production extends ContentModel implements Eventable
      */
     public function getTicketPriceDisplayAttribute(): string
     {
-        if (! $this->hasTickets()) {
+        if ($this->isFree()) {
             return 'Free';
         }
 
@@ -343,7 +342,7 @@ class Production extends ContentModel implements Eventable
      */
     public function isFree(): bool
     {
-        return ! $this->hasTickets() || ($this->ticket_price === null || $this->ticket_price == 0);
+        return  ($this->ticket_price === null || $this->ticket_price == 0);
     }
 
     /**

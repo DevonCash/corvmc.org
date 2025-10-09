@@ -106,7 +106,8 @@ class SpaceManagementTable
                     ->label('Needs Attention')
                     ->query(fn(Builder $query): Builder => $query
                         ->where(function ($query) {
-                            $query->where('status', 'pending')
+                            $query
+                                ->where('status', 'pending')
                                 ->orWhere('payment_status', 'unpaid');
                         })),
             ])
