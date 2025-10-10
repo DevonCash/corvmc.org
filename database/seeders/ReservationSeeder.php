@@ -124,7 +124,8 @@ class ReservationSeeder extends Seeder
 
         // Create the reservation
         Reservation::factory()->create([
-            'user_id' => $user->id,
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
             'status' => $this->getRandomStatus(),
@@ -156,7 +157,8 @@ class ReservationSeeder extends Seeder
                 $weeklyEnd = $endTime->copy()->addWeeks($week);
 
                 Reservation::factory()->create([
-                    'user_id' => $user->id,
+                    'reservable_type' => User::class,
+                    'reservable_id' => $user->id,
                     'reserved_at' => $weeklyStart,
                     'reserved_until' => $weeklyEnd,
                     'status' => 'confirmed',
@@ -229,7 +231,8 @@ class ReservationSeeder extends Seeder
         }
 
         Reservation::factory()->create([
-            'user_id' => $user->id,
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
             'status' => 'confirmed', // Past reservations are typically confirmed

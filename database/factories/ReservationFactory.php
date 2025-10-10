@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Actions\Reservations\CalculateReservationCost;
 use App\Models\User;
-use App\Services\ReservationService;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -29,8 +29,8 @@ class ReservationFactory extends Factory
             'reserved_until' => $reservedUntil,
             'status' => $this->faker->randomElement(['pending', 'confirmed', 'cancelled']),
             'cost' => function (array $attributes) use ($duration) {
-                // Simple cost calculation - will be overridden by service when needed
-                return $this->faker->boolean(30) ? 0 : $duration * ReservationService::HOURLY_RATE;
+                // Simple cost calculation - will be overridden by action when needed
+                return $this->faker->boolean(30) ? 0 : $duration * CalculateReservationCost::HOURLY_RATE;
             },
             'hours_used' => $duration,
             'free_hours_used' => function (array $attributes) use ($duration) {
