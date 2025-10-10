@@ -67,10 +67,9 @@ class CheckoutToMemberAction
             ])
             ->action(function (array $data, $record) {
                 try {
-                    $equipmentService = app(EquipmentService::class);
                     $borrower = User::find($data['borrower_id']);
 
-                    $loan = $equipmentService->checkoutToMember(
+                    $loan = \App\Actions\Equipment\CheckoutToMember::run(
                         equipment: $record,
                         borrower: $borrower,
                         dueDate: Carbon::parse($data['due_at']),

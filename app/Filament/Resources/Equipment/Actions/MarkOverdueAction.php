@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Equipment\Actions;
 
-use App\Services\EquipmentService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 
@@ -20,14 +19,13 @@ class MarkOverdueAction
             )
             ->action(function ($record) {
                 try {
-                    $equipmentService = app(EquipmentService::class);
                     $currentLoan = $record->currentLoan;
 
                     if (!$currentLoan) {
                         throw new \Exception('No active loan found for this equipment.');
                     }
 
-                    $equipmentService->markOverdue($currentLoan);
+                    \App\Actions\Equipment\MarkOverdue::run($currentLoan);
 
                     Notification::make()
                         ->title('Loan Marked Overdue')

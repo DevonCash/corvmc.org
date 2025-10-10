@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Equipment\Actions;
 
-use App\Services\EquipmentService;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Grid;
@@ -21,8 +20,7 @@ class ViewLoanHistoryAction
             ->modalWidth('4xl')
             ->modalHeading(fn ($record) => "Loan History - {$record->name}")
             ->schema(function ($record): Schema {
-                $equipmentService = app(EquipmentService::class);
-                $loanHistory = $equipmentService->getLoanHistoryForEquipment($record);
+                $loanHistory = \App\Actions\Equipment\GetLoanHistoryForEquipment::run($record);
 
                 return Schema::make()
                     ->record($record)

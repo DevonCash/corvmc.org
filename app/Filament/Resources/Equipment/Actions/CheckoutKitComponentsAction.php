@@ -96,7 +96,6 @@ class CheckoutKitComponentsAction
             ])
             ->action(function (array $data, $record) {
                 try {
-                    $equipmentService = app(EquipmentService::class);
                     $borrower = User::find($data['borrower_id']);
                     $componentIds = $data['component_ids'];
                     $components = $record->children()->whereIn('id', $componentIds)->get();
@@ -112,7 +111,7 @@ class CheckoutKitComponentsAction
                             continue;
                         }
 
-                        $equipmentService->checkoutToMember(
+                        \App\Actions\Equipment\CheckoutToMember::run(
                             equipment: $component,
                             borrower: $borrower,
                             dueDate: Carbon::parse($data['due_at']),

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Equipment\Actions;
 
-use App\Services\EquipmentService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -42,14 +41,13 @@ class ProcessReturnAction
             ])
             ->action(function (array $data, $record) {
                 try {
-                    $equipmentService = app(EquipmentService::class);
                     $currentLoan = $record->currentLoan;
 
                     if (!$currentLoan) {
                         throw new \Exception('No active loan found for this equipment.');
                     }
 
-                    $loan = $equipmentService->processReturn(
+                    $loan = \App\Actions\Equipment\ProcessReturn::run(
                         loan: $currentLoan,
                         conditionIn: $data['condition_in'],
                         damageNotes: $data['damage_notes'] ?? null

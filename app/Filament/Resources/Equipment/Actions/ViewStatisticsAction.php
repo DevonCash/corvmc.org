@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Equipment\Actions;
 
-use App\Services\EquipmentService;
 use Filament\Actions\Action;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -20,10 +19,9 @@ class ViewStatisticsAction
             ->modalWidth(width: '3xl')
             ->modalHeading('Equipment Library Statistics')
             ->schema(function (): Schema {
-                $equipmentService = app(EquipmentService::class);
-                $stats = $equipmentService->getStatistics();
-                $valueByType = $equipmentService->getValueByAcquisitionType();
-                $popular = $equipmentService->getPopularEquipment(5);
+                $stats = \App\Actions\Equipment\GetStatistics::run();
+                $valueByType = \App\Actions\Equipment\GetValueByAcquisitionType::run();
+                $popular = \App\Actions\Equipment\GetPopularEquipment::run(5);
 
                 return Schema::make()
                     ->schema([

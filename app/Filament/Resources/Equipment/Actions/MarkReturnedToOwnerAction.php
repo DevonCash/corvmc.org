@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Equipment\Actions;
 
-use App\Services\EquipmentService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 
@@ -21,13 +20,11 @@ class MarkReturnedToOwnerAction
             )
             ->action(function ($record) {
                 try {
-                    $equipmentService = app(EquipmentService::class);
-
                     if ($record->is_checked_out) {
                         throw new \Exception('Cannot return equipment to owner while it is checked out to a member.');
                     }
 
-                    $equipmentService->markReturnedToOwner($record);
+                    \App\Actions\Equipment\MarkReturnedToOwner::run($record);
 
                     Notification::make()
                         ->title('Equipment Returned to Owner')
