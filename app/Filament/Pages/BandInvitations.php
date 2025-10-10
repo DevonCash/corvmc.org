@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Facades\BandService;
 use App\Models\Band;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -40,7 +39,7 @@ class BandInvitations extends Page
 
     public function getPendingInvitations(): Collection
     {
-        return BandService::getPendingInvitationsForUser(Auth::user());
+        return \App\Actions\Bands\GetPendingInvitationsForUser::run(Auth::user());
     }
 
     protected function getActions(): array
@@ -58,7 +57,9 @@ class BandInvitations extends Page
         $band = Band::findOrFail($bandId);
         $user = Auth::user();
 
-        if (BandService::acceptInvitation($band, $user)) {
+        try {
+            \App\Actions\Bands\AcceptInvitation::run($band, $user);
+
             Notification::make()
                 ->title('Invitation accepted')
                 ->body("Welcome to {$band->name}!")
@@ -66,6 +67,12 @@ class BandInvitations extends Page
                 ->send();
 
             $this->redirect(route('filament.member.resources.bands.view', ['record' => $band]));
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Failed to accept invitation')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
         }
     }
 
@@ -84,7 +91,9 @@ class BandInvitations extends Page
                 $band = Band::findOrFail($arguments['bandId']);
                 $user = Auth::user();
 
-                if (BandService::declineInvitation($band, $user)) {
+                try {
+                    \App\Actions\Bands\DeclineInvitation::run($band, $user);
+
                     Notification::make()
                         ->title('Invitation declined')
                         ->body('You have declined the invitation')
@@ -96,6 +105,12 @@ class BandInvitations extends Page
                     if ($remainingInvitations->isEmpty()) {
                         $this->redirect(route('filament.member.resources.bands.index'));
                     }
+                } catch (\Exception $e) {
+                    Notification::make()
+                        ->title('Failed to decline invitation')
+                        ->body($e->getMessage())
+                        ->danger()
+                        ->send();
                 }
             });
     }

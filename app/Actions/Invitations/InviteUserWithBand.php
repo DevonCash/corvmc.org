@@ -2,7 +2,6 @@
 
 namespace App\Actions\Invitations;
 
-use App\Facades\BandService;
 use App\Models\Invitation;
 use App\Models\User;
 use App\Notifications\BandOwnershipInvitationNotification;
@@ -28,7 +27,7 @@ class InviteUserWithBand
             }
 
             // Create band without an owner initially (will be set when invitation is accepted)
-            $band = BandService::createBand([
+            $band = \App\Actions\Bands\CreateBand::run([
                 'name' => $bandName,
                 'owner_id' => null, // Will be set when invitation is accepted
                 'visibility' => 'members',

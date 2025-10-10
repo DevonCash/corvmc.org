@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Bands\RelationManagers;
 
 use App\Models\User;
-use App\Facades\BandService;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -127,24 +126,25 @@ class MembersRelationManager extends RelationManager
                 if ($data['user_id']) {
                     // Existing CMC member - send invitation
                     $user = User::find($data['user_id']);
-                    $success = BandService::inviteMember(
-                        $this->ownerRecord,
-                        $user,
-                        $data['role'],
-                        $data['position'] ?? null,
-                        $data['name'] ?? null
-                    );
 
-                    if ($success) {
+                    try {
+                        \App\Actions\Bands\InviteMember::run(
+                            $this->ownerRecord,
+                            $user,
+                            $data['role'],
+                            $data['position'] ?? null,
+                            $data['name'] ?? null
+                        );
+
                         Notification::make()
                             ->title('Invitation sent')
                             ->body("Invitation sent to {$user->name}")
                             ->success()
                             ->send();
-                    } else {
+                    } catch (\Exception $e) {
                         Notification::make()
                             ->title('Cannot send invitation')
-                            ->body('User is already a member or has a pending invitation')
+                            ->body($e->getMessage())
                             ->warning()
                             ->send();
                     }
@@ -156,19 +156,25 @@ class MembersRelationManager extends RelationManager
                         'password' => bcrypt(Str::random(32)), // Temporary password, they'll set it via invitation
                     ]);
 
-                    $success = BandService::inviteMember(
-                        $this->ownerRecord,
-                        $user,
-                        $data['role'],
-                        $data['position'] ?? null,
-                        $data['name']
-                    );
+                    try {
+                        \App\Actions\Bands\InviteMember::run(
+                            $this->ownerRecord,
+                            $user,
+                            $data['role'],
+                            $data['position'] ?? null,
+                            $data['name']
+                        );
 
-                    if ($success) {
                         Notification::make()
                             ->title('User created and invitation sent')
                             ->body("Created CMC account for {$user->email} and sent band invitation")
                             ->success()
+                            ->send();
+                    } catch (\Exception $e) {
+                        Notification::make()
+                            ->title('Cannot send invitation')
+                            ->body($e->getMessage())
+                            ->warning()
                             ->send();
                     }
                 } else {
@@ -293,7 +299,7 @@ class MembersRelationManager extends RelationManager
 
                         $user = User::find($data['user_id']);
                         if ($user) {
-                            BandService::resendInvitation($this->ownerRecord, $user);
+                            \App\Actions\Bands\ResendInvitation::run($this->ownerRecord, $user);
                         }
                     }
                 } elseif ($data['email']) {
@@ -308,7 +314,7 @@ class MembersRelationManager extends RelationManager
                     $updateData['status'] = 'invited';
                     $updateData['invited_at'] = now();
 
-                    BandService::resendInvitation($this->ownerRecord, $user);
+                    \App\Actions\Bands\ResendInvitation::run($this->ownerRecord, $user);
                 } else {
                     // No user association - keep as non-CMC member
                     $updateData['user_id'] = null;
@@ -390,13 +396,21 @@ class MembersRelationManager extends RelationManager
                     ->modalHeading('Accept Band Invitation')
                     ->modalDescription(fn($record) => "Accept invitation to join {$this->ownerRecord->name}?")
                     ->action(function ($record): void {
-                        $success = BandService::acceptInvitation($this->ownerRecord, $record);
+                        $user = User::find($record->user_id);
 
-                        if ($success) {
+                        try {
+                            \App\Actions\Bands\AcceptInvitation::run($this->ownerRecord, $user);
+
                             Notification::make()
                                 ->title('Invitation accepted')
                                 ->body("Welcome to {$this->ownerRecord->name}!")
                                 ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Failed to accept invitation')
+                                ->body($e->getMessage())
+                                ->danger()
                                 ->send();
                         }
                     })
@@ -413,13 +427,21 @@ class MembersRelationManager extends RelationManager
                     ->modalHeading('Decline Band Invitation')
                     ->modalDescription(fn($record) => "Decline invitation to join {$this->ownerRecord->name}?")
                     ->action(function ($record): void {
-                        $success = BandService::declineInvitation($this->ownerRecord, $record);
+                        $user = User::find($record->user_id);
 
-                        if ($success) {
+                        try {
+                            \App\Actions\Bands\DeclineInvitation::run($this->ownerRecord, $user);
+
                             Notification::make()
                                 ->title('Invitation declined')
                                 ->body('You have declined the invitation')
                                 ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Failed to decline invitation')
+                                ->body($e->getMessage())
+                                ->danger()
                                 ->send();
                         }
                     })
@@ -433,7 +455,9 @@ class MembersRelationManager extends RelationManager
                     ->color('warning')
                     ->icon('tabler-mail-forward')
                     ->action(function ($record): void {
-                        BandService::resendInvitation($this->ownerRecord, $record);
+                        $user = User::find($record->user_id);
+
+                        \App\Actions\Bands\ResendInvitation::run($this->ownerRecord, $user);
 
                         Notification::make()
                             ->title('Invitation resent')
@@ -454,13 +478,29 @@ class MembersRelationManager extends RelationManager
                     ->modalHeading('Re-invite Member')
                     ->modalDescription(fn($record) => "Send a new invitation to {$record->name}?")
                     ->action(function ($record): void {
-                        BandService::inviteMember($this->ownerRecord, $record);
+                        $user = User::find($record->user_id);
 
-                        Notification::make()
-                            ->title('Invitation sent')
-                            ->body("New invitation sent to {$record->name}")
-                            ->success()
-                            ->send();
+                        try {
+                            \App\Actions\Bands\InviteMember::run(
+                                $this->ownerRecord,
+                                $user,
+                                $record->role ?? 'member',
+                                $record->position,
+                                $record->name
+                            );
+
+                            Notification::make()
+                                ->title('Invitation sent')
+                                ->body("New invitation sent to {$record->name}")
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Failed to send invitation')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
                     })
                     ->visible(
                         fn($record): bool => $record->status === 'declined' &&

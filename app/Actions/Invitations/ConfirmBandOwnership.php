@@ -2,7 +2,6 @@
 
 namespace App\Actions\Invitations;
 
-use App\Facades\BandService;
 use App\Models\Invitation;
 use App\Models\User;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -21,8 +20,8 @@ class ConfirmBandOwnership
             return;
         }
 
-        // Use BandService to handle band ownership confirmation
-        BandService::confirmBandOwnershipFromInvitation($user, $invitation->data);
+        // Use action to handle band ownership confirmation
+        \App\Actions\Bands\ConfirmBandOwnershipFromInvitation::run($user, $invitation->data);
 
         // Assign any roles specified in the invitation
         if (!empty($invitation->data['roles'])) {

@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Bands\Pages;
 
 use App\Filament\Resources\Bands\BandResource;
 use App\Models\Band;
-use App\Facades\BandService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
@@ -38,7 +37,7 @@ class ClaimBand extends Page
         }
 
         // Get similar bands for reference
-        $this->similarBands = BandService::getSimilarBandNames($this->claimableBand->name, 10)->toArray();
+        $this->similarBands = \App\Actions\Bands\GetSimilarBandNames::run($this->claimableBand->name, 10)->toArray();
     }
 
     public function claimBandAction(): Action
@@ -52,7 +51,8 @@ class ClaimBand extends Page
             ->modalDescription(fn() => "Are you sure you want to claim ownership of \"{$this->claimableBand->name}\"? This will make you the owner and allow you to manage the band profile.")
             ->action(function () {
 
-                if (BandService::claimBand($this->claimableBand, Auth::user())) {
+                try {
+                    \App\Actions\Bands\ClaimBand::run($this->claimableBand, Auth::user());
                     // Update the band with any new data from the original form
                     $updateData = array_filter($this->originalData, function ($value, $key) {
                         return $key !== 'name' && $value !== null && $value !== '';
@@ -71,10 +71,10 @@ class ClaimBand extends Page
                         ->send();
 
                     $this->redirect(static::getResource()::getUrl('edit', ['record' => $this->claimableBand]));
-                } else {
+                } catch (\Exception $e) {
                     Notification::make()
                         ->title('Unable to Claim Band')
-                        ->body('There was an issue claiming this band. Please try again.')
+                        ->body($e->getMessage())
                         ->danger()
                         ->send();
                 }
