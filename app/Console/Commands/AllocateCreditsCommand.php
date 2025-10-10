@@ -57,16 +57,16 @@ class AllocateCreditsCommand extends Command
 
         foreach ($users as $user) {
             try {
-                $hours = \App\Facades\MemberBenefitsService::getUserMonthlyFreeHours($user);
-                $blocks = \App\Facades\ReservationService::hoursToBlocks($hours);
+                $hours = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user);
+                $blocks = \App\Actions\Credits\GetBlocksFromHours::run($hours);
                 $currentBalance = \App\Actions\Credits\GetBalance::run($user, 'free_hours');
-                $currentHours = \App\Facades\ReservationService::blocksToHours($currentBalance);
+                $currentHours = \App\Actions\Credits\GetHoursFromBlocks::run($currentBalance);
 
                 if ($this->option('dry-run')) {
                     $this->line("→ Would allocate {$blocks} blocks ({$hours} hours) to {$user->name}");
                     $this->line("  Current balance: {$currentBalance} blocks ({$currentHours} hours)");
                 } else {
-                    \App\Facades\MemberBenefitsService::allocateMonthlyCredits($user);
+                    \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
                     $this->line("✓ Allocated {$blocks} blocks ({$hours} hours) to {$user->name}");
                     $allocated++;
                 }

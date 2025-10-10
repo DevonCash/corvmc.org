@@ -7,7 +7,6 @@ use App\Filament\Resources\Users\Actions\ModifyMembershipAmountAction;
 use App\Filament\Resources\Users\Actions\OpenBillingPortalAction;
 use App\Filament\Resources\Users\Actions\ResumeMembershipAction;
 use App\Facades\UserSubscriptionService;
-use App\Facades\MemberBenefitsService;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Section;
@@ -161,7 +160,7 @@ class MembershipForm
                             })
                             ->state(function ($record) {
                                 $remaining = $record->getRemainingFreeHours();
-                                $total = MemberBenefitsService::getUserMonthlyFreeHours($record);
+                                $total = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($record);
                                 return sprintf('%g / %g hours', $remaining, $total);
                             })
                             ->size('lg')
@@ -214,7 +213,7 @@ class MembershipForm
                             ->state(function ($record) {
                                 $subscription = static::getActiveSubscription($record);
                                 if ($subscription && $subscription->ends_at) {
-                                    $totalHours = MemberBenefitsService::getUserMonthlyFreeHours($record);
+                                    $totalHours = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($record);
                                     return sprintf('You retain %d free hours/month until %s', $totalHours, $subscription->ends_at->format('M j, Y'));
                                 }
                                 return 'Benefits ended';
@@ -225,7 +224,7 @@ class MembershipForm
                             ->label('Free Hours Remaining This Month')
                             ->state(function ($record) {
                                 $remaining = $record->getRemainingFreeHours();
-                                $used = MemberBenefitsService::getUsedFreeHoursThisMonth($record);
+                                $used = $record->getUsedFreeHoursThisMonth();
                                 return sprintf('%g hours (%g used)', $remaining, $used);
                             })
                             ->badge()
@@ -257,7 +256,7 @@ class MembershipForm
         }
 
         try {
-            $currentHours = MemberBenefitsService::getUserMonthlyFreeHours($record);
+            $currentHours = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($record);
 
             $stripeSubscription = $subscription->asStripeSubscription();
             $firstItem = $stripeSubscription->items->data[0];

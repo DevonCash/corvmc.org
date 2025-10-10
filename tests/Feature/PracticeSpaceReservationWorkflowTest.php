@@ -8,8 +8,6 @@ use App\Models\Production;
 use App\Models\Reservation;
 use App\Notifications\ReservationConfirmedNotification;
 use App\Notifications\ReservationCancelledNotification;
-use App\Facades\ReservationService;
-use App\Facades\MemberBenefitsService;
 use Brick\Money\Money;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,11 +30,11 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $endTime = $startTime->copy()->addHours(2); // 4:00 PM
 
             // Verify time slot is available
-            $isAvailable = ReservationService::isTimeSlotAvailable($startTime, $endTime);
+            $isAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run($startTime, $endTime);
             expect($isAvailable)->toBeTrue();
 
             // Calculate cost breakdown
-            $costBreakdown = ReservationService::calculateCost($user, $startTime, $endTime);
+            $costBreakdown = \App\Actions\Reservations\CalculateReservationCost::run($user, $startTime, $endTime);
 
             expect($costBreakdown)->toHaveKeys([
                 'total_hours',
@@ -62,21 +60,21 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $validStart = now()->addDays(1)->setHour(14);
             $validEnd = $validStart->copy()->addHours(2);
 
-            $validationResult = ReservationService::validateReservation($user, $validStart, $validEnd);
+            $validationResult = \App\Actions\Reservations\ValidateReservation::run($user, $validStart, $validEnd);
             expect($validationResult)->toBeArray();
 
             // Test too early (7 AM - 9 AM)
             $tooEarlyStart = now()->addDays(1)->setHour(7);
             $tooEarlyEnd = $tooEarlyStart->copy()->addHours(2);
 
-            $earlyValidation = ReservationService::validateReservation($user, $tooEarlyStart, $tooEarlyEnd);
+            $earlyValidation = \App\Actions\Reservations\ValidateReservation::run($user, $tooEarlyStart, $tooEarlyEnd);
             expect($earlyValidation)->toBeArray(); // Should contain validation errors
 
             // Test too late (10 PM - 12 AM)
             $tooLateStart = now()->addDays(1)->setHour(22);
             $tooLateEnd = $tooLateStart->copy()->addHours(2);
 
-            $lateValidation = ReservationService::validateReservation($user, $tooLateStart, $tooLateEnd);
+            $lateValidation = \App\Actions\Reservations\ValidateReservation::run($user, $tooLateStart, $tooLateEnd);
             expect($lateValidation)->toBeArray(); // Should contain validation errors
         });
 
@@ -86,22 +84,22 @@ describe('Practice Space Reservation Workflow Tests', function () {
 
             // Test minimum duration (1 hour) - should be valid
             $oneHourEnd = $baseTime->copy()->addHours(1);
-            $validation = ReservationService::validateReservation($user, $baseTime, $oneHourEnd);
+            $validation = \App\Actions\Reservations\ValidateReservation::run($user, $baseTime, $oneHourEnd);
             expect($validation)->toBeArray();
 
             // Test maximum duration (8 hours) - should be valid
             $eightHourEnd = $baseTime->copy()->addHours(8);
-            $validation = ReservationService::validateReservation($user, $baseTime, $eightHourEnd);
+            $validation = \App\Actions\Reservations\ValidateReservation::run($user, $baseTime, $eightHourEnd);
             expect($validation)->toBeArray();
 
             // Test too short (30 minutes) - should be invalid
             $tooShortEnd = $baseTime->copy()->addMinutes(30);
-            $validation = ReservationService::validateReservation($user, $baseTime, $tooShortEnd);
+            $validation = \App\Actions\Reservations\ValidateReservation::run($user, $baseTime, $tooShortEnd);
             expect($validation)->toBeArray(); // Should contain error
 
             // Test too long (9 hours) - should be invalid
             $tooLongEnd = $baseTime->copy()->addHours(9);
-            $validation = ReservationService::validateReservation($user, $baseTime, $tooLongEnd);
+            $validation = \App\Actions\Reservations\ValidateReservation::run($user, $baseTime, $tooLongEnd);
             expect($validation)->toBeArray(); // Should contain error
         });
 
@@ -111,7 +109,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $pastTime = now()->subHours(2);
             $pastEnd = $pastTime->copy()->addHours(1);
 
-            $validation = ReservationService::validateReservation($user, $pastTime, $pastEnd);
+            $validation = \App\Actions\Reservations\ValidateReservation::run($user, $pastTime, $pastEnd);
             expect($validation)->toContain('Reservation start time must be in the future.');
         });
     });
@@ -136,8 +134,8 @@ describe('Practice Space Reservation Workflow Tests', function () {
             ]);
 
             // Test duration calculations
-            $duration1 = ReservationService::calculateHours($reservation1->reserved_at, $reservation1->reserved_until);
-            $duration2 = ReservationService::calculateHours($reservation2->reserved_at, $reservation2->reserved_until);
+            $duration1 = $reservation1->reserved_at->diffInMinutes($reservation1->reserved_until) / 60;
+            $duration2 = $reservation2->reserved_at->diffInMinutes($reservation2->reserved_until) / 60;
 
             expect($duration1)->toBe(2.0)
                 ->and($duration2)->toBe(3.5);
@@ -207,7 +205,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             expect($reservation->fresh()->status)->toBe('cancelled');
 
             // Verify the time slot becomes available again
-            $isAvailable = ReservationService::isTimeSlotAvailable(
+            $isAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run(
                 $reservation->reserved_at,
                 $reservation->reserved_until
             );
@@ -245,7 +243,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $originalReservation->update(['status' => 'cancelled']);
 
             // Verify original time is now available
-            $isOriginalAvailable = ReservationService::isTimeSlotAvailable(
+            $isOriginalAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run(
                 $originalTime,
                 $originalTime->copy()->addHours(2)
             );
@@ -253,7 +251,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
 
             // User can book new time
             $newTime = now()->addDays(1)->setHour(16);
-            $isNewTimeAvailable = ReservationService::isTimeSlotAvailable(
+            $isNewTimeAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run(
                 $newTime,
                 $newTime->copy()->addHours(2)
             );
@@ -283,7 +281,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $newTime = now()->addDays(2)->setHour(14);
             $newEnd = $newTime->copy()->addHours(2);
 
-            $isNewTimeAvailable = ReservationService::isTimeSlotAvailable($newTime, $newEnd);
+            $isNewTimeAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run($newTime, $newEnd);
             expect($isNewTimeAvailable)->toBeTrue();
         });
     });
@@ -293,18 +291,13 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $user = User::factory()->create();
             $user->assignRole('sustaining member');
 
-            // Mock sustaining member with 4 free hours (fallback for role-based member)
-            MemberBenefitsService::shouldReceive('isSustainingMember')
-                ->with($user)
-                ->andReturn(true);
-            MemberBenefitsService::shouldReceive('getRemainingFreeHours')
-                ->with($user, true)
-                ->andReturn(4.0);
+            // Allocate credits for sustaining member
+            \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
 
             $startTime = now()->addDays(1)->setHour(14);
             $endTime = $startTime->copy()->addHours(2);
 
-            $costBreakdown = ReservationService::calculateCost($user, $startTime, $endTime);
+            $costBreakdown = \App\Actions\Reservations\CalculateReservationCost::run($user, $startTime, $endTime);
 
             expect($costBreakdown['is_sustaining_member'])->toBeTrue()
                 ->and($costBreakdown['free_hours'])->toBe(2.0) // All 2 hours are free
@@ -316,18 +309,16 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $user = User::factory()->create();
             $user->assignRole('sustaining member');
 
-            // Mock sustaining member with only 1 free hour remaining
-            MemberBenefitsService::shouldReceive('isSustainingMember')
-                ->with($user)
-                ->andReturn(true);
-            MemberBenefitsService::shouldReceive('getRemainingFreeHours')
-                ->with($user, true)
-                ->andReturn(1.0);
+            // Allocate credits then deduct some
+            \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
+            $freeHoursBlocks = \App\Actions\Credits\GetBalance::run($user, 'free_hours');
+            // Deduct 3 hours worth of blocks (6 blocks) leaving 1 hour (2 blocks)
+            \App\Actions\Credits\DeductCredits::run($user, 'free_hours', $freeHoursBlocks - 2, 'Test deduction');
 
             $startTime = now()->addDays(1)->setHour(14);
             $endTime = $startTime->copy()->addHours(3); // 3 total hours
 
-            $costBreakdown = ReservationService::calculateCost($user, $startTime, $endTime);
+            $costBreakdown = \App\Actions\Reservations\CalculateReservationCost::run($user, $startTime, $endTime);
 
             expect($costBreakdown['total_hours'])->toBe(3.0)
                 ->and($costBreakdown['free_hours'])->toBe(1.0) // Only 1 hour free
@@ -339,18 +330,15 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $user = User::factory()->create();
             $user->assignRole('sustaining member');
 
-            // Mock sustaining member with no remaining free hours
-            MemberBenefitsService::shouldReceive('isSustainingMember')
-                ->with($user)
-                ->andReturn(true);
-            MemberBenefitsService::shouldReceive('getRemainingFreeHours')
-                ->with($user, true)
-                ->andReturn(0.0);
+            // Allocate credits then deduct all
+            \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
+            $freeHoursBlocks = \App\Actions\Credits\GetBalance::run($user, 'free_hours');
+            \App\Actions\Credits\DeductCredits::run($user, 'free_hours', $freeHoursBlocks, 'Test deduction');
 
             $startTime = now()->addDays(1)->setHour(14);
             $endTime = $startTime->copy()->addHours(2);
 
-            $costBreakdown = ReservationService::calculateCost($user, $startTime, $endTime);
+            $costBreakdown = \App\Actions\Reservations\CalculateReservationCost::run($user, $startTime, $endTime);
 
             expect($costBreakdown['free_hours'])->toBe(0.0)
                 ->and($costBreakdown['paid_hours'])->toBe(2.0)
@@ -370,7 +358,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             ];
 
             foreach ($slots as [$start, $end]) {
-                $isAvailable = ReservationService::isTimeSlotAvailable($start, $end);
+                $isAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run($start, $end);
                 expect($isAvailable)->toBeTrue();
             }
         });
@@ -395,7 +383,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             ];
 
             foreach ($overlapTests as [$start, $end]) {
-                $isAvailable = ReservationService::isTimeSlotAvailable($start, $end);
+                $isAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run($start, $end);
                 expect($isAvailable)->toBeFalse();
             }
 
@@ -406,7 +394,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             ];
 
             foreach ($noOverlapTests as [$start, $end]) {
-                $isAvailable = ReservationService::isTimeSlotAvailable($start, $end);
+                $isAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run($start, $end);
                 expect($isAvailable)->toBeTrue();
             }
         });
@@ -429,19 +417,14 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $user = User::factory()->create();
             $user->assignRole('sustaining member');
 
-            // Mock user with free hours
-            MemberBenefitsService::shouldReceive('isSustainingMember')
-                ->with($user)
-                ->andReturn(true);
-            MemberBenefitsService::shouldReceive('getRemainingFreeHours')
-                ->with($user, true)
-                ->andReturn(4.0);
+            // Allocate credits for sustaining member
+            \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
 
             // Test off-hours time slot
             $offHoursStart = now()->addDays(1)->setHour(7); // 7 AM (off-hours)
             $offHoursEnd = $offHoursStart->copy()->addHours(2);
 
-            $costBreakdown = ReservationService::calculateCost($user, $offHoursStart, $offHoursEnd);
+            $costBreakdown = \App\Actions\Reservations\CalculateReservationCost::run($user, $offHoursStart, $offHoursEnd);
 
             // Currently free hours would be applied, but when off-hours feature is implemented,
             // this should require full payment even for sustaining members
@@ -482,7 +465,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             ];
 
             foreach ($conflictTests as [$start, $end, $shouldConflict, $description]) {
-                $conflicts = ReservationService::getConflictingReservations($start, $end);
+                $conflicts = \App\Actions\Reservations\GetConflictingReservations::run($start, $end);
 
                 if ($shouldConflict) {
                     expect($conflicts)->toHaveCount(1, "Failed: $description should conflict");
@@ -503,7 +486,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             ]);
 
             // Test production conflict detection
-            $productionConflicts = ReservationService::getConflictingProductions(
+            $productionConflicts = \App\Actions\Reservations\GetConflictingProductions::run(
                 $baseTime,
                 $baseTime->copy()->addHours(2)
             );
@@ -524,7 +507,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             ]);
 
             // When excluding the reservation, there should be no conflicts
-            $conflicts = ReservationService::getConflictingReservations(
+            $conflicts = \App\Actions\Reservations\GetConflictingReservations::run(
                 $baseTime,
                 $baseTime->copy()->addHours(2),
                 $reservation->id // Exclude this reservation
@@ -533,7 +516,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             expect($conflicts)->toHaveCount(0);
 
             // Without exclusion, there should be a conflict
-            $conflictsWithoutExclusion = ReservationService::getConflictingReservations(
+            $conflictsWithoutExclusion = \App\Actions\Reservations\GetConflictingReservations::run(
                 $baseTime,
                 $baseTime->copy()->addHours(2)
             );
@@ -583,7 +566,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $endTime = $startTime->copy()->addHours(2);
 
             // Validation should include outstanding payment check
-            $validation = ReservationService::validateReservation($user, $startTime, $endTime);
+            $validation = \App\Actions\Reservations\ValidateReservation::run($user, $startTime, $endTime);
 
             // When outstanding payment validation is implemented, this should contain an error
             expect($validation)->toBeArray();
@@ -597,8 +580,10 @@ describe('Practice Space Reservation Workflow Tests', function () {
 
             $baseTime = now()->addDays(1)->setHour(14);
 
-            // Sustaining member books 2-4 PM (free)
-            $sustainingCost = ReservationService::calculateCost(
+            // Sustaining member books 2-4 PM (free) - allocate credits first
+            \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($sustainingUser);
+
+            $sustainingCost = \App\Actions\Reservations\CalculateReservationCost::run(
                 $sustainingUser,
                 $baseTime,
                 $baseTime->copy()->addHours(2)
@@ -617,17 +602,17 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $overlapStart = $baseTime->copy()->addHour();
             $overlapEnd = $overlapStart->copy()->addHours(2);
 
-            $isOverlapAvailable = ReservationService::isTimeSlotAvailable($overlapStart, $overlapEnd);
+            $isOverlapAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run($overlapStart, $overlapEnd);
             expect($isOverlapAvailable)->toBeFalse();
 
             // Regular user books after (4-6 PM) - should be allowed and paid
             $afterStart = $baseTime->copy()->addHours(2);
             $afterEnd = $afterStart->copy()->addHours(2);
 
-            $isAfterAvailable = ReservationService::isTimeSlotAvailable($afterStart, $afterEnd);
+            $isAfterAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run($afterStart, $afterEnd);
             expect($isAfterAvailable)->toBeTrue();
 
-            $regularCost = ReservationService::calculateCost($regularUser, $afterStart, $afterEnd);
+            $regularCost = \App\Actions\Reservations\CalculateReservationCost::run($regularUser, $afterStart, $afterEnd);
             expect($regularCost['cost']->getAmount()->toFloat())->toBe(30.0);
         });
 
@@ -646,21 +631,21 @@ describe('Practice Space Reservation Workflow Tests', function () {
             ]);
 
             // Verify slot is blocked
-            $isBlocked = ReservationService::isTimeSlotAvailable($originalStart, $originalEnd);
+            $isBlocked = \App\Actions\Reservations\CheckTimeSlotAvailability::run($originalStart, $originalEnd);
             expect($isBlocked)->toBeFalse();
 
             // Cancel reservation
             $reservation->update(['status' => 'cancelled']);
 
             // Verify slot is now available
-            $isAvailable = ReservationService::isTimeSlotAvailable($originalStart, $originalEnd);
+            $isAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run($originalStart, $originalEnd);
             expect($isAvailable)->toBeTrue();
 
             // Book new time
             $newStart = now()->addDays(2)->setHour(16);
             $newEnd = $newStart->copy()->addHours(2);
 
-            $isNewTimeAvailable = ReservationService::isTimeSlotAvailable($newStart, $newEnd);
+            $isNewTimeAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run($newStart, $newEnd);
             expect($isNewTimeAvailable)->toBeTrue();
         });
 
@@ -672,7 +657,7 @@ describe('Practice Space Reservation Workflow Tests', function () {
             $endTime = $popularTime->copy()->addHours(2);
 
             // Verify time is initially available
-            $isInitiallyAvailable = ReservationService::isTimeSlotAvailable($popularTime, $endTime);
+            $isInitiallyAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run($popularTime, $endTime);
             expect($isInitiallyAvailable)->toBeTrue();
 
             // First user books the slot
@@ -684,11 +669,11 @@ describe('Practice Space Reservation Workflow Tests', function () {
             ]);
 
             // Second user attempts to book same slot - should be blocked
-            $isStillAvailable = ReservationService::isTimeSlotAvailable($popularTime, $endTime);
+            $isStillAvailable = \App\Actions\Reservations\CheckTimeSlotAvailability::run($popularTime, $endTime);
             expect($isStillAvailable)->toBeFalse();
 
             // Verify conflicts are detected
-            $conflicts = ReservationService::getConflictingReservations($popularTime, $endTime);
+            $conflicts = \App\Actions\Reservations\GetConflictingReservations::run($popularTime, $endTime);
             expect($conflicts)->toHaveCount(1)
                 ->and($conflicts->first()->id)->toBe($reservation1->id);
         });

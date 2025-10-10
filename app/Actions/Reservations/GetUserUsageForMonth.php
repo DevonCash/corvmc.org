@@ -2,8 +2,8 @@
 
 namespace App\Actions\Reservations;
 
+use App\Actions\MemberBenefits\GetUserMonthlyFreeHours;
 use App\Data\Reservation\ReservationUsageData;
-use App\Facades\MemberBenefitsService;
 use App\Models\User;
 use Carbon\Carbon;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -35,7 +35,7 @@ class GetUserUsageForMonth
         $totalHours = $reservations->sum('hours_used');
         $totalPaid = $reservations->sum('cost');
 
-        $allocatedFreeHours = MemberBenefitsService::getUserMonthlyFreeHours($user);
+        $allocatedFreeHours = GetUserMonthlyFreeHours::run($user);
 
         return new ReservationUsageData(
             month: $month->format('Y-m'),

@@ -3,10 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Facades\CreditService;
-use App\Facades\MemberBenefitsService;
 use App\Models\Reservation;
 use App\Models\User;
-use App\Services\ReservationService;
 use App\Services\UserSubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -17,7 +15,6 @@ use Laravel\Cashier\Http\Controllers\WebhookController as CashierWebhookControll
 class StripeWebhookController extends CashierWebhookController
 {
     public function __construct(
-        private ReservationService $reservationService,
         private UserSubscriptionService $userSubscriptionService
     ) {}
 
@@ -80,7 +77,7 @@ class StripeWebhookController extends CashierWebhookController
             }
 
             // Process the successful payment
-            $this->reservationService->handleSuccessfulPayment($reservation, $sessionId);
+            \App\Actions\Reservations\HandleSuccessfulPayment::run($reservation, $sessionId);
 
             Log::info('Stripe webhook: Successfully processed reservation payment', [
                 'reservation_id' => $reservationId,
@@ -125,7 +122,7 @@ class StripeWebhookController extends CashierWebhookController
             // Update user membership status (Cashier handles the subscription sync automatically)
             $this->userSubscriptionService->updateUserMembershipStatus($user);
 
-            MemberBenefitsService::allocateMonthlyCredits($user);
+            \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
 
             Log::info('Stripe webhook: Successfully processed subscription checkout', [
                 'user_id' => $userId,
@@ -174,7 +171,7 @@ class StripeWebhookController extends CashierWebhookController
             }
 
             // Handle failed payment
-            $this->reservationService->handleFailedPayment($reservation);
+            \App\Actions\Reservations\HandleFailedPayment::run($reservation);
 
             Log::info('Stripe webhook: Processed payment failure', [
                 'reservation_id' => $reservationId,
@@ -312,7 +309,7 @@ class StripeWebhookController extends CashierWebhookController
                 // Allocate monthly credits if they're a sustaining member
                 // This is idempotent - won't double-allocate in same month
                 if ($user->hasRole('sustaining member')) {
-                    \App\Facades\MemberBenefitsService::allocateMonthlyCredits($user);
+                    \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
 
                     Log::info('Stripe webhook: Allocated monthly credits after invoice payment', [
                         'user_id' => $user->id,

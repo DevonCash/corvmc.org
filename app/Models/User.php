@@ -167,7 +167,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function isSustainingMember(): bool
     {
-        return \App\Facades\MemberBenefitsService::isSustainingMember($this);
+        return \App\Actions\MemberBenefits\CheckIsSustainingMember::run($this);
     }
 
     /**
@@ -177,7 +177,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function getUsedFreeHoursThisMonth(bool $fresh = false): float
     {
-        return \App\Facades\MemberBenefitsService::getUsedFreeHoursThisMonth($this, $fresh);
+        // Note: This uses legacy calculation via GetRemainingFreeHours action
+        $action = new \App\Actions\MemberBenefits\GetRemainingFreeHours();
+        return $action->getUsedFreeHoursThisMonth($this, $fresh);
     }
 
     /**
@@ -187,7 +189,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function getRemainingFreeHours(bool $fresh = false): float
     {
-        return \App\Facades\MemberBenefitsService::getRemainingFreeHours($this, $fresh);
+        return \App\Actions\MemberBenefits\GetRemainingFreeHours::run($this, $fresh);
     }
 
     public function scopeStaffMembers($query)
