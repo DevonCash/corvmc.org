@@ -237,49 +237,22 @@ class ReservationService
 
     /**
      * Get user's reservation statistics.
+     *
+     * @deprecated Use \App\Actions\Reservations\GetUserStats instead
      */
     public function getUserStats(User $user): array
     {
-        $thisMonth = now()->startOfMonth();
-        $thisYear = now()->startOfYear();
-
-        return [
-            'total_reservations' => $user->reservations()->count(),
-            'this_month_reservations' => $user->reservations()->where('reserved_at', '>=', $thisMonth)->count(),
-            'this_year_hours' => $user->reservations()->where('reserved_at', '>=', $thisYear)->sum('hours_used'),
-            'this_month_hours' => $user->reservations()->where('reserved_at', '>=', $thisMonth)->sum('hours_used'),
-            'free_hours_used' => $user->getUsedFreeHoursThisMonth(),
-            'remaining_free_hours' => $user->getRemainingFreeHours(),
-            'total_spent' => $user->reservations()->sum('cost'),
-            'is_sustaining_member' => $user->isSustainingMember(),
-        ];
+        return \App\Actions\Reservations\GetUserStats::run($user);
     }
 
     /**
      * Get user's reservation usage for a specific month.
+     *
+     * @deprecated Use \App\Actions\Reservations\GetUserUsageForMonth instead
      */
     public function getUserUsageForMonth(User $user, Carbon $month): ReservationUsageData
     {
-        $reservations = $user->reservations()
-            ->whereMonth('reserved_at', $month->month)
-            ->whereYear('reserved_at', $month->year)
-            ->where('free_hours_used', '>', 0)
-            ->get();
-
-        $totalFreeHours = $reservations->sum('free_hours_used');
-        $totalHours = $reservations->sum('hours_used');
-        $totalPaid = $reservations->sum('cost');
-
-        $allocatedFreeHours = MemberBenefitsService::getUserMonthlyFreeHours($user);
-
-        return new ReservationUsageData(
-            month: $month->format('Y-m'),
-            total_reservations: $reservations->count(),
-            total_hours: $totalHours,
-            free_hours_used: $totalFreeHours,
-            total_cost: $totalPaid,
-            allocated_free_hours: $allocatedFreeHours,
-        );
+        return \App\Actions\Reservations\GetUserUsageForMonth::run($user, $month);
     }
 
     /**
