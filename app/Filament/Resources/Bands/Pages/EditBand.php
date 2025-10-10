@@ -2,18 +2,27 @@
 
 namespace App\Filament\Resources\Bands\Pages;
 
+use App\Actions\Bands\DeleteBand as DeleteBandAction;
+use App\Actions\Bands\UpdateBand as UpdateBandAction;
 use App\Filament\Resources\Bands\BandResource;
-use App\Filament\Traits\HasCrudService;
 use App\Models\Band;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Database\Eloquent\Model;
 
 class EditBand extends EditRecord
 {
-    use HasCrudService;
-
     protected static string $resource = BandResource::class;
-    protected static ?string $crudService = 'BandService';
+
+    protected function handleRecordUpdate(Model $record, array $data): Model
+    {
+        return UpdateBandAction::run($record, $data);
+    }
+
+    protected function handleRecordDeletion(Model $record): void
+    {
+        DeleteBandAction::run($record);
+    }
 
     protected function getHeaderActions(): array
     {

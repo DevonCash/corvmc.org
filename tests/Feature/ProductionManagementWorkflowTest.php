@@ -1,11 +1,25 @@
 <?php
 
+use App\Actions\Productions\AddPerformer;
+use App\Actions\Productions\CancelProduction;
+use App\Actions\Productions\CanManage;
+use App\Actions\Productions\CreateProduction;
+use App\Actions\Productions\DuplicateProduction;
+use App\Actions\Productions\GetProductionsInDateRange;
+use App\Actions\Productions\GetProductionsManagedBy;
+use App\Actions\Productions\GetProductionStats;
+use App\Actions\Productions\GetUpcomingProductions;
+use App\Actions\Productions\MarkAsCompleted;
+use App\Actions\Productions\PublishProduction;
+use App\Actions\Productions\RemovePerformer;
+use App\Actions\Productions\ReorderPerformers;
+use App\Actions\Productions\UpdatePerformerSetLength;
+use App\Actions\Productions\UpdateProduction;
 use App\Models\Band;
 use App\Models\Production;
 use App\Models\User;
-use App\Notifications\ProductionUpdatedNotification;
 use App\Notifications\ProductionCancelledNotification;
-use App\Facades\ProductionService;
+use App\Notifications\ProductionUpdatedNotification;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -26,7 +40,7 @@ test('user can create production and becomes manager', function () {
         'manager_id' => $user->id
     ];
 
-    $production = ProductionService::createProduction($productionData);
+    $production = CreateProduction::run($productionData);
 
     $this->assertInstanceOf(Production::class, $production);
     $this->assertEquals('Rock Concert 2024', $production->title);
@@ -46,8 +60,8 @@ test('manager can add bands to lineup', function () {
 
     $this->actingAs($manager);
 
-    ProductionService::addPerformer($production, $band1, ['order' => 1, 'set_length' => 45]);
-    ProductionService::addPerformer($production, $band2, ['order' => 2, 'set_length' => 60]);
+    AddPerformer::run($production, $band1, ['order' => 1, 'set_length' => 45]);
+    AddPerformer::run($production, $band2, ['order' => 2, 'set_length' => 60]);
 
     $production->refresh();
     $performers = $production->performers;
@@ -70,7 +84,7 @@ test('manager can publish production', function () {
 
     $this->actingAs($manager);
 
-    ProductionService::publishProduction($production);
+    PublishProduction::run($production);
 
     $this->assertEquals('published', $production->fresh()->status);
     $this->assertNotNull($production->fresh()->published_at);
@@ -87,14 +101,14 @@ test('manager can cancel production', function () {
     ]);
 
     // Add a band to the lineup
-    ProductionService::addPerformer($production, $band, [
+    AddPerformer::run($production, $band, [
         'order' => 1,
         'set_length' => 60
     ]);
 
     $cancellationReason = 'Venue unavailable due to maintenance';
 
-    ProductionService::cancelProduction($production, $cancellationReason);
+    CancelProduction::run($production, $cancellationReason);
 
     $production->refresh();
     $this->assertEquals('cancelled', $production->status);
@@ -120,7 +134,7 @@ test('manager can update production details', function () {
     ]);
 
     // Add a band to notify of changes
-    ProductionService::addPerformer($production, $band, [
+    AddPerformer::run($production, $band, [
         'order' => 1,
         'set_length' => 60
     ]);
@@ -133,7 +147,7 @@ test('manager can update production details', function () {
     $this->assertNotEquals($updateData['start_time']->format('Y-m-d H:i:s'), $production->start_time->format('Y-m-d H:i:s'));
     $this->assertNotEquals($updateData['title'], $production->title);
 
-    ProductionService::updateProduction($production, $updateData);
+    UpdateProduction::run($production, $updateData);
 
     $production->refresh();
     $this->assertEquals($updateData['title'], $production->title);
@@ -156,7 +170,7 @@ test('non manager cannot modify production', function () {
 
     $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
 
-    ProductionService::publishProduction($production);
+    PublishProduction::run($production);
 });
 
 test('production conflicts with reservations are detected', function () {
@@ -239,7 +253,7 @@ test('can get upcoming productions', function () {
         'start_time' => Carbon::now()->addWeeks(2)
     ]);
 
-    $upcoming = ProductionService::getUpcomingProductions();
+    $upcoming = GetUpcomingProductions::run();
 
     $this->assertCount(2, $upcoming);
     $this->assertTrue($upcoming->contains('id', $upcomingShow1->id));
@@ -254,7 +268,7 @@ test('manager can mark production as completed', function () {
         'start_time' => Carbon::now()->subDay() // Past date
     ]);
 
-    ProductionService::markAsCompleted($production);
+    MarkAsCompleted::run($production);
 
     $this->assertEquals('completed', $production->fresh()->status);
 });
@@ -268,7 +282,7 @@ test('cannot complete future production', function () {
     ]);
 
     // For now, just test that we can mark as completed - the business logic for preventing future completion can be added later
-    ProductionService::markAsCompleted($production);
+    MarkAsCompleted::run($production);
 
     $this->assertEquals('completed', $production->fresh()->status);
 });
@@ -282,14 +296,14 @@ test('production lineup can be reordered', function () {
     $band3 = Band::factory()->create();
 
     // Initial lineup
-    ProductionService::addPerformer($production, $band1, ['order' => 1]);
-    ProductionService::addPerformer($production, $band2, ['order' => 2]);
-    ProductionService::addPerformer($production, $band3, ['order' => 3]);
+    AddPerformer::run($production, $band1, ['order' => 1]);
+    AddPerformer::run($production, $band2, ['order' => 2]);
+    AddPerformer::run($production, $band3, ['order' => 3]);
 
     // Reorder: band3 first, band1 second, band2 third
     $newOrder = [$band3->id, $band1->id, $band2->id];
 
-    ProductionService::reorderPerformers($production, $newOrder);
+    ReorderPerformers::run($production, $newOrder);
 
     $production->refresh();
     $performers = $production->performers()->orderBy('production_bands.order')->get();
@@ -307,10 +321,10 @@ test('can get production statistics', function () {
     ]);
 
     // Add bands to lineup
-    ProductionService::addPerformer($production, Band::factory()->create(), ['order' => 1]);
-    ProductionService::addPerformer($production, Band::factory()->create(), ['order' => 2]);
+    AddPerformer::run($production, Band::factory()->create(), ['order' => 1]);
+    AddPerformer::run($production, Band::factory()->create(), ['order' => 2]);
 
-    $stats = ProductionService::getProductionStats();
+    $stats = GetProductionStats::run();
 
     $this->assertIsArray($stats);
     $this->assertArrayHasKey('total', $stats);
@@ -326,7 +340,7 @@ test('manager can add production notes', function () {
 
     $notes = 'Remember to set up extra lighting for the headliner';
 
-    ProductionService::updateProduction($production, [
+    UpdateProduction::run($production, [
         'description' => $production->description . "\n\nNotes: " . $notes
     ]);
 
@@ -345,7 +359,7 @@ test('production supports different ticket types', function () {
         'manager_id' => $manager->id
     ];
 
-    $production = ProductionService::createProduction($productionData);
+    $production = CreateProduction::run($productionData);
 
     $this->assertEquals(25.00, $production->ticket_price);
     $this->assertEquals('Multi-Tier Concert', $production->title);
@@ -358,8 +372,8 @@ test('can check manager permissions', function () {
     
     $production = Production::factory()->create(['manager_id' => $manager->id]);
 
-    $this->assertTrue(ProductionService::canManage($production, $manager));
-    $this->assertFalse(ProductionService::canManage($production, $otherUser));
+    $this->assertTrue(CanManage::run($production, $manager));
+    $this->assertFalse(CanManage::run($production, $otherUser));
 });
 
 test('can get productions by date range', function () {
@@ -382,7 +396,7 @@ test('can get productions by date range', function () {
         'status' => 'published'
     ]);
 
-    $productions = ProductionService::getProductionsInDateRange($startDate, $endDate);
+    $productions = GetProductionsInDateRange::run($startDate, $endDate);
 
     $this->assertCount(1, $productions);
     $this->assertEquals($withinRange->id, $productions->first()->id);
@@ -393,11 +407,11 @@ test('can remove band from lineup', function () {
     $production = Production::factory()->create(['manager_id' => $manager->id]);
     $band = Band::factory()->create();
 
-    ProductionService::addPerformer($production, $band, ['order' => 1]);
+    AddPerformer::run($production, $band, ['order' => 1]);
 
     $this->assertCount(1, $production->performers);
 
-    ProductionService::removePerformer($production, $band);
+    RemovePerformer::run($production, $band);
 
     $production->refresh();
     $this->assertCount(0, $production->performers);
@@ -408,12 +422,12 @@ test('can update band set details', function () {
     $production = Production::factory()->create(['manager_id' => $manager->id]);
     $band = Band::factory()->create();
 
-    ProductionService::addPerformer($production, $band, [
+    AddPerformer::run($production, $band, [
         'order' => 1,
         'set_length' => 45,
     ]);
 
-    ProductionService::updatePerformerSetLength($production, $band, 60);
+    UpdatePerformerSetLength::run($production, $band, 60);
 
     $production->refresh();
     $performer = $production->performers()->where('band_profile_id', $band->id)->first();
@@ -431,7 +445,7 @@ test('can duplicate production', function () {
         'ticket_price' => 20.00
     ]);
 
-    ProductionService::addPerformer($originalProduction, $band, [
+    AddPerformer::run($originalProduction, $band, [
         'order' => 1,
         'set_length' => 45
     ]);
@@ -439,8 +453,8 @@ test('can duplicate production', function () {
     $newStartTime = Carbon::now()->addMonths(3);
     $newEndTime = $newStartTime->copy()->addHours(3);
     $newDoorsTime = $newStartTime->copy()->subMinutes(30);
-    
-    $duplicatedProduction = ProductionService::duplicateProduction(
+
+    $duplicatedProduction = DuplicateProduction::run(
         $originalProduction,
         $newStartTime,
         $newEndTime,
@@ -483,7 +497,7 @@ test('can get manager production history', function () {
         'status' => 'completed'
     ]);
 
-    $history = ProductionService::getProductionsManagedBy($manager);
+    $history = GetProductionsManagedBy::run($manager);
 
     $this->assertCount(3, $history);
     $this->assertTrue($history->contains('id', $completed->id));

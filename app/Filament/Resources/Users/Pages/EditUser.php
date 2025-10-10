@@ -2,21 +2,30 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
+use App\Actions\Users\DeleteUser as DeleteUserAction;
+use App\Actions\Users\UpdateUser as UpdateUserAction;
 use App\Filament\Resources\Users\UserResource;
-use App\Filament\Traits\HasCrudService;
 use App\Models\User;
-use Filament\Actions\DeleteAction;
 use Filament\Actions\Action;
-use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Facades\Password;
+use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\EditRecord;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Password;
 
 class EditUser extends EditRecord
 {
-    use HasCrudService;
-
     protected static string $resource = UserResource::class;
-    protected static ?string $crudService = 'UserService';
+
+    protected function handleRecordUpdate(Model $record, array $data): Model
+    {
+        return UpdateUserAction::run($record, $data);
+    }
+
+    protected function handleRecordDeletion(Model $record): void
+    {
+        DeleteUserAction::run($record);
+    }
 
     protected function getHeaderActions(): array
     {

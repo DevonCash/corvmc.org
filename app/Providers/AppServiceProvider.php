@@ -24,10 +24,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(\App\Services\GitHubService::class);
-        $this->app->singleton(\App\Services\MemberProfileService::class);
         $this->app->singleton(\App\Services\NotificationSchedulingService::class);
-        $this->app->singleton(\App\Services\ProductionService::class);
-        $this->app->singleton(\App\Services\UserService::class);
         $this->app->singleton(\App\Services\StaffProfileService::class);
     }
 
@@ -46,10 +43,7 @@ class AppServiceProvider extends ServiceProvider
         // Register facade aliases
         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
         $loader->alias('GitHubService', \App\Facades\GitHubService::class);
-        $loader->alias('MemberProfileService', \App\Facades\MemberProfileService::class);
         $loader->alias('NotificationSchedulingService', \App\Facades\NotificationSchedulingService::class);
-        $loader->alias('ProductionService', \App\Facades\ProductionService::class);
-        $loader->alias('UserService', \App\Facades\UserService::class);
         $loader->alias('StaffProfileService', \App\Facades\StaffProfileService::class);
 
         // Automatically grant all abilities to admin users

@@ -2,22 +2,25 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
+use App\Actions\Users\CreateUser as CreateUserAction;
 use App\Filament\Resources\Users\UserResource;
-use App\Filament\Traits\HasCrudService;
 use App\Models\User;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
 
 class CreateUser extends CreateRecord
 {
-    use HasCrudService;
-
     protected static string $resource = UserResource::class;
-    protected static ?string $crudService = 'UserService';
 
     protected static ?string $title = 'Invite User';
 
     protected static ?string $breadcrumb = 'Invite';
+
+    protected function handleRecordCreation(array $data): Model
+    {
+        return CreateUserAction::run($data);
+    }
 
     protected function getCreatedNotificationTitle(): ?string
     {
