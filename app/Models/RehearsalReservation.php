@@ -202,7 +202,7 @@ class RehearsalReservation extends Reservation implements Eventable
      */
     public function isPaid(): bool
     {
-        return \App\Facades\PaymentService::isReservationPaid($this);
+        return $this->payment_status === 'paid';
     }
 
     /**
@@ -210,7 +210,7 @@ class RehearsalReservation extends Reservation implements Eventable
      */
     public function isComped(): bool
     {
-        return \App\Facades\PaymentService::isReservationComped($this);
+        return $this->payment_status === 'comped';
     }
 
     /**
@@ -218,7 +218,7 @@ class RehearsalReservation extends Reservation implements Eventable
      */
     public function isUnpaid(): bool
     {
-        return \App\Facades\PaymentService::isReservationUnpaid($this);
+        return $this->payment_status === 'unpaid';
     }
 
     /**
@@ -226,7 +226,7 @@ class RehearsalReservation extends Reservation implements Eventable
      */
     public function isRefunded(): bool
     {
-        return \App\Facades\PaymentService::isReservationRefunded($this);
+        return $this->payment_status === 'refunded';
     }
 
     /**
@@ -234,7 +234,7 @@ class RehearsalReservation extends Reservation implements Eventable
      */
     public function markAsPaid(?string $paymentMethod = null, ?string $notes = null): void
     {
-        \App\Facades\PaymentService::markReservationAsPaid($this, $paymentMethod, $notes);
+        \App\Actions\Payments\MarkReservationAsPaid::run($this, $paymentMethod, $notes);
     }
 
     /**
@@ -242,7 +242,7 @@ class RehearsalReservation extends Reservation implements Eventable
      */
     public function markAsComped(?string $notes = null): void
     {
-        \App\Facades\PaymentService::markReservationAsComped($this, $notes);
+        \App\Actions\Payments\MarkReservationAsComped::run($this, $notes);
     }
 
     /**
@@ -250,7 +250,7 @@ class RehearsalReservation extends Reservation implements Eventable
      */
     public function markAsRefunded(?string $notes = null): void
     {
-        \App\Facades\PaymentService::markReservationAsRefunded($this, $notes);
+        \App\Actions\Payments\MarkReservationAsRefunded::run($this, $notes);
     }
 
     public function markAsCancelled()
@@ -265,7 +265,7 @@ class RehearsalReservation extends Reservation implements Eventable
      */
     public function getPaymentStatusBadgeAttribute(): array
     {
-        return \App\Facades\PaymentService::getPaymentStatusBadge($this);
+        return \App\Actions\Payments\GetPaymentStatusBadge::run($this);
     }
 
     /**

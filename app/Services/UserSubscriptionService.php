@@ -113,11 +113,11 @@ class UserSubscriptionService
 
         $newTotal = $baseAmount;
         if ($coverFees) {
-            $newTotal = $newTotal->plus(PaymentService::calculateProcessingFee($baseAmount));
+            $newTotal = $newTotal->plus(\App\Actions\Payments\CalculateProcessingFee::run($baseAmount));
         }
         $billingPeriodPeak = $this->getBillingPeriodPeakAmount($subscription);
 
-        $breakdown = PaymentService::getFeeBreakdown($baseAmount, $coverFees);
+        $breakdown = \App\Actions\Payments\GetFeeBreakdown::run($baseAmount, $coverFees);
 
         if ($newTotal->isGreaterThan($billingPeriodPeak)) {
             // True upgrade: New amount exceeds what's been paid this billing period
@@ -263,7 +263,7 @@ class UserSubscriptionService
     private function calculateNewSubscriptionTotal(Money $baseAmount, bool $coverFees): float
     {
         if ($coverFees) {
-            $totalWithCoverage = PaymentService::calculateTotalWithFeeCoverage($baseAmount);
+            $totalWithCoverage = \App\Actions\Payments\CalculateTotalWithFeeCoverage::run($baseAmount);
             return $totalWithCoverage->getAmount()->toFloat();
         }
 

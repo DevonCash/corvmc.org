@@ -63,7 +63,7 @@ class ModifyMembershipAmountAction
                     ->helperText(function ($get) {
                         $amount = Money::of($get('amount'), 'USD');
                         if (!$amount->isZero()) {
-                            $feeInfo = PaymentService::getFeeDisplayInfo($amount);
+                            $feeInfo = \App\Actions\Payments\GetFeeDisplayInfo::run($amount);
 
                             return $feeInfo['message'];
                         }
@@ -90,10 +90,10 @@ class ModifyMembershipAmountAction
                             return 'Please select a contribution amount';
                         }
 
-                        $breakdown = PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
+                        $breakdown = \App\Actions\Payments\GetFeeBreakdown::run($amount, $get('cover_fees'));
                         $totalAmount = Money::of($breakdown['total_amount'], 'USD');
 
-                        return $breakdown['description'] . ' = ' . PaymentService::formatMoney($totalAmount) . ' total per month';
+                        return $breakdown['description'] . ' = ' . \App\Actions\Payments\FormatMoney::run($totalAmount) . ' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])
