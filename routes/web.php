@@ -30,8 +30,7 @@ Route::get('/', function () {
     ];
 
     // Get major sponsors for display
-    $sponsorService = app(\App\Services\SponsorService::class);
-    $majorSponsors = $sponsorService->getMajorSponsors();
+    $majorSponsors = \App\Actions\Sponsors\GetMajorSponsors::run();
 
     return view('public.home', compact('upcomingEvents', 'stats', 'majorSponsors'));
 })->name('home');
@@ -126,8 +125,7 @@ Route::get('/contact', function () {
 })->name('contact');
 
 Route::get('/sponsors', function () {
-    $sponsorService = app(\App\Services\SponsorService::class);
-    $sponsors = $sponsorService->getActiveSponsors();
+    $sponsors = \App\Actions\Sponsors\GetActiveSponsors::run();
 
     return view('public.sponsors', compact('sponsors'));
 })->name('sponsors');
