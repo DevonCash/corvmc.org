@@ -21,6 +21,7 @@ class CreditTransaction extends Model
         'source_id',
         'description',
         'metadata',
+        'created_at',
     ];
 
     protected $casts = [

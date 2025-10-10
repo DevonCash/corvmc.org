@@ -34,6 +34,12 @@ return new class extends Migration
         ]);
 
         // Now drop the old user_id column
+        // First drop indexes that include user_id (SQLite requirement)
+        Schema::table('reservations', function (Blueprint $table) {
+            $table->dropIndex('idx_reservations_user_date');
+            $table->dropIndex('idx_reservations_user_created');
+        });
+
         Schema::table('reservations', function (Blueprint $table) {
             $table->dropForeign(['user_id']);
             $table->dropColumn('user_id');

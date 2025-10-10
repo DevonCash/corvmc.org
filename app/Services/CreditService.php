@@ -3,18 +3,23 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Models\UserCredit;
 use App\Models\CreditTransaction;
-use App\Models\CreditAllocation;
-use App\Models\PromoCode;
-use App\Models\PromoCodeRedemption;
-use App\Exceptions\InsufficientCreditsException;
-use App\Exceptions\PromoCodeAlreadyRedeemedException;
-use App\Exceptions\PromoCodeMaxUsesException;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 
+/**
+ * Backward compatibility wrapper for CreditService.
+ *
+ * All business logic has been migrated to individual Action classes.
+ * This service now delegates to those actions to maintain compatibility
+ * with existing code during the migration period.
+ *
+ * New code should use Actions directly:
+ * - \App\Actions\Credits\GetBalance::run($user, $creditType)
+ * - \App\Actions\Credits\AddCredits::run($user, $amount, ...)
+ * - \App\Actions\Credits\DeductCredits::run($user, $amount, ...)
+ * - \App\Actions\Credits\AllocateMonthlyCredits::run($user, $amount, $creditType)
+ * - \App\Actions\Credits\RedeemPromoCode::run($user, $code)
+ */
 class CreditService
 {
     /**
@@ -22,13 +27,7 @@ class CreditService
      */
     public function getBalance(User $user, string $creditType = 'free_hours'): int
     {
-        return UserCredit::where('user_id', $user->id)
-            ->where('credit_type', $creditType)
-            ->where(function($q) {
-                $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now());
-            })
-            ->value('balance') ?? 0;
+        return \App\Actions\Credits\GetBalance::run($user, $creditType);
     }
 
     /**
@@ -43,34 +42,15 @@ class CreditService
         string $creditType = 'free_hours',
         ?Carbon $expiresAt = null
     ): CreditTransaction {
-        return DB::transaction(function () use ($user, $amount, $source, $sourceId, $description, $creditType, $expiresAt) {
-            // Lock user credit record for update
-            $credit = UserCredit::lockForUpdate()
-                ->firstOrCreate(
-                    ['user_id' => $user->id, 'credit_type' => $creditType],
-                    array_merge(
-                        ['balance' => 0],
-                        $expiresAt ? ['expires_at' => $expiresAt] : [],
-                        $this->getDefaultCreditConfig($creditType)
-                    )
-                );
-
-            // Update balance
-            $credit->balance += $amount;
-            $credit->save();
-
-            // Record transaction
-            return CreditTransaction::create([
-                'user_id' => $user->id,
-                'credit_type' => $creditType,
-                'amount' => $amount,
-                'balance_after' => $credit->balance,
-                'source' => $source,
-                'source_id' => $sourceId,
-                'description' => $description,
-                'created_at' => now(),
-            ]);
-        });
+        return \App\Actions\Credits\AddCredits::run(
+            $user,
+            $amount,
+            $source,
+            $sourceId,
+            $description,
+            $creditType,
+            $expiresAt
+        );
     }
 
     /**
@@ -83,32 +63,13 @@ class CreditService
         ?int $sourceId = null,
         string $creditType = 'free_hours'
     ): CreditTransaction {
-        return DB::transaction(function () use ($user, $amount, $source, $sourceId, $creditType) {
-            $credit = UserCredit::lockForUpdate()
-                ->where('user_id', $user->id)
-                ->where('credit_type', $creditType)
-                ->first();
-
-            if (!$credit || $credit->balance < $amount) {
-                $currentBalance = $credit->balance ?? 0;
-                throw new InsufficientCreditsException(
-                    "User has {$currentBalance} credits but needs {$amount}"
-                );
-            }
-
-            $credit->balance -= $amount;
-            $credit->save();
-
-            return CreditTransaction::create([
-                'user_id' => $user->id,
-                'credit_type' => $creditType,
-                'amount' => -$amount,
-                'balance_after' => $credit->balance,
-                'source' => $source,
-                'source_id' => $sourceId,
-                'created_at' => now(),
-            ]);
-        });
+        return \App\Actions\Credits\DeductCredits::run(
+            $user,
+            $amount,
+            $source,
+            $sourceId,
+            $creditType
+        );
     }
 
     /**
@@ -120,138 +81,7 @@ class CreditService
         int $amount,
         string $creditType = 'free_hours'
     ): void {
-        // Check if allocation already exists for this month
-        $allocationKey = "credit_allocation.{$user->id}.{$creditType}." . now()->format('Y-m');
-
-        if (Cache::get($allocationKey)) {
-            return; // Already allocated this month
-        }
-
-        DB::transaction(function () use ($user, $amount, $creditType, $allocationKey) {
-            $credit = UserCredit::lockForUpdate()
-                ->firstOrCreate(
-                    ['user_id' => $user->id, 'credit_type' => $creditType],
-                    $this->getDefaultCreditConfig($creditType)
-                );
-
-            // Handle different allocation strategies
-            if ($creditType === 'free_hours') {
-                // Practice Space: RESET to subscription amount (no rollover)
-                $oldBalance = $credit->balance;
-                $credit->balance = $amount;
-                $credit->save();
-
-                CreditTransaction::create([
-                    'user_id' => $user->id,
-                    'credit_type' => $creditType,
-                    'amount' => $amount,
-                    'balance_after' => $credit->balance,
-                    'source' => 'monthly_reset',
-                    'description' => "Monthly practice space credits reset for " . now()->format('F Y') . " (previous: {$oldBalance} blocks)",
-                    'created_at' => now(),
-                ]);
-            } elseif ($creditType === 'equipment_credits') {
-                // Equipment: ADD to existing balance with cap (rollover enabled)
-                $oldBalance = $credit->balance;
-                $maxBalance = $credit->max_balance ?? 250; // Default cap
-
-                // Calculate how much we can add without exceeding cap
-                $availableSpace = max(0, $maxBalance - $oldBalance);
-                $actualAmount = min($amount, $availableSpace);
-
-                if ($actualAmount > 0) {
-                    $credit->balance += $actualAmount;
-                    $credit->save();
-
-                    CreditTransaction::create([
-                        'user_id' => $user->id,
-                        'credit_type' => $creditType,
-                        'amount' => $actualAmount,
-                        'balance_after' => $credit->balance,
-                        'source' => 'monthly_allocation',
-                        'description' => "Monthly equipment credits allocation for " . now()->format('F Y') .
-                                       ($actualAmount < $amount ? " (capped at {$maxBalance})" : ""),
-                        'metadata' => json_encode([
-                            'requested_amount' => $amount,
-                            'actual_amount' => $actualAmount,
-                            'cap_reached' => $credit->balance >= $maxBalance,
-                        ]),
-                        'created_at' => now(),
-                    ]);
-                }
-            }
-
-            // Mark as allocated for this month
-            Cache::put($allocationKey, true, now()->endOfMonth());
-        });
-    }
-
-    /**
-     * Get default configuration for a credit type.
-     */
-    protected function getDefaultCreditConfig(string $creditType): array
-    {
-        return match($creditType) {
-            'free_hours' => [
-                'balance' => 0,
-                'max_balance' => null,
-                'rollover_enabled' => false,
-            ],
-            'equipment_credits' => [
-                'balance' => 0,
-                'max_balance' => 250,
-                'rollover_enabled' => true,
-            ],
-            default => [
-                'balance' => 0,
-                'max_balance' => null,
-                'rollover_enabled' => false,
-            ],
-        };
-    }
-
-    /**
-     * Process all pending allocations.
-     * Run via scheduled command: php artisan credits:allocate
-     */
-    public function processPendingAllocations(): void
-    {
-        $allocations = CreditAllocation::where('is_active', true)
-            ->where('next_allocation_at', '<=', now())
-            ->get();
-
-        foreach ($allocations as $allocation) {
-            $this->processAllocation($allocation);
-        }
-    }
-
-    protected function processAllocation(CreditAllocation $allocation): void
-    {
-        DB::transaction(function () use ($allocation) {
-            $this->allocateMonthlyCredits(
-                $allocation->user,
-                $allocation->amount,
-                $allocation->credit_type
-            );
-
-            // Update next allocation date
-            $allocation->last_allocated_at = now();
-            $allocation->next_allocation_at = $this->calculateNextAllocation(
-                $allocation->frequency,
-                now()
-            );
-            $allocation->save();
-        });
-    }
-
-    protected function calculateNextAllocation(string $frequency, Carbon $from): Carbon
-    {
-        return match($frequency) {
-            'monthly' => $from->copy()->addMonth()->startOfMonth(),
-            'weekly' => $from->copy()->addWeek(),
-            'one_time' => $from->copy()->addYears(100), // Effectively never
-            default => $from->copy()->addMonth(),
-        };
+        \App\Actions\Credits\AllocateMonthlyCredits::run($user, $amount, $creditType);
     }
 
     /**
@@ -259,47 +89,17 @@ class CreditService
      */
     public function redeemPromoCode(User $user, string $code): CreditTransaction
     {
-        $promo = PromoCode::where('code', $code)
-            ->where('is_active', true)
-            ->where(function($q) {
-                $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now());
-            })
-            ->firstOrFail();
+        return \App\Actions\Credits\RedeemPromoCode::run($user, $code);
+    }
 
-        return DB::transaction(function () use ($user, $promo) {
-            // Check if already redeemed
-            if ($promo->redemptions()->where('user_id', $user->id)->exists()) {
-                throw new PromoCodeAlreadyRedeemedException();
-            }
-
-            // Check max uses
-            if ($promo->max_uses && $promo->uses_count >= $promo->max_uses) {
-                throw new PromoCodeMaxUsesException();
-            }
-
-            // Add credits
-            $transaction = $this->addCredits(
-                $user,
-                $promo->credit_amount,
-                'promo_code',
-                $promo->id,
-                "Promo code: {$promo->code}",
-                $promo->credit_type
-            );
-
-            // Record redemption
-            PromoCodeRedemption::create([
-                'promo_code_id' => $promo->id,
-                'user_id' => $user->id,
-                'credit_transaction_id' => $transaction->id,
-                'redeemed_at' => now(),
-            ]);
-
-            // Increment uses
-            $promo->increment('uses_count');
-
-            return $transaction;
-        });
+    /**
+     * Process all pending allocations.
+     *
+     * Note: This method is deprecated. Use the console command instead:
+     * php artisan credits:process-allocations
+     */
+    public function processPendingAllocations(): void
+    {
+        \App\Actions\Credits\ProcessPendingAllocations::run();
     }
 }

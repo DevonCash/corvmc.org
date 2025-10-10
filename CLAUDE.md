@@ -33,6 +33,7 @@ NOTE: Filament v4 beta makes some changes from v3
 
 ### Additional Libraries
 
+- **lorisleiva/laravel-actions** - Single-purpose action classes for business logic
 - **guava/calendar** - Calendar component integration
 - **secondnetwork/blade-tabler-icons** - Tabler icons for UI
 - **finller/laravel-money** - Money value handling (all amounts stored in cents)
@@ -167,9 +168,40 @@ Resources are organized in dedicated directories under `app/Filament/Resources/`
 - Integrated authentication with profile management
 - Resources auto-discovery from `app/Filament/Resources`
 
-#### Service Layer Architecture
+#### Business Logic Architecture
 
-The application uses dedicated service classes registered as **singletons** in `AppServiceProvider` for complex business logic:
+**🔄 Migration in Progress:** The application is transitioning from service classes to Laravel Actions for better organization and testability.
+
+**Laravel Actions** (New Approach - Preferred)
+
+Single-purpose action classes in `app/Actions/` organized by domain:
+
+- `app/Actions/Credits/` - Credit system operations ✅ **MIGRATED**
+  - `GetBalance` - Query credit balance
+  - `AddCredits` - Add credits with transaction safety
+  - `DeductCredits` - Deduct credits with validation
+  - `AllocateMonthlyCredits` - Handle monthly allocation
+  - `RedeemPromoCode` - Redeem promotional codes
+  - `ProcessPendingAllocations` - Batch processing (also a console command)
+
+**Usage:**
+```php
+// New code - use actions directly
+$balance = \App\Actions\Credits\GetBalance::run($user, 'free_hours');
+$transaction = \App\Actions\Credits\AddCredits::run($user, 100, 'subscription');
+
+// Actions can be queued
+\App\Actions\Credits\AddCredits::dispatch($user, 100, 'subscription');
+
+// Some actions are also console commands
+php artisan credits:process-allocations --dry-run
+```
+
+**See:** `docs/action-patterns.md` for detailed patterns and migration guide.
+
+**Service Layer** (Legacy - Being Phased Out)
+
+Services registered as singletons in `AppServiceProvider`:
 
 **Core Services:**
 - `UserSubscriptionService` - Handles membership status and sustaining member logic
@@ -177,7 +209,7 @@ The application uses dedicated service classes registered as **singletons** in `
 - `ReservationService` - Practice space booking logic with conflict detection, credit deduction
 - `RecurringReservationService` - Recurring reservation series management with RRULE parsing
 - `ProductionService` - Event management and production workflows
-- `CreditService` - Transaction-safe credit operations and balance management
+- `CreditService` - ⚠️ **Now a backward compatibility wrapper for Actions** (see `app/Actions/Credits/`)
 - `MemberBenefitsService` - Calculate and allocate member benefits based on subscriptions
 - `BandService` - Band profile management and member relationships
 - `MemberProfileService` - Member directory and profile management
@@ -192,11 +224,13 @@ The application uses dedicated service classes registered as **singletons** in `
 - `ReportService` - Reporting and analytics
 - `EquipmentService` - Equipment management and tracking
 - `TrustService` / `CommunityEventTrustService` - Trust and reputation systems
-- `MemberBenefitsService` - Member benefits calculation and tracking
 - `StaffProfileService` - Staff profile management
 - `RevisionService` - Content revision and history tracking
 
-**Important:** All business logic should be in services - never in controllers, models, or Filament resources.
+**Important:**
+- **New code:** Use Actions in `app/Actions/` (preferred)
+- **Existing code:** Services still work via backward compatibility wrappers
+- All business logic should be in Actions or Services - never in controllers, models, or Filament resources
 
 #### Custom Testing Commands Pattern
 

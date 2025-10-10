@@ -59,7 +59,7 @@ class AllocateCreditsCommand extends Command
             try {
                 $hours = \App\Facades\MemberBenefitsService::getUserMonthlyFreeHours($user);
                 $blocks = \App\Facades\ReservationService::hoursToBlocks($hours);
-                $currentBalance = \App\Facades\CreditService::getBalance($user, 'free_hours');
+                $currentBalance = \App\Actions\Credits\GetBalance::run($user, 'free_hours');
                 $currentHours = \App\Facades\ReservationService::blocksToHours($currentBalance);
 
                 if ($this->option('dry-run')) {
