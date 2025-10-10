@@ -202,37 +202,12 @@ class ReservationService
 
     /**
      * Create recurring reservations for sustaining members.
+     *
+     * @deprecated Use \App\Actions\Reservations\CreateRecurringReservation instead
      */
     public function createRecurringReservation(User $user, Carbon $startTime, Carbon $endTime, array $recurrencePattern): array
     {
-        if (! $user->isSustainingMember()) {
-            throw new \InvalidArgumentException('Only sustaining members can create recurring reservations.');
-        }
-
-        $reservations = [];
-        $weeks = $recurrencePattern['weeks'] ?? 4; // Default to 4 weeks
-        $interval = $recurrencePattern['interval'] ?? 1; // Every N weeks
-
-        for ($i = 0; $i < $weeks; $i++) {
-            $weekOffset = $i * $interval;
-            $recurringStart = $startTime->copy()->addWeeks($weekOffset);
-            $recurringEnd = $endTime->copy()->addWeeks($weekOffset);
-
-            try {
-                $reservation = $this->createReservation($user, $recurringStart, $recurringEnd, [
-                    'is_recurring' => true,
-                    'recurrence_pattern' => $recurrencePattern,
-                    'status' => 'pending', // Recurring reservations need confirmation
-                ]);
-
-                $reservations[] = $reservation;
-            } catch (\InvalidArgumentException $e) {
-                // Skip this slot if there's a conflict, but continue with others
-                continue;
-            }
-        }
-
-        return $reservations;
+        return \App\Actions\Reservations\CreateRecurringReservation::run($user, $startTime, $endTime, $recurrencePattern);
     }
 
     /**
@@ -319,62 +294,12 @@ class ReservationService
 
     /**
      * Validate that a time slot doesn't have conflicts using Spatie Period.
+     *
+     * @deprecated Use \App\Actions\Reservations\ValidateTimeSlot instead
      */
     public function validateTimeSlot(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): array
     {
-        $requestedPeriod = $this->createPeriod($startTime, $endTime);
-
-        if (! $requestedPeriod) {
-            return [
-                'valid' => false,
-                'errors' => ['Invalid time period provided'],
-            ];
-        }
-
-        // Check business hours
-        $businessStart = $startTime->copy()->setTime(9, 0);
-        $businessEnd = $startTime->copy()->setTime(22, 0);
-
-        if ($startTime->lessThan($businessStart) || $endTime->greaterThan($businessEnd)) {
-            return [
-                'valid' => false,
-                'errors' => ['Reservation must be within business hours (9 AM - 10 PM)'],
-            ];
-        }
-
-        // Check minimum/maximum duration
-        $duration = $startTime->diffInHours($endTime, true);
-        if ($duration < self::MIN_RESERVATION_DURATION) {
-            return [
-                'valid' => false,
-                'errors' => ['Minimum reservation duration is ' . self::MIN_RESERVATION_DURATION . ' hour'],
-            ];
-        }
-
-        if ($duration > self::MAX_RESERVATION_DURATION) {
-            return [
-                'valid' => false,
-                'errors' => ['Maximum reservation duration is ' . self::MAX_RESERVATION_DURATION . ' hours'],
-            ];
-        }
-
-        // Check for conflicts using existing methods
-        $conflicts = $this->getAllConflicts($startTime, $endTime, $excludeReservationId);
-        $errors = [];
-
-        if ($conflicts['reservations']->isNotEmpty()) {
-            $errors[] = 'Conflicts with ' . $conflicts['reservations']->count() . ' existing reservation(s)';
-        }
-
-        if ($conflicts['productions']->isNotEmpty()) {
-            $errors[] = 'Conflicts with ' . $conflicts['productions']->count() . ' production(s)';
-        }
-
-        return [
-            'valid' => empty($errors),
-            'errors' => $errors,
-            'conflicts' => $conflicts,
-        ];
+        return \App\Actions\Reservations\ValidateTimeSlot::run($startTime, $endTime, $excludeReservationId);
     }
 
     /**
