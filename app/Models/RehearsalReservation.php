@@ -273,7 +273,7 @@ class RehearsalReservation extends Reservation implements Eventable
      */
     public function toCalendarEvent(): CalendarEvent
     {
-        return \App\Facades\CalendarService::reservationToCalendarEvent($this);
+        return \App\Actions\Calendar\ReservationToCalendarEvent::run($this);
     }
 
     public function getActivitylogOptions(): LogOptions

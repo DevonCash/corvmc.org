@@ -317,7 +317,7 @@ class CommunityEvent extends Model implements Eventable, HasMedia
      */
     public function toCalendarEvent(): CalendarEvent
     {
-        return \App\Facades\CalendarService::communityEventToCalendarEvent($this);
+        return \App\Actions\Calendar\CommunityEventToCalendarEvent::run($this);
     }
 
     /**

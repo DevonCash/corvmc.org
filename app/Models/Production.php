@@ -448,6 +448,6 @@ class Production extends ContentModel implements Eventable
      */
     public function toCalendarEvent(): CalendarEvent
     {
-        return \App\Facades\CalendarService::productionToCalendarEvent($this);
+        return \App\Actions\Calendar\ProductionToCalendarEvent::run($this);
     }
 }
