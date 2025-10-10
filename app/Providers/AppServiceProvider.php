@@ -24,7 +24,6 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(\App\Services\BandService::class);
-        $this->app->singleton(\App\Services\CacheService::class);
         $this->app->singleton(\App\Services\CalendarService::class);
         $this->app->singleton(\App\Services\GitHubService::class);
         $this->app->singleton(\App\Services\MemberProfileService::class);
@@ -51,7 +50,6 @@ class AppServiceProvider extends ServiceProvider
         // Register facade aliases
         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
         $loader->alias('BandService', \App\Facades\BandService::class);
-        $loader->alias('CacheService', \App\Facades\CacheService::class);
         $loader->alias('CalendarService', \App\Facades\CalendarService::class);
         $loader->alias('GitHubService', \App\Facades\GitHubService::class);
         $loader->alias('MemberProfileService', \App\Facades\MemberProfileService::class);

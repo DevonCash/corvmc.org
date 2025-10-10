@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Services\CacheService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
@@ -53,9 +52,9 @@ class CacheManagement extends Command
     private function clearAllCaches(): void
     {
         $this->info('🧹 Clearing all caches...');
-        
+
         if ($this->confirm('This will clear ALL application caches. Are you sure?')) {
-            CacheService::clearAllCaches();
+            \App\Actions\Cache\ClearAllCaches::run();
             $this->info('✅ All caches cleared successfully!');
         } else {
             $this->info('❌ Cache clearing cancelled.');
@@ -68,13 +67,13 @@ class CacheManagement extends Command
     private function warmUpCaches(): void
     {
         $this->info('🔥 Warming up caches...');
-        
+
         $bar = $this->output->createProgressBar(3);
         $bar->start();
-        
-        CacheService::warmUpCaches();
+
+        \App\Actions\Cache\WarmUpCaches::run();
         $bar->advance();
-        
+
         $this->info("\n✅ Caches warmed up successfully!");
         $bar->finish();
         $this->newLine();
@@ -87,9 +86,9 @@ class CacheManagement extends Command
     {
         $this->info('📊 Cache Statistics:');
         $this->newLine();
-        
-        $stats = CacheService::getCacheStats();
-        
+
+        $stats = \App\Actions\Cache\GetCacheStats::run();
+
         $this->table(
             ['Metric', 'Value'],
             [
@@ -106,14 +105,14 @@ class CacheManagement extends Command
     private function clearUserCaches(): void
     {
         $userId = $this->option('user');
-        
+
         if (!$userId) {
             $this->error('❌ User ID is required. Use --user=123');
             return;
         }
 
         $this->info("🧹 Clearing caches for user ID: {$userId}...");
-        CacheService::clearUserCaches((int) $userId);
+        \App\Actions\Cache\ClearUserCaches::run((int) $userId);
         $this->info('✅ User caches cleared successfully!');
     }
 
@@ -128,12 +127,12 @@ class CacheManagement extends Command
 
         if ($date) {
             $this->info("🧹 Clearing caches for date: {$date}...");
-            CacheService::clearReservationCaches($date);
-            CacheService::clearProductionCaches($date);
+            \App\Actions\Cache\ClearReservationCaches::run($date);
+            \App\Actions\Cache\ClearProductionCaches::run($date);
             $this->info('✅ Date caches cleared successfully!');
         } elseif ($startDate && $endDate) {
             $this->info("🧹 Clearing caches for date range: {$startDate} to {$endDate}...");
-            CacheService::clearDateRangeCaches(
+            \App\Actions\Cache\ClearDateRangeCaches::run(
                 Carbon::createFromFormat('Y-m-d', $startDate),
                 Carbon::createFromFormat('Y-m-d', $endDate)
             );
@@ -149,7 +148,7 @@ class CacheManagement extends Command
     private function clearTagCaches(): void
     {
         $this->info('🧹 Clearing member directory tag caches...');
-        CacheService::clearMemberDirectoryCaches();
+        \App\Actions\Cache\ClearMemberDirectoryCaches::run();
         $this->info('✅ Tag caches cleared successfully!');
     }
 }
