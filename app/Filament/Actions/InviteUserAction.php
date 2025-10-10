@@ -2,7 +2,6 @@
 
 namespace App\Filament\Actions;
 
-use App\Services\UserInvitationService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
@@ -47,12 +46,12 @@ class InviteUserAction
                         ->toArray();
                 }
 
-                // Use the invitation service to create and invite the user
-                $user = \UserInvitationService::inviteUser($data['email'], $roleNames);
+                // Use the invitation action to create and invite the user
+                $invitation = \App\Actions\Invitations\InviteUser::run($data['email'], ['roles' => $roleNames]);
 
                 Notification::make()
                     ->title('Invitation sent')
-                    ->body("An invitation email has been sent to {$user->email}")
+                    ->body("An invitation email has been sent to {$invitation->email}")
                     ->success()
                     ->send();
             });

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Productions\RelationManagers;
 
 use App\Filament\Resources\Bands\BandResource;
-use App\Facades\UserInvitationService;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\SpatieTagsInput;
@@ -153,31 +152,20 @@ class PerformersRelationManager extends RelationManager
                         }
 
                         try {
-                            $result = UserInvitationService::inviteUserWithBand(
+                            $invitation = \App\Actions\Invitations\InviteUserWithBand::run(
                                 $data['email'],
                                 $record->name,
-                                $bandData,
-                                ['band leader']
+                                $bandData
                             );
-
-                            // Update the existing band record to have the new owner
-                            $record->update([
-                                'owner_id' => $result['user']->id,
-                                'status' => $result['invited_user'] ? 'pending_owner_verification' : 'active'
-                            ]);
 
                             // Add any updated band data
                             if (!empty($bandData)) {
                                 $record->update($bandData);
                             }
 
-                            $message = $result['invited_user']
-                                ? "Invitation sent to {$data['email']} to own {$record->name}"
-                                : "Band ownership transferred to existing member {$data['email']}";
-
                             Notification::make()
                                 ->title('Band Owner Invited!')
-                                ->body($message)
+                                ->body("Invitation sent to {$data['email']} to own {$record->name}")
                                 ->success()
                                 ->send();
                         } catch (\Exception $e) {

@@ -31,7 +31,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\NotificationSchedulingService::class);
         $this->app->singleton(\App\Services\ProductionService::class);
         $this->app->singleton(\App\Services\ReportService::class);
-        $this->app->singleton(\App\Services\UserInvitationService::class);
         $this->app->singleton(\App\Services\UserSubscriptionService::class);
         $this->app->singleton(\App\Services\UserService::class);
         $this->app->singleton(\App\Services\StaffProfileService::class);
@@ -59,7 +58,6 @@ class AppServiceProvider extends ServiceProvider
         $loader->alias('NotificationSchedulingService', \App\Facades\NotificationSchedulingService::class);
         $loader->alias('ProductionService', \App\Facades\ProductionService::class);
         $loader->alias('ReportService', \App\Facades\ReportService::class);
-        $loader->alias('UserInvitationService', \App\Facades\UserInvitationService::class);
         $loader->alias('UserSubscriptionService', \App\Facades\UserSubscriptionService::class);
         $loader->alias('UserService', \App\Facades\UserService::class);
         $loader->alias('StaffProfileService', \App\Facades\StaffProfileService::class);

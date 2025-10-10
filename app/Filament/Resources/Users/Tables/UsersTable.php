@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Users\Tables;
 
 use App\Filament\Actions\InviteUserAction;
-use App\Facades\UserInvitationService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -121,7 +120,7 @@ class UsersTable
                     ->modalDescription(fn($record) => "Resend invitation email to {$record->email}?")
                     ->action(function ($record) {
 
-                        if (UserInvitationService::resendInvitation($record)) {
+                        if (\App\Actions\Invitations\ResendInvitation::run($record->email)) {
                             Notification::make()
                                 ->title('Invitation resent')
                                 ->body("Invitation email has been resent to {$record->email}")
@@ -155,7 +154,13 @@ class UsersTable
                             $canceledCount = 0;
 
                             foreach ($records as $record) {
-                                if (UserInvitationService::cancelInvitation($record)) {
+                                // Find invitation for this user's email
+                                $invitation = \App\Models\Invitation::withoutGlobalScopes()
+                                    ->where('email', $record->email)
+                                    ->whereNull('used_at')
+                                    ->first();
+
+                                if ($invitation && \App\Actions\Invitations\CancelInvitation::run($invitation)) {
                                     $canceledCount++;
                                 }
                             }

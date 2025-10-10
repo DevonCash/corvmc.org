@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Facades\UserInvitationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,7 +16,7 @@ class InvitationController extends Controller
     public function show(string $token)
     {
         // Find and validate the invitation
-        $invitation = UserInvitationService::findInvitationByToken($token);
+        $invitation = \App\Actions\Invitations\FindInvitationByToken::run($token);
 
         if (!$invitation) {
             return view('auth.invitation-expired', [

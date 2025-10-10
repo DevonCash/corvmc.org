@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages\Auth;
 
-use App\Facades\UserInvitationService;
 use App\Models\Invitation;
 use Filament\Auth\Pages\Register as BaseRegister;
 use Filament\Forms\Components\TextInput;
@@ -21,7 +20,7 @@ class Register extends BaseRegister
         $this->invitationToken = request()->query('invitation');
 
         if ($this->invitationToken) {
-            $invitation = UserInvitationService::findInvitationByToken($this->invitationToken);
+            $invitation = \App\Actions\Invitations\FindInvitationByToken::run($this->invitationToken);
 
             if ($invitation && !$invitation->isExpired() && !$invitation->isUsed()) {
                 // Prefill email from invitation
@@ -84,7 +83,7 @@ class Register extends BaseRegister
 
                 // Handle band ownership if invitation includes band data
                 if (isset($invitation->data['band_id'])) {
-                    UserInvitationService::confirmBandOwnership($user, $invitation);
+                    \App\Actions\Invitations\ConfirmBandOwnership::run($user, $invitation);
                 }
             }
         }
