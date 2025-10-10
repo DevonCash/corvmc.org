@@ -12,8 +12,7 @@ class CreateRecurringReservation extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Build RRULE from form inputs
-        $service = app(\App\Services\RecurringReservationService::class);
-        $data['recurrence_rule'] = $service->buildRRule($data);
+        $data['recurrence_rule'] = \App\Actions\RecurringReservations\BuildRRule::run($data);
 
         // Remove temporary form fields
         unset($data['frequency'], $data['interval'], $data['by_day']);
@@ -24,7 +23,6 @@ class CreateRecurringReservation extends CreateRecord
     protected function afterCreate(): void
     {
         // Generate initial instances after creating series
-        $service = app(\App\Services\RecurringReservationService::class);
-        $service->generateInstances($this->record);
+        \App\Actions\RecurringReservations\GenerateRecurringInstances::run($this->record);
     }
 }
