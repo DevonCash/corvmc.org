@@ -1,10 +1,17 @@
 <?php
 
+use App\Actions\StaffProfiles\BulkUpdateProfiles;
+use App\Actions\StaffProfiles\CreateStaffProfile;
+use App\Actions\StaffProfiles\GetActiveStaffProfiles;
+use App\Actions\StaffProfiles\GetAllStaffProfiles;
+use App\Actions\StaffProfiles\GetOrganizedProfiles;
+use App\Actions\StaffProfiles\GetStaffProfileStats;
+use App\Actions\StaffProfiles\ReorderStaffProfiles;
+use App\Actions\StaffProfiles\UpdateStaffProfile;
 use App\Attributes\Story;
-use App\Facades\StaffProfileService;
-use App\Models\User;
 use App\Models\StaffProfile;
 use App\Models\StaffProfileType;
+use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
@@ -44,7 +51,7 @@ describe('Story 1: Create Staff Profile', function () {
             'user_id' => $this->staffMember->id, // Not linked to member account
         ];
 
-        $profile = StaffProfileService::createStaffProfile($staffData);
+        $profile = CreateStaffProfile::run($staffData);
 
         expect($profile)->toBeInstanceOf(StaffProfile::class)
             ->and($profile->name)->toBe('Sarah Johnson')
@@ -153,7 +160,7 @@ describe('Story 2: Staff Member Self-Edit', function () {
         // Staff member tries to edit restricted fields
         $this->actingAs($this->staffMember);
         expect(function () use ($profile) {
-            StaffProfileService::updateStaffProfile($profile, [
+            UpdateStaffProfile::run($profile, [
                 'title' => 'New Unauthorized Title',
                 'profile_type' => 'board',
                 'display_order' => 1,
@@ -376,7 +383,7 @@ describe('Story 4: Update Staff Profiles (Admin Direct Edit)', function () {
 
         Notification::fake(); // Clear creation notifications
 
-        StaffProfileService::updateStaffProfile($profile, [
+        UpdateStaffProfile::run($profile, [
             'bio' => 'Admin updated this bio',
         ]);
 
@@ -417,7 +424,7 @@ describe('Story 5: Staff Profile Organization', function () {
         ]);
 
         // Get organized profiles
-        $organized = StaffProfileService::getOrganizedProfiles();
+        $organized = GetOrganizedProfiles::run();
 
         expect($organized['board'])->toHaveCount(2)
             ->and($organized['staff'])->toHaveCount(1);
@@ -445,14 +452,14 @@ describe('Story 5: Staff Profile Organization', function () {
         ]);
 
         // Public view should only show active profiles
-        $publicProfiles = StaffProfileService::getActiveStaffProfiles();
+        $publicProfiles = GetActiveStaffProfiles::run();
         $publicNames = $publicProfiles->pluck('name')->toArray();
 
         expect($publicNames)->toContain('Active Staff')
             ->and($publicNames)->not->toContain('Inactive Staff');
 
         // Admin view should show all profiles
-        $allProfiles = StaffProfileService::getAllStaffProfiles();
+        $allProfiles = GetAllStaffProfiles::run();
         $allNames = $allProfiles->pluck('name')->toArray();
 
         expect($allNames)->toContain('Active Staff', 'Inactive Staff');
@@ -480,13 +487,13 @@ describe('Story 5: Staff Profile Organization', function () {
         ]);
 
         // Reorder profiles (swap positions)
-        StaffProfileService::reorderStaffProfiles([
+        ReorderStaffProfiles::run([
             $profile2->id => 1, // Second becomes first
             $profile1->id => 2, // First becomes second
         ]);
 
         // Verify new order
-        $reordered = StaffProfileService::getActiveStaffProfiles('staff');
+        $reordered = GetActiveStaffProfiles::run('staff');
 
         expect($reordered[0]->name)->toBe('Second Profile')
             ->and($reordered[0]->sort_order)->toBe(1)
@@ -510,7 +517,7 @@ describe('Story 8: Staff Profile Analytics', function () {
 
 
 
-        $analytics = StaffProfileService::getStaffProfileStats();
+        $analytics = GetStaffProfileStats::run();
 
         expect($analytics['total_profiles'])->toBe(5)
             ->and($analytics['active_profiles'])->toBe(3)
@@ -541,7 +548,7 @@ describe('Story 9: Bulk Staff Management', function () {
 
         // Bulk deactivate multiple profiles
         $profileIds = [$profile1->id, $profile2->id, $profile3->id];
-        $updatedCount = StaffProfileService::bulkUpdateProfiles($profileIds, [
+        $updatedCount = BulkUpdateProfiles::run($profileIds, [
             'is_active' => false,
         ]);
 
@@ -572,7 +579,7 @@ describe('Story 9: Bulk Staff Management', function () {
 
         // Bulk change from staff to board
         $profileIds = [$profile1->id, $profile2->id];
-        $updatedCount = StaffProfileService::bulkUpdateProfiles($profileIds, [
+        $updatedCount = BulkUpdateProfiles::run($profileIds, [
             'type' => 'board',
         ]);
 

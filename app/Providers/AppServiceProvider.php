@@ -24,7 +24,6 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(\App\Services\GitHubService::class);
-        $this->app->singleton(\App\Services\StaffProfileService::class);
     }
 
     public function boot(): void
@@ -42,7 +41,6 @@ class AppServiceProvider extends ServiceProvider
         // Register facade aliases
         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
         $loader->alias('GitHubService', \App\Facades\GitHubService::class);
-        $loader->alias('StaffProfileService', \App\Facades\StaffProfileService::class);
 
         // Automatically grant all abilities to admin users
         Gate::after(function ($user, $ability) {
