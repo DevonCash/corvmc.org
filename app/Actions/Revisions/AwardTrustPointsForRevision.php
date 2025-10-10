@@ -3,17 +3,12 @@
 namespace App\Actions\Revisions;
 
 use App\Models\Revision;
-use App\Services\TrustService;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class AwardTrustPointsForRevision
 {
     use AsAction;
-
-    public function __construct(
-        protected TrustService $trustService
-    ) {}
 
     /**
      * Award trust points for successful revision.
@@ -31,6 +26,6 @@ class AwardTrustPointsForRevision
             return;
         }
 
-        $this->trustService->awardSuccessfulContent($submitter, $model, $contentType, true);
+        \App\Actions\Trust\AwardSuccessfulContent::run($submitter, $model, $contentType, true);
     }
 }

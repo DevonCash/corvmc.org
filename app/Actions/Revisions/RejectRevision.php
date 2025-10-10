@@ -5,7 +5,6 @@ namespace App\Actions\Revisions;
 use App\Models\Revision;
 use App\Models\User;
 use App\Notifications\RevisionRejectedNotification;
-use App\Services\TrustService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -13,10 +12,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
 class RejectRevision
 {
     use AsAction;
-
-    public function __construct(
-        protected TrustService $trustService
-    ) {}
 
     /**
      * Reject a revision.
@@ -64,7 +59,7 @@ class RejectRevision
         $violationType = $this->determineViolationType($reason);
 
         if ($violationType && $contentType) {
-            $this->trustService->penalizeViolation($submitter, $violationType, $contentType, $reason);
+            \App\Actions\Trust\PenalizeViolation::run($submitter, $violationType, $contentType, null, $reason);
         }
     }
 

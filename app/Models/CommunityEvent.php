@@ -261,7 +261,7 @@ class CommunityEvent extends Model implements Eventable, HasMedia
      */
     public function getOrganizerTrustLevel(): string
     {
-        return app(\App\Services\TrustService::class)->getTrustLevel($this->organizer, 'App\\Models\\CommunityEvent');
+        return \App\Actions\Trust\GetTrustLevel::run($this->organizer, 'App\\Models\\CommunityEvent');
     }
 
     /**
@@ -269,7 +269,7 @@ class CommunityEvent extends Model implements Eventable, HasMedia
      */
     public function getOrganizerTrustBadge(): ?array
     {
-        return app(\App\Services\TrustService::class)->getTrustBadge($this->organizer, 'App\\Models\\CommunityEvent');
+        return \App\Actions\Trust\GetTrustBadge::run($this->organizer, 'App\\Models\\CommunityEvent');
     }
 
     /**

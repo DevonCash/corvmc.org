@@ -4,17 +4,13 @@ namespace App\Actions\Revisions;
 
 use App\Models\Revision;
 use App\Models\User;
-use App\Services\TrustService;
+use App\Support\TrustConstants;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class BulkApproveFromTrustedUsers
 {
     use AsAction;
-
-    public function __construct(
-        protected TrustService $trustService
-    ) {}
 
     /**
      * Bulk approve revisions from trusted users.
@@ -25,7 +21,7 @@ class BulkApproveFromTrustedUsers
             ->whereHas('submittedBy', function ($query) {
                 // Get revisions from users with fast-track approval
                 $query->whereRaw("JSON_EXTRACT(trust_points, '$.global') >= ?", [
-                    TrustService::TRUST_TRUSTED
+                    TrustConstants::TRUST_TRUSTED
                 ]);
             })
             ->get();

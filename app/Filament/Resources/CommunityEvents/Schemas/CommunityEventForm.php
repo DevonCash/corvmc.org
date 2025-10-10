@@ -5,7 +5,6 @@ namespace App\Filament\Resources\CommunityEvents\Schemas;
 use App\Models\CommunityEvent;
 use App\Models\User;
 use App\Data\VenueLocationData;
-use App\Services\TrustService;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Card;
@@ -220,9 +219,8 @@ class CommunityEventForm
                                 $organizer = User::find($organizerId);
                                 if (!$organizer) return 'Organizer not found';
 
-                                $trustService = app(TrustService::class);
-                                $trustInfo = $trustService->getTrustLevelInfo($organizer, 'App\\Models\\CommunityEvent');
-                                $badge = $trustService->getTrustBadge($organizer, 'App\\Models\\CommunityEvent');
+                                $trustInfo = \App\Actions\Trust\GetTrustLevelInfo::run($organizer, 'App\\Models\\CommunityEvent');
+                                $badge = \App\Actions\Trust\GetTrustBadge::run($organizer, 'App\\Models\\CommunityEvent');
 
                                 $content = "Trust Level: {$trustInfo['level']} ({$trustInfo['points']} points)";
                                 

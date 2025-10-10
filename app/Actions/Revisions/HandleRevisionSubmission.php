@@ -3,17 +3,12 @@
 namespace App\Actions\Revisions;
 
 use App\Models\Revision;
-use App\Services\TrustService;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class HandleRevisionSubmission
 {
     use AsAction;
-
-    public function __construct(
-        protected TrustService $trustService
-    ) {}
 
     /**
      * Handle a newly submitted revision.
@@ -77,7 +72,7 @@ class HandleRevisionSubmission
             default:
                 // Standard trust-based auto-approval
                 $contentType = get_class($model);
-                return $this->trustService->canAutoApprove($submitter, $contentType);
+                return \App\Actions\Trust\CanAutoApprove::run($submitter, $contentType);
         }
     }
 

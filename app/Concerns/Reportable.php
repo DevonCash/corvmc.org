@@ -4,7 +4,6 @@ namespace App\Concerns;
 
 use App\Models\Report;
 use App\Models\User;
-use App\Services\TrustService;
 
 trait Reportable
 {
@@ -134,8 +133,7 @@ trait Reportable
             return null;
         }
 
-        $trustService = app(TrustService::class);
-        return $trustService->getTrustLevelInfo($creator, $this->getTrustContentType());
+        return \App\Actions\Trust\GetTrustLevelInfo::run($creator, $this->getTrustContentType());
     }
 
     /**
@@ -148,8 +146,7 @@ trait Reportable
             return null;
         }
 
-        $trustService = app(TrustService::class);
-        return $trustService->getTrustBadge($creator, $this->getTrustContentType());
+        return \App\Actions\Trust\GetTrustBadge::run($creator, $this->getTrustContentType());
     }
 
     /**
@@ -167,8 +164,7 @@ trait Reportable
             ];
         }
 
-        $trustService = app(TrustService::class);
-        return $trustService->determineApprovalWorkflow($creator, $this->getTrustContentType());
+        return \App\Actions\Trust\DetermineApprovalWorkflow::run($creator, $this->getTrustContentType());
     }
 
     /**
@@ -181,8 +177,7 @@ trait Reportable
             return;
         }
 
-        $trustService = app(TrustService::class);
-        $trustService->awardSuccessfulContent($creator, $this, $this->getTrustContentType());
+        \App\Actions\Trust\AwardSuccessfulContent::run($creator, $this, $this->getTrustContentType());
     }
 
     /**
@@ -195,8 +190,7 @@ trait Reportable
             return;
         }
 
-        $trustService = app(TrustService::class);
-        $trustService->penalizeViolation($creator, $violationType, $this->getTrustContentType(), $reason);
+        \App\Actions\Trust\PenalizeViolation::run($creator, $violationType, $this->getTrustContentType(), null, $reason);
     }
 
     /**
@@ -209,8 +203,7 @@ trait Reportable
             return false;
         }
 
-        $trustService = app(TrustService::class);
-        return $trustService->canAutoApprove($creator, $this->getTrustContentType());
+        return \App\Actions\Trust\CanAutoApprove::run($creator, $this->getTrustContentType());
     }
 
     /**
@@ -223,7 +216,7 @@ trait Reportable
             return false;
         }
 
-        $trustService = app(TrustService::class);
-        return $trustService->getFastTrackApproval($creator, $this->getTrustContentType());
+        $points = \App\Actions\Trust\GetTrustBalance::run($creator, $this->getTrustContentType());
+        return $points >= \App\Support\TrustConstants::TRUST_TRUSTED;
     }
 }

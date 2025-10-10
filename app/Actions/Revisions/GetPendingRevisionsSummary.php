@@ -3,16 +3,11 @@
 namespace App\Actions\Revisions;
 
 use App\Models\Revision;
-use App\Services\TrustService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetPendingRevisionsSummary
 {
     use AsAction;
-
-    public function __construct(
-        protected TrustService $trustService
-    ) {}
 
     /**
      * Get pending revisions summary.
@@ -46,7 +41,7 @@ class GetPendingRevisionsSummary
             $contentType = $model ? get_class($model) : null;
 
             if ($contentType) {
-                $workflow = $this->trustService->determineApprovalWorkflow($submitter, $contentType);
+                $workflow = \App\Actions\Trust\DetermineApprovalWorkflow::run($submitter, $contentType);
                 $priority[$workflow['review_priority']] = ($priority[$workflow['review_priority']] ?? 0) + 1;
             }
         }

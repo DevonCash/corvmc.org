@@ -4,7 +4,6 @@ namespace App\Actions\Revisions;
 
 use App\Models\Revision;
 use App\Notifications\RevisionApprovedNotification;
-use App\Services\TrustService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -12,10 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
 class AutoApproveRevision
 {
     use AsAction;
-
-    public function __construct(
-        protected TrustService $trustService
-    ) {}
 
     /**
      * Auto-approve a revision based on trust level.

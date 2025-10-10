@@ -5,7 +5,6 @@ namespace App\Actions\Revisions;
 use App\Models\Revision;
 use App\Models\User;
 use App\Notifications\RevisionSubmittedNotification;
-use App\Services\TrustService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -13,10 +12,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
 class QueueRevisionForReview
 {
     use AsAction;
-
-    public function __construct(
-        protected TrustService $trustService
-    ) {}
 
     /**
      * Queue a revision for manual review.
@@ -35,7 +30,7 @@ class QueueRevisionForReview
         }
 
         // Determine review priority based on trust level
-        $workflow = $this->trustService->determineApprovalWorkflow($submitter, $contentType);
+        $workflow = \App\Actions\Trust\DetermineApprovalWorkflow::run($submitter, $contentType);
 
         Log::info('Revision queued for manual review', [
             'revision_id' => $revision->id,

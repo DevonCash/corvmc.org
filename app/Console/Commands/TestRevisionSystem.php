@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Models\User;
 use App\Models\MemberProfile;
 use App\Models\Revision;
-use App\Services\TrustService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
@@ -27,12 +26,9 @@ class TestRevisionSystem extends Command
      */
     protected $description = 'Test the revision system end-to-end';
 
-    protected TrustService $trustService;
-
-    public function __construct(TrustService $trustService)
+    public function __construct()
     {
         parent::__construct();
-        $this->trustService = $trustService;
     }
 
     /**
