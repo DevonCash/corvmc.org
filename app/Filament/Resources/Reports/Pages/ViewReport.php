@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Reports\Pages;
 
 use App\Filament\Resources\Reports\ReportResource;
 use App\Models\Report;
-use App\Services\ReportService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Infolists\Components\TextEntry;
@@ -152,7 +151,7 @@ class ViewReport extends ViewRecord
                         ->rows(3),
                 ])
                 ->action(function (Report $record, array $data): void {
-                    \ReportService::resolveReport(
+                    \App\Actions\Reports\ResolveReport::run(
                         $record,
                         Auth::user(),
                         'upheld',
@@ -182,7 +181,7 @@ class ViewReport extends ViewRecord
                         ->rows(3),
                 ])
                 ->action(function (Report $record, array $data): void {
-                    \ReportService::resolveReport(
+                    \App\Actions\Reports\ResolveReport::run(
                         $record,
                         Auth::user(),
                         'dismissed',
@@ -213,7 +212,7 @@ class ViewReport extends ViewRecord
                         ->rows(3),
                 ])
                 ->action(function (Report $record, array $data): void {
-                    \ReportService::resolveReport(
+                    \App\Actions\Reports\ResolveReport::run(
                         $record,
                         Auth::user(),
                         'escalated',

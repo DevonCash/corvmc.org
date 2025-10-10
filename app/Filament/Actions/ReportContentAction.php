@@ -2,7 +2,6 @@
 
 namespace App\Filament\Actions;
 
-use App\Facades\ReportService;
 use App\Models\Report;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -56,7 +55,7 @@ class ReportContentAction
                         ? $data['custom_reason']
                         : ($data['details'] ?? null);
 
-                    $report = ReportService::submitReport(
+                    $report = \App\Actions\Reports\SubmitReport::run(
                         $record,
                         Auth::user(),
                         $data['reason'],
