@@ -208,202 +208,52 @@ class ReservationService
 
     /**
      * Validate reservation parameters.
+     *
+     * @deprecated Use \App\Actions\Reservations\ValidateReservation instead
      */
     public function validateReservation(User $user, Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): array
     {
-        $errors = [];
-
-        // Check if start time is in the future
-        if ($startTime->isPast()) {
-            $errors[] = 'Reservation start time must be in the future.';
-        }
-
-        // Check if end time is after start time
-        if ($endTime->lte($startTime)) {
-            $errors[] = 'End time must be after start time.';
-        }
-
-        $hours = $this->calculateHours($startTime, $endTime);
-
-        // Check minimum duration
-        if ($hours < self::MIN_RESERVATION_DURATION) {
-            $errors[] = 'Minimum reservation duration is ' . self::MIN_RESERVATION_DURATION . ' hour(s).';
-        }
-
-        // Check maximum duration
-        if ($hours > self::MAX_RESERVATION_DURATION) {
-            $errors[] = 'Maximum reservation duration is ' . self::MAX_RESERVATION_DURATION . ' hours.';
-        }
-
-        // Check for conflicts
-        if (! $this->isTimeSlotAvailable($startTime, $endTime, $excludeReservationId)) {
-            $allConflicts = $this->getAllConflicts($startTime, $endTime, $excludeReservationId);
-            $conflictMessages = [];
-
-            if ($allConflicts['reservations']->isNotEmpty()) {
-                $reservationConflicts = $allConflicts['reservations']->map(function ($r) {
-                    return $r->user->name . ' (' . $r->reserved_at->format('M j, g:i A') . ' - ' . $r->reserved_until->format('g:i A') . ')';
-                })->join(', ');
-                $conflictMessages[] = 'existing reservation(s): ' . $reservationConflicts;
-            }
-
-            if ($allConflicts['productions']->isNotEmpty()) {
-                $productionConflicts = $allConflicts['productions']->map(function ($p) {
-                    return $p->title . ' (' . $p->start_time->format('M j, g:i A') . ' - ' . $p->end_time->format('g:i A') . ')';
-                })->join(', ');
-                $conflictMessages[] = 'production(s): ' . $productionConflicts;
-            }
-
-            $errors[] = 'Time slot conflicts with ' . implode(' and ', $conflictMessages);
-        }
-
-        // Business hours check (9 AM to 10 PM)
-        if ($startTime->hour < 9 || $endTime->hour > 22 || ($endTime->hour == 22 && $endTime->minute > 0)) {
-            $errors[] = 'Reservations are only allowed between 9 AM and 10 PM.';
-        }
-
-        return $errors;
+        return \App\Actions\Reservations\ValidateReservation::run($user, $startTime, $endTime, $excludeReservationId);
     }
 
     /**
      * Create a new reservation.
+     *
+     * @deprecated Use \App\Actions\Reservations\CreateReservation instead
      */
     public function createReservation(User $user, Carbon $startTime, Carbon $endTime, array $options = []): \App\Models\RehearsalReservation
     {
-        $errors = $this->validateReservation($user, $startTime, $endTime);
-
-        if (! empty($errors)) {
-            throw new \InvalidArgumentException('Validation failed: ' . implode(' ', $errors));
-        }
-
-        $costCalculation = $this->calculateCost($user, $startTime, $endTime);
-
-        return DB::transaction(function () use ($user, $startTime, $endTime, $costCalculation, $options) {
-            // Deduct credits if user is using free hours (Credits System integration)
-            if ($costCalculation['free_hours'] > 0) {
-                $blocks = $this->hoursToBlocks($costCalculation['free_hours']);
-
-                // Check if user has credits in the new system
-                $creditsBalance = \App\Facades\CreditService::getBalance($user, 'free_hours');
-
-                if ($creditsBalance > 0) {
-                    // User is on new Credits System - deduct credits
-                    try {
-                        \App\Facades\CreditService::deductCredits(
-                            $user,
-                            $blocks,
-                            'reservation_usage',
-                            null, // Will update with reservation ID after creation
-                            'free_hours'
-                        );
-                    } catch (\App\Exceptions\InsufficientCreditsException $e) {
-                        throw new \InvalidArgumentException('Insufficient credits available.');
-                    }
-                }
-                // Otherwise, legacy system will track via free_hours_used field
-            }
-
-            $reservation = \App\Models\RehearsalReservation::create([
-                'reservable_type' => \App\Models\User::class,
-                'reservable_id' => $user->id,
-                'reserved_at' => $startTime,
-                'reserved_until' => $endTime,
-                'cost' => $costCalculation['cost'],
-                'hours_used' => $costCalculation['total_hours'],
-                'free_hours_used' => $costCalculation['free_hours'],
-                'status' => $options['status'] ?? 'confirmed',
-                'notes' => $options['notes'] ?? null,
-                'is_recurring' => $options['is_recurring'] ?? false,
-                'recurrence_pattern' => $options['recurrence_pattern'] ?? null,
-            ]);
-
-            // Update the credit transaction with the reservation ID
-            if ($costCalculation['free_hours'] > 0 && \App\Facades\CreditService::getBalance($user, 'free_hours') >= 0) {
-                // Find the most recent deduction transaction and update its source_id
-                $latestTransaction = \App\Models\CreditTransaction::where('user_id', $user->id)
-                    ->where('credit_type', 'free_hours')
-                    ->where('source', 'reservation_usage')
-                    ->whereNull('source_id')
-                    ->latest('created_at')
-                    ->first();
-
-                if ($latestTransaction) {
-                    $latestTransaction->update(['source_id' => $reservation->id]);
-                }
-            }
-
-            // Send appropriate notification based on status
-            if ($reservation->status === 'confirmed') {
-                // For immediately confirmed reservations, send the confirmation notification
-                $user->notify(new ReservationConfirmedNotification($reservation));
-            } else {
-                // For pending reservations, send the creation notification
-                $user->notify(new ReservationCreatedNotification($reservation));
-            }
-
-            return $reservation;
-        });
+        return \App\Actions\Reservations\CreateReservation::run($user, $startTime, $endTime, $options);
     }
 
     /**
      * Update an existing reservation.
+     *
+     * @deprecated Use \App\Actions\Reservations\UpdateReservation instead
      */
     public function updateReservation(\App\Models\RehearsalReservation $reservation, Carbon $startTime, Carbon $endTime, array $options = []): \App\Models\RehearsalReservation
     {
-        $errors = $this->validateReservation($reservation->user, $startTime, $endTime, $reservation->id);
-
-        if (! empty($errors)) {
-            throw new \InvalidArgumentException('Validation failed: ' . implode(' ', $errors));
-        }
-
-        $costCalculation = $this->calculateCost($reservation->user, $startTime, $endTime);
-
-        return DB::transaction(function () use ($reservation, $startTime, $endTime, $costCalculation, $options) {
-            $reservation->update([
-                'reserved_at' => $startTime,
-                'reserved_until' => $endTime,
-                'cost' => $costCalculation['cost'],
-                'hours_used' => $costCalculation['total_hours'],
-                'free_hours_used' => $costCalculation['free_hours'],
-                'notes' => $options['notes'] ?? $reservation->notes,
-                'status' => $options['status'] ?? $reservation->status,
-            ]);
-
-            return $reservation;
-        });
+        return \App\Actions\Reservations\UpdateReservation::run($reservation, $startTime, $endTime, $options);
     }
 
     /**
      * Confirm a pending reservation.
+     *
+     * @deprecated Use \App\Actions\Reservations\ConfirmReservation instead
      */
     public function confirmReservation(\App\Models\RehearsalReservation $reservation): \App\Models\RehearsalReservation
     {
-        if ($reservation->status !== 'pending') {
-            return $reservation;
-        }
-
-        $reservation->update(['status' => 'confirmed']);
-
-        // Send confirmation notification
-        $reservation->user->notify(new ReservationConfirmedNotification($reservation));
-
-        return $reservation;
+        return \App\Actions\Reservations\ConfirmReservation::run($reservation);
     }
 
     /**
      * Cancel a reservation.
+     *
+     * @deprecated Use \App\Actions\Reservations\CancelReservation instead
      */
     public function cancelReservation(\App\Models\RehearsalReservation $reservation, ?string $reason = null): \App\Models\RehearsalReservation
     {
-        $reservation->update([
-            'status' => 'cancelled',
-            'notes' => $reservation->notes . ($reason ? "\nCancellation reason: " . $reason : ''),
-        ]);
-
-        // Send cancellation notification
-        $reservation->user->notify(new ReservationCancelledNotification($reservation));
-
-        return $reservation;
+        return \App\Actions\Reservations\CancelReservation::run($reservation, $reason);
     }
 
     /**

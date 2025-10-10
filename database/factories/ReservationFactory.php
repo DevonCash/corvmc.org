@@ -23,7 +23,8 @@ class ReservationFactory extends Factory
         $reservedUntil = (clone $reservedAt)->modify('+'.($duration * 60).' minutes');
 
         return [
-            'user_id' => User::factory(),
+            'reservable_type' => User::class,
+            'reservable_id' => User::factory(),
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
             'status' => $this->faker->randomElement(['pending', 'confirmed', 'cancelled']),
@@ -112,7 +113,8 @@ class ReservationFactory extends Factory
             $hours = $attributes['hours_used'] ?? 2;
 
             return [
-                'user_id' => $user->id,
+                'reservable_type' => User::class,
+                'reservable_id' => $user->id,
                 'cost' => 0, // Sustaining members often get free hours
                 'free_hours_used' => $hours,
             ];
