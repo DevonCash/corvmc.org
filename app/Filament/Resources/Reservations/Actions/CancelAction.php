@@ -20,7 +20,7 @@ class CancelAction
                 Auth::user()->can('manage reservations'))
             ->requiresConfirmation()
             ->action(function (Reservation $record) {
-                \App\Facades\ReservationService::cancelReservation($record);
+                \App\Actions\Reservations\CancelReservation::run($record);
 
                 Notification::make()
                     ->title('Reservation Cancelled')

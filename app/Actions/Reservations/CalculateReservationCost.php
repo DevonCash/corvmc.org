@@ -27,7 +27,7 @@ class CalculateReservationCost
      */
     public function handle(User $user, Carbon $startTime, Carbon $endTime): array
     {
-        $hours = $this->calculateHours($startTime, $endTime);
+        $hours = $startTime->diffInMinutes($endTime) / 60;
 
         // Use fresh calculation (bypass cache) for transaction safety during reservation creation
         $remainingFreeHours = $user->getRemainingFreeHours($fresh = true);
@@ -48,11 +48,4 @@ class CalculateReservationCost
         ];
     }
 
-    /**
-     * Calculate duration in hours between two times.
-     */
-    protected function calculateHours(Carbon $startTime, Carbon $endTime): float
-    {
-        return $startTime->diffInMinutes($endTime) / 60;
-    }
 }

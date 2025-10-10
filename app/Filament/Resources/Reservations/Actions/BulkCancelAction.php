@@ -17,7 +17,7 @@ class BulkCancelAction
             ->requiresConfirmation()
             ->action(function (Collection $records) {
                 foreach ($records as $record) {
-                    \App\Facades\ReservationService::cancelReservation($record);
+                    \App\Actions\Reservations\CancelReservation::run($record);
                 }
 
                 Notification::make()

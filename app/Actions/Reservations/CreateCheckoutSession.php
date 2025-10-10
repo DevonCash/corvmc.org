@@ -9,8 +9,6 @@ class CreateCheckoutSession
 {
     use AsAction;
 
-    public const MINUTES_PER_BLOCK = 30; // Practice space credits are in 30-minute blocks
-
     /**
      * Create a Stripe checkout session for a reservation payment.
      *
@@ -33,7 +31,7 @@ class CreateCheckoutSession
 
         // Calculate paid hours and convert to 30-minute blocks
         $paidHours = $reservation->hours_used - $reservation->free_hours_used;
-        $paidBlocks = $this->hoursToBlocks($paidHours);
+        $paidBlocks = \App\Actions\Credits\GetBlocksFromHours::run($paidHours);
 
         if ($paidBlocks <= 0) {
             throw new \Exception('No payment required for this reservation.');
@@ -54,13 +52,5 @@ class CreateCheckoutSession
         ]);
 
         return $checkout;
-    }
-
-    /**
-     * Convert hours to blocks for credit system.
-     */
-    protected function hoursToBlocks(float $hours): int
-    {
-        return (int) ceil(($hours * 60) / self::MINUTES_PER_BLOCK);
     }
 }

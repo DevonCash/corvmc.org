@@ -28,12 +28,12 @@ class CreateReservation
         }
 
         // Calculate cost
-        $costCalculation = \App\Facades\ReservationService::calculateCost($user, $startTime, $endTime);
+        $costCalculation = CalculateReservationCost::run($user, $startTime, $endTime);
 
         return DB::transaction(function () use ($user, $startTime, $endTime, $costCalculation, $options) {
             // Deduct credits if user is using free hours (Credits System integration)
             if ($costCalculation['free_hours'] > 0) {
-                $blocks = \App\Facades\ReservationService::hoursToBlocks($costCalculation['free_hours']);
+                $blocks = \App\Actions\Credits\GetBlocksFromHours::run($costCalculation['free_hours']);
 
                 // Check if user has credits in the new system
                 $creditsBalance = \App\Actions\Credits\GetBalance::run($user, 'free_hours');

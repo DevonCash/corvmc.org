@@ -8,7 +8,6 @@ use App\Models\User;
 use Filament\Actions\CreateAction;
 use App\Filament\Resources\Reservations\Schemas\ReservationForm;
 use App\Models\RehearsalReservation;
-use App\Services\ReservationService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Wizard\Step;
 use Filament\Notifications\Notification;
@@ -39,8 +38,8 @@ class ListReservations extends ListRecords
                 ->action(function (array $data) {
                     $user = User::find($data['user_id']);
 
-                    // Use ReservationService to properly create reservation with notifications
-                    $reservation = \App\Facades\ReservationService::createReservation(
+                    // Use CreateReservation action to properly create reservation with notifications
+                    $reservation = \App\Actions\Reservations\CreateReservation::run(
                         $user,
                         \Carbon\Carbon::parse($data['reserved_at']),
                         \Carbon\Carbon::parse($data['reserved_until']),

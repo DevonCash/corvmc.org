@@ -6,6 +6,8 @@ use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
+use Spatie\Period\Period;
+use Spatie\Period\Precision;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetConflictingReservations
@@ -18,7 +20,6 @@ class GetConflictingReservations
      */
     public function handle(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): Collection
     {
-        $requestedPeriod = \App\Facades\ReservationService::createPeriod($startTime, $endTime);
         $cacheKey = "reservations.conflicts." . $startTime->format('Y-m-d');
 
         // Cache all day's reservations, then filter for specific conflicts
@@ -42,10 +43,13 @@ class GetConflictingReservations
             return $reservation->reserved_until > $startTime && $reservation->reserved_at < $endTime;
         });
 
-        // If we can't create a valid period, return all potentially overlapping reservations
-        if (!$requestedPeriod) {
+        // If invalid time period, return all potentially overlapping reservations
+        if ($endTime <= $startTime) {
             return $filteredReservations;
         }
+
+        // Use Period for precise overlap detection
+        $requestedPeriod = Period::make($startTime, $endTime, Precision::MINUTE());
 
         return $filteredReservations->filter(function (Reservation $reservation) use ($requestedPeriod) {
             return $reservation->overlapsWith($requestedPeriod);

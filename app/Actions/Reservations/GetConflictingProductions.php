@@ -6,6 +6,8 @@ use App\Models\Production;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
+use Spatie\Period\Period;
+use Spatie\Period\Precision;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetConflictingProductions
@@ -17,7 +19,6 @@ class GetConflictingProductions
      */
     public function handle(Carbon $startTime, Carbon $endTime): Collection
     {
-        $requestedPeriod = \App\Facades\ReservationService::createPeriod($startTime, $endTime);
         $cacheKey = "productions.conflicts." . $startTime->format('Y-m-d');
 
         // Cache all day's productions, then filter for specific conflicts
@@ -39,10 +40,13 @@ class GetConflictingProductions
             return $production->end_time > $startTime && $production->start_time < $endTime;
         });
 
-        // If we can't create a valid period, return all potentially overlapping productions
-        if (!$requestedPeriod) {
+        // If invalid time period, return all potentially overlapping productions
+        if ($endTime <= $startTime) {
             return $filteredProductions;
         }
+
+        // Use Period for precise overlap detection
+        $requestedPeriod = Period::make($startTime, $endTime, Precision::MINUTE());
 
         return $filteredProductions->filter(function (Production $production) use ($requestedPeriod) {
             return $production->overlapsWith($requestedPeriod);

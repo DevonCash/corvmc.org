@@ -5,6 +5,8 @@ namespace App\Actions\Reservations;
 use App\Models\Reservation;
 use App\Models\Production;
 use Carbon\Carbon;
+use Spatie\Period\Period;
+use Spatie\Period\Precision;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetAvailableTimeSlots
@@ -41,11 +43,7 @@ class GetAvailableTimeSlots
         for ($hour = $startHour; $hour <= $endHour - $durationHours; $hour++) {
             $slotStart = $date->copy()->setTime($hour, 0);
             $slotEnd = $slotStart->copy()->addHours($durationHours);
-            $slotPeriod = \App\Facades\ReservationService::createPeriod($slotStart, $slotEnd);
-
-            if (!$slotPeriod) {
-                continue; // Skip invalid periods
-            }
+            $slotPeriod = Period::make($slotStart, $slotEnd, Precision::MINUTE());
 
             $hasReservationConflict = $existingReservations->contains(function (Reservation $reservation) use ($slotPeriod) {
                 return $reservation->overlapsWith($slotPeriod);

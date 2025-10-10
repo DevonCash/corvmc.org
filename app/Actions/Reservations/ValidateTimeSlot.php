@@ -28,9 +28,7 @@ class ValidateTimeSlot
      */
     public function handle(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): array
     {
-        $requestedPeriod = \App\Facades\ReservationService::createPeriod($startTime, $endTime);
-
-        if (!$requestedPeriod) {
+        if ($endTime <= $startTime) {
             return [
                 'valid' => false,
                 'errors' => ['Invalid time period provided'],

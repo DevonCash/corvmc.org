@@ -14,8 +14,8 @@ class CheckTimeSlotAvailability
      */
     public function handle(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): bool
     {
-        // If we can't create a valid period, the slot is not available
-        if (!\App\Facades\ReservationService::createPeriod($startTime, $endTime)) {
+        // Invalid time period means slot is not available
+        if ($endTime <= $startTime) {
             return false;
         }
 

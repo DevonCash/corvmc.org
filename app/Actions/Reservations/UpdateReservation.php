@@ -22,7 +22,7 @@ class UpdateReservation
             throw new \InvalidArgumentException('Validation failed: ' . implode(' ', $errors));
         }
 
-        $costCalculation = \App\Facades\ReservationService::calculateCost($reservation->user, $startTime, $endTime);
+        $costCalculation = CalculateReservationCost::run($reservation->user, $startTime, $endTime);
 
         return DB::transaction(function () use ($reservation, $startTime, $endTime, $costCalculation, $options) {
             $reservation->update([

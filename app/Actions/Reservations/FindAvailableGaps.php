@@ -7,6 +7,7 @@ use App\Models\Production;
 use Carbon\Carbon;
 use Spatie\Period\Period;
 use Spatie\Period\PeriodCollection;
+use Spatie\Period\Precision;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class FindAvailableGaps
@@ -20,7 +21,7 @@ class FindAvailableGaps
     {
         $businessHoursStart = $date->copy()->setTime(9, 0);
         $businessHoursEnd = $date->copy()->setTime(22, 0);
-        $businessPeriod = \App\Facades\ReservationService::createPeriod($businessHoursStart, $businessHoursEnd);
+        $businessPeriod = Period::make($businessHoursStart, $businessHoursEnd, Precision::MINUTE());
 
         // Get all reservations and productions for the day
         $dayStart = $date->copy()->setTime(0, 0);

@@ -63,7 +63,7 @@ class MemberBenefitsService
         }
 
         $hours = $this->getUserMonthlyFreeHours($user);
-        $blocks = \App\Facades\ReservationService::hoursToBlocks($hours);
+        $blocks = \App\Actions\Credits\GetBlocksFromHours::run($hours);
 
         // Use CreditService to allocate the credits (handles reset logic)
         \App\Facades\CreditService::allocateMonthlyCredits($user, $blocks, 'free_hours');

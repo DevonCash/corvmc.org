@@ -30,7 +30,7 @@ class ValidateReservation
             $errors[] = 'End time must be after start time.';
         }
 
-        $hours = \App\Facades\ReservationService::calculateHours($startTime, $endTime);
+        $hours = $startTime->diffInMinutes($endTime) / 60;
 
         // Check minimum duration
         if ($hours < self::MIN_RESERVATION_DURATION) {
@@ -43,8 +43,8 @@ class ValidateReservation
         }
 
         // Check for conflicts
-        if (!\App\Facades\ReservationService::isTimeSlotAvailable($startTime, $endTime, $excludeReservationId)) {
-            $allConflicts = \App\Facades\ReservationService::getAllConflicts($startTime, $endTime, $excludeReservationId);
+        if (!CheckTimeSlotAvailability::run($startTime, $endTime, $excludeReservationId)) {
+            $allConflicts = GetAllConflicts::run($startTime, $endTime, $excludeReservationId);
             $conflictMessages = [];
 
             if ($allConflicts['reservations']->isNotEmpty()) {
