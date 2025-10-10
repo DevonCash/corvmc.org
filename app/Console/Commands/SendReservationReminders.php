@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\NotificationSchedulingService;
+use App\Actions\Notifications\SendReservationReminders as SendReservationRemindersAction;
 use Illuminate\Console\Command;
 
 class SendReservationReminders extends Command
@@ -17,19 +17,13 @@ class SendReservationReminders extends Command
      */
     protected $description = 'Send reminder notifications for upcoming reservations';
 
-    public function __construct(
-        private NotificationSchedulingService $notificationService
-    ) {
-        parent::__construct();
-    }
-
     /**
      * Execute the console command.
      */
     public function handle()
     {
         $isDryRun = $this->option('dry-run');
-        
+
         $this->info('🔔 Sending reservation reminders...');
         $this->line('==================================');
 
@@ -37,7 +31,7 @@ class SendReservationReminders extends Command
             $this->warn('DRY RUN MODE - No notifications will be sent');
         }
 
-        $results = $this->notificationService->sendReservationReminders($isDryRun);
+        $results = SendReservationRemindersAction::run($isDryRun);
 
         if ($results['total'] === 0) {
             $this->info('No reservations found for tomorrow that need reminders.');

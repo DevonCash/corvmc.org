@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\NotificationSchedulingService;
+use App\Actions\Notifications\SendMembershipReminders as SendMembershipRemindersAction;
 use Illuminate\Console\Command;
 
 class SendMembershipReminders extends Command
@@ -17,12 +17,6 @@ class SendMembershipReminders extends Command
      */
     protected $description = 'Send membership reminders to inactive users';
 
-    public function __construct(
-        private NotificationSchedulingService $notificationService
-    ) {
-        parent::__construct();
-    }
-
     /**
      * Execute the console command.
      */
@@ -30,7 +24,7 @@ class SendMembershipReminders extends Command
     {
         $isDryRun = $this->option('dry-run');
         $inactiveDays = (int) $this->option('inactive-days');
-        
+
         $this->info('💌 Sending membership reminders...');
         $this->line('==================================');
 
@@ -40,7 +34,7 @@ class SendMembershipReminders extends Command
 
         $this->info("Checking for users inactive for {$inactiveDays}+ days...");
 
-        $results = $this->notificationService->sendMembershipReminders($isDryRun, $inactiveDays);
+        $results = SendMembershipRemindersAction::run($isDryRun, $inactiveDays);
 
         if ($results['total'] === 0) {
             $this->info('No inactive users found that need membership reminders.');
