@@ -4,7 +4,6 @@ namespace App\Concerns;
 
 use App\Models\Revision;
 use App\Models\User;
-use App\Services\RevisionService;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\Auth;
 
@@ -123,8 +122,8 @@ trait Revisionable
             'status' => Revision::STATUS_PENDING,
         ]);
 
-        // Use RevisionService to handle approval workflow
-        app(RevisionService::class)->handleRevisionSubmission($revision);
+        // Use action to handle approval workflow
+        \App\Actions\Revisions\HandleRevisionSubmission::run($revision);
 
         return $revision;
     }

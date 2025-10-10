@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Models\User;
 use App\Models\MemberProfile;
 use App\Models\Revision;
-use App\Services\RevisionService;
 use App\Services\TrustService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -28,13 +27,11 @@ class TestRevisionSystem extends Command
      */
     protected $description = 'Test the revision system end-to-end';
 
-    protected RevisionService $revisionService;
     protected TrustService $trustService;
 
-    public function __construct(RevisionService $revisionService, TrustService $trustService)
+    public function __construct(TrustService $trustService)
     {
         parent::__construct();
-        $this->revisionService = $revisionService;
         $this->trustService = $trustService;
     }
 
@@ -183,8 +180,8 @@ class TestRevisionSystem extends Command
                 // Test manual approval
                 $moderator = User::factory()->create(['name' => 'Moderator']);
                 $moderator->assignRole('moderator');
-                
-                $this->revisionService->approveRevision($revision, $moderator, 'Test approval');
+
+                \App\Actions\Revisions\ApproveRevision::run($revision, $moderator, 'Test approval');
                 
                 $profile->refresh();
                 if ($profile->bio === 'Pending approval bio') {
