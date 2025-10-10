@@ -97,113 +97,53 @@ class ReservationService
 
     /**
      * Check if a time slot is available (no conflicts with reservations or productions).
+     *
+     * @deprecated Use \App\Actions\Reservations\CheckTimeSlotAvailability instead
      */
     public function isTimeSlotAvailable(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): bool
     {
-        // If we can't create a valid period, the slot is not available
-        if (! $this->createPeriod($startTime, $endTime)) {
-            return false;
-        }
-
-        return ! $this->hasAnyConflicts($startTime, $endTime, $excludeReservationId);
+        return \App\Actions\Reservations\CheckTimeSlotAvailability::run($startTime, $endTime, $excludeReservationId);
     }
 
     /**
      * Get potentially conflicting reservations for a time slot.
      * Uses a broader database query then filters with Period for precision.
+     *
+     * @deprecated Use \App\Actions\Reservations\GetConflictingReservations instead
      */
     public function getConflictingReservations(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): Collection
     {
-        $requestedPeriod = $this->createPeriod($startTime, $endTime);
-        $cacheKey = "reservations.conflicts." . $startTime->format('Y-m-d');
-
-        // Cache all day's reservations, then filter for specific conflicts
-        $dayReservations = Cache::remember($cacheKey, 1800, function () use ($startTime) {
-            $dayStart = $startTime->copy()->startOfDay();
-            $dayEnd = $startTime->copy()->endOfDay();
-
-            return Reservation::with('reservable')
-                ->where('status', '!=', 'cancelled')
-                ->where('reserved_until', '>', $dayStart)
-                ->where('reserved_at', '<', $dayEnd)
-                ->get();
-        });
-
-        // Filter cached results for the specific time range and exclusion
-        $filteredReservations = $dayReservations->filter(function (Reservation $reservation) use ($startTime, $endTime, $excludeReservationId) {
-            if ($excludeReservationId && $reservation->id === $excludeReservationId) {
-                return false;
-            }
-
-            return $reservation->reserved_until > $startTime && $reservation->reserved_at < $endTime;
-        });
-
-        // If we can't create a valid period, return all potentially overlapping reservations
-        if (! $requestedPeriod) {
-            return $filteredReservations;
-        }
-
-        return $filteredReservations->filter(function (Reservation $reservation) use ($requestedPeriod) {
-            return $reservation->overlapsWith($requestedPeriod);
-        });
+        return \App\Actions\Reservations\GetConflictingReservations::run($startTime, $endTime, $excludeReservationId);
     }
 
     /**
      * Get productions that conflict with a time slot (only those using practice space).
+     *
+     * @deprecated Use \App\Actions\Reservations\GetConflictingProductions instead
      */
     public function getConflictingProductions(Carbon $startTime, Carbon $endTime): Collection
     {
-        $requestedPeriod = $this->createPeriod($startTime, $endTime);
-        $cacheKey = "productions.conflicts." . $startTime->format('Y-m-d');
-
-        // Cache all day's productions, then filter for specific conflicts
-        $dayProductions = Cache::remember($cacheKey, 3600, function () use ($startTime) {
-            $dayStart = $startTime->copy()->startOfDay();
-            $dayEnd = $startTime->copy()->endOfDay();
-
-            return Production::query()
-                ->where('end_time', '>', $dayStart)
-                ->where('start_time', '<', $dayEnd)
-                ->get()
-                ->filter(function (Production $production) {
-                    return $production->usesPracticeSpace();
-                });
-        });
-
-        // Filter cached results for the specific time range
-        $filteredProductions = $dayProductions->filter(function (Production $production) use ($startTime, $endTime) {
-            return $production->end_time > $startTime && $production->start_time < $endTime;
-        });
-
-        // If we can't create a valid period, return all potentially overlapping productions
-        if (! $requestedPeriod) {
-            return $filteredProductions;
-        }
-
-        return $filteredProductions->filter(function (Production $production) use ($requestedPeriod) {
-            return $production->overlapsWith($requestedPeriod);
-        });
+        return \App\Actions\Reservations\GetConflictingProductions::run($startTime, $endTime);
     }
 
     /**
      * Get all conflicts (both reservations and productions) for a time slot.
+     *
+     * @deprecated Use \App\Actions\Reservations\GetAllConflicts instead
      */
     public function getAllConflicts(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): array
     {
-        return [
-            'reservations' => $this->getConflictingReservations($startTime, $endTime, $excludeReservationId),
-            'productions' => $this->getConflictingProductions($startTime, $endTime),
-        ];
+        return \App\Actions\Reservations\GetAllConflicts::run($startTime, $endTime, $excludeReservationId);
     }
 
     /**
      * Check if a time slot has any conflicts (reservations or productions).
+     *
+     * @deprecated Use \App\Actions\Reservations\CheckTimeSlotAvailability (inverted) instead
      */
     public function hasAnyConflicts(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): bool
     {
-        $conflicts = $this->getAllConflicts($startTime, $endTime, $excludeReservationId);
-
-        return $conflicts['reservations']->isNotEmpty() || $conflicts['productions']->isNotEmpty();
+        return !\App\Actions\Reservations\CheckTimeSlotAvailability::run($startTime, $endTime, $excludeReservationId);
     }
 
     /**
@@ -258,119 +198,22 @@ class ReservationService
 
     /**
      * Get available time slots for a given date considering both reservations and productions.
+     *
+     * @deprecated Use \App\Actions\Reservations\GetAvailableTimeSlots instead
      */
     public function getAvailableTimeSlots(Carbon $date, int $durationHours = 1): array
     {
-        $slots = [];
-        $startHour = 9; // 9 AM
-        $endHour = 22; // 10 PM
-
-        // Get all reservations and productions for the day once to optimize queries
-        $dayStart = $date->copy()->setTime(0, 0);
-        $dayEnd = $date->copy()->setTime(23, 59);
-
-        $existingReservations = Reservation::with('reservable')
-            ->where('status', '!=', 'cancelled')
-            ->where('reserved_until', '>', $dayStart)
-            ->where('reserved_at', '<', $dayEnd)
-            ->get();
-
-        $existingProductions = Production::query()
-            ->where('end_time', '>', $dayStart)
-            ->where('start_time', '<', $dayEnd)
-            ->get()
-            ->filter(function (Production $production) {
-                return $production->usesPracticeSpace();
-            });
-
-        for ($hour = $startHour; $hour <= $endHour - $durationHours; $hour++) {
-            $slotStart = $date->copy()->setTime($hour, 0);
-            $slotEnd = $slotStart->copy()->addHours($durationHours);
-            $slotPeriod = $this->createPeriod($slotStart, $slotEnd);
-
-            if (! $slotPeriod) {
-                continue; // Skip invalid periods
-            }
-
-            $hasReservationConflict = $existingReservations->contains(function (Reservation $reservation) use ($slotPeriod) {
-                return $reservation->overlapsWith($slotPeriod);
-            });
-
-            $hasProductionConflict = $existingProductions->contains(function (Production $production) use ($slotPeriod) {
-                return $production->overlapsWith($slotPeriod);
-            });
-
-            if (! $hasReservationConflict && ! $hasProductionConflict) {
-                $slots[] = [
-                    'start' => $slotStart,
-                    'end' => $slotEnd,
-                    'duration' => $durationHours,
-                    'period' => $slotPeriod,
-                ];
-            }
-        }
-
-        return $slots;
+        return \App\Actions\Reservations\GetAvailableTimeSlots::run($date, $durationHours);
     }
 
     /**
      * Find gaps between reservations and productions for a given date using Period operations.
+     *
+     * @deprecated Use \App\Actions\Reservations\FindAvailableGaps instead
      */
     public function findAvailableGaps(Carbon $date, int $minimumDurationMinutes = 60): array
     {
-        $businessHoursStart = $date->copy()->setTime(9, 0);
-        $businessHoursEnd = $date->copy()->setTime(22, 0);
-        $businessPeriod = $this->createPeriod($businessHoursStart, $businessHoursEnd);
-
-        // Get all reservations and productions for the day
-        $dayStart = $date->copy()->setTime(0, 0);
-        $dayEnd = $date->copy()->setTime(23, 59);
-
-        $reservations = Reservation::where('status', '!=', 'cancelled')
-            ->where('reserved_until', '>', $dayStart)
-            ->where('reserved_at', '<', $dayEnd)
-            ->orderBy('reserved_at')
-            ->get();
-
-        $productions = Production::where('end_time', '>', $dayStart)
-            ->where('start_time', '<', $dayEnd)
-            ->orderBy('start_time')
-            ->get()
-            ->filter(function (Production $production) {
-                return $production->usesPracticeSpace();
-            });
-
-        // Combine all occupied periods
-        $occupiedPeriods = collect();
-
-        // Add reservation periods
-        $reservations->each(function (Reservation $reservation) use ($occupiedPeriods) {
-            $period = $reservation->getPeriod();
-            if ($period) {
-                $occupiedPeriods->push($period);
-            }
-        });
-
-        // Add production periods
-        $productions->each(function (Production $production) use ($occupiedPeriods) {
-            $period = $production->getPeriod();
-            if ($period) {
-                $occupiedPeriods->push($period);
-            }
-        });
-
-        if ($occupiedPeriods->isEmpty()) {
-            return [$businessPeriod]; // Entire business day is available
-        }
-
-        // Use Period collection to find gaps
-        $periodCollection = new \Spatie\Period\PeriodCollection(...$occupiedPeriods->toArray());
-        $gaps = $periodCollection->gaps($businessPeriod);
-
-        return collect($gaps)
-            ->filter(fn(Period $gap) => $gap->length() >= $minimumDurationMinutes)
-            ->values()
-            ->toArray();
+        return \App\Actions\Reservations\FindAvailableGaps::run($date, $minimumDurationMinutes);
     }
 
     /**
