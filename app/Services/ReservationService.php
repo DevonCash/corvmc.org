@@ -49,28 +49,12 @@ class ReservationService
 
     /**
      * Calculate the cost for a reservation.
+     *
+     * @deprecated Use \App\Actions\Reservations\CalculateReservationCost instead
      */
     public function calculateCost(User $user, Carbon $startTime, Carbon $endTime): array
     {
-        $hours = $this->calculateHours($startTime, $endTime);
-
-        // Use fresh calculation (bypass cache) for transaction safety during reservation creation
-        $remainingFreeHours = $user->getRemainingFreeHours($fresh = true);
-
-        $freeHours = $user->isSustainingMember() ? min($hours, $remainingFreeHours) : 0;
-        $paidHours = max(0, $hours - $freeHours);
-
-        $cost = Money::of(self::HOURLY_RATE, 'USD')->multipliedBy($paidHours);
-
-        return [
-            'total_hours' => $hours,
-            'free_hours' => $freeHours,
-            'paid_hours' => $paidHours,
-            'cost' => $cost,
-            'hourly_rate' => self::HOURLY_RATE,
-            'is_sustaining_member' => $user->isSustainingMember(),
-            'remaining_free_hours' => $remainingFreeHours,
-        ];
+        return \App\Actions\Reservations\CalculateReservationCost::run($user, $startTime, $endTime);
     }
 
     /**
@@ -505,74 +489,31 @@ class ReservationService
 
     /**
      * Create a Stripe checkout session for a reservation payment.
+     *
+     * @deprecated Use \App\Actions\Reservations\CreateCheckoutSession instead
      */
     public function createCheckoutSession(\App\Models\RehearsalReservation $reservation)
     {
-        $user = $reservation->user;
-
-        // Ensure user has a Stripe customer ID
-        if (! $user->hasStripeId()) {
-            $user->createAsStripeCustomer();
-        }
-
-        $priceId = config('services.stripe.practice_space_price_id');
-
-        if (! $priceId) {
-            throw new \Exception('Practice space price not configured. Run: php artisan practice-space:create-price');
-        }
-
-        // Calculate paid hours and convert to 30-minute blocks
-        $paidHours = $reservation->hours_used - $reservation->free_hours_used;
-        $paidBlocks = $this->hoursToBlocks($paidHours);
-
-        if ($paidBlocks <= 0) {
-            throw new \Exception('No payment required for this reservation.');
-        }
-
-        // Use Cashier's checkout method
-        $checkout = $user->checkout([
-            $priceId => $paidBlocks,
-        ], [
-            'success_url' => route('checkout.success') . '?session_id={CHECKOUT_SESSION_ID}&user_id=' . $reservation->getResponsibleUser()->id,
-            'cancel_url' => route('checkout.cancel') . '?user_id=' . $reservation->getResponsibleUser()->id . '&type=practice_space_reservation',
-            'metadata' => [
-                'reservation_id' => $reservation->id,
-                'user_id' => $user->id,
-                'type' => 'practice_space_reservation',
-                'free_hours_used' => $reservation->free_hours_used,
-            ],
-        ]);
-
-        return $checkout;
+        return \App\Actions\Reservations\CreateCheckoutSession::run($reservation);
     }
 
     /**
      * Handle successful payment and update reservation.
+     *
+     * @deprecated Use \App\Actions\Reservations\HandleSuccessfulPayment instead
      */
     public function handleSuccessfulPayment(\App\Models\RehearsalReservation $reservation, string $sessionId): bool
     {
-        // Update reservation payment status
-        $reservation->update([
-            'payment_status' => 'paid',
-            'payment_method' => 'stripe',
-            'paid_at' => now(),
-            'payment_notes' => "Paid via Stripe (Session: {$sessionId})",
-            'status' => 'confirmed', // Automatically confirm paid reservations
-        ]);
-
-        return true;
+        return \App\Actions\Reservations\HandleSuccessfulPayment::run($reservation, $sessionId);
     }
 
     /**
      * Handle failed or cancelled payment.
+     *
+     * @deprecated Use \App\Actions\Reservations\HandleFailedPayment instead
      */
     public function handleFailedPayment(\App\Models\RehearsalReservation $reservation, ?string $sessionId = null): void
     {
-        $notes = $sessionId ? "Payment failed/cancelled (Session: {$sessionId})" : 'Payment cancelled by user';
-
-        $reservation->update([
-            'payment_status' => 'unpaid',
-            'payment_notes' => $notes,
-        ]);
+        \App\Actions\Reservations\HandleFailedPayment::run($reservation, $sessionId);
     }
 }
