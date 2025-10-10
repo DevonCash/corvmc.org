@@ -34,7 +34,7 @@ class WarmUpCaches
         }
 
         // Warm up subscription stats
-        \UserSubscriptionService::getSubscriptionStats();
-        \UserSubscriptionService::getSustainingMembers();
+        \App\Actions\Subscriptions\GetSubscriptionStats::run();
+        \App\Actions\Subscriptions\GetSustainingMembers::run();
     }
 }

@@ -43,9 +43,9 @@ class AdminUserControlForm
                             ->afterStateUpdated(function ($state, $record) {
                                 if ($record) {
                                     if ($state) {
-                                        UserSubscriptionService::grantSustainingMemberStatus($record);
+                                        $record->makeSustainingMember();
                                     } else {
-                                        UserSubscriptionService::revokeSustainingMemberStatus($record);
+                                        $record->removeSustainingMember();
                                     }
                                 }
                             })

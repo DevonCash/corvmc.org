@@ -64,7 +64,7 @@ class CreateMembershipSubscriptionAction
             ->action(function (array $data, $record) {
                 $baseAmount = Money::of($data['amount'], 'USD');
                 try {
-                    $checkout = UserSubscriptionService::createSubscription($record, $baseAmount, $data['cover_fees']);
+                    $checkout = \App\Actions\Subscriptions\CreateSubscription::run($record, $baseAmount, $data['cover_fees']);
                     redirect($checkout->url);
                 } catch (\Exception $e) {
                     Log::error('Failed to create membership subscription', [

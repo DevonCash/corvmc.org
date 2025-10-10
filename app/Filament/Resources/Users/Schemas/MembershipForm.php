@@ -69,7 +69,7 @@ class MembershipForm
                         TextEntry::make('current_subscription')
                             ->label('Current Contribution')
                             ->helperText(function ($record) {
-                                $subscription = UserSubscriptionService::getActiveSubscription($record);
+                                $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
                                 if ($subscription) {
                                     try {
                                         $stripeSubscription = $subscription->asStripeSubscription();
@@ -82,7 +82,7 @@ class MembershipForm
                                 return null;
                             })
                             ->state(function ($record) {
-                                $subscription = UserSubscriptionService::getActiveSubscription($record);
+                                $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
 
                                 if ($subscription) {
                                     try {
@@ -137,7 +137,7 @@ class MembershipForm
                                 $changeInfo = static::getBenefitChangeInfo($record);
 
                                 if ($changeInfo) {
-                                    $subscription = UserSubscriptionService::getActiveSubscription($record);
+                                    $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
                                     $nextBillingDate = 'N/A';
 
                                     if ($subscription) {
@@ -250,7 +250,7 @@ class MembershipForm
      */
     private static function getBenefitChangeInfo($record): ?array
     {
-        $subscription = UserSubscriptionService::getActiveSubscription($record);
+        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
         if (!$subscription) {
             return null;
         }

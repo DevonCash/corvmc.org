@@ -32,7 +32,7 @@ class ModifyMembershipAmountAction
                     ->live()
                     ->tooltips(RawJs::make('`$${$value.toFixed(2)}`'))
                     ->default(function ($record) {
-                        $subscription = UserSubscriptionService::getActiveSubscription($record);
+                        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
 
                         if ($subscription) {
                             try {
@@ -72,8 +72,8 @@ class ModifyMembershipAmountAction
                     })
                     ->live()
                     ->default(function ($record) {
-                        $subscription = UserSubscriptionService::getActiveSubscription($record);
-                        
+                        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
+
                         if ($subscription) {
                             // Check if subscription has multiple items (base + fee coverage)
                             $stripeSubscription = $subscription->asStripeSubscription();
@@ -103,7 +103,7 @@ class ModifyMembershipAmountAction
                 $baseAmount = Money::of($data['amount'], 'USD');
 
                 try {
-                    $result = UserSubscriptionService::updateSubscriptionAmount($record, $baseAmount, $data['cover_fees']);
+                    $result = \App\Actions\Subscriptions\UpdateSubscriptionAmount::run($record, $baseAmount, $data['cover_fees']);
                     \Filament\Notifications\Notification::make()
                         ->title('Membership Updated')
                         ->success()

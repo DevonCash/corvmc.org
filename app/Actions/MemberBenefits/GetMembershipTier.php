@@ -18,7 +18,7 @@ class GetMembershipTier
      */
     public function handle(User $user): ?string
     {
-        $subscription = \App\Facades\UserSubscriptionService::getActiveSubscription($user);
+        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($user);
 
         if (!$subscription) {
             return null;

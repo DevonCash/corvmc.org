@@ -24,12 +24,12 @@ class GetUserMonthlyFreeHours
             return 0;
         }
 
-        // Use facade to avoid circular dependency
-        $subscription = \App\Facades\UserSubscriptionService::getActiveSubscription($user);
+        // Use actions for subscription data
+        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($user);
         if ($subscription) {
             try {
                 // Get the maximum contribution amount for this billing period
-                $peakAmount = \App\Facades\UserSubscriptionService::getBillingPeriodPeakAmount($subscription);
+                $peakAmount = \App\Actions\Subscriptions\GetBillingPeriodPeakAmount::run($subscription);
                 return CalculateFreeHours::run($peakAmount);
             } catch (\Exception $e) {
                 Log::warning('Failed to get billing period peak amount for free hours calculation', [
