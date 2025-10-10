@@ -184,6 +184,13 @@ Single-purpose action classes in `app/Actions/` organized by domain:
   - `RedeemPromoCode` - Redeem promotional codes
   - `ProcessPendingAllocations` - Batch processing (also a console command)
 
+- `app/Actions/Reservations/` - Reservation operations ✅ **Phase 2A MIGRATED**
+  - `CreateReservation` - Create new reservations with credit deduction
+  - `UpdateReservation` - Update existing reservations
+  - `ConfirmReservation` - Confirm pending reservations
+  - `CancelReservation` - Cancel reservations with notifications
+  - `ValidateReservation` - Comprehensive validation logic
+
 **Usage:**
 ```php
 // New code - use actions directly
@@ -206,10 +213,12 @@ Services registered as singletons in `AppServiceProvider`:
 **Core Services:**
 - `UserSubscriptionService` - Handles membership status and sustaining member logic
 - `UserInvitationService` - Manages user invitation workflow and token handling
-- `ReservationService` - Practice space booking logic with conflict detection, credit deduction
+- `ReservationService` - ⚠️ **Core CRUD operations migrated to Actions** (see `app/Actions/Reservations/`)
+  - Still contains: conflict detection, availability queries, stats, utilities
+  - Migrated: create, update, confirm, cancel, validate (885 → 735 lines, 17% reduction)
 - `RecurringReservationService` - Recurring reservation series management with RRULE parsing
 - `ProductionService` - Event management and production workflows
-- `CreditService` - ⚠️ **Now a backward compatibility wrapper for Actions** (see `app/Actions/Credits/`)
+- `CreditService` - ⚠️ **Fully migrated to Actions** (see `app/Actions/Credits/`)
 - `MemberBenefitsService` - Calculate and allocate member benefits based on subscriptions
 - `BandService` - Band profile management and member relationships
 - `MemberProfileService` - Member directory and profile management
