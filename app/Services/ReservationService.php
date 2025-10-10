@@ -284,121 +284,64 @@ class ReservationService
 
     /**
      * Determine the initial status for a reservation based on business rules.
+     *
+     * @deprecated Use \App\Actions\Reservations\DetermineReservationStatus instead
      */
     public function determineInitialStatus(Carbon $reservationDate, bool $isRecurring = false): string
     {
-        // Recurring reservations always need manual approval
-        if ($isRecurring) {
-            return 'pending';
-        }
-
-        // Reservations more than a week away need confirmation reminder
-        if ($reservationDate->isAfter(Carbon::now()->addWeek())) {
-            return 'pending';
-        }
-
-        // Near-term reservations are immediately confirmed
-        return 'confirmed';
+        return \App\Actions\Reservations\DetermineReservationStatus::run($reservationDate, $isRecurring);
     }
 
     /**
      * Check if a reservation needs a confirmation reminder.
+     *
+     * @deprecated Use \App\Actions\Reservations\DetermineReservationStatus::needsConfirmationReminder instead
      */
     public function needsConfirmationReminder(Carbon $reservationDate, bool $isRecurring = false): bool
     {
-        return ! $isRecurring && $reservationDate->isAfter(Carbon::now()->addWeek());
+        $action = new \App\Actions\Reservations\DetermineReservationStatus();
+        return $action->needsConfirmationReminder($reservationDate, $isRecurring);
     }
 
     /**
      * Calculate when to send the confirmation reminder (1 week before).
+     *
+     * @deprecated Use \App\Actions\Reservations\DetermineReservationStatus::getConfirmationReminderDate instead
      */
     public function getConfirmationReminderDate(Carbon $reservationDate): Carbon
     {
-        return $reservationDate->copy()->subWeek();
+        $action = new \App\Actions\Reservations\DetermineReservationStatus();
+        return $action->getConfirmationReminderDate($reservationDate);
     }
 
     /**
      * Get all time slots for the practice space (30-minute intervals).
+     *
+     * @deprecated Use \App\Actions\Reservations\GetAllTimeSlots instead
      */
     public function getAllTimeSlots(): array
     {
-        $slots = [];
-
-        // Practice space hours: 9 AM to 10 PM
-        $start = Carbon::createFromTime(9, 0);
-        $end = Carbon::createFromTime(22, 0);
-
-        $current = $start->copy();
-        while ($current->lessThanOrEqualTo($end)) {
-            $timeString = $current->format('H:i');
-            $slots[$timeString] = $current->format('g:i A');
-            $current->addMinutes(self::MINUTES_PER_BLOCK);
-        }
-
-        return $slots;
+        return \App\Actions\Reservations\GetAllTimeSlots::run();
     }
 
     /**
      * Get valid end time options based on start time (max 8 hours, within business hours).
+     *
+     * @deprecated Use \App\Actions\Reservations\GetValidEndTimes instead
      */
     public function getValidEndTimes(string $startTime): array
     {
-        $slots = [];
-        $start = Carbon::createFromFormat('H:i', $startTime);
-
-        // Minimum 1 hour, maximum 8 hours
-        $earliestEnd = $start->copy()->addHour();
-        $latestEnd = $start->copy()->addHours(self::MAX_RESERVATION_DURATION);
-
-        // Don't go past 10 PM
-        $businessEnd = Carbon::createFromTime(22, 0);
-        if ($latestEnd->greaterThan($businessEnd)) {
-            $latestEnd = $businessEnd;
-        }
-
-        $current = $earliestEnd->copy();
-        while ($current->lessThanOrEqualTo($latestEnd)) {
-            $timeString = $current->format('H:i');
-            $slots[$timeString] = $current->format('g:i A');
-            $current->addMinutes(self::MINUTES_PER_BLOCK);
-        }
-
-        return $slots;
+        return \App\Actions\Reservations\GetValidEndTimes::run($startTime);
     }
 
     /**
      * Get valid end times for a specific date and start time, avoiding conflicts.
+     *
+     * @deprecated Use \App\Actions\Reservations\GetValidEndTimesForDate instead
      */
     public function getValidEndTimesForDateAndStart(Carbon $date, string $startTime): array
     {
-        $slots = [];
-        $start = $date->copy()->setTimeFromTimeString($startTime);
-
-        // Minimum 1 hour, maximum 8 hours
-        $earliestEnd = $start->copy()->addHour();
-        $latestEnd = $start->copy()->addHours(self::MAX_RESERVATION_DURATION);
-
-        // Don't go past 10 PM
-        $businessEnd = $date->copy()->setTime(22, 0);
-        if ($latestEnd->greaterThan($businessEnd)) {
-            $latestEnd = $businessEnd;
-        }
-
-        $current = $earliestEnd->copy();
-        while ($current->lessThanOrEqualTo($latestEnd)) {
-            $timeString = $current->format('H:i');
-
-            // Check if this end time would cause conflicts
-            $hasConflicts = $this->hasAnyConflicts($start, $current);
-
-            if (! $hasConflicts) {
-                $slots[$timeString] = $current->format('g:i A');
-            }
-
-            $current->addMinutes(self::MINUTES_PER_BLOCK);
-        }
-
-        return $slots;
+        return \App\Actions\Reservations\GetValidEndTimesForDate::run($date, $startTime);
     }
 
     /**
@@ -463,28 +406,12 @@ class ReservationService
 
     /**
      * Get available time slots for a specific date, filtering out conflicted times.
+     *
+     * @deprecated Use \App\Actions\Reservations\GetAvailableTimeSlotsForDate instead
      */
     public function getAvailableTimeSlotsForDate(Carbon $date): array
     {
-        $allSlots = $this->getAllTimeSlots();
-        $availableSlots = [];
-
-        foreach ($allSlots as $timeString => $label) {
-            $testStart = $date->copy()->setTimeFromTimeString($timeString);
-            $testEnd = $testStart->copy()->addHour(); // Test with 1 hour duration
-
-            // Only check for conflicts and past times, not duration limits
-            // since users might want shorter or longer reservations
-            $hasConflicts = $this->hasAnyConflicts($testStart, $testEnd);
-            $isPast = $testStart->isPast();
-
-            // Only include slots that don't have conflicts and are in the future
-            if (! $hasConflicts && ! $isPast) {
-                $availableSlots[$timeString] = $label;
-            }
-        }
-
-        return $availableSlots;
+        return \App\Actions\Reservations\GetAvailableTimeSlotsForDate::run($date);
     }
 
     /**
