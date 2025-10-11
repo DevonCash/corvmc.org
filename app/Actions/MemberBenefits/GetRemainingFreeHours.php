@@ -45,7 +45,7 @@ class GetRemainingFreeHours
      *
      * @deprecated Use Credits System instead
      */
-    protected function getUsedFreeHoursThisMonth(User $user, bool $fresh = false): float
+    public function getUsedFreeHoursThisMonth(User $user, bool $fresh = false): float
     {
         $cacheKey = "user.{$user->id}.free_hours." . now()->format('Y-m');
 
