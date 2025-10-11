@@ -19,9 +19,20 @@
                     {{ filament()->getUserName($user) }}
                 </p>
                 @if ($stats['is_sustaining_member'] ?? false)
-                    <div class="flex items-center gap-1 mt-1">
-                        <x-tabler-star-filled class="w-4 h-4 text-amber-500" />
-                        <span class="text-xs text-amber-600 dark:text-amber-400 font-medium">Sustaining Member</span>
+                    <div class="flex items-center gap-2 mt-1">
+                        <div class="flex items-center gap-1">
+                            <x-tabler-star-filled class="w-4 h-4 text-amber-500" />
+                            <span class="text-xs text-amber-600 dark:text-amber-400 font-medium">Sustaining Member</span>
+                        </div>
+                        @if (isset($stats['remaining_free_hours']))
+                            <span class="text-xs text-gray-500 dark:text-gray-400">•</span>
+                            <div class="flex items-center gap-1">
+                                <x-tabler-clock class="w-4 h-4 text-primary-500" />
+                                <span class="text-xs text-gray-700 dark:text-gray-300 font-medium">
+                                    {{ number_format($stats['remaining_free_hours'], 1) }}h free hours remaining
+                                </span>
+                            </div>
+                        @endif
                     </div>
                 @endif
             </div>
