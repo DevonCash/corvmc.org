@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\HasTimePeriod;
+use Database\Factories\ReservationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
@@ -12,6 +13,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class ProductionReservation extends Reservation
 {
     use HasFactory, HasTimePeriod;
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory()
+    {
+        return ReservationFactory::new();
+    }
 
     // Table and primary key are inherited from parent
 
