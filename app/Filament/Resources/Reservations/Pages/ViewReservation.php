@@ -16,20 +16,22 @@ class ViewReservation extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        $actions = [
-            EditAction::make(),
-        ];
-
-        // Add payment action if reservation requires payment and user owns it or has permission
         $reservation = $this->getRecord();
         $user = Auth::user();
+        $actions = [];
 
+        // Only show edit for rehearsal reservations (production reservations are edited elsewhere)
+        if ($reservation instanceof \App\Models\RehearsalReservation) {
+            $actions[] = EditAction::make();
+        }
+
+        // Add payment action if reservation requires payment and user owns it or has permission
         if ($reservation instanceof \App\Models\RehearsalReservation &&
             $reservation->cost->isPositive() &&
             !$reservation->isPaid() &&
             ($reservation->reservable_id === $user->id || $user->can('manage reservations'))) {
 
-            $actions[] = PayStripeAction::make(); 
+            $actions[] = PayStripeAction::make();
         }
 
         return $actions;
