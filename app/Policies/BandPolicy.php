@@ -39,12 +39,10 @@ class BandPolicy
         return null;
     }
 
-    public function create(User $user): ?bool
+    public function create(User $user): bool
     {
-        if ($user?->can('create bands')) {
-            return true;
-        };
-        return null;
+        // All authenticated users can create bands
+        return true;
     }
 
     /**
