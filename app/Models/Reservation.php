@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use App\Concerns\HasTimePeriod;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class Reservation extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTimePeriod;
 
     protected $table = 'reservations';
     protected $primaryKey = 'id';
@@ -188,5 +189,23 @@ class Reservation extends Model
             'label' => 'N/A',
             'color' => 'gray',
         ];
+    }
+
+    /**
+     * Get the name of the start time field for this model.
+     * Required by HasTimePeriod trait.
+     */
+    protected function getStartTimeField(): string
+    {
+        return 'reserved_at';
+    }
+
+    /**
+     * Get the name of the end time field for this model.
+     * Required by HasTimePeriod trait.
+     */
+    protected function getEndTimeField(): string
+    {
+        return 'reserved_until';
     }
 }
