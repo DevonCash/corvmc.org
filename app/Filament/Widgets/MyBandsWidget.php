@@ -4,7 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Filament\Resources\Bands\Actions\CreateBandAction;
 use App\Models\Band;
-use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -94,27 +94,27 @@ class MyBandsWidget extends BaseWidget
                     ),
             ])
             ->recordActions([
-                Actions\Action::make('view')
+                Action::make('view')
                     ->label('View')
                     ->icon('tabler-eye')
                     ->url(fn(Band $record) => route('filament.member.resources.bands.view', $record))
                     ->openUrlInNewTab(),
 
-                Actions\Action::make('edit')
+                Action::make('edit')
                     ->label('Edit')
                     ->icon('tabler-edit')
                     ->url(fn(Band $record) => route('filament.member.resources.bands.edit', $record))
                     ->visible(fn(Band $record) => $this->canEditBand($record))
                     ->openUrlInNewTab(),
 
-                Actions\Action::make('manage_members')
+                Action::make('manage_members')
                     ->label('Members')
                     ->icon('tabler-users-plus')
                     ->url(fn(Band $record) => route('filament.member.resources.bands.edit', $record) . '#members')
                     ->visible(fn(Band $record) => $this->canManageBand($record) && $record->pending_invitations > 0)
                     ->openUrlInNewTab(),
 
-                Actions\Action::make('primary_link')
+                Action::make('primary_link')
                     ->label('Visit')
                     ->icon(fn(Band $record) => $this->getPrimaryLinkIcon($record))
                     ->url(fn(Band $record) => $this->getPrimaryLinkUrl($record))
@@ -122,7 +122,7 @@ class MyBandsWidget extends BaseWidget
                     ->openUrlInNewTab(),
             ])
             ->headerActions([
-                Actions\Action::make('view_all')
+                Action::make('view_all')
                     ->label('See All')
                     ->icon('tabler-settings')
                     ->url(route('filament.member.resources.bands.index')),
