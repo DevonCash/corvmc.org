@@ -50,6 +50,11 @@ class BandPolicy
      */
     public function update(User $user, Band $band): ?bool
     {
+        // Owner can always update their band
+        if ($user->is($band->owner)) {
+            return true;
+        }
+
         // Context check: admin members can update
         if ($band->membership($user)?->role === 'admin') {
             return true;
@@ -192,5 +197,13 @@ class BandPolicy
         }
 
         return false;
+    }
+
+    /**
+     * Determine whether the user can claim a band (band without owner).
+     */
+    public function claim(User $user, Band $band): bool
+    {
+        return $band->owner_id === null;
     }
 }

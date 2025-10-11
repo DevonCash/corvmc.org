@@ -22,13 +22,12 @@ use Filament\Tables\Table;
 use Filament\Tables\Enums\FiltersLayout;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class MembersRelationManager extends RelationManager
 {
     protected static string $relationship = 'memberships';
 
+    protected static ?string $title = "Band Members";
     protected static ?string $recordTitleAttribute = 'name';
 
     public function canViewAny(): bool
@@ -46,7 +45,7 @@ class MembersRelationManager extends RelationManager
             ->modalWidth('xl')
             ->schema([
                 TextInput::make('name')
-                    ->label('Display Name')
+                    ->label('Name')
                     ->placeholder('Member name or stage name')
                     ->maxLength(255)
                     ->required(fn($get) => !$get('user_id') && !$get('email'))
@@ -150,19 +149,13 @@ class MembersRelationManager extends RelationManager
                     }
                 } elseif ($data['email']) {
                     // New user by email - create account and invite to band
-                    $user = User::create([
-                        'name' => $data['name'],
-                        'email' => $data['email'],
-                        'password' => bcrypt(Str::random(32)), // Temporary password, they'll set it via invitation
-                    ]);
-
                     try {
-                        \App\Actions\Bands\InviteMember::run(
+                        $user = \App\Actions\Bands\CreateUserAndInviteToBand::run(
                             $this->ownerRecord,
-                            $user,
+                            $data['name'],
+                            $data['email'],
                             $data['role'],
-                            $data['position'] ?? null,
-                            $data['name']
+                            $data['position'] ?? null
                         );
 
                         Notification::make()
@@ -179,16 +172,12 @@ class MembersRelationManager extends RelationManager
                     }
                 } else {
                     // Non-CMC member - add directly as active
-                    DB::table('band_profile_members')->insert([
-                        'band_profile_id' => $this->ownerRecord->id,
-                        'user_id' => null,
-                        'role' => $data['role'],
-                        'position' => $data['position'] ?? null,
-                        'name' => $data['name'],
-                        'status' => 'active',
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+                    \App\Actions\Bands\AddNonCMCMember::run(
+                        $this->ownerRecord,
+                        $data['name'],
+                        $data['role'],
+                        $data['position'] ?? null
+                    );
 
                     Notification::make()
                         ->title('Member added')
@@ -282,50 +271,11 @@ class MembersRelationManager extends RelationManager
                     ]),
             ])
             ->using(function ($record, array $data): void {
-                $updateData = [
-                    'role' => $data['role'] ?? $record->role,
-                    'position' => $data['position'] ?? null,
-                    'name' => $data['name'],
-                ];
-
-                if ($data['user_id']) {
-                    // Existing CMC member selected
-                    $updateData['user_id'] = $data['user_id'];
-
-                    // If changing from non-CMC to CMC, convert to invitation
-                    if (!$record->user_id && $record->status === 'active') {
-                        $updateData['status'] = 'invited';
-                        $updateData['invited_at'] = now();
-
-                        $user = User::find($data['user_id']);
-                        if ($user) {
-                            \App\Actions\Bands\ResendInvitation::run($this->ownerRecord, $user);
-                        }
-                    }
-                } elseif ($data['email']) {
-                    // Email invitation - create new user
-                    $user = User::create([
-                        'name' => $data['name'],
-                        'email' => $data['email'],
-                        'password' => bcrypt(Str::random(32)),
-                    ]);
-
-                    $updateData['user_id'] = $user->id;
-                    $updateData['status'] = 'invited';
-                    $updateData['invited_at'] = now();
-
-                    \App\Actions\Bands\ResendInvitation::run($this->ownerRecord, $user);
-                } else {
-                    // No user association - keep as non-CMC member
-                    $updateData['user_id'] = null;
-                    // If converting from CMC to non-CMC, make them active
-                    if ($record->user_id) {
-                        $updateData['status'] = 'active';
-                        $updateData['invited_at'] = null;
-                    }
-                }
-
-                $record->update($updateData);
+                \App\Actions\Bands\UpdateBandMember::run(
+                    $record,
+                    $this->ownerRecord,
+                    $data
+                );
             })
             ->visible(
                 fn($record): bool => Auth::user()->can('manageMembers', $this->ownerRecord) ||
@@ -336,6 +286,7 @@ class MembersRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+
             ->recordTitleAttribute('name')
             ->columns([
                 TextColumn::make('display_name')

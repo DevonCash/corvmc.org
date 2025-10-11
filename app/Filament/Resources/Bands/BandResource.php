@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Bands;
 
 use App\Filament\Resources\Bands\Pages\ClaimBand;
-use App\Filament\Resources\Bands\Pages\CreateBand;
 use App\Filament\Resources\Bands\Pages\EditBand;
 use App\Filament\Resources\Bands\Pages\ListBands;
 use App\Filament\Resources\Bands\Pages\ViewBand;
@@ -67,7 +66,6 @@ class BandResource extends Resource
     {
         return [
             'index' => ListBands::route('/'),
-            'create' => CreateBand::route('/create'),
             'claim' => ClaimBand::route('/claim'),
             'view' => ViewBand::route('/{record}'),
             'edit' => EditBand::route('/{record}/edit'),

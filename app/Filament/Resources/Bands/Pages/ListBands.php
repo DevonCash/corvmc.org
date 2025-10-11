@@ -2,13 +2,16 @@
 
 namespace App\Filament\Resources\Bands\Pages;
 
+use App\Actions\Bands\CreateBand as CreateBandAction;
+use App\Actions\Bands\FindClaimableBand;
 use App\Filament\Resources\Bands\BandResource;
 use App\Models\Band;
 use Filament\Actions\Action;
-use Filament\Actions\CreateAction;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class ListBands extends ListRecords
 {
@@ -25,7 +28,41 @@ class ListBands extends ListRecords
                 ->badgeColor('danger')
                 ->url(route('filament.member.pages.band-invitations'))
                 ->visible(fn () => $this->getPendingInvitationsCount() > 0),
-            CreateAction::make(),
+            Action::make('create')
+                ->label('Create Band')
+                ->icon('heroicon-o-plus')
+                ->modalHeading('Create New Band')
+                ->modalWidth('md')
+                ->form([
+                    TextInput::make('name')
+                        ->label('Band Name')
+                        ->required()
+                        ->maxLength(255)
+                        ->placeholder('Enter your band name')
+                        ->autofocus(),
+                ])
+                ->action(function (array $data) {
+                    // Check for claimable bands with the same name first
+                    $claimableBand = FindClaimableBand::run($data['name']);
+
+                    if ($claimableBand && Auth::user()->can('claim', $claimableBand)) {
+                        // Redirect to claiming workflow instead of creating duplicate
+                        session()->flash('claimable_band', [
+                            'id' => $claimableBand->id,
+                            'name' => $claimableBand->name,
+                            'data' => $data
+                        ]);
+
+                        $this->redirect(BandResource::getUrl('claim'));
+                        return;
+                    }
+
+                    // Create the band
+                    $band = CreateBandAction::run($data);
+
+                    // Redirect to edit page
+                    $this->redirect(BandResource::getUrl('edit', ['record' => $band]));
+                }),
         ];
     }
 
