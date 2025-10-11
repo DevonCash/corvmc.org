@@ -2,6 +2,7 @@
 
 namespace App\Actions\Reservations;
 
+use App\Models\Reservation;
 use App\Models\RehearsalReservation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -14,26 +15,46 @@ class UpdateReservation
     /**
      * Update an existing reservation.
      */
-    public function handle(RehearsalReservation $reservation, Carbon $startTime, Carbon $endTime, array $options = []): RehearsalReservation
+    public function handle(Reservation $reservation, Carbon $startTime, Carbon $endTime, array $options = []): Reservation
     {
-        $errors = ValidateReservation::run($reservation->user, $startTime, $endTime, $reservation->id);
+        // Only validate and recalculate costs for rehearsal reservations
+        if ($reservation instanceof RehearsalReservation) {
+            $errors = ValidateReservation::run($reservation->user, $startTime, $endTime, $reservation->id);
 
-        if (!empty($errors)) {
-            throw new \InvalidArgumentException('Validation failed: ' . implode(' ', $errors));
+            if (!empty($errors)) {
+                throw new \InvalidArgumentException('Validation failed: ' . implode(' ', $errors));
+            }
+
+            $costCalculation = CalculateReservationCost::run($reservation->user, $startTime, $endTime);
+        } else {
+            // For production reservations, just set basic fields
+            $costCalculation = [
+                'cost' => $reservation->cost,
+                'total_hours' => $startTime->diffInHours($endTime),
+                'free_hours' => 0,
+            ];
         }
 
-        $costCalculation = CalculateReservationCost::run($reservation->user, $startTime, $endTime);
-
         return DB::transaction(function () use ($reservation, $startTime, $endTime, $costCalculation, $options) {
-            $reservation->update([
+            $updateData = [
                 'reserved_at' => $startTime,
                 'reserved_until' => $endTime,
-                'cost' => $costCalculation['cost'],
-                'hours_used' => $costCalculation['total_hours'],
-                'free_hours_used' => $costCalculation['free_hours'],
                 'notes' => $options['notes'] ?? $reservation->notes,
                 'status' => $options['status'] ?? $reservation->status,
-            ]);
+            ];
+
+            // Only update cost-related fields for rehearsal reservations
+            if ($reservation instanceof RehearsalReservation) {
+                $updateData['cost'] = $costCalculation['cost'];
+                $updateData['hours_used'] = $costCalculation['total_hours'];
+                $updateData['free_hours_used'] = $costCalculation['free_hours'];
+
+                if (isset($options['payment_status'])) {
+                    $updateData['payment_status'] = $options['payment_status'];
+                }
+            }
+
+            $reservation->update($updateData);
 
             return $reservation;
         });
