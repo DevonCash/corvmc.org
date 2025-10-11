@@ -2,7 +2,7 @@
 
 namespace App\Actions\Reservations;
 
-use App\Models\RehearsalReservation;
+use App\Models\Reservation;
 use App\Notifications\ReservationCancelledNotification;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -13,15 +13,18 @@ class CancelReservation
     /**
      * Cancel a reservation.
      */
-    public function handle(RehearsalReservation $reservation, ?string $reason = null): RehearsalReservation
+    public function handle(Reservation $reservation, ?string $reason = null): Reservation
     {
         $reservation->update([
             'status' => 'cancelled',
             'notes' => $reservation->notes . ($reason ? "\nCancellation reason: " . $reason : ''),
         ]);
 
-        // Send cancellation notification
-        $reservation->user->notify(new ReservationCancelledNotification($reservation));
+        // Send cancellation notification to responsible user
+        $user = $reservation->getResponsibleUser();
+        if ($user) {
+            $user->notify(new ReservationCancelledNotification($reservation));
+        }
 
         return $reservation;
     }
