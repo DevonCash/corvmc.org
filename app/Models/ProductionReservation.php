@@ -59,7 +59,7 @@ class ProductionReservation extends Reservation
         return $this->reservable?->title ?? 'Unknown Production';
     }
 
-    public function getResponsibleUser(): User
+    public function getResponsibleUser(): ?User
     {
         return $this->reservable?->manager;
     }

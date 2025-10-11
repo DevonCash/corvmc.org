@@ -77,7 +77,7 @@ class RehearsalReservation extends Reservation implements Eventable
         return $this->reservable?->name ?? 'Unknown User';
     }
 
-    public function getResponsibleUser(): User
+    public function getResponsibleUser(): ?User
     {
         return $this->reservable;
     }
