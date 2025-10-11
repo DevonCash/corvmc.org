@@ -12,6 +12,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 // Public website routes
 Route::get('/', function () {
     $upcomingEvents = Production::publishedUpcoming()
+        ->with('media')
         ->limit(3)
         ->get();
 
