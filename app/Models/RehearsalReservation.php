@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\MoneyCast;
 use App\Concerns\HasTimePeriod;
+use Database\Factories\ReservationFactory;
 use Guava\Calendar\Contracts\Eventable;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,14 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class RehearsalReservation extends Reservation implements Eventable
 {
     use HasFactory, LogsActivity, HasTimePeriod;
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory()
+    {
+        return ReservationFactory::new();
+    }
 
     // Table and primary key are inherited from parent
 
