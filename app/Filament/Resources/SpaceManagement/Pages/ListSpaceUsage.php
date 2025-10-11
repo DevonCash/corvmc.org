@@ -55,14 +55,20 @@ class ListSpaceUsage extends ListRecords
                 ->badge(function () {
                     return Reservation::where(function ($q) {
                             $q->where('status', 'pending')
-                                ->orWhere('payment_status', 'unpaid');
+                                ->orWhere(function ($q) {
+                                    $q->where('payment_status', 'unpaid')
+                                        ->where('cost', '>', 0);
+                                });
                         })->count();
                 })
                 ->badgeColor('warning')
                 ->modifyQueryUsing(fn(Builder $query) => $query
                     ->where(function ($q) {
                         $q->where('status', 'pending')
-                            ->orWhere('payment_status', 'unpaid');
+                            ->orWhere(function ($q) {
+                                $q->where('payment_status', 'unpaid')
+                                    ->where('cost', '>', 0);
+                            });
                     })
                     ->where('status', '!=', 'cancelled')
                     ->orderBy('reserved_at', 'asc')),

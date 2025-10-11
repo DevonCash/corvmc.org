@@ -14,6 +14,7 @@ class SpaceStatsWidget extends BaseWidget
         $pending = Reservation::where('status', 'pending')->count();
         $unpaid = Reservation::where('payment_status', 'unpaid')
             ->where('status', '!=', 'cancelled')
+            ->where('cost', '>', 0)
             ->count();
 
         // This week's reservations
