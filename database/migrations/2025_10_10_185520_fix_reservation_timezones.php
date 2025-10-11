@@ -21,17 +21,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Fix reservations
+        // Fix reservations (PostgreSQL syntax)
         DB::statement("
             UPDATE reservations
             SET
-                reserved_at = DATE_ADD(reserved_at, INTERVAL 8 HOUR),
-                reserved_until = DATE_ADD(reserved_until, INTERVAL 8 HOUR)
+                reserved_at = reserved_at + INTERVAL '8 hours',
+                reserved_until = reserved_until + INTERVAL '8 hours'
         ");
 
         DB::statement("
             UPDATE reservations
-            SET paid_at = DATE_ADD(paid_at, INTERVAL 8 HOUR)
+            SET paid_at = paid_at + INTERVAL '8 hours'
             WHERE paid_at IS NOT NULL
         ");
 
@@ -39,13 +39,13 @@ return new class extends Migration
         DB::statement("
             UPDATE productions
             SET
-                start_time = DATE_ADD(start_time, INTERVAL 8 HOUR),
-                end_time = DATE_ADD(end_time, INTERVAL 8 HOUR)
+                start_time = start_time + INTERVAL '8 hours',
+                end_time = end_time + INTERVAL '8 hours'
         ");
 
         DB::statement("
             UPDATE productions
-            SET published_at = DATE_ADD(published_at, INTERVAL 8 HOUR)
+            SET published_at = published_at + INTERVAL '8 hours'
             WHERE published_at IS NOT NULL
         ");
 
@@ -54,13 +54,13 @@ return new class extends Migration
             DB::statement("
                 UPDATE community_events
                 SET
-                    start_time = DATE_ADD(start_time, INTERVAL 8 HOUR),
-                    end_time = DATE_ADD(end_time, INTERVAL 8 HOUR)
+                    start_time = start_time + INTERVAL '8 hours',
+                    end_time = end_time + INTERVAL '8 hours'
             ");
 
             DB::statement("
                 UPDATE community_events
-                SET published_at = DATE_ADD(published_at, INTERVAL 8 HOUR)
+                SET published_at = published_at + INTERVAL '8 hours'
                 WHERE published_at IS NOT NULL
             ");
         }
@@ -71,30 +71,30 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Subtract the 8 hours back to restore original values
+        // Subtract the 8 hours back to restore original values (PostgreSQL syntax)
         DB::statement("
             UPDATE reservations
             SET
-                reserved_at = DATE_SUB(reserved_at, INTERVAL 8 HOUR),
-                reserved_until = DATE_SUB(reserved_until, INTERVAL 8 HOUR)
+                reserved_at = reserved_at - INTERVAL '8 hours',
+                reserved_until = reserved_until - INTERVAL '8 hours'
         ");
 
         DB::statement("
             UPDATE reservations
-            SET paid_at = DATE_SUB(paid_at, INTERVAL 8 HOUR)
+            SET paid_at = paid_at - INTERVAL '8 hours'
             WHERE paid_at IS NOT NULL
         ");
 
         DB::statement("
             UPDATE productions
             SET
-                start_time = DATE_SUB(start_time, INTERVAL 8 HOUR),
-                end_time = DATE_SUB(end_time, INTERVAL 8 HOUR)
+                start_time = start_time - INTERVAL '8 hours',
+                end_time = end_time - INTERVAL '8 hours'
         ");
 
         DB::statement("
             UPDATE productions
-            SET published_at = DATE_SUB(published_at, INTERVAL 8 HOUR)
+            SET published_at = published_at - INTERVAL '8 hours'
             WHERE published_at IS NOT NULL
         ");
 
@@ -102,13 +102,13 @@ return new class extends Migration
             DB::statement("
                 UPDATE community_events
                 SET
-                    start_time = DATE_SUB(start_time, INTERVAL 8 HOUR),
-                    end_time = DATE_SUB(end_time, INTERVAL 8 HOUR)
+                    start_time = start_time - INTERVAL '8 hours',
+                    end_time = end_time - INTERVAL '8 hours'
             ");
 
             DB::statement("
                 UPDATE community_events
-                SET published_at = DATE_SUB(published_at, INTERVAL 8 HOUR)
+                SET published_at = published_at - INTERVAL '8 hours'
                 WHERE published_at IS NOT NULL
             ");
         }
