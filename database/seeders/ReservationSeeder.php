@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Reservation;
+use App\Models\RehearsalReservation;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -113,7 +113,7 @@ class ReservationSeeder extends Seeder
         }
 
         // Check if time slot conflicts with existing reservations
-        $conflicts = Reservation::where('reserved_until', '>', $startTime)
+        $conflicts = RehearsalReservation::where('reserved_until', '>', $startTime)
             ->where('reserved_at', '<', $endTime)
             ->where('status', '!=', 'cancelled')
             ->exists();
@@ -123,7 +123,7 @@ class ReservationSeeder extends Seeder
         }
 
         // Create the reservation
-        Reservation::factory()->create([
+        RehearsalReservation::factory()->create([
             'reservable_type' => User::class,
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
@@ -156,7 +156,7 @@ class ReservationSeeder extends Seeder
                 $weeklyStart = $startTime->copy()->addWeeks($week);
                 $weeklyEnd = $endTime->copy()->addWeeks($week);
 
-                Reservation::factory()->create([
+                RehearsalReservation::factory()->create([
                     'reservable_type' => User::class,
                     'reservable_id' => $user->id,
                     'reserved_at' => $weeklyStart,
@@ -230,7 +230,7 @@ class ReservationSeeder extends Seeder
             return;
         }
 
-        Reservation::factory()->create([
+        RehearsalReservation::factory()->create([
             'reservable_type' => User::class,
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
