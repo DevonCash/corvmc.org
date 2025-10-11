@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SpaceManagement;
 
+use App\Filament\Resources\SpaceManagement\Pages\EditSpaceUsage;
 use App\Filament\Resources\SpaceManagement\Pages\ListSpaceUsage;
 use App\Filament\Resources\SpaceManagement\Pages\ViewSpaceUsage;
 use App\Filament\Resources\SpaceManagement\Tables\SpaceManagementTable;
@@ -60,6 +61,7 @@ class SpaceManagementResource extends Resource
         return [
             'index' => ListSpaceUsage::route('/'),
             'view' => ViewSpaceUsage::route('/{record}'),
+            'edit' => EditSpaceUsage::route('/{record}/edit'),
         ];
     }
 }

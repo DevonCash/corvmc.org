@@ -20,10 +20,7 @@ class ViewSpaceUsage extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            // Redirect to appropriate panel to edit
-            EditAction::make()
-                ->url(fn ($record) => route('filament.member.resources.reservations.edit', $record))
-                ->openUrlInNewTab(false),
+            EditAction::make(),
         ];
     }
 }
