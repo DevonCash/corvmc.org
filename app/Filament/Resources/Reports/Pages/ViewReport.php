@@ -2,16 +2,16 @@
 
 namespace App\Filament\Resources\Reports\Pages;
 
+use App\Filament\Resources\Reports\Actions\DismissReportAction;
+use App\Filament\Resources\Reports\Actions\EscalateReportAction;
+use App\Filament\Resources\Reports\Actions\UpholdReportAction;
 use App\Filament\Resources\Reports\ReportResource;
 use App\Models\Report;
-use Filament\Actions\Action;
-use Filament\Forms\Components\Textarea;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
 
@@ -134,97 +134,9 @@ class ViewReport extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('uphold')
-                ->label('Uphold')
-                ->icon('tabler-circle-check')
-                ->color('danger')
-                ->visible(
-                    fn(Report $record): bool =>
-                    $record->status === 'pending' && Auth::user()->can('uphold', [$record])
-                )
-                ->requiresConfirmation()
-                ->schema([
-                    Textarea::make('resolution_notes')
-                        ->label('Resolution Notes')
-                        ->placeholder('Explain why this report was upheld...')
-                        ->required()
-                        ->rows(3),
-                ])
-                ->action(function (Report $record, array $data): void {
-                    \App\Actions\Reports\ResolveReport::run(
-                        $record,
-                        Auth::user(),
-                        'upheld',
-                        $data['resolution_notes']
-                    );
-
-                    Notification::make()
-                        ->title('Report Upheld')
-                        ->body('The report has been upheld successfully.')
-                        ->success()
-                        ->send();
-                }),
-
-            Action::make('dismiss')
-                ->label('Dismiss')
-                ->icon('tabler-circle-x')
-                ->color('success')
-                ->visible(
-                    fn(Report $record): bool => $record->status === 'pending' && Auth::user()->can('dismiss', [$record])
-                )
-                ->requiresConfirmation()
-                ->schema([
-                    Textarea::make('resolution_notes')
-                        ->label('Resolution Notes')
-                        ->placeholder('Explain why this report was dismissed...')
-                        ->required()
-                        ->rows(3),
-                ])
-                ->action(function (Report $record, array $data): void {
-                    \App\Actions\Reports\ResolveReport::run(
-                        $record,
-                        Auth::user(),
-                        'dismissed',
-                        $data['resolution_notes']
-                    );
-
-                    Notification::make()
-                        ->title('Report Dismissed')
-                        ->body('The report has been dismissed successfully.')
-                        ->success()
-                        ->send();
-                }),
-
-            Action::make('escalate')
-                ->label('Escalate')
-                ->icon('tabler-circle-arrow-up')
-                ->color('warning')
-                ->visible(
-                    fn(Report $record): bool =>
-                    $record->status === 'pending' && Auth::user()->can('escalate', [$record])
-                )
-                ->requiresConfirmation()
-                ->schema([
-                    Textarea::make('resolution_notes')
-                        ->label('Escalation Notes')
-                        ->placeholder('Explain why this report needs admin review...')
-                        ->required()
-                        ->rows(3),
-                ])
-                ->action(function (Report $record, array $data): void {
-                    \App\Actions\Reports\ResolveReport::run(
-                        $record,
-                        Auth::user(),
-                        'escalated',
-                        $data['resolution_notes']
-                    );
-
-                    Notification::make()
-                        ->title('Report Escalated')
-                        ->body('The report has been escalated to admin review.')
-                        ->warning()
-                        ->send();
-                }),
+            UpholdReportAction::make(),
+            DismissReportAction::make(),
+            EscalateReportAction::make(),
         ];
     }
 

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\CommunityEvents\Pages;
 
+use App\Filament\Resources\CommunityEvents\Actions\ApproveCommunityEventAction;
+use App\Filament\Resources\CommunityEvents\Actions\RejectCommunityEventAction;
 use App\Filament\Resources\CommunityEvents\CommunityEventResource;
 use App\Models\CommunityEvent;
 use Filament\Actions;
@@ -11,7 +13,6 @@ use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 
 class ViewCommunityEvent extends ViewRecord
@@ -22,46 +23,8 @@ class ViewCommunityEvent extends ViewRecord
     {
         return [
             Actions\EditAction::make(),
-            
-            Actions\Action::make('approve')
-                ->icon('tabler-check')
-                ->color('success')
-                ->visible(fn (CommunityEvent $record): bool => 
-                    $record->status === CommunityEvent::STATUS_PENDING && 
-                    Auth::user()->can('approve community events'))
-                ->requiresConfirmation()
-                ->action(function (CommunityEvent $record) {
-                    $record->update([
-                        'status' => CommunityEvent::STATUS_APPROVED,
-                        'published_at' => now(),
-                    ]);
-
-                    Notification::make()
-                        ->title('Event approved successfully')
-                        ->success()
-                        ->send();
-
-                    return redirect($this->getResource()::getUrl('view', ['record' => $record]));
-                }),
-
-            Actions\Action::make('reject')
-                ->icon('tabler-x')
-                ->color('danger')
-                ->visible(fn (CommunityEvent $record): bool => 
-                    $record->status === CommunityEvent::STATUS_PENDING && 
-                    Auth::user()->can('approve community events'))
-                ->requiresConfirmation()
-                ->action(function (CommunityEvent $record) {
-                    $record->update(['status' => CommunityEvent::STATUS_REJECTED]);
-
-                    Notification::make()
-                        ->title('Event rejected')
-                        ->warning()
-                        ->send();
-
-                    return redirect($this->getResource()::getUrl('view', ['record' => $record]));
-                }),
-
+            ApproveCommunityEventAction::make(),
+            RejectCommunityEventAction::make(),
             Actions\DeleteAction::make(),
         ];
     }
