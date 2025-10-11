@@ -2,24 +2,18 @@
 
 namespace App\Filament\Resources\Bands\RelationManagers;
 
+use App\Filament\Resources\Bands\Actions\AddBandMemberAction;
+use App\Filament\Resources\Bands\Actions\EditBandMemberAction;
 use App\Models\User;
-use Filament\Actions\Action;
-use Filament\Actions\CreateAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Text;
 use Filament\Support\Enums\FontWeight;
-use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
-use Filament\Tables\Enums\FiltersLayout;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
@@ -36,252 +30,6 @@ class MembersRelationManager extends RelationManager
         return Auth::user()->can('view', $this->ownerRecord);
     }
 
-    public function makeAddMember(): Action
-    {
-        return Action::make('invite')
-            ->label('Add Member')
-            ->color('primary')
-            ->icon('tabler-user-plus')
-            ->modalWidth('xl')
-            ->schema([
-                TextInput::make('name')
-                    ->label('Name')
-                    ->placeholder('Member name or stage name')
-                    ->maxLength(255)
-                    ->required(fn($get) => !$get('user_id') && !$get('email'))
-                    ->helperText(
-                        fn($get) =>
-                        $get('user_id') ? 'Override their CMC name for this band (optional)' : ($get('email') ? 'Their name for the band (required)' :
-                            'This name will be displayed publicly (required for non-CMC members)')
-                    ),
-
-                Grid::make(2)->schema([
-                    Select::make('user_id')
-                        ->label('CMC Member (optional)')
-                        ->getSearchResultsUsing(
-                            fn(string $search): array => User::where(function ($query) use ($search) {
-                                $query->where('name', 'like', "%{$search}%")
-                                    ->orWhere('email', 'like', "%{$search}%");
-                            })
-                                ->whereDoesntHave('bandProfiles', fn($query) => $query->where('band_profile_id', $this->ownerRecord->id))
-                                ->limit(50)
-                                ->get()
-                                ->mapWithKeys(fn($user) => [$user->id => "{$user->name} ({$user->email})"])
-                                ->toArray()
-                        )
-                        ->getOptionLabelUsing(
-                            fn($value): ?string => ($user = User::find($value)) ? "{$user->name} ({$user->email})" : null
-                        )
-                        ->searchable()
-                        ->reactive()
-                        ->afterStateUpdated(function ($state, $set, $get) {
-                            if ($state) {
-                                $user = User::find($state);
-                                if ($user) {
-                                    $set('name', $user->name);
-                                }
-                            }
-                        })
-                        ->helperText('Select an existing CMC member'),
-
-
-                    TextInput::make('email')
-                        ->label('Invite by Email (optional)')
-                        ->email()
-                        ->placeholder('invitee@example.com')
-                        ->helperText('Invite someone new to join CMC and this band')
-                        ->rule(function ($get) {
-                            return function (string $attribute, $value, \Closure $fail) use ($get) {
-                                if ($value && $get('user_id')) {
-                                    $fail('Cannot select both an existing member and invite by email.');
-                                }
-                                if ($value && User::where('email', $value)->exists()) {
-                                    $fail('This email is already registered. Please select them from the CMC Member dropdown instead.');
-                                }
-                            };
-                        }),
-                ]),
-                Grid::make(4)
-                    ->schema([
-                        Select::make('role')
-                            ->label('Role')
-                            ->options([
-                                'member' => 'Member',
-                                'admin' => 'Admin',
-                            ])
-                            ->default('member')
-                            ->required(),
-
-                        TextInput::make('position')
-                            ->columnSpan(3)
-                            ->label('Position')
-                            ->placeholder('e.g., Lead Guitarist, Vocalist, Drummer')
-                            ->maxLength(100),
-                    ]),
-
-            ])
-            ->action(function (array $data): void {
-
-                if ($data['user_id']) {
-                    // Existing CMC member - send invitation
-                    $user = User::find($data['user_id']);
-
-                    try {
-                        \App\Actions\Bands\InviteMember::run(
-                            $this->ownerRecord,
-                            $user,
-                            $data['role'],
-                            $data['position'] ?? null,
-                            $data['name'] ?? null
-                        );
-
-                        Notification::make()
-                            ->title('Invitation sent')
-                            ->body("Invitation sent to {$user->name}")
-                            ->success()
-                            ->send();
-                    } catch (\Exception $e) {
-                        Notification::make()
-                            ->title('Cannot send invitation')
-                            ->body($e->getMessage())
-                            ->warning()
-                            ->send();
-                    }
-                } elseif ($data['email']) {
-                    // New user by email - create account and invite to band
-                    try {
-                        $user = \App\Actions\Bands\CreateUserAndInviteToBand::run(
-                            $this->ownerRecord,
-                            $data['name'],
-                            $data['email'],
-                            $data['role'],
-                            $data['position'] ?? null
-                        );
-
-                        Notification::make()
-                            ->title('User created and invitation sent')
-                            ->body("Created CMC account for {$user->email} and sent band invitation")
-                            ->success()
-                            ->send();
-                    } catch (\Exception $e) {
-                        Notification::make()
-                            ->title('Cannot send invitation')
-                            ->body($e->getMessage())
-                            ->warning()
-                            ->send();
-                    }
-                } else {
-                    // Non-CMC member - add directly as active
-                    \App\Actions\Bands\AddNonCMCMember::run(
-                        $this->ownerRecord,
-                        $data['name'],
-                        $data['role'],
-                        $data['position'] ?? null
-                    );
-
-                    Notification::make()
-                        ->title('Member added')
-                        ->body("Added {$data['name']} to the band")
-                        ->success()
-                        ->send();
-                }
-            });
-    }
-
-    public function makeEditMember(): EditAction
-    {
-        return EditAction::make()
-            ->schema([
-                TextInput::make('name')
-                    ->label('Display Name')
-                    ->placeholder('Member name or stage name')
-                    ->default(fn($record) => $record->name)
-                    ->maxLength(255)
-                    ->required()
-                    ->helperText('This name will be displayed publicly'),
-
-                Grid::make(2)
-                    ->schema([
-                        Select::make('user_id')
-                            ->label('CMC Member Account (optional)')
-                            ->getSearchResultsUsing(
-                                fn(string $search): array => User::where(function ($query) use ($search) {
-                                    $query->where('name', 'like', "%{$search}%")
-                                        ->orWhere('email', 'like', "%{$search}%");
-                                })
-                                    ->whereDoesntHave('bandProfiles', fn($query) => $query->where('band_profile_id', $this->ownerRecord->id))
-                                    ->limit(50)
-                                    ->get()
-                                    ->mapWithKeys(fn($user) => [$user->id => "{$user->name} ({$user->email})"])
-                                    ->toArray()
-                            )
-                            ->getOptionLabelUsing(
-                                fn($value): ?string => ($user = User::find($value)) ? "{$user->name} ({$user->email})" : null
-                            )
-                            ->searchable()
-                            ->default(fn($record) => $record->user_id)
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, $set, $get) {
-                                if ($state && !$get('name_manually_changed')) {
-                                    $user = User::find($state);
-                                    if ($user) {
-                                        $set('name', $user->name);
-                                    }
-                                }
-                            })
-                            ->helperText('Select an existing CMC member'),
-
-                        TextInput::make('email')
-                            ->label('Invite by Email (optional)')
-                            ->email()
-                            ->placeholder('invitee@example.com')
-                            ->helperText('Invite someone new to join CMC')
-                            ->rule(function ($get) {
-                                return function (string $attribute, $value, \Closure $fail) use ($get) {
-                                    if ($value && $get('user_id')) {
-                                        $fail('Cannot select both an existing member and invite by email.');
-                                    }
-                                    if ($value && User::where('email', $value)->exists()) {
-                                        $fail('This email is already registered. Please select them from the CMC Member dropdown instead.');
-                                    }
-                                };
-                            }),
-                    ]),
-
-                Grid::make(2)
-                    ->schema([
-                        Select::make('role')
-                            ->label('Role')
-                            ->options([
-                                'member' => 'Member',
-                                'admin' => 'Admin',
-                            ])
-                            ->default(fn($record) => $record->role)
-                            ->required()
-                            ->disabled(
-                                fn($record): bool => ! Auth::user()->can('changeMemberRoles', $this->ownerRecord) ||
-                                    $record->user_id === $this->ownerRecord->owner_id
-                            ),
-
-                        TextInput::make('position')
-                            ->label('Position')
-                            ->placeholder('e.g., Lead Guitarist, Vocalist, Drummer')
-                            ->default(fn($record) => $record->position)
-                            ->maxLength(100),
-                    ]),
-            ])
-            ->using(function ($record, array $data): void {
-                \App\Actions\Bands\UpdateBandMember::run(
-                    $record,
-                    $this->ownerRecord,
-                    $data
-                );
-            })
-            ->visible(
-                fn($record): bool => Auth::user()->can('manageMembers', $this->ownerRecord) ||
-                    $record->user_id === Auth::user()->id
-            );
-    }
 
     public function table(Table $table): Table
     {
@@ -334,8 +82,8 @@ class MembersRelationManager extends RelationManager
             ])
             ->filtersLayout(FiltersLayout::BelowContent)
             ->headerActions([
-                $this->makeAddMember()
-                    ->visible(fn(): bool => Auth::user()->can('manageMembers', $this->ownerRecord))
+                AddBandMemberAction::make($this->ownerRecord)
+                    ->visible(fn(): bool => Auth::user()->can('update', $this->ownerRecord))
 
             ])
             ->recordActions([
@@ -458,7 +206,7 @@ class MembersRelationManager extends RelationManager
                             Auth::user()->can('manageMembers', $this->ownerRecord)
                     ),
 
-                $this->makeEditMember(),
+                EditBandMemberAction::make($this->ownerRecord),
 
                 DeleteAction::make()
                     ->label('Remove')
