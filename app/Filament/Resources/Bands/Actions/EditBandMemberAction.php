@@ -4,10 +4,10 @@ namespace App\Filament\Resources\Bands\Actions;
 
 use App\Models\Band;
 use App\Models\User;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
-use Filament\Tables\Actions\EditAction;
 use Illuminate\Support\Facades\Auth;
 
 class EditBandMemberAction
@@ -83,7 +83,7 @@ class EditBandMemberAction
                             ->default(fn($record) => $record->role)
                             ->required()
                             ->disabled(
-                                fn($record): bool => ! Auth::user()->can('changeMemberRoles', $band) ||
+                                fn($record): bool => ! Auth::user()->can('update', $band) ||
                                     $record->user_id === $band->owner_id
                             ),
 
@@ -102,7 +102,7 @@ class EditBandMemberAction
                 );
             })
             ->visible(
-                fn($record): bool => Auth::user()->can('manageMembers', $band) ||
+                fn($record): bool => Auth::user()->can('update', $band) ||
                     $record->user_id === Auth::user()->id
             );
     }

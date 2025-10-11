@@ -2,14 +2,10 @@
 
 namespace App\Filament\Resources\Bands\Pages;
 
-use App\Actions\Bands\InviteMember;
 use App\Filament\Actions\ReportContentAction;
+use App\Filament\Resources\Bands\Actions\AddBandMemberAction;
 use App\Filament\Resources\Bands\BandResource;
-use App\Models\User;
-use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\View\View;
@@ -53,51 +49,7 @@ class ViewBand extends Page
     public function getHeaderActions(): array
     {
         return [
-            Action::make('invite_member')
-                ->label('Invite Band Member')
-                ->icon('heroicon-o-user-plus')
-                ->modalHeading('Invite Band Member')
-                ->modalWidth('md')
-                ->visible(fn () => Auth::user()->can('invite', $this->record))
-                ->form([
-                    Select::make('user_id')
-                        ->label('User')
-                        ->required()
-                        ->searchable()
-                        ->getSearchResultsUsing(fn (string $search) =>
-                            User::where('name', 'like', "%{$search}%")
-                                ->orWhere('email', 'like', "%{$search}%")
-                                ->limit(50)
-                                ->pluck('name', 'id')
-                        )
-                        ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
-                        ->placeholder('Search for a user...'),
-
-                    TextInput::make('position')
-                        ->label('Position/Instrument')
-                        ->placeholder('e.g., Guitarist, Vocalist, Drummer')
-                        ->maxLength(255),
-
-                    Select::make('role')
-                        ->label('Role')
-                        ->options([
-                            'member' => 'Member',
-                            'admin' => 'Admin',
-                        ])
-                        ->default('member')
-                        ->required()
-                        ->helperText('Admins can manage band settings and invite other members'),
-                ])
-                ->action(function (array $data) {
-                    InviteMember::run(
-                        band: $this->record,
-                        user: User::find($data['user_id']),
-                        role: $data['role'],
-                        position: $data['position'] ?? null
-                    );
-
-                    $this->notify('success', 'Band member invitation sent!');
-                }),
+            AddBandMemberAction::make($this->record),
             EditAction::make()
                 ->visible(fn () => Auth::user()->can('update', $this->record)),
             ReportContentAction::make()

@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
+use Illuminate\Support\Facades\Auth;
 
 class AddBandMemberAction
 {
@@ -159,6 +160,7 @@ class AddBandMemberAction
                         ->success()
                         ->send();
                 }
-            });
+            })
+            ->visible(fn (): bool => Auth::user()->can('update', $band));
     }
 }

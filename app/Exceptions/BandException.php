@@ -50,4 +50,14 @@ class BandException extends Exception
     {
         return new self('Band owner cannot leave their own band. Transfer ownership first.');
     }
+
+    public static function userNotFound(): self
+    {
+        return new self('User is not associated with this band.');
+    }
+
+    public static function invitationNotPending(): self
+    {
+        return new self('The invitation is not pending and cannot be cancelled.');
+    }
 }
