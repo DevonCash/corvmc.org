@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\Reservations\Schemas;
 
+use App\Actions\Reservations\CalculateReservationCost;
+use App\Actions\Reservations\DetermineReservationStatus;
+use App\Actions\Reservations\GetAvailableTimeSlotsForDate;
+use App\Actions\Reservations\GetValidEndTimesForDate;
 use App\Models\User;
-use App\Facades\ReservationService;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
@@ -166,7 +169,7 @@ class ReservationForm
                                 return [];
                             }
 
-                            return ReservationService::getAvailableTimeSlotsForDate(Carbon::parse($date));
+                            return GetAvailableTimeSlotsForDate::run(Carbon::parse($date));
                         })
                         ->disabled(fn(Get $get) => ! $get('reservation_date'))
                         ->required()
@@ -189,7 +192,7 @@ class ReservationForm
                                 return [];
                             }
 
-                            return ReservationService::getValidEndTimesForDateAndStart(Carbon::parse($date), $startTime);
+                            return GetValidEndTimesForDate::run(Carbon::parse($date), $startTime);
                         })
                         ->required()
                         ->live()
@@ -307,7 +310,7 @@ class ReservationForm
             return;
         }
 
-        $status = ReservationService::determineInitialStatus(
+        $status = DetermineReservationStatus::run(
             Carbon::parse($date),
             (bool) $isRecurring
         );
@@ -341,7 +344,7 @@ class ReservationForm
             return;
         }
 
-        $calculation = ReservationService::calculateCost(
+        $calculation = CalculateReservationCost::run(
             $user,
             Carbon::parse($start),
             Carbon::parse($end)

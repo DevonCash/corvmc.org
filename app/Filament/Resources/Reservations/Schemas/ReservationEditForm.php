@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources\Reservations\Schemas;
 
-use App\Facades\ReservationService;
+use App\Actions\Reservations\GetAvailableTimeSlotsForDate;
+use App\Actions\Reservations\GetValidEndTimesForDate;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -34,7 +35,7 @@ class ReservationEditForm
                                 if (!$date) {
                                     return [];
                                 }
-                                return ReservationService::getAvailableTimeSlotsForDate(Carbon::parse($date));
+                                return GetAvailableTimeSlotsForDate::run(Carbon::parse($date));
                             })
                             ->default(fn ($record) => $record?->reserved_at?->format('H:i'))
                             ->required()
@@ -48,7 +49,7 @@ class ReservationEditForm
                                 if (!$date || !$startTime) {
                                     return [];
                                 }
-                                return ReservationService::getValidEndTimesForDateAndStart(Carbon::parse($date), $startTime);
+                                return GetValidEndTimesForDate::run(Carbon::parse($date), $startTime);
                             })
                             ->default(fn ($record) => $record?->reserved_until?->format('H:i'))
                             ->required()
