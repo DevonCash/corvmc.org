@@ -35,13 +35,8 @@ class ClaimBand
                 'status' => 'active'
             ]);
 
-            // Add user as owner/admin member
-            if (!$band->memberships()->active()->where('user_id', $user->id)->exists()) {
-                AddMember::run($band, $user, ['role' => 'admin']);
-            } else {
-                // Update existing membership to admin
-                $band->memberships()->for($user)->update(['role' => 'admin']);
-            }
+            // Ensure user is admin member of the band
+            EnsureAdminMembership::run($band, $user);
 
             // Notify admins about the band being claimed
             $admins = User::role(['admin'])->get();
