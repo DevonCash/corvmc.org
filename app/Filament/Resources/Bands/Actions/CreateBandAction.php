@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Bands\Actions;
 
-use App\Actions\Bands\CreateBand as CreateBandAction;
+use App\Actions\Bands\CreateBand;
 use App\Actions\Bands\FindClaimableBand;
 use App\Filament\Resources\Bands\BandResource;
 use App\Models\Band;
@@ -44,7 +44,7 @@ class CreateBandAction
                 }
 
                 // Create the band
-                $band = CreateBandAction::run($data);
+                $band = CreateBand::run($data);
 
                 // Redirect to edit page
                 $livewire->redirect(BandResource::getUrl('edit', ['record' => $band]));
