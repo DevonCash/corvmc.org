@@ -30,30 +30,44 @@ class ReservationEditForm
 
                         Select::make('start_time')
                             ->label('Start Time')
-                            ->options(function ($get, $record) {
+                            ->options(function ($get, $record, $state) {
                                 $date = $get('reservation_date') ?? $record?->reserved_at?->toDateString();
                                 if (!$date) {
                                     return [];
                                 }
-                                return GetAvailableTimeSlotsForDate::run(Carbon::parse($date));
+                                $options = GetAvailableTimeSlotsForDate::run(Carbon::parse($date));
+
+                                // Ensure current value is in options when editing
+                                if ($state && !isset($options[$state])) {
+                                    $options[$state] = $state;
+                                }
+
+                                return $options;
                             })
-                            ->default(fn ($record) => $record?->reserved_at?->format('H:i'))
                             ->required()
-                            ->live(),
+                            ->live()
+                            ->searchable(),
 
                         Select::make('end_time')
                             ->label('End Time')
-                            ->options(function ($get, $record) {
+                            ->options(function ($get, $record, $state) {
                                 $date = $get('reservation_date') ?? $record?->reserved_at?->toDateString();
                                 $startTime = $get('start_time') ?? $record?->reserved_at?->format('H:i');
                                 if (!$date || !$startTime) {
                                     return [];
                                 }
-                                return GetValidEndTimesForDate::run(Carbon::parse($date), $startTime);
+                                $options = GetValidEndTimesForDate::run(Carbon::parse($date), $startTime);
+
+                                // Ensure current value is in options when editing
+                                if ($state && !isset($options[$state])) {
+                                    $options[$state] = $state;
+                                }
+
+                                return $options;
                             })
-                            ->default(fn ($record) => $record?->reserved_until?->format('H:i'))
                             ->required()
-                            ->disabled(fn ($get) => !$get('start_time')),
+                            ->disabled(fn ($get) => !$get('start_time'))
+                            ->searchable(),
 
                         Textarea::make('notes')
                             ->label('Notes')
