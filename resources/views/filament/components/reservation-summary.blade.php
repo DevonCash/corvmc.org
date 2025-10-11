@@ -1,7 +1,7 @@
 @php
     use App\Models\User;
     use Carbon\Carbon;
-    use App\Facades\ReservationService;
+    use App\Actions\Reservations\CalculateReservationCost;
 
     $start = $get('reserved_at');
     $end = $get('reserved_until');
@@ -20,7 +20,7 @@
             $endFormatted = Carbon::parse($end)->format('g:i A');
             $duration = Carbon::parse($start)->diffInMinutes(Carbon::parse($end)) / 60;
 
-            $calculation = ReservationService::calculateCost(
+            $calculation = CalculateReservationCost::run(
                 $user,
                 Carbon::parse($start),
                 Carbon::parse($end)
