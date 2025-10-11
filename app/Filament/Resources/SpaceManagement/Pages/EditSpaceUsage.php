@@ -24,12 +24,15 @@ class EditSpaceUsage extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         // Convert datetime to date and time components for the form
+        // The datetime values are already Carbon instances from the model cast
         if (isset($data['reserved_at'])) {
-            $data['reservation_date'] = Carbon::parse($data['reserved_at'])->toDateString();
-            $data['start_time'] = Carbon::parse($data['reserved_at'])->format('H:i');
+            $reservedAt = $data['reserved_at'] instanceof Carbon ? $data['reserved_at'] : Carbon::parse($data['reserved_at']);
+            $data['reservation_date'] = $reservedAt->toDateString();
+            $data['start_time'] = $reservedAt->format('H:i');
         }
         if (isset($data['reserved_until'])) {
-            $data['end_time'] = Carbon::parse($data['reserved_until'])->format('H:i');
+            $reservedUntil = $data['reserved_until'] instanceof Carbon ? $data['reserved_until'] : Carbon::parse($data['reserved_until']);
+            $data['end_time'] = $reservedUntil->format('H:i');
         }
 
         return $data;
@@ -37,9 +40,9 @@ class EditSpaceUsage extends EditRecord
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        // Combine date and time fields
-        $startTime = Carbon::parse($data['reservation_date'] . ' ' . $data['start_time']);
-        $endTime = Carbon::parse($data['reservation_date'] . ' ' . $data['end_time']);
+        // Combine date and time fields in the app's timezone
+        $startTime = Carbon::parse($data['reservation_date'] . ' ' . $data['start_time'], config('app.timezone'));
+        $endTime = Carbon::parse($data['reservation_date'] . ' ' . $data['end_time'], config('app.timezone'));
 
         $options = [
             'notes' => $data['notes'] ?? null,
