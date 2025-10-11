@@ -24,14 +24,14 @@ class EditSpaceUsage extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         // Convert datetime to date and time components for the form
-        // The datetime values are already Carbon instances from the model cast
+        // Access the model directly to avoid timezone conversion from toArray()
         if (isset($data['reserved_at'])) {
-            $reservedAt = $data['reserved_at'] instanceof Carbon ? $data['reserved_at'] : Carbon::parse($data['reserved_at']);
+            $reservedAt = $this->record->reserved_at;
             $data['reservation_date'] = $reservedAt->toDateString();
             $data['start_time'] = $reservedAt->format('H:i');
         }
         if (isset($data['reserved_until'])) {
-            $reservedUntil = $data['reserved_until'] instanceof Carbon ? $data['reserved_until'] : Carbon::parse($data['reserved_until']);
+            $reservedUntil = $this->record->reserved_until;
             $data['end_time'] = $reservedUntil->format('H:i');
         }
 
