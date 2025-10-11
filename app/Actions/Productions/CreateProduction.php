@@ -30,10 +30,15 @@ class CreateProduction
             if (isset($data['start_time']) && isset($data['end_time'])) {
                 $isExternal = isset($data['location']['is_external']) ? $data['location']['is_external'] : false;
                 if (!$isExternal) {
-                    $conflicts = \App\Actions\Reservations\GetAllConflicts::run(
-                        Carbon::parse($data['start_time']),
-                        Carbon::parse($data['end_time'])
-                    );
+                    // Handle both Carbon instances and strings from form
+                    $startTime = $data['start_time'] instanceof Carbon
+                        ? $data['start_time']
+                        : Carbon::parse($data['start_time'], config('app.timezone'));
+                    $endTime = $data['end_time'] instanceof Carbon
+                        ? $data['end_time']
+                        : Carbon::parse($data['end_time'], config('app.timezone'));
+
+                    $conflicts = \App\Actions\Reservations\GetAllConflicts::run($startTime, $endTime);
 
                     if ($conflicts['reservations']->isNotEmpty()) {
                         throw new \InvalidArgumentException('Production conflicts with existing reservation');

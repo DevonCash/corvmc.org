@@ -38,11 +38,15 @@ class ListReservations extends ListRecords
                 ->action(function (array $data) {
                     $user = User::find($data['user_id']);
 
+                    // reserved_at and reserved_until are already Carbon instances from ReservationForm
+                    $reservedAt = $data['reserved_at'];
+                    $reservedUntil = $data['reserved_until'];
+
                     // Use CreateReservation action to properly create reservation with notifications
                     $reservation = \App\Actions\Reservations\CreateReservation::run(
                         $user,
-                        \Carbon\Carbon::parse($data['reserved_at']),
-                        \Carbon\Carbon::parse($data['reserved_until']),
+                        $reservedAt,
+                        $reservedUntil,
                         [
                             'status' => $data['status'],
                             'notes' => $data['notes'] ?? null,

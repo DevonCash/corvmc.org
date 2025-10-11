@@ -55,8 +55,9 @@ class ReservationForm
         }
 
         // Must be within auto-confirm range (next 7 days)
-        $resDate = Carbon::parse($reservationDate);
-        $oneWeekFromNow = Carbon::now()->addWeek();
+        // Parse the date string with explicit timezone
+        $resDate = Carbon::parse($reservationDate, config('app.timezone'));
+        $oneWeekFromNow = now()->addWeek();
 
         return $resDate->lte($oneWeekFromNow);
     }
@@ -282,11 +283,13 @@ class ReservationForm
         $endTime = $get('end_time');
 
         if ($date && $startTime) {
-            $set('reserved_at', $date . ' ' . $startTime);
+            $datetime = Carbon::parse($date . ' ' . $startTime, config('app.timezone'));
+            $set('reserved_at', $datetime);
         }
 
         if ($date && $endTime) {
-            $set('reserved_until', $date . ' ' . $endTime);
+            $datetime = Carbon::parse($date . ' ' . $endTime, config('app.timezone'));
+            $set('reserved_until', $datetime);
         }
 
         // Update status whenever dates change

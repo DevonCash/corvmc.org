@@ -67,8 +67,9 @@ class CreateReservation extends CreateRecord
         }
 
         // Must be within auto-confirm range (next 7 days)
-        $reservationDate = Carbon::parse($record->reserved_at);
-        $oneWeekFromNow = Carbon::now()->addWeek();
+        // $record->reserved_at is already a Carbon instance from the model cast
+        $reservationDate = $record->reserved_at;
+        $oneWeekFromNow = now()->addWeek();
 
         return $reservationDate->lte($oneWeekFromNow);
     }
