@@ -41,7 +41,7 @@ class QuickActionsWidget extends Widget
                 'description' => 'Start or join a musical group',
                 'icon' => 'tabler-users-plus',
                 'color' => 'success',
-                'url' => route('filament.member.resources.bands.create'),
+                'url' => route('filament.member.resources.bands.index'),
             ];
         } else {
             $actions[] = [
