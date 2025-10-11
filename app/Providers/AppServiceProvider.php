@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Livewire\Synthesizers\MoneySynthesizer;
 use App\Models\Production;
 use App\Models\Reservation;
 use App\Models\Subscription;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
+use Livewire\Livewire;
 use Spatie\Tags\Tag;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,6 +32,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register custom Cashier models
         Cashier::useSubscriptionModel(Subscription::class);
+
+        // Register Livewire synthesizers
+        Livewire::propertySynthesizer(MoneySynthesizer::class);
 
         // Register model observers for cache invalidation
         User::observe(UserObserver::class);
