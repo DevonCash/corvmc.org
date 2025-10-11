@@ -177,11 +177,16 @@ class BandForm
 
                         Select::make('owner_id')
                             ->label('Band Owner')
-                            ->options(
-                                fn (?Band $record) => $record
-                                    ? $record->members()->select(['users.name', 'users.id'])->pluck('name', 'id')->toArray()
-                                    : [Auth::user()->id => Auth::user()->name]
-                            )
+                            ->options(function (?Band $record) {
+                                if (!$record) {
+                                    return [Auth::user()->id => Auth::user()->name];
+                                }
+
+                                return $record->members()
+                                    ->select(['users.id', 'users.name'])
+                                    ->pluck('users.name', 'users.id')
+                                    ->toArray();
+                            })
                             ->preload()
                             ->default(fn () => Auth::user()->id)
                             ->disabled(fn (?Band $record) => $record && ! Auth::user()->can('transferOwnership', $record))
