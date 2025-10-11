@@ -250,17 +250,17 @@ class TestRevisionSystem extends Command
     protected function setupPermissions(): void
     {
         $this->info('🔧 Setting up permissions...');
-        
+
         if (!$this->option('dry-run')) {
             // Create permissions if they don't exist
-            Permission::firstOrCreate(['name' => 'approve_revisions']);
-            Permission::firstOrCreate(['name' => 'reject_revisions']);
-            Permission::firstOrCreate(['name' => 'view_revisions']);
-            
+            Permission::firstOrCreate(['name' => 'approve revisions']);
+            Permission::firstOrCreate(['name' => 'reject revisions']);
+            Permission::firstOrCreate(['name' => 'view revisions']);
+
             // Create moderator role if it doesn't exist
             $moderator = Role::firstOrCreate(['name' => 'moderator']);
-            $moderator->givePermissionTo(['approve_revisions', 'reject_revisions', 'view_revisions']);
-            
+            $moderator->givePermissionTo(['approve revisions', 'reject revisions', 'view revisions']);
+
             $this->line('   ✓ Permissions set up successfully');
         } else {
             $this->line('   → Would set up revision permissions');

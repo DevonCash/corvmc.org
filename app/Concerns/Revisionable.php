@@ -357,7 +357,7 @@ trait Revisionable
     public function canUserApproveRevisions(User $user): bool
     {
         // Override in individual models for custom authorization
-        return $user->hasPermissionTo('approve_revisions') ?? false;
+        return $user->hasPermissionTo('approve revisions') ?? false;
     }
     
     /**
