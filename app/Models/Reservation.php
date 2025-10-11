@@ -167,4 +167,26 @@ class Reservation extends Model
 
         return $this->reserved_at->diffInMinutes($this->reserved_until) / 60;
     }
+
+    public function getTimeRangeAttribute(): string
+    {
+        if (! $this->reserved_at || ! $this->reserved_until) {
+            return 'TBD';
+        }
+
+        if ($this->reserved_at->isSameDay($this->reserved_until)) {
+            return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('g:i A');
+        }
+
+        return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('M j, Y g:i A');
+    }
+
+    public function getPaymentStatusBadgeAttribute(): array
+    {
+        // Default implementation for non-payment reservations
+        return [
+            'label' => 'N/A',
+            'color' => 'gray',
+        ];
+    }
 }
