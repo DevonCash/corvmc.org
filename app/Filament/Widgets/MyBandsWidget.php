@@ -2,13 +2,13 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\Bands\Actions\CreateBandAction;
 use App\Models\Band;
 use App\Models\User;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Actions;
 use Illuminate\Support\Facades\Auth;
 
 class MyBandsWidget extends BaseWidget
@@ -131,11 +131,9 @@ class MyBandsWidget extends BaseWidget
             ->emptyStateDescription('You haven\'t joined or created any bands.')
             ->emptyStateIcon('tabler-users-off')
             ->emptyStateActions([
-                Actions\Action::make('create')
+                CreateBandAction::make()
                     ->label('Create Your First Band')
-                    ->icon('tabler-plus')
-                    ->url(route('filament.member.resources.bands.create'))
-                    ->visible(fn() => Auth::user()?->can('create bands') ?? false),
+                    ->icon('tabler-plus'),
             ])
             ->paginated(false);
     }

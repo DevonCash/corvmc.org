@@ -27,12 +27,7 @@ class ReservationForm
             ->components([
                 Wizard::make()
                     ->columnSpanFull()
-                    ->steps(static::getSteps())
-                    ->submitAction(fn (Action $action, Get $get) => $action
-                        ->label(fn () => static::shouldShowCheckout($get) ? 'Checkout with Stripe' : 'Request Reservation')
-                        ->icon(fn () => static::shouldShowCheckout($get) ? 'tabler-credit-card' : null)
-                        ->color(fn () => static::shouldShowCheckout($get) ? 'primary' : 'gray')
-                    ),
+                    ->steps(static::getSteps()),
             ]);
     }
 
