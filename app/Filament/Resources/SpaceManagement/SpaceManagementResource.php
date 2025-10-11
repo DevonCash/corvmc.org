@@ -2,13 +2,16 @@
 
 namespace App\Filament\Resources\SpaceManagement;
 
+use App\Filament\Resources\SpaceManagement\Pages\CreateSpaceUsage;
 use App\Filament\Resources\SpaceManagement\Pages\EditSpaceUsage;
 use App\Filament\Resources\SpaceManagement\Pages\ListSpaceUsage;
 use App\Filament\Resources\SpaceManagement\Pages\ViewSpaceUsage;
+use App\Filament\Resources\SpaceManagement\Schemas\SpaceManagementForm;
 use App\Filament\Resources\SpaceManagement\Tables\SpaceManagementTable;
 use App\Models\Reservation;
 use BackedEnum;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 
@@ -36,6 +39,11 @@ class SpaceManagementResource extends Resource
         return Auth::user()->can('manage practice space');
     }
 
+    public static function form(Schema $schema): Schema
+    {
+        return SpaceManagementForm::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return SpaceManagementTable::configure($table);
@@ -60,6 +68,7 @@ class SpaceManagementResource extends Resource
     {
         return [
             'index' => ListSpaceUsage::route('/'),
+            'create' => CreateSpaceUsage::route('/create'),
             'view' => ViewSpaceUsage::route('/{record}'),
             'edit' => EditSpaceUsage::route('/{record}/edit'),
         ];
