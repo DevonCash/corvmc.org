@@ -37,9 +37,10 @@ class ReservationEditForm
                                 }
                                 $options = GetAvailableTimeSlotsForDate::run(Carbon::parse($date));
 
-                                // Ensure current value is in options when editing
+                                // Ensure current value is in options when editing (with proper 12-hour format label)
                                 if ($state && !isset($options[$state])) {
-                                    $options[$state] = $state;
+                                    $time = Carbon::parse($state);
+                                    $options[$state] = $time->format('g:i A');
                                 }
 
                                 return $options;
@@ -58,9 +59,10 @@ class ReservationEditForm
                                 }
                                 $options = GetValidEndTimesForDate::run(Carbon::parse($date), $startTime);
 
-                                // Ensure current value is in options when editing
+                                // Ensure current value is in options when editing (with proper 12-hour format label)
                                 if ($state && !isset($options[$state])) {
-                                    $options[$state] = $state;
+                                    $time = Carbon::parse($state);
+                                    $options[$state] = $time->format('g:i A');
                                 }
 
                                 return $options;
