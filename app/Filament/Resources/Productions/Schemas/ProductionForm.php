@@ -107,17 +107,20 @@ class ProductionForm
     protected static function startTimeField(): DateTimePicker
     {
         return DateTimePicker::make('start_time')
+            ->timezone(config('app.timezone'))
             ->required();
     }
 
     protected static function endTimeField(): DateTimePicker
     {
-        return DateTimePicker::make('end_time');
+        return DateTimePicker::make('end_time')
+            ->timezone(config('app.timezone'));
     }
 
     protected static function doorsTimeField(): DateTimePicker
     {
-        return DateTimePicker::make('doors_time');
+        return DateTimePicker::make('doors_time')
+            ->timezone(config('app.timezone'));
     }
 
     protected static function ticketingGrid(): Grid
