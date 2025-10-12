@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\UserSubscriptionService;
 use App\Models\User;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
@@ -12,9 +11,6 @@ use Laravel\Cashier\Cashier;
 
 class CheckoutController extends Controller
 {
-    public function __construct(
-        private UserSubscriptionService $subscriptionService
-    ) {}
 
     /**
      * Handle successful checkout for any type (subscription, reservation, etc.).
@@ -50,17 +46,17 @@ class CheckoutController extends Controller
         // Initialize variables for use outside try block
         $checkoutType = 'unknown';
         $metadata = [];
-        
+
         try {
             // Retrieve the checkout session to verify it was successful and determine type
             $session = Cashier::stripe()->checkout->sessions->retrieve($sessionId);
             $metadata = $session->metadata ? $session->metadata->toArray() : [];
             $checkoutType = $metadata['type'] ?? 'unknown';
-            
+
             if ($session->payment_status === 'paid') {
                 // Success! Webhooks will handle the actual processing
                 $this->showSuccessNotification($checkoutType, $metadata);
-                    
+
                 Log::info('Checkout success page viewed', [
                     'user_id' => $userId,
                     'session_id' => $sessionId,
@@ -70,7 +66,7 @@ class CheckoutController extends Controller
             } else {
                 // Payment not completed yet
                 $this->showPendingNotification($checkoutType);
-                    
+
                 Log::info('Checkout with pending payment', [
                     'user_id' => $userId,
                     'session_id' => $sessionId,
@@ -85,7 +81,7 @@ class CheckoutController extends Controller
                 ->body('Your payment is being processed. You will receive confirmation shortly.')
                 ->info()
                 ->send();
-                
+
             Log::warning('Could not retrieve checkout session on success page', [
                 'user_id' => $userId,
                 'session_id' => $sessionId,
@@ -134,13 +130,13 @@ class CheckoutController extends Controller
                 ->body('You are now a sustaining member. Thank you for your support! Your subscription will be activated shortly.')
                 ->success()
                 ->send(),
-            
+
             'practice_space_reservation' => Notification::make()
                 ->title('Reservation Payment Successful!')
                 ->body('Your practice space reservation has been confirmed. You will receive a confirmation email shortly.')
                 ->success()
                 ->send(),
-            
+
             default => Notification::make()
                 ->title('Payment Successful!')
                 ->body('Your payment has been processed successfully. You will receive confirmation shortly.')
@@ -160,13 +156,13 @@ class CheckoutController extends Controller
                 ->body('Your subscription is being processed. You will receive confirmation shortly.')
                 ->warning()
                 ->send(),
-            
+
             'practice_space_reservation' => Notification::make()
                 ->title('Reservation Processing')
                 ->body('Your reservation payment is being processed. You will receive confirmation shortly.')
                 ->warning()
                 ->send(),
-            
+
             default => Notification::make()
                 ->title('Payment Processing')
                 ->body('Your payment is being processed. You will receive confirmation shortly.')
@@ -186,13 +182,13 @@ class CheckoutController extends Controller
                 ->body('Your subscription checkout was cancelled. You can try again anytime.')
                 ->warning()
                 ->send(),
-            
+
             'practice_space_reservation' => Notification::make()
                 ->title('Reservation Cancelled')
                 ->body('Your reservation checkout was cancelled. You can try again anytime.')
                 ->warning()
                 ->send(),
-            
+
             default => Notification::make()
                 ->title('Checkout Cancelled')
                 ->body('Your checkout was cancelled. You can try again anytime.')
@@ -231,11 +227,11 @@ class CheckoutController extends Controller
     private function getReservationRedirect(array $metadata)
     {
         $reservationId = $metadata['reservation_id'] ?? null;
-        
+
         if ($reservationId && $reservation = Reservation::find($reservationId)) {
             return redirect()->route('filament.member.resources.reservations.view', $reservation);
         }
-        
+
         return redirect()->route('filament.member.resources.reservations.index');
     }
 }

@@ -2,12 +2,13 @@
 
 namespace App\Filament\Resources\Reservations\Actions;
 
+use App\Actions\Reservations\CreateCheckoutSession;
 use App\Models\Reservation;
 use App\Models\User;
-use App\Services\ReservationService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PayStripeAction
 {
@@ -17,12 +18,13 @@ class PayStripeAction
             ->label('Pay Online')
             ->icon('tabler-credit-card')
             ->color('success')
-            ->visible(fn(Reservation $record) =>
+            ->visible(
+                fn(Reservation $record) =>
                 $record instanceof \App\Models\RehearsalReservation &&
-                $record->cost->isPositive() &&
-                $record->isUnpaid() &&
-                $record->status !== 'cancelled' &&
-                ($record->reservable_id === Auth::id() || Auth::user()->can('manage reservations'))
+                    $record->cost->isPositive() &&
+                    $record->isUnpaid() &&
+                    $record->status !== 'cancelled' &&
+                    ($record->reservable_id === Auth::id() || Auth::user()->can('manage reservations'))
             )
             ->action(function (Reservation $record) {
                 // Ensure user owns the reservation or has permission
@@ -55,13 +57,11 @@ class PayStripeAction
                 }
 
                 try {
-                    $reservationService = app(ReservationService::class);
-                    $session = $reservationService->createCheckoutSession($record);
-                    
+                    $session = CreateCheckoutSession::run($record);
                     // Redirect to Stripe checkout
                     return redirect($session->url);
-                    
                 } catch (\Exception $e) {
+                    Log::error($e);
                     Notification::make()
                         ->title('Payment Error')
                         ->body('Unable to create payment session: ' . $e->getMessage())

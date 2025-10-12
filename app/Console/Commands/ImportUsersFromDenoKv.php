@@ -4,13 +4,13 @@ namespace App\Console\Commands;
 
 use App\Models\User;
 use App\Models\Invitation;
-use App\Facades\UserInvitationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Filament\Notifications\Notification;
 
 class ImportUsersFromDenoKv extends Command
 {
@@ -19,7 +19,7 @@ class ImportUsersFromDenoKv extends Command
      *
      * @var string
      */
-    protected $signature = 'import:users-from-deno-kv 
+    protected $signature = 'import:users-from-deno-kv
                             {--endpoint= : Deno KV REST API endpoint URL}
                             {--file= : Path to NDJSON export file from Deno KV}
                             {--key-prefix=users : Key prefix for user data in Deno KV}
@@ -75,7 +75,7 @@ class ImportUsersFromDenoKv extends Command
                 }
                 $this->info("📁 Reading NDJSON file: {$file}");
                 $users = $this->parseNdjsonFile($file, $keyPrefix);
-            } 
+            }
             // Handle REST API import
             elseif ($endpoint) {
                 if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
@@ -111,7 +111,7 @@ class ImportUsersFromDenoKv extends Command
 
             $this->info("🔑 Key prefix: {$keyPrefix}");
             $this->newLine();
-            
+
             if (empty($users)) {
                 $this->warn('⚠️  No users found in Deno KV');
                 return 0;
@@ -128,7 +128,7 @@ class ImportUsersFromDenoKv extends Command
             foreach ($users as $userData) {
                 try {
                     $result = $this->processUser($userData, $sendInvites, $invitationMessage, $dryRun);
-                    
+
                     if ($result['status'] === 'imported') {
                         $this->info("✅ Created user: {$result['user']['name']} ({$result['user']['email']})");
                         $imported++;
@@ -151,7 +151,7 @@ class ImportUsersFromDenoKv extends Command
             $this->line("   ✅ Created users: {$imported}");
             $this->line("   📧 Sent invitations: {$invited}");
             $this->line("   ⏭️  Skipped: {$skipped}");
-            
+
             if (!empty($errors)) {
                 $this->line("   ❌ Errors: " . count($errors));
                 foreach ($errors as $error) {
@@ -193,13 +193,13 @@ class ImportUsersFromDenoKv extends Command
 
         foreach ($possiblePaths as $path) {
             $url = rtrim($endpoint, '/') . $path;
-            
+
             try {
                 $response = Http::timeout(30)->get($url);
-                
+
                 if ($response->successful()) {
                     $data = $response->json();
-                    
+
                     // Handle different response formats
                     if (isset($data['users']) && is_array($data['users'])) {
                         return $data['users'];
@@ -226,7 +226,7 @@ class ImportUsersFromDenoKv extends Command
         }
 
         $decoded = json_decode($jsonData, true);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \Exception('Invalid JSON data provided');
         }
@@ -244,7 +244,7 @@ class ImportUsersFromDenoKv extends Command
         }
 
         $firstItem = reset($data);
-        return is_array($firstItem) && 
+        return is_array($firstItem) &&
                (isset($firstItem['email']) || isset($firstItem['name']));
     }
 
@@ -315,7 +315,7 @@ class ImportUsersFromDenoKv extends Command
             ]);
 
             // Send the notification manually
-            \Notification::route('mail', $email)
+            Notification::route('mail', $email)
                 ->notify(new \App\Notifications\UserInvitationNotification($invitation, [
                     'message' => $invitationMessage
                 ]));
@@ -334,8 +334,8 @@ class ImportUsersFromDenoKv extends Command
                 'email' => $email,
                 'pronouns' => $userData['pronouns'] ?? null,
                 'password' => Hash::make(Str::random(32)), // Random password, user will set their own
-                'email_verified_at' => isset($userData['email_verified']) && $userData['email_verified'] 
-                    ? Carbon::now() 
+                'email_verified_at' => isset($userData['email_verified']) && $userData['email_verified']
+                    ? Carbon::now()
                     : null,
                 'trust_points' => $userData['trust_points'] ?? null,
                 'community_event_trust_points' => $userData['community_event_trust_points'] ?? 0,
@@ -360,52 +360,52 @@ class ImportUsersFromDenoKv extends Command
     private function parseNdjsonFile(string $filePath, string $keyPrefix): array
     {
         $this->info('🔄 Parsing NDJSON file...');
-        
+
         $users = [];
         $userCount = 0;
         $totalLines = 0;
-        
+
         $handle = fopen($filePath, 'r');
-        
+
         while (($line = fgets($handle)) !== false) {
             $totalLines++;
             $line = trim($line);
-            
+
             if (empty($line)) {
                 continue;
             }
-            
+
             try {
                 $entry = json_decode($line, true);
-                
+
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $this->line("   ⚠️  Skipping invalid JSON on line {$totalLines}");
                     continue;
                 }
-                
+
                 // Check if this is a user entry
                 if ($this->isUserEntry($entry, $keyPrefix)) {
                     $userData = $this->extractUserData($entry);
                     if ($userData) {
                         $users[] = $userData;
                         $userCount++;
-                        
+
                         if ($userCount % 10 === 0) {
                             $this->line("   📋 Found {$userCount} users so far...");
                         }
                     }
                 }
-                
+
             } catch (\Exception $e) {
                 $this->line("   ⚠️  Error parsing line {$totalLines}: " . $e->getMessage());
                 continue;
             }
         }
-        
+
         fclose($handle);
-        
+
         $this->info("✅ Parsed {$totalLines} total entries, found {$userCount} users");
-        
+
         return $users;
     }
 
@@ -417,12 +417,12 @@ class ImportUsersFromDenoKv extends Command
         if (!isset($entry['key']) || !is_array($entry['key'])) {
             return false;
         }
-        
+
         // Check if first key part matches our prefix
         $firstKey = $entry['key'][0] ?? null;
-        
-        return isset($firstKey['type']) && 
-               $firstKey['type'] === 'string' && 
+
+        return isset($firstKey['type']) &&
+               $firstKey['type'] === 'string' &&
                isset($firstKey['value']) &&
                $firstKey['value'] === $keyPrefix;
     }
@@ -435,21 +435,21 @@ class ImportUsersFromDenoKv extends Command
         if (!isset($entry['value']['value']) || !is_array($entry['value']['value'])) {
             return null;
         }
-        
+
         $valueData = $entry['value']['value'];
         $userData = [];
-        
+
         // Extract typed values
         foreach ($valueData as $field => $typedValue) {
             if (!is_array($typedValue) || !isset($typedValue['type'])) {
                 continue;
             }
-            
+
             // Skip undefined values
             if ($typedValue['type'] === 'undefined') {
                 continue;
             }
-            
+
             // Extract the actual value
             if (isset($typedValue['value'])) {
                 switch ($field) {
@@ -495,17 +495,17 @@ class ImportUsersFromDenoKv extends Command
                 }
             }
         }
-        
+
         // Validate required fields
         if (empty($userData['email'])) {
             return null;
         }
-        
+
         // Generate name from email if not provided
         if (empty($userData['name'])) {
             $userData['name'] = explode('@', $userData['email'])[0];
         }
-        
+
         return $userData;
     }
 

@@ -4,12 +4,10 @@ namespace App\Filament\Resources\Equipment\Actions;
 
 use App\Filament\Components\MemberSelector;
 use App\Models\User;
-use App\Services\EquipmentService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;

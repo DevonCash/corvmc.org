@@ -2,22 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Facades\CreditService;
+use App\Actions\Subscriptions\UpdateUserMembershipStatus;
 use App\Models\Reservation;
 use App\Models\User;
-use App\Services\UserSubscriptionService;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Http\Controllers\WebhookController as CashierWebhookController;
 
 class StripeWebhookController extends CashierWebhookController
 {
-    public function __construct(
-        private UserSubscriptionService $userSubscriptionService
-    ) {}
-
     /**
      * Handle checkout session completed webhook.
      */
@@ -120,7 +113,7 @@ class StripeWebhookController extends CashierWebhookController
             }
 
             // Update user membership status (Cashier handles the subscription sync automatically)
-            $this->userSubscriptionService->updateUserMembershipStatus($user);
+            UpdateUserMembershipStatus::run($user);
 
             \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
 
@@ -204,7 +197,7 @@ class StripeWebhookController extends CashierWebhookController
 
             if ($user && $subscription['status'] === 'active') {
                 // Update membership status since Cashier created the subscription
-                $this->userSubscriptionService->updateUserMembershipStatus($user);
+                UpdateUserMembershipStatus::run($user);
 
                 Log::info('Stripe webhook: Updated membership status after subscription creation', [
                     'user_id' => $user->id,
@@ -238,7 +231,7 @@ class StripeWebhookController extends CashierWebhookController
 
             if ($user) {
                 // Update membership status since Cashier updated the subscription
-                $this->userSubscriptionService->updateUserMembershipStatus($user);
+                UpdateUserMembershipStatus::run($user);
 
                 Log::info('Stripe webhook: Updated membership status after subscription update', [
                     'user_id' => $user->id,
@@ -273,7 +266,7 @@ class StripeWebhookController extends CashierWebhookController
 
             if ($user) {
                 // Update membership status since subscription was deleted
-                $this->userSubscriptionService->updateUserMembershipStatus($user);
+                UpdateUserMembershipStatus::run($user);
 
                 Log::info('Stripe webhook: Updated membership status after subscription deletion', [
                     'user_id' => $user->id,
@@ -304,8 +297,7 @@ class StripeWebhookController extends CashierWebhookController
 
             if ($user) {
                 // Update membership status in case this payment qualifies them
-                $this->userSubscriptionService->updateUserMembershipStatus($user);
-
+                UpdateUserMembershipStatus::run($user);
                 // Allocate monthly credits if they're a sustaining member
                 // This is idempotent - won't double-allocate in same month
                 if ($user->hasRole('sustaining member')) {

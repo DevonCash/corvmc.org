@@ -3,15 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Equipment;
-use App\Services\EquipmentService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PublicEquipmentController extends Controller
 {
-    public function __construct(
-        private EquipmentService $equipmentService
-    ) {}
 
     /**
      * Display the equipment lending library catalog.

@@ -2,7 +2,7 @@
 
 namespace App\Actions\Calendar;
 
-use App\Exceptions\Services\CalendarServiceException;
+use App\Exceptions\CalendarException;
 use App\Models\Reservation;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Support\Facades\Auth;
@@ -18,19 +18,19 @@ class ReservationToCalendarEvent
     public function handle(Reservation $reservation): CalendarEvent
     {
         if (!$reservation->exists) {
-            throw CalendarServiceException::missingRequiredData('reservation', 'Reservation must be persisted to database');
+            throw CalendarException::missingRequiredData('reservation', 'Reservation must be persisted to database');
         }
 
         if (!$reservation->user) {
-            throw CalendarServiceException::missingRequiredData('user', 'Reservation must have an associated user');
+            throw CalendarException::missingRequiredData('user', 'Reservation must have an associated user');
         }
 
         if (!$reservation->reserved_at || !$reservation->reserved_until) {
-            throw CalendarServiceException::missingRequiredData('reservation times', 'Reservation must have start and end times');
+            throw CalendarException::missingRequiredData('reservation times', 'Reservation must have start and end times');
         }
 
         if ($reservation->reserved_at >= $reservation->reserved_until) {
-            throw CalendarServiceException::invalidDateRange($reservation->reserved_at, $reservation->reserved_until);
+            throw CalendarException::invalidDateRange($reservation->reserved_at, $reservation->reserved_until);
         }
 
         try {
@@ -61,10 +61,10 @@ class ReservationToCalendarEvent
                 ->textColor('#fff')
                 ->extendedProps($extendedProps);
         } catch (\Exception $e) {
-            if ($e instanceof CalendarServiceException) {
+            if ($e instanceof CalendarException) {
                 throw $e;
             }
-            throw CalendarServiceException::eventGenerationFailed(
+            throw CalendarException::eventGenerationFailed(
                 'Reservation',
                 $reservation->id,
                 $e->getMessage()

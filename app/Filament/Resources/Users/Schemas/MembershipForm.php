@@ -6,7 +6,6 @@ use App\Filament\Resources\Users\Actions\CreateMembershipSubscriptionAction;
 use App\Filament\Resources\Users\Actions\ModifyMembershipAmountAction;
 use App\Filament\Resources\Users\Actions\OpenBillingPortalAction;
 use App\Filament\Resources\Users\Actions\ResumeMembershipAction;
-use App\Facades\UserSubscriptionService;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Section;

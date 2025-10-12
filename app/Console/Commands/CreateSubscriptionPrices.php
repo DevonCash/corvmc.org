@@ -2,8 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Facades\PaymentService;
-use Brick\Money\Money;
 use Error;
 use Illuminate\Console\Command;
 use Laravel\Cashier\Cashier;

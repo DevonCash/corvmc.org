@@ -2,12 +2,13 @@
 
 namespace App\Filament\Resources\Reservations\Pages;
 
+use App\Actions\Reservations\CreateCheckoutSession;
 use App\Filament\Resources\Reservations\ReservationResource;
 use App\Models\Reservation;
-use App\Services\ReservationService;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Log;
 
 class CreateReservation extends CreateRecord
 {
@@ -23,12 +24,12 @@ class CreateReservation extends CreateRecord
 
         if ($shouldCheckout) {
             try {
-                $reservationService = app(ReservationService::class);
-                $session = $reservationService->createCheckoutSession($record);
+                $session = CreateCheckoutSession::run($record);
 
                 // Store the redirect URL in session to use after the page redirects
                 session()->put('stripe_checkout_url', $session->url);
             } catch (\Exception $e) {
+                Log::error($e);
                 Notification::make()
                     ->title('Payment Error')
                     ->body('Unable to create payment session: ' . $e->getMessage())

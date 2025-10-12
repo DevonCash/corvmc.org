@@ -2,7 +2,7 @@
 
 namespace App\Actions\Calendar;
 
-use App\Exceptions\Services\CalendarServiceException;
+use App\Exceptions\CalendarException;
 use App\Models\Production;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -17,15 +17,15 @@ class ProductionToCalendarEvent
     public function handle(Production $production): CalendarEvent
     {
         if (!$production->exists) {
-            throw CalendarServiceException::missingRequiredData('production', 'Production must be persisted to database');
+            throw CalendarException::missingRequiredData('production', 'Production must be persisted to database');
         }
 
         if (!$production->start_time || !$production->end_time) {
-            throw CalendarServiceException::missingRequiredData('production times', 'Production must have start and end times');
+            throw CalendarException::missingRequiredData('production times', 'Production must have start and end times');
         }
 
         if ($production->start_time >= $production->end_time) {
-            throw CalendarServiceException::invalidDateRange($production->start_time, $production->end_time);
+            throw CalendarException::invalidDateRange($production->start_time, $production->end_time);
         }
 
         try {
@@ -50,10 +50,10 @@ class ProductionToCalendarEvent
                 ->textColor('#fff')
                 ->extendedProps($extendedProps);
         } catch (\Exception $e) {
-            if ($e instanceof CalendarServiceException) {
+            if ($e instanceof CalendarException) {
                 throw $e;
             }
-            throw CalendarServiceException::eventGenerationFailed(
+            throw CalendarException::eventGenerationFailed(
                 'Production',
                 $production->id,
                 $e->getMessage()

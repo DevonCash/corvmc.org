@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Exceptions\Services;
+namespace App\Exceptions;
 
 use Exception;
 
-class CalendarServiceException extends Exception
+class CalendarException extends Exception
 {
     public static function invalidDateRange(\DateTimeInterface $start, \DateTimeInterface $end): self
     {

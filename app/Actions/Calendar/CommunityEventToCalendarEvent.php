@@ -2,7 +2,7 @@
 
 namespace App\Actions\Calendar;
 
-use App\Exceptions\Services\CalendarServiceException;
+use App\Exceptions\CalendarException;
 use App\Models\CommunityEvent;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -17,15 +17,15 @@ class CommunityEventToCalendarEvent
     public function handle(CommunityEvent $communityEvent): CalendarEvent
     {
         if (!$communityEvent->exists) {
-            throw CalendarServiceException::missingRequiredData('community event', 'Community event must be persisted to database');
+            throw CalendarException::missingRequiredData('community event', 'Community event must be persisted to database');
         }
 
         if (!$communityEvent->start_time) {
-            throw CalendarServiceException::missingRequiredData('community event times', 'Community event must have start time');
+            throw CalendarException::missingRequiredData('community event times', 'Community event must have start time');
         }
 
         if ($communityEvent->end_time && $communityEvent->start_time >= $communityEvent->end_time) {
-            throw CalendarServiceException::invalidDateRange($communityEvent->start_time, $communityEvent->end_time);
+            throw CalendarException::invalidDateRange($communityEvent->start_time, $communityEvent->end_time);
         }
 
         try {
@@ -50,10 +50,10 @@ class CommunityEventToCalendarEvent
                 ->textColor('#fff')
                 ->extendedProps($extendedProps);
         } catch (\Exception $e) {
-            if ($e instanceof CalendarServiceException) {
+            if ($e instanceof CalendarException) {
                 throw $e;
             }
-            throw CalendarServiceException::eventGenerationFailed(
+            throw CalendarException::eventGenerationFailed(
                 'CommunityEvent',
                 $communityEvent->id,
                 $e->getMessage()

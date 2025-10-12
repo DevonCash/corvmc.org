@@ -2,15 +2,12 @@
 
 namespace App\Filament\Resources\Users\Actions;
 
-use App\Facades\PaymentService;
-use App\Facades\UserSubscriptionService;
 use Brick\Money\Money;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Slider;
 use Filament\Forms\Components\Slider\Enums\PipsMode;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Components\Actions;
 use Filament\Support\RawJs;
 
 class ModifyMembershipAmountAction
@@ -79,7 +76,7 @@ class ModifyMembershipAmountAction
                             $stripeSubscription = $subscription->asStripeSubscription();
                             return count($stripeSubscription->items->data) > 1;
                         }
-                        
+
                         return false;
                     }),
                 TextEntry::make('total_preview')

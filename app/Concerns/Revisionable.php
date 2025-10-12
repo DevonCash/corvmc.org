@@ -2,6 +2,7 @@
 
 namespace App\Concerns;
 
+use App\Actions\Trust\DetermineApprovalWorkflow;
 use App\Models\Revision;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -359,7 +360,7 @@ trait Revisionable
         // Override in individual models for custom authorization
         return $user->hasPermissionTo('approve revisions') ?? false;
     }
-    
+
     /**
      * Get revision workflow information for this content.
      */
@@ -367,13 +368,13 @@ trait Revisionable
     {
         $autoApproveMode = $this->getAutoApproveMode();
         $contentCategory = $this->getContentCategory();
-        
+
         // Base workflow info
         $workflow = [
             'auto_approve_mode' => $autoApproveMode,
             'content_category' => $contentCategory,
         ];
-        
+
         switch ($autoApproveMode) {
             case 'never':
                 $workflow = array_merge($workflow, [
@@ -383,7 +384,7 @@ trait Revisionable
                     'reason' => 'Organizational content requires manual approval',
                 ]);
                 break;
-                
+
             case 'personal':
                 $currentUser = Auth::user();
                 if ($currentUser) {
@@ -391,7 +392,7 @@ trait Revisionable
                     $trustPointsKey = static::class;
                     $trustPoints = $currentUser->trust_points[$trustPointsKey] ?? 0;
                     $inPoorStanding = $trustPoints < -5;
-                    
+
                     $workflow = array_merge($workflow, [
                         'requires_approval' => $inPoorStanding,
                         'review_priority' => $inPoorStanding ? 'standard' : 'none',
@@ -407,14 +408,13 @@ trait Revisionable
                     ]);
                 }
                 break;
-                
+
             case 'trusted':
             default:
                 $currentUser = Auth::user();
                 if ($currentUser) {
-                    $trustService = app(\App\Services\TrustService::class);
-                    $trustWorkflow = $trustService->determineApprovalWorkflow($currentUser, static::class);
-                    
+                    $trustWorkflow = DetermineApprovalWorkflow::run($currentUser, static::class);
+
                     $workflow = array_merge($workflow, [
                         'requires_approval' => $trustWorkflow['requires_approval'],
                         'review_priority' => $trustWorkflow['review_priority'],
@@ -431,10 +431,10 @@ trait Revisionable
                 }
                 break;
         }
-        
+
         return $workflow;
     }
-    
+
     /**
      * Get content category for workflow determination.
      */
