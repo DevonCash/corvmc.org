@@ -32,38 +32,53 @@ class ProductionUpdatedNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $subject = match ($this->updateType) {
-            'published' => "Event Published: {$this->production->title}",
-            'updated' => "Event Updated: {$this->production->title}",
-            'cancelled' => "Event Cancelled: {$this->production->title}",
-            'completed' => "Event Completed: {$this->production->title}",
-            default => "Event Update: {$this->production->title}",
-        };
+        try {
+            $subject = match ($this->updateType) {
+                'published' => "Event Published: {$this->production->title}",
+                'updated' => "Event Updated: {$this->production->title}",
+                'cancelled' => "Event Cancelled: {$this->production->title}",
+                'completed' => "Event Completed: {$this->production->title}",
+                default => "Event Update: {$this->production->title}",
+            };
 
-        $message = (new MailMessage)
-            ->subject($subject)
-            ->greeting('Hello!')
-            ->line($this->getUpdateMessage());
+            $message = (new MailMessage)
+                ->subject($subject)
+                ->greeting('Hello!')
+                ->line($this->getUpdateMessage());
 
-        if ($this->updateType === 'published') {
-            $message->action('View Event Details', route('events.show', $this->production));
-        }
+            if ($this->updateType === 'published') {
+                $message->action('View Event Details', route('events.show', $this->production));
+            }
 
-        if (!empty($this->changes)) {
-            $message->line('Changes made:');
-            foreach ($this->changes as $field => $change) {
-                // Handle both array format and simple string format
-                if (is_array($change) && isset($change['old'], $change['new'])) {
-                    $message->line("• {$field}: {$change['old']} → {$change['new']}");
-                } else {
-                    // If change is a simple string or doesn't have old/new keys
-                    $changeText = is_string($change) ? $change : json_encode($change);
-                    $message->line("• {$field}: {$changeText}");
+            if (!empty($this->changes)) {
+                $message->line('Changes made:');
+                foreach ($this->changes as $field => $change) {
+                    // Handle both array format and simple string format
+                    if (is_array($change) && isset($change['old'], $change['new'])) {
+                        $message->line("• {$field}: {$change['old']} → {$change['new']}");
+                    } else {
+                        // If change is a simple string or doesn't have old/new keys
+                        $changeText = is_string($change) ? $change : json_encode($change);
+                        $message->line("• {$field}: {$changeText}");
+                    }
                 }
             }
-        }
 
-        return $message->line('Thank you for being part of the Corvallis Music Collective!');
+            return $message->line('Thank you for being part of the Corvallis Music Collective!');
+        } catch (\Exception $e) {
+            \Log::error('Failed to build ProductionUpdatedNotification email', [
+                'production_id' => $this->production->id,
+                'update_type' => $this->updateType,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Return a simple fallback message
+            return (new MailMessage)
+                ->subject("Event Update: {$this->production->title}")
+                ->greeting('Hello!')
+                ->line("The event '{$this->production->title}' has been updated.")
+                ->line('Thank you for being part of the Corvallis Music Collective!');
+        }
     }
 
     /**
