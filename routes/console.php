@@ -3,6 +3,7 @@
 use App\Actions\Notifications\SendMembershipReminders;
 use App\Actions\Notifications\SendReservationConfirmationReminders;
 use App\Actions\Notifications\SendReservationReminders;
+use App\Actions\RecurringReservations\GenerateRecurringInstances;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -27,5 +28,5 @@ Schedule::command('cloudflare:reload')->daily();
 
 // Generate future instances for recurring reservations daily
 Schedule::call(function () {
-    app(\App\Services\RecurringReservationService::class)->generateFutureInstances();
+    GenerateRecurringInstances::run();
 })->daily()->at('00:00');

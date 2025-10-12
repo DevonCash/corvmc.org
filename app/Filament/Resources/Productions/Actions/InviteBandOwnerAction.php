@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Productions\Actions;
 
+use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Tables\Actions\Action;
 
 class InviteBandOwnerAction
 {

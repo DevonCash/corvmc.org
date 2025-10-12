@@ -55,6 +55,7 @@ class ListSpaceUsage extends ListRecords
                 ->badge(function () {
                     return Reservation::where(function ($q) {
                             $q->where('status', 'pending')
+                            ->where('reserved_at', '>', now())
                                 ->orWhere(function ($q) {
                                     $q->where('payment_status', 'unpaid')
                                         ->where('cost', '>', 0);
