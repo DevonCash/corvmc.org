@@ -47,11 +47,18 @@ class QueueRevisionForReview
      */
     protected function notifyModerators(Revision $revision, string $priority): void
     {
-        // Get users with revision approval permissions
-        $moderators = User::permission('approve revisions')->get();
+        try {
+            // Get users with revision approval permissions
+            $moderators = User::permission('approve revisions')->get();
 
-        if ($moderators->isNotEmpty()) {
-            Notification::send($moderators, new RevisionSubmittedNotification($revision, $priority));
+            if ($moderators->isNotEmpty()) {
+                Notification::send($moderators, new RevisionSubmittedNotification($revision, $priority));
+            }
+        } catch (\Spatie\Permission\Exceptions\PermissionDoesNotExist $e) {
+            Log::warning('Permission "approve revisions" not found. Run: php artisan db:seed --class=PermissionSeeder', [
+                'revision_id' => $revision->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }
