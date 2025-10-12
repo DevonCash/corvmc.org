@@ -51,21 +51,29 @@ class UpdateProduction
      */
     protected function sendUpdateNotificationIfNeeded(Production $production, array $originalData, array $newData): void
     {
-        $significantFields = ['title', 'start_time', 'end_time', 'location', 'status'];
-        $hasSignificantChanges = false;
+        try {
+            $significantFields = ['title', 'start_time', 'end_time', 'location', 'status'];
+            $hasSignificantChanges = false;
 
-        foreach ($significantFields as $field) {
-            if (isset($newData[$field]) && ($originalData[$field] ?? null) !== $newData[$field]) {
-                $hasSignificantChanges = true;
-                break;
+            foreach ($significantFields as $field) {
+                if (isset($newData[$field]) && ($originalData[$field] ?? null) !== $newData[$field]) {
+                    $hasSignificantChanges = true;
+                    break;
+                }
             }
-        }
 
-        if ($hasSignificantChanges) {
-            $users = GetInterestedUsers::run($production);
-            if ($users->isNotEmpty()) {
-                Notification::send($users, new ProductionUpdatedNotification($production, 'updated', $newData));
+            if ($hasSignificantChanges) {
+                $users = GetInterestedUsers::run($production);
+                if ($users->isNotEmpty()) {
+                    Notification::send($users, new ProductionUpdatedNotification($production, 'updated', $newData));
+                }
             }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send production update notifications', [
+                'production_id' => $production->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Continue execution - notification failure shouldn't block the update
         }
     }
 }

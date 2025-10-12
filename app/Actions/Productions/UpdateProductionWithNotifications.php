@@ -32,9 +32,17 @@ class UpdateProductionWithNotifications
 
         // Send notification if there were meaningful changes
         if (!empty($changes)) {
-            $users = GetInterestedUsers::run($production);
-            if ($users->isNotEmpty()) {
-                Notification::send($users, new ProductionUpdatedNotification($production, 'updated', $changes));
+            try {
+                $users = GetInterestedUsers::run($production);
+                if ($users->isNotEmpty()) {
+                    Notification::send($users, new ProductionUpdatedNotification($production, 'updated', $changes));
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send production update notifications', [
+                    'production_id' => $production->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Continue execution - notification failure shouldn't block the update
             }
         }
 
