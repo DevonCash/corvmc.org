@@ -52,7 +52,14 @@ class ProductionUpdatedNotification extends Notification
         if (!empty($this->changes)) {
             $message->line('Changes made:');
             foreach ($this->changes as $field => $change) {
-                $message->line("• {$field}: {$change['old']} → {$change['new']}");
+                // Handle both array format and simple string format
+                if (is_array($change) && isset($change['old'], $change['new'])) {
+                    $message->line("• {$field}: {$change['old']} → {$change['new']}");
+                } else {
+                    // If change is a simple string or doesn't have old/new keys
+                    $changeText = is_string($change) ? $change : json_encode($change);
+                    $message->line("• {$field}: {$changeText}");
+                }
             }
         }
 
