@@ -65,21 +65,6 @@ class CreateBand
                     ->autofocus(),
             ])
             ->action(function (array $data, $livewire) {
-                // Check for claimable bands with the same name first
-                $claimableBand = FindClaimableBand::run($data['name']);
-
-                if ($claimableBand && User::me()?->can('claim', $claimableBand)) {
-                    // Redirect to claiming workflow instead of creating duplicate
-                    session()->flash('claimable_band', [
-                        'id' => $claimableBand->id,
-                        'name' => $claimableBand->name,
-                        'data' => $data
-                    ]);
-
-                    $livewire->redirect(BandResource::getUrl('claim'));
-                    return;
-                }
-
                 // Create the band
                 $band = static::run($data);
 

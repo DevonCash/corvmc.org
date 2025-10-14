@@ -11,7 +11,7 @@ use Filament\Tables\Table;
 
 class BandsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'bandProfiles';
+    protected static string $relationship = 'bands';
 
     public function form(Schema $schema): Schema
     {

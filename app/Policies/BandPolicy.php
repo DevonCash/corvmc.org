@@ -199,11 +199,4 @@ class BandPolicy
         return false;
     }
 
-    /**
-     * Determine whether the user can claim a band (band without owner).
-     */
-    public function claim(User $user, Band $band): bool
-    {
-        return $band->owner_id === null;
-    }
 }

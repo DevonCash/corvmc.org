@@ -118,19 +118,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(Production::class, 'manager_id');
     }
 
-    // @deprecated use bands() instead
-    public function bandProfiles()
-    {
-        return $this->belongsToMany(Band::class, 'band_profile_members', 'user_id', 'band_profile_id')
-            ->withPivot('role', 'position')
-            ->withTimestamps();
-    }
-
     public function bands()
     {
         return $this->belongsToMany(Band::class, 'band_profile_members', 'user_id', 'band_profile_id')
             ->withPivot('role', 'position', 'status')
             ->withTimestamps();
+    }
+
+    public function bandMemberships()
+    {
+        return $this->hasMany(BandMember::class, 'user_id');
     }
 
     public function staffProfile(): HasOne

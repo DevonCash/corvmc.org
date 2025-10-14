@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Bands;
 
-use App\Filament\Resources\Bands\Pages\ClaimBand;
 use App\Filament\Resources\Bands\Pages\EditBand;
 use App\Filament\Resources\Bands\Pages\ListBands;
 use App\Filament\Resources\Bands\Pages\ViewBand;
@@ -10,6 +9,7 @@ use App\Filament\Resources\Bands\RelationManagers\MembersRelationManager;
 use App\Filament\Resources\Bands\Schemas\BandForm;
 use App\Filament\Resources\Bands\Tables\BandsTable;
 use App\Models\Band;
+use App\Models\User;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -33,7 +33,7 @@ class BandResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         $count = Band::whereHas('members', function ($query) {
-            $query->where('user_id', auth()->id())
+            $query->where('user_id', User::me()->id)
                 ->where('status', 'invited');
         })->count();
 
@@ -66,7 +66,6 @@ class BandResource extends Resource
     {
         return [
             'index' => ListBands::route('/'),
-            'claim' => ClaimBand::route('/claim'),
             'view' => ViewBand::route('/{record}'),
             'edit' => EditBand::route('/{record}/edit'),
         ];

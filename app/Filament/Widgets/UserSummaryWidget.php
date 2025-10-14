@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\User;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -16,7 +17,7 @@ class UserSummaryWidget extends Widget
 
     public function getUserStats(): array
     {
-        $user = Auth::user();
+        $user = User::me();
 
         if (!$user) {
             return [];
@@ -24,12 +25,12 @@ class UserSummaryWidget extends Widget
 
         return Cache::remember("user_stats.{$user->id}", 300, function() use ($user) {
             $stats = [
-                'upcoming_reservations' => $user->reservations()
+                'upcoming_reservations' => $user->reservations
                     ->where('reserved_at', '>', now())
                     ->count(),
-                'band_memberships' => $user->bandProfiles()->count(),
-                'owned_bands' => $user->ownedBands()->count(),
-                'managed_productions' => $user->productions()->count(),
+                'band_memberships' => $user->bands->count(),
+                'owned_bands' => $user->ownedBands->count(),
+                'managed_productions' => $user->productions->count(),
                 'is_sustaining_member' => $user->isSustainingMember(),
             ];
 
@@ -58,7 +59,7 @@ class UserSummaryWidget extends Widget
         return Cache::remember("user_activity.{$user->id}", 600, function() use ($user) {
             $activities = [];
 
-            $recentReservations = $user->reservations()
+            $recentReservations = $user->reservations
                 ->where('reserved_at', '>', now()->subDays(30))
                 ->orderBy('reserved_at', 'desc')
                 ->limit(3)

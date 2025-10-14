@@ -2,11 +2,9 @@
 
 namespace App\Filament\Resources\ActivityLog\Tables;
 
-use App\Filament\Widgets\ActivityFeedWidget;
 use App\Models\User;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\Models\Activity;
 use Filament\Forms;
 use Filament\Actions;

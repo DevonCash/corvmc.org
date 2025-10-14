@@ -100,7 +100,7 @@ class UpdateBandMember
                                     $query->where('name', 'like', "%{$search}%")
                                         ->orWhere('email', 'like', "%{$search}%");
                                 })
-                                    ->whereDoesntHave('bandProfiles', function ($query) use ($record) {
+                                    ->whereDoesntHave('bands', function ($query) use ($record) {
                                         return $query->where('band_profile_id', $record->id);
                                     })
                                     ->limit(50)

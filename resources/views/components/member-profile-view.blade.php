@@ -111,14 +111,14 @@
             <x-profile-contact :profile="$record" />
 
             {{-- Ensemble Credits --}}
-            @if ($record->user->bandProfiles && count($record->user->bandProfiles) > 0)
+            @if ($record->user->bands && count($record->user->bands) > 0)
                 <div>
                     <h3
                         class="font-bold text-base-content mb-3 uppercase tracking-wide text-sm border-b border-base-300 pb-1">
                         Bands
                     </h3>
                     <div class="space-y-2 text-sm">
-                        @foreach ($record->user->bandProfiles as $band)
+                        @foreach ($record->user->bands as $band)
                             @php
                                 $isVisible =
                                     $band->visibility === 'public' ||

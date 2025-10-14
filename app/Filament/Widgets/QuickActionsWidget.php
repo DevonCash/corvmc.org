@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\User;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,7 +18,7 @@ class QuickActionsWidget extends Widget
 
     public function getQuickActions(): array
     {
-        $user = Auth::user();
+        $user = User::me();
 
         if (!$user) {
             return [];
@@ -35,7 +36,7 @@ class QuickActionsWidget extends Widget
         ];
 
         // Band-related actions
-        if ($user->bandProfiles()->count() === 0) {
+        if ($user->bands->count() === 0) {
             $actions[] = [
                 'label' => 'Create New Band',
                 'description' => 'Start or join a musical group',
