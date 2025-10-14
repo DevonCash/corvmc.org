@@ -58,17 +58,24 @@ class AddBandMember
                     ->label('CMC Member')
                     ->required()
                     ->getSearchResultsUsing(
-                        fn(string $search, $record): array => User::where(function ($query) use ($search) {
-                            $query->where('name', 'like', "%{$search}%")
-                                ->orWhere('email', 'like', "%{$search}%");
-                        })
-                            ->whereDoesntHave('bands', function ($query) use ($record) {
-                                return $query->where('band_profile_id', $record->id);
+                        function (string $search, $livewire): array {
+                            // Get the band record from the livewire component
+                            $band = $livewire->record ?? $livewire->ownerRecord ?? null;
+
+                            return User::where(function ($query) use ($search) {
+                                $query->where('name', 'like', "%{$search}%")
+                                    ->orWhere('email', 'like', "%{$search}%");
                             })
-                            ->limit(50)
-                            ->get()
-                            ->mapWithKeys(fn($user) => [$user->id => "{$user->name} ({$user->email})"])
-                            ->toArray()
+                                ->when($band, function ($query) use ($band) {
+                                    $query->whereDoesntHave('bands', function ($query) use ($band) {
+                                        $query->where('band_profile_id', $band->id);
+                                    });
+                                })
+                                ->limit(50)
+                                ->get()
+                                ->mapWithKeys(fn($user) => [$user->id => "{$user->name} ({$user->email})"])
+                                ->toArray();
+                        }
                     )
                     ->getOptionLabelUsing(
                         fn($value): ?string => ($user = User::find($value)) ? "{$user->name} ({$user->email})" : null
@@ -115,7 +122,7 @@ class AddBandMember
                 // Existing CMC member - send invitation
                 $user = User::find($data['user_id']);
 
-                static::run($record->band, $user, $data);
+                static::run($record, $user, $data);
 
                 Notification::make()
                     ->title('Invitation sent')
