@@ -50,7 +50,8 @@ class ViewBand extends Page
     public function getHeaderActions(): array
     {
         return [
-            AddBandMember::filamentAction(),
+            AddBandMember::filamentAction()
+                ->record($this->record),
             EditAction::make()
                 ->visible(fn() => User::me()?->can('update', $this->record)),
             ReportContentAction::make()
