@@ -5,6 +5,7 @@ namespace App\Filament\Resources\MemberProfiles\Pages;
 use App\Actions\Invitations\InviteUser;
 use App\Filament\Resources\MemberProfiles\MemberProfileResource;
 use App\Models\MemberProfile;
+use App\Models\User;
 use App\Settings\MemberDirectorySettings;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\CheckboxList;
@@ -162,14 +163,14 @@ class ListMemberProfiles extends Page
                         $settings = app(MemberDirectorySettings::class);
                         return $settings->getAvailableFlags();
                     })
-                    ->columnSpan(fn() => Auth::user()?->can('view private member profiles') ? 2 : 3)
+                    ->columnSpan(fn() => User::me()?->can('view private member profiles') ? 2 : 3)
                     ->columns(function () {
-                        return Auth::user()?->can('view private member profiles') ? 2 : 4;
+                        return User::me()?->can('view private member profiles') ? 2 : 4;
                     }),
 
                 Select::make('visibility')
                     ->label('Visibility 🛡️')
-                    ->visible(fn() => Auth::user()?->can('view private member profiles'))
+                    ->visible(fn() => User::me()?->can('view private member profiles'))
                     ->live()
                     ->options([
                         'public' => 'Public',

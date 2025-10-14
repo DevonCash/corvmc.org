@@ -16,6 +16,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 
 class UserForm
 {
@@ -69,7 +70,7 @@ class UserForm
                                                 ->modalDescription(fn($record) => "Send a password reset email to {$record->email}?")
                                                 ->modalSubmitActionLabel('Send Reset Email')
                                                 ->action(function (User $record) {
-                                                    $token = \Password::createToken($record);
+                                                    $token = Password::createToken($record);
                                                     $record->sendPasswordResetNotification($token);
                                                 }),
                                         ])->verticalAlignment('end')
@@ -83,7 +84,7 @@ class UserForm
                                 MemberProfileForm::configure(Section::make('')->relationship('profile')),
                             ]),
                         Tab::make('Staff Profile')
-                            ->visible(fn($record) => $record?->staffProfile && (Auth::user()?->can('manage staff profiles') || Auth::user()->is($record)))
+                            ->visible(fn($record) => $record?->staffProfile && (User::me()?->can('manage staff profiles') || User::me()->is($record)))
                             ->schema([
                                 StaffProfileForm::configure(Section::make('')
                                     ->schema([
@@ -95,7 +96,7 @@ class UserForm
                                     ->relationship('staffProfile')),
                             ]),
                         Tab::make('Administration')
-                            ->visible(fn($record) => Auth::user()?->can('update user roles') || Auth::user()?->can('manage subscriptions'))
+                            ->visible(fn($record) => User::me()?->can('update user roles') || User::me()?->can('manage subscriptions'))
                             ->schema([
                                 AdminUserControlForm::configure(Grid::make(1)),
                             ]),

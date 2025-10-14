@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Reservations\Schemas;
 
 use App\Actions\Reservations\GetAvailableTimeSlotsForDate;
 use App\Actions\Reservations\GetValidEndTimesForDate;
+use App\Models\User;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -103,7 +104,7 @@ class ReservationEditForm
                             ->default('unpaid')
                             ->required(),
                     ])
-                    ->visible(fn () => Auth::user()?->can('manage practice space'))
+                    ->visible(fn () => User::me()?->can('manage practice space'))
                     ->columnSpan(2),
             ]);
     }

@@ -27,7 +27,7 @@ class CheckoutToMemberAction
             ->schema([
                 MemberSelector::make('borrower_id')
                     ->default(Auth::id())
-                    ->visible(fn() => Auth::user()->can('manage equipment loans'))
+                    ->visible(fn() => User::me()?->can('manage equipment loans'))
                     ->required(),
 
                 DateTimePicker::make('due_at')

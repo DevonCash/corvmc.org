@@ -9,7 +9,6 @@ use App\Data\UserSettingsData;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -22,7 +21,6 @@ use App\Notifications\EmailVerificationNotification;
 use Illuminate\Support\Facades\Auth;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Cashier\Billable;
-use Illuminate\Support\Facades\Cache;
 
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {

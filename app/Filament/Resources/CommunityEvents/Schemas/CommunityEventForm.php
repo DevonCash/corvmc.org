@@ -18,6 +18,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Fieldset;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Actions;
 use Illuminate\Support\Facades\Auth;
@@ -212,7 +213,7 @@ class CommunityEventForm
                                     ->default(CommunityEvent::STATUS_PENDING),
                             ]),
 
-                        Placeholder::make('organizer_trust_info')
+                        TextEntry::make('organizer_trust_info')
                             ->label('Organizer Trust Level')
                             ->content(function ($get) {
                                 $organizerId = $get('organizer_id');
@@ -242,7 +243,7 @@ class CommunityEventForm
                             ->native(false)
                             ->visible(fn ($get) => $get('status') === CommunityEvent::STATUS_APPROVED),
                     ])
-                    ->visible(fn () => Auth::user()->can('manage community events'))
+                    ->visible(fn () => User::me()->can('manage community events'))
                     ->collapsible()
                     ->collapsed(),
             ]);

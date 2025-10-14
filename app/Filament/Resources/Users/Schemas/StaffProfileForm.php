@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\User;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
@@ -61,13 +62,13 @@ class StaffProfileForm
                     ->numeric()
                     ->default(0)
                     ->helperText('Lower numbers appear first')
-                    ->visible(fn () => Auth::user()?->can('manage staff profiles')),
+                    ->visible(fn () => User::me()?->can('manage staff profiles')),
 
                 Toggle::make('is_active')
                     ->label('Show on About Page')
                     ->default(true)
                     ->helperText('Toggle whether this profile appears on the public about page')
-                    ->visible(fn () => Auth::user()?->can('manage staff profiles')),
+                    ->visible(fn () => User::me()?->can('manage staff profiles')),
                 SpatieMediaLibraryFileUpload::make('profile_image')
                     ->label('Profile Picture')
                     ->collection('profile_image')

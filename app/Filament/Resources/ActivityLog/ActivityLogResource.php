@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ActivityLog;
 
 use App\Filament\Resources\ActivityLog\Pages;
 use App\Filament\Resources\ActivityLog\Tables\ActivityLogTable;
+use App\Models\User;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\Models\Activity;
@@ -31,7 +32,7 @@ class ActivityLogResource extends Resource
 
     public static function canAccess(): bool
     {
-        return Auth::user()?->can('view activity log') ?? false;
+        return User::me()?->can('view activity log') ?? false;
     }
 
     public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
@@ -58,14 +59,14 @@ class ActivityLogResource extends Resource
 
     public static function canDelete($record): bool
     {
-        return Auth::user()?->can('delete activity log') ?? false;
+        return User::me()?->can('delete activity log') ?? false;
     }
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         $query = parent::getEloquentQuery()->with(['causer', 'subject']);
 
-        $currentUser = Auth::user();
+        $currentUser = User::me();
 
         if (!$currentUser || !$currentUser->can('view all activity logs')) {
             // Filter to only show activities the user is authorized to see
@@ -126,7 +127,7 @@ class ActivityLogResource extends Resource
                     }
                 })
                 ->orWhereHasMorph('subject', [
-                    \App\Models\User::class,
+                    User::class,
                 ], function ($q) {
                     // User activities are generally visible (registration, etc.)
                     $q->whereRaw('1=1');

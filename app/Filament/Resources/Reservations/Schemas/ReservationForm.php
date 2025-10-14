@@ -82,7 +82,7 @@ class ReservationForm
     }
     public static function reservationStep(): array
     {
-        $isAdmin = Auth::user()?->can('manage practice space');
+        $isAdmin = User::me()?->can('manage practice space');
 
         return [
             // Admin-only member selection at the top if needed

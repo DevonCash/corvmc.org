@@ -4,6 +4,7 @@ namespace App\Actions\Invitations;
 
 use App\Concerns\AsFilamentAction;
 use App\Models\Invitation;
+use App\Models\User;
 use App\Notifications\UserInvitationNotification;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
@@ -49,7 +50,7 @@ class InviteUser
                     ->placeholder('Enter email address'),
 
                 CheckboxList::make('roles')
-                    ->visible(fn() => Auth::user()->hasRole('admin'))
+                    ->visible(fn() => User::me()->hasRole('admin'))
                     ->label('Assign Roles')
                     ->options(Role::all()->pluck('name', 'id'))
                     ->descriptions(Role::all()->pluck('name', 'id')->map(fn($name) => "Assign {$name} role"))

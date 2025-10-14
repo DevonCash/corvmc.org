@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\CommunityEvents\Tables;
 
 use App\Models\CommunityEvent;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\DeleteAction;
@@ -51,7 +52,8 @@ class CommunityEventsTable
                     ->sortable()
                     ->description(fn (CommunityEvent $record): string => $record->date_range),
 
-                BadgeColumn::make('status')
+                TextColumn::make('status')
+                    ->badge()
                     ->colors([
                         'warning' => CommunityEvent::STATUS_PENDING,
                         'success' => CommunityEvent::STATUS_APPROVED,
@@ -59,7 +61,8 @@ class CommunityEventsTable
                         'gray' => CommunityEvent::STATUS_CANCELLED,
                     ]),
 
-                BadgeColumn::make('event_type')
+                TextColumn::make('event_type')
+                    ->badge()
                     ->label('Type')
                     ->colors([
                         'primary' => CommunityEvent::TYPE_PERFORMANCE,
@@ -102,7 +105,7 @@ class CommunityEventsTable
                     ->counts('reports')
                     ->badge()
                     ->color('danger')
-                    ->visible(fn () => Auth::user()?->can('view reports')),
+                    ->visible(fn () => User::me()?->can('view reports')),
             ])
             ->filters([
                 SelectFilter::make('status')

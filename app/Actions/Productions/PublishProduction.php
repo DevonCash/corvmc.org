@@ -3,8 +3,8 @@
 namespace App\Actions\Productions;
 
 use App\Models\Production;
+use App\Models\User;
 use App\Notifications\ProductionPublishedNotification;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -18,7 +18,7 @@ class PublishProduction
     public function handle(Production $production): void
     {
         // Check authorization
-        if (!Auth::user()?->can('update', $production)) {
+        if (!User::me()?->can('update', $production)) {
             throw new \Illuminate\Auth\Access\AuthorizationException('You are not authorized to publish this production.');
         }
 

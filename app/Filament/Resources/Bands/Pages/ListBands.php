@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Bands\Pages;
 use App\Actions\Bands\CreateBand;
 use App\Filament\Resources\Bands\BandResource;
 use App\Models\Band;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -37,9 +38,9 @@ class ListBands extends ListRecords
                 ->modifyQueryUsing(
                     fn(Builder $query) =>
                     $query->where(function (Builder $query) {
-                        $query->where('owner_id', auth()->id())
+                        $query->where('owner_id', User::me()->id)
                             ->orWhereHas('members', function (Builder $query) {
-                                $query->where('user_id', auth()->id())
+                                $query->where('user_id', User::me()->id)
                                     ->where('status', 'active');
                             });
                     })
@@ -50,7 +51,7 @@ class ListBands extends ListRecords
     protected function getPendingInvitationsCount(): int
     {
         return Band::whereHas('members', function ($query) {
-            $query->where('user_id', auth()->id())
+            $query->where('user_id', User::me()->id)
                 ->where('status', 'invited');
         })->count();
     }

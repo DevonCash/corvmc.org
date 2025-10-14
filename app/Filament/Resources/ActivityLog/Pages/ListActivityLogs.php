@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ActivityLog\Pages;
 
 use App\Filament\Resources\ActivityLog\ActivityLogResource;
 use App\Filament\Resources\ActivityLog\Widgets\ActivityStatsWidget;
+use App\Models\User;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Auth;
@@ -32,7 +33,7 @@ class ListActivityLogs extends ListRecords
                         ->success()
                         ->send();
                 })
-                ->visible(fn (): bool => Auth::user()?->can('delete activity log') ?? false),
+                ->visible(fn (): bool => User::me()?->can('delete activity log') ?? false),
         ];
     }
 

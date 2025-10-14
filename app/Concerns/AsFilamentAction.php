@@ -83,7 +83,7 @@ trait AsFilamentAction
             ->toString();
     }
 
-    protected static function isActionVisible(): bool
+    protected static function isActionVisible(...$args): bool
     {
         return static::$actionVisible ?? true;
     }

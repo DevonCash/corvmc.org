@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -121,7 +122,7 @@ class AdminUserControlForm
 
                 Section::make('Staff Profile Management')
                     ->description('Administrative tools for managing staff profiles.')
-                    ->visible(fn($record) => Auth::user()?->can('manage staff profiles'))
+                    ->visible(fn($record) => User::me()?->can('manage staff profiles'))
                     ->headerActions([
                         Action::make('create_staff_profile')
                             ->label('Add Staff Profile')

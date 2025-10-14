@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Bands\Pages;
 use App\Actions\Bands\AddBandMember;
 use App\Filament\Actions\ReportContentAction;
 use App\Filament\Resources\Bands\BandResource;
+use App\Models\User;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
@@ -49,9 +50,9 @@ class ViewBand extends Page
     public function getHeaderActions(): array
     {
         return [
-            AddBandMember::filamentAction($this->record),
+            AddBandMember::filamentAction(),
             EditAction::make()
-                ->visible(fn() => Auth::user()->can('update', $this->record)),
+                ->visible(fn() => User::me()?->can('update', $this->record)),
             ReportContentAction::make()
                 ->visible(fn() => Auth::user()->id !== $this->record->owner_id), // Don't show report button to owner
         ];
@@ -62,7 +63,7 @@ class ViewBand extends Page
         $this->record = $this->resolveRecord($record);
 
         // Check if user can view this profile
-        if (! Auth::user()->can('view', $this->record)) {
+        if (! User::me()?->can('view', $this->record)) {
             abort(403, 'You do not have permission to view this band profile.');
         }
     }

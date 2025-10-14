@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Equipment\Actions;
 
 use App\Models\Equipment;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
@@ -21,7 +22,7 @@ class ExportEquipmentAction
             ->modalWidth('md')
             ->modalHeading('Export Equipment Data')
             ->modalDescription('Export equipment information to CSV or Excel format')
-            ->form([
+            ->schema([
                 Select::make('format')
                     ->label('Export Format')
                     ->options([
@@ -163,6 +164,6 @@ class ExportEquipmentAction
 
             })
             ->modalIcon('tabler-file-export')
-            ->visible(fn () => Auth::user()->can('export equipment'));
+            ->visible(fn () => User::me()?->can('export equipment'));
     }
 }
