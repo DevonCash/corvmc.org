@@ -13,6 +13,7 @@ use Filament\Schemas\Schema;
 use Carbon\Carbon;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Support\Facades\Log;
 
 class RecurringReservationForm
 {
@@ -171,6 +172,7 @@ class RecurringReservationForm
             $endTime = Carbon::parse($end);
             return $startTime->diffInMinutes($endTime);
         } catch (\Exception $e) {
+            Log::error($e);
             return null;
         }
     }

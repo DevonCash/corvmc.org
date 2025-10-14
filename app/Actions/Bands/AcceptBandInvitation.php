@@ -2,16 +2,21 @@
 
 namespace App\Actions\Bands;
 
+use App\Concerns\AsFilamentAction;
 use App\Exceptions\BandException;
 use App\Models\Band;
 use App\Models\User;
 use App\Notifications\BandInvitationAcceptedNotification;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
-class AcceptInvitation
+class AcceptBandInvitation
 {
     use AsAction;
+    use AsFilamentAction;
 
     /**
      * Accept an invitation to join a band.
@@ -27,7 +32,6 @@ class AcceptInvitation
             $band->members()->updateExistingPivot($user->id, [
                 'status' => 'active',
             ]);
-
             // Notify band owner and admins about the new member
             $this->notifyBandLeadership($band, $user);
         });
@@ -54,5 +58,26 @@ class AcceptInvitation
         foreach ($adminsAndOwner as $admin) {
             $admin->notify(new BandInvitationAcceptedNotification($band, $user));
         }
+    }
+
+    public static function filamentAction(): Action
+    {
+        return static::buildBaseAction()
+            ->label('Accept')
+            ->color('success')
+            ->icon('tabler-check')
+            ->requiresConfirmation()
+            ->modalHeading('Accept Band Invitation')
+            ->modalDescription(fn($record) => "Accept invitation to join {$record->band->name}?")
+            ->action(function ($record): void {
+                $user = User::find($record->user_id);
+                static::run($record->band, $user);
+                Notification::make()
+                    ->title('Invitation accepted')
+                    ->body("Welcome to {$record->band->name}!")
+                    ->success()
+                    ->send();
+            })
+            ->authorize('accept');
     }
 }

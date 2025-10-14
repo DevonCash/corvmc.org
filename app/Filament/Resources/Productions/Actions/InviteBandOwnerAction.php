@@ -45,30 +45,22 @@ class InviteBandOwnerAction
                     $bandData['bio'] = $data['bio'];
                 }
 
-                try {
-                    $invitation = \App\Actions\Invitations\InviteUserWithBand::run(
-                        $data['email'],
-                        $record->name,
-                        $bandData
-                    );
+                $invitation = \App\Actions\Invitations\InviteUserWithBand::run(
+                    $data['email'],
+                    $record->name,
+                    $bandData
+                );
 
-                    // Add any updated band data
-                    if (!empty($bandData)) {
-                        $record->update($bandData);
-                    }
-
-                    Notification::make()
-                        ->title('Band Owner Invited!')
-                        ->body("Invitation sent to {$data['email']} to own {$record->name}")
-                        ->success()
-                        ->send();
-                } catch (\Exception $e) {
-                    Notification::make()
-                        ->title('Error')
-                        ->body('Failed to invite band owner: ' . $e->getMessage())
-                        ->danger()
-                        ->send();
+                // Add any updated band data
+                if (!empty($bandData)) {
+                    $record->update($bandData);
                 }
+
+                Notification::make()
+                    ->title('Band Owner Invited!')
+                    ->body("Invitation sent to {$data['email']} to own {$record->name}")
+                    ->success()
+                    ->send();
             })
             ->modalHeading(fn($record) => "Invite Owner for {$record->name}")
             ->modalDescription('Invite someone to join CMC and take ownership of this band profile.')

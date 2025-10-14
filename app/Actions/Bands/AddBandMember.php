@@ -1,19 +1,66 @@
 <?php
 
-namespace App\Filament\Resources\Bands\Actions;
+namespace App\Actions\Bands;
 
+use App\Exceptions\BandException;
 use App\Models\Band;
+use App\Models\BandMember;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Lorisleiva\Actions\Concerns\AsAction;
 
-class AddBandMemberAction
+class AddBandMember
 {
-    public static function make(Band $band): Action
+    use AsAction;
+
+    /**
+     * Add a member directly to a band (without invitation).
+     */
+    public function handle(
+        Band $band,
+        ?User $user = null,
+        array $data = [],
+    ): void {
+        // Check if user is already a member by looking at pivot table
+        if ($user && $band->memberships()->active()->where('user_id', $user->id)->exists()) {
+            throw BandException::userAlreadyMember();
+        }
+
+        $role = $data['role'] ?? 'member';
+        $position = $data['position'] ?? null;
+        $displayName = $data['display_name'] ?? null;
+
+        DB::transaction(function () use ($band, $user, $role, $position, $displayName) {
+            // If user is null, create a guest member entry (non-CMC member)
+            if (is_null($user)) {
+                BandMember::create([
+                    'band_profile_id' => $band->id,
+                    'user_id' => null,
+                    'name' => $displayName ?? 'Guest Member',
+                    'role' => $role,
+                    'position' => $position,
+                    'status' => 'active',
+                    'invited_at' => now(),
+                ]);
+            } else {
+                // Add member to pivot table (for tracking purposes)
+                $band->members()->attach($user->id, [
+                    'role' => $role,
+                    'position' => $position,
+                    'name' => $displayName ?? $user->name,
+                    'status' => 'active',
+                    'invited_at' => now(),
+                ]);
+            }
+        });
+    }
+
+    public static function filamentAction(): Action
     {
         return Action::make('invite')
             ->label('Add Member')
@@ -36,11 +83,13 @@ class AddBandMemberAction
                     Select::make('user_id')
                         ->label('CMC Member (optional)')
                         ->getSearchResultsUsing(
-                            fn(string $search): array => User::where(function ($query) use ($search) {
+                            fn(string $search, $record): array => User::where(function ($query) use ($search) {
                                 $query->where('name', 'like', "%{$search}%")
                                     ->orWhere('email', 'like', "%{$search}%");
                             })
-                                ->whereDoesntHave('bandProfiles', fn($query) => $query->where('band_profile_id', $band->id))
+                                ->whereDoesntHave('bandProfiles', function ($query) use ($record) {
+                                    return $query->where('band_profile_id', $record->id);
+                                })
                                 ->limit(50)
                                 ->get()
                                 ->mapWithKeys(fn($user) => [$user->id => "{$user->name} ({$user->email})"])
@@ -96,59 +145,43 @@ class AddBandMemberAction
                             ->maxLength(100),
                     ]),
             ])
-            ->action(function (array $data) use ($band): void {
+            ->action(function (array $data, $record): void {
                 if ($data['user_id']) {
                     // Existing CMC member - send invitation
                     $user = User::find($data['user_id']);
 
-                    try {
-                        \App\Actions\Bands\InviteMember::run(
-                            $band,
-                            $user,
-                            $data['role'],
-                            $data['position'] ?? null,
-                            $data['name'] ?? null
-                        );
+                    \App\Actions\Bands\InviteMember::run(
+                        $record->band,
+                        $user,
+                        $data['role'],
+                        $data['position'] ?? null,
+                        $data['name'] ?? null
+                    );
 
-                        Notification::make()
-                            ->title('Invitation sent')
-                            ->body("Invitation sent to {$user->name}")
-                            ->success()
-                            ->send();
-                    } catch (\Exception $e) {
-                        Notification::make()
-                            ->title('Cannot send invitation')
-                            ->body($e->getMessage())
-                            ->warning()
-                            ->send();
-                    }
+                    Notification::make()
+                        ->title('Invitation sent')
+                        ->body("Invitation sent to {$user->name}")
+                        ->success()
+                        ->send();
                 } elseif ($data['email']) {
                     // New user by email - create account and invite to band
-                    try {
-                        $user = \App\Actions\Bands\CreateUserAndInviteToBand::run(
-                            $band,
-                            $data['name'],
-                            $data['email'],
-                            $data['role'],
-                            $data['position'] ?? null
-                        );
+                    $user = \App\Actions\Bands\CreateUserAndInviteToBand::run(
+                        $record,
+                        $data['name'],
+                        $data['email'],
+                        $data['role'],
+                        $data['position'] ?? null
+                    );
 
-                        Notification::make()
-                            ->title('User created and invitation sent')
-                            ->body("Created CMC account for {$user->email} and sent band invitation")
-                            ->success()
-                            ->send();
-                    } catch (\Exception $e) {
-                        Notification::make()
-                            ->title('Cannot send invitation')
-                            ->body($e->getMessage())
-                            ->warning()
-                            ->send();
-                    }
+                    Notification::make()
+                        ->title('User created and invitation sent')
+                        ->body("Created CMC account for {$user->email} and sent band invitation")
+                        ->success()
+                        ->send();
                 } else {
                     // Non-CMC member - add directly as active
-                    \App\Actions\Bands\AddNonCMCMember::run(
-                        $band,
+                    \App\Actions\Bands\AddNonCMCBandMember::run(
+                        $record->band,
                         $data['name'],
                         $data['role'],
                         $data['position'] ?? null
@@ -161,6 +194,6 @@ class AddBandMemberAction
                         ->send();
                 }
             })
-            ->visible(fn (): bool => Auth::user()->can('update', $band));
+            ->authorize('create');
     }
 }

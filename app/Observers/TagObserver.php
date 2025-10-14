@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Spatie\Tags\Tag;
 
 class TagObserver
@@ -44,6 +45,7 @@ class TagObserver
             }
         } catch (\BadMethodCallException $e) {
             // Cache driver doesn't support tagging, skip
+            Log::warning('Cache driver does not support tagging, skipping cache clear.');
         }
     }
 }

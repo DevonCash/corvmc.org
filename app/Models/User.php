@@ -19,6 +19,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 use App\Notifications\PasswordResetNotification;
 use App\Notifications\EmailVerificationNotification;
+use Illuminate\Support\Facades\Auth;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Cashier\Billable;
 use Illuminate\Support\Facades\Cache;
@@ -236,5 +237,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function sendEmailVerificationNotification()
     {
         $this->notify(new EmailVerificationNotification());
+    }
+
+    public static function me(): ?self {
+        /* @var self|null $user */
+        $user = Auth::user();
+        return $user;
     }
 }

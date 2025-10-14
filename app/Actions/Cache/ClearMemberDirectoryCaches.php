@@ -3,6 +3,7 @@
 namespace App\Actions\Cache;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class ClearMemberDirectoryCaches
@@ -20,6 +21,7 @@ class ClearMemberDirectoryCaches
             }
         } catch (\BadMethodCallException $e) {
             // Cache driver doesn't support tagging, skip
+            Log::warning('Cache driver does not support tagging, skipping cache clear.');
         }
     }
 }

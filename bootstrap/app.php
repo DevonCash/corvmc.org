@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             '/stripe/*',
         ]);
 
-        if(env('APP_ENV') !== 'local') {
+        if (env('APP_ENV') !== 'local') {
             $middleware->replace(
                 \Illuminate\Http\Middleware\TrustProxies::class,
                 \Monicahq\Cloudflare\Http\Middleware\TrustProxies::class
@@ -28,4 +28,22 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         //->withExceptions(function (Exceptions $exceptions) {
         Integration::handles($exceptions);
+
+        // Custom rendering for Filament
+        $exceptions->render(function (Throwable $e, $request) {
+            if ($request->header('X-Livewire')) {
+
+                $message = app()->environment('production')
+                    ? 'Something went wrong. Our team has been notified.'
+                    : $e->getMessage();
+
+                \Filament\Notifications\Notification::make()
+                    ->title('An error occurred')
+                    ->body($message)
+                    ->danger()
+                    ->send();
+
+                return response()->noContent();
+            }
+        });
     })->create();

@@ -27,7 +27,7 @@ class EnsureAdminMembership
                 $existingMembership->update(['role' => 'admin']);
             } else {
                 // Add user as admin member
-                AddMember::run($band, $user, ['role' => 'admin']);
+                AddBandMember::run($band, $user, ['role' => 'admin']);
             }
         });
     }

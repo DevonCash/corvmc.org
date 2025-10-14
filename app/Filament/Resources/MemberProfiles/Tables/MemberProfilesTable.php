@@ -2,15 +2,13 @@
 
 namespace App\Filament\Resources\MemberProfiles\Tables;
 
-use App\Filament\Actions\InviteUserAction;
-use App\Models\User;
+use App\Actions\Invitations\InviteUser;
 use App\Settings\MemberDirectorySettings;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\SpatieTagsInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Support\Enums\IconPosition;
 use Filament\Tables\Columns\ImageColumn;
@@ -19,7 +17,6 @@ use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\SpatieTagsColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
@@ -244,7 +241,7 @@ class MemberProfilesTable
                     ->successNotificationTitle('Member profile deleted successfully'),
             ])
             ->headerActions([
-                InviteUserAction::make(),
+                InviteUser::filamentAction(),
             ])
             ->paginated([10, 25, 50]);
     }

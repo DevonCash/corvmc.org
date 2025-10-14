@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Equipment\Actions;
 
-use App\Models\User;
-;
+use App\Models\User;;
+
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
@@ -27,18 +27,20 @@ class CheckoutKitComponentsAction
             ->schema([
                 CheckboxList::make('component_ids')
                     ->label('Select Components to Check Out')
-                    ->options(fn ($record) =>
+                    ->options(
+                        fn($record) =>
                         $record->children
                             ->where('status', 'available')
                             ->where('can_lend_separately', true)
                             ->pluck('name', 'id')
                             ->toArray()
                     )
-                    ->descriptions(fn ($record) =>
+                    ->descriptions(
+                        fn($record) =>
                         $record->children
                             ->where('status', 'available')
                             ->where('can_lend_separately', true)
-                            ->mapWithKeys(fn ($component) => [
+                            ->mapWithKeys(fn($component) => [
                                 $component->id => collect([$component->brand, $component->model, $component->condition])
                                     ->filter()
                                     ->join(' • ')
@@ -95,58 +97,50 @@ class CheckoutKitComponentsAction
                     ->rows(3),
             ])
             ->action(function (array $data, $record) {
-                try {
-                    $borrower = User::find($data['borrower_id']);
-                    $componentIds = $data['component_ids'];
-                    $components = $record->children()->whereIn('id', $componentIds)->get();
+                $borrower = User::find($data['borrower_id']);
+                $componentIds = $data['component_ids'];
+                $components = $record->children()->whereIn('id', $componentIds)->get();
 
-                    $checkedOutCount = 0;
-                    $totalDeposit = (float) ($data['security_deposit'] ?? 0);
-                    $totalFee = (float) ($data['rental_fee'] ?? 0);
-                    $depositPerItem = count($components) > 0 ? $totalDeposit / count($components) : 0;
-                    $feePerItem = count($components) > 0 ? $totalFee / count($components) : 0;
+                $checkedOutCount = 0;
+                $totalDeposit = (float) ($data['security_deposit'] ?? 0);
+                $totalFee = (float) ($data['rental_fee'] ?? 0);
+                $depositPerItem = count($components) > 0 ? $totalDeposit / count($components) : 0;
+                $feePerItem = count($components) > 0 ? $totalFee / count($components) : 0;
 
-                    foreach ($components as $component) {
-                        if (!$component->is_available || !$component->can_lend_separately) {
-                            continue;
-                        }
-
-                        \App\Actions\Equipment\CheckoutToMember::run(
-                            equipment: $component,
-                            borrower: $borrower,
-                            dueDate: Carbon::parse($data['due_at']),
-                            conditionOut: $data['condition_out'],
-                            securityDeposit: $depositPerItem,
-                            rentalFee: $feePerItem,
-                            notes: $data['notes'] ?? null
-                        );
-
-                        $checkedOutCount++;
+                foreach ($components as $component) {
+                    if (!$component->is_available || !$component->can_lend_separately) {
+                        continue;
                     }
 
-                    if ($checkedOutCount > 0) {
-                        Notification::make()
-                            ->title('Kit Components Checked Out')
-                            ->body("Successfully checked out {$checkedOutCount} components to {$borrower->name}")
-                            ->success()
-                            ->send();
-                    } else {
-                        throw new \Exception('No components were available for checkout.');
-                    }
+                    \App\Actions\Equipment\CheckoutToMember::run(
+                        equipment: $component,
+                        borrower: $borrower,
+                        dueDate: Carbon::parse($data['due_at']),
+                        conditionOut: $data['condition_out'],
+                        securityDeposit: $depositPerItem,
+                        rentalFee: $feePerItem,
+                        notes: $data['notes'] ?? null
+                    );
 
-                } catch (\Exception $e) {
+                    $checkedOutCount++;
+                }
+
+                if ($checkedOutCount > 0) {
                     Notification::make()
-                        ->title('Checkout Failed')
-                        ->body($e->getMessage())
-                        ->danger()
+                        ->title('Kit Components Checked Out')
+                        ->body("Successfully checked out {$checkedOutCount} components to {$borrower->name}")
+                        ->success()
                         ->send();
+                } else {
+                    throw new \Exception('No components were available for checkout.');
                 }
             })
             ->requiresConfirmation()
             ->modalIcon('tabler-category')
-            ->visible(fn ($record) =>
+            ->visible(
+                fn($record) =>
                 $record->is_kit &&
-                $record->children
+                    $record->children
                     ->where('status', 'available')
                     ->where('can_lend_separately', true)
                     ->isNotEmpty()

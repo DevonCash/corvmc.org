@@ -35,45 +35,37 @@ class ProcessReturnAction
                     ->label('Damage/Condition Notes')
                     ->placeholder('Describe any damage or condition changes')
                     ->rows(3)
-                    ->visible(fn (callable $get) =>
+                    ->visible(
+                        fn(callable $get) =>
                         in_array($get('condition_in'), ['fair', 'poor', 'needs_repair'])
                     ),
             ])
             ->action(function (array $data, $record) {
-                try {
-                    $currentLoan = $record->currentLoan;
+                $currentLoan = $record->currentLoan;
 
-                    if (!$currentLoan) {
-                        throw new \Exception('No active loan found for this equipment.');
-                    }
-
-                    $loan = \App\Actions\Equipment\ProcessReturn::run(
-                        loan: $currentLoan,
-                        conditionIn: $data['condition_in'],
-                        damageNotes: $data['damage_notes'] ?? null
-                    );
-
-                    // Update equipment condition if it changed
-                    if ($data['condition_in'] !== $record->condition) {
-                        $record->update(['condition' => $data['condition_in']]);
-                    }
-
-                    Notification::make()
-                        ->title('Equipment Returned')
-                        ->body("Successfully processed return of {$record->name}")
-                        ->success()
-                        ->send();
-
-                } catch (\Exception $e) {
-                    Notification::make()
-                        ->title('Return Failed')
-                        ->body($e->getMessage())
-                        ->danger()
-                        ->send();
+                if (!$currentLoan) {
+                    throw new \Exception('No active loan found for this equipment.');
                 }
+
+                $loan = \App\Actions\Equipment\ProcessReturn::run(
+                    loan: $currentLoan,
+                    conditionIn: $data['condition_in'],
+                    damageNotes: $data['damage_notes'] ?? null
+                );
+
+                // Update equipment condition if it changed
+                if ($data['condition_in'] !== $record->condition) {
+                    $record->update(['condition' => $data['condition_in']]);
+                }
+
+                Notification::make()
+                    ->title('Equipment Returned')
+                    ->body("Successfully processed return of {$record->name}")
+                    ->success()
+                    ->send();
             })
             ->requiresConfirmation()
             ->modalIcon('tabler-receipt-refund')
-            ->visible(fn ($record) => $record->is_checked_out && $record->currentLoan);
+            ->visible(fn($record) => $record->is_checked_out && $record->currentLoan);
     }
 }

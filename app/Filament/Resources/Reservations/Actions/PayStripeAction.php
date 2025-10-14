@@ -56,18 +56,9 @@ class PayStripeAction
                     return;
                 }
 
-                try {
-                    $session = CreateCheckoutSession::run($record);
-                    // Redirect to Stripe checkout
-                    return redirect($session->url);
-                } catch (\Exception $e) {
-                    Log::error($e);
-                    Notification::make()
-                        ->title('Payment Error')
-                        ->body('Unable to create payment session: ' . $e->getMessage())
-                        ->danger()
-                        ->send();
-                }
+                $session = CreateCheckoutSession::run($record);
+                // Redirect to Stripe checkout
+                return redirect($session->url);
             });
     }
 }

@@ -18,21 +18,13 @@ class ResumeMembershipAction
             ->modalDescription('Are you sure you want to resume your contribution? Your contribution will continue until you cancel it again.')
             ->modalSubmitActionLabel('Yes, Resume Contribution')
             ->action(function ($record) {
-                try {
-                    \App\Actions\Subscriptions\ResumeSubscription::run($record);
+                \App\Actions\Subscriptions\ResumeSubscription::run($record);
 
-                    \Filament\Notifications\Notification::make()
-                        ->title('Contribution Resumed')
-                        ->body('Your contribution has been resumed successfully.')
-                        ->success()
-                        ->send();
-                } catch (\Exception $e) {
-                    \Filament\Notifications\Notification::make()
-                        ->title('Failed to resume contribution')
-                        ->body($e->getMessage())
-                        ->danger()
-                        ->send();
-                }
+                \Filament\Notifications\Notification::make()
+                    ->title('Contribution Resumed')
+                    ->body('Your contribution has been resumed successfully.')
+                    ->success()
+                    ->send();
             });
     }
 }

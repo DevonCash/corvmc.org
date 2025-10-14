@@ -8,6 +8,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 
 class AdminUserControlForm
@@ -70,6 +71,7 @@ class AdminUserControlForm
                                         ->success()
                                         ->send();
                                 } catch (\Exception $e) {
+                                    Log::error($e);
                                     \Filament\Notifications\Notification::make()
                                         ->title('Failed to create subscription')
                                         ->body($e->getMessage())

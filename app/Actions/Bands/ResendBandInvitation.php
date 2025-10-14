@@ -2,15 +2,19 @@
 
 namespace App\Actions\Bands;
 
+use App\Concerns\AsFilamentAction;
 use App\Exceptions\BandException;
 use App\Models\Band;
 use App\Models\User;
 use App\Notifications\BandInvitationNotification;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;
 
-class ResendInvitation
+class ResendBandInvitation
 {
     use AsAction;
+    use AsFilamentAction;
 
     /**
      * Resend an invitation to a user.
@@ -35,5 +39,23 @@ class ResendInvitation
             $member->pivot->role,
             $member->pivot->position
         ));
+    }
+
+    public static function filamentAction(): Action
+    {
+        return Action::make('resend_invitation')
+            ->label('Resend')
+            ->color('warning')
+            ->icon('tabler-mail-forward')
+            ->authorize('resend')
+            ->action(function ($record): void {
+                static::run($record->band, $record->user);
+
+                Notification::make()
+                    ->title('Invitation resent')
+                    ->body("Invitation resent to {$record->user->name}")
+                    ->success()
+                    ->send();
+            });
     }
 }

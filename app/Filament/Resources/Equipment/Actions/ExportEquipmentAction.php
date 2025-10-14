@@ -75,7 +75,6 @@ class ExportEquipmentAction
                     ->columns(2),
             ])
             ->action(function (array $data) {
-                try {
                     // Build query based on scope
                     $query = Equipment::query();
 
@@ -161,13 +160,7 @@ class ExportEquipmentAction
                     // This is a placeholder for now
                     throw new \Exception('Excel export not yet implemented. Please use CSV format.');
 
-                } catch (\Exception $e) {
-                    Notification::make()
-                        ->danger()
-                        ->title('Export Failed')
-                        ->body($e->getMessage())
-                        ->send();
-                }
+
             })
             ->modalIcon('tabler-file-export')
             ->visible(fn () => Auth::user()->can('export equipment'));

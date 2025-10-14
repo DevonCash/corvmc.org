@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Bands\Pages;
 
+use App\Actions\Bands\AddBandMember;
 use App\Filament\Actions\ReportContentAction;
-use App\Filament\Resources\Bands\Actions\AddBandMemberAction;
 use App\Filament\Resources\Bands\BandResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
@@ -32,10 +32,10 @@ class ViewBand extends Page
         if ($genres->count() > 0) {
             $genreText = $genres->take(3)->join(', ');
 
-            return $genreText.$location;
+            return $genreText . $location;
         }
 
-        return 'Band'.$location;
+        return 'Band' . $location;
     }
 
     public function getBreadCrumbs(): array
@@ -49,11 +49,11 @@ class ViewBand extends Page
     public function getHeaderActions(): array
     {
         return [
-            AddBandMemberAction::make($this->record),
+            AddBandMember::filamentAction($this->record),
             EditAction::make()
-                ->visible(fn () => Auth::user()->can('update', $this->record)),
+                ->visible(fn() => Auth::user()->can('update', $this->record)),
             ReportContentAction::make()
-                ->visible(fn () => Auth::user()->id !== $this->record->owner_id), // Don't show report button to owner
+                ->visible(fn() => Auth::user()->id !== $this->record->owner_id), // Don't show report button to owner
         ];
     }
 

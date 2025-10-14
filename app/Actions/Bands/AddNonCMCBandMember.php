@@ -6,7 +6,7 @@ use App\Models\Band;
 use App\Models\BandMember;
 use Lorisleiva\Actions\Concerns\AsAction;
 
-class AddNonCMCMember
+class AddNonCMCBandMember
 {
     use AsAction;
 

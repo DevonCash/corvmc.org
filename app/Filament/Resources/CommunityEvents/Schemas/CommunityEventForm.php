@@ -21,6 +21,7 @@ use Filament\Forms\Components\Fieldset;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Actions;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class CommunityEventForm
@@ -115,7 +116,7 @@ class CommunityEventForm
 
                                         if ($location->distance_from_corvallis !== null) {
                                             $set('distance_from_corvallis', $location->distance_from_corvallis);
-                                            
+
                                             $warning = $location->getDistanceWarning();
                                             if ($warning) {
                                                 Notification::make()
@@ -138,6 +139,7 @@ class CommunityEventForm
                                                 ->send();
                                         }
                                     } catch (\Exception $e) {
+                                        Log::error($e);
                                         Notification::make()
                                             ->title('Error calculating distance')
                                             ->body('Please try again or contact support')
@@ -223,7 +225,7 @@ class CommunityEventForm
                                 $badge = \App\Actions\Trust\GetTrustBadge::run($organizer, 'App\\Models\\CommunityEvent');
 
                                 $content = "Trust Level: {$trustInfo['level']} ({$trustInfo['points']} points)";
-                                
+
                                 if ($badge) {
                                     $content .= "\nBadge: {$badge['label']}";
                                 }

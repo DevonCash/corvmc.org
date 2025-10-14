@@ -8,6 +8,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
 class ClaimBand extends Page
@@ -72,6 +73,7 @@ class ClaimBand extends Page
 
                     $this->redirect(static::getResource()::getUrl('edit', ['record' => $this->claimableBand]));
                 } catch (\Exception $e) {
+                    Log::error($e);
                     Notification::make()
                         ->title('Unable to Claim Band')
                         ->body($e->getMessage())

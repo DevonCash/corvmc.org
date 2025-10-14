@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Bands\Pages;
 
-use App\Filament\Resources\Bands\Actions\CreateBandAction;
+use App\Actions\Bands\CreateBand;
 use App\Filament\Resources\Bands\BandResource;
 use App\Models\Band;
 use Filament\Actions\Action;
@@ -21,11 +21,11 @@ class ListBands extends ListRecords
                 ->label('Band Invites')
                 ->icon('tabler-mail')
                 ->color('warning')
-                ->badge(fn () => $this->getPendingInvitationsCount())
+                ->badge(fn() => $this->getPendingInvitationsCount())
                 ->badgeColor('danger')
                 ->url(route('filament.member.pages.band-invitations'))
-                ->visible(fn () => $this->getPendingInvitationsCount() > 0),
-            CreateBandAction::make(),
+                ->visible(fn() => $this->getPendingInvitationsCount() > 0),
+            CreateBand::filamentAction(),
         ];
     }
 
@@ -34,13 +34,14 @@ class ListBands extends ListRecords
         return [
             'all_bands' => Tab::make('All Bands'),
             'my_bands' => Tab::make('My Bands')
-                ->modifyQueryUsing(fn (Builder $query) =>
+                ->modifyQueryUsing(
+                    fn(Builder $query) =>
                     $query->where(function (Builder $query) {
                         $query->where('owner_id', auth()->id())
-                              ->orWhereHas('members', function (Builder $query) {
-                                  $query->where('user_id', auth()->id())
-                                        ->where('status', 'active');
-                              });
+                            ->orWhereHas('members', function (Builder $query) {
+                                $query->where('user_id', auth()->id())
+                                    ->where('status', 'active');
+                            });
                     })
                 ),
         ];

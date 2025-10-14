@@ -19,8 +19,7 @@ class DeleteBand
             // Remove all members
             $band->memberships()->delete();
 
-            // Detach all tags
-            $band->detachTags();
+            $band->tags()->detach();
 
             return $band->delete();
         });

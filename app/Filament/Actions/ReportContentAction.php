@@ -49,31 +49,22 @@ class ReportContentAction
                     ->rows(3),
             ])
             ->action(function (Model $record, array $data): void {
-                try {
+                $customReason = $data['reason'] === 'other'
+                    ? $data['custom_reason']
+                    : ($data['details'] ?? null);
 
-                    $customReason = $data['reason'] === 'other'
-                        ? $data['custom_reason']
-                        : ($data['details'] ?? null);
+                $report = \App\Actions\Reports\SubmitReport::run(
+                    $record,
+                    Auth::user(),
+                    $data['reason'],
+                    $customReason
+                );
 
-                    $report = \App\Actions\Reports\SubmitReport::run(
-                        $record,
-                        Auth::user(),
-                        $data['reason'],
-                        $customReason
-                    );
-
-                    Notification::make()
-                        ->title('Report Submitted')
-                        ->body("Thank you for reporting this {$record->getReportableType()}. We'll review it shortly.")
-                        ->success()
-                        ->send();
-                } catch (\Exception $e) {
-                    Notification::make()
-                        ->title('Report Failed')
-                        ->body($e->getMessage())
-                        ->danger()
-                        ->send();
-                }
+                Notification::make()
+                    ->title('Report Submitted')
+                    ->body("Thank you for reporting this {$record->getReportableType()}. We'll review it shortly.")
+                    ->success()
+                    ->send();
             })
             ->requiresConfirmation()
             ->modalHeading(fn(Model $record) => "Report {$record->getReportableType()}")

@@ -6,6 +6,7 @@ use App\Models\Production;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
 class ProductionUpdatedNotification extends Notification
 {
@@ -66,7 +67,7 @@ class ProductionUpdatedNotification extends Notification
 
             return $message->line('Thank you for being part of the Corvallis Music Collective!');
         } catch (\Exception $e) {
-            \Log::error('Failed to build ProductionUpdatedNotification email', [
+            Log::error('Failed to build ProductionUpdatedNotification email', [
                 'production_id' => $this->production->id,
                 'update_type' => $this->updateType,
                 'error' => $e->getMessage(),

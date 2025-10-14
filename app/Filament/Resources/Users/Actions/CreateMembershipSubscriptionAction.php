@@ -62,20 +62,8 @@ class CreateMembershipSubscriptionAction
             ])
             ->action(function (array $data, $record) {
                 $baseAmount = Money::of($data['amount'], 'USD');
-                try {
-                    $checkout = \App\Actions\Subscriptions\CreateSubscription::run($record, $baseAmount, $data['cover_fees']);
-                    redirect($checkout->url);
-                } catch (\Exception $e) {
-                    Log::error('Failed to create membership subscription', [
-                        'user_id' => $record->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                    \Filament\Notifications\Notification::make()
-                        ->title('Error creating checkout')
-                        ->body($e->getMessage())
-                        ->danger()
-                        ->send();
-                }
+                $checkout = \App\Actions\Subscriptions\CreateSubscription::run($record, $baseAmount, $data['cover_fees']);
+                redirect($checkout->url);
             });
     }
 }

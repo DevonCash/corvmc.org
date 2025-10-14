@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Resources\Bands\Actions\CreateBandAction;
+use App\Actions\Bands\CreateBand;
 use App\Models\Band;
 use Filament\Actions\Action;
 use Filament\Tables;
@@ -131,9 +131,8 @@ class MyBandsWidget extends BaseWidget
             ->emptyStateDescription('You haven\'t joined or created any bands.')
             ->emptyStateIcon('tabler-users-off')
             ->emptyStateActions([
-                CreateBandAction::make()
-                    ->label('Create Your First Band')
-                    ->icon('tabler-plus'),
+                CreateBand::filamentAction()
+                    ->label('Create Your First Band'),
             ])
             ->paginated(false);
     }
@@ -149,9 +148,9 @@ class MyBandsWidget extends BaseWidget
         return Band::query()
             ->where(function ($query) use ($user) {
                 $query->where('owner_id', $user->id)
-                      ->orWhereHas('members', function ($q) use ($user) {
-                          $q->where('users.id', $user->id);
-                      });
+                    ->orWhereHas('members', function ($q) use ($user) {
+                        $q->where('users.id', $user->id);
+                    });
             })
             ->with(['owner', 'activeMembers', 'pendingInvitations'])
             ->withCount(['activeMembers as member_count', 'pendingInvitations'])

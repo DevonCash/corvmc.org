@@ -2,10 +2,9 @@
 
 namespace App\Filament\Resources\MemberProfiles\Pages;
 
-use App\Filament\Actions\InviteUserAction;
+use App\Actions\Invitations\InviteUser;
 use App\Filament\Resources\MemberProfiles\MemberProfileResource;
 use App\Models\MemberProfile;
-use App\Models\User;
 use App\Settings\MemberDirectorySettings;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\CheckboxList;
@@ -49,7 +48,7 @@ class ListMemberProfiles extends Page
     protected function getHeaderActions(): array
     {
         return [
-            InviteUserAction::make(),
+            InviteUser::filamentAction(),
             EditAction::make()
                 ->label('Edit My Profile')
                 ->record(fn(): MemberProfile => Auth::user()->profile),

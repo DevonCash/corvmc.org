@@ -64,31 +64,23 @@ class CheckoutToMemberAction
                     ->rows(3),
             ])
             ->action(function (array $data, $record) {
-                try {
-                    $borrower = User::find($data['borrower_id']);
+                $borrower = User::find($data['borrower_id']);
 
-                    $loan = \App\Actions\Equipment\CheckoutToMember::run(
-                        equipment: $record,
-                        borrower: $borrower,
-                        dueDate: Carbon::parse($data['due_at']),
-                        conditionOut: $data['condition_out'],
-                        securityDeposit: (float) ($data['security_deposit'] ?? 0),
-                        rentalFee: (float) ($data['rental_fee'] ?? 0),
-                        notes: $data['notes'] ?? null
-                    );
+                $loan = \App\Actions\Equipment\CheckoutToMember::run(
+                    equipment: $record,
+                    borrower: $borrower,
+                    dueDate: Carbon::parse($data['due_at']),
+                    conditionOut: $data['condition_out'],
+                    securityDeposit: (float) ($data['security_deposit'] ?? 0),
+                    rentalFee: (float) ($data['rental_fee'] ?? 0),
+                    notes: $data['notes'] ?? null
+                );
 
-                    Notification::make()
-                        ->title('Equipment Checked Out')
-                        ->body("Successfully checked out {$record->name} to {$borrower->name}")
-                        ->success()
-                        ->send();
-                } catch (\Exception $e) {
-                    Notification::make()
-                        ->title('Checkout Failed')
-                        ->body($e->getMessage())
-                        ->danger()
-                        ->send();
-                }
+                Notification::make()
+                    ->title('Equipment Checked Out')
+                    ->body("Successfully checked out {$record->name} to {$borrower->name}")
+                    ->success()
+                    ->send();
             })
             ->requiresConfirmation()
             ->modalIcon('tabler-user')

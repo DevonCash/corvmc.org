@@ -24,7 +24,7 @@ class ClaimBand
             throw BandException::bandAlreadyHasOwner();
         }
 
-        if (!$user->can('create bands')) {
+        if (!$user->can('create', Band::class)) {
             throw new UnauthorizedException('User does not have permission to claim bands.');
         }
 

@@ -32,22 +32,12 @@ class ModifyMembershipAmountAction
                         $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
 
                         if ($subscription) {
-                            try {
-                                // Get the Stripe subscription object with pricing info
-                                $stripeSubscription = $subscription->asStripeSubscription();
-                                $firstItem = $stripeSubscription->items->data[0];
-                                $currentAmount = $firstItem->price->unit_amount / 100; // Convert from cents to dollars
-                                // Clamp to slider range
-                                return max(10, min(50, $currentAmount));
-                            } catch (\Exception $e) {
-                                \Log::warning('Failed to get current subscription amount for slider default', [
-                                    'user_id' => $record->id,
-                                    'subscription_id' => $subscription->id,
-                                    'error' => $e->getMessage()
-                                ]);
-                                // Fallback to middle value
-                                return 25;
-                            }
+                            // Get the Stripe subscription object with pricing info
+                            $stripeSubscription = $subscription->asStripeSubscription();
+                            $firstItem = $stripeSubscription->items->data[0];
+                            $currentAmount = $firstItem->price->unit_amount / 100; // Convert from cents to dollars
+                            // Clamp to slider range
+                            return max(10, min(50, $currentAmount));
                         }
 
                         return 25;
@@ -99,20 +89,11 @@ class ModifyMembershipAmountAction
             ->action(function (array $data, $record) {
                 $baseAmount = Money::of($data['amount'], 'USD');
 
-                try {
-                    $result = \App\Actions\Subscriptions\UpdateSubscriptionAmount::run($record, $baseAmount, $data['cover_fees']);
-                    \Filament\Notifications\Notification::make()
-                        ->title('Membership Updated')
-                        ->success()
-                        ->send();
-                } catch (\Exception $e) {
-                    \Filament\Notifications\Notification::make()
-                        ->title('Error Updating Membership')
-                        ->body('An error occurred while updating the membership: ' . $e->getMessage())
-                        ->danger()
-                        ->send();
-                    return;
-                }
+                \App\Actions\Subscriptions\UpdateSubscriptionAmount::run($record, $baseAmount, $data['cover_fees']);
+                \Filament\Notifications\Notification::make()
+                    ->title('Membership Updated')
+                    ->success()
+                    ->send();
             });
     }
 }

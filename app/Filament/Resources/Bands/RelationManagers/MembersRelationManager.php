@@ -2,14 +2,15 @@
 
 namespace App\Filament\Resources\Bands\RelationManagers;
 
-use App\Filament\Resources\Bands\Actions\AcceptBandInvitationAction;
-use App\Filament\Resources\Bands\Actions\AddBandMemberAction;
-use App\Filament\Resources\Bands\Actions\CancelBandInvitationAction;
-use App\Filament\Resources\Bands\Actions\DeclineBandInvitationAction;
-use App\Filament\Resources\Bands\Actions\EditBandMemberAction;
-use App\Filament\Resources\Bands\Actions\ReinviteBandMemberAction;
-use App\Filament\Resources\Bands\Actions\RemoveBandMemberAction;
-use App\Filament\Resources\Bands\Actions\ResendBandInvitationAction;
+use App\Actions\Bands\AcceptBandInvitation;
+use App\Actions\Bands\AddBandMember;
+use App\Actions\Bands\CancelBandInvitation;
+use App\Actions\Bands\DeclineBandInvitation;
+use App\Actions\Bands\ReinviteBandMember;
+use App\Actions\Bands\RemoveBandMember;
+use App\Actions\Bands\ResendBandInvitation;
+use App\Actions\Bands\UpdateBandMember;
+use App\Models\User;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
@@ -17,7 +18,6 @@ use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
 
 class MembersRelationManager extends RelationManager
 {
@@ -29,7 +29,7 @@ class MembersRelationManager extends RelationManager
     public function canViewAny(): bool
     {
         // Allow viewing if user can view the parent record
-        return Auth::user()->can('view', $this->ownerRecord);
+        return User::me()?->can('view', $this->ownerRecord);
     }
 
 
@@ -84,16 +84,17 @@ class MembersRelationManager extends RelationManager
             ])
             ->filtersLayout(FiltersLayout::BelowContent)
             ->headerActions([
-                AddBandMemberAction::make($this->ownerRecord),
+                AddBandMember::filamentAction()
+                    ->record($this->ownerRecord),
             ])
             ->recordActions([
-                AcceptBandInvitationAction::make($this->ownerRecord),
-                DeclineBandInvitationAction::make($this->ownerRecord),
-                ResendBandInvitationAction::make($this->ownerRecord),
-                CancelBandInvitationAction::make($this->ownerRecord),
-                ReinviteBandMemberAction::make($this->ownerRecord),
-                EditBandMemberAction::make($this->ownerRecord),
-                RemoveBandMemberAction::make($this->ownerRecord),
+                AcceptBandInvitation::filamentAction(),
+                DeclineBandInvitation::filamentAction(),
+                ResendBandInvitation::filamentAction(),
+                ReinviteBandMember::filamentAction(),
+                UpdateBandMember::filamentAction(),
+                RemoveBandMember::filamentAction(),
+                CancelBandInvitation::filamentAction(),
             ])
             ->defaultSort('created_at', 'asc');
     }

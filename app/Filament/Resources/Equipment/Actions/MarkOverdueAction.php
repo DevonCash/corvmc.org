@@ -14,40 +14,33 @@ class MarkOverdueAction
             ->icon('tabler-alert-triangle')
             ->color('warning')
             ->modalHeading('Mark Equipment as Overdue')
-            ->modalDescription(fn ($record) =>
+            ->modalDescription(
+                fn($record) =>
                 "Mark the current loan of '{$record->name}' as overdue. This will send notifications to the borrower."
             )
             ->action(function ($record) {
-                try {
-                    $currentLoan = $record->currentLoan;
+                $currentLoan = $record->currentLoan;
 
-                    if (!$currentLoan) {
-                        throw new \Exception('No active loan found for this equipment.');
-                    }
-
-                    \App\Actions\Equipment\MarkOverdue::run($currentLoan);
-
-                    Notification::make()
-                        ->title('Loan Marked Overdue')
-                        ->body("Successfully marked {$record->name} loan as overdue")
-                        ->warning()
-                        ->send();
-
-                } catch (\Exception $e) {
-                    Notification::make()
-                        ->title('Failed to Mark Overdue')
-                        ->body($e->getMessage())
-                        ->danger()
-                        ->send();
+                if (!$currentLoan) {
+                    throw new \Exception('No active loan found for this equipment.');
                 }
+
+                \App\Actions\Equipment\MarkOverdue::run($currentLoan);
+
+                Notification::make()
+                    ->title('Loan Marked Overdue')
+                    ->body("Successfully marked {$record->name} loan as overdue")
+                    ->warning()
+                    ->send();
             })
             ->requiresConfirmation()
             ->modalIcon('tabler-alert-triangle')
-            ->visible(fn ($record) =>
+            ->visible(
+                fn($record) =>
                 $record->is_checked_out &&
-                $record->currentLoan &&
-                $record->currentLoan->due_at->isPast() &&
-                $record->currentLoan->status !== 'overdue'
+                    $record->currentLoan &&
+                    $record->currentLoan->due_at->isPast() &&
+                    $record->currentLoan->status !== 'overdue'
             );
     }
 }

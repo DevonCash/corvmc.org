@@ -75,6 +75,7 @@ class MembershipForm
                                         $nextBillingDate = \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_end)->format('n/j/Y');
                                         return sprintf('Next bill %s', $nextBillingDate);
                                     } catch (\Exception $e) {
+                                        Log::error($e);
                                         return null;
                                     }
                                 }
@@ -144,6 +145,7 @@ class MembershipForm
                                             $stripeSubscription = $subscription->asStripeSubscription();
                                             $nextBillingDate = \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_end)->format('n/j/Y');
                                         } catch (\Exception $e) {
+                                            Log::error($e);
                                             // Fall back to N/A
                                         }
                                     }
@@ -272,6 +274,7 @@ class MembershipForm
                 'is_increase' => $nextMonthHours > $currentHours
             ];
         } catch (\Exception $e) {
+            Log::error($e);
             return null;
         }
     }
