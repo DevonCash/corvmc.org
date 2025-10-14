@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Actions\Bands\AcceptBandInvitation;
+use App\Actions\Bands\DeclineBandInvitation;
 use App\Models\Band;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -39,7 +41,7 @@ class BandInvitations extends Page
 
     public function getPendingInvitations(): Collection
     {
-        return \App\Actions\Bands\GetPendingInvitationsForUser::run(Auth::user());
+        return User::me()->bandMemberships()->invited()->get();
     }
 
     protected function getActions(): array
@@ -57,61 +59,19 @@ class BandInvitations extends Page
         $band = Band::findOrFail($bandId);
         $user = Auth::user();
 
-        try {
-            \App\Actions\Bands\AcceptInvitation::run($band, $user);
+        AcceptBandInvitation::run($band, $user);
 
-            Notification::make()
-                ->title('Invitation accepted')
-                ->body("Welcome to {$band->name}!")
-                ->success()
-                ->send();
+        Notification::make()
+            ->title('Invitation accepted')
+            ->body("Welcome to {$band->name}!")
+            ->success()
+            ->send();
 
-            $this->redirect(route('filament.member.resources.bands.view', ['record' => $band]));
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Failed to accept invitation')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
+        $this->redirect(route('filament.member.resources.bands.view', ['record' => $band]));
     }
 
     public function declineInvitationAction(): Action
     {
-        return Action::make('declineInvitation')
-            ->label('Decline')
-            ->color('gray')
-            ->icon('tabler-x')
-            ->requiresConfirmation()
-            ->modalHeading('Decline Band Invitation')
-            ->modalDescription(fn(array $arguments) => "Are you sure you want to decline the invitation to join " . Band::find($arguments['bandId'])->name . "?")
-            ->modalSubmitActionLabel('Yes, decline')
-            ->modalCancelActionLabel('Cancel')
-            ->action(function (array $arguments): void {
-                $band = Band::findOrFail($arguments['bandId']);
-                $user = Auth::user();
-
-                try {
-                    \App\Actions\Bands\DeclineInvitation::run($band, $user);
-
-                    Notification::make()
-                        ->title('Invitation declined')
-                        ->body('You have declined the invitation')
-                        ->success()
-                        ->send();
-
-                    // Redirect to band profiles index if no more invitations
-                    $remainingInvitations = $this->getPendingInvitations();
-                    if ($remainingInvitations->isEmpty()) {
-                        $this->redirect(route('filament.member.resources.bands.index'));
-                    }
-                } catch (\Exception $e) {
-                    Notification::make()
-                        ->title('Failed to decline invitation')
-                        ->body($e->getMessage())
-                        ->danger()
-                        ->send();
-                }
-            });
+        return DeclineBandInvitation::filamentAction();
     }
 }
