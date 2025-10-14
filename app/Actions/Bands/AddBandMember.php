@@ -118,11 +118,14 @@ class AddBandMember
                         ->maxLength(100),
                 ]),
             ])
-            ->action(function (array $data, $record): void {
+            ->action(function (array $data, $livewire): void {
+                // Get the band from either page or relation manager context
+                $band = $livewire->record ?? $livewire->ownerRecord;
+
                 // Existing CMC member - send invitation
                 $user = User::find($data['user_id']);
 
-                static::run($record, $user, $data);
+                static::run($band, $user, $data);
 
                 Notification::make()
                     ->title('Invitation sent')
