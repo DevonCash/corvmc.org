@@ -8,7 +8,6 @@ use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class PayStripeAction
 {
@@ -20,42 +19,10 @@ class PayStripeAction
             ->color('success')
             ->visible(
                 fn(Reservation $record) =>
-                $record instanceof \App\Models\RehearsalReservation &&
-                    $record->cost->isPositive() &&
-                    $record->isUnpaid() &&
-                    $record->status !== 'cancelled' &&
+                $record->cost->isPositive() && $record->isUnpaid() &&
                     ($record->reservable_id === Auth::id() || Auth::user()->can('manage reservations'))
             )
             ->action(function (Reservation $record) {
-                // Ensure user owns the reservation or has permission
-                if ($record->reservable_id !== Auth::id() && !Auth::user()->can('manage reservations')) {
-                    Notification::make()
-                        ->title('Access Denied')
-                        ->body('You do not have permission to pay for this reservation.')
-                        ->danger()
-                        ->send();
-                    return;
-                }
-
-                // Check if reservation needs payment
-                if ($record->cost->isZero() || $record->cost->isNegative()) {
-                    Notification::make()
-                        ->title('Payment Not Required')
-                        ->body('This reservation does not require payment.')
-                        ->warning()
-                        ->send();
-                    return;
-                }
-
-                if ($record->isPaid()) {
-                    Notification::make()
-                        ->title('Already Paid')
-                        ->body('This reservation has already been paid.')
-                        ->info()
-                        ->send();
-                    return;
-                }
-
                 $session = CreateCheckoutSession::run($record);
                 // Redirect to Stripe checkout
                 return redirect($session->url);
