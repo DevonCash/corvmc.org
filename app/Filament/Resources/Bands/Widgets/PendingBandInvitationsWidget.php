@@ -32,7 +32,6 @@ class PendingBandInvitationsWidget extends BaseWidget
                     ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->band->name) . '&color=7C3AED&background=F3E8FF&size=120'),
                 Tables\Columns\TextColumn::make('band.name')
                     ->label('Band Name')
-                    ->searchable()
                     ->sortable()
                     ->description(fn($record) => $record->band->hometown)
                     ->weight('bold'),
@@ -53,39 +52,9 @@ class PendingBandInvitationsWidget extends BaseWidget
                     ->sortable()
                     ->since(),
             ])
-            ->actions([
-                Tables\Actions\Action::make('accept')
-                    ->label('Accept')
-                    ->icon('tabler-check')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->modalHeading('Accept Band Invitation')
-                    ->modalDescription(fn($record) => "Accept invitation to join {$record->band->name}?")
-                    ->action(function (BandMember $record) {
-                        AcceptBandInvitation::run($record->band, $record->user);
-
-                        Notification::make()
-                            ->title('Invitation accepted')
-                            ->body("Welcome to {$record->band->name}!")
-                            ->success()
-                            ->send();
-                    }),
-                Tables\Actions\Action::make('decline')
-                    ->label('Decline')
-                    ->icon('tabler-x')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('Decline Band Invitation')
-                    ->modalDescription(fn($record) => "Decline invitation to join {$record->band->name}?")
-                    ->action(function (BandMember $record) {
-                        DeclineBandInvitation::run($record->band, $record->user);
-
-                        Notification::make()
-                            ->title('Invitation declined')
-                            ->body('You have declined the invitation')
-                            ->success()
-                            ->send();
-                    }),
+            ->recordActions([
+                AcceptBandInvitation::filamentAction(),
+                DeclineBandInvitation::filamentAction(),
             ])
             ->paginated(false);
     }

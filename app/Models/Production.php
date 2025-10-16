@@ -342,12 +342,12 @@ class Production extends ContentModel implements Eventable
      */
     public function isFree(): bool
     {
-        return  ($this->ticket_price === null || $this->ticket_price == 0);
+        return ($this->ticket_price === null || $this->ticket_price == 0);
     }
 
     /**
      * Get the production as a Period object.
-     * 
+     *
      * @deprecated Use createPeriod() instead
      */
     public function getPeriod(): ?Period
@@ -448,6 +448,29 @@ class Production extends ContentModel implements Eventable
      */
     public function toCalendarEvent(): CalendarEvent
     {
-        return \App\Actions\Calendar\ProductionToCalendarEvent::run($this);
+        $color = match ($this->status) {
+            'pre-production' => '#8b5cf6', // purple
+            'production' => '#3b82f6',     // blue
+            'completed' => '#10b981',      // green
+            'cancelled' => '#ef4444',      // red
+            default => '#6b7280',          // gray
+        };
+
+        $extendedProps =  [
+            'type' => 'production',
+            'manager_name' => $this->manager->name ?? '',
+            'status' => $this->status,
+            'venue_name' => $this->venue_name,
+            'is_published' => $this->isPublished(),
+            'ticket_url' => $this->ticket_url,
+        ];
+
+        return CalendarEvent::make($this)
+            ->title($this->title)
+            ->start($this->start_time)
+            ->end($this->end_time)
+            ->backgroundColor($color)
+            ->textColor('#fff')
+            ->extendedProps($extendedProps);
     }
 }

@@ -21,7 +21,7 @@ use Spatie\Image\Enums\CropPosition;
 
 /**
  * Community Event Model
- * 
+ *
  * Represents member-submitted public performances and events
  * for the community calendar platform.
  */
@@ -317,7 +317,37 @@ class CommunityEvent extends Model implements Eventable, HasMedia
      */
     public function toCalendarEvent(): CalendarEvent
     {
-        return \App\Actions\Calendar\CommunityEventToCalendarEvent::run($this);
+        // Only show approved and published events
+        $color = match ($this->event_type) {
+            CommunityEvent::TYPE_PERFORMANCE => '#8b5cf6',      // purple
+            CommunityEvent::TYPE_WORKSHOP => '#059669',         // emerald
+            CommunityEvent::TYPE_OPEN_MIC => '#dc2626',         // red
+            CommunityEvent::TYPE_COLLABORATIVE_SHOW => '#0891b2', // cyan
+            CommunityEvent::TYPE_ALBUM_RELEASE => '#ea580c',    // orange
+            default => '#6b7280',                               // gray
+        };
+
+        if (!$this->isPublished()) {
+            $color = '#6b7280'; // gray
+        }
+
+        return CalendarEvent::make($this)
+            ->title($this->title)
+            ->start($this->start_time->toISOString())
+            ->end(($this->end_time ?? $this->start_time->addHours(2))->toISOString())
+            ->backgroundColor($color)
+            ->textColor('#fff')
+            ->extendedProps([
+                'type' => 'community_event',
+                'organizer_name' => $this->organizer->name ?? '',
+                'event_type' => $this->event_type,
+                'venue_name' => $this->venue_name,
+                'venue_address' => $this->venue_address,
+                'visibility' => $this->visibility,
+                'is_public' => $this->isPublic(),
+                'ticket_url' => $this->ticket_url,
+                'distance_from_corvallis' => $this->distance_from_corvallis,
+            ]);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\MoneyCast;
 use App\Concerns\HasTimePeriod;
+use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -64,6 +65,7 @@ class Reservation extends Model
      */
     public function newFromBuilder($attributes = [], $connection = null)
     {
+        $attributes = (object) $attributes;
         // If we have a type attribute, instantiate that class instead
         if (isset($attributes->type) && $attributes->type !== static::class) {
             $class = $attributes->type;
@@ -79,7 +81,7 @@ class Reservation extends Model
             }
         }
 
-        return parent::newFromBuilder($attributes, $connection);
+        return parent::newFromBuilder((array) $attributes, $connection);
     }
 
     /**

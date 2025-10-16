@@ -71,18 +71,6 @@ class MembersRelationManager extends RelationManager
                     ->since()
                     ->sortable(),
             ])
-            ->filters([
-                Filter::make('show_declined')
-                    ->toggle()
-                    ->query(function (Builder $query, array $data): Builder {
-                        if (!($data['show_declined'] ?? false)) {
-                            return $query->whereNot('status', 'declined');
-                        }
-                        return $query;
-                    })
-
-            ])
-            ->filtersLayout(FiltersLayout::BelowContent)
             ->headerActions([
                 AddBandMember::filamentAction()
                     ->record($this->ownerRecord),

@@ -2,7 +2,6 @@
 
 namespace App\Actions\Invitations;
 
-use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,12 +16,13 @@ class AcceptInvitation
      */
     public function handle(string $token, array $userData): ?User
     {
-        return DB::transaction(function () use ($token, $userData) {
-            $invitation = FindInvitationByToken::run($token);
+        $invitation = FindInvitationByToken::run($token);
 
-            if (!$invitation || $invitation->isExpired() || $invitation->isUsed()) {
-                return null;
-            }
+        if (!$invitation || $invitation->isExpired() || $invitation->isUsed()) {
+            return null;
+        }
+
+        return DB::transaction(function () use ($invitation, $userData) {
 
             // Create the user
             $user = User::create([
@@ -34,11 +34,6 @@ class AcceptInvitation
 
             // Mark invitation as used
             $invitation->markAsUsed();
-
-            // Handle band ownership if invitation includes band data
-            if (isset($invitation->data['band_id'])) {
-                ConfirmBandOwnership::run($user, $invitation);
-            }
 
             return $user;
         });
