@@ -59,11 +59,11 @@ class UserSummaryWidget extends Widget
         return Cache::remember("user_activity.{$user->id}", 600, function() use ($user) {
             $activities = [];
 
-            $recentReservations = $user->reservations
-                ->where('reserved_at', '>', now()->subDays(30))
-                ->orderBy('reserved_at', 'desc')
-                ->limit(3)
-                ->get();
+            $recentReservations = $user->rehearsals;
+                // ->where('reserved_at', '>', now()->subDays(30))
+                // ->orderBy('reserved_at', 'desc')
+                // ->limit(3)
+                // ->get();
 
             foreach ($recentReservations as $reservation) {
                 $activities[] = [
