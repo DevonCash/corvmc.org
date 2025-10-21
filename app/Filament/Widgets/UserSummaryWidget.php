@@ -25,7 +25,7 @@ class UserSummaryWidget extends Widget
 
         return Cache::remember("user_stats.{$user->id}", 300, function() use ($user) {
             $stats = [
-                'upcoming_reservations' => $user->reservations
+                'upcoming_reservations' => $user->rehearsals
                     ->where('reserved_at', '>', now())
                     ->count(),
                 'band_memberships' => $user->bands->count(),

@@ -21,7 +21,7 @@ class SendReservationReminders
         $startOfTomorrow = $tomorrow->copy()->startOfDay();
         $endOfTomorrow = $tomorrow->copy()->endOfDay();
 
-        $reservations = Reservation::with('user')
+        $reservations = Reservation::with('reservable')
             ->where('status', 'confirmed')
             ->whereBetween('reserved_at', [$startOfTomorrow, $endOfTomorrow])
             ->get();
@@ -37,21 +37,21 @@ class SendReservationReminders
         foreach ($reservations as $reservation) {
             $reservationData = [
                 'id' => $reservation->id,
-                'user_name' => $reservation->user->name,
-                'user_email' => $reservation->user->email,
+                'user_name' => $reservation->reservable->name,
+                'user_email' => $reservation->reservable->email,
                 'time_range' => $reservation->time_range,
                 'status' => 'pending',
             ];
 
             if (!$dryRun) {
                 try {
-                    $reservation->user->notify(new ReservationReminderNotification($reservation));
+                    $reservation->reservable->notify(new ReservationReminderNotification($reservation));
                     $reservationData['status'] = 'sent';
                     $results['sent']++;
 
                     Log::info('Reservation reminder sent', [
                         'reservation_id' => $reservation->id,
-                        'user_email' => $reservation->user->email,
+                        'user_email' => $reservation->reservable->email,
                     ]);
                 } catch (\Exception $e) {
                     $reservationData['status'] = 'failed';
@@ -61,7 +61,7 @@ class SendReservationReminders
 
                     Log::error('Failed to send reservation reminder', [
                         'reservation_id' => $reservation->id,
-                        'user_email' => $reservation->user->email,
+                        'user_email' => $reservation->reservable->email,
                         'error' => $e->getMessage(),
                     ]);
                 }
