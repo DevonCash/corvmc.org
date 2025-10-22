@@ -11,20 +11,19 @@ class SpaceStatsWidget extends BaseWidget
 {
     protected function getStats(): array
     {
-        $pending = Reservation::where('status', 'pending')->count();
-        $unpaid = Reservation::where('payment_status', 'unpaid')
-            ->where('status', '!=', 'cancelled')
-            ->where('cost', '>', 0)
-            ->count();
+        $needsAttention = Reservation::needsAttention()->count();
 
         // This week's reservations
         $weekReservations = Reservation::whereBetween('reserved_at', [
             now()->startOfWeek(),
             now()->endOfWeek()
-        ])->where('status', '!=', 'cancelled');
+        ])
+        ->where('status', '!=', 'cancelled')
+        ->get();
 
         $weekHours = $weekReservations->sum('hours_used');
-        $weekRevenue = $weekReservations->get()->sum(fn($r) => $r->cost->getMinorAmount()->toInt()) / 100;
+        $weekRevenue = $weekReservations->sum(fn($r) => $r->cost->getMinorAmount()->toInt()) / 100;
+        $weekReservationCount = $weekReservations->count();
 
         // This week's productions using space
         $weekProductions = Production::whereBetween('start_time', [
@@ -39,13 +38,13 @@ class SpaceStatsWidget extends BaseWidget
         $totalWeekHours = $weekHours + $weekProductionHours;
 
         return [
-            Stat::make('Needs Attention', $pending + $unpaid)
-                ->description(sprintf('%d pending, %d unpaid', $pending, $unpaid))
-                ->color($pending + $unpaid > 0 ? 'warning' : 'success')
+            Stat::make('Needs Attention', $needsAttention)
+                ->description('Future pending or unpaid reservations')
+                ->color($needsAttention > 0 ? 'warning' : 'success')
                 ->icon('tabler-alert-circle'),
 
             Stat::make('This Week', number_format($totalWeekHours, 1) . ' hours')
-                ->description(sprintf('$%s revenue • %d events', number_format($weekRevenue, 2), $weekProductions->count()))
+                ->description(sprintf('$%s revenue • %d reservations • %d events', number_format($weekRevenue, 2), $weekReservationCount, $weekProductions->count()))
                 ->color('primary')
                 ->icon('tabler-calendar-week'),
 
@@ -59,7 +58,7 @@ class SpaceStatsWidget extends BaseWidget
     protected function getUtilizationRate(): string
     {
         $businessHoursPerDay = 13; // 9am-10pm
-        $daysThisWeek = now()->diffInDays(now()->endOfWeek()) + 1;
+        $daysThisWeek = now()->startOfWeek()->diffInDays(now()->endOfWeek()) + 1;
         $totalAvailableHours = $businessHoursPerDay * $daysThisWeek;
 
         // Reservation hours

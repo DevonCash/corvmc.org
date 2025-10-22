@@ -17,6 +17,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -36,6 +37,22 @@ class SpaceManagementTable
                 ReservationColumns::updatedAt(),
             ])
             ->defaultSort('reserved_at', 'desc')
+            ->groups([
+                Group::make('date_group')
+                    ->label('Date')
+                    ->collapsible()
+                    ->getTitleFromRecordUsing(fn(Reservation $record): string =>
+                        $record->reserved_at?->isToday()
+                            ? 'Today - ' . $record->reserved_at->format('M j, Y')
+                            : ($record->reserved_at?->isTomorrow()
+                                ? 'Tomorrow - ' . $record->reserved_at->format('M j, Y')
+                                : $record->reserved_at?->format('M j, Y') ?? 'Unknown')
+                    )
+                    ->orderQueryUsing(fn(Builder $query, string $direction) =>
+                        $query->orderBy('reserved_at', $direction)
+                    ),
+            ])
+            ->defaultGroup('date_group')
             ->filters([
                 SelectFilter::make('status')
                     ->options([
@@ -104,12 +121,7 @@ class SpaceManagementTable
 
                 Filter::make('needs_attention')
                     ->label('Needs Attention')
-                    ->query(fn(Builder $query): Builder => $query
-                        ->where(function ($query) {
-                            $query
-                                ->where('status', 'pending')
-                                ->orWhere('payment_status', 'unpaid');
-                        })),
+                    ->query(fn(Builder $query): Builder => $query->needsAttention()),
             ])
             ->recordActions([
                 ActionGroup::make([
