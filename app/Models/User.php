@@ -56,6 +56,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public function canAccessPanel($panel): bool
     {
+        // Staff panel requires staff or admin role
+        if ($panel->getId() === 'staff') {
+            return $this->hasRole(['admin', 'staff']);
+        }
+
+        // Member panel is accessible to all authenticated users
         return true;
     }
 

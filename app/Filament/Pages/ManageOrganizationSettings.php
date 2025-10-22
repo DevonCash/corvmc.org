@@ -61,7 +61,7 @@ class ManageOrganizationSettings extends Page implements HasForms
 
     public static function canAccess(): bool
     {
-        return Auth::user()->can('manage site settings');
+        return User::me()->can('manage site settings');
     }
     public function form(Schema $form): Schema
     {
@@ -115,13 +115,13 @@ class ManageOrganizationSettings extends Page implements HasForms
                             ->helperText('When enabled, the equipment section appears in navigation. When disabled, all equipment features are hidden.')
                             ->default(false)
                             ->live(),
-                        
+
                         Forms\Components\Toggle::make('enable_rental_features')
                             ->label('Enable Equipment Rental Features')
                             ->helperText('When enabled, members can checkout and return equipment through the system. When disabled, only the equipment catalog view is available.')
                             ->default(false)
                             ->visible(fn (callable $get) => $get('enable_equipment_features')),
-                        
+
                         Forms\Components\Toggle::make('enable_community_calendar')
                             ->label('Enable Community Calendar')
                             ->helperText('When enabled, members can submit and view community events on the calendar. When disabled, the community calendar is hidden from navigation.')

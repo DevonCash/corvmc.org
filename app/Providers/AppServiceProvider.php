@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
 use Livewire\Livewire;
+use BezhanSalleh\PanelSwitch\PanelSwitch;
+
 use Spatie\Tags\Tag;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,6 +32,18 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+
+
+        PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
+            // Custom configurations go here
+            $panelSwitch
+                ->icons([
+                    'member' => 'tabler-user',
+                    'staff' => 'tabler-user-shield',
+                ], asImage: false)
+                ->simple();
+        });
+
         // Register custom Cashier models
         Cashier::useSubscriptionModel(Subscription::class);
 

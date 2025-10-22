@@ -95,7 +95,7 @@ class MemberPanelProvider extends PanelProvider
                 ],
                 'gray' => [
                     50 => 'oklch(0.98 0.01 65)',   // warm cream white
-                    100 => 'oklch(0.94 0.015 60)', // light parchment  
+                    100 => 'oklch(0.94 0.015 60)', // light parchment
                     200 => 'oklch(0.87 0.02 55)',  // aged paper tone
                     300 => 'oklch(0.78 0.025 50)', // better contrast step
                     400 => 'oklch(0.68 0.03 45)',  // more distinct
@@ -111,10 +111,19 @@ class MemberPanelProvider extends PanelProvider
             ->darkModeBrandLogo(asset('images/cmc-compact-logo-dark.svg'))
             ->brandLogoHeight('3rem')
             ->icons(config('filament-icons', []))
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            ->resources([
+                \App\Filament\Resources\MemberProfiles\MemberProfileResource::class,
+                \App\Filament\Resources\Bands\BandResource::class,
+                \App\Filament\Resources\CommunityEvents\CommunityEventResource::class,
+                \App\Filament\Resources\Reservations\ReservationResource::class,
+                \App\Filament\Resources\Equipment\EquipmentResource::class,
+                \App\Filament\Resources\Equipment\EquipmentLoans\EquipmentLoanResource::class,
+            ])
             ->pages([
                 Dashboard::class,
+                \App\Filament\Pages\MyProfile::class,
+                \App\Filament\Pages\MyAccount::class,
+                \App\Filament\Pages\MyMembership::class,
             ])
             ->databaseNotifications()
             ->widgets([
@@ -137,6 +146,7 @@ class MemberPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->globalSearch(false)
             ->authMiddleware([
                 Authenticate::class,
             ])

@@ -24,7 +24,7 @@ class ListReservations extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            ReservationStatsOverview::class,
+            // ReservationStatsOverview::class, // Disabled - simplifying member panel
         ];
     }
 

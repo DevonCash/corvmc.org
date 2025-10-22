@@ -30,7 +30,6 @@ class UserSummaryWidget extends Widget
                     ->count(),
                 'band_memberships' => $user->bands->count(),
                 'owned_bands' => $user->ownedBands->count(),
-                'managed_productions' => $user->productions->count(),
                 'is_sustaining_member' => $user->isSustainingMember(),
             ];
 
@@ -91,7 +90,6 @@ class UserSummaryWidget extends Widget
         return [
             'reservations' => route('filament.member.resources.reservations.index'),
             'bands' => route('filament.member.resources.bands.index'),
-            'productions' => route('filament.member.resources.productions.index'),
         ];
     }
 }

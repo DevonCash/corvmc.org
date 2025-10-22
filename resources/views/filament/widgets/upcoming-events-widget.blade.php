@@ -16,7 +16,7 @@
             </div>
 
             @if ($this->getUpcomingEvents()->isNotEmpty())
-                <a href="{{ route('filament.member.resources.productions.index') }}"
+                <a href="{{ route('events.index') }}"
                    class="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
                     View all
                     <x-tabler-chevron-right class="w-4 h-4" />
@@ -125,7 +125,7 @@
                     No events are currently scheduled in the community
                 </p>
                 @if(auth()->user()?->can('create productions'))
-                    <a href="{{ route('filament.member.resources.productions.create') }}"
+                    <a href="{{ route('filament.staff.resources.productions.create') }}"
                        class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">
                         <x-tabler-plus class="w-4 h-4" />
                         Create Event

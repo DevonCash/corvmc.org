@@ -10,6 +10,7 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../vendor/filament/filament/resources/views/**/*.blade.php';
 @source '../../vendor/filament/*/resources/views/**/*.blade.php';
+@source '../../vendor/bezhansalleh/filament-panel-switch/resources/views/**/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';

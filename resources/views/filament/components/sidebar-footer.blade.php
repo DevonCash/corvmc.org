@@ -1,5 +1,5 @@
 <div class="fi-sidebar-footer border-t border-gray-200 dark:border-gray-700 mt-auto">
-    <a href="{{ route('filament.member.resources.users.edit', ['record' => auth()->user()->id]) }}" 
+    <a href="{{ \App\Filament\Pages\MyAccount::getUrl() }}" 
        class="flex items-center space-x-3 p-4 group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-lg m-2 border border-transparent hover:border-gray-200 dark:hover:border-gray-600">
         <!-- User Avatar -->
         <div class="flex-shrink-0">
