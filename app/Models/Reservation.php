@@ -229,4 +229,68 @@ class Reservation extends Model
         $minutesPerBlock = config('reservation.minutes_per_block', 30);
         return ($blocks * $minutesPerBlock) / 60;
     }
+
+    /**
+     * Check if reservation is in the confirmation window (3-7 days before).
+     */
+    public function isInConfirmationWindow(): bool
+    {
+        if (!$this->reserved_at) {
+            return false;
+        }
+
+        $daysUntilReservation = now()->diffInDays($this->reserved_at, false);
+        return $daysUntilReservation >= 3 && $daysUntilReservation <= 7;
+    }
+
+    /**
+     * Check if reservation is an immediate reservation (< 3 days).
+     */
+    public function isImmediate(): bool
+    {
+        if (!$this->reserved_at) {
+            return false;
+        }
+
+        $daysUntilReservation = now()->diffInDays($this->reserved_at, false);
+        return $daysUntilReservation < 3;
+    }
+
+    /**
+     * Check if reservation can be confirmed (pending and within confirmation window or immediate).
+     */
+    public function canBeConfirmed(): bool
+    {
+        return $this->status === 'pending' &&
+               ($this->isInConfirmationWindow() || $this->isImmediate());
+    }
+
+    /**
+     * Check if reservation should be auto-cancelled (pending and missed confirmation window).
+     */
+    public function shouldAutoCancel(): bool
+    {
+        if ($this->status !== 'pending' || !$this->reserved_at) {
+            return false;
+        }
+
+        // Auto-cancel if we're now within 3 days and still not confirmed
+        $daysUntilReservation = now()->diffInDays($this->reserved_at, false);
+        return $daysUntilReservation < 3;
+    }
+
+    /**
+     * Get days until confirmation deadline (3 days before reservation).
+     */
+    public function daysUntilConfirmationDeadline(): ?int
+    {
+        if (!$this->reserved_at) {
+            return null;
+        }
+
+        $confirmationDeadline = $this->reserved_at->copy()->subDays(3);
+        $daysUntil = now()->diffInDays($confirmationDeadline, false);
+
+        return $daysUntil >= 0 ? $daysUntil : null;
+    }
 }

@@ -2,11 +2,11 @@
 
 namespace App\Actions\Credits;
 
+use App\Enums\CreditType;
 use App\Models\User;
 use App\Models\UserCredit;
 use App\Models\CreditTransaction;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class AllocateMonthlyCredits
@@ -14,45 +14,69 @@ class AllocateMonthlyCredits
     use AsAction;
 
     /**
-     * Allocate monthly credits based on subscription.
+     * Allocate monthly credits based on billing cycle.
+     *
+     * Uses transaction log to determine when next allocation is due.
+     * Allocates 1 month after last allocation (using addMonthNoOverflow to handle month-end edge cases).
+     *
      * Handles both practice space (reset) and equipment (rollover) credits.
      */
     public function handle(
         User $user,
         int $amount,
-        string $creditType = 'free_hours'
+        CreditType $creditType = CreditType::FreeHours
     ): void {
-        // Check if allocation already exists for this month
-        $allocationKey = "credit_allocation.{$user->id}.{$creditType}." . now()->format('Y-m');
+        // Find last allocation transaction
+        $lastAllocation = CreditTransaction::where('user_id', $user->id)
+            ->where('credit_type', $creditType->value)
+            ->where('source', $creditType === CreditType::FreeHours ? 'monthly_reset' : 'monthly_allocation')
+            ->latest('created_at')
+            ->first();
 
-        if (Cache::get($allocationKey)) {
-            return; // Already allocated this month
+        // Determine if allocation is due
+        if ($lastAllocation) {
+            $nextAllocationDate = $lastAllocation->created_at->copy()->addMonthNoOverflow();
+
+            // If not time for regular allocation, check if this is a mid-month upgrade
+            if (now()->lt($nextAllocationDate)) {
+                // Check current balance - if new amount is higher, this is an upgrade
+                $currentBalance = $user->getCreditBalance($creditType);
+
+                if ($amount > $currentBalance) {
+                    // Mid-month upgrade - add the delta
+                    $this->handleMidMonthUpgrade($user, $amount, $creditType, $currentBalance);
+                }
+                // Otherwise, no action needed (downgrade keeps peak amount until next cycle)
+                return;
+            }
         }
+        // If no last allocation, this is the first time - proceed
 
-        DB::transaction(function () use ($user, $amount, $creditType, $allocationKey) {
+        DB::transaction(function () use ($user, $amount, $creditType) {
             $credit = UserCredit::lockForUpdate()
                 ->firstOrCreate(
-                    ['user_id' => $user->id, 'credit_type' => $creditType],
+                    ['user_id' => $user->id, 'credit_type' => $creditType->value],
                     $this->getDefaultCreditConfig($creditType)
                 );
 
             // Handle different allocation strategies
-            if ($creditType === 'free_hours') {
+            if ($creditType === CreditType::FreeHours) {
                 // Practice Space: RESET to subscription amount (no rollover)
                 $oldBalance = $credit->balance;
+                $delta = $amount - $oldBalance; // Actual change
                 $credit->balance = $amount;
                 $credit->save();
 
                 CreditTransaction::create([
                     'user_id' => $user->id,
-                    'credit_type' => $creditType,
-                    'amount' => $amount,
+                    'credit_type' => $creditType->value,
+                    'amount' => $delta, // Record actual delta, not allocation amount
                     'balance_after' => $credit->balance,
                     'source' => 'monthly_reset',
-                    'description' => "Monthly practice space credits reset for " . now()->format('F Y') . " (previous: {$oldBalance} blocks)",
+                    'description' => "Monthly reset to {$amount} blocks (was {$oldBalance})",
                     'created_at' => now(),
                 ]);
-            } elseif ($creditType === 'equipment_credits') {
+            } elseif ($creditType === CreditType::EquipmentCredits) {
                 // Equipment: ADD to existing balance with cap (rollover enabled)
                 $oldBalance = $credit->balance;
                 $maxBalance = $credit->max_balance ?? 250; // Default cap
@@ -67,11 +91,11 @@ class AllocateMonthlyCredits
 
                     CreditTransaction::create([
                         'user_id' => $user->id,
-                        'credit_type' => $creditType,
+                        'credit_type' => $creditType->value,
                         'amount' => $actualAmount,
                         'balance_after' => $credit->balance,
                         'source' => 'monthly_allocation',
-                        'description' => "Monthly equipment credits allocation for " . now()->format('F Y') .
+                        'description' => "Monthly equipment credits allocation" .
                                        ($actualAmount < $amount ? " (capped at {$maxBalance})" : ""),
                         'metadata' => json_encode([
                             'requested_amount' => $amount,
@@ -82,32 +106,85 @@ class AllocateMonthlyCredits
                     ]);
                 }
             }
+        });
+    }
 
-            // Mark as allocated for this month
-            Cache::put($allocationKey, true, now()->endOfMonth());
+    /**
+     * Handle mid-month upgrade by adding credit delta.
+     *
+     * Called when user upgrades their subscription within the same billing cycle.
+     * Adds the difference between new entitlement and current balance.
+     */
+    protected function handleMidMonthUpgrade(User $user, int $newAmount, CreditType $creditType, int $currentBalance): void
+    {
+        DB::transaction(function () use ($user, $newAmount, $creditType, $currentBalance) {
+            $credit = UserCredit::lockForUpdate()
+                ->firstOrCreate(
+                    ['user_id' => $user->id, 'credit_type' => $creditType->value],
+                    $this->getDefaultCreditConfig($creditType)
+                );
+
+            if ($creditType === CreditType::FreeHours) {
+                // Add the delta between new entitlement and current balance
+                $delta = $newAmount - $currentBalance;
+                $credit->balance += $delta;
+                $credit->save();
+
+                CreditTransaction::create([
+                    'user_id' => $user->id,
+                    'credit_type' => $creditType->value,
+                    'amount' => $delta,
+                    'balance_after' => $credit->balance,
+                    'source' => 'upgrade_adjustment',
+                    'description' => "Mid-month upgrade: added {$delta} blocks (from {$currentBalance} to {$credit->balance})",
+                    'created_at' => now(),
+                ]);
+            } elseif ($creditType === CreditType::EquipmentCredits) {
+                // Equipment credits with cap
+                $maxBalance = $credit->max_balance ?? 250;
+                $delta = $newAmount - $currentBalance;
+                $availableSpace = max(0, $maxBalance - $currentBalance);
+                $actualDelta = min($delta, $availableSpace);
+
+                if ($actualDelta > 0) {
+                    $credit->balance += $actualDelta;
+                    $credit->save();
+
+                    CreditTransaction::create([
+                        'user_id' => $user->id,
+                        'credit_type' => $creditType->value,
+                        'amount' => $actualDelta,
+                        'balance_after' => $credit->balance,
+                        'source' => 'upgrade_adjustment',
+                        'description' => "Mid-month upgrade: added {$actualDelta} blocks" .
+                                       ($actualDelta < $delta ? " (capped at {$maxBalance})" : ""),
+                        'metadata' => json_encode([
+                            'requested_delta' => $delta,
+                            'actual_delta' => $actualDelta,
+                            'cap_reached' => $credit->balance >= $maxBalance,
+                        ]),
+                        'created_at' => now(),
+                    ]);
+                }
+            }
         });
     }
 
     /**
      * Get default configuration for a credit type.
      */
-    protected function getDefaultCreditConfig(string $creditType): array
+    protected function getDefaultCreditConfig(CreditType $creditType): array
     {
         return match($creditType) {
-            'free_hours' => [
+            CreditType::FreeHours => [
                 'balance' => 0,
                 'max_balance' => null,
                 'rollover_enabled' => false,
             ],
-            'equipment_credits' => [
+            CreditType::EquipmentCredits => [
                 'balance' => 0,
                 'max_balance' => 250,
                 'rollover_enabled' => true,
-            ],
-            default => [
-                'balance' => 0,
-                'max_balance' => null,
-                'rollover_enabled' => false,
             ],
         };
     }

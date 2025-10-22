@@ -14,13 +14,14 @@ class CreateRecurringReservation
      * Create recurring reservations for sustaining members.
      *
      * Creates multiple reservation instances based on a recurrence pattern.
+     * Provides credit estimate for informational purposes - user can pay for any shortfall.
      * Skips slots with conflicts but continues with remaining slots.
      *
      * @param User $user User creating the reservations (must be sustaining member)
      * @param Carbon $startTime Initial start time
      * @param Carbon $endTime Initial end time
      * @param array $recurrencePattern Pattern config with 'weeks' and 'interval' keys
-     * @return array Array of created RehearsalReservation instances
+     * @return array Array with 'reservations' and 'credit_estimate' keys
      * @throws \InvalidArgumentException If user is not a sustaining member
      */
     public function handle(User $user, Carbon $startTime, Carbon $endTime, array $recurrencePattern): array
@@ -28,6 +29,9 @@ class CreateRecurringReservation
         if (!$user->isSustainingMember()) {
             throw new \InvalidArgumentException('Only sustaining members can create recurring reservations.');
         }
+
+        // Estimate credit availability across renewal cycles (informational only)
+        $creditEstimate = EstimateRecurringCreditCost::run($user, $startTime, $endTime, $recurrencePattern);
 
         $reservations = [];
         $weeks = $recurrencePattern['weeks'] ?? 4; // Default to 4 weeks
@@ -52,6 +56,9 @@ class CreateRecurringReservation
             }
         }
 
-        return $reservations;
+        return [
+            'reservations' => $reservations,
+            'credit_estimate' => $creditEstimate,
+        ];
     }
 }

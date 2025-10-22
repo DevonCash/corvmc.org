@@ -7,6 +7,7 @@ use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Filament\Resources\Users\RelationManagers\BandsRelationManager;
+use App\Filament\Resources\Users\RelationManagers\CreditTransactionsRelationManager;
 use App\Filament\Resources\Users\RelationManagers\ProductionsRelationManager;
 use App\Filament\Resources\Users\RelationManagers\ReservationsRelationManager;
 use App\Filament\Resources\Users\Schemas\UserForm;
@@ -86,6 +87,7 @@ class UserResource extends Resource
             BandsRelationManager::class,
             ProductionsRelationManager::class,
             ReservationsRelationManager::class,
+            CreditTransactionsRelationManager::class,
         ];
     }
 

@@ -7,9 +7,11 @@ use App\Models\User;
 use App\Models\RehearsalReservation;
 use App\Notifications\ReservationConfirmedNotification;
 use App\Notifications\ReservationCreatedNotification;
+use App\Notifications\ReservationCreatedTodayNotification;
 use Brick\Money\Money;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class CreateReservation
@@ -18,6 +20,10 @@ class CreateReservation
 
     /**
      * Create a new reservation.
+     *
+     * Reservations are created as pending and must be confirmed within the confirmation window.
+     * Credits are applied at confirmation time, not creation time.
+     * For immediate reservations (< 3 days), auto-confirmation is triggered.
      */
     public function handle(User $user, Carbon $startTime, Carbon $endTime, array $options = []): RehearsalReservation
     {
@@ -29,51 +35,43 @@ class CreateReservation
         }
 
         $reservation = DB::transaction(function () use ($user, $startTime, $endTime, $options) {
+            // Calculate initial cost estimate (without deducting credits yet)
+            $costCalculation = CalculateReservationCost::run($user, $startTime, $endTime);
 
-            // Calculate cost (automatically applies available free hours)
-            $hours = $startTime->diffInMinutes($endTime) / 60;
-            $totalBlocks = RehearsalReservation::hoursToBlocks($hours);
-
-            // Get user's free hour credit balance
-            $freeBlockBalance = $user->getCreditBalance(CreditType::FreeHours);
-            $freeBlocks = min($totalBlocks, $freeBlockBalance);
-            $paidBlocks = $totalBlocks - $freeBlocks;
-
-            // Calculate cost: $15/hour = $7.50 per 30-min block
-            $hourlyRate = config('reservation.hourly_rate', 15.00);
-            $costPerBlock = $hourlyRate / 2;
-            $cost = Money::of($costPerBlock, 'USD')->multipliedBy($paidBlocks);
-
-            // Create reservation
+            // Create reservation as pending
+            // Credits will be deducted when reservation is confirmed
             $reservation = RehearsalReservation::create([
                 'reservable_type' => User::class,
                 'reservable_id' => $user->id,
                 'reserved_at' => $startTime,
                 'reserved_until' => $endTime,
-                'cost' => $cost,
-                'hours_used' => $hours,
-                'free_hours_used' => RehearsalReservation::blocksToHours($freeBlocks),
-                'status' => $cost->isZero() ? 'confirmed' : 'pending',
+                'cost' => $costCalculation['cost'],
+                'hours_used' => $costCalculation['total_hours'],
+                'free_hours_used' => $costCalculation['free_hours'],
+                'status' => 'pending',
                 'notes' => $options['notes'] ?? null,
                 'is_recurring' => $options['is_recurring'] ?? false,
                 'recurrence_pattern' => $options['recurrence_pattern'] ?? null,
             ]);
 
-            // Deduct free hours that were applied
-            if ($freeBlocks > 0) {
-                $user->deductCredit($freeBlocks, CreditType::FreeHours, 'reservation_usage', $reservation->id);
-            }
-
             return $reservation;
         });
-        // Send appropriate notification based on status
-        if ($reservation->status === 'confirmed') {
-            // For immediately confirmed reservations, send the confirmation notification
-            $user->notify(new ReservationConfirmedNotification($reservation));
+
+        // For immediate reservations (< 3 days), auto-confirm
+        $daysUntilReservation = now()->diffInDays($startTime, false);
+        if ($daysUntilReservation < 3) {
+            $reservation = ConfirmReservation::run($reservation);
         } else {
-            // For pending reservations, send the creation notification
+            // For future reservations, send creation notification
             $user->notify(new ReservationCreatedNotification($reservation));
         }
+
+        // Notify admins if reservation is for today
+        if ($startTime->isToday()) {
+            $admins = User::role('admin')->get();
+            Notification::send($admins, new ReservationCreatedTodayNotification($reservation));
+        }
+
         return $reservation;
     }
 }

@@ -89,6 +89,9 @@ class PermissionSeeder extends Seeder
             'restore reservations',
             'manage practice space',
 
+            // Credit Management
+            'manage credits',
+
             // Financial Management
             'view transactions',
 
@@ -152,6 +155,8 @@ class PermissionSeeder extends Seeder
             'delete reservations',
             'restore reservations',
             'manage practice space',
+            'manage credits',
+            'view users',
             'view bands',
             'create bands',
             'view band members',

@@ -3,6 +3,7 @@
 namespace App\Actions\Reservations;
 
 use App\Enums\CreditType;
+use App\Models\CreditTransaction;
 use App\Models\Reservation;
 use App\Models\RehearsalReservation;
 use Carbon\Carbon;
@@ -46,8 +47,8 @@ class UpdateReservation
 
             // Only update cost-related fields for rehearsal reservations
             if ($reservation instanceof RehearsalReservation) {
-                $oldFreeHoursUsed = $reservation->free_hours_used;
                 $newFreeHours = $costCalculation['free_hours'];
+                $newBlocks = Reservation::hoursToBlocks($newFreeHours);
 
                 $updateData['cost'] = $costCalculation['cost'];
                 $updateData['hours_used'] = $costCalculation['total_hours'];
@@ -58,10 +59,19 @@ class UpdateReservation
                 }
 
                 // Adjust credits if free hours changed
+                // Use original transaction blocks instead of recalculating from hours to avoid precision loss
                 $user = $reservation->getResponsibleUser();
-                if ($user && $newFreeHours != $oldFreeHoursUsed) {
-                    $oldBlocks = Reservation::hoursToBlocks($oldFreeHoursUsed);
-                    $newBlocks = Reservation::hoursToBlocks($newFreeHours);
+                if ($user) {
+                    // Find the original deduction transaction to get exact blocks deducted
+                    $originalDeduction = CreditTransaction::where('user_id', $user->id)
+                        ->where('credit_type', CreditType::FreeHours->value)
+                        ->whereIn('source', ['reservation_usage', 'reservation_update'])
+                        ->where('source_id', $reservation->id)
+                        ->where('amount', '<', 0)
+                        ->latest('created_at')
+                        ->first();
+
+                    $oldBlocks = $originalDeduction ? abs($originalDeduction->amount) : 0;
                     $blocksDifference = $newBlocks - $oldBlocks;
 
                     if ($blocksDifference > 0) {
@@ -70,7 +80,8 @@ class UpdateReservation
                             $blocksDifference,
                             CreditType::FreeHours,
                             'reservation_update',
-                            $reservation->id
+                            $reservation->id,
+                            "Additional {$blocksDifference} blocks for reservation update"
                         );
                     } elseif ($blocksDifference < 0) {
                         // Refund credits
