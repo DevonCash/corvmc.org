@@ -2,6 +2,7 @@
 
 namespace App\Actions\Credits;
 
+use App\Enums\CreditType;
 use App\Models\User;
 use App\Models\PromoCode;
 use App\Models\PromoCodeRedemption;
@@ -39,14 +40,14 @@ class RedeemPromoCode
                 throw new PromoCodeMaxUsesException();
             }
 
-            // Add credits using AddCredits action
-            $transaction = AddCredits::run(
-                $user,
+            // Add credits
+            $creditType = CreditType::from($promo->credit_type);
+            $transaction = $user->addCredit(
                 $promo->credit_amount,
+                $creditType,
                 'promo_code',
                 $promo->id,
-                "Promo code: {$promo->code}",
-                $promo->credit_type
+                "Promo code: {$promo->code}"
             );
 
             // Record redemption

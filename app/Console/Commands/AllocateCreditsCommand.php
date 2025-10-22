@@ -58,9 +58,9 @@ class AllocateCreditsCommand extends Command
         foreach ($users as $user) {
             try {
                 $hours = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user);
-                $blocks = \App\Actions\Credits\GetBlocksFromHours::run($hours);
-                $currentBalance = \App\Actions\Credits\GetBalance::run($user, 'free_hours');
-                $currentHours = \App\Actions\Credits\GetHoursFromBlocks::run($currentBalance);
+                $blocks = \App\Models\Reservation::hoursToBlocks($hours);
+                $currentBalance = $user->getCreditBalance(\App\Enums\CreditType::FreeHours);
+                $currentHours = \App\Models\Reservation::blocksToHours($currentBalance);
 
                 if ($this->option('dry-run')) {
                     $this->line("→ Would allocate {$blocks} blocks ({$hours} hours) to {$user->name}");

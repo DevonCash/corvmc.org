@@ -14,6 +14,27 @@ class CreateReservation extends CreateRecord
 {
     protected static string $resource = ReservationResource::class;
 
+    protected function handleRecordCreation(array $data): Reservation
+    {
+        // Use CreateReservation action instead of direct model creation
+        // This ensures credits are properly deducted
+        $user = auth()->user();
+        $startTime = Carbon::parse($data['reserved_at']);
+        $endTime = Carbon::parse($data['reserved_until']);
+
+        return \App\Actions\Reservations\CreateReservation::run(
+            $user,
+            $startTime,
+            $endTime,
+            [
+                'notes' => $data['notes'] ?? null,
+                'status' => $data['status'] ?? null,
+                'is_recurring' => $data['is_recurring'] ?? false,
+                'recurrence_pattern' => $data['recurrence_pattern'] ?? null,
+            ]
+        );
+    }
+
     protected function afterCreate(): void
     {
         /** @var Reservation $record */

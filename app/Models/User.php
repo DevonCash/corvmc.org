@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Concerns\HasCredits;
 use App\Concerns\HasMembershipStatus;
 use App\Data\UserSettingsData;
 use Filament\Models\Contracts\FilamentUser;
@@ -25,7 +26,7 @@ use Laravel\Cashier\Billable;
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, HasRoles, LogsActivity, Notifiable, Impersonate, Billable, SoftDeletes, HasMembershipStatus;
+    use HasFactory, HasRoles, LogsActivity, Notifiable, Impersonate, Billable, SoftDeletes, HasMembershipStatus, HasCredits;
 
     /**
      * The attributes that are mass assignable.
@@ -169,11 +170,10 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     /**
      * Get used free hours for the current month.
      *
-     * @param bool $fresh If true, bypass cache for transaction-safe calculation
+     * @param bool $fresh Deprecated, kept for compatibility
      */
     public function getUsedFreeHoursThisMonth(bool $fresh = false): float
     {
-        // Note: This uses legacy calculation via GetRemainingFreeHours action
         $action = new \App\Actions\MemberBenefits\GetRemainingFreeHours();
         return $action->getUsedFreeHoursThisMonth($this, $fresh);
     }

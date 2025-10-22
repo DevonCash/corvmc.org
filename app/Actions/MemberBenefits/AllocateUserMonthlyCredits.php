@@ -3,7 +3,7 @@
 namespace App\Actions\MemberBenefits;
 
 use App\Actions\Credits\AllocateMonthlyCredits;
-use App\Actions\Credits\GetBlocksFromHours;
+use App\Models\Reservation;
 use App\Models\User;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -24,7 +24,7 @@ class AllocateUserMonthlyCredits
         }
 
         $hours = GetUserMonthlyFreeHours::run($user);
-        $blocks = GetBlocksFromHours::run($hours);
+        $blocks = Reservation::hoursToBlocks($hours);
 
         // Use AllocateMonthlyCredits to handle the allocation (handles reset logic)
         AllocateMonthlyCredits::run($user, $blocks, 'free_hours');

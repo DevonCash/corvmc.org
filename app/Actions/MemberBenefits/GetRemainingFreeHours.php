@@ -2,10 +2,9 @@
 
 namespace App\Actions\MemberBenefits;
 
-use App\Actions\Credits\GetBalance;
-use App\Actions\Credits\GetHoursFromBlocks;
+use App\Enums\CreditType;
+use App\Models\Reservation;
 use App\Models\User;
-use Illuminate\Support\Facades\Cache;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetRemainingFreeHours
@@ -15,9 +14,9 @@ class GetRemainingFreeHours
     /**
      * Get remaining free hours for sustaining members this month.
      *
-     * Tries Credits System first (new system), falls back to legacy calculation.
+     * Uses Credits System exclusively.
      *
-     * @param bool $fresh If true, bypass cache for transaction-safe calculation
+     * @param bool $fresh If true, bypass cache for transaction-safe calculation (deprecated, kept for compatibility)
      */
     public function handle(User $user, bool $fresh = false): float
     {
@@ -25,48 +24,30 @@ class GetRemainingFreeHours
             return 0;
         }
 
-        // Try Credits System first (new system)
-        $balanceInBlocks = GetBalance::run($user, 'free_hours');
-
-        if ($balanceInBlocks > 0) {
-            // User has credits allocated - use Credits System
-            return GetHoursFromBlocks::run($balanceInBlocks);
-        }
-
-        // Fallback to legacy calculation for users not yet migrated
-        $allocatedHours = GetUserMonthlyFreeHours::run($user);
-        $usedHours = $this->getUsedFreeHoursThisMonth($user, $fresh);
-
-        return max(0, $allocatedHours - $usedHours);
+        // Use Credits System exclusively
+        $balanceInBlocks = $user->getCreditBalance(CreditType::FreeHours);
+        return Reservation::blocksToHours($balanceInBlocks);
     }
 
     /**
-     * Get used free hours for user in current month (legacy).
+     * Get used free hours for user in current month.
      *
-     * @deprecated Use Credits System instead
+     * @param bool $fresh Deprecated, kept for compatibility
      */
     public function getUsedFreeHoursThisMonth(User $user, bool $fresh = false): float
     {
-        $cacheKey = "user.{$user->id}.free_hours." . now()->format('Y-m');
-
-        // For fresh calculations (during reservation creation), bypass cache
-        if ($fresh) {
-            $value = $user->reservations()
-                ->whereMonth('reserved_at', now()->month)
-                ->whereYear('reserved_at', now()->year)
-                ->sum('free_hours_used') ?? 0;
-
-            // Update cache with fresh value
-            Cache::put($cacheKey, $value, 1800);
-            return $value;
+        if (!CheckIsSustainingMember::run($user)) {
+            return 0;
         }
 
-        // For display purposes, use cached value
-        return Cache::remember($cacheKey, 1800, function () use ($user) {
-            return $user->reservations()
-                ->whereMonth('reserved_at', now()->month)
-                ->whereYear('reserved_at', now()->year)
-                ->sum('free_hours_used') ?? 0;
-        });
+        // Sum all negative credit transactions (deductions) this month
+        $usedBlocks = \App\Models\CreditTransaction::where('user_id', $user->id)
+            ->where('credit_type', 'free_hours')
+            ->where('amount', '<', 0)
+            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->sum('amount');
+
+        // Convert negative value to positive and blocks to hours
+        return Reservation::blocksToHours(abs($usedBlocks));
     }
 }

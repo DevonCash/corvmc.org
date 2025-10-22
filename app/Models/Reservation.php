@@ -210,4 +210,23 @@ class Reservation extends Model
     {
         return 'reserved_until';
     }
+
+    /**
+     * Convert hours to credit blocks.
+     * Rounds up to ensure users are charged for full blocks.
+     */
+    public static function hoursToBlocks(float $hours): int
+    {
+        $minutesPerBlock = config('reservation.minutes_per_block', 30);
+        return (int) ceil(($hours * 60) / $minutesPerBlock);
+    }
+
+    /**
+     * Convert credit blocks to hours.
+     */
+    public static function blocksToHours(int $blocks): float
+    {
+        $minutesPerBlock = config('reservation.minutes_per_block', 30);
+        return ($blocks * $minutesPerBlock) / 60;
+    }
 }

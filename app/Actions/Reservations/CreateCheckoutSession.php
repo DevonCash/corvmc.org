@@ -2,6 +2,7 @@
 
 namespace App\Actions\Reservations;
 
+use App\Models\Reservation;
 use App\Models\RehearsalReservation;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -31,7 +32,7 @@ class CreateCheckoutSession
 
         // Calculate paid hours and convert to 30-minute blocks
         $paidHours = $reservation->hours_used - $reservation->free_hours_used;
-        $paidBlocks = \App\Actions\Credits\GetBlocksFromHours::run($paidHours);
+        $paidBlocks = Reservation::hoursToBlocks($paidHours);
 
         if ($paidBlocks <= 0) {
             throw new \Exception('No payment required for this reservation.');
