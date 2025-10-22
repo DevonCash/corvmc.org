@@ -20,7 +20,7 @@ class SendReservationConfirmationReminders
         // Find reservations that are pending and created more than 24 hours ago
         $cutoffDate = Carbon::now()->subDay();
 
-        $pendingReservations = Reservation::with('user')
+        $pendingReservations = Reservation::select('*')
             ->where('status', 'pending')
             ->where('created_at', '<=', $cutoffDate)
             ->where('reserved_at', '>', Carbon::now()) // Only future reservations
@@ -46,7 +46,7 @@ class SendReservationConfirmationReminders
 
             if (!$dryRun) {
                 try {
-                    $reservation->user->notify(new ReservationConfirmationNotification($reservation));
+                    $reservation->getResponsibleUser()?->notify(new ReservationConfirmationNotification($reservation));
                     $reservationData['status'] = 'sent';
                     $results['sent']++;
 

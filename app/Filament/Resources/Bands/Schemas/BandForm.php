@@ -182,10 +182,7 @@ class BandForm
                                     return [Auth::user()->id => Auth::user()->name];
                                 }
 
-                                return $record->members()
-                                    ->select(['users.id', 'users.name'])
-                                    ->pluck('users.name', 'users.id')
-                                    ->toArray();
+                                return $record->members->pluck('name', 'id')->toArray();
                             })
                             ->preload()
                             ->default(fn () => Auth::user()->id)

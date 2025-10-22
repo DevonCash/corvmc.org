@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\RelationManagers;
 
+use App\Actions\Credits\AdjustCredits;
 use App\Models\Reservation;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -12,7 +13,7 @@ class CreditTransactionsRelationManager extends RelationManager
 {
     protected static string $relationship = 'creditTransactions';
 
-    protected static ?string $title = 'Credit Transaction History';
+    protected static ?string $title = 'User Credits';
 
     protected static ?string $recordTitleAttribute = 'description';
 
@@ -119,7 +120,7 @@ class CreditTransactionsRelationManager extends RelationManager
                     ->query(fn ($query) => $query->where('amount', '<', 0)),
             ])
             ->headerActions([
-                // No create action - transactions are system-generated
+                AdjustCredits::filamentAction(),
             ])
             ->recordActions([
                 // No edit/delete actions - transactions are immutable

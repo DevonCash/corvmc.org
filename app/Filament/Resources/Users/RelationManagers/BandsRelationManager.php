@@ -40,7 +40,9 @@ class BandsRelationManager extends RelationManager
             ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable()
+                    ->searchable(query: function ($query, $search) {
+                        return $query->where('band_profiles.name', 'ilike', "%{$search}%");
+                    })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('pivot.role')
                     ->label('Role')
