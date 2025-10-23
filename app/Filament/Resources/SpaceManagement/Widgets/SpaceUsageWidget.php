@@ -59,7 +59,8 @@ class SpaceUsageWidget extends Widget
             'todaysUsage' => $today,
             'todaysCount' => $today->count(),
             'hoursToday' => $today->sum('duration'),
-            'revenueToday' => $todayRehearsals->filter(fn($r) => $r['cost'] !== null)
+            'revenueToday' => $todayRehearsals
+                ->filter(fn($r) => $r['cost'] !== null && $r['payment_status'] === 'paid')
                 ->sum(fn($r) => $r['cost']->getMinorAmount()->toInt()) / 100,
             'rehearsalCount' => $todayRehearsals->count(),
             'productionCount' => $todayProductions->count(),

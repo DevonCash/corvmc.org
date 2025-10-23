@@ -22,7 +22,9 @@ class SpaceStatsWidget extends BaseWidget
         ->get();
 
         $weekHours = $weekReservations->sum('hours_used');
-        $weekRevenue = $weekReservations->sum(fn($r) => $r->cost->getMinorAmount()->toInt()) / 100;
+        $weekRevenue = $weekReservations
+            ->filter(fn($r) => $r instanceof \App\Models\RehearsalReservation && $r->payment_status === 'paid')
+            ->sum(fn($r) => $r->cost->getMinorAmount()->toInt()) / 100;
         $weekReservationCount = $weekReservations->count();
 
         // This week's productions using space
@@ -39,7 +41,7 @@ class SpaceStatsWidget extends BaseWidget
 
         return [
             Stat::make('Needs Attention', $needsAttention)
-                ->description('Future pending or unpaid reservations')
+                ->description('Pending auto-cancels & past unpaid')
                 ->color($needsAttention > 0 ? 'warning' : 'success')
                 ->icon('tabler-alert-circle'),
 

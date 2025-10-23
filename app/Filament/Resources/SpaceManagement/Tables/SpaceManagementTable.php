@@ -12,9 +12,9 @@ use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;
 use App\Models\Reservation;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
@@ -38,21 +38,15 @@ class SpaceManagementTable
             ])
             ->defaultSort('reserved_at', 'desc')
             ->groups([
-                Group::make('date_group')
+                Group::make('reserved_at')
                     ->label('Date')
+                    ->date()
                     ->collapsible()
-                    ->getTitleFromRecordUsing(fn(Reservation $record): string =>
-                        $record->reserved_at?->isToday()
-                            ? 'Today - ' . $record->reserved_at->format('M j, Y')
-                            : ($record->reserved_at?->isTomorrow()
-                                ? 'Tomorrow - ' . $record->reserved_at->format('M j, Y')
-                                : $record->reserved_at?->format('M j, Y') ?? 'Unknown')
-                    )
                     ->orderQueryUsing(fn(Builder $query, string $direction) =>
                         $query->orderBy('reserved_at', $direction)
                     ),
             ])
-            ->defaultGroup('date_group')
+            ->defaultGroup('reserved_at')
             ->filters([
                 SelectFilter::make('status')
                     ->options([

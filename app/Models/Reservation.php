@@ -258,19 +258,21 @@ class Reservation extends Model
 
     /**
      * Scope to filter reservations that need attention.
-     * Includes future pending reservations and unpaid reservations.
+     * Includes pending reservations about to be autocancelled (< 3 days) and past unpaid reservations.
      */
     public function scopeNeedsAttention(Builder $query): Builder
     {
         return $query->where(function ($q) {
             $q->where(function ($q) {
-                // Future pending reservations only
+                // Pending reservations about to be autocancelled (< 3 days away)
                 $q->where('status', 'pending')
-                    ->where('reserved_at', '>', now());
+                    ->where('reserved_at', '>', now())
+                    ->where('reserved_at', '<=', now()->addDays(3));
             })->orWhere(function ($q) {
-                // Unpaid reservations with cost
+                // Past reservations that are unpaid
                 $q->where('payment_status', 'unpaid')
-                    ->where('cost', '>', 0);
+                    ->where('cost', '>', 0)
+                    ->where('reserved_at', '<', now());
             });
         })->where('status', '!=', 'cancelled');
     }

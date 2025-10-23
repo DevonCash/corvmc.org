@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Reservations\Tables\Columns;
 
 use App\Models\Reservation;
 use Filament\Support\Enums\IconPosition;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 
 class ReservationColumns
@@ -103,25 +104,9 @@ class ReservationColumns
 
     public static function costDisplay(): TextColumn
     {
-        return TextColumn::make('cost_display')
+        return TextColumn::make('cost')
             ->label('Cost')
-            ->getStateUsing(function (Reservation $record): string {
-                // ProductionReservation has no cost
-                if ($record instanceof \App\Models\ProductionReservation) {
-                    return 'N/A';
-                }
-
-                // RehearsalReservation has cost
-                if ($record instanceof \App\Models\RehearsalReservation) {
-                    $display = $record->cost_display ?? 'Free';
-                    if ($record->free_hours_used > 0) {
-                        $display .= ' (' . number_format($record->free_hours_used, 1) . 'h free)';
-                    }
-                    return $display;
-                }
-
-                return 'N/A';
-            })
+            ->money(divideBy: 100, locale: 'en_US')
             ->sortable(['cost']);
     }
 
