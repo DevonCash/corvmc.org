@@ -20,7 +20,8 @@ class SendReservationConfirmationReminders
         // Find reservations that are pending and created more than 24 hours ago
         $cutoffDate = Carbon::now()->subDay();
 
-        $pendingReservations = Reservation::select('*')
+        $pendingReservations = Reservation::query()
+            ->with('reservable')
             ->where('status', 'pending')
             ->where('created_at', '<=', $cutoffDate)
             ->where('reserved_at', '>', Carbon::now()) // Only future reservations
@@ -35,10 +36,12 @@ class SendReservationConfirmationReminders
         ];
 
         foreach ($pendingReservations as $reservation) {
+            $responsibleUser = $reservation->getResponsibleUser();
+
             $reservationData = [
                 'id' => $reservation->id,
-                'user_name' => $reservation->user->name,
-                'user_email' => $reservation->user->email,
+                'user_name' => $responsibleUser?->name,
+                'user_email' => $responsibleUser?->email,
                 'time_range' => $reservation->time_range,
                 'created_at' => $reservation->created_at,
                 'status' => 'pending',
@@ -52,7 +55,7 @@ class SendReservationConfirmationReminders
 
                     Log::info('Reservation confirmation reminder sent', [
                         'reservation_id' => $reservation->id,
-                        'user_email' => $reservation->user->email,
+                        'user_email' => $responsibleUser?->email,
                     ]);
                 } catch (\Exception $e) {
                     $reservationData['status'] = 'failed';
@@ -62,7 +65,7 @@ class SendReservationConfirmationReminders
 
                     Log::error('Failed to send reservation confirmation reminder', [
                         'reservation_id' => $reservation->id,
-                        'user_email' => $reservation->user->email,
+                        'user_email' => $responsibleUser?->email,
                         'error' => $e->getMessage(),
                     ]);
                 }

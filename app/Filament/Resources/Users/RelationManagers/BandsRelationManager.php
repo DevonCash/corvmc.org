@@ -37,19 +37,24 @@ class BandsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->inverseRelationship('members')
             ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(query: function ($query, $search) {
-                        return $query->where('band_profiles.name', 'ilike', "%{$search}%");
+                    ->searchable(query: function ($query, string $search) {
+                        return $query->whereRaw('LOWER("band_profiles"."name") LIKE ?', ['%' . strtolower($search) . '%']);
                     })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('pivot.role')
                     ->label('Role')
-                    ->searchable(),
+                    ->searchable(query: function ($query, string $search) {
+                        return $query->whereRaw('LOWER("band_profile_members"."role") LIKE ?', ['%' . strtolower($search) . '%']);
+                    }),
                 Tables\Columns\TextColumn::make('pivot.position')
                     ->label('Position')
-                    ->searchable(),
+                    ->searchable(query: function ($query, string $search) {
+                        return $query->whereRaw('LOWER("band_profile_members"."position") LIKE ?', ['%' . strtolower($search) . '%']);
+                    }),
                 Tables\Columns\TextColumn::make('pivot.status')
                     ->badge()
                     ->label('Status')
@@ -79,6 +84,9 @@ class BandsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Actions\AttachAction::make()
+                    ->recordSelectOptionsQuery(fn ($query) =>
+                        $query->select('band_profiles.id', 'band_profiles.name', 'band_profiles.slug', 'band_profiles.owner_id', 'band_profiles.visibility', 'band_profiles.status')
+                    )
                     ->schema(fn (Actions\AttachAction $action): array => [
                         $action->getRecordSelect(),
                         Forms\Components\TextInput::make('role')

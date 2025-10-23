@@ -9,6 +9,7 @@ use App\Filament\Resources\SpaceManagement\Pages\ViewSpaceUsage;
 use App\Filament\Resources\SpaceManagement\Schemas\SpaceManagementForm;
 use App\Filament\Resources\SpaceManagement\Tables\SpaceManagementTable;
 use App\Models\Reservation;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -36,7 +37,7 @@ class SpaceManagementResource extends Resource
      */
     public static function canAccess(): bool
     {
-        return Auth::user()->can('manage practice space');
+        return User::me()->can('manage practice space');
     }
 
     public static function form(Schema $schema): Schema
