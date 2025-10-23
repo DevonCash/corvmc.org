@@ -23,35 +23,45 @@ class AdjustCredits
     public static function filamentAction(): \Filament\Actions\Action
     {
         return static::buildBaseAction()
-            ->schema([
-                \Filament\Forms\Components\Select::make('user_id')
-                    ->label('User')
-                    ->relationship('user', 'name')
-                    ->searchable()
-                    ->required(),
-                Grid::make(2)->schema([
-                    \Filament\Forms\Components\Select::make('credit_type')
-                        ->label('Credit Type')
-                        ->default(CreditType::FreeHours->value)
-                        ->options([
-                            CreditType::FreeHours->value => 'Free Hours',
-                            CreditType::EquipmentCredits->value => 'Equipment Credits',
-                        ])
-                        ->required(),
-                    \Filament\Forms\Components\TextInput::make('amount')
-                        ->label('Amount')
-                        ->numeric()
-                        ->step(1)
-                        ->required(),
-                ])
-            ])
-            ->modalWidth('md')
-            ->action(function (array $data) {
-                $user = User::findOrFail($data['user_id']);
-                $creditType = CreditType::from($data['credit_type']);
-                $amount = $data['amount'];
+            ->schema(function ($livewire) {
+                $user = $livewire->ownerRecord;
 
-                static::run($user, $amount, $creditType);
+                return [
+                    Grid::make(3)->schema([
+                        \Filament\Forms\Components\Placeholder::make('free_hours_label')
+                            ->label('Free Hours')
+                            ->content(fn () => $user->getCreditBalance(CreditType::FreeHours) . ' blocks'),
+                        \Filament\Forms\Components\TextInput::make('free_hours_adjustment')
+                            ->label('Adjustment')
+                            ->numeric()
+                            ->default(0)
+                            ->step(1)
+                            ->columnSpan(2),
+                    ]),
+                    Grid::make(3)->schema([
+                        \Filament\Forms\Components\Placeholder::make('equipment_credits_label')
+                            ->label('Equipment Credits')
+                            ->content(fn () => $user->getCreditBalance(CreditType::EquipmentCredits) . ' blocks'),
+                        \Filament\Forms\Components\TextInput::make('equipment_credits_adjustment')
+                            ->label('Adjustment')
+                            ->numeric()
+                            ->default(0)
+                            ->step(1)
+                            ->columnSpan(2),
+                    ]),
+                ];
+            })
+            ->modalWidth('md')
+            ->action(function (array $data, $livewire) {
+                $user = $livewire->ownerRecord;
+
+                if (!empty($data['free_hours_adjustment']) && $data['free_hours_adjustment'] != 0) {
+                    static::run($user, (int) $data['free_hours_adjustment'], CreditType::FreeHours);
+                }
+
+                if (!empty($data['equipment_credits_adjustment']) && $data['equipment_credits_adjustment'] != 0) {
+                    static::run($user, (int) $data['equipment_credits_adjustment'], CreditType::EquipmentCredits);
+                }
             });
     }
 }

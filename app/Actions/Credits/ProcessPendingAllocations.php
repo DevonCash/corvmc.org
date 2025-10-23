@@ -20,31 +20,39 @@ class ProcessPendingAllocations
      */
     public function handle(): void
     {
-        $dryRun = $this->option('dry-run') ?? false;
+        $dryRun = method_exists($this, 'option') ? ($this->option('dry-run') ?? false) : false;
 
         $allocations = CreditAllocation::where('is_active', true)
             ->where('next_allocation_at', '<=', now())
             ->get();
 
         if ($allocations->isEmpty()) {
-            $this->info('No pending allocations to process.');
+            if (method_exists($this, 'info')) {
+                $this->info('No pending allocations to process.');
+            }
             return;
         }
 
-        $this->info("Processing {$allocations->count()} allocation(s)...");
+        if (method_exists($this, 'info')) {
+            $this->info("Processing {$allocations->count()} allocation(s)...");
+        }
 
         foreach ($allocations as $allocation) {
             if ($dryRun) {
-                $this->line("  → Would allocate {$allocation->amount} {$allocation->credit_type} credits to user {$allocation->user_id}");
+                if (method_exists($this, 'line')) {
+                    $this->line("  → Would allocate {$allocation->amount} {$allocation->credit_type} credits to user {$allocation->user_id}");
+                }
             } else {
                 $this->processAllocation($allocation);
-                $this->line("  ✓ Allocated {$allocation->amount} {$allocation->credit_type} credits to user {$allocation->user_id}");
+                if (method_exists($this, 'line')) {
+                    $this->line("  ✓ Allocated {$allocation->amount} {$allocation->credit_type} credits to user {$allocation->user_id}");
+                }
             }
         }
 
-        if ($dryRun) {
+        if ($dryRun && method_exists($this, 'warn')) {
             $this->warn('DRY RUN - No changes were made');
-        } else {
+        } elseif (method_exists($this, 'info')) {
             $this->info('✓ All allocations processed successfully');
         }
     }
@@ -55,7 +63,7 @@ class ProcessPendingAllocations
             AllocateMonthlyCredits::run(
                 $allocation->user,
                 $allocation->amount,
-                $allocation->credit_type
+                \App\Enums\CreditType::from($allocation->credit_type)
             );
 
             // Update next allocation date

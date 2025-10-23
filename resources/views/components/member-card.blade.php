@@ -14,20 +14,22 @@
     class="relative rounded-xl hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02] aspect-[16/10]  corvmc-header-stripes p-1">
     <div class="relative rounded-lg overflow-hidden h-full w-full flex flex-col bg-base-200">
         <!-- TOP ROW: Logo + Flags -->
-        <div class="flex items-center justify-between px-2 py-1 bg-base-300">
-            <x-logo :soundLines="false" class="h-5" />
-            <div class="flex gap-1">
+        <div class="flex items-stretch justify-between bg-base-300">
+            <div class="flex items-center px-2 py-1">
+                <x-logo :soundLines="false" class="h-5" />
+            </div>
+            <div class="flex items-stretch">
                 @if ($member->hasFlag('music_teacher'))
-                    <div class="badge badge-secondary badge-xs">Teacher</div>
+                    <div class="bg-secondary text-secondary-content text-xs font-medium px-2 py-1 flex items-center">Teacher</div>
                 @endif
                 @if ($member->hasFlag('open_to_collaboration'))
-                    <div class="badge badge-info badge-xs">Open to Collab</div>
+                    <div class="bg-info text-info-content text-xs font-medium px-2 py-1 flex items-center">Open to Collab</div>
                 @endif
                 @if ($member->hasFlag('available_for_hire'))
-                    <div class="badge badge-success badge-xs">For Hire</div>
+                    <div class="bg-success text-success-content text-xs font-medium px-2 py-1 flex items-center">For Hire</div>
                 @endif
                 @if ($member->hasFlag('looking_for_band'))
-                    <div class="badge badge-warning badge-xs">Seeking Band</div>
+                    <div class="bg-warning text-warning-content text-xs font-medium px-2 py-1 flex items-center">Seeking Band</div>
                 @endif
             </div>
         </div>
@@ -43,26 +45,24 @@
                     <img src="{{ $member->avatar_url }}" alt="{{ $member->user->name }}"
                         class="w-full h-full object-cover" />
                 </div>
-                <div class="flex-shrink-0 p-1 h-6">
-                    @if ($member->hometown)
-                        <p class="text-xs text-base-content/70 flex items-center gap-1">
-                            <x-unicon name="tabler:map-pin" class="size-3" />
-                            <span class="truncate">{{ $member->hometown }}</span>
-                        </p>
-                    @endif
-                </div>
             </div>
 
             <!-- Skills and Pronouns -->
             <div class=" min-w-0 space-y-1 flex-2 flex flex-col p-2 h-full">
-                <!-- Pronouns -->
+                <!-- Pronouns and Hometown -->
                 <div>
                     <h3 class="font-bold text-base leading-tight">{{ $member->user->name }}</h3>
-                    @if ($member->user->pronouns)
-                        <p class="text-xs text-base-content/60">{{ $member->user->pronouns }}
-                        </p>
-                    @endif
-
+                    <div class="flex items-center justify-between gap-2">
+                        @if ($member->user->pronouns)
+                            <p class="text-xs text-base-content/60">{{ $member->user->pronouns }}</p>
+                        @endif
+                        @if ($member->hometown)
+                            <p class="text-xs text-base-content/70 flex items-center gap-1">
+                                <x-unicon name="tabler:map-pin" class="size-3" />
+                                <span class="truncate">{{ $member->hometown }}</span>
+                            </p>
+                        @endif
+                    </div>
                 </div>
                 <!-- Skills as Columns -->
                 <div class="text-xs text-base-content/80 grow">
