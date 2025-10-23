@@ -73,4 +73,12 @@ class SpaceManagementResource extends Resource
             'edit' => EditSpaceUsage::route('/{record}/edit'),
         ];
     }
+
+    public static function getWidgets(): array
+    {
+        return [
+            Widgets\SpaceUsageWidget::class,
+            Widgets\SpaceStatsWidget::class,
+        ];
+    }
 }
