@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Actions\Subscriptions\UpdateUserMembershipStatus;
 use App\Models\Reservation;
 use App\Models\User;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Http\Controllers\WebhookController as CashierWebhookController;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class StripeWebhookController extends CashierWebhookController
 {
@@ -51,21 +51,24 @@ class StripeWebhookController extends CashierWebhookController
             $sessionId = $session['id'];
             $reservationId = $metadata['reservation_id'] ?? null;
 
-            if (!$reservationId) {
+            if (! $reservationId) {
                 Log::warning('Stripe webhook: No reservation ID in metadata', ['session_id' => $sessionId]);
+
                 return $this->successMethod();
             }
 
             $reservation = Reservation::find($reservationId);
 
-            if (!$reservation) {
+            if (! $reservation) {
                 Log::error('Stripe webhook: Reservation not found', ['reservation_id' => $reservationId]);
+
                 return $this->successMethod();
             }
 
             // Skip if already paid to avoid duplicate processing
             if ($reservation->isPaid()) {
                 Log::info('Stripe webhook: Reservation already paid', ['reservation_id' => $reservationId]);
+
                 return $this->successMethod();
             }
 
@@ -100,22 +103,25 @@ class StripeWebhookController extends CashierWebhookController
             $sessionId = $session['id'];
             $userId = $metadata['user_id'] ?? null;
 
-            if (!$userId) {
+            if (! $userId) {
                 Log::warning('Stripe webhook: No user ID in subscription metadata', ['session_id' => $sessionId]);
+
                 return $this->successMethod();
             }
 
             $user = User::find($userId);
 
-            if (!$user) {
+            if (! $user) {
                 Log::error('Stripe webhook: User not found for subscription', ['user_id' => $userId]);
+
                 return $this->successMethod();
             }
 
             // Update user membership status (Cashier handles the subscription sync automatically)
             UpdateUserMembershipStatus::run($user);
 
-            \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
+            // Note: Credit allocation happens in customer.subscription.created webhook
+            // after Cashier has created the subscription in our database
 
             Log::info('Stripe webhook: Successfully processed subscription checkout', [
                 'user_id' => $userId,
@@ -151,15 +157,17 @@ class StripeWebhookController extends CashierWebhookController
 
             $reservationId = $metadata['reservation_id'] ?? null;
 
-            if (!$reservationId) {
+            if (! $reservationId) {
                 Log::warning('Stripe webhook: No reservation ID in payment failure metadata');
+
                 return $this->successMethod();
             }
 
             $reservation = Reservation::find($reservationId);
 
-            if (!$reservation) {
+            if (! $reservation) {
                 Log::error('Stripe webhook: Reservation not found for payment failure', ['reservation_id' => $reservationId]);
+
                 return $this->successMethod();
             }
 
@@ -199,7 +207,10 @@ class StripeWebhookController extends CashierWebhookController
                 // Update membership status since Cashier created the subscription
                 UpdateUserMembershipStatus::run($user);
 
-                Log::info('Stripe webhook: Updated membership status after subscription creation', [
+                // Allocate monthly credits now that subscription exists and role is assigned
+                \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
+
+                Log::info('Stripe webhook: Updated membership status and allocated credits after subscription creation', [
                     'user_id' => $user->id,
                     'subscription_id' => $subscription['id'],
                 ]);

@@ -24,7 +24,7 @@ class MembershipForm
                 Section::make('Become a Sustaining Member')
                     ->description('Support the Corvallis Music Collective with a monthly contribution!')
                     ->visible(function ($record) {
-                        return !$record->isSustainingMember() && !static::hasActiveOrCancelledSubscription($record);
+                        return ! $record->isSustainingMember() && ! static::hasActiveOrCancelledSubscription($record);
                     })
                     ->columns(3)
                     ->schema([
@@ -32,29 +32,29 @@ class MembershipForm
                             ->listWithLineBreaks()
                             ->bulleted()
                             ->state([
-                                "Free reservation hours every month (1 hour per $5 contributed)",
-                                "Recurring practice reservations"
+                                'Free reservation hours every month (1 hour per $5 contributed)',
+                                'Recurring practice reservations',
                             ]),
                         TextEntry::make('Equipment')
                             ->listWithLineBreaks()
                             ->bulleted()
                             ->state([
-                                "Free accessory rentals (cables, stands, etc.)",
-                                "Monthly equipment credits equal to your contribution"
+                                'Free accessory rentals (cables, stands, etc.)',
+                                'Monthly equipment credits equal to your contribution',
                             ]),
                         TextEntry::make('Community')
                             ->listWithLineBreaks()
                             ->bulleted()
                             ->state([
-                                "50% off admission to CMC events",
-                                "Support local music!"
+                                '50% off admission to CMC events',
+                                'Support local music!',
                             ]),
 
-                        Text::make('Sustaining memberships start at $10/month and can be changed or cancelled anytime.')->columnSpanFull()
+                        Text::make('Sustaining memberships start at $10/month and can be changed or cancelled anytime.')->columnSpanFull(),
 
                     ])
                     ->headerActions([
-                        CreateMembershipSubscriptionAction::make()
+                        CreateMembershipSubscriptionAction::make(),
                     ]),
 
                 // Active sustaining membership section
@@ -73,12 +73,15 @@ class MembershipForm
                                     try {
                                         $stripeSubscription = $subscription->asStripeSubscription();
                                         $nextBillingDate = \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_end)->format('n/j/Y');
+
                                         return sprintf('Next bill %s', $nextBillingDate);
                                     } catch (\Exception $e) {
                                         Log::error($e);
+
                                         return null;
                                     }
                                 }
+
                                 return null;
                             })
                             ->state(function ($record) {
@@ -97,7 +100,7 @@ class MembershipForm
                                         if ($hasFeesCovered) {
                                             // Calculate total cost including fees
                                             $totalAmount = collect($stripeSubscription->items->data)
-                                                ->sum(fn($item) => $item->price->unit_amount);
+                                                ->sum(fn ($item) => $item->price->unit_amount);
                                             $totalCost = \Brick\Money\Money::ofMinor($totalAmount, 'USD');
 
                                             return sprintf(
@@ -115,8 +118,9 @@ class MembershipForm
                                     } catch (\Exception $e) {
                                         Log::warning('Failed to retrieve subscription display info', [
                                             'subscription_id' => $subscription->id,
-                                            'error' => $e->getMessage()
+                                            'error' => $e->getMessage(),
                                         ]);
+
                                         return 'Amount unavailable';
                                     }
                                 }
@@ -129,32 +133,40 @@ class MembershipForm
                             ->iconColor('danger')
                             ->icon(function ($record) {
                                 $hasFeeCovered = count($record->subscription('default')->items) > 1;
+
                                 return $hasFeeCovered ? 'tabler-heart-dollar' : null;
                             }),
                         TextEntry::make('rehearsal_hours')
                             ->label('Rehearsal Hours')
                             ->helperText(function ($record) {
-                                $changeInfo = static::getBenefitChangeInfo($record);
+                                $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
 
-                                if ($changeInfo) {
-                                    $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
-                                    $nextBillingDate = 'N/A';
+                                if ($subscription) {
+                                    try {
+                                        $stripeSubscription = $subscription->asStripeSubscription();
+                                        $nextBillingDate = \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_end)->format('n/j/Y');
 
-                                    if ($subscription) {
-                                        try {
-                                            $stripeSubscription = $subscription->asStripeSubscription();
-                                            $nextBillingDate = \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_end)->format('n/j/Y');
-                                        } catch (\Exception $e) {
-                                            Log::error($e);
-                                            // Fall back to N/A
+                                        $changeInfo = static::getBenefitChangeInfo($record);
+
+                                        if ($changeInfo) {
+                                            // Show change in benefits
+                                            return sprintf(
+                                                'Changes to %d hours on %s',
+                                                $changeInfo['next_month'],
+                                                $nextBillingDate
+                                            );
                                         }
-                                    }
 
-                                    return sprintf(
-                                        '%d hours on %s',
-                                        $changeInfo['next_month'],
-                                        $nextBillingDate
-                                    );
+                                        // Show refresh date
+                                        return sprintf('Refreshes %s', $nextBillingDate);
+                                    } catch (\Exception $e) {
+                                        Log::error('Failed to get subscription billing date', [
+                                            'user_id' => $record->id,
+                                            'error' => $e->getMessage(),
+                                        ]);
+
+                                        return null;
+                                    }
                                 }
 
                                 return null;
@@ -162,6 +174,7 @@ class MembershipForm
                             ->state(function ($record) {
                                 $remaining = $record->getRemainingFreeHours();
                                 $total = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($record);
+
                                 return sprintf('%g / %g hours', $remaining, $total);
                             })
                             ->size('lg')
@@ -169,7 +182,7 @@ class MembershipForm
                         Flex::make([
                             OpenBillingPortalAction::make(),
                             ModifyMembershipAmountAction::make(),
-                        ])->columnSpanFull()
+                        ])->columnSpanFull(),
                     ]),
 
                 // Cancelled sustaining membership section
@@ -182,6 +195,7 @@ class MembershipForm
                                 $subscription->ends_at->format('F j, Y \a\t g:i A')
                             );
                         }
+
                         return 'Your contribution has been cancelled. You remain a member of the collective.';
                     })
                     ->columns(2)
@@ -205,6 +219,7 @@ class MembershipForm
                                         $subscription->ends_at->diffForHumans()
                                     );
                                 }
+
                                 return 'Contribution cancelled';
                             })
                             ->badge()
@@ -215,8 +230,10 @@ class MembershipForm
                                 $subscription = static::getActiveSubscription($record);
                                 if ($subscription && $subscription->ends_at) {
                                     $totalHours = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($record);
+
                                     return sprintf('You retain %d free hours/month until %s', $totalHours, $subscription->ends_at->format('M j, Y'));
                                 }
+
                                 return 'Benefits ended';
                             })
                             ->badge()
@@ -226,11 +243,13 @@ class MembershipForm
                             ->state(function ($record) {
                                 $remaining = $record->getRemainingFreeHours();
                                 $used = $record->getUsedFreeHoursThisMonth();
+
                                 return sprintf('%g hours (%g used)', $remaining, $used);
                             })
                             ->badge()
                             ->color(function ($record) {
                                 $remaining = $record->getRemainingFreeHours();
+
                                 return $remaining > 2 ? 'success' : ($remaining > 0 ? 'warning' : 'danger');
                             }),
                         TextEntry::make('resume_benefits')
@@ -240,7 +259,7 @@ class MembershipForm
                         Flex::make([
                             ResumeMembershipAction::make(),
                             OpenBillingPortalAction::make(),
-                        ])->columnSpanFull()
+                        ])->columnSpanFull(),
                     ]),
 
             ]);
@@ -252,7 +271,7 @@ class MembershipForm
     private static function getBenefitChangeInfo($record): ?array
     {
         $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
-        if (!$subscription) {
+        if (! $subscription) {
             return null;
         }
 
@@ -262,7 +281,9 @@ class MembershipForm
             $stripeSubscription = $subscription->asStripeSubscription();
             $firstItem = $stripeSubscription->items->data[0];
             $nextMonthAmount = $firstItem->price->unit_amount / 100;
-            $nextMonthHours = $nextMonthAmount >= 50 ? 6 : ($nextMonthAmount >= 25 ? 5 : 4);
+
+            // Use the proper calculation: 1 hour per $5 contributed
+            $nextMonthHours = \App\Actions\MemberBenefits\CalculateFreeHours::run($nextMonthAmount);
 
             if ($currentHours === $nextMonthHours) {
                 return null; // No change
@@ -271,10 +292,11 @@ class MembershipForm
             return [
                 'current' => $currentHours,
                 'next_month' => $nextMonthHours,
-                'is_increase' => $nextMonthHours > $currentHours
+                'is_increase' => $nextMonthHours > $currentHours,
             ];
         } catch (\Exception $e) {
             Log::error($e);
+
             return null;
         }
     }
@@ -293,6 +315,7 @@ class MembershipForm
     private static function isSubscriptionCancelled($record): bool
     {
         $subscription = static::getActiveSubscription($record);
+
         return $subscription && $subscription->ends_at !== null;
     }
 

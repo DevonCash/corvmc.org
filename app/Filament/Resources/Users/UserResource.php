@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Users;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
-use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Filament\Resources\Users\RelationManagers\BandsRelationManager;
 use App\Filament\Resources\Users\RelationManagers\CreditTransactionsRelationManager;
 use App\Filament\Resources\Users\RelationManagers\ProductionsRelationManager;
@@ -25,8 +24,8 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'tabler-user-cog';
-    protected static string|UnitEnum|null $navigationGroup = 'Admin';
 
+    protected static string|UnitEnum|null $navigationGroup = 'Admin';
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -64,6 +63,16 @@ class UserResource extends Resource
         return User::me()?->can('delete users') ?? null;
     }
 
+    public static function canForceDelete($record): bool
+    {
+        return User::me()?->can('delete users') ?? null;
+    }
+
+    public static function canRestore($record): bool
+    {
+        return User::me()?->can('delete users') ?? null;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return UserForm::configure($schema);
@@ -74,8 +83,8 @@ class UserResource extends Resource
         $table = UsersTable::configure($table);
 
         // Restrict table to current user if they don't have view users permission
-        if (!User::me()?->can('view users')) {
-            $table->modifyQueryUsing(fn($query) => $query->where('id', Auth::id()));
+        if (! User::me()?->can('view users')) {
+            $table->modifyQueryUsing(fn ($query) => $query->where('id', Auth::id()));
         }
 
         return $table;

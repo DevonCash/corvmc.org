@@ -7,11 +7,15 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
-use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 use STS\FilamentImpersonate\Actions\Impersonate;
@@ -28,7 +32,7 @@ class UsersTable
 
                 TextColumn::make('email')
                     ->label('Email address')
-                    ->icon(fn($record) => $record?->email_verified_at ? 'tabler-circle-check' : null)
+                    ->icon(fn ($record) => $record?->email_verified_at ? 'tabler-circle-check' : null)
                     ->iconColor('success')
                     ->iconPosition('after')
                     ->searchable()
@@ -104,19 +108,24 @@ class UsersTable
                                 ->where('show_on_about_page', true);
                         }
                     }),
+
+                TrashedFilter::make(),
             ])
             ->recordActions([
 
                 ViewAction::make(),
                 EditAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make()
+                    ->visible(fn ($record) => $record->trashed()),
                 Action::make('resend_invitation')
                     ->label('Resend Invitation')
                     ->icon('tabler-send')
                     ->color('info')
-                    ->visible(fn($record) => $record->email_verified_at === null && $record->name === 'Invited User')
+                    ->visible(fn ($record) => $record->email_verified_at === null && $record->name === 'Invited User')
                     ->requiresConfirmation()
                     ->modalHeading('Resend Invitation')
-                    ->modalDescription(fn($record) => "Resend invitation email to {$record->email}?")
+                    ->modalDescription(fn ($record) => "Resend invitation email to {$record->email}?")
                     ->action(function ($record) {
 
                         if (\App\Actions\Invitations\ResendInvitation::run($record->email)) {
@@ -142,6 +151,8 @@ class UsersTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    RestoreBulkAction::make(),
+                    ForceDeleteBulkAction::make(),
                     BulkAction::make('cancel_pending_invitations')
                         ->label('Cancel Pending Invitations')
                         ->icon('tabler-circle-x')
