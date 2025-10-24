@@ -36,16 +36,16 @@ class ReservationReminderNotification extends Notification implements ShouldQueu
             ->greeting('Hello!')
             ->line('This is a friendly reminder about your upcoming practice space reservation.')
             ->line('**Reservation Details:**')
-            ->line('Time: ' . $this->reservation->time_range)
-            ->line('Duration: ' . number_format($this->reservation->duration, 1) . ' hours')
-            ->line('Cost: ' . $this->reservation->cost_display);
+            ->line('Time: '.$this->reservation->time_range)
+            ->line('Duration: '.number_format($this->reservation->duration, 1).' hours')
+            ->line('Cost: '.$this->reservation->cost_display);
 
-        if ($this->reservation->isUnpaid() && $this->reservation->cost > 0) {
+        if ($this->reservation->isUnpaid() && $this->reservation->cost->isPositive()) {
             $message->line('**Payment Due:** Please bring payment or pay online before your session.');
         }
 
         if ($this->reservation->notes) {
-            $message->line('**Notes:** ' . $this->reservation->notes);
+            $message->line('**Notes:** '.$this->reservation->notes);
         }
 
         return $message
@@ -63,12 +63,12 @@ class ReservationReminderNotification extends Notification implements ShouldQueu
     {
         return [
             'title' => 'Practice Space Reminder',
-            'body' => 'Your practice space reservation is tomorrow at ' . $this->reservation->reserved_at->format('g:i A') . '.',
+            'body' => 'Your practice space reservation is tomorrow at '.$this->reservation->reserved_at->format('g:i A').'.',
             'icon' => 'tabler-clock',
             'reservation_id' => $this->reservation->id,
             'reserved_at' => $this->reservation->reserved_at,
             'duration' => $this->reservation->duration,
-            'cost' => $this->reservation->cost,
+            'cost' => $this->reservation->cost->getMinorAmount()->toInt(),
         ];
     }
 
@@ -81,7 +81,7 @@ class ReservationReminderNotification extends Notification implements ShouldQueu
             'reservation_id' => $this->reservation->id,
             'reserved_at' => $this->reservation->reserved_at,
             'duration' => $this->reservation->duration,
-            'cost' => $this->reservation->cost,
+            'cost' => $this->reservation->cost->getMinorAmount()->toInt(),
         ];
     }
 }
