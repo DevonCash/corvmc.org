@@ -14,6 +14,9 @@ use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Support\Enums\Alignment;
+use Filament\Tables\Columns\Layout\Split;
+use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -25,12 +28,27 @@ class ReservationsTable
     {
         return $table
             ->columns([
-                ReservationColumns::timeRange(),
-                ReservationColumns::duration(),
-                ReservationColumns::statusDisplay(),
-                ReservationColumns::costDisplay(),
-                ReservationColumns::createdAt(),
-                ReservationColumns::updatedAt(),
+
+                Stack::make([
+                    Split::make([
+                        ReservationColumns::timeRange(),
+                        Stack::make([
+                            ReservationColumns::statusDisplay()->grow(false),
+                            ReservationColumns::costDisplay()->grow(false),
+                        ])->alignment(Alignment::End)->space(2)
+                    ])
+                    // Split::make([
+                    //     // ReservationColumns::duration()
+                    //     //     ->visibleFrom('md'),
+
+                    // ])->from('md'),
+                ]),
+            ])
+            ->contentGrid([
+                'default' => 1,
+                'sm' => 1,
+                'md' => 2,
+                'xl' => 3,
             ])
             ->defaultSort('reserved_at', 'asc')
             ->filters([
@@ -83,7 +101,7 @@ class ReservationsTable
                     ->label('Used Free Hours')
                     ->query(fn(Builder $query): Builder => $query->where('free_hours_used', '>', 0)),
             ])
-
+            ->recordActionsAlignment('end')
             ->recordActions([
                 PayStripeAction::make(),
 
@@ -92,7 +110,7 @@ class ReservationsTable
                     MarkCompedAction::make(),
                     CancelAction::make(),
                     ViewAction::make(),
-                ])
+                ])->extraDropdownAttributes(['class' => 'ml-auto'])
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

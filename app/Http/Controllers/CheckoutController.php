@@ -29,7 +29,7 @@ class CheckoutController extends Controller
                 ->danger()
                 ->send();
 
-            return redirect()->route('filament.member.resources.users.index');
+            return redirect()->route('filament.member.pages.dashboard');
         }
 
         $user = User::find($userId);
@@ -40,7 +40,7 @@ class CheckoutController extends Controller
                 ->danger()
                 ->send();
 
-            return redirect()->route('filament.member.resources.users.index');
+            return redirect()->route('filament.member.pages.dashboard');
         }
 
         // Initialize variables for use outside try block
@@ -116,7 +116,7 @@ class CheckoutController extends Controller
             }
         }
 
-        return redirect()->route('filament.member.resources.users.index');
+        return redirect()->route('filament.member.pages.dashboard');
     }
 
     /**
@@ -204,8 +204,8 @@ class CheckoutController extends Controller
     {
         return match ($checkoutType) {
             'practice_space_reservation' => $this->getReservationRedirect($metadata),
-            'sliding_scale_membership' => redirect()->route('filament.member.resources.users.edit', ['record' => $user->id]),
-            default => redirect()->route('filament.member.resources.users.edit', ['record' => $user->id]),
+            'sliding_scale_membership' => redirect()->route('filament.member.pages.membership'),
+            default => redirect()->route('filament.member.pages.profile'),
         };
     }
 
@@ -216,8 +216,8 @@ class CheckoutController extends Controller
     {
         return match ($checkoutType) {
             'practice_space_reservation' => redirect()->route('filament.member.resources.reservations.index'),
-            'sliding_scale_membership' => redirect()->route('filament.member.resources.users.edit', ['record' => $user->id]),
-            default => redirect()->route('filament.member.resources.users.edit', ['record' => $user->id]),
+            'sliding_scale_membership' => redirect()->route('filament.member.pages.membership'),
+            default => redirect()->route('filament.member.pages.profile'),
         };
     }
 

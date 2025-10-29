@@ -2,22 +2,19 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Components\ActivitySidebar;
+use App\Filament\Widgets\MyBandsWidget;
+use App\Filament\Widgets\QuickActionsWidget;
+use App\Filament\Widgets\TodayReservationsWidget;
+use App\Filament\Widgets\UpcomingEventsWidget;
+use App\Filament\Widgets\UserSummaryWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\View\PanelsRenderHook;
-use App\Filament\Widgets\ActivityFeedWidget;
-use App\Filament\Widgets\MyBandsWidget;
-use App\Filament\Widgets\TodayReservationsWidget;
-use App\Filament\Widgets\UpcomingEventsWidget;
-use App\Filament\Widgets\QuickActionsWidget;
-use App\Filament\Widgets\UserSummaryWidget;
-use Filament\Actions\Action;
-use Filament\Pages\Dashboard;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -128,7 +125,6 @@ class MemberPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->widgets([
                 UserSummaryWidget::class,
-                ActivityFeedWidget::class,
                 QuickActionsWidget::class,
                 UpcomingEventsWidget::class,
                 MyBandsWidget::class,
@@ -151,25 +147,16 @@ class MemberPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->renderHook(
-                PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
-                fn(): string => view('filament.components.dark-mode-toggle')->render()
-            )
-            ->renderHook(
-                PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
-                fn(): string => view('livewire.feedback-button-wrapper')->render()
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn (): string => view('filament.components.dark-mode-toggle')->render()
             )
             ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,
-                fn(): string => view('filament.components.activity-toggle-button')->render()
-            )
-
-            ->renderHook(
-                PanelsRenderHook::BODY_END,
-                fn(): string => ActivitySidebar::render()
+                fn (): string => view('livewire.feedback-button-wrapper')->render()
             )
             ->renderHook(
                 PanelsRenderHook::SIDEBAR_FOOTER,
-                fn(): string => view('filament.components.sidebar-footer')->render()
+                fn (): string => view('filament.components.sidebar-footer')->render()
             )
             ->viteTheme('resources/css/app.css');
     }

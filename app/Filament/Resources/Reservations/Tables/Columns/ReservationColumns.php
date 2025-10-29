@@ -106,7 +106,7 @@ class ReservationColumns
     {
         return TextColumn::make('cost')
             ->label('Cost')
-            ->money(divideBy: 100, locale: 'en_US')
+            ->money('USD', divideBy: 100, locale: 'en_US')
             ->sortable(['cost']);
     }
 

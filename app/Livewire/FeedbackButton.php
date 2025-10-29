@@ -16,10 +16,10 @@ use Filament\Schemas\Components\Grid;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-class FeedbackButton extends Component implements HasForms, HasActions
+class FeedbackButton extends Component implements HasActions, HasForms
 {
-    use InteractsWithForms;
     use InteractsWithActions;
+    use InteractsWithForms;
 
     public string $pageUrl = '';
 
@@ -27,13 +27,13 @@ class FeedbackButton extends Component implements HasForms, HasActions
     {
         return Action::make('feedback')
             ->label('Feedback')
-            ->icon('tabler-message-2')
+            ->icon('tabler-message-2-question')
             ->color('gray')
-            ->size('sm')
             ->tooltip('Submit Feedback')
             ->modalHeading('Submit Feedback')
             ->modalDescription('Help us improve the site! Submit bug reports, feature requests, or general suggestions.')
             ->modalWidth('2xl')
+            ->iconButton()
             ->schema([
                 TextInput::make('title')
                     ->label('Title')

@@ -28,7 +28,7 @@ class QuickActionsWidget extends Widget
 
         // Always available actions
         $actions[] = [
-            'label' => 'Book Practice Space',
+            'label' => 'Practice Space',
             'description' => 'Reserve a room for rehearsal',
             'icon' => 'tabler-calendar-plus',
             'color' => 'primary',
@@ -38,7 +38,7 @@ class QuickActionsWidget extends Widget
         // Band-related actions
         if ($user->bands->count() === 0) {
             $actions[] = [
-                'label' => 'Create New Band',
+                'label' => 'New Band',
                 'description' => 'Start or join a musical group',
                 'icon' => 'tabler-users-plus',
                 'color' => 'success',
@@ -46,7 +46,7 @@ class QuickActionsWidget extends Widget
             ];
         } else {
             $actions[] = [
-                'label' => 'Manage My Bands',
+                'label' => 'My Bands',
                 'description' => 'Edit band profiles and members',
                 'icon' => 'tabler-users',
                 'color' => 'info',
@@ -57,7 +57,7 @@ class QuickActionsWidget extends Widget
 
         // Community actions
         $actions[] = [
-            'label' => 'Browse Members',
+            'label' => 'Members',
             'description' => 'Connect with other musicians',
             'icon' => 'tabler-users-group',
             'color' => 'gray',
@@ -67,7 +67,7 @@ class QuickActionsWidget extends Widget
         // Membership action for non-sustaining members
         if (!$user->isSustainingMember()) {
             $actions[] = [
-                'label' => 'Become a Sustaining Member',
+                'label' => 'Sustaining Member',
                 'description' => 'Support the collective and get benefits',
                 'icon' => 'tabler-heart',
                 'color' => 'warning',
