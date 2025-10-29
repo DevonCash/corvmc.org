@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ActivityLog;
 
 use App\Filament\Resources\ActivityLog\Pages;
 use App\Filament\Resources\ActivityLog\Tables\ActivityLogTable;
+use App\Filament\Resources\ActivityLog\Widgets;
 use App\Models\User;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +39,13 @@ class ActivityLogResource extends Resource
     public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
     {
         return ActivityLogTable::make($table);
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            Widgets\ActivityStatsWidget::class,
+        ];
     }
 
     public static function getPages(): array
