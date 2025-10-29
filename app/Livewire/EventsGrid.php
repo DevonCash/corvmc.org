@@ -12,7 +12,6 @@ class EventsGrid extends SearchableGrid
         'search' => ['except' => ''],
         'filters' => ['except' => []],
         'scope' => ['except' => 'upcoming'],
-        'page' => ['except' => 1],
     ];
 
     protected function getModelClass(): string

@@ -61,7 +61,6 @@ abstract class SearchableGrid extends Component
     protected $queryString = [
         'search' => ['except' => ''],
         'filters' => ['except' => []],
-        'page' => ['except' => 1],
     ];
 
     public function mount()
