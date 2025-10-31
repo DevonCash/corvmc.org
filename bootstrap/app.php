@@ -32,6 +32,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Custom rendering for Filament
         $exceptions->render(function (Throwable $e, $request) {
             if ($request->header('X-Livewire')) {
+                // Report the exception so it gets logged and sent to Sentry
+                try {
+                    report($e);
+                } catch (Throwable $reportException) {
+                    // Silently fail if reporting fails to prevent infinite loop
+                }
 
                 $message = app()->environment('production')
                     ? 'Something went wrong. Our team has been notified.'

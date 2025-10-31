@@ -265,7 +265,7 @@
             <div class="card-body">
                 <h2 class="card-title text-2xl justify-center mb-6">Volunteer Interest Form</h2>
 
-                <form class="space-y-4">
+                <form class="space-y-4" onsubmit="event.preventDefault(); alert('Thank you for your interest! Please contact us at volunteer@corvallismusiccollective.org to get started.')">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="form-control">
                             <label class="label">

@@ -1,13 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Models\User;
 use App\Models\Band;
-use App\Models\Production;
 use App\Models\MemberProfile;
+use App\Models\Production;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
+use Illuminate\Support\Facades\Route;
 
 // Public website routes
 Route::get('/', function () {
@@ -27,7 +25,7 @@ Route::get('/', function () {
             ->get()
             ->sum(function ($reservation) {
                 return $reservation->duration ?? 0;
-            })
+            }),
     ];
 
     // Get major sponsors for display
@@ -69,19 +67,19 @@ Route::get('/events/{production}', function (Production $production) {
     abort_if($production->published_at > now() || $production->published_at === null, 404);
 
     return view('public.events.show', compact('production'));
-})->name('events.show');
+})->where('production', '[0-9]+')->name('events.show');
 
 Route::get('/show-tonight', function () {
     // Find next published production happening today
     $tonightShow = Production::publishedToday()->first();
 
     // If no show tonight, get next upcoming published show
-    if (!$tonightShow) {
+    if (! $tonightShow) {
         $tonightShow = Production::publishedUpcoming()->first();
     }
 
     // If still no show found, redirect to events listing with message
-    if (!$tonightShow) {
+    if (! $tonightShow) {
         return redirect()->route('events.index')
             ->with('info', 'No upcoming shows found. Check back soon for exciting events!');
     }
@@ -91,7 +89,7 @@ Route::get('/show-tonight', function () {
 })->name('show-tonight');
 
 Route::get('/members', [\App\Http\Controllers\PublicMemberController::class, 'index'])->name('members.index');
-Route::get('/members/{memberProfile}', [\App\Http\Controllers\PublicMemberController::class, 'show'])->name('members.show');
+Route::get('/members/{memberProfile}', [\App\Http\Controllers\PublicMemberController::class, 'show'])->where('memberProfile', '[0-9]+')->name('members.show');
 
 Route::get('/bands', function () {
     return view('public.bands.index');
@@ -103,7 +101,7 @@ Route::get('/bands/{band}', function (Band $band) {
     $band->load(['members', 'tags', 'media']);
 
     return view('public.bands.show', compact('band'));
-})->name('bands.show');
+})->where('band', '[a-z0-9\-]+')->name('bands.show');
 
 Route::get('/programs', function () {
     return view('public.programs');
@@ -139,7 +137,7 @@ Route::get('/about/bylaws', function () {
 
 // Equipment Library routes (public gear catalog)
 Route::get('/equipment', [\App\Http\Controllers\PublicEquipmentController::class, 'index'])->name('equipment.index');
-Route::get('/equipment/{equipment}', [\App\Http\Controllers\PublicEquipmentController::class, 'show'])->name('equipment.show');
+Route::get('/equipment/{equipment}', [\App\Http\Controllers\PublicEquipmentController::class, 'show'])->where('equipment', '[0-9]+')->name('equipment.show');
 
 Route::get('/privacy-policy', function () {
     return view('public.privacy-policy');
@@ -167,7 +165,7 @@ if (app()->environment('local', 'development')) {
     Route::get('/email-preview/password-reset', function () {
         $user = new User([
             'name' => 'John Doe',
-            'email' => 'john@example.com'
+            'email' => 'john@example.com',
         ]);
 
         $notification = new \App\Notifications\PasswordResetNotification('sample-token-12345');
