@@ -13,7 +13,7 @@ This is a Laravel 12 application for the Corvallis Music Collective, a nonprofit
 - **Spatie ecosystem**: permissions, tags, media library, model flags, periods, data DTOs
 - **Pest testing** with SQLite in-memory database
 - **Vite + TailwindCSS v4** with DaisyUI components
-- **Stripe** (Laravel Cashier for reservations) + **Zeffy** (membership/donation webhooks pending)
+- **Stripe** (Laravel Cashier for reservation payments)
 
 ## Development Commands
 
@@ -128,9 +128,8 @@ The `Reservation` model uses STI with a `type` column:
 
 ### Membership System
 - **Roles**: member, sustaining member, staff, admin (via `spatie/laravel-permission`)
-- **Sustaining members**: Users with $10+ monthly donations or manually assigned role
+- **Sustaining members**: Manually assigned role by administrators
 - **Benefits**: 4 free practice hours/month with credits system
-- **Detection**: Pending Zeffy webhook integration
 
 ### Practice Space Reservations
 - **Pricing**: $15/hour base rate

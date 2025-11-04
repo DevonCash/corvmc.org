@@ -170,32 +170,27 @@ This document provides a comprehensive overview of all systems within the Corval
 
 ### 6. Financial Management & Subscription System
 
-**Status: ✅ Complete with Webhook Integration**
+**Status: ✅ Complete**
 
-**Overview:** Automated financial tracking with third-party payment processor integration.
+**Overview:** Financial tracking and membership management system.
 
 **Key Features:**
 
-- Transaction tracking via Zeffy/Zapier webhook integration
-- Automatic sustaining membership determination ($10+ monthly donations)
+- Transaction tracking for payment records
+- Manual sustaining membership assignment by administrators
 - Free practice hours allocation for sustaining members
-- Donation acknowledgment notification system
 - Revenue tracking and membership statistics
 
 **Management Tools:**
 
-- Webhook endpoint for automatic transaction processing
-- Manual membership status override capabilities
-- Donation tracking and thank you automation
+- Manual membership status management capabilities
 - Monthly statistics for revenue and membership growth
 - Free hours calculation and balance tracking
 
 **Technical Components:**
 
-- Service: `UserSubscriptionService` for membership logic
 - Model: `Transaction` for financial record keeping
-- Webhook: `ZeffyWebhookController` for payment processing
-- Integration: Automatic role assignment based on donation levels
+- Integration: Manual role assignment for sustaining members
 
 ---
 

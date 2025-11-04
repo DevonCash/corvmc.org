@@ -108,7 +108,7 @@
 
 **Acceptance Criteria:**
 
-- System can track transactions from external platforms (Zeffy, etc.) via API integration
+- System can track transactions from external platforms via API integration
 - External donations count toward sustaining member status calculations
 - Donation amounts from external platforms are included in monthly totals
 - External transaction data is synchronized regularly and automatically

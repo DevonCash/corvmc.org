@@ -1,4 +1,3 @@
-
 # Corvallis Music Collective
 
 This is a site for the Corvallis Music Collective, a nonprofit organization operating out of Corvallis, Oregon.
@@ -7,7 +6,7 @@ This is a site for the Corvallis Music Collective, a nonprofit organization oper
 
 Features are listed in order of priority. Each should be implemented in an isolated module using as many pre-existing tools as possible. Moderation and access to each feature should be handled on an individual basis to allow volunteers to take on a subset of features for moderation.
 
-### Membership (IMPLEMENTED - Zeffy Integration Pending)
+### Membership (FULLY IMPLEMENTED)
 
 **Current Implementation Status:**
 
@@ -23,24 +22,19 @@ Features are listed in order of priority. Each should be implemented in an isola
 - [x] Basic member profile management
 - [x] Admin interface for user management
 
-**Phase 2 (Mostly Implemented):**
+**Phase 2 (Completed):**
 
 - [x] Members automatically created on registration
 - [x] Sustaining member role system with enhanced permissions
 - [x] Staff roles with granular access to moderation tools
 - [x] Transaction tracking infrastructure
-- ⏳ Automated sustaining member detection based on $10+ monthly donations
-
-**Pending Integration:**
-
-- ⏳ Zeffy webhook integration for payment processing
-- ⏳ Automated role assignment based on payment status
+- [x] Manual sustaining member role assignment by administrators
 
 **Technical Implementation:**
 
 - **Authentication**: Laravel Filament authentication with custom member panel
 - **Roles**: Comprehensive role system (member, sustaining member, staff, admin)
-- **Payments**: Transaction model ready for Zeffy webhook integration
+- **Payments**: Transaction model for payment tracking
 - **Admin Interface**: Full user management via Filament resources
 
 ### Productions (FULLY IMPLEMENTED - Minor Enhancements Pending)

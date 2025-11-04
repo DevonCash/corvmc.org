@@ -208,7 +208,7 @@
 
 **Acceptance Criteria:**
 
-- System can integrate with external payment APIs (Zeffy, PayPal, etc.) for transaction tracking
+- System can integrate with external payment APIs for transaction tracking
 - External transactions are imported and categorized appropriately
 - Transaction data from external platforms is synchronized on a regular schedule
 - External payment data contributes to overall revenue reporting and analytics
