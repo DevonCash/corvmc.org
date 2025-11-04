@@ -188,6 +188,35 @@ Performance indexes on:
 - Production `start_time`, `published_at`, `status`
 - User `email` (unique)
 
+### Time Handling
+**App Timezone**: `America/Los_Angeles` (PST/PDT)  
+**Database**: PostgreSQL stores timestamps in UTC internally  
+**Model Casts**: Automatically convert to/from app timezone
+
+**CRITICAL Best Practices:**
+
+✅ **DO:**
+- Trust model casts - `$record->reserved_at` is already a Carbon instance
+- Check instance type before parsing:
+  ```php
+  $reservedAt = $data['reserved_at'] instanceof Carbon
+      ? $data['reserved_at']
+      : Carbon::parse($data['reserved_at'], config('app.timezone'));
+  ```
+- Use `now()` and `today()` helpers (automatically use app timezone)
+- Specify timezone when creating from strings:
+  ```php
+  Carbon::parse('2024-10-11 14:00', config('app.timezone'));
+  ```
+
+❌ **DON'T:**
+- Re-parse Carbon instances: `Carbon::parse($record->reserved_at)` is wrong
+- Create datetimes without timezone: `Carbon::parse('2024-10-11 14:00')` uses UTC!
+- Use `toDateString()` then re-parse (loses time and timezone info)
+
+**Historical Context:**  
+A timezone migration was run that added 8 hours to all existing timestamps when the app switched from UTC to `America/Los_Angeles`. All datetime model attributes are properly cast and handle PST/PDT automatically.
+
 ## Testing Patterns
 
 ### Test Organization
