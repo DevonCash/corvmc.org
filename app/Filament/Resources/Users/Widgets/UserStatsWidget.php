@@ -10,25 +10,13 @@ class UserStatsWidget extends BaseWidget
 {
     protected function getStats(): array
     {
-        $totalMembers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['member', 'sustaining member', 'staff', 'admin']);
-        })->count();
+        $totalUsers = User::count();
 
         $sustainingMembers = User::role('sustaining member')->count();
 
-        $regularMembers = User::role('member')
-            ->whereDoesntHave('roles', function ($query) {
-                $query->whereIn('name', ['sustaining member', 'staff', 'admin']);
-            })
-            ->count();
-
-        $staffAndAdmins = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['staff', 'admin']);
-        })->count();
-
         return [
-            Stat::make('Total Members', $totalMembers)
-                ->description('All active users')
+            Stat::make('Total Members', $totalUsers)
+                ->description('All Members')
                 ->descriptionIcon('tabler-users')
                 ->color('primary'),
 
@@ -36,16 +24,6 @@ class UserStatsWidget extends BaseWidget
                 ->description('Monthly supporters')
                 ->descriptionIcon('tabler-user-heart')
                 ->color('success'),
-
-            Stat::make('Regular Members', $regularMembers)
-                ->description('Standard membership')
-                ->descriptionIcon('tabler-user')
-                ->color('info'),
-
-            Stat::make('Staff & Admins', $staffAndAdmins)
-                ->description('Management team')
-                ->descriptionIcon('tabler-user-cog')
-                ->color('warning'),
         ];
     }
 

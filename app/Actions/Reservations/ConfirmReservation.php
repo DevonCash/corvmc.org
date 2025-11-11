@@ -7,6 +7,7 @@ use App\Concerns\AsFilamentAction;
 use App\Enums\CreditType;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
+use App\Models\User;
 use App\Notifications\ReservationConfirmedNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -32,8 +33,8 @@ class ConfirmReservation
         $record = $args[0] ?? null;
 
         return $record instanceof RehearsalReservation &&
-               $record->status === 'pending' &&
-               Auth::user()?->can('manage reservations');
+            $record->status === 'pending' &&
+            User::me()?->can('manage reservations');
     }
 
     /**
