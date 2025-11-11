@@ -2,14 +2,11 @@
 
 namespace App\Filament\Resources\Reservations\Tables;
 
+use App\Actions\Payments\MarkReservationAsComped;
+use App\Actions\Payments\MarkReservationAsPaid;
+use App\Actions\Reservations\CancelReservation;
 use App\Actions\Reservations\ConfirmReservation;
-use App\Filament\Resources\Reservations\Actions\BulkCancelAction;
-use App\Filament\Resources\Reservations\Actions\CancelAction;
-use App\Filament\Resources\Reservations\Actions\MarkCompedAction;
-use App\Filament\Resources\Reservations\Actions\MarkCompedBulkAction;
-use App\Filament\Resources\Reservations\Actions\MarkPaidAction;
-use App\Filament\Resources\Reservations\Actions\MarkPaidBulkAction;
-use App\Filament\Resources\Reservations\Actions\PayStripeAction;
+use App\Actions\Reservations\CreateCheckoutSession;
 use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -105,20 +102,20 @@ class ReservationsTable
             ->recordActionsAlignment('end')
             ->recordActions([
                 ConfirmReservation::filamentAction(),
-                PayStripeAction::make(),
+                CreateCheckoutSession::filamentAction(),
 
                 ActionGroup::make([
-                    MarkPaidAction::make(),
-                    MarkCompedAction::make(),
-                    CancelAction::make(),
+                    MarkReservationAsPaid::filamentAction(),
+                    MarkReservationAsComped::filamentAction(),
+                    CancelReservation::filamentAction(),
                     ViewAction::make(),
                 ])->extraDropdownAttributes(['class' => 'ml-auto']),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    MarkPaidBulkAction::make(),
-                    MarkCompedBulkAction::make(),
-                    BulkCancelAction::make(),
+                    MarkReservationAsPaid::filamentBulkAction(),
+                    MarkReservationAsComped::filamentBulkAction(),
+                    CancelReservation::filamentBulkAction(),
                 ]),
             ])
             ->emptyStateHeading('No reservations found')

@@ -2,13 +2,35 @@
 
 namespace App\Actions\Reservations;
 
-use App\Models\Reservation;
+use App\Concerns\AsFilamentAction;
 use App\Models\RehearsalReservation;
+use App\Models\Reservation;
+use App\Models\User;
+use Filament\Actions\Action;
+use Illuminate\Support\Facades\Auth;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class CreateCheckoutSession
 {
-    use AsAction;
+    use AsAction, AsFilamentAction;
+
+    protected static ?string $actionLabel = 'Pay Online';
+
+    protected static ?string $actionIcon = 'tabler-credit-card';
+
+    protected static string $actionColor = 'success';
+
+    protected static string $actionSuccessMessage = 'Redirecting to Stripe checkout...';
+
+    protected static function isActionVisible(...$args): bool
+    {
+        $record = $args[0] ?? null;
+
+        return $record instanceof RehearsalReservation &&
+            $record->cost->isPositive() &&
+            $record->isUnpaid() &&
+            ($record->reservable_id === Auth::id() || User::me()->can('manage reservations'));
+    }
 
     /**
      * Create a Stripe checkout session for a reservation payment.
@@ -20,13 +42,13 @@ class CreateCheckoutSession
         $user = $reservation->user;
 
         // Ensure user has a Stripe customer ID
-        if (!$user->hasStripeId()) {
+        if (! $user->hasStripeId()) {
             $user->createAsStripeCustomer();
         }
 
         $priceId = config('services.stripe.practice_space_price_id');
 
-        if (!$priceId) {
+        if (! $priceId) {
             throw new \Exception('Practice space price not configured. Run: php artisan practice-space:create-price');
         }
 
@@ -42,8 +64,8 @@ class CreateCheckoutSession
         $checkout = $user->checkout([
             $priceId => $paidBlocks,
         ], [
-            'success_url' => route('checkout.success') . '?session_id={CHECKOUT_SESSION_ID}&user_id=' . $reservation->getResponsibleUser()->id,
-            'cancel_url' => route('checkout.cancel') . '?user_id=' . $reservation->getResponsibleUser()->id . '&type=practice_space_reservation',
+            'success_url' => route('checkout.success').'?session_id={CHECKOUT_SESSION_ID}&user_id='.$reservation->getResponsibleUser()->id,
+            'cancel_url' => route('checkout.cancel').'?user_id='.$reservation->getResponsibleUser()->id.'&type=practice_space_reservation',
             'metadata' => [
                 'reservation_id' => $reservation->id,
                 'user_id' => $user->id,
@@ -53,5 +75,22 @@ class CreateCheckoutSession
         ]);
 
         return $checkout;
+    }
+
+    public static function filamentAction(): Action
+    {
+        return Action::make('pay_stripe')
+            ->label('Pay Online')
+            ->icon('tabler-credit-card')
+            ->color('success')
+            ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation &&
+                $record->cost->isPositive() &&
+                $record->isUnpaid() &&
+                ($record->reservable_id === Auth::id() || User::me()->can('manage reservations')))
+            ->action(function (Reservation $record) {
+                $session = static::run($record);
+
+                return redirect($session->url);
+            });
     }
 }

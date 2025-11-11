@@ -2,13 +2,12 @@
 
 namespace App\Filament\Resources\Reservations\Pages;
 
+use App\Actions\Reservations\CreateCheckoutSession;
 use App\Filament\Resources\Reservations\ReservationResource;
-use Filament\Actions\EditAction;
 use Filament\Actions\Action;
+use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
-use App\Filament\Resources\Reservations\Actions\PayStripeAction;
 
 class ViewReservation extends ViewRecord
 {
@@ -28,10 +27,10 @@ class ViewReservation extends ViewRecord
         // Add payment action if reservation requires payment and user owns it or has permission
         if ($reservation instanceof \App\Models\RehearsalReservation &&
             $reservation->cost->isPositive() &&
-            !$reservation->isPaid() &&
+            ! $reservation->isPaid() &&
             ($reservation->reservable_id === $user->id || $user->can('manage reservations'))) {
 
-            $actions[] = PayStripeAction::make();
+            $actions[] = CreateCheckoutSession::filamentAction();
         }
 
         return $actions;

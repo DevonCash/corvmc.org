@@ -9,7 +9,7 @@ use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Notifications\ReservationConfirmedNotification;
-use Illuminate\Support\Facades\Auth;
+use Filament\Actions\Action;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -17,25 +17,6 @@ class ConfirmReservation
 {
     use AsAction;
     use AsFilamentAction;
-
-    protected static ?string $actionLabel = 'Confirm';
-
-    protected static ?string $actionIcon = 'tabler-check';
-
-    protected static string $actionColor = 'success';
-
-    protected static bool $actionConfirm = true;
-
-    protected static string $actionSuccessMessage = 'Reservation confirmed and user notified';
-
-    protected static function isActionVisible(...$args): bool
-    {
-        $record = $args[0] ?? null;
-
-        return $record instanceof RehearsalReservation &&
-            $record->status === 'pending' &&
-            User::me()?->can('manage reservations');
-    }
 
     /**
      * Confirm a pending reservation.
@@ -97,5 +78,25 @@ class ConfirmReservation
 
             return $reservation;
         });
+    }
+
+    public static function filamentAction(): Action
+    {
+        return Action::make('confirm')
+            ->label('Confirm')
+            ->icon('tabler-check')
+            ->color('success')
+            ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation &&
+                $record->status === 'pending' &&
+                User::me()?->can('manage reservations'))
+            ->requiresConfirmation()
+            ->action(function (Reservation $record) {
+                static::run($record);
+
+                \Filament\Notifications\Notification::make()
+                    ->title('Reservation confirmed and user notified')
+                    ->success()
+                    ->send();
+            });
     }
 }

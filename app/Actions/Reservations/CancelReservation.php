@@ -10,30 +10,35 @@ use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Notifications\ReservationCancelledNotification;
+use Filament\Actions\Action;
+use Illuminate\Database\Eloquent\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class CancelReservation
 {
     use AsAction, AsFilamentAction;
 
-
     protected static ?string $actionLabel = 'Cancel';
 
-    protected static ?string $actionIcon = 'tabler-x';
+    protected static ?string $actionIcon = 'tabler-calendar-x';
 
     protected static string $actionColor = 'danger';
 
     protected static bool $actionConfirm = true;
 
-    protected static string $actionSuccessMessage = 'Reservation cancelled and user notified';
+    protected static string $actionSuccessMessage = 'Reservation cancelled';
+
     protected static function isActionVisible(...$args): bool
     {
         $record = $args[0] ?? null;
 
-        return $record instanceof RehearsalReservation &&
-            $record->status !== 'cancelled' &&
-            $record->status !== 'completed' &&
-            User::me()->can('manage reservations');
+        if (! $record instanceof RehearsalReservation) {
+            return false;
+        }
+
+        // Allow cancellation if user is the owner or has permission
+        return ($record->reservable_id === User::me()?->id) ||
+            User::me()?->can('manage reservations');
     }
 
     /**
@@ -43,7 +48,7 @@ class CancelReservation
     {
         $reservation->update([
             'status' => 'cancelled',
-            'notes' => $reservation->notes . ($reason ? "\nCancellation reason: " . $reason : ''),
+            'notes' => $reservation->notes.($reason ? "\nCancellation reason: ".$reason : ''),
         ]);
 
         // Refund credits if this was a rehearsal reservation with free hours used
@@ -83,5 +88,41 @@ class CancelReservation
         SyncReservationToGoogleCalendar::run($reservation, 'delete');
 
         return $reservation;
+    }
+
+    public static function filamentAction(): Action
+    {
+        return Action::make('cancel')
+            ->label('Cancel')
+            ->icon('tabler-calendar-x')
+            ->color('danger')
+            ->visible(fn (Reservation $record) => ($record instanceof RehearsalReservation && $record->reservable_id === User::me()?->id) ||
+                User::me()?->can('manage reservations'))
+            ->requiresConfirmation()
+            ->action(function (Reservation $record) {
+                static::run($record);
+
+                \Filament\Notifications\Notification::make()
+                    ->title('Reservation cancelled')
+                    ->success()
+                    ->send();
+            });
+    }
+
+    public static function filamentBulkAction(): Action
+    {
+        return Action::make('bulk_cancel')
+            ->label('Cancel Reservations')
+            ->icon('tabler-calendar-x')
+            ->color('danger')
+            ->visible(fn () => User::me()->can('manage reservations'))
+            ->requiresConfirmation()
+            ->action(function (Collection $records) {
+                foreach ($records as $record) {
+                    static::run($record);
+                }
+            })
+            ->successNotificationTitle('Reservations cancelled')
+            ->successNotification(fn (Collection $records) => $records->count().' reservations marked as cancelled');
     }
 }

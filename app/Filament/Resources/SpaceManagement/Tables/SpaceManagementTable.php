@@ -6,17 +6,10 @@ use App\Actions\Payments\MarkReservationAsComped;
 use App\Actions\Payments\MarkReservationAsPaid;
 use App\Actions\Reservations\CancelReservation;
 use App\Actions\Reservations\ConfirmReservation;
-use App\Filament\Resources\Reservations\Actions\BulkCancelAction;
-use App\Filament\Resources\Reservations\Actions\CancelAction;
-use App\Filament\Resources\Reservations\Actions\MarkCompedAction;
-use App\Filament\Resources\Reservations\Actions\MarkCompedBulkAction;
-use App\Filament\Resources\Reservations\Actions\MarkPaidAction;
-use App\Filament\Resources\Reservations\Actions\MarkPaidBulkAction;
 use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;
 use App\Models\Reservation;
 use Filament\Actions\ActionGroup;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
@@ -48,7 +41,7 @@ class SpaceManagementTable
                     ->date()
                     ->collapsible()
                     ->orderQueryUsing(
-                        fn(Builder $query, string $direction) => $query->orderBy('reserved_at', $direction)
+                        fn (Builder $query, string $direction) => $query->orderBy('reserved_at', $direction)
                     ),
             ])
             ->defaultGroup('reserved_at')
@@ -90,43 +83,43 @@ class SpaceManagementTable
                         return $query
                             ->when(
                                 $data['from'],
-                                fn(Builder $query, $date): Builder => $query->whereDate('reserved_at', '>=', $date),
+                                fn (Builder $query, $date): Builder => $query->whereDate('reserved_at', '>=', $date),
                             )
                             ->when(
                                 $data['until'],
-                                fn(Builder $query, $date): Builder => $query->whereDate('reserved_at', '<=', $date),
+                                fn (Builder $query, $date): Builder => $query->whereDate('reserved_at', '<=', $date),
                             );
                     }),
 
                 Filter::make('today')
                     ->label('Today')
-                    ->query(fn(Builder $query): Builder => $query->whereDate('reserved_at', today())),
+                    ->query(fn (Builder $query): Builder => $query->whereDate('reserved_at', today())),
 
                 Filter::make('this_week')
                     ->label('This Week')
-                    ->query(fn(Builder $query): Builder => $query->whereBetween('reserved_at', [now()->startOfWeek(), now()->endOfWeek()])),
+                    ->query(fn (Builder $query): Builder => $query->whereBetween('reserved_at', [now()->startOfWeek(), now()->endOfWeek()])),
 
                 Filter::make('this_month')
                     ->label('This Month')
-                    ->query(fn(Builder $query): Builder => $query->whereMonth('reserved_at', now()->month)),
+                    ->query(fn (Builder $query): Builder => $query->whereMonth('reserved_at', now()->month)),
 
                 Filter::make('recurring')
                     ->label('Recurring Only')
-                    ->query(fn(Builder $query): Builder => $query->where('is_recurring', true)),
+                    ->query(fn (Builder $query): Builder => $query->where('is_recurring', true)),
 
                 Filter::make('free_hours_used')
                     ->label('Used Free Hours')
-                    ->query(fn(Builder $query): Builder => $query->where('free_hours_used', '>', 0)),
+                    ->query(fn (Builder $query): Builder => $query->where('free_hours_used', '>', 0)),
 
                 Filter::make('needs_attention')
                     ->label('Needs Attention')
-                    ->query(fn(Builder $query): Builder => $query->needsAttention()),
+                    ->query(fn (Builder $query): Builder => $query->needsAttention()),
             ])
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make()
-                        ->schema(fn($infolist) => ReservationInfolist::configure($infolist))
-                        ->modalHeading(fn(Reservation $record): string => 'Reservation Details')
+                        ->schema(fn ($infolist) => ReservationInfolist::configure($infolist))
+                        ->modalHeading(fn (Reservation $record): string => 'Reservation Details')
                         ->modalWidth('3xl')
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Close')
