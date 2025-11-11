@@ -52,6 +52,7 @@ class CreditTransactionsRelationManager extends RelationManager
                     ->formatStateUsing(function (int $state): string {
                         $hours = Reservation::blocksToHours(abs($state));
                         $sign = $state >= 0 ? '+' : '';
+
                         return "{$sign}{$state} blocks ({$hours}h)";
                     })
                     ->color(fn (int $state): string => $state >= 0 ? 'success' : 'danger')
@@ -61,6 +62,7 @@ class CreditTransactionsRelationManager extends RelationManager
                     ->label('Balance After')
                     ->formatStateUsing(function (int $state): string {
                         $hours = Reservation::blocksToHours($state);
+
                         return "{$state} blocks ({$hours}h)";
                     }),
 

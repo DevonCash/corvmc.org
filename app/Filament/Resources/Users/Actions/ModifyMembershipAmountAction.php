@@ -36,6 +36,7 @@ class ModifyMembershipAmountAction
                             $stripeSubscription = $subscription->asStripeSubscription();
                             $firstItem = $stripeSubscription->items->data[0];
                             $currentAmount = $firstItem->price->unit_amount / 100; // Convert from cents to dollars
+
                             // Clamp to slider range
                             return max(10, min(50, $currentAmount));
                         }
@@ -49,7 +50,7 @@ class ModifyMembershipAmountAction
                     ->columnSpan(2)
                     ->helperText(function ($get) {
                         $amount = Money::of($get('amount'), 'USD');
-                        if (!$amount->isZero()) {
+                        if (! $amount->isZero()) {
                             $feeInfo = \App\Actions\Payments\GetFeeDisplayInfo::run($amount);
 
                             return $feeInfo['message'];
@@ -64,6 +65,7 @@ class ModifyMembershipAmountAction
                         if ($subscription) {
                             // Check if subscription has multiple items (base + fee coverage)
                             $stripeSubscription = $subscription->asStripeSubscription();
+
                             return count($stripeSubscription->items->data) > 1;
                         }
 
@@ -80,7 +82,7 @@ class ModifyMembershipAmountAction
                         $breakdown = \App\Actions\Payments\GetFeeBreakdown::run($amount, $get('cover_fees'));
                         $totalAmount = Money::of($breakdown['total_amount'], 'USD');
 
-                        return $breakdown['description'] . ' = ' . \App\Actions\Payments\FormatMoney::run($totalAmount) . ' total per month';
+                        return $breakdown['description'].' = '.\App\Actions\Payments\FormatMoney::run($totalAmount).' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])

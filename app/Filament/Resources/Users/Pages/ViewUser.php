@@ -28,7 +28,7 @@ class ViewUser extends ViewRecord
                 ->label('Add Credits')
                 ->icon('tabler-plus')
                 ->color('success')
-                ->visible(fn() => User::me()?->can('manage credits'))
+                ->visible(fn () => User::me()?->can('manage credits'))
                 ->form([
                     Select::make('credit_type')
                         ->label('Credit Type')
@@ -63,7 +63,7 @@ class ViewUser extends ViewRecord
                     $creditType = CreditType::from($data['credit_type']);
                     $blocks = (int) $data['blocks'];
                     $hours = round($blocks * 0.5, 1);
-                    $description = $data['description'] ?? "Manual credit addition by admin";
+                    $description = $data['description'] ?? 'Manual credit addition by admin';
 
                     $user->addCredit(
                         $blocks,
@@ -81,9 +81,8 @@ class ViewUser extends ViewRecord
                 })
                 ->requiresConfirmation()
                 ->modalHeading('Add Credits')
-                ->modalDescription(fn(array $data) =>
-                    isset($data['blocks'])
-                        ? "Add {$data['blocks']} blocks (" . round($data['blocks'] * 0.5, 1) . " hours) to this user's account?"
+                ->modalDescription(fn (array $data) => isset($data['blocks'])
+                        ? "Add {$data['blocks']} blocks (".round($data['blocks'] * 0.5, 1)." hours) to this user's account?"
                         : "Add credits to this user's account?"
                 ),
 
@@ -91,7 +90,7 @@ class ViewUser extends ViewRecord
                 ->label('Deduct Credits')
                 ->icon('tabler-minus')
                 ->color('danger')
-                ->visible(fn() => User::me()?->can('manage credits'))
+                ->visible(fn () => User::me()?->can('manage credits'))
                 ->form([
                     Select::make('credit_type')
                         ->label('Credit Type')
@@ -107,11 +106,12 @@ class ViewUser extends ViewRecord
                         ->helperText(function () {
                             $balance = $this->record->getCreditBalance(CreditType::FreeHours);
                             $hours = Reservation::blocksToHours($balance);
+
                             return "1 block = 30 minutes. Current balance: {$balance} blocks ({$hours} hours).";
                         })
                         ->numeric()
                         ->minValue(1)
-                        ->maxValue(fn() => max(1, $this->record->getCreditBalance(CreditType::FreeHours)))
+                        ->maxValue(fn () => max(1, $this->record->getCreditBalance(CreditType::FreeHours)))
                         ->required()
                         ->live()
                         ->afterStateUpdated(function ($state, Component $component) {
@@ -152,9 +152,8 @@ class ViewUser extends ViewRecord
                 })
                 ->requiresConfirmation()
                 ->modalHeading('Deduct Credits')
-                ->modalDescription(fn(array $data) =>
-                    isset($data['blocks'])
-                        ? "Deduct {$data['blocks']} blocks (" . round($data['blocks'] * 0.5, 1) . " hours) from this user's account?"
+                ->modalDescription(fn (array $data) => isset($data['blocks'])
+                        ? "Deduct {$data['blocks']} blocks (".round($data['blocks'] * 0.5, 1)." hours) from this user's account?"
                         : "Deduct credits from this user's account?"
                 )
                 ->modalSubmitActionLabel('Deduct Credits'),

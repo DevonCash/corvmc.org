@@ -48,6 +48,7 @@ class EditUser extends EditRecord
                     auth()->logout();
                     request()->session()->invalidate();
                     request()->session()->regenerateToken();
+
                     return redirect()->route('filament.member.auth.login');
                 });
         }

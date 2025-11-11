@@ -8,7 +8,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 
@@ -95,7 +94,7 @@ class AdminUserControlForm
                                     ->map(function ($subscription) {
                                         $price = $subscription->items->first()?->price ?? null;
                                         $status = ucfirst($subscription->stripe_status);
-                                        $amount = $price ? '$' . ($price->unit_amount / 100) : 'Unknown';
+                                        $amount = $price ? '$'.($price->unit_amount / 100) : 'Unknown';
 
                                         return sprintf(
                                             '%s - %s (%s/month)',
@@ -112,7 +111,7 @@ class AdminUserControlForm
                             ->label('Stripe Customer Portal')
                             ->formatStateUsing(function ($record) {
                                 if ($record->stripe_id) {
-                                    return '<a href="#" onclick="openCustomerPortal(\'' . $record->id . '\')" class="text-primary-600 hover:underline">Open Customer Portal</a>';
+                                    return '<a href="#" onclick="openCustomerPortal(\''.$record->id.'\')" class="text-primary-600 hover:underline">Open Customer Portal</a>';
                                 }
 
                                 return 'No Stripe customer ID';
@@ -122,13 +121,13 @@ class AdminUserControlForm
 
                 Section::make('Staff Profile Management')
                     ->description('Administrative tools for managing staff profiles.')
-                    ->visible(fn($record) => User::me()?->can('manage staff profiles'))
+                    ->visible(fn ($record) => User::me()?->can('manage staff profiles'))
                     ->headerActions([
                         Action::make('create_staff_profile')
                             ->label('Add Staff Profile')
                             ->icon('tabler-plus')
                             ->color('primary')
-                            ->visible(fn($record) => ! $record?->staffProfile)
+                            ->visible(fn ($record) => ! $record?->staffProfile)
                             ->action(function ($livewire) {
                                 $record = $livewire->getRecord();
                                 if ($record && ! $record->staffProfile) {

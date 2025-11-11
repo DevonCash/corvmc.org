@@ -9,7 +9,6 @@ use Filament\Forms\Components\Slider\Enums\PipsMode;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Support\RawJs;
-use Illuminate\Support\Facades\Log;
 
 class CreateMembershipSubscriptionAction
 {
@@ -38,8 +37,9 @@ class CreateMembershipSubscriptionAction
                     ->columnSpan(2)
                     ->helperText(function ($get) {
                         $amount = Money::of($get('amount'), 'USD');
-                        if (!$amount->isZero()) {
+                        if (! $amount->isZero()) {
                             $feeInfo = \App\Actions\Payments\GetFeeDisplayInfo::run($amount);
+
                             return $feeInfo['message'];
                         }
 
@@ -56,7 +56,8 @@ class CreateMembershipSubscriptionAction
                         }
                         $breakdown = \App\Actions\Payments\GetFeeBreakdown::run($amount, $get('cover_fees'));
                         $totalAmount = Money::of($breakdown['total_amount'], 'USD');
-                        return $breakdown['description'] . ' = ' . \App\Actions\Payments\FormatMoney::run($totalAmount) . ' total per month';
+
+                        return $breakdown['description'].' = '.\App\Actions\Payments\FormatMoney::run($totalAmount).' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])

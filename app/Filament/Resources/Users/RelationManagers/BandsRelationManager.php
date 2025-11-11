@@ -42,18 +42,18 @@ class BandsRelationManager extends RelationManager
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(query: function ($query, string $search) {
-                        return $query->whereRaw('LOWER("band_profiles"."name") LIKE ?', ['%' . strtolower($search) . '%']);
+                        return $query->whereRaw('LOWER("band_profiles"."name") LIKE ?', ['%'.strtolower($search).'%']);
                     })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('pivot.role')
                     ->label('Role')
                     ->searchable(query: function ($query, string $search) {
-                        return $query->whereRaw('LOWER("band_profile_members"."role") LIKE ?', ['%' . strtolower($search) . '%']);
+                        return $query->whereRaw('LOWER("band_profile_members"."role") LIKE ?', ['%'.strtolower($search).'%']);
                     }),
                 Tables\Columns\TextColumn::make('pivot.position')
                     ->label('Position')
                     ->searchable(query: function ($query, string $search) {
-                        return $query->whereRaw('LOWER("band_profile_members"."position") LIKE ?', ['%' . strtolower($search) . '%']);
+                        return $query->whereRaw('LOWER("band_profile_members"."position") LIKE ?', ['%'.strtolower($search).'%']);
                     }),
                 Tables\Columns\TextColumn::make('pivot.status')
                     ->badge()
@@ -84,8 +84,7 @@ class BandsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Actions\AttachAction::make()
-                    ->recordSelectOptionsQuery(fn ($query) =>
-                        $query->select('band_profiles.id', 'band_profiles.name', 'band_profiles.slug', 'band_profiles.owner_id', 'band_profiles.visibility', 'band_profiles.status')
+                    ->recordSelectOptionsQuery(fn ($query) => $query->select('band_profiles.id', 'band_profiles.name', 'band_profiles.slug', 'band_profiles.owner_id', 'band_profiles.visibility', 'band_profiles.status')
                     )
                     ->schema(fn (Actions\AttachAction $action): array => [
                         $action->getRecordSelect(),

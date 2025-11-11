@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Users\Actions;
 
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Log;
 
 class OpenBillingPortalAction
 {
@@ -15,12 +14,13 @@ class OpenBillingPortalAction
             ->icon('tabler-credit-card')
             ->color('info')
             ->action(function ($record) {
-                if (!$record->stripe_id) {
+                if (! $record->stripe_id) {
                     Notification::make()
                         ->title('No billing account')
                         ->body('You need an active subscription to access billing management.')
                         ->warning()
                         ->send();
+
                     return;
                 }
                 // Return to the user's view page after billing portal
@@ -30,6 +30,6 @@ class OpenBillingPortalAction
                 // Redirect to the billing portal
                 return redirect()->away($billingPortal);
             })
-            ->disabled(fn($record) => $record->stripe_id == null);
+            ->disabled(fn ($record) => $record->stripe_id == null);
     }
 }
