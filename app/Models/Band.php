@@ -3,16 +3,14 @@
 namespace App\Models;
 
 use App\Data\ContactData;
-use App\Models\ContentModel;
 use App\Models\Scopes\OwnedBandsScope;
-use Spatie\Image\Enums\CropPosition;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
 /**
  * Represents a band in the application.
- * 
+ *
  * It includes details about the band's name, bio, links, and contact information.
  * The band can have multiple members and exactly one owner.
  */
@@ -22,11 +20,14 @@ class Band extends ContentModel
 
     // Report configuration
     protected static int $reportThreshold = 4;
+
     protected static bool $reportAutoHide = false;
+
     protected static string $reportableTypeName = 'Band Profile';
 
     // Activity logging configuration
     protected static array $loggedFields = ['name', 'bio', 'hometown', 'visibility'];
+
     protected static string $logTitle = 'Band profile';
 
     protected $table = 'band_profiles';
@@ -89,7 +90,10 @@ class Band extends ContentModel
 
     public function membership(?User $user): ?BandMember
     {
-        if (!$user) return null;
+        if (! $user) {
+            return null;
+        }
+
         return $this->memberships()->for($user)->first();
     }
 
@@ -120,9 +124,8 @@ class Band extends ContentModel
 
     public function getAvatarUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=400';
+        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=400';
     }
-
 
     /**
      * Register additional media conversions specific to bands.
@@ -148,17 +151,17 @@ class Band extends ContentModel
 
     public function getAvatarThumbUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=150';
+        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=150';
     }
 
     public function getAvatarLargeUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=800';
+        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=800';
     }
 
     public function getAvatarOptimizedUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=1200';
+        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=1200';
     }
 
     /**
@@ -212,8 +215,9 @@ class Band extends ContentModel
         }
 
         // Priority 2: First external link
-        if (!empty($this->links) && is_array($this->links)) {
-            $firstLink = reset($this->links);
+        if (! empty($this->links) && is_array($this->links)) {
+            $links = $this->links;
+            $firstLink = reset($links);
             if ($firstLink) {
                 return [
                     'url' => $firstLink,
@@ -273,10 +277,10 @@ class Band extends ContentModel
         return 'view private band profiles';
     }
 
-
     public function getUserRole(User $user): ?string
     {
         $membership = $this->memberships()->for($user)->first();
+
         return $membership ? $membership->role : null;
     }
 }

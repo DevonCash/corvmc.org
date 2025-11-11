@@ -15,7 +15,7 @@ class MyBandsWidget extends BaseWidget
 {
     protected static ?string $heading = 'My Bands';
 
-    protected int | string | array $columnSpan = 1;
+    protected int|string|array $columnSpan = 1;
 
     protected static ?int $sort = 4;
 
@@ -28,7 +28,7 @@ class MyBandsWidget extends BaseWidget
                     ->label('')
                     ->circular()
                     ->imageSize(40)
-                    ->defaultImageUrl(fn() => 'https://ui-avatars.com/api/?name=Band&color=7c3aed&background=ede9fe'),
+                    ->defaultImageUrl(fn () => 'https://ui-avatars.com/api/?name=Band&color=7c3aed&background=ede9fe'),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('Band Name')
@@ -45,9 +45,9 @@ class MyBandsWidget extends BaseWidget
                             return 'owner';
                         }
 
-                        // Check membership
-                        $membership = $record->members()->where('users.id', $user->id)->first();
-                        if (!$membership) {
+                        // Check membership (already eager loaded)
+                        $membership = $record->members->first();
+                        if (! $membership) {
                             return 'none';
                         }
 
@@ -59,7 +59,7 @@ class MyBandsWidget extends BaseWidget
                         return $membership->pivot->role ?? 'member';
                     })
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'owner' => 'primary',
                         'admin' => 'warning',
                         'member' => 'success',
@@ -70,13 +70,13 @@ class MyBandsWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('visibility')
                     ->label('Visibility')
                     ->badge()
-                    ->icon(fn(string $state): string => match ($state) {
+                    ->icon(fn (string $state): string => match ($state) {
                         'public' => 'tabler-world',
                         'members' => 'tabler-users',
                         'private' => 'tabler-lock',
                         default => 'tabler-eye-off',
                     })
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'public' => 'success',
                         'members' => 'info',
                         'private' => 'warning',
@@ -89,36 +89,35 @@ class MyBandsWidget extends BaseWidget
                     ->sortable()
                     ->alignCenter()
                     ->formatStateUsing(
-                        fn($state, $record) =>
-                        $state . ($record->pending_invitations > 0 ? " (+{$record->pending_invitations})" : '')
+                        fn ($state, $record) => $state.($record->pending_invitations > 0 ? " (+{$record->pending_invitations})" : '')
                     ),
             ])
             ->recordActions([
                 Action::make('view')
                     ->label('View')
                     ->icon('tabler-eye')
-                    ->url(fn(Band $record) => route('filament.member.resources.bands.view', $record))
+                    ->url(fn (Band $record) => route('filament.member.resources.bands.view', $record))
                     ->openUrlInNewTab(),
 
                 Action::make('edit')
                     ->label('Edit')
                     ->icon('tabler-edit')
-                    ->url(fn(Band $record) => route('filament.member.resources.bands.edit', $record))
-                    ->visible(fn(Band $record) => $this->canEditBand($record))
+                    ->url(fn (Band $record) => route('filament.member.resources.bands.edit', $record))
+                    ->visible(fn (Band $record) => $this->canEditBand($record))
                     ->openUrlInNewTab(),
 
                 Action::make('manage_members')
                     ->label('Members')
                     ->icon('tabler-users-plus')
-                    ->url(fn(Band $record) => route('filament.member.resources.bands.edit', $record) . '#members')
-                    ->visible(fn(Band $record) => $this->canManageBand($record) && $record->pending_invitations > 0)
+                    ->url(fn (Band $record) => route('filament.member.resources.bands.edit', $record).'#members')
+                    ->visible(fn (Band $record) => $this->canManageBand($record) && $record->pending_invitations > 0)
                     ->openUrlInNewTab(),
 
                 Action::make('primary_link')
                     ->label('Visit')
-                    ->icon(fn(Band $record) => $this->getPrimaryLinkIcon($record))
-                    ->url(fn(Band $record) => $this->getPrimaryLinkUrl($record))
-                    ->visible(fn(Band $record) => $this->getPrimaryLinkUrl($record) !== null)
+                    ->icon(fn (Band $record) => $this->getPrimaryLinkIcon($record))
+                    ->url(fn (Band $record) => $this->getPrimaryLinkUrl($record))
+                    ->visible(fn (Band $record) => $this->getPrimaryLinkUrl($record) !== null)
                     ->openUrlInNewTab(),
             ])
             ->headerActions([
@@ -141,7 +140,7 @@ class MyBandsWidget extends BaseWidget
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return Band::query()->whereRaw('1=0'); // Empty query
         }
 
@@ -152,17 +151,23 @@ class MyBandsWidget extends BaseWidget
                         $q->where('users.id', $user->id);
                     });
             })
-            ->with(['owner', 'activeMembers', 'pendingInvitations'])
+            ->with([
+                'owner',
+                'activeMembers',
+                'pendingInvitations',
+                'members' => function ($query) use ($user) {
+                    $query->where('users.id', $user->id);
+                },
+            ])
             ->withCount(['activeMembers as member_count', 'pendingInvitations'])
             ->orderBy('name');
     }
-
 
     protected function canEditBand(Band $band): bool
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -176,8 +181,9 @@ class MyBandsWidget extends BaseWidget
             return true;
         }
 
-        // Band admins can edit
-        $membership = $band->members()->where('users.id', $user->id)->first();
+        // Band admins can edit (already eager loaded)
+        $membership = $band->members->first();
+
         return $membership?->pivot->role === 'admin';
     }
 
@@ -185,7 +191,7 @@ class MyBandsWidget extends BaseWidget
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -199,20 +205,23 @@ class MyBandsWidget extends BaseWidget
             return true;
         }
 
-        // Band admins can manage
-        $membership = $band->members()->where('users.id', $user->id)->first();
+        // Band admins can manage (already eager loaded)
+        $membership = $band->members->first();
+
         return $membership?->pivot->role === 'admin';
     }
 
     protected function getPrimaryLinkUrl(Band $band): ?string
     {
         $primaryLink = $band->primaryLink();
+
         return $primaryLink['url'] ?? null;
     }
 
     protected function getPrimaryLinkIcon(Band $band): string
     {
         $primaryLink = $band->primaryLink();
+
         return str_replace('tabler:', 'tabler-', $primaryLink['icon'] ?? 'tabler-external-link');
     }
 

@@ -42,7 +42,9 @@ class MembersRelationManager extends RelationManager
                 TextColumn::make('display_name')
                     ->label('Member Name')
                     ->weight(FontWeight::Bold)
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->orderBy('name', $direction);
+                    }),
 
                 TextColumn::make('status')
                     ->label('Status')

@@ -108,4 +108,11 @@ class UserResource extends Resource
             'edit' => EditUser::route('/{record}'),
         ];
     }
+
+    public static function getWidgets(): array
+    {
+        return [
+            Widgets\UserStatsWidget::class,
+        ];
+    }
 }
