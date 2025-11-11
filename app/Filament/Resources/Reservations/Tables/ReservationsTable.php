@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Reservations\Tables;
 
+use App\Actions\Reservations\ConfirmReservation;
 use App\Filament\Resources\Reservations\Actions\BulkCancelAction;
 use App\Filament\Resources\Reservations\Actions\CancelAction;
 use App\Filament\Resources\Reservations\Actions\MarkCompedAction;
@@ -35,8 +36,8 @@ class ReservationsTable
                         Stack::make([
                             ReservationColumns::statusDisplay()->grow(false),
                             ReservationColumns::costDisplay()->grow(false),
-                        ])->alignment(Alignment::End)->space(2)
-                    ])
+                        ])->alignment(Alignment::End)->space(2),
+                    ]),
                     // Split::make([
                     //     // ReservationColumns::duration()
                     //     //     ->visibleFrom('md'),
@@ -81,28 +82,29 @@ class ReservationsTable
                         return $query
                             ->when(
                                 $data['from'],
-                                fn(Builder $query, $date): Builder => $query->whereDate('reserved_at', '>=', $date),
+                                fn (Builder $query, $date): Builder => $query->whereDate('reserved_at', '>=', $date),
                             )
                             ->when(
                                 $data['until'],
-                                fn(Builder $query, $date): Builder => $query->whereDate('reserved_at', '<=', $date),
+                                fn (Builder $query, $date): Builder => $query->whereDate('reserved_at', '<=', $date),
                             );
                     }),
 
                 Filter::make('this_month')
                     ->label('This Month')
-                    ->query(fn(Builder $query): Builder => $query->whereMonth('reserved_at', now()->month)),
+                    ->query(fn (Builder $query): Builder => $query->whereMonth('reserved_at', now()->month)),
 
                 Filter::make('recurring')
                     ->label('Recurring Only')
-                    ->query(fn(Builder $query): Builder => $query->where('is_recurring', true)),
+                    ->query(fn (Builder $query): Builder => $query->where('is_recurring', true)),
 
                 Filter::make('free_hours_used')
                     ->label('Used Free Hours')
-                    ->query(fn(Builder $query): Builder => $query->where('free_hours_used', '>', 0)),
+                    ->query(fn (Builder $query): Builder => $query->where('free_hours_used', '>', 0)),
             ])
             ->recordActionsAlignment('end')
             ->recordActions([
+                ConfirmReservation::filamentAction(),
                 PayStripeAction::make(),
 
                 ActionGroup::make([
@@ -110,7 +112,7 @@ class ReservationsTable
                     MarkCompedAction::make(),
                     CancelAction::make(),
                     ViewAction::make(),
-                ])->extraDropdownAttributes(['class' => 'ml-auto'])
+                ])->extraDropdownAttributes(['class' => 'ml-auto']),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
