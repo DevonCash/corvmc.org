@@ -2,10 +2,11 @@
 
 namespace App\Actions\Reservations;
 
+use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
 use App\Enums\CreditType;
 use App\Models\CreditTransaction;
-use App\Models\Reservation;
 use App\Models\RehearsalReservation;
+use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -23,8 +24,8 @@ class UpdateReservation
         if ($reservation instanceof RehearsalReservation) {
             $errors = ValidateReservation::run($reservation->user, $startTime, $endTime, $reservation->id);
 
-            if (!empty($errors)) {
-                throw new \InvalidArgumentException('Validation failed: ' . implode(' ', $errors));
+            if (! empty($errors)) {
+                throw new \InvalidArgumentException('Validation failed: '.implode(' ', $errors));
             }
 
             $costCalculation = CalculateReservationCost::run($reservation->user, $startTime, $endTime);
@@ -90,13 +91,16 @@ class UpdateReservation
                             CreditType::FreeHours,
                             'reservation_update',
                             $reservation->id,
-                            "Refund from reservation update"
+                            'Refund from reservation update'
                         );
                     }
                 }
             }
 
             $reservation->update($updateData);
+
+            // Sync to Google Calendar (both pending and confirmed)
+            SyncReservationToGoogleCalendar::run($reservation->fresh(), 'update');
 
             return $reservation;
         });

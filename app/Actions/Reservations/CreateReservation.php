@@ -2,13 +2,11 @@
 
 namespace App\Actions\Reservations;
 
-use App\Enums\CreditType;
-use App\Models\User;
+use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
 use App\Models\RehearsalReservation;
-use App\Notifications\ReservationConfirmedNotification;
+use App\Models\User;
 use App\Notifications\ReservationCreatedNotification;
 use App\Notifications\ReservationCreatedTodayNotification;
-use Brick\Money\Money;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -30,8 +28,8 @@ class CreateReservation
         // Validate the reservation
         $errors = ValidateReservation::run($user, $startTime, $endTime);
 
-        if (!empty($errors)) {
-            throw new \InvalidArgumentException('Validation failed: ' . implode(' ', $errors));
+        if (! empty($errors)) {
+            throw new \InvalidArgumentException('Validation failed: '.implode(' ', $errors));
         }
 
         $reservation = DB::transaction(function () use ($user, $startTime, $endTime, $options) {
@@ -71,6 +69,9 @@ class CreateReservation
             $admins = User::role('admin')->get();
             Notification::send($admins, new ReservationCreatedTodayNotification($reservation));
         }
+
+        // Sync to Google Calendar (both pending and confirmed show on calendar)
+        SyncReservationToGoogleCalendar::run($reservation, 'create');
 
         return $reservation;
     }

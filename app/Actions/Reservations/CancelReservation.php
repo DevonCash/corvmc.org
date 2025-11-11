@@ -2,10 +2,11 @@
 
 namespace App\Actions\Reservations;
 
+use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
 use App\Enums\CreditType;
 use App\Models\CreditTransaction;
-use App\Models\Reservation;
 use App\Models\RehearsalReservation;
+use App\Models\Reservation;
 use App\Notifications\ReservationCancelledNotification;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -20,7 +21,7 @@ class CancelReservation
     {
         $reservation->update([
             'status' => 'cancelled',
-            'notes' => $reservation->notes . ($reason ? "\nCancellation reason: " . $reason : ''),
+            'notes' => $reservation->notes.($reason ? "\nCancellation reason: ".$reason : ''),
         ]);
 
         // Refund credits if this was a rehearsal reservation with free hours used
@@ -55,6 +56,9 @@ class CancelReservation
         if ($user) {
             $user->notify(new ReservationCancelledNotification($reservation));
         }
+
+        // Delete from Google Calendar
+        SyncReservationToGoogleCalendar::run($reservation, 'delete');
 
         return $reservation;
     }

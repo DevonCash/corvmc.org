@@ -2,9 +2,10 @@
 
 namespace App\Actions\Reservations;
 
+use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
 use App\Enums\CreditType;
-use App\Models\Reservation;
 use App\Models\RehearsalReservation;
+use App\Models\Reservation;
 use App\Notifications\ReservationConfirmedNotification;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -66,7 +67,12 @@ class ConfirmReservation
             // Send confirmation notification
             $user->notify(new ReservationConfirmedNotification($reservation));
 
-            return $reservation->fresh();
+            $reservation = $reservation->fresh();
+
+            // Sync to Google Calendar (update from pending yellow to confirmed green)
+            SyncReservationToGoogleCalendar::run($reservation, 'update');
+
+            return $reservation;
         });
     }
 }

@@ -144,36 +144,76 @@ Band profile management with member invitation system.
 
 ## Planned Features
 
-These features are documented in [docs/ROADMAP.md](docs/ROADMAP.md).
-
 ### Community Calendar (High Priority)
 
-Allow members to submit their own events to be displayed on a public calendar. Provide notifications and discovery features.
+Public calendar for community members to post and discover local music events beyond CMC productions.
 
 **Planned Features:**
 - Event submission with staff approval workflow
 - Calendar views (month, week, list)
 - Event categories (shows, open mics, jam sessions, workshops)
 - Filtering by category, venue, date range
+- Venue management for community venues
 - RSVP tracking
 - Integration with member/band profiles
+- Public display for discovery
+- Email notifications for new events
+- Optional iCal export
 
-**Note**: May eventually replace the current Productions system.
+**Technical Considerations:**
+- Separate `community_events` table from `productions`
+- Staff approval workflow using existing permission system
+- Settings toggle via `CommunityCalendarSettings`
+
+**Future Consideration:**  
+Current Production system features are underutilized. May consolidate to use Community Calendar exclusively, simplifying event management architecture.
 
 ---
 
 ### Volunteer Management (High Priority)
 
-Comprehensive volunteer management for events and operations.
+Comprehensive volunteer management for events and ongoing operations.
 
 **Planned Features:**
-- Volunteer profiles with skills and availability
+- Volunteer profiles with skills, availability, and interests
 - Shift scheduling for events/productions
-- Sign-up system for claiming shifts
+- Sign-up system for claiming available shifts
 - Hour tracking for recognition and reporting
-- Task management for specific roles
-- Communication and notifications
+- Task management for specific roles (door, sound, merch, setup, etc.)
+- Communication and shift reminder notifications
 - Reporting for grants and recognition
+
+**Technical Considerations:**
+- Extend existing user/member profile system
+- Link volunteer shifts to Productions
+- Use existing permission system for volunteer coordinator roles
+- Consider recurring shift patterns (similar to recurring reservations)
+- Integration with production/event calendar
+
+---
+
+### Reservation System Enhancements
+
+Add configuration UI and closure management to existing reservation system.
+
+**Configurable Settings:**
+- Business hours (currently hardcoded to 9 AM - 10 PM)
+- Hourly rate (currently $15/hour)
+- Duration limits (currently 1-8 hours)
+
+**Holiday/Closure Management:**
+- Holiday calendar for marking closed dates
+- Closure scheduling with date ranges
+- Prevent reservations on closed dates
+- Public display of closures on booking calendar
+
+**Technical Considerations:**
+- Store settings using `spatie/laravel-settings` (similar to existing OrganizationSettings)
+- Create `space_closures` table with:
+  - `date` or `start_date`/`end_date` for date ranges
+  - `reason` (holiday name, maintenance, etc.)
+  - `is_recurring` for annual holidays
+- Integration with existing `ValidateTimeSlot` action
 
 ---
 
