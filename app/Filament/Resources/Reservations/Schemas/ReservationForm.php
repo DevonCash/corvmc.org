@@ -40,7 +40,7 @@ class ReservationForm
         $isRecurring = $get('is_recurring');
 
         // Must have a positive cost
-        if (!$cost || $cost <= 0) {
+        if (! $cost || $cost <= 0) {
             return false;
         }
 
@@ -50,7 +50,7 @@ class ReservationForm
         }
 
         // Must have a reservation date
-        if (!$reservationDate) {
+        if (! $reservationDate) {
             return false;
         }
 
@@ -76,10 +76,11 @@ class ReservationForm
             Wizard\Step::make('Confirm')
                 ->description('Review and confirm your reservation')
                 ->icon('tabler-circle-check')
-                ->schema(static::confirmationStep())
+                ->schema(static::confirmationStep()),
 
         ];
     }
+
     public static function reservationStep(): array
     {
         $isAdmin = User::me()?->can('manage practice space');
@@ -141,7 +142,7 @@ class ReservationForm
 
                         return 'tabler-circle-check';
                     })
-                        ->color(fn(Get $get) => match (true) {
+                        ->color(fn (Get $get) => match (true) {
                             ! $get('reservation_date') => 'gray',
                             ! $get('start_time') => 'primary',
                             ! $get('end_time') => 'primary',
@@ -159,8 +160,8 @@ class ReservationForm
                             self::updateDateTimes($get, $set);
                             self::calculateCost($get('user_id'), $get, $set);
                         })
-                        ->hint(fn($state) => $state ? '' : 'Select a date')
-                        ->minDate(now()->toDateString()),
+                        ->hint(fn ($state) => $state ? '' : 'Select a date')
+                        ->minDate(now()->addDay()->toDateString()),
 
                     Select::make('start_time')
                         ->label('Start Time')
@@ -172,7 +173,7 @@ class ReservationForm
 
                             return GetAvailableTimeSlotsForDate::run(Carbon::parse($date));
                         })
-                        ->disabled(fn(Get $get) => ! $get('reservation_date'))
+                        ->disabled(fn (Get $get) => ! $get('reservation_date'))
                         ->required()
                         ->live()
                         ->afterStateUpdated(function ($state, callable $set, Get $get) {
@@ -181,11 +182,11 @@ class ReservationForm
                             self::updateDateTimes($get, $set);
                             self::calculateCost($get('user_id'), $get, $set);
                         })
-                        ->hint(fn(Get $get, $state) => ! $get('reservation_date') || $state ? '' : 'Select a start time'),
+                        ->hint(fn (Get $get, $state) => ! $get('reservation_date') || $state ? '' : 'Select a start time'),
 
                     Select::make('end_time')
                         ->label('End Time')
-                        ->hint(fn(Get $get, $state) => ! $get('start_time') || $state ? '' : 'Select an end time')
+                        ->hint(fn (Get $get, $state) => ! $get('start_time') || $state ? '' : 'Select an end time')
                         ->options(function (Get $get) {
                             $date = $get('reservation_date');
                             $startTime = $get('start_time');
@@ -201,7 +202,7 @@ class ReservationForm
                             self::updateDateTimes($get, $set);
                             self::calculateCost($get('user_id'), $get, $set);
                         })
-                        ->disabled(fn(Get $get) => ! $get('start_time')),
+                        ->disabled(fn (Get $get) => ! $get('start_time')),
                 ])->columnSpanFull(),
 
             Textarea::make('notes')
@@ -238,18 +239,18 @@ class ReservationForm
                                 'comp' => 'Comped',
                                 'other' => 'Other',
                             ])
-                            ->visible(fn(Get $get) => $get('payment_status') !== 'unpaid'),
+                            ->visible(fn (Get $get) => $get('payment_status') !== 'unpaid'),
 
                         DateTimePicker::make('paid_at')
                             ->label('Payment Date')
-                            ->visible(fn(Get $get) => in_array($get('payment_status'), ['paid', 'comped', 'refunded']))
+                            ->visible(fn (Get $get) => in_array($get('payment_status'), ['paid', 'comped', 'refunded']))
                             ->default(now()),
 
                         Textarea::make('payment_notes')
                             ->label('Payment Notes')
                             ->placeholder('Notes about payment, comp reason, etc.')
                             ->rows(2)
-                            ->visible(fn(Get $get) => $get('payment_status') !== 'unpaid'),
+                            ->visible(fn (Get $get) => $get('payment_status') !== 'unpaid'),
                     ])
                     ->columns(2),
             ] : [],
@@ -257,9 +258,10 @@ class ReservationForm
             // Hidden fields for the actual datetime values and status
             Hidden::make('reserved_at'),
             Hidden::make('reserved_until'),
-            Hidden::make('status')
+            Hidden::make('status'),
         ];
     }
+
     public static function confirmationStep(): array
     {
         return [
@@ -283,12 +285,12 @@ class ReservationForm
         $endTime = $get('end_time');
 
         if ($date && $startTime) {
-            $datetime = Carbon::parse($date . ' ' . $startTime, config('app.timezone'));
+            $datetime = Carbon::parse($date.' '.$startTime, config('app.timezone'));
             $set('reserved_at', $datetime);
         }
 
         if ($date && $endTime) {
-            $datetime = Carbon::parse($date . ' ' . $endTime, config('app.timezone'));
+            $datetime = Carbon::parse($date.' '.$endTime, config('app.timezone'));
             $set('reserved_until', $datetime);
         }
 

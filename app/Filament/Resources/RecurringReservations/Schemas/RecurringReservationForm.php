@@ -2,17 +2,17 @@
 
 namespace App\Filament\Resources\RecurringReservations\Schemas;
 
+use Carbon\Carbon;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
-use Filament\Forms\Components\CheckboxList;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
-use Carbon\Carbon;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Log;
 
 class RecurringReservationForm
@@ -72,7 +72,7 @@ class RecurringReservationForm
                         DatePicker::make('series_start_date')
                             ->label('Start Date')
                             ->required()
-                            ->minDate(now())
+                            ->minDate(now()->addDay())
                             ->reactive(),
 
                         DatePicker::make('series_end_date')
@@ -137,23 +137,25 @@ class RecurringReservationForm
                                 $interval = $get('interval') ?? 1;
                                 $byDay = $get('by_day') ?? [];
 
-                                if (!$frequency) {
+                                if (! $frequency) {
                                     return 'Select options above to preview pattern';
                                 }
 
                                 if ($frequency === 'WEEKLY') {
-                                    $days = array_map(fn($d) => ['MO' => 'Mon', 'TU' => 'Tue', 'WE' => 'Wed', 'TH' => 'Thu', 'FR' => 'Fri', 'SA' => 'Sat', 'SU' => 'Sun'][$d] ?? $d, $byDay);
+                                    $days = array_map(fn ($d) => ['MO' => 'Mon', 'TU' => 'Tue', 'WE' => 'Wed', 'TH' => 'Thu', 'FR' => 'Fri', 'SA' => 'Sat', 'SU' => 'Sun'][$d] ?? $d, $byDay);
                                     $dayStr = empty($days) ? 'no days selected' : implode(', ', $days);
 
                                     if ($interval == 1) {
                                         return "Every week on {$dayStr}";
                                     }
+
                                     return "Every {$interval} weeks on {$dayStr}";
                                 }
 
                                 if ($interval == 1) {
-                                    return "Every month";
+                                    return 'Every month';
                                 }
+
                                 return "Every {$interval} months";
                             }),
                     ])
@@ -163,16 +165,18 @@ class RecurringReservationForm
 
     protected static function calculateDuration(?string $start, ?string $end): ?int
     {
-        if (!$start || !$end) {
+        if (! $start || ! $end) {
             return null;
         }
 
         try {
             $startTime = Carbon::parse($start);
             $endTime = Carbon::parse($end);
+
             return $startTime->diffInMinutes($endTime);
         } catch (\Exception $e) {
             Log::error($e);
+
             return null;
         }
     }
