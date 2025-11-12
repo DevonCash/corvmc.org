@@ -35,15 +35,6 @@ class BandMemberPolicy
         return $user->can('invite band members');
     }
 
-    public function reinvite(User $user, BandMember $bandMember): bool
-    {
-        return $bandMember->status === 'declined' && $user->can('update', $bandMember->band);
-    }
-
-    public function resend(User $user, BandMember $bandMember): bool {
-        return $bandMember->status === 'invited' && $user->can('update', $bandMember->band);
-    }
-
     /**
      * Determine whether the user can update a band member record.
      */
@@ -69,7 +60,7 @@ class BandMemberPolicy
 
     public function accept(User $user, BandMember $bandMember): bool
     {
-        return  $bandMember->status === 'invited' && $user->is($bandMember->user);
+        return $bandMember->status === 'invited' && $user->is($bandMember->user);
     }
 
     public function decline(User $user, BandMember $bandMember): bool

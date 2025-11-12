@@ -19,31 +19,45 @@ class AddBandMember
     use AsAction;
 
     /**
-     * Add a member directly to a band (without invitation).
+     * Invite a CMC member to join a band.
+     * Idempotent - can be called multiple times to resend invitation.
      */
     public function handle(
         Band $band,
-        ?User $user = null,
+        User $user,
         array $data = [],
     ): void {
+        // Check if user is already an active member
         if ($band->memberships()->active()->where('user_id', $user->id)->exists()) {
             throw BandException::userAlreadyMember();
         }
 
-        if ($band->memberships()->invited()->where('user_id', $user->id)->exists()) {
-            throw BandException::userAlreadyInvited();
-        }
-
         DB::transaction(function () use ($band, $user, $data) {
-            // Add invitation to pivot table
-            $band->members()->attach($user->id, [
-                ...$data,
-                'status' => 'invited',
-                'invited_at' => now(),
-            ]);
+            // Check for existing invitation
+            $existingInvitation = $band->memberships()->invited()->where('user_id', $user->id)->first();
+
+            if ($existingInvitation) {
+                // Resend invitation - update timestamp and data
+                $existingInvitation->update([
+                    ...$data,
+                    'invited_at' => now(),
+                ]);
+            } else {
+                // Create new invitation
+                $band->members()->attach($user->id, [
+                    ...$data,
+                    'status' => 'invited',
+                    'invited_at' => now(),
+                ]);
+            }
+
+            // Send notification
+            $user->notify(new BandInvitationNotification(
+                $band,
+                $data['role'] ?? 'member',
+                $data['position'] ?? null
+            ));
         });
-        // Send notification
-        $user->notify(new BandInvitationNotification($band, $data['role'] ?? 'member', $data['position'] ?? null));
     }
 
     public static function filamentAction(): Action
@@ -68,36 +82,21 @@ class AddBandMember
                             })
                                 ->when($band, function ($query) use ($band) {
                                     $query->whereDoesntHave('bands', function ($query) use ($band) {
-                                        $query->where('band_profile_id', $band->id);
+                                        $query->where('band_profile_id', $band->id)
+                                            ->where('status', 'active');
                                     });
                                 })
                                 ->limit(50)
                                 ->get()
-                                ->mapWithKeys(fn($user) => [$user->id => "{$user->name} ({$user->email})"])
+                                ->mapWithKeys(fn ($user) => [$user->id => "{$user->name} ({$user->email})"])
                                 ->toArray();
                         }
                     )
                     ->getOptionLabelUsing(
-                        fn($value): ?string => ($user = User::find($value)) ? "{$user->name} ({$user->email})" : null
+                        fn ($value): ?string => ($user = User::find($value)) ? "{$user->name} ({$user->email})" : null
                     )
                     ->searchable()
-                    ->reactive()
-                    ->afterStateUpdated(function ($state, $set, $get) {
-                        if ($state) {
-                            $user = User::find($state);
-                            if ($user) {
-                                $set('name', $user->name);
-                            }
-                        }
-                    })
-                    ->helperText('Select an existing CMC member'),
-
-                TextInput::make('name')
-                    ->label('Name')
-                    ->placeholder('Stage name')
-                    ->maxLength(255)
-                    ->required()
-                    ->helperText('Their name for the band'),
+                    ->helperText('Select a CMC member to invite'),
 
                 Flex::make([
                     Select::make('role')
@@ -122,14 +121,16 @@ class AddBandMember
                 // Get the band from either page or relation manager context
                 $band = $livewire->record ?? $livewire->ownerRecord;
 
-                // Existing CMC member - send invitation
                 $user = User::find($data['user_id']);
+
+                // Check if this is a resend
+                $isResend = $band->memberships()->invited()->where('user_id', $user->id)->exists();
 
                 static::run($band, $user, $data);
 
                 Notification::make()
-                    ->title('Invitation sent')
-                    ->body("Invitation sent to {$user->name}")
+                    ->title($isResend ? 'Invitation resent' : 'Invitation sent')
+                    ->body(($isResend ? 'Invitation resent to ' : 'Invitation sent to ').$user->name)
                     ->success()
                     ->send();
             })

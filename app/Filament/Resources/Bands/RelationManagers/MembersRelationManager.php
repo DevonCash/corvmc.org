@@ -6,25 +6,19 @@ use App\Actions\Bands\AcceptBandInvitation;
 use App\Actions\Bands\AddBandMember;
 use App\Actions\Bands\CancelBandInvitation;
 use App\Actions\Bands\DeclineBandInvitation;
-use App\Actions\Bands\ReinviteBandMember;
 use App\Actions\Bands\RemoveBandMember;
-use App\Actions\Bands\ResendBandInvitation;
 use App\Actions\Bands\UpdateBandMember;
 use App\Models\User;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Enums\FiltersLayout;
-use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class MembersRelationManager extends RelationManager
 {
     protected static string $relationship = 'memberships';
 
-    protected static ?string $title = "Band Members";
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $title = 'Band Members';
 
     public function canViewAny(): bool
     {
@@ -32,33 +26,26 @@ class MembersRelationManager extends RelationManager
         return User::me()?->can('view', $this->ownerRecord);
     }
 
-
     public function table(Table $table): Table
     {
         return $table
-
-            ->recordTitleAttribute('name')
             ->columns([
-                TextColumn::make('display_name')
+                TextColumn::make('user.name')
                     ->label('Member Name')
                     ->weight(FontWeight::Bold)
-                    ->sortable(query: function (Builder $query, string $direction): Builder {
-                        return $query->orderBy('name', $direction);
-                    }),
+                    ->sortable(),
 
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'active' => 'success',
                         'invited' => 'warning',
-                        'declined' => 'danger',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         'active' => 'Active',
                         'invited' => 'Pending Invitation',
-                        'declined' => 'Declined',
                         default => ucfirst($state),
                     }),
 
@@ -80,8 +67,6 @@ class MembersRelationManager extends RelationManager
             ->recordActions([
                 AcceptBandInvitation::filamentAction(),
                 DeclineBandInvitation::filamentAction(),
-                ResendBandInvitation::filamentAction(),
-                ReinviteBandMember::filamentAction(),
                 UpdateBandMember::filamentAction(),
                 RemoveBandMember::filamentAction(),
                 CancelBandInvitation::filamentAction(),

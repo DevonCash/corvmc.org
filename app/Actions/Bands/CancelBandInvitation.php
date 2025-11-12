@@ -8,7 +8,6 @@ use App\Models\Band;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Auth;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class CancelBandInvitation
@@ -21,17 +20,12 @@ class CancelBandInvitation
      */
     public function handle(Band $band, User $user): void
     {
-        $membership = $band->memberships()->where('user_id', $user->id)->first();
+        $membership = $band->memberships()->invited()->where('user_id', $user->id)->first();
 
-        if (!$membership) {
-            throw BandException::userNotFound();
+        if (! $membership) {
+            throw BandException::userNotInvited();
         }
 
-        if ($membership->status !== 'invited') {
-            throw BandException::invitationNotPending();
-        }
-
-        // Remove the invitation
         $membership->delete();
     }
 
@@ -43,14 +37,14 @@ class CancelBandInvitation
             ->icon('tabler-x')
             ->requiresConfirmation()
             ->modalHeading('Cancel Band Invitation')
-            ->modalDescription(fn($record) => "Cancel the invitation for {$record->name}?")
+            ->modalDescription(fn ($record) => "Cancel the invitation for {$record->user->name}?")
             ->authorize('cancel')
             ->action(function ($record): void {
                 static::run($record->band, $record->user);
 
                 Notification::make()
                     ->title('Invitation cancelled')
-                    ->body("Invitation for {$record->name} has been cancelled")
+                    ->body("Invitation for {$record->user->name} has been cancelled")
                     ->success()
                     ->send();
             });

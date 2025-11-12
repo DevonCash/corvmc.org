@@ -17,16 +17,17 @@ class DeclineBandInvitation
 
     /**
      * Decline an invitation to join a band.
+     * Deletes the invitation record - band admins can re-invite if needed.
      */
     public function handle(Band $band, User $user): void
     {
-        if (! $band->memberships()->invited()->where('user_id', $user->id)->exists()) {
+        $membership = $band->memberships()->invited()->where('user_id', $user->id)->first();
+
+        if (! $membership) {
             throw BandException::userNotInvited();
         }
 
-        $band->members()->updateExistingPivot($user->id, [
-            'status' => 'declined',
-        ]);
+        $membership->delete();
     }
 
     public static function filamentAction(): Action
@@ -37,7 +38,7 @@ class DeclineBandInvitation
             ->icon('tabler-x')
             ->requiresConfirmation()
             ->modalHeading('Decline Band Invitation')
-            ->modalDescription(fn($record) => "Decline invitation to join {$record->band->name}?")
+            ->modalDescription(fn ($record) => "Decline invitation to join {$record->band->name}?")
             ->action(function ($record): void {
                 static::run($record->band, $record->user);
 

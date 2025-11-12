@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class BandMember extends Model
 {
     use HasFactory;
+
     protected $table = 'band_profile_members';
 
     protected $fillable = [
         'band_profile_id',
         'user_id',
-        'name',
         'role',
         'position',
         'status',
@@ -36,24 +36,6 @@ class BandMember extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Get display name - either from pivot name or user name
-    public function getDisplayNameAttribute(): string
-    {
-        return $this->name ?: ($this->user?->name ?? 'Unknown Member');
-    }
-
-    // Check if this is a CMC member (has user_id)
-    public function getIsCmcMemberAttribute(): bool
-    {
-        return !is_null($this->user_id);
-    }
-
-    // Get avatar URL from user if available
-    public function getAvatarUrlAttribute(): ?string
-    {
-        return $this->user?->getFilamentAvatarUrl();
-    }
-
     #[Scope]
     public function active($query)
     {
@@ -64,18 +46,6 @@ class BandMember extends Model
     public function invited($query)
     {
         return $query->where('status', 'invited');
-    }
-
-    #[Scope]
-    public function declined($query)
-    {
-        return $query->where('status', 'declined');
-    }
-
-    #[Scope]
-    public function inactive($query)
-    {
-        return $query->where('status', 'inactive');
     }
 
     #[Scope]
