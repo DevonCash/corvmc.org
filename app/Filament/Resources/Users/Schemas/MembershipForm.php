@@ -66,6 +66,7 @@ class MembershipForm
                     })
                     ->schema([
                         TextEntry::make('current_subscription')
+                            ->visible(fn ($record) => static::hasActiveOrCancelledSubscription($record))
                             ->label('Current Contribution')
                             ->helperText(function ($record) {
                                 $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
@@ -132,7 +133,12 @@ class MembershipForm
                             ->iconPosition(IconPosition::After)
                             ->iconColor('danger')
                             ->icon(function ($record) {
-                                $hasFeeCovered = count($record->subscription('default')->items) > 1;
+                                $subscription = $record->subscription('default');
+                                if (! $subscription) {
+                                    return null;
+                                }
+
+                                $hasFeeCovered = count($subscription->items) > 1;
 
                                 return $hasFeeCovered ? 'tabler-heart-dollar' : null;
                             }),

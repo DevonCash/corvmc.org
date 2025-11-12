@@ -65,15 +65,15 @@ class ReservationForm
     {
         return [
             // Step 1: Reservation Details
-            Wizard\Step::make('Details')
-                ->description('Set up your reservation')
+            Wizard\Step::make('Schedule')
+                // ->description('Set up your reservation')
                 ->icon('tabler-calendar-time')
                 ->schema(static::reservationStep())
                 ->columns(2),
 
             // Step 2: Confirmation
             Wizard\Step::make('Confirm')
-                ->description('Review and confirm your reservation')
+                // ->description('Review and confirm your reservation')
                 ->icon('tabler-circle-check')
                 ->schema(static::confirmationStep()),
 

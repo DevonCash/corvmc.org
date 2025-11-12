@@ -111,9 +111,10 @@
                             Free Hours
                             @if(!$isSustainingMember)
                                 <a
-                                    href="#"
+                                    href="/member/membership"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     class="text-primary-600 dark:text-primary-400 hover:underline ml-1"
-                                    wire:click.prevent="$dispatch('open-modal', { id: 'sustaining-member-info' })"
                                 >
                                     (learn more)
                                 </a>
