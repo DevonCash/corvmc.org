@@ -32,7 +32,8 @@ class SendDailyReservationDigest extends Command
         $this->info('Sending daily reservation digest...');
 
         // Get all reservations for today, ordered by start time
-        $todaysReservations = RehearsalReservation::whereDate('reserved_at', today())
+        $todaysReservations = RehearsalReservation::with('reservable')
+            ->whereDate('reserved_at', today())
             ->whereIn('status', ['confirmed', 'pending'])
             ->orderBy('reserved_at')
             ->get();
@@ -45,6 +46,7 @@ class SendDailyReservationDigest extends Command
 
         if ($admins->isEmpty()) {
             $this->warn('No admin users found to send digest to.');
+
             return Command::FAILURE;
         }
 
