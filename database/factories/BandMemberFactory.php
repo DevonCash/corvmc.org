@@ -21,11 +21,34 @@ class BandMemberFactory extends Factory
         return [
             'band_profile_id' => Band::factory(),
             'user_id' => User::factory(),
-            'name' => $this->faker->name(),
-            'role' => $this->faker->randomElement(['vocalist', 'guitarist', 'bassist', 'drummer', 'keyboardist']),
-            'position' => $this->faker->randomElement(['lead', 'rhythm', 'backup']),
-            'status' => $this->faker->randomElement(['active', 'inactive', 'pending']),
-            'invited_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
+            'role' => $this->faker->randomElement(['member', 'admin']),
+            'position' => $this->faker->randomElement([
+                'Lead Vocalist', 'Backing Vocalist', 'Lead Guitarist', 'Rhythm Guitarist',
+                'Bassist', 'Drummer', 'Keyboardist', 'Pianist', 'Saxophonist',
+            ]),
+            'status' => 'active',
+            'invited_at' => null,
         ];
+    }
+
+    /**
+     * Create an invited (pending) band member.
+     */
+    public function invited(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'invited',
+            'invited_at' => $this->faker->dateTimeBetween('-30 days', 'now'),
+        ]);
+    }
+
+    /**
+     * Create an admin band member.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'admin',
+        ]);
     }
 }
