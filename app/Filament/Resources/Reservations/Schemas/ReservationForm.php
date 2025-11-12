@@ -9,7 +9,6 @@ use App\Actions\Reservations\GetValidEndTimesForDate;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -83,45 +82,10 @@ class ReservationForm
 
     public static function reservationStep(): array
     {
-        $isAdmin = User::me()?->can('manage practice space');
-
         return [
-            // Admin-only member selection at the top if needed
-            ...$isAdmin ? [
-                Select::make('user_id')
-                    ->label('Member (Admin Only)')
-                    ->options(User::query()->orderBy('name')->pluck('name', 'id'))
-                    ->default(Auth::user()->id)
-                    ->searchable()
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(function ($state, callable $set, Get $get) {
-                        self::calculateCost($state, $get, $set);
-                    }),
-                Select::make('status_override')
-                    ->label('Status (Admin Only)')
-                    ->hintIcon('tabler-circle-info')
-                    ->hintIconTooltip('Override the default status based on your selection.')
-                    ->options([
-                        'auto' => 'Default (based on date/type)',
-                        'pending' => 'Force Pending',
-                        'confirmed' => 'Force Confirmed',
-                        'cancelled' => 'Cancelled',
-                    ])
-                    ->default('auto')
-                    ->live()
-                    ->afterStateUpdated(function ($state, callable $set, Get $get) {
-                        if ($state === 'auto') {
-                            self::updateStatus($get, $set);
-                        } else {
-                            $set('status', $state);
-                        }
-                    }),
-            ] : [
-                Hidden::make('user_id')
-                    ->default(Auth::user()?->id)
-                    ->required(),
-            ],
+            Hidden::make('user_id')
+                ->default(Auth::user()?->id)
+                ->required(),
 
             Section::make('Date & Time')
                 ->compact()
@@ -210,50 +174,6 @@ class ReservationForm
                 ->placeholder('What will you be working on? Any special setup needed?')
                 ->rows(3)
                 ->columnSpanFull(),
-
-            // Admin-only payment controls
-            ...$isAdmin ? [
-                Section::make('Payment Management (Admin)')
-                    ->compact()
-                    ->schema([
-                        Select::make('payment_status')
-                            ->label('Payment Status')
-                            ->options([
-                                'unpaid' => 'Unpaid',
-                                'paid' => 'Paid',
-                                'comped' => 'Comped',
-                                'refunded' => 'Refunded',
-                            ])
-                            ->default('unpaid')
-                            ->live(),
-
-                        Select::make('payment_method')
-                            ->label('Payment Method')
-                            ->options([
-                                'cash' => 'Cash',
-                                'card' => 'Credit/Debit Card',
-                                'venmo' => 'Venmo',
-                                'paypal' => 'PayPal',
-                                'zelle' => 'Zelle',
-                                'check' => 'Check',
-                                'comp' => 'Comped',
-                                'other' => 'Other',
-                            ])
-                            ->visible(fn (Get $get) => $get('payment_status') !== 'unpaid'),
-
-                        DateTimePicker::make('paid_at')
-                            ->label('Payment Date')
-                            ->visible(fn (Get $get) => in_array($get('payment_status'), ['paid', 'comped', 'refunded']))
-                            ->default(now()),
-
-                        Textarea::make('payment_notes')
-                            ->label('Payment Notes')
-                            ->placeholder('Notes about payment, comp reason, etc.')
-                            ->rows(2)
-                            ->visible(fn (Get $get) => $get('payment_status') !== 'unpaid'),
-                    ])
-                    ->columns(2),
-            ] : [],
 
             // Hidden fields for the actual datetime values and status
             Hidden::make('reserved_at'),
