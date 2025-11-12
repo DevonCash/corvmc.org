@@ -34,6 +34,9 @@ class MemberProfileSeeder extends Seeder
         // 6. Multi-instrumentalist with extensive profile
         UserFactory::createMultiInstrumentalist();
 
+        // 7-11. Sustaining members (get 4 free hours/month)
+        $this->createSustainingMembers(5);
+
         // Generate additional random profiles
         UserFactory::createRandomUsers(15);
 
@@ -44,5 +47,13 @@ class MemberProfileSeeder extends Seeder
         UserFactory::createRandomUsers(3, ['bio' => null]);
 
         $this->command->info('Created member profiles with diverse configurations for testing');
+    }
+
+    private function createSustainingMembers(int $count): void
+    {
+        for ($i = 0; $i < $count; $i++) {
+            $result = UserFactory::createRandomUser(['visibility' => 'public']);
+            $result['user']->assignRole('sustaining member');
+        }
     }
 }
