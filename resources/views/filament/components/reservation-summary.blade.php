@@ -224,13 +224,13 @@
                         </div>
                     </div>
                 @else
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-start gap-2">
                         <x-filament::icon
-                            icon="tabler-circle-check"
-                            class="w-5 h-5 text-success-600 dark:text-success-400"
+                            icon="tabler-info-circle"
+                            class="w-5 h-5 text-primary-600 dark:text-primary-400 mt-0.5 flex-shrink-0"
                         />
-                        <span class="text-sm font-medium text-success-700 dark:text-success-300">
-                            This reservation will be immediately confirmed.
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Payment is due at time of reservation.
                         </span>
                     </div>
                 @endif
