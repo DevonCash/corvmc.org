@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Production;
+use App\Models\Event;
 use App\Models\Reservation;
 use App\Models\User;
 use Closure;
@@ -67,19 +67,19 @@ class PracticeSpaceCalendar extends CalendarWidget
                     ->textColor('#fff');
             });
 
-        $productions = Production::with('manager')
+        $events = Event::with('manager')
             ->where('end_time', '>=', $start)
             ->where('start_time', '<=', $end)
             ->where('status', '!=', 'cancelled')
             ->get()
-            ->filter(fn (Production $production) => $production->usesPracticeSpace())
-            ->map(function (Production $production) {
-                $title = $production->title;
-                if (! $production->isPublished()) {
+            ->filter(fn (Production $event) => $event->usesPracticeSpace())
+            ->map(function (Production $event) {
+                $title = $event->title;
+                if (! $event->isPublished()) {
                     $title .= ' (Draft)';
                 }
 
-                $color = match ($production->status) {
+                $color = match ($event->status) {
                     'pre-production' => '#8b5cf6', // purple
                     'production' => '#3b82f6',     // blue
                     'completed' => '#10b981',      // green
@@ -87,16 +87,16 @@ class PracticeSpaceCalendar extends CalendarWidget
                     default => '#6b7280',          // gray
                 };
 
-                return CalendarEvent::make($production)
+                return CalendarEvent::make($event)
                     ->title($title)
-                    ->start($production->start_time)
-                    ->end($production->end_time)
+                    ->start($event->start_time)
+                    ->end($event->end_time)
                     ->backgroundColor($color)
                     ->textColor('#fff');
             });
 
         // Return all events
-        return collect([])->merge($reservations)->merge($productions)->toArray();
+        return collect([])->merge($reservations)->merge($events)->toArray();
     }
 
     public function getConfig(): array

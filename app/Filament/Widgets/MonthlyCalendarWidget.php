@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Production;
+use App\Models\Event;
 use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
@@ -37,7 +37,7 @@ class MonthlyCalendarWidget extends CalendarWidget
                 if ($isOwnReservation || $canViewDetails) {
                     $title = $reservation->user->name;
                     if ($reservation->notes) {
-                        $title .= ' - ' . $reservation->notes;
+                        $title .= ' - '.$reservation->notes;
                     }
                 } else {
                     $title = 'Reserved';
@@ -59,16 +59,16 @@ class MonthlyCalendarWidget extends CalendarWidget
                     ->textColor('#fff');
             });
 
-        $productions = Production::with('manager')
+        $events = Event::with('manager')
             ->get()
-            ->filter(fn(Production $production) => $production->usesPracticeSpace())
-            ->map(function (Production $production) {
-                $title = $production->title;
-                if (! $production->isPublished()) {
+            ->filter(fn (Production $event) => $event->usesPracticeSpace())
+            ->map(function (Production $event) {
+                $title = $event->title;
+                if (! $event->isPublished()) {
                     $title .= ' (Draft)';
                 }
 
-                $color = match ($production->status) {
+                $color = match ($event->status) {
                     'pre-production' => '#8b5cf6', // purple
                     'production' => '#3b82f6',     // blue
                     'completed' => '#10b981',      // green
@@ -76,10 +76,10 @@ class MonthlyCalendarWidget extends CalendarWidget
                     default => '#6b7280',          // gray
                 };
 
-                return CalendarEvent::make($production)
+                return CalendarEvent::make($event)
                     ->title($title)
-                    ->start($production->start_time)
-                    ->end($production->end_time)
+                    ->start($event->start_time)
+                    ->end($event->end_time)
                     ->backgroundColor($color)
                     ->action('view')
                     ->textColor('#fff');
@@ -87,8 +87,8 @@ class MonthlyCalendarWidget extends CalendarWidget
 
         // Return all events
         return $reservations
-            ->merge($productions)
-            ->map(fn($event) => $event->action('view'))
+            ->merge($events)
+            ->map(fn ($event) => $event->action('view'))
             ->toArray();
     }
 

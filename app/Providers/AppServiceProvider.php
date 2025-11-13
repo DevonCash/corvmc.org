@@ -3,21 +3,17 @@
 namespace App\Providers;
 
 use App\Livewire\Synthesizers\MoneySynthesizer;
-use App\Models\Production;
-use App\Models\Reservation;
 use App\Models\Subscription;
 use App\Models\User;
-use App\Observers\ProductionObserver;
 use App\Observers\ReservationObserver;
 use App\Observers\TagObserver;
 use App\Observers\UserObserver;
+use BezhanSalleh\PanelSwitch\PanelSwitch;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
 use Livewire\Livewire;
-use BezhanSalleh\PanelSwitch\PanelSwitch;
-
 use Spatie\Tags\Tag;
 
 class AppServiceProvider extends ServiceProvider
@@ -32,7 +28,6 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-
 
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
             // Custom configurations go here
@@ -53,8 +48,8 @@ class AppServiceProvider extends ServiceProvider
         // Register model observers for cache invalidation
         User::observe(UserObserver::class);
         \App\Models\RehearsalReservation::observe(ReservationObserver::class);
-        \App\Models\ProductionReservation::observe(ReservationObserver::class);
-        Production::observe(ProductionObserver::class);
+        \App\Models\EventReservation::observe(ReservationObserver::class);
+        \App\Models\Event::observe(\App\Observers\EventObserver::class);
         Tag::observe(TagObserver::class);
 
         // Register facade aliases

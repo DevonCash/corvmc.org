@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\Production;
+use App\Models\Event;
 
 class EventsGrid extends SearchableGrid
 {
@@ -16,14 +16,14 @@ class EventsGrid extends SearchableGrid
 
     protected function getModelClass(): string
     {
-        return Production::class;
+        return Event::class;
     }
 
     protected function getBaseQuery()
     {
         return match ($this->scope) {
-            'past' => Production::publishedPast(),
-            default => Production::publishedUpcoming(),
+            'past' => Event::publishedPast(),
+            default => Event::publishedUpcoming(),
         };
     }
 
@@ -91,28 +91,28 @@ class EventsGrid extends SearchableGrid
         $query = $this->getBaseQuery();
 
         // Apply case-insensitive search across title, tags, and performers if we have search term
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $query->where(function ($q) {
                 $searchTerm = $this->search;
-                
+
                 // Search in title (use ilike for PostgreSQL case-insensitive search)
-                $q->where('title', 'ilike', '%' . $searchTerm . '%')
+                $q->where('title', 'ilike', '%'.$searchTerm.'%')
                   // Search in tags/genres using spatie package methods
-                  ->orWhere(function ($tagQuery) use ($searchTerm) {
-                      // Get all genre tags that contain the search term
-                      $genreTags = \Spatie\Tags\Tag::getWithType('genre')
-                          ->filter(function ($tag) use ($searchTerm) {
-                              return stripos($tag->name, $searchTerm) !== false;
-                          });
-                      
-                      if ($genreTags->isNotEmpty()) {
-                          $tagQuery->withAnyTags($genreTags->pluck('name')->toArray(), 'genre');
-                      }
-                  })
+                    ->orWhere(function ($tagQuery) use ($searchTerm) {
+                        // Get all genre tags that contain the search term
+                        $genreTags = \Spatie\Tags\Tag::getWithType('genre')
+                            ->filter(function ($tag) use ($searchTerm) {
+                                return stripos($tag->name, $searchTerm) !== false;
+                            });
+
+                        if ($genreTags->isNotEmpty()) {
+                            $tagQuery->withAnyTags($genreTags->pluck('name')->toArray(), 'genre');
+                        }
+                    })
                   // Search in performer/band names
-                  ->orWhereHas('performers', function ($performerQuery) use ($searchTerm) {
-                      $performerQuery->where('name', 'ilike', '%' . $searchTerm . '%');
-                  });
+                    ->orWhereHas('performers', function ($performerQuery) use ($searchTerm) {
+                        $performerQuery->where('name', 'ilike', '%'.$searchTerm.'%');
+                    });
             });
         }
 

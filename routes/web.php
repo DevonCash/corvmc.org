@@ -1,15 +1,15 @@
 <?php
 
 use App\Models\Band;
+use App\Models\Event;
 use App\Models\MemberProfile;
-use App\Models\Production;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // Public website routes
 Route::get('/', function () {
-    $upcomingEvents = Production::publishedUpcoming()
+    $upcomingEvents = Event::publishedUpcoming()
         ->with('media')
         ->limit(3)
         ->get();
@@ -17,7 +17,7 @@ Route::get('/', function () {
     // Calculate stats from database
     $stats = [
         'active_members' => MemberProfile::whereIn('visibility', ['public', 'members'])->count(),
-        'monthly_events' => Production::publishedUpcoming()
+        'monthly_events' => Event::publishedUpcoming()
             ->whereBetween('start_time', [now()->startOfMonth(), now()->endOfMonth()])
             ->count(),
         'practice_hours' => \App\Models\Reservation::where('status', 'confirmed')
@@ -63,19 +63,19 @@ Route::get('/events', function () {
     return view('public.events.index');
 })->name('events.index');
 
-Route::get('/events/{production}', function (Production $production) {
-    abort_if($production->published_at > now() || $production->published_at === null, 404);
+Route::get('/events/{event}', function (Event $event) {
+    abort_if($event->published_at > now() || $event->published_at === null, 404);
 
-    return view('public.events.show', compact('production'));
-})->where('production', '[0-9]+')->name('events.show');
+    return view('public.events.show', compact('event'));
+})->where('event', '[0-9]+')->name('events.show');
 
 Route::get('/show-tonight', function () {
-    // Find next published production happening today
-    $tonightShow = Production::publishedToday()->first();
+    // Find next published event happening today
+    $tonightShow = Event::publishedToday()->first();
 
     // If no show tonight, get next upcoming published show
     if (! $tonightShow) {
-        $tonightShow = Production::publishedUpcoming()->first();
+        $tonightShow = Event::publishedUpcoming()->first();
     }
 
     // If still no show found, redirect to events listing with message

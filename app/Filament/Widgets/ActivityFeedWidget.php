@@ -11,7 +11,7 @@ class ActivityFeedWidget extends Widget
 {
     protected string $view = 'filament.widgets.activity-feed-widget';
 
-    protected int | string | array $columnSpan = [
+    protected int|string|array $columnSpan = [
         'md' => 2,
         'xl' => 1,
     ];
@@ -70,10 +70,11 @@ class ActivityFeedWidget extends Widget
 
     protected function formatProductionDescription(Activity $activity, string $causerName, string $action): string
     {
-        $production = $activity->subject;
-        if ($production && $production->title) {
-            return "{$causerName} {$action} event \"{$production->title}\"";
+        $event = $activity->subject;
+        if ($event && $event->title) {
+            return "{$causerName} {$action} event \"{$event->title}\"";
         }
+
         return "{$causerName} {$action} an event";
     }
 
@@ -82,14 +83,17 @@ class ActivityFeedWidget extends Widget
         $band = $activity->subject;
         if ($band && $band->name) {
             $actionText = $action === 'created' ? 'created' : 'updated';
+
             return "{$causerName} {$actionText} band \"{$band->name}\"";
         }
+
         return "{$causerName} {$action} a band profile";
     }
 
     protected function formatMemberDescription(Activity $activity, string $causerName, string $action): string
     {
         $actionText = $action === 'completed' ? 'completed their profile' : 'updated their profile';
+
         return "{$causerName} {$actionText}";
     }
 
@@ -115,7 +119,7 @@ class ActivityFeedWidget extends Widget
         }
 
         // Generic message for others
-        return "Practice space activity";
+        return 'Practice space activity';
     }
 
     protected function getActivityIcon(Activity $activity): string
@@ -151,7 +155,7 @@ class ActivityFeedWidget extends Widget
     protected function canViewActivity(Activity $activity, $currentUser): bool
     {
         // If no subject (activity was about deleted model), hide it
-        if (!$activity->subject) {
+        if (! $activity->subject) {
             return false;
         }
 
@@ -182,7 +186,7 @@ class ActivityFeedWidget extends Widget
 
     protected function canViewMemberProfileActivity($memberProfile, $currentUser): bool
     {
-        if (!$memberProfile) {
+        if (! $memberProfile) {
             return false;
         }
 
@@ -192,7 +196,7 @@ class ActivityFeedWidget extends Widget
 
     protected function canViewBandProfileActivity($bandProfile, $currentUser): bool
     {
-        if (!$bandProfile) {
+        if (! $bandProfile) {
             return false;
         }
 
@@ -201,7 +205,7 @@ class ActivityFeedWidget extends Widget
             return true;
         }
 
-        if (!$currentUser) {
+        if (! $currentUser) {
             return false;
         }
 
@@ -218,20 +222,20 @@ class ActivityFeedWidget extends Widget
         return false;
     }
 
-    protected function canViewProductionActivity($production, $currentUser): bool
+    protected function canViewProductionActivity($event, $currentUser): bool
     {
-        if (!$production) {
+        if (! $event) {
             return false;
         }
 
         // Productions are generally visible if published
-        if ($production->isPublished()) {
+        if ($event->isPublished()) {
             return true;
         }
 
         // Unpublished productions only visible to manager and staff
         if ($currentUser) {
-            return $production->manager_id === $currentUser->id ||
+            return $event->manager_id === $currentUser->id ||
                 $currentUser->can('view productions');
         }
 
@@ -240,7 +244,7 @@ class ActivityFeedWidget extends Widget
 
     protected function canViewReservationActivity($reservation, $currentUser): bool
     {
-        if (!$reservation || !$currentUser) {
+        if (! $reservation || ! $currentUser) {
             return false;
         }
 
