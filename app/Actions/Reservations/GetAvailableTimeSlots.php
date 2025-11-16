@@ -3,18 +3,18 @@
 namespace App\Actions\Reservations;
 
 use App\Models\Reservation;
-use App\Models\Production;
 use Carbon\Carbon;
+use Lorisleiva\Actions\Concerns\AsAction;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetAvailableTimeSlots
 {
     use AsAction;
 
     /**
-     * Get available time slots for a given date considering both reservations and productions.
+     * Get available time slots for a given date considering all reservations.
+     * Note: Events automatically create reservations, so we only need to check reservations.
      */
     public function handle(Carbon $date, int $durationHours = 1): array
     {
@@ -22,7 +22,7 @@ class GetAvailableTimeSlots
         $startHour = 9; // 9 AM
         $endHour = 22; // 10 PM
 
-        // Get all reservations and productions for the day once to optimize queries
+        // Get all reservations for the day once to optimize queries
         $dayStart = $date->copy()->setTime(0, 0);
         $dayEnd = $date->copy()->setTime(23, 59);
 
@@ -31,14 +31,6 @@ class GetAvailableTimeSlots
             ->where('reserved_until', '>', $dayStart)
             ->where('reserved_at', '<', $dayEnd)
             ->get();
-
-        $existingProductions = Production::query()
-            ->where('end_time', '>', $dayStart)
-            ->where('start_time', '<', $dayEnd)
-            ->get()
-            ->filter(function (Production $production) {
-                return $production->usesPracticeSpace();
-            });
 
         for ($hour = $startHour; $hour <= $endHour - $durationHours; $hour++) {
             $slotStart = $date->copy()->setTime($hour, 0);
@@ -49,11 +41,7 @@ class GetAvailableTimeSlots
                 return $reservation->overlapsWith($slotPeriod);
             });
 
-            $hasProductionConflict = $existingProductions->contains(function (Production $production) use ($slotPeriod) {
-                return $production->overlapsWith($slotPeriod);
-            });
-
-            if (!$hasReservationConflict && !$hasProductionConflict) {
+            if (! $hasReservationConflict) {
                 $slots[] = [
                     'start' => $slotStart,
                     'end' => $slotEnd,

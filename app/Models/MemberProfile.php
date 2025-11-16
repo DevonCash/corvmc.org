@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Data\ContactData;
-use App\Models\ContentModel;
+use App\Enums\Visibility;
 use App\Models\Scopes\MemberVisibilityScope;
 use App\Settings\MemberDirectorySettings;
 use Illuminate\Contracts\Support\Htmlable;
@@ -12,18 +12,21 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Represents a member profile in the application.
- * 
+ *
  * It includes details about the user, their bio, links, and contact information.
  */
 class MemberProfile extends ContentModel
 {
     // Report configuration
     protected static int $reportThreshold = 5;
+
     protected static bool $reportAutoHide = false;
+
     protected static string $reportableTypeName = 'Member Profile';
 
     // Activity logging configuration
     protected static array $loggedFields = ['bio', 'hometown', 'visibility', 'pronouns'];
+
     protected static string $logTitle = 'Member profile';
 
     /**
@@ -39,7 +42,7 @@ class MemberProfile extends ContentModel
         ];
     }
 
-    public static function getGlobalSearchResultTitle(Model $record): string | Htmlable
+    public static function getGlobalSearchResultTitle(Model $record): string|Htmlable
     {
         return $record->user->name;
     }
@@ -63,13 +66,14 @@ class MemberProfile extends ContentModel
         'links' => 'array',
         'contact' => ContactData::class,
         'embeds' => 'array',
+        'visibility' => Visibility::class,
     ];
 
     public function getAvatarAttribute(): ?string
     {
         $url = $this->getFirstMediaUrl('avatar');
 
-        return $url ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=200';
+        return $url ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user->name).'&size=200';
     }
 
     public function getNameAttribute(): string
@@ -79,22 +83,22 @@ class MemberProfile extends ContentModel
 
     public function getAvatarUrlAttribute(): string
     {
-        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=300';
+        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user->name).'&size=300';
     }
 
     public function getAvatarThumbUrlAttribute(): string
     {
-        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=100';
+        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user->name).'&size=100';
     }
 
     public function getAvatarLargeUrlAttribute(): string
     {
-        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=600';
+        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user->name).'&size=600';
     }
 
     public function getAvatarOptimizedUrlAttribute(): string
     {
-        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=1200';
+        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user->name).'&size=1200';
     }
 
     public function user()
@@ -105,8 +109,8 @@ class MemberProfile extends ContentModel
     public function isComplete(): bool
     {
         // Check if profile has key information filled out
-        return !empty($this->bio) &&
-            !empty($this->skills);
+        return ! empty($this->bio) &&
+            ! empty($this->skills);
     }
 
     /**

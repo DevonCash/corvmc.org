@@ -32,7 +32,7 @@ class BulkDeleteEquipmentAction
 
                 $base = "Delete {$count} selected equipment item(s)?";
 
-                return $warnings ? $base . "\n\n" . implode("\n", $warnings) : $base;
+                return $warnings ? $base."\n\n".implode("\n", $warnings) : $base;
             })
             ->deselectRecordsAfterCompletion()
             ->before(function ($records) {
@@ -41,7 +41,7 @@ class BulkDeleteEquipmentAction
 
                 if ($cannotDelete->count() > 0) {
                     $names = $cannotDelete->pluck('name')->take(3)->join(', ');
-                    $extra = $cannotDelete->count() > 3 ? ' and ' . ($cannotDelete->count() - 3) . ' more' : '';
+                    $extra = $cannotDelete->count() > 3 ? ' and '.($cannotDelete->count() - 3).' more' : '';
 
                     Notification::make()
                         ->warning()
@@ -54,7 +54,7 @@ class BulkDeleteEquipmentAction
             })
             ->action(function ($records) {
                 // Only delete equipment that isn't checked out
-                $deletableRecords = $records->filter(fn ($record) => !$record->is_checked_out);
+                $deletableRecords = $records->filter(fn ($record) => ! $record->is_checked_out);
                 $deletedCount = 0;
 
                 foreach ($deletableRecords as $record) {

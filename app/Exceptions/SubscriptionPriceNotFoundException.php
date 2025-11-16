@@ -8,7 +8,7 @@ class SubscriptionPriceNotFoundException extends SubscriptionException
     {
         $type = $isFeeCoverage ? 'fee coverage' : 'base';
         $message = "Stripe price for {$type} amount \${$amount} not found. Please run: php artisan subscription:create-prices";
-        
+
         parent::__construct($message);
     }
 }

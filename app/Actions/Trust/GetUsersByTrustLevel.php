@@ -17,14 +17,14 @@ class GetUsersByTrustLevel
      */
     public function handle(string $level, string $contentType = 'global'): Collection
     {
-        $minPoints = match($level) {
+        $minPoints = match ($level) {
             'auto-approved' => TrustConstants::TRUST_AUTO_APPROVED,
             'verified' => TrustConstants::TRUST_VERIFIED,
             'trusted' => TrustConstants::TRUST_TRUSTED,
             default => 0
         };
 
-        $maxPoints = match($level) {
+        $maxPoints = match ($level) {
             'verified' => TrustConstants::TRUST_AUTO_APPROVED - 1,
             'trusted' => TrustConstants::TRUST_VERIFIED - 1,
             'pending' => TrustConstants::TRUST_TRUSTED - 1,

@@ -19,9 +19,9 @@ class GetProfilesWithFlag
         $query = MemberProfile::withFlag($flag);
 
         // Apply visibility filter
-        if (!$viewingUser) {
+        if (! $viewingUser) {
             $query->where('visibility', 'public');
-        } elseif (!$viewingUser->can('view private member profiles')) {
+        } elseif (! $viewingUser->can('view private member profiles')) {
             $query->where(function ($q) use ($viewingUser) {
                 $q->where('visibility', 'public')
                     ->orWhere('user_id', $viewingUser->id)

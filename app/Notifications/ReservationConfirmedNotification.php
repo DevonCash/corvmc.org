@@ -36,15 +36,15 @@ class ReservationConfirmedNotification extends Notification implements ShouldQue
             ->greeting('Hello!')
             ->line('Your practice space reservation has been confirmed!')
             ->line('**Reservation Details:**')
-            ->line('Time: ' . $this->reservation->time_range)
-            ->line('Duration: ' . number_format($this->reservation->duration, 1) . ' hours')
-            ->line('Cost: ' . $this->reservation->cost_display);
+            ->line('Time: '.$this->reservation->time_range)
+            ->line('Duration: '.number_format($this->reservation->duration, 1).' hours')
+            ->line('Cost: '.$this->reservation->cost_display);
 
         if ($this->reservation->notes) {
-            $message->line('**Notes:** ' . $this->reservation->notes);
+            $message->line('**Notes:** '.$this->reservation->notes);
         }
 
-        if ($this->reservation->isUnpaid() && !$this->reservation->cost->isZero()) {
+        if ($this->reservation->isUnpaid() && ! $this->reservation->cost->isZero()) {
             $message->line('**Payment Required:** Please bring payment or pay online before your session.');
         }
 
@@ -61,7 +61,7 @@ class ReservationConfirmedNotification extends Notification implements ShouldQue
     {
         return [
             'title' => 'Reservation Confirmed',
-            'body' => 'Your practice space reservation for ' . $this->reservation->reserved_at->format('M j, Y g:i A') . ' has been confirmed.',
+            'body' => 'Your practice space reservation for '.$this->reservation->reserved_at->format('M j, Y g:i A').' has been confirmed.',
             'icon' => 'tabler-clock-check',
             'reservation_id' => $this->reservation->id,
             'reserved_at' => $this->reservation->reserved_at,

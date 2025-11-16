@@ -17,8 +17,7 @@ class EscalateReportAction
             ->icon('tabler-circle-arrow-up')
             ->color('warning')
             ->visible(
-                fn(Report $record): bool =>
-                $record->status === 'pending' && Auth::user()->can('escalate', [$record])
+                fn (Report $record): bool => $record->status === 'pending' && Auth::user()->can('escalate', [$record])
             )
             ->requiresConfirmation()
             ->schema([

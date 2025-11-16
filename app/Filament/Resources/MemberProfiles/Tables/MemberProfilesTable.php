@@ -20,7 +20,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class MemberProfilesTable
@@ -35,7 +34,7 @@ class MemberProfilesTable
             ->defaultImageUrl(function ($record) {
                 $name = $record->user?->name ?? 'Member';
 
-                return 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&color=7F9CF5&background=EBF4FF&size=160';
+                return 'https://ui-avatars.com/api/?name='.urlencode($name).'&color=7F9CF5&background=EBF4FF&size=160';
             });
     }
 
@@ -72,7 +71,7 @@ class MemberProfilesTable
     public static function bioColumn()
     {
         return TextColumn::make('bio')
-            ->state(fn($record) => strip_tags($record->bio))
+            ->state(fn ($record) => strip_tags($record->bio))
             ->label('')
             ->lineClamp(2)
             ->color('gray');
@@ -149,7 +148,7 @@ class MemberProfilesTable
                                     ->multiple()
                                     ->searchable()
                                     ->options(function () {
-                                        return Cache::tags(['member_directory', 'tags'])->remember('member_directory.skills', 3600, function() {
+                                        return Cache::tags(['member_directory', 'tags'])->remember('member_directory.skills', 3600, function () {
                                             return \Spatie\Tags\Tag::where('type', 'skill')
                                                 ->pluck('name', 'name')
                                                 ->toArray();
@@ -161,7 +160,7 @@ class MemberProfilesTable
                                     ->multiple()
                                     ->searchable()
                                     ->options(function () {
-                                        return Cache::tags(['member_directory', 'tags'])->remember('member_directory.genres', 3600, function() {
+                                        return Cache::tags(['member_directory', 'tags'])->remember('member_directory.genres', 3600, function () {
                                             return \Spatie\Tags\Tag::where('type', 'genre')
                                                 ->pluck('name', 'name')
                                                 ->toArray();
@@ -173,7 +172,7 @@ class MemberProfilesTable
                                     ->multiple()
                                     ->searchable()
                                     ->options(function () {
-                                        return Cache::tags(['member_directory', 'tags'])->remember('member_directory.influences', 3600, function() {
+                                        return Cache::tags(['member_directory', 'tags'])->remember('member_directory.influences', 3600, function () {
                                             return \Spatie\Tags\Tag::where('type', 'influence')
                                                 ->pluck('name', 'name')
                                                 ->toArray();
@@ -187,6 +186,7 @@ class MemberProfilesTable
                                     ->label('Services')
                                     ->options(function () {
                                         $settings = app(MemberDirectorySettings::class);
+
                                         return $settings->getAvailableFlags();
                                     })
                                     ->columns(function () {
@@ -198,7 +198,7 @@ class MemberProfilesTable
 
                                 Select::make('visibility')
                                     ->label('Visibility 🛡️')
-                                    ->visible(fn() => User::me()?->can('view private member profiles'))
+                                    ->visible(fn () => User::me()?->can('view private member profiles'))
                                     ->options([
                                         'public' => 'Public',
                                         'members' => 'Members Only',
@@ -207,25 +207,25 @@ class MemberProfilesTable
                             ]),
                     ])
                     ->query(function ($query, array $data) {
-                        if (!empty($data['visibility'])) {
+                        if (! empty($data['visibility'])) {
                             // Handle visibility filter
                         }
 
-                        if (!empty($data['flags'])) {
+                        if (! empty($data['flags'])) {
                             foreach ($data['flags'] as $flag) {
                                 $query->withFlag($flag);
                             }
                         }
 
-                        if (!empty($data['skills'])) {
+                        if (! empty($data['skills'])) {
                             $query->withAnyTags($data['skills'], 'skill');
                         }
 
-                        if (!empty($data['genres'])) {
+                        if (! empty($data['genres'])) {
                             $query->withAnyTags($data['genres'], 'genre');
                         }
 
-                        if (!empty($data['influences'])) {
+                        if (! empty($data['influences'])) {
                             $query->withAnyTags($data['influences'], 'influence');
                         }
 

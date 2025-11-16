@@ -15,7 +15,7 @@ class ToggleActiveStatus
     public function handle(StaffProfile $staffProfile): bool
     {
         return $staffProfile->update([
-            'is_active' => !$staffProfile->is_active
+            'is_active' => ! $staffProfile->is_active,
         ]);
     }
 }

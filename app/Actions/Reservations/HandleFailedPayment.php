@@ -2,6 +2,7 @@
 
 namespace App\Actions\Reservations;
 
+use App\Enums\PaymentStatus;
 use App\Models\RehearsalReservation;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -19,7 +20,7 @@ class HandleFailedPayment
         $notes = $sessionId ? "Payment failed/cancelled (Session: {$sessionId})" : 'Payment cancelled by user';
 
         $reservation->update([
-            'payment_status' => 'unpaid',
+            'payment_status' => PaymentStatus::Unpaid,
             'payment_notes' => $notes,
         ]);
     }

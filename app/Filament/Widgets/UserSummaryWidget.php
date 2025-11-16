@@ -13,17 +13,19 @@ class UserSummaryWidget extends Widget
 
     protected static bool $isLazy = false;
 
+    protected static bool $isDiscovered = false; // Hide this widget - merged into QuickActionsWidget
+
     protected string $view = 'filament.widgets.user-summary-widget';
 
     public function getUserStats(): array
     {
         $user = User::me();
 
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
-        return Cache::remember("user_stats.{$user->id}", 300, function() use ($user) {
+        return Cache::remember("user_stats.{$user->id}", 300, function () use ($user) {
             $stats = [
                 'upcoming_reservations' => $user->rehearsals
                     ->where('reserved_at', '>', now())
@@ -51,24 +53,24 @@ class UserSummaryWidget extends Widget
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
-        return Cache::remember("user_activity.{$user->id}", 600, function() use ($user) {
+        return Cache::remember("user_activity.{$user->id}", 600, function () use ($user) {
             $activities = [];
 
             $recentReservations = $user->rehearsals;
-                // ->where('reserved_at', '>', now()->subDays(30))
-                // ->orderBy('reserved_at', 'desc')
-                // ->limit(3)
-                // ->get();
+            // ->where('reserved_at', '>', now()->subDays(30))
+            // ->orderBy('reserved_at', 'desc')
+            // ->limit(3)
+            // ->get();
 
             foreach ($recentReservations as $reservation) {
                 $activities[] = [
                     'type' => 'reservation',
                     'date' => $reservation->reserved_at,
-                    'description' => 'Practice room booked for ' . $reservation->reserved_at->format('M j, g:i A'),
+                    'description' => 'Practice room booked for '.$reservation->reserved_at->format('M j, g:i A'),
                     'icon' => 'tabler-calendar',
                     'url' => route('filament.member.resources.reservations.view', ['record' => $reservation->id]),
                     'model' => $reservation,

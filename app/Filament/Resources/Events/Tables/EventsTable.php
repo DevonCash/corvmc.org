@@ -67,7 +67,7 @@ class EventsTable
                         return 'success';
                     })
                     ->tooltip(fn ($state) => $state ? 'Published on '.$state->format('M j, Y H:i A') : 'Not published'),
-                TextColumn::make('manager.name')
+                TextColumn::make('organizer.name')
                     ->sortable(),
             ])
             ->filters([

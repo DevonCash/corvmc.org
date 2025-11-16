@@ -33,10 +33,10 @@ class ViewBand extends Page
         if ($genres->count() > 0) {
             $genreText = $genres->take(3)->join(', ');
 
-            return $genreText . $location;
+            return $genreText.$location;
         }
 
-        return 'Band' . $location;
+        return 'Band'.$location;
     }
 
     public function getBreadCrumbs(): array
@@ -53,9 +53,9 @@ class ViewBand extends Page
             AddBandMember::filamentAction()
                 ->record($this->record),
             EditAction::make()
-                ->visible(fn() => User::me()?->can('update', $this->record)),
+                ->visible(fn () => User::me()?->can('update', $this->record)),
             ReportContentAction::make()
-                ->visible(fn() => Auth::user()->id !== $this->record->owner_id), // Don't show report button to owner
+                ->visible(fn () => Auth::user()->id !== $this->record->owner_id), // Don't show report button to owner
         ];
     }
 

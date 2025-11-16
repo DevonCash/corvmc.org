@@ -18,15 +18,15 @@ class WarmUpCaches
         // Warm up tag caches for member directory (only if cache supports tagging)
         try {
             if (Cache::getStore() instanceof \Illuminate\Cache\TaggableStore) {
-                Cache::tags(['member_directory', 'tags'])->remember('member_directory.skills', 3600, function() {
+                Cache::tags(['member_directory', 'tags'])->remember('member_directory.skills', 3600, function () {
                     return \Spatie\Tags\Tag::where('type', 'skill')->pluck('name', 'name')->toArray();
                 });
 
-                Cache::tags(['member_directory', 'tags'])->remember('member_directory.genres', 3600, function() {
+                Cache::tags(['member_directory', 'tags'])->remember('member_directory.genres', 3600, function () {
                     return \Spatie\Tags\Tag::where('type', 'genre')->pluck('name', 'name')->toArray();
                 });
 
-                Cache::tags(['member_directory', 'tags'])->remember('member_directory.influences', 3600, function() {
+                Cache::tags(['member_directory', 'tags'])->remember('member_directory.influences', 3600, function () {
                     return \Spatie\Tags\Tag::where('type', 'influence')->pluck('name', 'name')->toArray();
                 });
             }

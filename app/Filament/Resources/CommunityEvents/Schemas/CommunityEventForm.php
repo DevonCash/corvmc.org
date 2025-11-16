@@ -2,28 +2,23 @@
 
 namespace App\Filament\Resources\CommunityEvents\Schemas;
 
+use App\Data\VenueLocationData;
 use App\Models\CommunityEvent;
 use App\Models\User;
-use App\Data\VenueLocationData;
 use Filament\Actions\Action;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Card;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class CommunityEventForm
 {
@@ -108,6 +103,7 @@ class CommunityEventForm
                                             ->title('Please fill in venue name and address first')
                                             ->warning()
                                             ->send();
+
                                         return;
                                     }
 
@@ -217,10 +213,14 @@ class CommunityEventForm
                             ->label('Organizer Trust Level')
                             ->content(function ($get) {
                                 $organizerId = $get('organizer_id');
-                                if (!$organizerId) return 'Select an organizer to see trust information';
+                                if (! $organizerId) {
+                                    return 'Select an organizer to see trust information';
+                                }
 
                                 $organizer = User::find($organizerId);
-                                if (!$organizer) return 'Organizer not found';
+                                if (! $organizer) {
+                                    return 'Organizer not found';
+                                }
 
                                 $trustInfo = \App\Actions\Trust\GetTrustLevelInfo::run($organizer, 'App\\Models\\CommunityEvent');
                                 $badge = \App\Actions\Trust\GetTrustBadge::run($organizer, 'App\\Models\\CommunityEvent');

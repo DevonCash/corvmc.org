@@ -4,11 +4,13 @@ namespace App\Filament\Resources\Events\Schemas;
 
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
@@ -75,34 +77,74 @@ class EventForm
     {
         return Grid::make([
             'sm' => 1,
-            'md' => 3,
-            'lg' => 3,
+            'md' => 4,
+            'lg' => 4,
         ])
             ->columnSpanFull()
             ->schema([
+                static::eventDateField(),
+                static::doorsTimeField(),
                 static::startTimeField(),
                 static::endTimeField(),
-                static::doorsTimeField(),
             ]);
     }
 
-    protected static function startTimeField(): DateTimePicker
+    protected static function eventDateField(): DatePicker
     {
-        return DateTimePicker::make('start_time')
+        return DatePicker::make('event_date')
+            ->label('Event Date')
             ->timezone(config('app.timezone'))
-            ->required();
+            ->native(false)
+            ->required()
+            ->dehydrated(false)
+            ->afterStateHydrated(function (DatePicker $component, $record) {
+                if ($record?->start_time) {
+                    $component->state($record->start_time->format('Y-m-d'));
+                }
+            });
     }
 
-    protected static function endTimeField(): DateTimePicker
+    protected static function doorsTimeField(): TimePicker
     {
-        return DateTimePicker::make('end_time')
-            ->timezone(config('app.timezone'));
+        return TimePicker::make('doors_time_only')
+            ->label('Doors Time')
+            ->timezone(config('app.timezone'))
+            ->seconds(false)
+            ->dehydrated(false)
+            ->afterStateHydrated(function (TimePicker $component, $record) {
+                if ($record?->doors_time) {
+                    $component->state($record->doors_time->format('H:i'));
+                }
+            });
     }
 
-    protected static function doorsTimeField(): DateTimePicker
+    protected static function startTimeField(): TimePicker
     {
-        return DateTimePicker::make('doors_time')
-            ->timezone(config('app.timezone'));
+        return TimePicker::make('start_time_only')
+            ->label('Start Time')
+            ->timezone(config('app.timezone'))
+            ->seconds(false)
+            ->required()
+            ->dehydrated(false)
+            ->afterStateHydrated(function (TimePicker $component, $record) {
+                if ($record?->start_time) {
+                    $component->state($record->start_time->format('H:i'));
+                }
+            });
+    }
+
+    protected static function endTimeField(): TimePicker
+    {
+        return TimePicker::make('end_time_only')
+            ->label('End Time')
+            ->timezone(config('app.timezone'))
+            ->seconds(false)
+            ->dehydrated(false)
+            ->afterStateHydrated(function (TimePicker $component, $record) {
+                if ($record?->end_time) {
+                    $component->state($record->end_time->format('H:i'));
+                }
+            });
     }
 
     protected static function ticketingGrid(): Grid

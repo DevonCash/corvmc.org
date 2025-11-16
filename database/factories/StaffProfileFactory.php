@@ -18,15 +18,15 @@ class StaffProfileFactory extends Factory
     public function definition(): array
     {
         $type = fake()->randomElement(['board', 'staff']);
-        
+
         $boardTitles = [
             'Board President',
-            'Board Vice President', 
+            'Board Vice President',
             'Treasurer',
             'Secretary',
             'Board Member',
         ];
-        
+
         $staffTitles = [
             'Operations Manager',
             'Program Coordinator',
@@ -35,35 +35,35 @@ class StaffProfileFactory extends Factory
             'Marketing Coordinator',
             'Volunteer Coordinator',
         ];
-        
-        $title = $type === 'board' 
+
+        $title = $type === 'board'
             ? fake()->randomElement($boardTitles)
             : fake()->randomElement($staffTitles);
-            
+
         $socialPlatforms = ['website', 'linkedin', 'twitter', 'facebook', 'instagram', 'github'];
         $socialLinks = [];
-        
+
         // Randomly add 0-3 social links
         $numLinks = fake()->numberBetween(0, 3);
         $selectedPlatforms = fake()->randomElements($socialPlatforms, $numLinks);
-        
+
         foreach ($selectedPlatforms as $platform) {
             $socialLinks[] = [
                 'platform' => $platform,
-                'url' => match($platform) {
+                'url' => match ($platform) {
                     'website' => fake()->url(),
-                    'linkedin' => 'https://linkedin.com/in/' . fake()->userName(),
-                    'twitter' => 'https://twitter.com/' . fake()->userName(),
-                    'facebook' => 'https://facebook.com/' . fake()->userName(),
-                    'instagram' => 'https://instagram.com/' . fake()->userName(),
-                    'github' => 'https://github.com/' . fake()->userName(),
-                }
+                    'linkedin' => 'https://linkedin.com/in/'.fake()->userName(),
+                    'twitter' => 'https://twitter.com/'.fake()->userName(),
+                    'facebook' => 'https://facebook.com/'.fake()->userName(),
+                    'instagram' => 'https://instagram.com/'.fake()->userName(),
+                    'github' => 'https://github.com/'.fake()->userName(),
+                },
             ];
         }
 
         $name = fake()->name();
         $email = fake()->optional(0.6)->safeEmail();
-        
+
         return [
             'user_id' => User::factory()->create([
                 'name' => $name,
@@ -89,7 +89,7 @@ class StaffProfileFactory extends Factory
             'title' => fake()->randomElement([
                 'Board President',
                 'Board Vice President',
-                'Treasurer', 
+                'Treasurer',
                 'Secretary',
                 'Board Member',
             ]),

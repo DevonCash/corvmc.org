@@ -5,6 +5,8 @@ namespace App\Actions\Reservations;
 use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
 use App\Concerns\AsFilamentAction;
 use App\Enums\CreditType;
+use App\Enums\PaymentStatus;
+use App\Enums\ReservationStatus;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;
@@ -26,7 +28,7 @@ class ConfirmReservation
      */
     public function handle(RehearsalReservation $reservation): RehearsalReservation
     {
-        if ($reservation->status !== 'pending') {
+        if ($reservation->status !== ReservationStatus::Pending) {
             return $reservation;
         }
 
@@ -54,7 +56,7 @@ class ConfirmReservation
 
             // Update reservation with calculated values
             $reservation->update([
-                'status' => 'confirmed',
+                'status' => ReservationStatus::Confirmed,
                 'cost' => $costCalculation['cost'],
                 'hours_used' => $costCalculation['total_hours'],
                 'free_hours_used' => $costCalculation['free_hours'],
@@ -63,7 +65,7 @@ class ConfirmReservation
             // Auto-confirm if cost is zero
             if ($reservation->cost->isZero()) {
                 $reservation->update([
-                    'payment_status' => 'paid',
+                    'payment_status' => PaymentStatus::Paid,
                     'paid_at' => now(),
                 ]);
             }
@@ -87,7 +89,7 @@ class ConfirmReservation
             ->icon('tabler-check')
             ->color('success')
             ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation &&
-                $record->status === 'pending' &&
+                $record->status === ReservationStatus::Pending &&
                 User::me()?->can('manage reservations'))
             ->requiresConfirmation()
             ->action(function (Reservation $record) {

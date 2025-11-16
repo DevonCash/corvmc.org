@@ -20,7 +20,7 @@ class GetEventLogoSponsors
                 ->whereIn('tier', [
                     Sponsor::TIER_MELODY,
                     Sponsor::TIER_RHYTHM,
-                    Sponsor::TIER_CRESCENDO
+                    Sponsor::TIER_CRESCENDO,
                 ])
                 ->ordered()
                 ->get();

@@ -25,11 +25,9 @@ class SpaceManagementTable
     {
         return $table
             ->columns([
-                ReservationColumns::type(),
+                ReservationColumns::statusDisplay(),
                 ReservationColumns::responsibleUser(),
                 ReservationColumns::timeRange(),
-                ReservationColumns::duration(),
-                ReservationColumns::statusDisplay(),
                 ReservationColumns::costDisplay(),
                 ReservationColumns::createdAt(),
                 ReservationColumns::updatedAt(),

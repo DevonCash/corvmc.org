@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources\SpaceManagement\Widgets;
 
-use App\Models\Production;
+use App\Enums\PaymentStatus;
+use App\Enums\ReservationStatus;
 use App\Models\Reservation;
 use Filament\Widgets\Widget;
 
@@ -10,14 +11,14 @@ class SpaceUsageWidget extends Widget
 {
     protected string $view = 'filament.resources.space-management.widgets.space-usage-widget';
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public function getNextSpaceUsage(): ?Reservation
     {
         // Get next reservation of any type
         return Reservation::with('reservable')
             ->where('reserved_at', '>', now())
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', ReservationStatus::Cancelled->value)
             ->orderBy('reserved_at', 'asc')
             ->first();
     }
@@ -26,7 +27,7 @@ class SpaceUsageWidget extends Widget
     {
         return Reservation::with('reservable')
             ->whereDate('reserved_at', today())
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', ReservationStatus::Cancelled->value)
             ->orderBy('reserved_at', 'asc')
             ->get()
             ->map(function ($r) {
@@ -60,8 +61,8 @@ class SpaceUsageWidget extends Widget
             'todaysCount' => $today->count(),
             'hoursToday' => $today->sum('duration'),
             'revenueToday' => $todayRehearsals
-                ->filter(fn($r) => $r['cost'] !== null && $r['payment_status'] === 'paid')
-                ->sum(fn($r) => $r['cost']->getMinorAmount()->toInt()) / 100,
+                ->filter(fn ($r) => $r['cost'] !== null && $r['payment_status'] === PaymentStatus::Paid)
+                ->sum(fn ($r) => $r['cost']->getMinorAmount()->toInt()) / 100,
             'rehearsalCount' => $todayRehearsals->count(),
             'productionCount' => $todayProductions->count(),
         ];

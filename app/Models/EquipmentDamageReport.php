@@ -5,20 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * Tracks equipment damage reports and repair workflows.
- * 
+ *
  * Similar to GitHub issues for tracking equipment problems from discovery
  * through completion of repairs, with assignment, priority, and cost tracking.
  */
 class EquipmentDamageReport extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia, LogsActivity;
+    use HasFactory, InteractsWithMedia, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'equipment_id',
@@ -89,7 +89,7 @@ class EquipmentDamageReport extends Model implements HasMedia
      */
     public function getIsOpenAttribute(): bool
     {
-        return !in_array($this->status, ['completed', 'cancelled']);
+        return ! in_array($this->status, ['completed', 'cancelled']);
     }
 
     /**
@@ -97,7 +97,7 @@ class EquipmentDamageReport extends Model implements HasMedia
      */
     public function getIsHighPriorityAttribute(): bool
     {
-        return in_array($this->priority, ['high', 'urgent']) || 
+        return in_array($this->priority, ['high', 'urgent']) ||
                in_array($this->severity, ['high', 'critical']);
     }
 
@@ -107,6 +107,7 @@ class EquipmentDamageReport extends Model implements HasMedia
     public function getDaysOpenAttribute(): int
     {
         $endDate = $this->completed_at ?? now();
+
         return (int) $this->discovered_at->diffInDays($endDate);
     }
 
@@ -115,7 +116,7 @@ class EquipmentDamageReport extends Model implements HasMedia
      */
     public function getSeverityColorAttribute(): string
     {
-        return match($this->severity) {
+        return match ($this->severity) {
             'low' => 'success',
             'medium' => 'warning',
             'high' => 'danger',
@@ -129,7 +130,7 @@ class EquipmentDamageReport extends Model implements HasMedia
      */
     public function getPriorityColorAttribute(): string
     {
-        return match($this->priority) {
+        return match ($this->priority) {
             'low' => 'gray',
             'normal' => 'info',
             'high' => 'warning',
@@ -143,7 +144,7 @@ class EquipmentDamageReport extends Model implements HasMedia
      */
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'reported' => 'info',
             'in_progress' => 'warning',
             'waiting_parts' => 'warning',
@@ -168,7 +169,7 @@ class EquipmentDamageReport extends Model implements HasMedia
     /**
      * Mark damage report as completed.
      */
-    public function markCompleted(string $repairNotes = null, ?int $actualCost = null): void
+    public function markCompleted(?string $repairNotes = null, ?int $actualCost = null): void
     {
         $this->update([
             'status' => 'completed',
@@ -214,7 +215,7 @@ class EquipmentDamageReport extends Model implements HasMedia
     {
         return $query->where(function ($q) {
             $q->whereIn('priority', ['high', 'urgent'])
-              ->orWhereIn('severity', ['high', 'critical']);
+                ->orWhereIn('severity', ['high', 'critical']);
         });
     }
 
@@ -256,6 +257,6 @@ class EquipmentDamageReport extends Model implements HasMedia
             ->logOnly(['status', 'assigned_to_id', 'priority', 'severity', 'actual_cost'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "Damage report {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "Damage report {$eventName}");
     }
 }

@@ -9,16 +9,14 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
-use Filament\Tables\Columns\ImageColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\Filter;
 use Filament\Notifications\Notification;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Auth;
 
 class CommunityEventsTable
 {
@@ -43,6 +41,7 @@ class CommunityEventsTable
                     ->sortable()
                     ->description(function (CommunityEvent $record) {
                         $badge = $record->getOrganizerTrustBadge();
+
                         return $badge ? $badge['label'] : 'New organizer';
                     }),
 
@@ -75,8 +74,12 @@ class CommunityEventsTable
                 TextColumn::make('distance_from_corvallis')
                     ->label('Distance')
                     ->formatStateUsing(function ($state) {
-                        if ($state === null) return 'Unknown';
-                        if ($state == 0) return 'Local (CMC)';
+                        if ($state === null) {
+                            return 'Unknown';
+                        }
+                        if ($state == 0) {
+                            return 'Local (CMC)';
+                        }
 
                         $hours = floor($state / 60);
                         $minutes = $state % 60;
@@ -84,12 +87,20 @@ class CommunityEventsTable
                         if ($hours > 0) {
                             return sprintf('%d hr %d min', $hours, $minutes);
                         }
+
                         return sprintf('%d min', $minutes);
                     })
                     ->color(function ($state) {
-                        if ($state === null) return 'gray';
-                        if ($state <= 30) return 'success';
-                        if ($state <= 60) return 'warning';
+                        if ($state === null) {
+                            return 'gray';
+                        }
+                        if ($state <= 30) {
+                            return 'success';
+                        }
+                        if ($state <= 60) {
+                            return 'warning';
+                        }
+
                         return 'danger';
                     }),
 

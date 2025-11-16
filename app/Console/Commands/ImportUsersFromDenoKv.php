@@ -2,15 +2,15 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
 use App\Models\Invitation;
+use App\Models\User;
+use Carbon\Carbon;
+use Filament\Notifications\Notification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
-use Filament\Notifications\Notification;
 
 class ImportUsersFromDenoKv extends Command
 {
@@ -57,7 +57,7 @@ class ImportUsersFromDenoKv extends Command
 
         if ($clean) {
             $this->info('🧹 Cleaning test data...');
-            if (!$dryRun) {
+            if (! $dryRun) {
                 $this->cleanTestData();
             } else {
                 $this->line('   → Would clean test data');
@@ -69,8 +69,9 @@ class ImportUsersFromDenoKv extends Command
 
             // Handle NDJSON file import
             if ($file) {
-                if (!file_exists($file)) {
+                if (! file_exists($file)) {
                     $this->error("❌ File not found: {$file}");
+
                     return 1;
                 }
                 $this->info("📁 Reading NDJSON file: {$file}");
@@ -78,8 +79,9 @@ class ImportUsersFromDenoKv extends Command
             }
             // Handle REST API import
             elseif ($endpoint) {
-                if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
+                if (! filter_var($endpoint, FILTER_VALIDATE_URL)) {
                     $this->error('❌ Invalid endpoint URL provided');
+
                     return 1;
                 }
                 $this->info("🔗 Connecting to: {$endpoint}");
@@ -89,20 +91,22 @@ class ImportUsersFromDenoKv extends Command
             else {
                 $choice = $this->choice('Choose import method:', [
                     'file' => 'Import from NDJSON file',
-                    'endpoint' => 'Import from REST API endpoint'
+                    'endpoint' => 'Import from REST API endpoint',
                 ], 'file');
 
                 if ($choice === 'file') {
                     $file = $this->ask('Enter path to NDJSON export file:');
-                    if (!file_exists($file)) {
+                    if (! file_exists($file)) {
                         $this->error("❌ File not found: {$file}");
+
                         return 1;
                     }
                     $users = $this->parseNdjsonFile($file, $keyPrefix);
                 } else {
                     $endpoint = $this->ask('Enter the Deno KV REST API endpoint URL:');
-                    if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
+                    if (! filter_var($endpoint, FILTER_VALIDATE_URL)) {
                         $this->error('❌ Invalid endpoint URL provided');
+
                         return 1;
                     }
                     $users = $this->fetchUsersFromDenoKv($endpoint, $keyPrefix);
@@ -114,10 +118,11 @@ class ImportUsersFromDenoKv extends Command
 
             if (empty($users)) {
                 $this->warn('⚠️  No users found in Deno KV');
+
                 return 0;
             }
 
-            $this->info("📋 Found " . count($users) . " users to import");
+            $this->info('📋 Found '.count($users).' users to import');
             $this->newLine();
 
             $imported = 0;
@@ -152,8 +157,8 @@ class ImportUsersFromDenoKv extends Command
             $this->line("   📧 Sent invitations: {$invited}");
             $this->line("   ⏭️  Skipped: {$skipped}");
 
-            if (!empty($errors)) {
-                $this->line("   ❌ Errors: " . count($errors));
+            if (! empty($errors)) {
+                $this->line('   ❌ Errors: '.count($errors));
                 foreach ($errors as $error) {
                     $this->line("      • {$error}");
                 }
@@ -172,6 +177,7 @@ class ImportUsersFromDenoKv extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Import failed: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -188,11 +194,11 @@ class ImportUsersFromDenoKv extends Command
             "/kv/{$keyPrefix}",
             "/api/kv/{$keyPrefix}",
             "/kv/list/{$keyPrefix}",
-            "/api/users",
+            '/api/users',
         ];
 
         foreach ($possiblePaths as $path) {
-            $url = rtrim($endpoint, '/') . $path;
+            $url = rtrim($endpoint, '/').$path;
 
             try {
                 $response = Http::timeout(30)->get($url);
@@ -204,13 +210,14 @@ class ImportUsersFromDenoKv extends Command
                     if (isset($data['users']) && is_array($data['users'])) {
                         return $data['users'];
                     } elseif (isset($data['entries']) && is_array($data['entries'])) {
-                        return array_map(fn($entry) => $entry['value'] ?? $entry, $data['entries']);
+                        return array_map(fn ($entry) => $entry['value'] ?? $entry, $data['entries']);
                     } elseif (is_array($data) && $this->isUserArray($data)) {
                         return $data;
                     }
                 }
             } catch (\Exception $e) {
                 $this->line("   → Tried {$url}: {$e->getMessage()}");
+
                 continue;
             }
         }
@@ -244,6 +251,7 @@ class ImportUsersFromDenoKv extends Command
         }
 
         $firstItem = reset($data);
+
         return is_array($firstItem) &&
                (isset($firstItem['email']) || isset($firstItem['name']));
     }
@@ -260,7 +268,7 @@ class ImportUsersFromDenoKv extends Command
         ]);
 
         if ($validator->fails()) {
-            throw new \Exception("Invalid user data: " . implode(', ', $validator->errors()->all()));
+            throw new \Exception('Invalid user data: '.implode(', ', $validator->errors()->all()));
         }
 
         $email = $userData['email'];
@@ -270,7 +278,7 @@ class ImportUsersFromDenoKv extends Command
         if (User::where('email', $email)->exists()) {
             return [
                 'status' => 'skipped',
-                'reason' => "User with email {$email} already exists"
+                'reason' => "User with email {$email} already exists",
             ];
         }
 
@@ -283,14 +291,14 @@ class ImportUsersFromDenoKv extends Command
         if ($existingInvitation) {
             return [
                 'status' => 'skipped',
-                'reason' => "Invitation already exists for email {$email}"
+                'reason' => "Invitation already exists for email {$email}",
             ];
         }
 
         if ($dryRun) {
             return [
                 'status' => $sendInvites ? 'invited' : 'imported',
-                'user' => ['name' => $name, 'email' => $email]
+                'user' => ['name' => $name, 'email' => $email],
             ];
         }
 
@@ -310,14 +318,14 @@ class ImportUsersFromDenoKv extends Command
                         'created_at' => $userData['created_at'] ?? null,
                         'trust_points' => $userData['trust_points'] ?? null,
                         'community_event_trust_points' => $userData['community_event_trust_points'] ?? 0,
-                    ]
-                ]
+                    ],
+                ],
             ]);
 
             // Send the notification manually
             Notification::route('mail', $email)
                 ->notify(new \App\Notifications\UserInvitationNotification($invitation, [
-                    'message' => $invitationMessage
+                    'message' => $invitationMessage,
                 ]));
 
             $invitation->markAsSent();
@@ -325,7 +333,7 @@ class ImportUsersFromDenoKv extends Command
             return [
                 'status' => 'invited',
                 'user' => ['name' => $name, 'email' => $email],
-                'invitation' => $invitation
+                'invitation' => $invitation,
             ];
         } else {
             // Create user directly (original behavior)
@@ -349,7 +357,7 @@ class ImportUsersFromDenoKv extends Command
 
             return [
                 'status' => 'imported',
-                'user' => ['name' => $user->name, 'email' => $user->email]
+                'user' => ['name' => $user->name, 'email' => $user->email],
             ];
         }
     }
@@ -380,6 +388,7 @@ class ImportUsersFromDenoKv extends Command
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $this->line("   ⚠️  Skipping invalid JSON on line {$totalLines}");
+
                     continue;
                 }
 
@@ -397,7 +406,8 @@ class ImportUsersFromDenoKv extends Command
                 }
 
             } catch (\Exception $e) {
-                $this->line("   ⚠️  Error parsing line {$totalLines}: " . $e->getMessage());
+                $this->line("   ⚠️  Error parsing line {$totalLines}: ".$e->getMessage());
+
                 continue;
             }
         }
@@ -414,7 +424,7 @@ class ImportUsersFromDenoKv extends Command
      */
     private function isUserEntry(array $entry, string $keyPrefix): bool
     {
-        if (!isset($entry['key']) || !is_array($entry['key'])) {
+        if (! isset($entry['key']) || ! is_array($entry['key'])) {
             return false;
         }
 
@@ -432,7 +442,7 @@ class ImportUsersFromDenoKv extends Command
      */
     private function extractUserData(array $entry): ?array
     {
-        if (!isset($entry['value']['value']) || !is_array($entry['value']['value'])) {
+        if (! isset($entry['value']['value']) || ! is_array($entry['value']['value'])) {
             return null;
         }
 
@@ -441,7 +451,7 @@ class ImportUsersFromDenoKv extends Command
 
         // Extract typed values
         foreach ($valueData as $field => $typedValue) {
-            if (!is_array($typedValue) || !isset($typedValue['type'])) {
+            if (! is_array($typedValue) || ! isset($typedValue['type'])) {
                 continue;
             }
 

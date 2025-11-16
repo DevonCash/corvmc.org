@@ -15,9 +15,8 @@ class MarkReturnedToOwnerAction
             ->color('danger')
             ->modalHeading('Return Equipment to Owner')
             ->modalDescription(
-                fn($record) =>
-                "Mark '{$record->name}' as returned to its original owner. " .
-                    "This will retire the equipment from the lending library."
+                fn ($record) => "Mark '{$record->name}' as returned to its original owner. ".
+                    'This will retire the equipment from the lending library.'
             )
             ->action(function ($record) {
                 if ($record->is_checked_out) {
@@ -35,9 +34,8 @@ class MarkReturnedToOwnerAction
             ->requiresConfirmation()
             ->modalIcon('tabler-arrow-back-up')
             ->visible(
-                fn($record) =>
-                $record->isOnLoanToCmc() &&
-                    !$record->is_checked_out &&
+                fn ($record) => $record->isOnLoanToCmc() &&
+                    ! $record->is_checked_out &&
                     $record->ownership_status === 'on_loan_to_cmc'
             );
     }

@@ -21,12 +21,12 @@ class ReservationObserver
     public function updated(Reservation $reservation): void
     {
         $this->clearReservationCaches($reservation);
-        
+
         // If reservation date changed, clear both old and new date caches
         if ($reservation->isDirty('reserved_at')) {
             $originalDate = $reservation->getOriginal('reserved_at');
             if ($originalDate) {
-                Cache::forget("reservations.conflicts." . date('Y-m-d', strtotime($originalDate)));
+                Cache::forget('reservations.conflicts.'.date('Y-m-d', strtotime($originalDate)));
             }
         }
     }

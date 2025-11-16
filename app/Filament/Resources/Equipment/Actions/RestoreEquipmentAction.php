@@ -23,11 +23,11 @@ class RestoreEquipmentAction
                     $info[] = "ℹ️ This kit has {$count} component(s) that will also be restored";
                 }
 
-                $info[] = "📅 Equipment was deleted on: " . $record->deleted_at->format('M j, Y g:i A');
+                $info[] = '📅 Equipment was deleted on: '.$record->deleted_at->format('M j, Y g:i A');
 
-                $base = "Restore this equipment to the active library?";
+                $base = 'Restore this equipment to the active library?';
 
-                return $base . "\n\n" . implode("\n", $info);
+                return $base."\n\n".implode("\n", $info);
             })
             ->requiresConfirmation()
             ->successNotification(
@@ -36,8 +36,7 @@ class RestoreEquipmentAction
                     ->title('Equipment Restored')
                     ->body('Equipment has been restored to the active library.')
             )
-            ->visible(fn ($record) =>
-                Auth::user()->can('restore equipment') &&
+            ->visible(fn ($record) => Auth::user()->can('restore equipment') &&
                 $record->trashed()
             );
     }

@@ -2,14 +2,16 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\Events\EventResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Pages\Dashboard;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -27,6 +29,7 @@ class StaffPanelProvider extends PanelProvider
             ->login()
             ->font('Lexend')
             ->darkMode()
+            ->globalSearch(false)
             ->colors([
                 'primary' => Color::Cyan,
                 'gray' => [
@@ -55,9 +58,9 @@ class StaffPanelProvider extends PanelProvider
                 \App\Filament\Resources\Sponsors\SponsorResource::class,
                 \App\Filament\Resources\SpaceManagement\SpaceManagementResource::class,
                 \App\Filament\Resources\RecurringReservations\RecurringReservationResource::class,
-                \App\Filament\Resources\Productions\ProductionResource::class,
                 \App\Filament\Resources\Bylaws\BylawsResource::class,
                 \App\Filament\Resources\Equipment\EquipmentDamageReports\EquipmentDamageReportResource::class,
+                EventResource::class,
             ])
             ->pages([
                 Dashboard::class,
@@ -78,6 +81,15 @@ class StaffPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->renderHook(
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn (): string => view('filament.components.dark-mode-toggle')->render()
+            )
+            ->renderHook(
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn (): string => view('livewire.feedback-button-wrapper')->render()
+            )
+
             ->authGuard('web')
             ->viteTheme('resources/css/app.css');
     }

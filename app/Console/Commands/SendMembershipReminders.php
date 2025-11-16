@@ -38,23 +38,24 @@ class SendMembershipReminders extends Command
 
         if ($results['total'] === 0) {
             $this->info('No inactive users found that need membership reminders.');
+
             return 0;
         }
 
         $this->info("Found {$results['total']} inactive users:");
 
         foreach ($results['users'] as $user) {
-            $lastReservation = $user['last_reservation'] ? 
+            $lastReservation = $user['last_reservation'] ?
                 $user['last_reservation']->format('M j, Y') : 'Never';
-            
+
             $this->line("- {$user['name']} ({$user['email']})");
             $this->line("  Last reservation: {$lastReservation}");
-            
+
             match ($user['status']) {
-                'sent' => $this->info("  ✓ Membership reminder sent"),
+                'sent' => $this->info('  ✓ Membership reminder sent'),
                 'failed' => $this->error("  ✗ Failed to send reminder: {$user['error']}"),
-                'dry_run' => $this->line("  → Would send membership reminder"),
-                default => $this->line("  ? Unknown status")
+                'dry_run' => $this->line('  → Would send membership reminder'),
+                default => $this->line('  ? Unknown status')
             };
         }
 
@@ -65,8 +66,8 @@ class SendMembershipReminders extends Command
         $this->line("   Successfully sent: {$results['sent']}");
         $this->line("   Failed: {$results['failed']}");
 
-        if (!empty($results['errors'])) {
-            $this->line("   Errors:");
+        if (! empty($results['errors'])) {
+            $this->line('   Errors:');
             foreach ($results['errors'] as $error) {
                 $this->line("     • {$error}");
             }

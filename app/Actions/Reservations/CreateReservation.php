@@ -3,6 +3,7 @@
 namespace App\Actions\Reservations;
 
 use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
+use App\Enums\ReservationStatus;
 use App\Models\RehearsalReservation;
 use App\Models\User;
 use App\Notifications\ReservationCreatedNotification;
@@ -39,6 +40,7 @@ class CreateReservation
             // Create reservation as pending
             // Credits will be deducted when reservation is confirmed
             $reservation = RehearsalReservation::create([
+                'user_id' => $user->id,
                 'reservable_type' => User::class,
                 'reservable_id' => $user->id,
                 'reserved_at' => $startTime,
@@ -46,10 +48,12 @@ class CreateReservation
                 'cost' => $costCalculation['cost'],
                 'hours_used' => $costCalculation['total_hours'],
                 'free_hours_used' => $costCalculation['free_hours'],
-                'status' => 'pending',
+                'status' => ReservationStatus::Pending,
                 'notes' => $options['notes'] ?? null,
                 'is_recurring' => $options['is_recurring'] ?? false,
                 'recurrence_pattern' => $options['recurrence_pattern'] ?? null,
+                'recurring_series_id' => $options['recurring_series_id'] ?? null,
+                'instance_date' => $options['instance_date'] ?? null,
             ]);
 
             return $reservation;

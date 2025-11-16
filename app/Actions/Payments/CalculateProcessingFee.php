@@ -13,6 +13,7 @@ class CalculateProcessingFee
      * Stripe processing fee: 2.9% + $0.30 for cards
      */
     const STRIPE_RATE = 0.029;
+
     const STRIPE_FIXED_FEE_CENTS = 30;
 
     /**

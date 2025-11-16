@@ -14,32 +14,32 @@ trait HasTimePeriod
     {
         $startField = $this->getStartTimeField();
         $endField = $this->getEndTimeField();
-        
-        if (!$this->{$startField} || !$this->{$endField}) {
+
+        if (! $this->{$startField} || ! $this->{$endField}) {
             return null;
         }
-        
+
         return Period::make(
             $this->{$startField},
             $this->{$endField},
             Precision::MINUTE()
         );
     }
-    
+
     /**
      * Check if this model's time period overlaps with another period.
      */
     public function periodOverlapsWith(Period $period): bool
     {
         $thisPeriod = $this->createPeriod();
-        
-        if (!$thisPeriod) {
+
+        if (! $thisPeriod) {
             return false;
         }
-        
+
         return $thisPeriod?->overlapsWith($period);
     }
-    
+
     /**
      * Check if this model's time period overlaps with another model's period or Period object.
      */
@@ -51,19 +51,19 @@ trait HasTimePeriod
         }
 
         // Otherwise, expect an object with createPeriod() method
-        if (!method_exists($other, 'createPeriod')) {
+        if (! method_exists($other, 'createPeriod')) {
             return false;
         }
 
         $otherPeriod = $other->createPeriod();
 
-        if (!$otherPeriod) {
+        if (! $otherPeriod) {
             return false;
         }
 
         return $this->periodOverlapsWith($otherPeriod);
     }
-    
+
     /**
      * Validate that the time period is valid (start before end).
      */
@@ -71,14 +71,14 @@ trait HasTimePeriod
     {
         $startField = $this->getStartTimeField();
         $endField = $this->getEndTimeField();
-        
-        if (!$this->{$startField} || !$this->{$endField}) {
+
+        if (! $this->{$startField} || ! $this->{$endField}) {
             return false;
         }
-        
+
         return $this->{$startField} < $this->{$endField};
     }
-    
+
     /**
      * Get the name of the start time field for this model.
      * Override in models if different from default.
@@ -87,7 +87,7 @@ trait HasTimePeriod
     {
         return 'start_time';
     }
-    
+
     /**
      * Get the name of the end time field for this model.
      * Override in models if different from default.

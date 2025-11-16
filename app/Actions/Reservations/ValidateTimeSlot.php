@@ -10,6 +10,7 @@ class ValidateTimeSlot
     use AsAction;
 
     public const MIN_RESERVATION_DURATION = 1; // hours
+
     public const MAX_RESERVATION_DURATION = 8; // hours
 
     /**
@@ -51,14 +52,14 @@ class ValidateTimeSlot
         if ($duration < self::MIN_RESERVATION_DURATION) {
             return [
                 'valid' => false,
-                'errors' => ['Minimum reservation duration is ' . self::MIN_RESERVATION_DURATION . ' hour'],
+                'errors' => ['Minimum reservation duration is '.self::MIN_RESERVATION_DURATION.' hour'],
             ];
         }
 
         if ($duration > self::MAX_RESERVATION_DURATION) {
             return [
                 'valid' => false,
-                'errors' => ['Maximum reservation duration is ' . self::MAX_RESERVATION_DURATION . ' hours'],
+                'errors' => ['Maximum reservation duration is '.self::MAX_RESERVATION_DURATION.' hours'],
             ];
         }
 
@@ -67,11 +68,11 @@ class ValidateTimeSlot
         $errors = [];
 
         if ($conflicts['reservations']->isNotEmpty()) {
-            $errors[] = 'Conflicts with ' . $conflicts['reservations']->count() . ' existing reservation(s)';
+            $errors[] = 'Conflicts with '.$conflicts['reservations']->count().' existing reservation(s)';
         }
 
         if ($conflicts['productions']->isNotEmpty()) {
-            $errors[] = 'Conflicts with ' . $conflicts['productions']->count() . ' production(s)';
+            $errors[] = 'Conflicts with '.$conflicts['productions']->count().' production(s)';
         }
 
         return [

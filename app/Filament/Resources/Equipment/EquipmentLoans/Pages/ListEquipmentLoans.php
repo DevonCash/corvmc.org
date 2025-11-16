@@ -12,6 +12,7 @@ class ListEquipmentLoans extends ListRecords
     protected static string $resource = EquipmentLoanResource::class;
 
     protected static ?string $parentResource = EquipmentResource::class;
+
     protected function getHeaderActions(): array
     {
         return [

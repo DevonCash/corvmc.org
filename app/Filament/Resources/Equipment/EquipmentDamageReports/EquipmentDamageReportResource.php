@@ -12,7 +12,6 @@ use App\Settings\EquipmentSettings;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
@@ -38,6 +37,7 @@ class EquipmentDamageReportResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         $equipmentSettings = app(EquipmentSettings::class);
+
         return $equipmentSettings->enable_equipment_features && $equipmentSettings->enable_rental_features;
     }
 

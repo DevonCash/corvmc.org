@@ -2,10 +2,9 @@
 
 namespace App\Filament\Resources\Bands\Schemas;
 
+use App\Enums\Visibility;
 use App\Filament\Components\EmbedControl;
 use App\Models\Band;
-use App\Models\User;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\RichEditor;
@@ -124,38 +123,29 @@ class BandForm
                 Grid::make(1)
                     ->columnSpan(1)
                     ->schema([
-                            SpatieMediaLibraryFileUpload::make('avatar')
-                                ->label('Band Photo')
-                                ->disk('r2')
-                                ->image()
-                                ->imageEditor()
-                                ->imageCropAspectRatio('1:1')
-                                ->imageResizeTargetWidth(800)
-                                ->imageResizeTargetHeight(800)
-                                ->directory('band-avatars')
-                                ->collection('avatar')
-                                ->visibility('public')
-                                ->alignCenter()
-                                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
-                                ->maxSize(3072)
-                                ->imageResizeMode('cover'),
+                        SpatieMediaLibraryFileUpload::make('avatar')
+                            ->label('Band Photo')
+                            ->disk('r2')
+                            ->image()
+                            ->imageEditor()
+                            ->imageCropAspectRatio('1:1')
+                            ->imageResizeTargetWidth(800)
+                            ->imageResizeTargetHeight(800)
+                            ->directory('band-avatars')
+                            ->collection('avatar')
+                            ->visibility('public')
+                            ->alignCenter()
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+                            ->maxSize(3072)
+                            ->imageResizeMode('cover'),
 
                         Select::make('visibility')
                             ->label('Profile Visibility')
                             ->required()
-                            ->default('private')
+                            ->default(Visibility::Private)
                             ->live()
-                            ->options([
-                                'private' => 'Private',
-                                'members' => 'Members Only',
-                                'public' => 'Public',
-                            ])
-                            ->helperText(fn ($state) => match ($state) {
-                                'private' => 'Only band members can see your profile',
-                                'members' => 'Other CMC members can view your profile',
-                                'public' => 'Your profile is visible to the public',
-                                default => 'Choose who can see your band profile',
-                            })
+                            ->options(Visibility::class)
+                            ->helperText(fn ($state) => $state ? $state->getDescription() : 'Choose who can see your band profile')
                             ->selectablePlaceholder(false),
 
                         Select::make('contact.visibility')
@@ -178,7 +168,7 @@ class BandForm
                         Select::make('owner_id')
                             ->label('Band Owner')
                             ->options(function (?Band $record) {
-                                if (!$record) {
+                                if (! $record) {
                                     return [Auth::user()->id => Auth::user()->name];
                                 }
 

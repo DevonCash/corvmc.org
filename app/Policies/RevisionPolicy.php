@@ -35,6 +35,7 @@ class RevisionPolicy
 
         // Users who can view revisions for this specific content type
         $contentType = $this->getContentTypeName($revision->revisionable_type);
+
         return $user->can("view {$contentType} revisions");
     }
 
@@ -52,13 +53,13 @@ class RevisionPolicy
     public function submitFor(User $user, $content): bool
     {
         // Users cannot submit revisions for their own content unless explicitly allowed
-        if ($this->isContentOwner($user, $content) && !$user->can('submit revisions for own content')) {
+        if ($this->isContentOwner($user, $content) && ! $user->can('submit revisions for own content')) {
             return false;
         }
 
         // Check if user can submit revisions for this content type
         $contentType = $this->getContentTypeName(get_class($content));
-        
+
         if ($user->can("submit {$contentType} revisions")) {
             return true;
         }
@@ -122,7 +123,7 @@ class RevisionPolicy
 
         // Check content-specific approval permissions
         $contentType = $this->getContentTypeName($revision->revisionable_type);
-        
+
         if ($user->can("approve {$contentType} revisions")) {
             return true;
         }
@@ -148,7 +149,7 @@ class RevisionPolicy
 
         // Check content-specific rejection permissions
         $contentType = $this->getContentTypeName($revision->revisionable_type);
-        
+
         if ($user->can("reject {$contentType} revisions")) {
             return true;
         }
@@ -201,11 +202,11 @@ class RevisionPolicy
     private function getContentTypeName(string $className): string
     {
         $baseName = class_basename($className);
-        
+
         return match ($baseName) {
             'MemberProfile' => 'member profile',
             'Band' => 'band',
-            'Production' => 'production',
+            'Event' => 'event',
             'CommunityEvent' => 'community event',
             'StaffProfile' => 'staff profile',
             'Equipment' => 'equipment',

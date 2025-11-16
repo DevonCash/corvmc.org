@@ -17,7 +17,7 @@ class DismissReportAction
             ->icon('tabler-circle-x')
             ->color('success')
             ->visible(
-                fn(Report $record): bool => $record->status === 'pending' && Auth::user()->can('dismiss', [$record])
+                fn (Report $record): bool => $record->status === 'pending' && Auth::user()->can('dismiss', [$record])
             )
             ->requiresConfirmation()
             ->schema([

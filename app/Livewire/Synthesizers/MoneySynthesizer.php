@@ -21,7 +21,7 @@ class MoneySynthesizer extends Synth
                 'amount' => $target->getAmount()->__toString(),
                 'currency' => $target->getCurrency()->getCurrencyCode(),
             ],
-            []
+            [],
         ];
     }
 

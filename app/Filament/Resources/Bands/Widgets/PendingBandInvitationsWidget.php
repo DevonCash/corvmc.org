@@ -4,10 +4,8 @@ namespace App\Filament\Resources\Bands\Widgets;
 
 use App\Actions\Bands\AcceptBandInvitation;
 use App\Actions\Bands\DeclineBandInvitation;
-use App\Models\Band;
 use App\Models\BandMember;
 use App\Models\User;
-use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -29,16 +27,16 @@ class PendingBandInvitationsWidget extends BaseWidget
                 Tables\Columns\ImageColumn::make('band.avatar_url')
                     ->label('')
                     ->circular()
-                    ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->band->name) . '&color=7C3AED&background=F3E8FF&size=120'),
+                    ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name='.urlencode($record->band->name).'&color=7C3AED&background=F3E8FF&size=120'),
                 Tables\Columns\TextColumn::make('band.name')
                     ->label('Band Name')
                     ->sortable()
-                    ->description(fn($record) => $record->band->hometown)
+                    ->description(fn ($record) => $record->band->hometown)
                     ->weight('bold'),
                 Tables\Columns\TextColumn::make('role')
                     ->label('Role')
                     ->badge()
-                    ->color(fn($value) => match ($value) {
+                    ->color(fn ($value) => match ($value) {
                         'admin' => 'success',
                         'member' => 'info',
                         default => 'gray',

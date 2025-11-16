@@ -26,6 +26,7 @@ class HandleRevisionSubmission
         // Check if this revision can be auto-approved based on trust
         if ($this->shouldAutoApprove($revision)) {
             AutoApproveRevision::run($revision);
+
             return;
         }
 
@@ -42,12 +43,13 @@ class HandleRevisionSubmission
         $model = $revision->revisionable;
 
         // Check if model exists (could be soft-deleted or missing)
-        if (!$model) {
+        if (! $model) {
             Log::warning('Revision model not found', [
                 'revision_id' => $revision->id,
                 'revisionable_type' => $revision->revisionable_type,
                 'revisionable_id' => $revision->revisionable_id,
             ]);
+
             return false;
         }
 
@@ -72,6 +74,7 @@ class HandleRevisionSubmission
             default:
                 // Standard trust-based auto-approval
                 $contentType = get_class($model);
+
                 return \App\Actions\Trust\CanAutoApprove::run($submitter, $contentType);
         }
     }

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Data\ContactData;
+use App\Enums\Visibility;
 use App\Models\MemberProfile;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -28,16 +29,16 @@ class MemberProfileFactory extends Factory
     public function definition(): array
     {
         $platforms = [
-            'Instagram' => 'https://instagram.com/' . fake()->userName(),
-            'Facebook' => 'https://facebook.com/' . fake()->userName(),
-            'Twitter' => 'https://twitter.com/' . fake()->userName(),
-            'Bandcamp' => 'https://' . fake()->userName() . '.bandcamp.com',
-            'Spotify' => 'https://open.spotify.com/artist/' . fake()->bothify('?##?##?##?##?##'),
-            'SoundCloud' => 'https://soundcloud.com/' . fake()->userName(),
-            'YouTube' => 'https://youtube.com/@' . fake()->userName(),
-            'TikTok' => 'https://tiktok.com/@' . fake()->userName(),
-            'LinkedIn' => 'https://linkedin.com/in/' . fake()->userName(),
-            'Website' => 'https://' . fake()->domainName(),
+            'Instagram' => 'https://instagram.com/'.fake()->userName(),
+            'Facebook' => 'https://facebook.com/'.fake()->userName(),
+            'Twitter' => 'https://twitter.com/'.fake()->userName(),
+            'Bandcamp' => 'https://'.fake()->userName().'.bandcamp.com',
+            'Spotify' => 'https://open.spotify.com/artist/'.fake()->bothify('?##?##?##?##?##'),
+            'SoundCloud' => 'https://soundcloud.com/'.fake()->userName(),
+            'YouTube' => 'https://youtube.com/@'.fake()->userName(),
+            'TikTok' => 'https://tiktok.com/@'.fake()->userName(),
+            'LinkedIn' => 'https://linkedin.com/in/'.fake()->userName(),
+            'Website' => 'https://'.fake()->domainName(),
         ];
 
         // Generate 0-4 random links
@@ -55,7 +56,7 @@ class MemberProfileFactory extends Factory
         return [
             'user_id' => $this->createUserWithoutProfile(),
             'bio' => fake()->boolean(80) ? $this->generateBio() : null,
-            'hometown' => fake()->boolean(60) ? fake()->city() . ', ' . fake()->stateAbbr() : null,
+            'hometown' => fake()->boolean(60) ? fake()->city().', '.fake()->stateAbbr() : null,
             'links' => $links,
             'contact' => new ContactData(
                 visibility: fake()->randomElement(['private', 'members', 'public']),
@@ -63,7 +64,7 @@ class MemberProfileFactory extends Factory
                 phone: fake()->boolean(50) ? fake()->phoneNumber() : null,
                 address: fake()->boolean(30) ? fake()->address() : null,
             ),
-            'visibility' => fake()->randomElement(['private', 'members', 'public']),
+            'visibility' => fake()->randomElement([Visibility::Private, Visibility::Members, Visibility::Public]),
         ];
     }
 
@@ -283,7 +284,7 @@ class MemberProfileFactory extends Factory
     public function private(): static
     {
         return $this->state([
-            'visibility' => 'private',
+            'visibility' => Visibility::Private,
             'contact' => new ContactData(visibility: 'private'),
         ]);
     }
@@ -291,7 +292,7 @@ class MemberProfileFactory extends Factory
     public function public(): static
     {
         return $this->state([
-            'visibility' => 'public',
+            'visibility' => Visibility::Public,
             'contact' => new ContactData(visibility: 'public'),
         ]);
     }
@@ -299,9 +300,8 @@ class MemberProfileFactory extends Factory
     public function membersOnly(): static
     {
         return $this->state([
-            'visibility' => 'members',
+            'visibility' => Visibility::Members,
             'contact' => new ContactData(visibility: 'members'),
         ]);
     }
-
 }

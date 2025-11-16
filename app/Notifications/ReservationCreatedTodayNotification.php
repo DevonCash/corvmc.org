@@ -42,11 +42,11 @@ class ReservationCreatedTodayNotification extends Notification implements Should
 
         return (new MailMessage)
             ->subject('Reservation Created for Today')
-            ->line("A new reservation has been created for **today**.")
+            ->line('A new reservation has been created for **today**.')
             ->line("**Member:** {$user->name}")
             ->line("**Time:** {$startTime} - {$endTime} ({$duration} hours)")
-            ->line("**Status:** " . ucfirst($this->reservation->status))
-            ->when($this->reservation->cost && !$this->reservation->cost->isZero(), function ($message) {
+            ->line('**Status:** '.ucfirst($this->reservation->status))
+            ->when($this->reservation->cost && ! $this->reservation->cost->isZero(), function ($message) {
                 return $message->line("**Cost:** {$this->reservation->cost->formatTo('en_US')}");
             })
             ->when($this->reservation->notes, function ($message) {

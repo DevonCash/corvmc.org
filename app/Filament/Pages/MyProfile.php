@@ -6,7 +6,6 @@ use App\Filament\Resources\MemberProfiles\Schemas\MemberProfileForm;
 use App\Models\User;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
@@ -15,11 +14,11 @@ class MyProfile extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-user-circle';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-circle';
 
     protected string $view = 'filament.pages.simple-form-page';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'My Account';
+    protected static string|\UnitEnum|null $navigationGroup = 'My Account';
 
     protected static ?int $navigationSort = 1;
 
@@ -58,5 +57,4 @@ class MyProfile extends Page implements HasForms
             ->title('Profile updated')
             ->send();
     }
-
 }

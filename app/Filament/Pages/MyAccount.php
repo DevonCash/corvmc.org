@@ -8,13 +8,11 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Support\Enums\ActionSize;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -26,7 +24,7 @@ class MyAccount extends Page implements HasForms
 
     protected string $view = 'filament.pages.simple-form-page';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'My Account';
+    protected static string|\UnitEnum|null $navigationGroup = 'My Account';
 
     protected static ?int $navigationSort = 4;
 
@@ -57,6 +55,7 @@ class MyAccount extends Page implements HasForms
                     Auth::guard('web')->logout();
                     request()->session()->invalidate();
                     request()->session()->regenerateToken();
+
                     return redirect('/');
                 }),
         ];
@@ -126,7 +125,7 @@ class MyAccount extends Page implements HasForms
         ]);
 
         // Update password if provided
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $user->update([
                 'password' => Hash::make($data['password']),
             ]);
@@ -144,5 +143,4 @@ class MyAccount extends Page implements HasForms
             'pronouns' => $user->pronouns,
         ]);
     }
-
 }

@@ -47,7 +47,7 @@ class BandsTable
 
                 TextColumn::make('activity')
                     ->label('Activity')
-                    ->getStateUsing(fn($record) => 'Active ' . $record->updated_at->diffForHumans())
+                    ->getStateUsing(fn ($record) => 'Active '.$record->updated_at->diffForHumans())
                     ->color('gray')
                     ->size('sm'),
             ])

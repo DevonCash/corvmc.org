@@ -36,8 +36,8 @@ class CreateSubscription
         // Use Cashier's multi-product subscription support
         return $user->newSubscription('default', $subscriptionPrices)
             ->checkout([
-                'success_url' => route('checkout.success') . '?user_id=' . $user->id . '&session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => route('checkout.cancel') . '?user_id=' . $user->id . '&type=sliding_scale_membership',
+                'success_url' => route('checkout.success').'?user_id='.$user->id.'&session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => route('checkout.cancel').'?user_id='.$user->id.'&type=sliding_scale_membership',
             ]);
     }
 
@@ -48,10 +48,11 @@ class CreateSubscription
     {
         $basePrices = collect(Cashier::stripe()->prices->all(['product' => config('services.stripe.membership_product_id'), 'active' => true, 'limit' => 100])->data);
 
-        $price = $basePrices->first(fn($price) => $price->unit_amount === $amount->getMinorAmount()->toInt());
-        if (!$price) {
+        $price = $basePrices->first(fn ($price) => $price->unit_amount === $amount->getMinorAmount()->toInt());
+        if (! $price) {
             throw new SubscriptionPriceNotFoundException($amount->getAmount()->toInt(), false);
         }
+
         return $price;
     }
 
@@ -60,17 +61,18 @@ class CreateSubscription
      */
     private function getFeeCoverage(string $forProductId): Price
     {
-        $coveragePrices = \Illuminate\Support\Facades\Cache::remember('stripe_fee_coverage_' . $forProductId, 3600, function () use ($forProductId) {
+        $coveragePrices = \Illuminate\Support\Facades\Cache::remember('stripe_fee_coverage_'.$forProductId, 3600, function () use ($forProductId) {
             return collect(Cashier::stripe()->prices->all([
                 'active' => true,
                 'product' => config('services.stripe.fee_coverage_product_id'),
-                'lookup_keys' => ['fee_' . $forProductId]
+                'lookup_keys' => ['fee_'.$forProductId],
             ])->data);
         });
 
         if ($coveragePrices->isEmpty()) {
-            throw new \Error('No fee coverage price found for product: ' . $forProductId, true);
+            throw new \Error('No fee coverage price found for product: '.$forProductId, true);
         }
+
         return $coveragePrices->first();
     }
 }

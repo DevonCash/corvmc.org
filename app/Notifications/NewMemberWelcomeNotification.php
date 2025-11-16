@@ -32,7 +32,7 @@ class NewMemberWelcomeNotification extends Notification implements ShouldQueue
             ->line('• Create and manage your member profile')
             ->line('• Join or create band profiles')
             ->line('• Stay updated on CMC events and shows')
-            ->action('Complete Your Profile', route('filament.member.pages.dashboard'))
+            ->action('Complete Your Profile', url('/member'))
             ->line('If you have any questions, feel free to reach out to us.')
             ->line('We\'re excited to have you as part of our music community!')
             ->salutation('Welcome aboard,<br>The CMC Team');
@@ -43,7 +43,7 @@ class NewMemberWelcomeNotification extends Notification implements ShouldQueue
         return [
             'title' => 'Welcome to CMC!',
             'message' => 'Welcome to the Corvallis Music Collective! Complete your profile to get started.',
-            'action_url' => route('filament.member.pages.dashboard'),
+            'action_url' => url('/member'),
             'action_text' => 'Complete Profile',
         ];
     }

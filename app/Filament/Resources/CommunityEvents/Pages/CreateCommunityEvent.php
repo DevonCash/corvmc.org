@@ -4,8 +4,8 @@ namespace App\Filament\Resources\CommunityEvents\Pages;
 
 use App\Filament\Resources\CommunityEvents\CommunityEventResource;
 use App\Models\CommunityEvent;
-use Filament\Resources\Pages\CreateRecord;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\CreateRecord;
 
 class CreateCommunityEvent extends CreateRecord
 {
@@ -23,7 +23,7 @@ class CreateCommunityEvent extends CreateRecord
 
         if ($organizer) {
             $workflow = \App\Actions\Trust\DetermineApprovalWorkflow::run($organizer, 'App\\Models\\CommunityEvent');
-            
+
             if ($workflow['auto_publish']) {
                 $data['status'] = CommunityEvent::STATUS_APPROVED;
                 $data['published_at'] = now();

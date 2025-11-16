@@ -3,11 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\MemberProfile;
-use App\Settings\MemberDirectorySettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class PublicMemberController extends Controller
 {

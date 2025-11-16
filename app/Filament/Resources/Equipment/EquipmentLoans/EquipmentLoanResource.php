@@ -13,10 +13,8 @@ use App\Settings\EquipmentSettings;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Facades\Auth;
 
 class EquipmentLoanResource extends Resource
 {
@@ -24,7 +22,7 @@ class EquipmentLoanResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'tabler-clipboard-list';
 
-    protected static  \UnitEnum|string|null $navigationGroup = 'Operations';
+    protected static \UnitEnum|string|null $navigationGroup = 'Operations';
 
     protected static ?string $modelLabel = 'Equipment Loan';
 
@@ -40,6 +38,7 @@ class EquipmentLoanResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         $equipmentSettings = app(EquipmentSettings::class);
+
         return $equipmentSettings->enable_equipment_features && $equipmentSettings->enable_rental_features;
     }
 
@@ -62,7 +61,6 @@ class EquipmentLoanResource extends Resource
     {
         return User::me()?->can('view equipment loans') ?? true;
     }
-
 
     public static function form(Schema $schema): Schema
     {

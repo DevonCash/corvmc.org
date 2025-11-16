@@ -16,27 +16,28 @@ class GetRemainingFreeHours
      *
      * Uses Credits System exclusively.
      *
-     * @param bool $fresh If true, bypass cache for transaction-safe calculation (deprecated, kept for compatibility)
+     * @param  bool  $fresh  If true, bypass cache for transaction-safe calculation (deprecated, kept for compatibility)
      */
     public function handle(User $user, bool $fresh = false): float
     {
-        if (!CheckIsSustainingMember::run($user)) {
+        if (! CheckIsSustainingMember::run($user)) {
             return 0;
         }
 
         // Use Credits System exclusively
         $balanceInBlocks = $user->getCreditBalance(CreditType::FreeHours);
+
         return Reservation::blocksToHours($balanceInBlocks);
     }
 
     /**
      * Get used free hours for user in current month.
      *
-     * @param bool $fresh Deprecated, kept for compatibility
+     * @param  bool  $fresh  Deprecated, kept for compatibility
      */
     public function getUsedFreeHoursThisMonth(User $user, bool $fresh = false): float
     {
-        if (!CheckIsSustainingMember::run($user)) {
+        if (! CheckIsSustainingMember::run($user)) {
             return 0;
         }
 

@@ -16,7 +16,7 @@ class ApplyRevision
     {
         $model = $revision->revisionable;
 
-        if (!$model) {
+        if (! $model) {
             throw new \InvalidArgumentException('Revisionable model not found');
         }
 

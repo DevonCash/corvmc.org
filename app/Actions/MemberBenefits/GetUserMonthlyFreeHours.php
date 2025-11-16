@@ -20,7 +20,7 @@ class GetUserMonthlyFreeHours
      */
     public function handle(User $user): int
     {
-        if (!CheckIsSustainingMember::run($user)) {
+        if (! CheckIsSustainingMember::run($user)) {
             return 0;
         }
 
@@ -30,13 +30,15 @@ class GetUserMonthlyFreeHours
             try {
                 // Get the maximum contribution amount for this billing period
                 $peakAmount = \App\Actions\Subscriptions\GetBillingPeriodPeakAmount::run($subscription);
+
                 return CalculateFreeHours::run($peakAmount);
             } catch (\Exception $e) {
                 Log::warning('Failed to get billing period peak amount for free hours calculation', [
                     'user_id' => $user->id,
                     'subscription_id' => $subscription->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
+
                 // Fallback to default for active subscription
                 return self::FREE_HOURS_PER_MONTH;
             }

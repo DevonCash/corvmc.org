@@ -27,7 +27,7 @@ class CreateUser
             }
 
             // Validate required data
-            if (!isset($data['password']) || empty($data['password'])) {
+            if (! isset($data['password']) || empty($data['password'])) {
                 throw new \InvalidArgumentException('Password is required');
             }
 
@@ -40,14 +40,14 @@ class CreateUser
             $user = User::create($userData);
 
             // Assign roles if provided
-            if (!empty($roleNames)) {
+            if (! empty($roleNames)) {
                 $user->assignRole($roleNames);
             }
 
             // Profile creation is handled automatically by the User model
 
             // Send creation notification
-            $user->notify(new UserCreatedNotification());
+            $user->notify(new UserCreatedNotification);
 
             return $user;
         });

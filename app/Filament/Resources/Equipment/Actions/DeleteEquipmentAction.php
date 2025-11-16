@@ -32,9 +32,9 @@ class DeleteEquipmentAction
                     $warnings[] = "📝 This equipment has {$count} loan record(s) in its history";
                 }
 
-                $base = "Are you sure you want to delete this equipment? This action cannot be undone.";
+                $base = 'Are you sure you want to delete this equipment? This action cannot be undone.';
 
-                return $warnings ? $base . "\n\n" . implode("\n", $warnings) : $base;
+                return $warnings ? $base."\n\n".implode("\n", $warnings) : $base;
             })
             ->requiresConfirmation()
             ->before(function ($record) {
@@ -73,9 +73,8 @@ class DeleteEquipmentAction
                     ->title('Equipment Deleted')
                     ->body('Equipment has been permanently deleted from the library.')
             )
-            ->visible(fn ($record) =>
-                Auth::user()->can('delete equipment') &&
-                !$record->is_checked_out
+            ->visible(fn ($record) => Auth::user()->can('delete equipment') &&
+                ! $record->is_checked_out
             );
     }
 }

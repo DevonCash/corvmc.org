@@ -4,11 +4,10 @@ namespace App\Console\Commands;
 
 use App\Data\LocationData;
 use App\Models\Band;
-use App\Models\Production;
+use App\Models\Event;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 
 class ImportProductionsFromCsv extends Command
 {
@@ -17,17 +16,17 @@ class ImportProductionsFromCsv extends Command
      *
      * @var string
      */
-    protected $signature = 'import:productions 
+    protected $signature = 'import:productions
                             {file : Path to the CSV file}
                             {--dry-run : Show what would be imported without saving}
-                            {--manager= : Default manager user ID for productions}';
+                            {--manager= : Default manager user ID for events}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Import productions from a CSV file containing show data';
+    protected $description = 'Import events from a CSV file containing show data (legacy productions)';
 
     /**
      * Execute the console command.
@@ -38,8 +37,9 @@ class ImportProductionsFromCsv extends Command
         $dryRun = $this->option('dry-run');
         $defaultManagerId = $this->option('manager');
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             $this->error("❌ File not found: {$filePath}");
+
             return 1;
         }
 
@@ -54,8 +54,9 @@ class ImportProductionsFromCsv extends Command
         $defaultManager = null;
         if ($defaultManagerId) {
             $defaultManager = User::find($defaultManagerId);
-            if (!$defaultManager) {
+            if (! $defaultManager) {
                 $this->error("❌ Manager with ID {$defaultManagerId} not found");
+
                 return 1;
             }
             $this->info("📝 Default manager: {$defaultManager->name}");
@@ -64,7 +65,7 @@ class ImportProductionsFromCsv extends Command
         // Parse CSV
         $handle = fopen($filePath, 'r');
         $headers = fgetcsv($handle);
-        
+
         $imported = 0;
         $skipped = 0;
         $errors = [];
@@ -72,20 +73,21 @@ class ImportProductionsFromCsv extends Command
         while (($row = fgetcsv($handle)) !== false) {
             if (empty($row[0]) || $this->isSkippableRow($row)) {
                 $skipped++;
+
                 continue;
             }
 
             try {
                 $productionData = $this->parseRow($headers, $row, $defaultManager);
-                
+
                 if ($productionData) {
                     $this->info("📅 {$productionData['date']} - {$productionData['title']}");
-                    
+
                     if ($productionData['local_bands']) {
-                        $this->line("   🎸 Local: " . implode(', ', $productionData['local_bands']));
+                        $this->line('   🎸 Local: '.implode(', ', $productionData['local_bands']));
                     }
                     if ($productionData['touring_bands']) {
-                        $this->line("   🚐 Touring: " . implode(', ', $productionData['touring_bands']));
+                        $this->line('   🚐 Touring: '.implode(', ', $productionData['touring_bands']));
                     }
                     if ($productionData['cover']) {
                         $this->line("   💰 Cover: {$productionData['cover']}");
@@ -94,17 +96,17 @@ class ImportProductionsFromCsv extends Command
                         $this->line("   📝 Notes: {$productionData['notes']}");
                     }
 
-                    if (!$dryRun) {
+                    if (! $dryRun) {
                         $this->createProduction($productionData);
                     }
-                    
+
                     $imported++;
                 } else {
                     $skipped++;
                 }
             } catch (\Exception $e) {
-                $errors[] = "Row " . ($imported + $skipped + 1) . ": " . $e->getMessage();
-                $this->error("❌ Error processing row: " . $e->getMessage());
+                $errors[] = 'Row '.($imported + $skipped + 1).': '.$e->getMessage();
+                $this->error('❌ Error processing row: '.$e->getMessage());
                 $skipped++;
             }
         }
@@ -116,9 +118,9 @@ class ImportProductionsFromCsv extends Command
         $this->info('📊 Import Summary:');
         $this->line("   ✅ Imported: {$imported}");
         $this->line("   ⏭️  Skipped: {$skipped}");
-        
-        if (!empty($errors)) {
-            $this->line("   ❌ Errors: " . count($errors));
+
+        if (! empty($errors)) {
+            $this->line('   ❌ Errors: '.count($errors));
             foreach ($errors as $error) {
                 $this->line("      • {$error}");
             }
@@ -137,16 +139,16 @@ class ImportProductionsFromCsv extends Command
     private function parseRow(array $headers, array $row, ?User $defaultManager): ?array
     {
         $data = array_combine($headers, $row);
-        
+
         // Skip if no date or invalid date
         $dateStr = trim($data['Date'] ?? '');
-        if (empty($dateStr) || !$this->isValidDate($dateStr)) {
+        if (empty($dateStr) || ! $this->isValidDate($dateStr)) {
             return null;
         }
 
         // Parse date
         $date = Carbon::createFromFormat('m/d/Y', $dateStr);
-        
+
         // Parse time
         $startTime = $this->parseTime($data['Start Time'] ?? '7:00 PM');
         $showStart = $date->copy()->setTime($startTime['hour'], $startTime['minute']);
@@ -155,10 +157,10 @@ class ImportProductionsFromCsv extends Command
         // Parse bands
         $touringBands = $this->parseBands($data['Touring Band (if applicable)'] ?? '');
         $localBands = $this->parseBands($data['Local Support'] ?? '');
-        
+
         // Create title from bands
         $allBands = array_merge($touringBands, $localBands);
-        $title = !empty($allBands) ? implode(', ', array_slice($allBands, 0, 3)) : 'Show';
+        $title = ! empty($allBands) ? implode(', ', array_slice($allBands, 0, 3)) : 'Show';
         if (count($allBands) > 3) {
             $title .= ' + more';
         }
@@ -172,7 +174,7 @@ class ImportProductionsFromCsv extends Command
 
         // Determine manager (could be enhanced to parse from 'Show Runner' column)
         $manager = $defaultManager;
-        if (!$manager) {
+        if (! $manager) {
             // Try to find a manager from the system
             $manager = User::where('email', 'like', '%@corvmc.org')->first();
         }
@@ -193,11 +195,11 @@ class ImportProductionsFromCsv extends Command
     }
 
     /**
-     * Create a production from parsed data.
+     * Create an event from parsed data.
      */
-    private function createProduction(array $data): Production
+    private function createProduction(array $data): Event
     {
-        $production = Production::create([
+        $event = Event::create([
             'title' => $data['title'],
             'description' => $this->buildDescription($data),
             'start_time' => $data['start_time'],
@@ -207,19 +209,19 @@ class ImportProductionsFromCsv extends Command
             'ticket_price' => $data['ticket_price'],
             'status' => $data['date']->isFuture() ? 'pre-production' : 'completed',
             'published_at' => $data['date']->isFuture() ? null : $data['date'],
-            'manager_id' => $data['manager']?->id,
+            'organizer_id' => $data['manager']?->id,
         ]);
 
         // Add notes if present
         if ($data['notes']) {
-            $production->description .= "\n\nNotes: " . $data['notes'];
-            $production->save();
+            $event->description .= "\n\nNotes: ".$data['notes'];
+            $event->save();
         }
 
         // TODO: Could enhance to create/link band relationships
         // This would require more complex logic to match band names to existing bands
 
-        return $production;
+        return $event;
     }
 
     /**
@@ -228,23 +230,23 @@ class ImportProductionsFromCsv extends Command
     private function buildDescription(array $data): string
     {
         $description = '';
-        
-        if (!empty($data['touring_bands'])) {
-            $description .= "Featuring touring acts: " . implode(', ', $data['touring_bands']);
+
+        if (! empty($data['touring_bands'])) {
+            $description .= 'Featuring touring acts: '.implode(', ', $data['touring_bands']);
         }
-        
-        if (!empty($data['local_bands'])) {
+
+        if (! empty($data['local_bands'])) {
             if ($description) {
                 $description .= "\n\n";
             }
-            $description .= "With local support from: " . implode(', ', $data['local_bands']);
+            $description .= 'With local support from: '.implode(', ', $data['local_bands']);
         }
 
         if ($data['cover']) {
             if ($description) {
                 $description .= "\n\n";
             }
-            $description .= "Cover: " . $data['cover'];
+            $description .= 'Cover: '.$data['cover'];
         }
 
         return $description ?: 'Live music at Corvallis Music Collective';
@@ -263,11 +265,12 @@ class ImportProductionsFromCsv extends Command
         $bands = explode(',', $bandStr);
         $bands = array_map('trim', $bands);
         $bands = array_filter($bands);
-        
+
         // Remove empty entries and common non-band text
-        $bands = array_filter($bands, function($band) {
+        $bands = array_filter($bands, function ($band) {
             $lower = strtolower($band);
-            return !in_array($lower, ['', 'tbd', 'n/a', 'na', 'none']);
+
+            return ! in_array($lower, ['', 'tbd', 'n/a', 'na', 'none']);
         });
 
         return array_values($bands);
@@ -296,13 +299,14 @@ class ImportProductionsFromCsv extends Command
     private function parseTime(string $timeStr): array
     {
         $timeStr = trim($timeStr);
-        
+
         if (empty($timeStr)) {
             return ['hour' => 19, 'minute' => 0]; // Default 7 PM
         }
 
         try {
             $time = Carbon::createFromFormat('g:i A', $timeStr);
+
             return ['hour' => $time->hour, 'minute' => $time->minute];
         } catch (\Exception $e) {
             return ['hour' => 19, 'minute' => 0]; // Default 7 PM
@@ -315,11 +319,11 @@ class ImportProductionsFromCsv extends Command
     private function isSkippableRow(array $row): bool
     {
         $firstCell = strtolower(trim($row[0] ?? ''));
-        
+
         // Skip month headers, empty rows, summary rows
         $skipPatterns = [
             'june', 'july', 'august', 'september', 'october', 'november', 'december',
-            'do not book', '#value!', 'total', 'summary'
+            'do not book', '#value!', 'total', 'summary',
         ];
 
         foreach ($skipPatterns as $pattern) {
@@ -329,7 +333,8 @@ class ImportProductionsFromCsv extends Command
         }
 
         // Skip if mostly empty
-        $nonEmptyCells = array_filter($row, fn($cell) => !empty(trim($cell)));
+        $nonEmptyCells = array_filter($row, fn ($cell) => ! empty(trim($cell)));
+
         return count($nonEmptyCells) < 2;
     }
 
@@ -340,6 +345,7 @@ class ImportProductionsFromCsv extends Command
     {
         try {
             Carbon::createFromFormat('m/d/Y', $dateStr);
+
             return true;
         } catch (\Exception $e) {
             return false;

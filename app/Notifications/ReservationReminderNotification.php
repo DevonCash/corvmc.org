@@ -40,7 +40,7 @@ class ReservationReminderNotification extends Notification implements ShouldQueu
             ->line('Duration: '.number_format($this->reservation->duration, 1).' hours')
             ->line('Cost: '.$this->reservation->cost_display);
 
-        if ($this->reservation->isUnpaid() && !$this->reservation->cost->isZero()) {
+        if ($this->reservation->isUnpaid() && ! $this->reservation->cost->isZero()) {
             $message->line('**Payment Due:** Please bring payment or pay online before your session.');
         }
 

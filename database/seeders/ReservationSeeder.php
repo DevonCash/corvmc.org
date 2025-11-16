@@ -82,14 +82,14 @@ class ReservationSeeder extends Seeder
             17 => 5, 18 => 6, 19 => 6, 20 => 4, // Evening peak (higher weight)
             21 => 2, // Late evening (lower)
         ];
-        
+
         $weightedHours = [];
         foreach ($popularHours as $hour => $weight) {
             for ($i = 0; $i < $weight; $i++) {
                 $weightedHours[] = $hour;
             }
         }
-        
+
         $startHour = $weightedHours[array_rand($weightedHours)];
         $startMinute = [0, 15, 30, 45][rand(0, 3)]; // Quarter-hour intervals
 
@@ -103,7 +103,7 @@ class ReservationSeeder extends Seeder
                 $durations[] = $duration;
             }
         }
-        
+
         $durationHours = $durations[array_rand($durations)];
         $endTime = $startTime->copy()->addHours($durationHours);
 
@@ -203,18 +203,18 @@ class ReservationSeeder extends Seeder
             17 => 5, 18 => 6, 19 => 6, 20 => 4,
             21 => 2,
         ];
-        
+
         $weightedHours = [];
         foreach ($popularHours as $hour => $weight) {
             for ($i = 0; $i < $weight; $i++) {
                 $weightedHours[] = $hour;
             }
         }
-        
+
         $startHour = $weightedHours[array_rand($weightedHours)];
         $startMinute = [0, 15, 30, 45][rand(0, 3)];
         $startTime = $date->copy()->setTime($startHour, $startMinute);
-        
+
         $durationWeights = [1 => 1, 2 => 4, 3 => 3, 4 => 1];
         $durations = [];
         foreach ($durationWeights as $duration => $weight) {
@@ -222,7 +222,7 @@ class ReservationSeeder extends Seeder
                 $durations[] = $duration;
             }
         }
-        
+
         $durationHours = $durations[array_rand($durations)];
         $endTime = $startTime->copy()->addHours($durationHours);
 

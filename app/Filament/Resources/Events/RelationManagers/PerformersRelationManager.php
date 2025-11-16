@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Events\RelationManagers;
 
-use App\Filament\Resources\Bands\BandResource;
 use App\Filament\Resources\Events\Actions\InviteBandOwnerAction;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -20,8 +19,6 @@ use Filament\Tables\Table;
 class PerformersRelationManager extends RelationManager
 {
     protected static string $relationship = 'performers';
-
-    protected static ?string $relatedResource = BandResource::class;
 
     public function table(Table $table): Table
     {

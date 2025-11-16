@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\MemberProfiles\Schemas;
 
+use App\Enums\Visibility;
+use App\Filament\Components\EmbedControl;
 use App\Models\MemberProfile;
 use App\Settings\MemberDirectorySettings;
-use App\Filament\Components\EmbedControl;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
@@ -16,7 +17,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
-use Filament\Schemas\Schema;
 
 class MemberProfileForm
 {
@@ -46,7 +46,7 @@ class MemberProfileForm
                             TextInput::make('hometown')
                                 ->label('Hometown')
                                 ->columnSpan(1)
-                                ->datalist(fn() => MemberProfile::withoutGlobalScope(\App\Models\Scopes\MemberVisibilityScope::class)->distinct()->pluck('hometown')->concat(['Corvallis', 'Albany', 'Philomath', 'Monroe', 'Lebanon', 'Sweet Home', 'Eugene', 'Springfield', 'Portland', 'Salem'])),
+                                ->datalist(fn () => MemberProfile::withoutGlobalScope(\App\Models\Scopes\MemberVisibilityScope::class)->distinct()->pluck('hometown')->concat(['Corvallis', 'Albany', 'Philomath', 'Monroe', 'Lebanon', 'Sweet Home', 'Eugene', 'Springfield', 'Portland', 'Salem'])),
                         ])->columns(4)->columnSpanFull(),
                         Grid::make(2)
                             ->columnSpanFull()
@@ -73,7 +73,6 @@ class MemberProfileForm
                                 ['undo', 'redo'],
                             ])
                             ->columnSpanFull(),
-
 
                         Fieldset::make('Embeds & Media')
                             ->columnSpanFull()
@@ -154,18 +153,10 @@ class MemberProfileForm
                         Select::make('visibility')
                             ->label('Profile Visibility')
                             ->live()
-                            ->options([
-                                'private' => 'Private',
-                                'members' => 'Members Only',
-                                'public' => 'Public',
-                            ])
-                            ->helperText(fn($state) => match ($state) {
-                                'private' => 'Only you can see your profile',
-                                'members' => 'Other CMC members can view your profile',
-                                'public' => 'Your profile is visible to the public',
-                            })
+                            ->options(Visibility::class)
+                            ->helperText(fn ($state) => $state ? $state->getDescription() : 'Choose who can see your profile')
                             ->selectablePlaceholder(false)
-                            ->default('private')
+                            ->default(Visibility::Private)
                             ->required(),
 
                         Select::make('contact.visibility')
@@ -177,7 +168,7 @@ class MemberProfileForm
                                 'members' => 'Members Only',
                                 'public' => 'Public',
                             ])
-                            ->helperText(fn($state) => match ($state) {
+                            ->helperText(fn ($state) => match ($state) {
                                 'private' => 'Only CMC staff can see your contact info',
                                 'members' => 'Only other members can see your contact info',
                                 'public' => 'Anyone who can see your profile can see your contact info',
@@ -221,7 +212,7 @@ class MemberProfileForm
                                     })
                                     ->dehydrated(false)
                                     ->afterStateUpdated(function ($state, $record) {
-                                        if (!$record) {
+                                        if (! $record) {
                                             return;
                                         }
 

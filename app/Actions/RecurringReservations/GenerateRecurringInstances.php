@@ -2,8 +2,11 @@
 
 namespace App\Actions\RecurringReservations;
 
+use App\Actions\Events\CreateEvent;
 use App\Actions\Reservations\CreateReservation;
-use App\Models\RecurringReservation;
+use App\Enums\ReservationStatus;
+use App\Models\Event;
+use App\Models\RecurringSeries;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -14,10 +17,10 @@ class GenerateRecurringInstances
     use AsAction;
 
     /**
-     * Generate reservation instances for a recurring series.
+     * Generate instances (Reservations or Events) for a recurring series.
      * Only generates up to max_advance_days into the future.
      */
-    public function handle(RecurringReservation $series): Collection
+    public function handle(RecurringSeries $series): Collection
     {
         $startDate = $series->series_start_date;
         $maxDate = now()->addDays($series->max_advance_days);
@@ -29,9 +32,11 @@ class GenerateRecurringInstances
         $occurrences = CalculateOccurrences::run($series->recurrence_rule, $startDate, $maxDate);
         $created = collect();
 
+        $modelClass = $series->recurable_type;
+
         foreach ($occurrences as $date) {
             // Check if instance already exists
-            $existing = Reservation::where('recurring_reservation_id', $series->id)
+            $existing = $modelClass::where('recurring_series_id', $series->id)
                 ->where('instance_date', $date->toDateString())
                 ->first();
 
@@ -39,23 +44,13 @@ class GenerateRecurringInstances
                 continue;
             }
 
-            // Try to create the actual reservation
+            // Try to create the actual instance
             try {
-                $reservation = $this->createInstanceReservation($series, $date);
-                $created->push($reservation);
+                $instance = $this->createInstance($series, $date);
+                $created->push($instance);
             } catch (\InvalidArgumentException $e) {
-                // Conflict - create a placeholder cancelled reservation to track skip
-                Reservation::create([
-                    'user_id' => $series->user_id,
-                    'recurring_reservation_id' => $series->id,
-                    'instance_date' => $date->toDateString(),
-                    'reserved_at' => $date->copy()->setTimeFromTimeString($series->start_time->format('H:i:s')),
-                    'reserved_until' => $date->copy()->setTimeFromTimeString($series->end_time->format('H:i:s')),
-                    'status' => 'cancelled',
-                    'cancellation_reason' => 'Scheduling conflict',
-                    'is_recurring' => true,
-                    'cost' => 0,
-                ]);
+                // Conflict - create a placeholder cancelled instance to track skip
+                $this->createCancelledPlaceholder($series, $date);
             }
         }
 
@@ -63,26 +58,69 @@ class GenerateRecurringInstances
     }
 
     /**
-     * Create a single reservation instance from recurring pattern.
+     * Create a single instance from recurring pattern.
      */
-    protected function createInstanceReservation(
-        RecurringReservation $series,
-        Carbon $date
-    ): Reservation {
+    protected function createInstance(RecurringSeries $series, Carbon $date): Reservation|Event
+    {
         $startDateTime = $date->copy()->setTimeFromTimeString($series->start_time->format('H:i:s'));
         $endDateTime = $date->copy()->setTimeFromTimeString($series->end_time->format('H:i:s'));
 
-        return CreateReservation::run(
-            $series->user,
-            $startDateTime,
-            $endDateTime,
-            [
-                'recurring_reservation_id' => $series->id,
+        if ($series->recurable_type === Reservation::class) {
+            return CreateReservation::run(
+                $series->user,
+                $startDateTime,
+                $endDateTime,
+                [
+                    'recurring_series_id' => $series->id,
+                    'instance_date' => $date->toDateString(),
+                    'is_recurring' => true,
+                    'recurrence_pattern' => ['source' => 'recurring_series'],
+                    'status' => ReservationStatus::Pending,
+                ]
+            );
+        }
+
+        // Create Event instance
+        return CreateEvent::run([
+            'organizer_id' => $series->user_id,
+            'recurring_series_id' => $series->id,
+            'instance_date' => $date->toDateString(),
+            'start_time' => $startDateTime,
+            'end_time' => $endDateTime,
+            'status' => 'approved',
+            'published_at' => now(),
+        ]);
+    }
+
+    /**
+     * Create a cancelled placeholder to track a skipped instance.
+     */
+    protected function createCancelledPlaceholder(RecurringSeries $series, Carbon $date): void
+    {
+        $startDateTime = $date->copy()->setTimeFromTimeString($series->start_time->format('H:i:s'));
+        $endDateTime = $date->copy()->setTimeFromTimeString($series->end_time->format('H:i:s'));
+
+        if ($series->recurable_type === Reservation::class) {
+            Reservation::create([
+                'user_id' => $series->user_id,
+                'recurring_series_id' => $series->id,
                 'instance_date' => $date->toDateString(),
+                'reserved_at' => $startDateTime,
+                'reserved_until' => $endDateTime,
+                'status' => ReservationStatus::Cancelled,
+                'cancellation_reason' => 'Scheduling conflict',
                 'is_recurring' => true,
-                'recurrence_pattern' => ['source' => 'recurring_series'],
-                'status' => 'pending',
-            ]
-        );
+                'cost' => 0,
+            ]);
+        } else {
+            Event::create([
+                'organizer_id' => $series->user_id,
+                'recurring_series_id' => $series->id,
+                'instance_date' => $date->toDateString(),
+                'start_time' => $startDateTime,
+                'end_time' => $endDateTime,
+                'status' => 'cancelled',
+            ]);
+        }
     }
 }

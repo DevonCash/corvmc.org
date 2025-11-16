@@ -2,15 +2,13 @@
 
 namespace App\Filament\Resources\Equipment\EquipmentDamageReports\Schemas;
 
-use App\Models\Equipment;
 use App\Models\EquipmentLoan;
-use App\Models\User;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
@@ -31,20 +29,22 @@ class EquipmentDamageReportForm
                                     ->preload()
                                     ->required()
                                     ->live()
-                                    ->afterStateUpdated(fn($state, $set) => $set('equipment_loan_id', null)),
+                                    ->afterStateUpdated(fn ($state, $set) => $set('equipment_loan_id', null)),
 
                                 Select::make('equipment_loan_id')
                                     ->label('Related Loan')
                                     ->relationship('loan', 'id')
                                     ->options(function (Get $get) {
                                         $equipmentId = $get('equipment_id');
-                                        if (!$equipmentId) return [];
+                                        if (! $equipmentId) {
+                                            return [];
+                                        }
 
                                         return EquipmentLoan::where('equipment_id', $equipmentId)
                                             ->with('borrower')
                                             ->get()
-                                            ->mapWithKeys(fn($loan) => [
-                                                $loan->id => "#{$loan->id} - {$loan->borrower->name} ({$loan->checked_out_at->format('M j, Y')})"
+                                            ->mapWithKeys(fn ($loan) => [
+                                                $loan->id => "#{$loan->id} - {$loan->borrower->name} ({$loan->checked_out_at->format('M j, Y')})",
                                             ]);
                                     })
                                     ->searchable()
@@ -161,7 +161,7 @@ class EquipmentDamageReportForm
                             ->columnSpanFull(),
                     ])
                     ->collapsible()
-                    ->collapsed(fn($record) => !$record?->repair_notes),
+                    ->collapsed(fn ($record) => ! $record?->repair_notes),
             ]);
     }
 }

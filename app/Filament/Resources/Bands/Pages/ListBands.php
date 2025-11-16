@@ -7,7 +7,6 @@ use App\Filament\Resources\Bands\BandResource;
 use App\Filament\Resources\Bands\Widgets\PendingBandInvitationsWidget;
 use App\Models\Band;
 use App\Models\User;
-use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
@@ -36,8 +35,7 @@ class ListBands extends ListRecords
             'all_bands' => Tab::make('All Bands'),
             'my_bands' => Tab::make('My Bands')
                 ->modifyQueryUsing(
-                    fn(Builder $query) =>
-                    $query->where(function (Builder $query) {
+                    fn (Builder $query) => $query->where(function (Builder $query) {
                         $query->where('owner_id', User::me()->id)
                             ->orWhereHas('members', function (Builder $query) {
                                 $query->where('user_id', User::me()->id)

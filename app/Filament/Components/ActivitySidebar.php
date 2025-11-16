@@ -3,7 +3,6 @@
 namespace App\Filament\Components;
 
 use App\Models\User;
-use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Spatie\Activitylog\Models\Activity;
@@ -24,10 +23,10 @@ class ActivitySidebar
     protected static function getContextualActivities()
     {
         $currentUser = Auth::user();
-        if (!$currentUser) {
+        if (! $currentUser) {
             return collect();
         }
-        
+
         $context = self::getCurrentContext();
 
         $query = Activity::with(['subject', 'causer.profile'])
@@ -39,16 +38,16 @@ class ActivitySidebar
             case 'band':
                 if ($context['record_id']) {
                     // If record_id is a slug, find the actual band ID
-                    if (is_string($context['record_id']) && !is_numeric($context['record_id'])) {
+                    if (is_string($context['record_id']) && ! is_numeric($context['record_id'])) {
                         $band = \App\Models\Band::where('slug', $context['record_id'])->first();
                         $bandId = $band ? $band->id : null;
                     } else {
                         $bandId = $context['record_id'];
                     }
-                    
+
                     if ($bandId) {
                         $query->where('subject_type', 'App\\Models\\Band')
-                              ->where('subject_id', $bandId);
+                            ->where('subject_id', $bandId);
                     }
                 }
                 break;
@@ -57,17 +56,17 @@ class ActivitySidebar
                 if ($context['record_id']) {
                     // Get the member profile and user ID outside the query to avoid N+1
                     $memberProfile = \App\Models\MemberProfile::find($context['record_id']);
-                    
+
                     $query->where(function ($q) use ($context, $memberProfile) {
                         // Direct member profile activities
                         $q->where('subject_type', 'App\\Models\\MemberProfile')
-                          ->where('subject_id', $context['record_id']);
-                        
+                            ->where('subject_id', $context['record_id']);
+
                         // User activities related to this member profile
                         if ($memberProfile && $memberProfile->user_id) {
                             $q->orWhere(function ($userQuery) use ($memberProfile) {
                                 $userQuery->where('subject_type', 'App\\Models\\User')
-                                         ->where('subject_id', $memberProfile->user_id);
+                                    ->where('subject_id', $memberProfile->user_id);
                             });
                         }
                     });
@@ -81,7 +80,7 @@ class ActivitySidebar
             case 'production':
                 if ($context['record_id']) {
                     $query->where('subject_type', 'App\\Models\\Production')
-                          ->where('subject_id', $context['record_id']);
+                        ->where('subject_id', $context['record_id']);
                 } else {
                     $query->where('subject_type', 'App\\Models\\Production');
                 }
@@ -116,7 +115,7 @@ class ActivitySidebar
     protected static function getCurrentContext(): array
     {
         $route = Route::current();
-        if (!$route) {
+        if (! $route) {
             return [
                 'type' => 'dashboard',
                 'resource' => null,
@@ -124,7 +123,7 @@ class ActivitySidebar
                 'page' => 'dashboard',
             ];
         }
-        
+
         $routeName = $route->getName();
         $parameters = $route->parameters();
 
@@ -175,10 +174,19 @@ class ActivitySidebar
 
     protected static function getPageType(string $routeName): string
     {
-        if (str_contains($routeName, '.index')) return 'index';
-        if (str_contains($routeName, '.view')) return 'view';
-        if (str_contains($routeName, '.edit')) return 'edit';
-        if (str_contains($routeName, '.create')) return 'create';
+        if (str_contains($routeName, '.index')) {
+            return 'index';
+        }
+        if (str_contains($routeName, '.view')) {
+            return 'view';
+        }
+        if (str_contains($routeName, '.edit')) {
+            return 'edit';
+        }
+        if (str_contains($routeName, '.create')) {
+            return 'create';
+        }
+
         return 'other';
     }
 
@@ -211,6 +219,7 @@ class ActivitySidebar
         if ($production && $production->title) {
             return "{$causerName} {$action} event \"{$production->title}\"";
         }
+
         return "{$causerName} {$action} an event";
     }
 
@@ -219,14 +228,17 @@ class ActivitySidebar
         $band = $activity->subject;
         if ($band && $band->name) {
             $actionText = $action === 'created' ? 'created' : 'updated';
+
             return "{$causerName} {$actionText} band \"{$band->name}\"";
         }
+
         return "{$causerName} {$action} a band profile";
     }
 
     protected static function formatMemberDescription(Activity $activity, string $causerName, string $action): string
     {
         $actionText = $action === 'completed' ? 'completed their profile' : 'updated their profile';
+
         return "{$causerName} {$actionText}";
     }
 
@@ -249,7 +261,7 @@ class ActivitySidebar
             return "{$causerName} {$actionText}";
         }
 
-        return "Practice space activity";
+        return 'Practice space activity';
     }
 
     protected static function getActivityIcon(Activity $activity): string
@@ -284,7 +296,7 @@ class ActivitySidebar
 
     protected static function getActivitySubjectUrl(Activity $activity): ?string
     {
-        if (!$activity->subject || !$activity->subject_id) {
+        if (! $activity->subject || ! $activity->subject_id) {
             return null;
         }
 
@@ -294,7 +306,7 @@ class ActivitySidebar
                 'App\\Models\\MemberProfile' => route('filament.member.resources.directory.view', ['record' => $activity->subject_id]),
                 'App\\Models\\Production' => route('filament.member.resources.productions.view', ['record' => $activity->subject_id]),
                 'App\\Models\\Reservation' => route('filament.member.resources.reservations.view', ['record' => $activity->subject_id]),
-                'App\\Models\\User' => $activity->subject?->profile?->id ? 
+                'App\\Models\\User' => $activity->subject?->profile?->id ?
                     route('filament.member.resources.directory.view', ['record' => $activity->subject->profile->id]) : null,
                 default => null,
             };
@@ -307,7 +319,7 @@ class ActivitySidebar
     protected static function canViewActivity(Activity $activity, $currentUser): bool
     {
         // Simplified version - reuse existing logic from ActivityFeedWidget
-        if (!$activity->subject) {
+        if (! $activity->subject) {
             return false;
         }
 

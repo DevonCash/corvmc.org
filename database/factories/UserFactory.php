@@ -43,13 +43,12 @@ class UserFactory extends Factory
         ];
     }
 
-
     /**
      * Indicate that the model's email address should be unverified.
      */
     public function unverified(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
     }
@@ -77,7 +76,7 @@ class UserFactory extends Factory
     public function withRole(string $role): static
     {
         return $this->afterCreating(function ($user) use ($role) {
-            if (!Role::where('name', $role)->exists()) {
+            if (! Role::where('name', $role)->exists()) {
                 throw new \InvalidArgumentException("Role '{$role}' does not exist.");
             }
             $user->assignRole($role);

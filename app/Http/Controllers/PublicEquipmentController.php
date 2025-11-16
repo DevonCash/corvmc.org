@@ -8,7 +8,6 @@ use Illuminate\View\View;
 
 class PublicEquipmentController extends Controller
 {
-
     /**
      * Display the equipment lending library catalog.
      */
@@ -40,9 +39,9 @@ class PublicEquipmentController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('brand', 'like', "%{$search}%")
-                  ->orWhere('model', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('brand', 'like', "%{$search}%")
+                    ->orWhere('model', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -85,7 +84,7 @@ class PublicEquipmentController extends Controller
                 $query->latest('checked_out_at')->limit(5);
             },
             'loans.borrower',
-            'media'
+            'media',
         ]);
 
         $relatedEquipment = Equipment::available()

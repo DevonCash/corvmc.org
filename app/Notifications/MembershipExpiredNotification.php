@@ -28,7 +28,7 @@ class MembershipExpiredNotification extends Notification implements ShouldQueue
             ->greeting("Hello {$notifiable->name}!")
             ->line('We wanted to let you know that your Corvallis Music Collective membership has expired.')
             ->line('To continue enjoying member benefits like free practice hours and priority booking, please renew your membership.')
-            ->action('Renew Membership', route('filament.member.pages.dashboard'))
+            ->action('Renew Membership', url('/member'))
             ->line('If you have any questions, please don\'t hesitate to contact us.')
             ->salutation('Thanks for being part of the CMC community!');
     }
@@ -38,7 +38,7 @@ class MembershipExpiredNotification extends Notification implements ShouldQueue
         return [
             'title' => 'Membership Expired',
             'message' => 'Your CMC membership has expired. Renew to continue enjoying member benefits.',
-            'action_url' => route('filament.member.pages.dashboard'),
+            'action_url' => url('/member'),
             'action_text' => 'Renew Membership',
         ];
     }

@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Equipment\Schemas;
 
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class EquipmentInfolist
@@ -23,8 +23,7 @@ class EquipmentInfolist
                                     ->size('lg'),
                                 TextEntry::make('type')
                                     ->badge()
-                                    ->formatStateUsing(fn (string $state): string =>
-                                        ucwords(str_replace('_', ' ', $state))
+                                    ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state))
                                     ),
                             ]),
 
@@ -46,10 +45,9 @@ class EquipmentInfolist
                             ->schema([
                                 TextEntry::make('condition')
                                     ->badge()
-                                    ->formatStateUsing(fn (string $state): string =>
-                                        ucfirst(str_replace('_', ' ', $state))
+                                    ->formatStateUsing(fn (string $state): string => ucfirst(str_replace('_', ' ', $state))
                                     )
-                                    ->color(fn (string $state): string => match($state) {
+                                    ->color(fn (string $state): string => match ($state) {
                                         'excellent' => 'success',
                                         'good' => 'primary',
                                         'fair' => 'warning',
@@ -57,10 +55,9 @@ class EquipmentInfolist
                                     }),
                                 TextEntry::make('status')
                                     ->badge()
-                                    ->formatStateUsing(fn (string $state): string =>
-                                        ucfirst(str_replace('_', ' ', $state))
+                                    ->formatStateUsing(fn (string $state): string => ucfirst(str_replace('_', ' ', $state))
                                     )
-                                    ->color(fn (string $state): string => match($state) {
+                                    ->color(fn (string $state): string => match ($state) {
                                         'available' => 'success',
                                         'checked_out' => 'warning',
                                         'maintenance' => 'danger',
@@ -89,15 +86,13 @@ class EquipmentInfolist
                                         TextEntry::make('name')
                                             ->weight('bold'),
                                         TextEntry::make('type')
-                                            ->formatStateUsing(fn (string $state): string =>
-                                                ucwords(str_replace('_', ' ', $state))
+                                            ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state))
                                             ),
                                         TextEntry::make('condition')
                                             ->badge()
-                                            ->formatStateUsing(fn (string $state): string =>
-                                                ucfirst(str_replace('_', ' ', $state))
+                                            ->formatStateUsing(fn (string $state): string => ucfirst(str_replace('_', ' ', $state))
                                             )
-                                            ->color(fn (string $state): string => match($state) {
+                                            ->color(fn (string $state): string => match ($state) {
                                                 'excellent' => 'success',
                                                 'good' => 'primary',
                                                 'fair' => 'warning',
@@ -105,10 +100,9 @@ class EquipmentInfolist
                                             }),
                                         TextEntry::make('status')
                                             ->badge()
-                                            ->formatStateUsing(fn (string $state): string =>
-                                                ucfirst(str_replace('_', ' ', $state))
+                                            ->formatStateUsing(fn (string $state): string => ucfirst(str_replace('_', ' ', $state))
                                             )
-                                            ->color(fn (string $state): string => match($state) {
+                                            ->color(fn (string $state): string => match ($state) {
                                                 'available' => 'success',
                                                 'checked_out' => 'warning',
                                                 'maintenance' => 'danger',
@@ -120,8 +114,7 @@ class EquipmentInfolist
                                     ->schema([
                                         TextEntry::make('brand_model')
                                             ->label('Brand/Model')
-                                            ->getStateUsing(fn ($record) =>
-                                                collect([$record->brand, $record->model])->filter()->join(' ')
+                                            ->getStateUsing(fn ($record) => collect([$record->brand, $record->model])->filter()->join(' ')
                                             )
                                             ->placeholder('Not specified'),
                                         TextEntry::make('can_lend_separately')
@@ -134,7 +127,7 @@ class EquipmentInfolist
                                 TextEntry::make('description')
                                     ->columnSpanFull()
                                     ->placeholder('No description')
-                                    ->visible(fn ($record) => !empty($record->description)),
+                                    ->visible(fn ($record) => ! empty($record->description)),
                             ])
                             ->contained(false),
                     ])
@@ -146,8 +139,7 @@ class EquipmentInfolist
                             ->schema([
                                 TextEntry::make('acquisition_type')
                                     ->label('Acquisition Type')
-                                    ->formatStateUsing(fn (string $state): string =>
-                                        ucwords(str_replace('_', ' ', $state))
+                                    ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state))
                                     )
                                     ->badge(),
                                 TextEntry::make('acquisition_date')

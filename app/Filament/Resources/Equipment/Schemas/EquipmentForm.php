@@ -2,14 +2,12 @@
 
 namespace App\Filament\Resources\Equipment\Schemas;
 
-use App\Models\Equipment;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class EquipmentForm
@@ -90,7 +88,7 @@ class EquipmentForm
                                 ->default(0)
                                 ->helperText('Order within the kit (0 = first)'),
                         ])->columns(2)
-                        ->hidden(fn (callable $get) => $get('is_kit')),
+                            ->hidden(fn (callable $get) => $get('is_kit')),
                     ])
                     ->collapsible(),
 

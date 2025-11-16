@@ -26,7 +26,7 @@ class SuggestCollaborators
             ->where('visibility', '!=', 'private');
 
         // Find profiles with matching genres or complementary skills
-        if (!empty($userGenres)) {
+        if (! empty($userGenres)) {
             $query->withAnyTags($userGenres, 'genre');
         }
 

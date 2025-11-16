@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Data\LocationData;
+use App\Enums\Visibility;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -78,7 +79,7 @@ class EventFactory extends Factory
                 ]);
             },
             'status' => 'approved',
-            'visibility' => 'public',
+            'visibility' => Visibility::Public,
             'published_at' => $this->faker->boolean(70) ? $this->faker->dateTimeBetween('-1 month', 'now') : null,
             'organizer_id' => null, // Staff events by default
             'event_type' => null,

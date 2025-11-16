@@ -34,7 +34,7 @@ class BandInvitationNotification extends Notification
         return (new \Illuminate\Notifications\Messages\MailMessage)
             ->subject("You're invited to join {$this->band->name}!")
             ->greeting('Hello!')
-            ->line("You've been invited to join {$this->band->name}" . ($this->position ? " as {$this->position}" : '') . '.')
+            ->line("You've been invited to join {$this->band->name}".($this->position ? " as {$this->position}" : '').'.')
             ->line("Here's a bit about the band:")
             ->line($this->band->bio ?: 'No bio available yet.')
             ->action('View Band Profile', route('bands.show', $this->band))

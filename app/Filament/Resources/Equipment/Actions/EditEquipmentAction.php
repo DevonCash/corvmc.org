@@ -2,13 +2,12 @@
 
 namespace App\Filament\Resources\Equipment\Actions;
 
-use App\Models\Equipment;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Group;
@@ -74,9 +73,9 @@ class EditEquipmentAction
                     ->schema([
                         Placeholder::make('current_status')
                             ->label('Current Status')
-                            ->content(fn ($record) => match($record->status) {
+                            ->content(fn ($record) => match ($record->status) {
                                 'available' => '✅ Available for checkout',
-                                'checked_out' => '⚠️ Currently checked out' .
+                                'checked_out' => '⚠️ Currently checked out'.
                                     ($record->currentLoan ? " to {$record->currentLoan->borrower->name}" : ''),
                                 'maintenance' => '🔧 Under maintenance',
                                 'retired' => '📦 Retired from service',
@@ -107,8 +106,7 @@ class EditEquipmentAction
                                     'retired' => 'Retired',
                                 ])
                                 ->disabled(fn ($record) => $record->is_checked_out)
-                                ->helperText(fn ($record) =>
-                                    $record->is_checked_out ? 'Cannot change status while checked out' : null
+                                ->helperText(fn ($record) => $record->is_checked_out ? 'Cannot change status while checked out' : null
                                 ),
                         ])->columns(2),
 
@@ -128,8 +126,7 @@ class EditEquipmentAction
                         Toggle::make('is_kit')
                             ->label('This is a kit/set')
                             ->disabled(fn ($record) => $record->children()->count() > 0)
-                            ->helperText(fn ($record) =>
-                                $record->children()->count() > 0
+                            ->helperText(fn ($record) => $record->children()->count() > 0
                                     ? 'Cannot change - this kit has components'
                                     : 'Check if this represents multiple pieces'
                             )
@@ -137,7 +134,7 @@ class EditEquipmentAction
 
                         Select::make('parent_equipment_id')
                             ->label('Parent Kit')
-                            ->relationship('parent', 'name', fn($query) => $query->where('is_kit', true))
+                            ->relationship('parent', 'name', fn ($query) => $query->where('is_kit', true))
                             ->searchable()
                             ->preload()
                             ->placeholder('Select parent kit if this is a component')
@@ -153,7 +150,7 @@ class EditEquipmentAction
                                 ->numeric()
                                 ->default(0),
                         ])->columns(2)
-                        ->hidden(fn (callable $get) => $get('is_kit')),
+                            ->hidden(fn (callable $get) => $get('is_kit')),
                     ])
                     ->visible(fn ($record) => $record->parent_equipment_id || $record->is_kit)
                     ->collapsible(),
@@ -195,7 +192,7 @@ class EditEquipmentAction
             ->mutateFormDataUsing(function (array $data, $record): array {
                 // Update ownership status if acquisition type changed
                 if (isset($data['acquisition_type'])) {
-                    $data['ownership_status'] = match($data['acquisition_type']) {
+                    $data['ownership_status'] = match ($data['acquisition_type']) {
                         'loaned_to_us' => 'on_loan_to_cmc',
                         default => 'cmc_owned',
                     };
@@ -209,6 +206,6 @@ class EditEquipmentAction
                     ->title('Equipment Updated')
                     ->body('Equipment information has been successfully updated.')
             )
-            ->visible(fn ($record) => !$record->is_checked_out || Auth::user()->can('manage equipment'));
+            ->visible(fn ($record) => ! $record->is_checked_out || Auth::user()->can('manage equipment'));
     }
 }

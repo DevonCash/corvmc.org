@@ -56,8 +56,8 @@
                                 <span class="text-gray-600 dark:text-gray-400">
                                     {{ $reservation->reserved_at->format('M j, g:i A') }}
                                 </span>
-                                <span class="px-2 py-1 rounded text-xs {{ $reservation->status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' }}">
-                                    {{ ucfirst($reservation->status) }}
+                                <span class="px-2 py-1 rounded text-xs {{ $reservation->status->isConfirmed() ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' }}">
+                                    {{ $reservation->status->getLabel() }}
                                 </span>
                             </div>
                         @endforeach

@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Concerns\HasVisibility;
+use App\Concerns\Reportable;
+use App\Concerns\Revisionable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
@@ -11,23 +14,20 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\ModelFlags\Models\Concerns\HasFlags;
 use Spatie\Tags\HasTags;
-use Spatie\Image\Enums\CropPosition;
-use App\Concerns\Reportable;
-use App\Concerns\Revisionable;
-use App\Concerns\HasVisibility;
 
 /**
  * Abstract base class for user-generated content models.
- * 
+ *
  * Provides common functionality for models that represent content created by users,
  * including media handling, activity logging, reporting, and tagging capabilities.
  */
 abstract class ContentModel extends Model implements HasMedia
 {
-    use HasFactory, HasFlags, HasTags, InteractsWithMedia, LogsActivity, Reportable, Revisionable, HasVisibility;
+    use HasFactory, HasFlags, HasTags, HasVisibility, InteractsWithMedia, LogsActivity, Reportable, Revisionable;
 
     // Default report configuration - can be overridden in subclasses
     protected static int $reportThreshold = 4;
+
     protected static bool $reportAutoHide = false;
 
     /**
@@ -82,7 +82,7 @@ abstract class ContentModel extends Model implements HasMedia
             ->logOnly($fields)
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "{$this->getLogTitle()} {$eventName}")
+            ->setDescriptionForEvent(fn (string $eventName) => "{$this->getLogTitle()} {$eventName}")
             ->dontLogIfAttributesChangedOnly(['updated_at'])
             ->logExcept($this->isPrivateContent() ? $this->getPrivateContentFields() : []);
     }
@@ -105,8 +105,6 @@ abstract class ContentModel extends Model implements HasMedia
 
     /**
      * Check if this content is private and should have restricted logging.
-     * 
-     * @return bool
      */
     protected function isPrivateContent(): bool
     {
@@ -116,8 +114,6 @@ abstract class ContentModel extends Model implements HasMedia
     /**
      * Get fields that should not be logged when content is private.
      * Override in subclasses to customize privacy handling.
-     * 
-     * @return array
      */
     protected function getPrivateContentFields(): array
     {

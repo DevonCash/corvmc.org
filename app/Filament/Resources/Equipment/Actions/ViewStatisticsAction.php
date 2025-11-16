@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\Equipment\Actions;
 
 use Filament\Actions\Action;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
 class ViewStatisticsAction
@@ -71,7 +71,8 @@ class ViewStatisticsAction
                                             ->default(function () use ($stats) {
                                                 $total = $stats['total_equipment'];
                                                 $checkedOut = $stats['checked_out_equipment'];
-                                                return $total > 0 ? round(($checkedOut / $total) * 100, 1) . '%' : '0%';
+
+                                                return $total > 0 ? round(($checkedOut / $total) * 100, 1).'%' : '0%';
                                             })
                                             ->badge()
                                             ->color('secondary'),
@@ -108,19 +109,19 @@ class ViewStatisticsAction
                                     ->schema([
                                         TextEntry::make('donated_value')
                                             ->label('Donated Value')
-                                            ->default('$' . number_format($valueByType['donated'] ?? 0, 2))
+                                            ->default('$'.number_format($valueByType['donated'] ?? 0, 2))
                                             ->color('success'),
                                         TextEntry::make('loaned_value')
                                             ->label('Loaned Value')
-                                            ->default('$' . number_format($valueByType['loaned_to_us'] ?? 0, 2))
+                                            ->default('$'.number_format($valueByType['loaned_to_us'] ?? 0, 2))
                                             ->color('warning'),
                                         TextEntry::make('purchased_value')
                                             ->label('Purchased Value')
-                                            ->default('$' . number_format($valueByType['purchased'] ?? 0, 2))
+                                            ->default('$'.number_format($valueByType['purchased'] ?? 0, 2))
                                             ->color('primary'),
                                     ]),
                             ])
-                            ->visible(!empty(array_filter($valueByType))),
+                            ->visible(! empty(array_filter($valueByType))),
 
                         Section::make('Most Popular Equipment')
                             ->schema([

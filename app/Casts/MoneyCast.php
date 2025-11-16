@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 class MoneyCast implements CastsAttributes
 {
     protected string $defaultCurrency;
+
     protected ?string $currencyColumn;
 
     public function __construct(string $defaultCurrency = 'USD', ?string $currencyColumn = null)
     {
         $this->defaultCurrency = $defaultCurrency;
-        
+
         // If currencyColumn is 3 uppercase letters, treat it as a fixed currency code
         if ($currencyColumn && preg_match('/^[A-Z]{3}$/', $currencyColumn)) {
             $this->defaultCurrency = $currencyColumn;
@@ -31,6 +32,7 @@ class MoneyCast implements CastsAttributes
         }
 
         $currency = $this->resolveCurrency($attributes);
+
         return Money::ofMinor($value, $currency);
     }
 
@@ -45,16 +47,19 @@ class MoneyCast implements CastsAttributes
             if ($this->currencyColumn && isset($attributes[$this->currencyColumn])) {
                 $model->setAttribute($this->currencyColumn, $value->getCurrency()->getCurrencyCode());
             }
+
             return $value->getMinorAmount()->toInt();
         }
 
         if (is_numeric($value)) {
             $currency = $this->resolveCurrency($attributes);
+
             return Money::of($value, $currency)->getMinorAmount()->toInt();
         }
 
         if (is_string($value)) {
             $currency = $this->resolveCurrency($attributes);
+
             return Money::of($value, $currency)->getMinorAmount()->toInt();
         }
 

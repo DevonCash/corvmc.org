@@ -4,12 +4,11 @@ namespace App\Concerns;
 
 trait HasMembershipStatus
 {
-
     public function getSustainingMemberRole(): string
     {
         return $this->sustainingMemberRole ?? config('membership.member_role', 'sustaining member');
     }
-    
+
     /**
      * Grant sustaining member status to the user.
      */
@@ -17,7 +16,7 @@ trait HasMembershipStatus
     {
         return $this->assignRole($this->getSustainingMemberRole());
     }
-    
+
     /**
      * Remove sustaining member status from the user.
      */
@@ -25,7 +24,7 @@ trait HasMembershipStatus
     {
         return $this->removeRole($this->getSustainingMemberRole());
     }
-    
+
     /**
      * Check if the user has sustaining member status.
      */

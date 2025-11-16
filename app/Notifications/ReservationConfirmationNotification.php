@@ -33,7 +33,7 @@ class ReservationConfirmationNotification extends Notification implements Should
             ->subject('Confirm Your Practice Space Reservation')
             ->greeting("Hi {$notifiable->name}!")
             ->line('You have a pending practice space reservation that needs confirmation.')
-            ->line("**Reservation Details:**")
+            ->line('**Reservation Details:**')
             ->line("Date & Time: {$this->reservation->time_range}")
             ->line("Duration: {$this->reservation->duration} hours")
             ->line("Cost: \${$this->reservation->cost}")

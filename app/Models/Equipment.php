@@ -7,22 +7,23 @@ use App\States\Equipment\EquipmentState;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\ModelStates\HasStates;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+
 // use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 
 /**
  * Represents equipment in the CMC gear lending library.
- * 
+ *
  * Tracks both donated and loaned equipment with detailed acquisition information
  * and current lending status to members.
  */
 class Equipment extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia, LogsActivity, HasStates; // , HasRecursiveRelationships;
+    use HasFactory, HasStates, InteractsWithMedia, LogsActivity, SoftDeletes; // , HasRecursiveRelationships;
 
     protected $fillable = [
         'name',
@@ -147,9 +148,9 @@ class Equipment extends Model implements HasMedia
      */
     public function getIsAvailableAttribute(): bool
     {
-        return $this->loanable && 
-               $this->status === 'available' && 
-               !$this->currentLoan;
+        return $this->loanable &&
+               $this->status === 'available' &&
+               ! $this->currentLoan;
     }
 
     /**
@@ -213,9 +214,9 @@ class Equipment extends Model implements HasMedia
      */
     public function needsReturn(): bool
     {
-        return $this->isOnLoanToCmc() && 
+        return $this->isOnLoanToCmc() &&
                $this->ownership_status === 'on_loan_to_cmc' &&
-               $this->return_due_date && 
+               $this->return_due_date &&
                $this->return_due_date?->isPast();
     }
 
@@ -226,7 +227,7 @@ class Equipment extends Model implements HasMedia
     public function scopeAvailable($query)
     {
         return $query->where('loanable', true)
-                    ->where('status', 'available');
+            ->where('status', 'available');
     }
 
     /**
@@ -282,7 +283,7 @@ class Equipment extends Model implements HasMedia
      */
     public function isComponent(): bool
     {
-        return !is_null($this->parent_equipment_id);
+        return ! is_null($this->parent_equipment_id);
     }
 
     /**
@@ -290,13 +291,13 @@ class Equipment extends Model implements HasMedia
      */
     public function areAllComponentsAvailable(): bool
     {
-        if (!$this->is_kit) {
+        if (! $this->is_kit) {
             return $this->is_available;
         }
 
         return $this->children
             ->where('can_lend_separately', false) // Required components
-            ->every(fn($component) => $component->is_available);
+            ->every(fn ($component) => $component->is_available);
     }
 
     /**
@@ -304,11 +305,11 @@ class Equipment extends Model implements HasMedia
      */
     public function getAvailableComponents()
     {
-        if (!$this->is_kit) {
+        if (! $this->is_kit) {
             return collect();
         }
 
-        return $this->children->filter(fn($component) => $component->is_available);
+        return $this->children->filter(fn ($component) => $component->is_available);
     }
 
     /**
@@ -316,11 +317,11 @@ class Equipment extends Model implements HasMedia
      */
     public function getCheckedOutComponents()
     {
-        if (!$this->is_kit) {
+        if (! $this->is_kit) {
             return collect();
         }
 
-        return $this->children->filter(fn($component) => $component->is_checked_out);
+        return $this->children->filter(fn ($component) => $component->is_checked_out);
     }
 
     public function getActivitylogOptions(): LogOptions
@@ -329,6 +330,6 @@ class Equipment extends Model implements HasMedia
             ->logOnly(['name', 'status', 'condition', 'location', 'ownership_status'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "Equipment {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "Equipment {$eventName}");
     }
 }

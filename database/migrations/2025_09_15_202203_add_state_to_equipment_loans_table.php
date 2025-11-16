@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('equipment_loans', function (Blueprint $table) {
             $table->string('state')->default('pending')->after('status');
         });
-        
+
         // Copy existing status values to state for initial migration
         DB::statement("UPDATE equipment_loans SET state = CASE 
             WHEN status = 'active' THEN 'checked_out'

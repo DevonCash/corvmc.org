@@ -33,11 +33,11 @@ class ReportSubmittedNotification extends Notification implements ShouldQueue
     {
         $contentType = $this->report->reportable->getReportableType();
         $contentTitle = $this->getContentTitle();
-        
+
         return (new MailMessage)
             ->subject("Content Report Submitted: {$contentType}")
             ->greeting("Hello {$notifiable->name},")
-            ->line("A new report has been submitted that requires moderation attention.")
+            ->line('A new report has been submitted that requires moderation attention.')
             ->line("**Reported Content:** {$contentType} - {$contentTitle}")
             ->line("**Reason:** {$this->report->reason_label}")
             ->line("**Reported By:** {$this->report->reportedBy->name}")
@@ -67,13 +67,13 @@ class ReportSubmittedNotification extends Notification implements ShouldQueue
             'submitted_at' => $this->report->created_at,
         ];
     }
-    
+
     private function getContentTitle(): string
     {
         $reportable = $this->report->reportable;
-        
-        return match(get_class($reportable)) {
-            'App\Models\Production' => $reportable->title ?? 'Untitled Production',
+
+        return match (get_class($reportable)) {
+            'App\Models\Event' => $reportable->title ?? 'Untitled Production',
             'App\Models\MemberProfile' => $reportable->user->name,
             'App\Models\Band' => $reportable->name ?? 'Untitled Band',
             default => "#{$reportable->id}",

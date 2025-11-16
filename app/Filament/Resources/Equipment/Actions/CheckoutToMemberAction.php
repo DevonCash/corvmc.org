@@ -27,7 +27,7 @@ class CheckoutToMemberAction
             ->schema([
                 MemberSelector::make('borrower_id')
                     ->default(Auth::id())
-                    ->visible(fn() => User::me()?->can('manage equipment loans'))
+                    ->visible(fn () => User::me()?->can('manage equipment loans'))
                     ->required(),
 
                 DateTimePicker::make('due_at')
@@ -49,13 +49,13 @@ class CheckoutToMemberAction
                     ->required(),
 
                 TextEntry::make('security_deposit')
-                    ->visible(fn($record) => $record->security_deposit !== null)
-                    ->state(fn($record) =>  "\${$record->security_deposit}")
+                    ->visible(fn ($record) => $record->security_deposit !== null)
+                    ->state(fn ($record) => "\${$record->security_deposit}")
                     ->label('Security Deposit'),
 
                 TextEntry::make('rental_fee')
-                    ->visible(fn($record) => $record->rental_fee !== null)
-                    ->state(fn($record) =>  "\${$record->rental_fee}")
+                    ->visible(fn ($record) => $record->rental_fee !== null)
+                    ->state(fn ($record) => "\${$record->rental_fee}")
                     ->label('Rental Fee'),
 
                 Textarea::make('notes')
@@ -84,6 +84,6 @@ class CheckoutToMemberAction
             })
             ->requiresConfirmation()
             ->modalIcon('tabler-user')
-            ->visible(fn($record) => $record->is_available);
+            ->visible(fn ($record) => $record->is_available);
     }
 }

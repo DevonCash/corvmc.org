@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\CommunityEvents;
 
-use App\Settings\CommunityCalendarSettings;
 use App\Filament\Resources\CommunityEvents\Pages\CreateCommunityEvent;
 use App\Filament\Resources\CommunityEvents\Pages\EditCommunityEvent;
 use App\Filament\Resources\CommunityEvents\Pages\ListCommunityEvents;
@@ -10,6 +9,7 @@ use App\Filament\Resources\CommunityEvents\Pages\ViewCommunityEvent;
 use App\Filament\Resources\CommunityEvents\Schemas\CommunityEventForm;
 use App\Filament\Resources\CommunityEvents\Tables\CommunityEventsTable;
 use App\Models\CommunityEvent;
+use App\Settings\CommunityCalendarSettings;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -21,9 +21,13 @@ class CommunityEventResource extends Resource
     protected static ?string $model = CommunityEvent::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'tabler-calendar-event';
+
     protected static ?string $recordTitleAttribute = 'title';
+
     protected static ?string $navigationLabel = 'Community Events';
+
     protected static ?string $modelLabel = 'Community Event';
+
     protected static ?string $pluralModelLabel = 'Community Events';
 
     protected static ?int $navigationSort = 10;
@@ -62,7 +66,7 @@ class CommunityEventResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         $pendingCount = CommunityEvent::where('status', CommunityEvent::STATUS_PENDING)->count();
-        
+
         return $pendingCount > 0 ? (string) $pendingCount : null;
     }
 
@@ -77,6 +81,7 @@ class CommunityEventResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         $communityCalendarSettings = app(CommunityCalendarSettings::class);
+
         return $communityCalendarSettings->enable_community_calendar;
     }
 }

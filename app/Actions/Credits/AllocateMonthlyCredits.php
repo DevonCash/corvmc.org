@@ -3,9 +3,9 @@
 namespace App\Actions\Credits;
 
 use App\Enums\CreditType;
+use App\Models\CreditTransaction;
 use App\Models\User;
 use App\Models\UserCredit;
-use App\Models\CreditTransaction;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -47,6 +47,7 @@ class AllocateMonthlyCredits
                     // Mid-month upgrade - add the tier delta
                     $this->handleMidMonthUpgrade($user, $amount, $creditType, $currentBalance);
                 }
+
                 // Otherwise, no action needed (downgrade keeps peak amount until next cycle)
                 return;
             }
@@ -99,8 +100,8 @@ class AllocateMonthlyCredits
                         'amount' => $actualAmount,
                         'balance_after' => $credit->balance,
                         'source' => 'monthly_allocation',
-                        'description' => "Monthly equipment credits allocation" .
-                                       ($actualAmount < $amount ? " (capped at {$maxBalance})" : ""),
+                        'description' => 'Monthly equipment credits allocation'.
+                                       ($actualAmount < $amount ? " (capped at {$maxBalance})" : ''),
                         'metadata' => json_encode([
                             'allocated_amount' => $amount,
                             'requested_amount' => $amount,
@@ -169,8 +170,8 @@ class AllocateMonthlyCredits
                         'amount' => $actualDelta,
                         'balance_after' => $credit->balance,
                         'source' => 'upgrade_adjustment',
-                        'description' => "Mid-month upgrade: tier changed from {$previousAmount} to {$newAmount}" .
-                                       ($actualDelta < $tierDelta ? " (capped at {$maxBalance})" : ""),
+                        'description' => "Mid-month upgrade: tier changed from {$previousAmount} to {$newAmount}".
+                                       ($actualDelta < $tierDelta ? " (capped at {$maxBalance})" : ''),
                         'metadata' => json_encode([
                             'allocated_amount' => $newAmount,
                             'previous_amount' => $previousAmount,
@@ -198,7 +199,7 @@ class AllocateMonthlyCredits
             ->latest('created_at')
             ->first();
 
-        if (!$lastAllocation || !$lastAllocation->metadata) {
+        if (! $lastAllocation || ! $lastAllocation->metadata) {
             return 0;
         }
 
@@ -214,7 +215,7 @@ class AllocateMonthlyCredits
      */
     protected function getDefaultCreditConfig(CreditType $creditType): array
     {
-        return match($creditType) {
+        return match ($creditType) {
             CreditType::FreeHours => [
                 'balance' => 0,
                 'max_balance' => null,

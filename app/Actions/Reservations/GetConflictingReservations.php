@@ -6,9 +6,9 @@ use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
+use Lorisleiva\Actions\Concerns\AsAction;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetConflictingReservations
 {
@@ -20,7 +20,7 @@ class GetConflictingReservations
      */
     public function handle(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): Collection
     {
-        $cacheKey = "reservations.conflicts." . $startTime->format('Y-m-d');
+        $cacheKey = 'reservations.conflicts.'.$startTime->format('Y-m-d');
 
         // Cache all day's reservations, then filter for specific conflicts
         $dayReservations = Cache::remember($cacheKey, 1800, function () use ($startTime) {

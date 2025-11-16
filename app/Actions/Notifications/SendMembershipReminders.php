@@ -35,7 +35,7 @@ class SendMembershipReminders
                 })
                 ->get()
                 ->filter(function ($user) {
-                    return !$user->isSustainingMember();
+                    return ! $user->isSustainingMember();
                 });
 
             $results = [
@@ -55,7 +55,7 @@ class SendMembershipReminders
                     'status' => 'pending',
                 ];
 
-                if (!$dryRun) {
+                if (! $dryRun) {
                     try {
                         $user->notify(new MembershipReminderNotification($user));
                         $userData['status'] = 'sent';

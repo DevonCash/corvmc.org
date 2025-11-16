@@ -3,12 +3,11 @@
 namespace App\Filament\Resources\Equipment\Actions;
 
 use App\Models\Equipment;
-use App\Models\User;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Group;
@@ -86,7 +85,7 @@ class CreateEquipmentAction
 
                         Select::make('parent_equipment_id')
                             ->label('Parent Kit')
-                            ->relationship('parent', 'name', fn($query) => $query->where('is_kit', true))
+                            ->relationship('parent', 'name', fn ($query) => $query->where('is_kit', true))
                             ->searchable()
                             ->preload()
                             ->placeholder('Select parent kit if this is a component')
@@ -103,7 +102,7 @@ class CreateEquipmentAction
                                 ->default(0)
                                 ->helperText('Order within the kit (0 = first)'),
                         ])->columns(2)
-                        ->hidden(fn (callable $get) => $get('is_kit')),
+                            ->hidden(fn (callable $get) => $get('is_kit')),
                     ])
                     ->collapsible(),
 
@@ -184,7 +183,7 @@ class CreateEquipmentAction
             ])
             ->mutateFormDataUsing(function (array $data): array {
                 // Set ownership status based on acquisition type
-                $data['ownership_status'] = match($data['acquisition_type']) {
+                $data['ownership_status'] = match ($data['acquisition_type']) {
                     'loaned_to_us' => 'on_loan_to_cmc',
                     default => 'cmc_owned',
                 };

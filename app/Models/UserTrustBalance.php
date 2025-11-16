@@ -47,6 +47,6 @@ class UserTrustBalance extends Model
     public function scopeBetween($query, int $min, int $max)
     {
         return $query->where('balance', '>=', $min)
-                    ->where('balance', '<=', $max);
+            ->where('balance', '<=', $max);
     }
 }

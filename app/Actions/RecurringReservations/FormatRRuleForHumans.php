@@ -18,6 +18,7 @@ class FormatRRuleForHumans
     {
         try {
             $rrule = new RRule($ruleString);
+
             return $rrule->humanReadable();
         } catch (\Exception $e) {
             return $ruleString;

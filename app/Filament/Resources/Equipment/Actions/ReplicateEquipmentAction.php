@@ -26,7 +26,7 @@ class ReplicateEquipmentAction
             ])
             ->beforeReplicaSaved(function (Equipment $replica, Equipment $original): void {
                 // Modify the name to indicate it's a duplicate
-                $replica->name = $original->name . ' (Copy)';
+                $replica->name = $original->name.' (Copy)';
 
                 // Clear serial number since it should be unique
                 $replica->serial_number = null;
@@ -46,11 +46,9 @@ class ReplicateEquipmentAction
                     ->title('Equipment Duplicated')
                     ->body(fn ($replica) => "Created duplicate: {$replica->name}")
             )
-            ->successRedirectUrl(fn ($replica) =>
-                route('filament.member.resources.equipment.edit', $replica)
+            ->successRedirectUrl(fn ($replica) => route('filament.member.resources.equipment.edit', $replica)
             )
-            ->visible(fn ($record) =>
-                Auth::user()->can('create equipment')
+            ->visible(fn ($record) => Auth::user()->can('create equipment')
             );
     }
 }

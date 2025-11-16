@@ -53,7 +53,7 @@ class CreateReservation extends CreateRecord
                 Log::error($e);
                 Notification::make()
                     ->title('Payment Error')
-                    ->body('Unable to create payment session: ' . $e->getMessage())
+                    ->body('Unable to create payment session: '.$e->getMessage())
                     ->danger()
                     ->send();
             }
@@ -79,12 +79,12 @@ class CreateReservation extends CreateRecord
         }
 
         // Must be unpaid
-        if (!$record->isUnpaid()) {
+        if (! $record->isUnpaid()) {
             return false;
         }
 
         // Cannot be recurring
-        if ($record->recurring_reservation_id) {
+        if ($record->recurring_series_id) {
             return false;
         }
 

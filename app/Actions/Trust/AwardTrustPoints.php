@@ -103,7 +103,7 @@ class AwardTrustPoints
             'App\\Models\\CommunityEvent',
             'App\\Models\\MemberProfile',
             'App\\Models\\Band',
-            'App\\Models\\Production'
+            'App\\Models\\Production',
         ];
 
         $totalPoints = 0;

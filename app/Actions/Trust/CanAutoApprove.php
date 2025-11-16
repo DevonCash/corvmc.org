@@ -17,7 +17,7 @@ class CanAutoApprove
     {
         // Check if content type allows auto-approval
         if (class_exists($contentType) && in_array(\App\Concerns\Revisionable::class, class_uses_recursive($contentType))) {
-            $tempInstance = new $contentType();
+            $tempInstance = new $contentType;
             if ($tempInstance->getAutoApproveMode() === 'never') {
                 return false;
             }

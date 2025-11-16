@@ -28,11 +28,11 @@ class ForceDeleteEquipmentAction
                     $warnings[] = "⚠️ This equipment has {$count} loan record(s) that will be permanently deleted";
                 }
 
-                $warnings[] = "🚨 THIS ACTION CANNOT BE UNDONE";
+                $warnings[] = '🚨 THIS ACTION CANNOT BE UNDONE';
 
-                $base = "Permanently delete this equipment and all associated data?";
+                $base = 'Permanently delete this equipment and all associated data?';
 
-                return $base . "\n\n" . implode("\n", $warnings);
+                return $base."\n\n".implode("\n", $warnings);
             })
             ->requiresConfirmation()
             ->modalSubmitActionLabel('Permanently Delete')
@@ -61,8 +61,7 @@ class ForceDeleteEquipmentAction
                     ->title('Equipment Permanently Deleted')
                     ->body('Equipment and all associated data has been permanently removed.')
             )
-            ->visible(fn ($record) =>
-                Auth::user()->can('force delete equipment') &&
+            ->visible(fn ($record) => Auth::user()->can('force delete equipment') &&
                 $record->trashed()
             );
     }

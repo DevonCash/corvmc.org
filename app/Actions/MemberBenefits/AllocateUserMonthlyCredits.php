@@ -20,7 +20,7 @@ class AllocateUserMonthlyCredits
      */
     public function handle(User $user): void
     {
-        if (!CheckIsSustainingMember::run($user)) {
+        if (! CheckIsSustainingMember::run($user)) {
             return;
         }
 

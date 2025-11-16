@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\Reservation;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Filament\Notifications\Notification;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Cashier;
 
 class CheckoutController extends Controller
 {
-
     /**
      * Handle successful checkout for any type (subscription, reservation, etc.).
      * Note: The actual processing is handled by Stripe webhooks.
@@ -22,25 +21,25 @@ class CheckoutController extends Controller
         $sessionId = $request->get('session_id');
         $userId = $request->get('user_id');
 
-        if (!$sessionId || !$userId) {
+        if (! $sessionId || ! $userId) {
             Notification::make()
                 ->title('Invalid subscription session')
                 ->body('Missing required parameters for subscription confirmation.')
                 ->danger()
                 ->send();
 
-            return redirect()->route('filament.member.pages.dashboard');
+            return redirect(filament()->getUrl());
         }
 
         $user = User::find($userId);
-        if (!$user) {
+        if (! $user) {
             Notification::make()
                 ->title('User not found')
                 ->body('Unable to find the user for this subscription.')
                 ->danger()
                 ->send();
 
-            return redirect()->route('filament.member.pages.dashboard');
+            return redirect(filament()->getUrl());
         }
 
         // Initialize variables for use outside try block
@@ -116,7 +115,7 @@ class CheckoutController extends Controller
             }
         }
 
-        return redirect()->route('filament.member.pages.dashboard');
+        return redirect(filament()->getUrl());
     }
 
     /**

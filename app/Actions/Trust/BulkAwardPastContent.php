@@ -21,7 +21,7 @@ class BulkAwardPastContent
             $successfulEvents = \App\Models\CommunityEvent::where('organizer_id', $user->id)
                 ->where('status', \App\Models\CommunityEvent::STATUS_APPROVED)
                 ->where('start_time', '<', now())
-                ->whereDoesntHave('reports', function($query) {
+                ->whereDoesntHave('reports', function ($query) {
                     $query->where('status', 'upheld');
                 })
                 ->count();

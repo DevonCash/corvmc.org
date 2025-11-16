@@ -3,7 +3,6 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Reservation;
-use App\Models\User;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +20,7 @@ class WeeklyOverviewWidget extends ChartWidget
 
     public function getDescription(): ?string
     {
-        return 'Practice hours by day for ' . Carbon::now()->startOfWeek()->format('M j') . ' - ' . Carbon::now()->endOfWeek()->format('M j');
+        return 'Practice hours by day for '.Carbon::now()->startOfWeek()->format('M j').' - '.Carbon::now()->endOfWeek()->format('M j');
     }
 
     protected function getData(): array

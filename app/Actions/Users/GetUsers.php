@@ -17,16 +17,16 @@ class GetUsers
         $query = User::with(['roles', 'profile']);
 
         // Apply filters
-        if (!empty($filters['role'])) {
+        if (! empty($filters['role'])) {
             $query->whereHas('roles', function ($q) use ($filters) {
                 $q->where('name', $filters['role']);
             });
         }
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('name', 'like', "%{$filters['search']}%")
-                  ->orWhere('email', 'like', "%{$filters['search']}%");
+                    ->orWhere('email', 'like', "%{$filters['search']}%");
             });
         }
 

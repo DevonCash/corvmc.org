@@ -31,7 +31,7 @@ class CreateSubscriptionPrices extends Command
 
     protected $feeCoverageProduct;
 
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
         $this->stripe = Cashier::stripe();
@@ -62,7 +62,6 @@ class CreateSubscriptionPrices extends Command
         return 0;
     }
 
-
     /**
      * Get existing product or create new one for sliding scale membership
      */
@@ -75,13 +74,14 @@ class CreateSubscriptionPrices extends Command
         // Check if product ID is configured in environment
         $configuredProductId = config('services.stripe.membership_product_id');
 
-        if (!$configuredProductId) {
+        if (! $configuredProductId) {
             throw new Error('Define STRIPE_MEMBERSHIP_PRODUCT_ID');
         }
 
         try {
             $this->membershipProduct = Cashier::stripe()->products->retrieve($configuredProductId);
             $this->line("   ✓ Using existing membership product: {$this->membershipProduct->id}");
+
             return $this->membershipProduct;
         } catch (ApiErrorException $e) {
 
@@ -92,6 +92,7 @@ class CreateSubscriptionPrices extends Command
             ]);
 
             $this->line("   ✓ Created new membership product: {$this->membershipProduct->id}");
+
             return $this->membershipProduct;
         }
     }
@@ -108,13 +109,14 @@ class CreateSubscriptionPrices extends Command
         // Check if fee coverage product ID is configured in environment
         $configuredProductId = config('services.stripe.fee_coverage_product_id');
 
-        if (!$configuredProductId) {
+        if (! $configuredProductId) {
             throw new Error('Configure STRIPE_FEE_COVERAGE_PRODUCT_ID');
         }
 
         try {
             $this->feeCoverageProduct = Cashier::stripe()->products->retrieve($configuredProductId);
             $this->line("   ✓ Using existing fee coverage product: {$this->feeCoverageProduct->id}");
+
             return $this->feeCoverageProduct;
         } catch (ApiErrorException $e) {
             $this->feeCoverageProduct = Cashier::stripe()->products->create([
@@ -124,6 +126,7 @@ class CreateSubscriptionPrices extends Command
             ]);
 
             $this->line("   ✓ Created new fee coverage product: {$this->feeCoverageProduct->id}");
+
             return $this->feeCoverageProduct;
         }
     }
@@ -135,16 +138,17 @@ class CreateSubscriptionPrices extends Command
     {
         $product = $this->getOrCreateProduct();
         $unitAmount = $amountDollars * 100; // Convert to cents
-        $lookupKey = 'membership_monthly_' . $amountDollars;
+        $lookupKey = 'membership_monthly_'.$amountDollars;
 
         // Check if price already exists
         $price = $this->stripe->prices->all([
             'product' => $product->id,
-            'lookup_keys' => [$lookupKey]
+            'lookup_keys' => [$lookupKey],
         ])->data[0] ?? null;
 
         if ($price) {
             $this->line("   ✓ Base price for \${$amountDollars} already exists: {$price->id}");
+
             return $price;
         }
 
@@ -173,11 +177,12 @@ class CreateSubscriptionPrices extends Command
         // Check if fee coverage price already exists
         $price = $this->stripe->prices->all([
             'product' => $product_id,
-            'lookup_keys' => ['fee_' . $forPrice->id]
+            'lookup_keys' => ['fee_'.$forPrice->id],
         ])->data[0] ?? null;
 
         if ($price) {
             $this->line("   ✓ Fee coverage price for \${$forPrice->id} already exists: {$price->id}");
+
             return;
         }
 
@@ -190,11 +195,11 @@ class CreateSubscriptionPrices extends Command
             'recurring' => [
                 'interval' => 'month',
             ],
-            'lookup_key' => 'fee_' . $forPrice->id,
+            'lookup_key' => 'fee_'.$forPrice->id,
             'metadata' => [
                 'base_amount' => $forPrice->unit_amount,
                 'fee_for' => $forPrice->id,
-            ]
+            ],
         ]);
 
         $amountDollars = $forPrice->unit_amount / 100;

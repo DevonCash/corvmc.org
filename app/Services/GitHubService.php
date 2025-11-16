@@ -2,19 +2,20 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class GitHubService
 {
     private string $token;
+
     private string $graphqlUrl = 'https://api.github.com/graphql';
 
     public function __construct()
     {
         $this->token = config('services.github.token');
-        
-        if (!$this->token) {
+
+        if (! $this->token) {
             throw new \Exception('GitHub token is required for GitHubService');
         }
     }
@@ -22,7 +23,7 @@ class GitHubService
     private function executeGraphQLQuery(string $query, array $variables = []): array
     {
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->token,
+            'Authorization' => 'Bearer '.$this->token,
             'Content-Type' => 'application/json',
             'Accept' => 'application/vnd.github.v4+json',
         ])->post($this->graphqlUrl, [
@@ -30,14 +31,14 @@ class GitHubService
             'variables' => $variables,
         ]);
 
-        if (!$response->successful()) {
-            throw new \Exception('GraphQL request failed: ' . $response->body());
+        if (! $response->successful()) {
+            throw new \Exception('GraphQL request failed: '.$response->body());
         }
 
         $body = $response->json();
 
         if (isset($body['errors'])) {
-            throw new \Exception('GraphQL errors: ' . json_encode($body['errors']));
+            throw new \Exception('GraphQL errors: '.json_encode($body['errors']));
         }
 
         return $body['data'] ?? [];
@@ -86,7 +87,7 @@ class GitHubService
             ]);
 
             $actors = $result['repository']['suggestedActors']['nodes'] ?? [];
-            
+
             // Look for the Copilot coding agent
             foreach ($actors as $actor) {
                 if ($actor['login'] === 'copilot-swe-agent' && $actor['__typename'] === 'Bot') {
@@ -94,12 +95,13 @@ class GitHubService
                         'login' => $actor['login'],
                         'id' => $actor['id'],
                     ]);
+
                     return $actor['id'];
                 }
             }
 
             Log::info('Copilot coding agent not found in suggested actors', [
-                'actors_found' => array_map(fn($actor) => $actor['login'], $actors),
+                'actors_found' => array_map(fn ($actor) => $actor['login'], $actors),
             ]);
 
             return null;
@@ -107,6 +109,7 @@ class GitHubService
             Log::warning('Could not query suggested actors for Copilot', [
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -156,13 +159,13 @@ class GitHubService
         $owner = config('services.github.repository.owner');
         $repo = config('services.github.repository.name');
 
-        if (!$this->token || !$owner || !$repo) {
+        if (! $this->token || ! $owner || ! $repo) {
             Log::warning('GitHub feedback submission failed: Missing configuration', [
-                'has_token' => !empty($this->token),
-                'has_owner' => !empty($owner),
-                'has_repo' => !empty($repo),
+                'has_token' => ! empty($this->token),
+                'has_owner' => ! empty($owner),
+                'has_repo' => ! empty($repo),
                 'title' => $data['title'] ?? 'Unknown',
-                'user_id' => $data['user_id'] ?? null
+                'user_id' => $data['user_id'] ?? null,
             ]);
 
             return [
@@ -174,8 +177,8 @@ class GitHubService
         try {
             // Get repository ID
             $repositoryId = $this->getRepositoryId($owner, $repo);
-            if (!$repositoryId) {
-                throw new \Exception('Repository not found: ' . $owner . '/' . $repo);
+            if (! $repositoryId) {
+                throw new \Exception('Repository not found: '.$owner.'/'.$repo);
             }
 
             // Get label IDs
@@ -185,7 +188,7 @@ class GitHubService
             // Get Copilot user ID for auto-assignment (only for critical issues)
             $assigneeIds = [];
             $isCritical = ($data['priority'] ?? 'low') === 'critical';
-            
+
             if ($isCritical) {
                 $copilotUserId = $this->getCopilotUserId($owner, $repo);
                 if ($copilotUserId) {
@@ -229,8 +232,8 @@ class GitHubService
                 'title' => $issue['title'],
                 'user_id' => $data['user_id'] ?? null,
                 'priority' => $data['priority'] ?? 'low',
-                'assigned_to_copilot' => !empty($assigneeIds),
-                'copilot_assignment_reason' => !empty($assigneeIds) ? 'critical_priority' : ($isCritical ? 'copilot_not_available' : 'non_critical_priority'),
+                'assigned_to_copilot' => ! empty($assigneeIds),
+                'copilot_assignment_reason' => ! empty($assigneeIds) ? 'critical_priority' : ($isCritical ? 'copilot_not_available' : 'non_critical_priority'),
             ]);
 
             return [
@@ -243,7 +246,7 @@ class GitHubService
             Log::error('Failed to create GitHub issue', [
                 'error' => $e->getMessage(),
                 'title' => $data['title'] ?? 'Unknown',
-                'user_id' => $data['user_id'] ?? null
+                'user_id' => $data['user_id'] ?? null,
             ]);
 
             return [
@@ -255,36 +258,36 @@ class GitHubService
 
     private function formatIssueBody(array $data): string
     {
-        $body = $data['description'] . "\n\n";
+        $body = $data['description']."\n\n";
 
         // Format details as a table
         $body .= "| Field | Value |\n";
         $body .= "|-------|-------|\n";
 
-        if (!empty($data['user_id'])) {
+        if (! empty($data['user_id'])) {
             $body .= "| User ID | {$data['user_id']} |\n";
         }
 
-        if (!empty($data['category'])) {
-            $body .= "| Category | " . ucfirst($data['category']) . " |\n";
+        if (! empty($data['category'])) {
+            $body .= '| Category | '.ucfirst($data['category'])." |\n";
         }
 
-        if (!empty($data['priority'])) {
-            $body .= "| Priority | " . ucfirst($data['priority']) . " |\n";
+        if (! empty($data['priority'])) {
+            $body .= '| Priority | '.ucfirst($data['priority'])." |\n";
         }
 
-        if (!empty($data['page_url'])) {
+        if (! empty($data['page_url'])) {
             $body .= "| Page URL | {$data['page_url']} |\n";
         }
 
-        if (!empty($data['browser_info'])) {
+        if (! empty($data['browser_info'])) {
             $body .= "| Browser | {$data['browser_info']} |\n";
         }
 
-        if (!empty($data['environment'])) {
+        if (! empty($data['environment'])) {
             $body .= "| Environment | {$data['environment']} |\n";
         }
-        $body .= "| Submitted at | " . now()->format('Y-m-d H:i:s T') . " |\n";
+        $body .= '| Submitted at | '.now()->format('Y-m-d H:i:s T')." |\n";
 
         return $body;
     }
@@ -293,7 +296,7 @@ class GitHubService
     {
         $labels = ['feedback', 'triage'];
 
-        if (!empty($data['category'])) {
+        if (! empty($data['category'])) {
             $labels[] = $data['category'];
         }
 

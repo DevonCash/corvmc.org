@@ -10,6 +10,8 @@ use App\Filament\Resources\Reservations\Pages\ViewReservation;
 use App\Filament\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\ReservationsTable;
+use App\Filament\Resources\Reservations\Widgets\FreeHoursWidget;
+use App\Filament\Resources\Reservations\Widgets\RecurringSeriesTableWidget;
 use App\Models\RehearsalReservation;
 use App\Models\User;
 use BackedEnum;
@@ -23,7 +25,6 @@ class ReservationResource extends Resource
     protected static ?string $model = RehearsalReservation::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'tabler-metronome';
-
 
     protected static ?string $navigationLabel = 'Practice Space';
 
@@ -55,6 +56,14 @@ class ReservationResource extends Resource
             ->where('status', '!=', 'cancelled')
             ->where('reserved_at', '>', now())
             ->count() ?: null;
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            RecurringSeriesTableWidget::class,
+            FreeHoursWidget::class,
+        ];
     }
 
     public static function getPages(): array

@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Equipment\EquipmentLoans\Schemas;
 
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
@@ -122,10 +122,10 @@ class EquipmentLoanForm
                                         'damaged' => 'Damaged',
                                     ])
                                     ->columnSpan(1)
-                                    ->visible(fn(Get $get) => in_array($get('state'), [
+                                    ->visible(fn (Get $get) => in_array($get('state'), [
                                         'staff_processing_return',
                                         'damage_reported',
-                                        'returned'
+                                        'returned',
                                     ])),
                             ]),
 
@@ -140,9 +140,9 @@ class EquipmentLoanForm
                             ->placeholder('Details about any damage found...')
                             ->rows(3)
                             ->columnSpanFull()
-                            ->visible(fn(Get $get) => in_array($get('state'), [
+                            ->visible(fn (Get $get) => in_array($get('state'), [
                                 'damage_reported',
-                                'returned'
+                                'returned',
                             ]) || $get('condition_in') === 'damaged'),
                     ])
                     ->columnSpan(2),
@@ -172,7 +172,7 @@ class EquipmentLoanForm
                     ])
                     ->columnSpan(1)
                     ->collapsible()
-                    ->collapsed(fn($record) => !$record || ($record->security_deposit == 0 && $record->rental_fee == 0)),
+                    ->collapsed(fn ($record) => ! $record || ($record->security_deposit == 0 && $record->rental_fee == 0)),
             ]);
     }
 }

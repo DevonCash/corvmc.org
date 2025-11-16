@@ -44,10 +44,10 @@ class DailyReservationDigestNotification extends Notification implements ShouldQ
         if ($count === 0) {
             return $message
                 ->line("**No reservations scheduled for today** ({$date}).")
-                ->line("The practice space is available all day.");
+                ->line('The practice space is available all day.');
         }
 
-        $message->line("**{$count} " . str('reservation')->plural($count) . " scheduled for today** ({$date}):");
+        $message->line("**{$count} ".str('reservation')->plural($count)." scheduled for today** ({$date}):");
 
         foreach ($this->reservations as $reservation) {
             $user = $reservation->getResponsibleUser();
@@ -56,7 +56,7 @@ class DailyReservationDigestNotification extends Notification implements ShouldQ
             $duration = $reservation->duration;
             $status = ucfirst($reservation->status);
 
-            $message->line("---");
+            $message->line('---');
             $message->line("**{$startTime} - {$endTime}** ({$duration} hours)");
             $message->line("Member: {$user->name}");
             $message->line("Status: {$status}");
@@ -67,7 +67,7 @@ class DailyReservationDigestNotification extends Notification implements ShouldQ
         }
 
         return $message
-            ->line("---")
+            ->line('---')
             ->action('View All Reservations', url('/member/rehearsal-reservations'));
     }
 
@@ -81,7 +81,7 @@ class DailyReservationDigestNotification extends Notification implements ShouldQ
         return [
             'date' => now()->toDateString(),
             'count' => $this->reservations->count(),
-            'reservations' => $this->reservations->map(fn($r) => [
+            'reservations' => $this->reservations->map(fn ($r) => [
                 'id' => $r->id,
                 'user' => $r->getResponsibleUser()->name,
                 'start' => $r->reserved_at,

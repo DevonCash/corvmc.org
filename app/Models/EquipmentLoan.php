@@ -2,35 +2,34 @@
 
 namespace App\Models;
 
-use App\States\EquipmentLoan\EquipmentLoanState;
-use App\States\EquipmentLoan\Requested;
-use App\States\EquipmentLoan\StaffPreparing;
-use App\States\EquipmentLoan\ReadyForPickup;
-use App\States\EquipmentLoan\CheckedOut;
-use App\States\EquipmentLoan\Overdue;
-use App\States\EquipmentLoan\DropoffScheduled;
-use App\States\EquipmentLoan\StaffProcessingReturn;
-use App\States\EquipmentLoan\Returned;
-use App\States\EquipmentLoan\DamageReported;
+use App\Concerns\HasTimePeriod;
 use App\States\EquipmentLoan\Cancelled;
+use App\States\EquipmentLoan\CheckedOut;
+use App\States\EquipmentLoan\DamageReported;
+use App\States\EquipmentLoan\DropoffScheduled;
+use App\States\EquipmentLoan\EquipmentLoanState;
+use App\States\EquipmentLoan\Overdue;
+use App\States\EquipmentLoan\ReadyForPickup;
+use App\States\EquipmentLoan\Requested;
+use App\States\EquipmentLoan\Returned;
+use App\States\EquipmentLoan\StaffPreparing;
+use App\States\EquipmentLoan\StaffProcessingReturn;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\ModelStates\HasStates;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
-use App\Concerns\HasTimePeriod;
+use Spatie\ModelStates\HasStates;
 use Spatie\Period\Period;
-use Spatie\Period\Precision;
 
 /**
  * Represents a loan of equipment from CMC to a member.
- * 
+ *
  * Tracks the checkout/return process, condition, and financial aspects
  * of equipment loans to members.
  */
 class EquipmentLoan extends Model
 {
-    use HasFactory, LogsActivity, HasStates, HasTimePeriod;
+    use HasFactory, HasStates, HasTimePeriod, LogsActivity;
 
     /**
      * Get the name of the start time field for this model.
@@ -39,7 +38,7 @@ class EquipmentLoan extends Model
     {
         return 'reserved_from';
     }
-    
+
     /**
      * Get the name of the end time field for this model.
      */
@@ -95,7 +94,6 @@ class EquipmentLoan extends Model
         return $this->belongsTo(User::class, 'borrower_id');
     }
 
-
     /**
      * Check if loan is currently active (not yet returned/cancelled/lost).
      */
@@ -116,7 +114,7 @@ class EquipmentLoan extends Model
      */
     public function getIsOverdueAttribute(): bool
     {
-        return $this->state instanceof Overdue || 
+        return $this->state instanceof Overdue ||
                ($this->is_active && $this->checked_out_at && $this->due_at->isPast());
     }
 
@@ -134,6 +132,7 @@ class EquipmentLoan extends Model
     public function getDaysOutAttribute(): int
     {
         $endDate = $this->returned_at ?? now();
+
         return $this->checked_out_at->diffInDays($endDate);
     }
 
@@ -143,12 +142,12 @@ class EquipmentLoan extends Model
     public function getDaysOverdueAttribute(): int
     {
         $endDate = $this->returned_at ?? now();
-        
+
         // If returned before due date, not overdue
         if ($endDate <= $this->due_at) {
             return 0;
         }
-        
+
         return max(0, $this->due_at->diffInDays($endDate));
     }
 
@@ -158,7 +157,7 @@ class EquipmentLoan extends Model
     public function markOverdue(): void
     {
         $this->state->transitionTo(Overdue::class);
-        
+
         // Update equipment status
         $this->equipment->update(['status' => 'checked_out']);
     }
@@ -173,7 +172,7 @@ class EquipmentLoan extends Model
             'condition_in' => $conditionIn,
             'damage_notes' => $damageNotes,
         ]);
-        
+
         $this->state->transitionTo(Returned::class);
 
         // Update equipment status and condition
@@ -191,10 +190,10 @@ class EquipmentLoan extends Model
         $this->update([
             'damage_notes' => $notes,
         ]);
-        
+
         // Note: Lost state would need to be added to state machine
         // For now, we'll use DamageReported or create a Lost state
-        
+
         // Update equipment status
         $this->equipment->update(['status' => 'retired']);
     }
@@ -209,7 +208,7 @@ class EquipmentLoan extends Model
 
     /**
      * Get the reservation period for this loan.
-     * 
+     *
      * @deprecated Use createPeriod() instead
      */
     public function getReservationPeriod(): Period
@@ -224,20 +223,20 @@ class EquipmentLoan extends Model
     public function overlapsWithPeriod(Period $period): bool
     {
         $thisPeriod = $this->getReservationPeriod();
-        
+
         // If periods overlap but only touch at boundaries, allow it
         if ($thisPeriod->overlapsWith($period)) {
             // Check if they only touch at boundaries (no actual time overlap)
             $touchesAtStart = $thisPeriod->end()->format('Y-m-d H:i:s') === $period->start()->format('Y-m-d H:i:s');
             $touchesAtEnd = $thisPeriod->start()->format('Y-m-d H:i:s') === $period->end()->format('Y-m-d H:i:s');
-            
+
             if ($touchesAtStart || $touchesAtEnd) {
                 return false; // Allow adjacent periods
             }
-            
+
             return true; // Real overlap, block it
         }
-        
+
         return false; // No overlap
     }
 
@@ -247,6 +246,7 @@ class EquipmentLoan extends Model
     public function getIsReservationActiveAttribute(): bool
     {
         $now = now();
+
         return $now->between($this->reserved_from, $this->due_at);
     }
 
@@ -289,14 +289,14 @@ class EquipmentLoan extends Model
     public function scopeOverdue($query)
     {
         return $query->whereState('state', Overdue::class)
-                    ->orWhere(function ($q) {
-                        $q->whereState('state', [
-                            CheckedOut::class,
-                            DropoffScheduled::class,
-                        ])
-                          ->where('due_at', '<', now())
-                          ->whereNotNull('checked_out_at');
-                    });
+            ->orWhere(function ($q) {
+                $q->whereState('state', [
+                    CheckedOut::class,
+                    DropoffScheduled::class,
+                ])
+                    ->where('due_at', '<', now())
+                    ->whereNotNull('checked_out_at');
+            });
     }
 
     /**
@@ -373,9 +373,10 @@ class EquipmentLoan extends Model
     public function scopeWithActiveReservations($query)
     {
         $now = now();
+
         return $query->where('reserved_from', '<=', $now)
-                    ->where('due_at', '>=', $now)
-                    ->active();
+            ->where('due_at', '>=', $now)
+            ->active();
     }
 
     /**
@@ -384,7 +385,7 @@ class EquipmentLoan extends Model
     public function scopeUpcomingReservations($query)
     {
         return $query->where('reserved_from', '>', now())
-                    ->active();
+            ->active();
     }
 
     /**
@@ -393,8 +394,8 @@ class EquipmentLoan extends Model
     public function scopeOverlappingPeriod($query, Period $period)
     {
         return $query->where('reserved_from', '<', $period->end())
-                    ->where('due_at', '>', $period->start())
-                    ->active();
+            ->where('due_at', '>', $period->start())
+            ->active();
     }
 
     /**
@@ -404,14 +405,14 @@ class EquipmentLoan extends Model
     {
         $startOfDay = \Carbon\Carbon::parse($date)->startOfDay();
         $endOfDay = \Carbon\Carbon::parse($date)->endOfDay();
-        
+
         return $query->where(function ($q) use ($startOfDay, $endOfDay) {
             $q->whereBetween('reserved_from', [$startOfDay, $endOfDay])
-              ->orWhereBetween('due_at', [$startOfDay, $endOfDay])
-              ->orWhere(function ($q2) use ($startOfDay, $endOfDay) {
-                  $q2->where('reserved_from', '<=', $startOfDay)
-                     ->where('due_at', '>=', $endOfDay);
-              });
+                ->orWhereBetween('due_at', [$startOfDay, $endOfDay])
+                ->orWhere(function ($q2) use ($startOfDay, $endOfDay) {
+                    $q2->where('reserved_from', '<=', $startOfDay)
+                        ->where('due_at', '>=', $endOfDay);
+                });
         })->active();
     }
 
@@ -421,6 +422,6 @@ class EquipmentLoan extends Model
             ->logOnly(['state', 'due_at', 'returned_at', 'condition_in'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "Equipment loan {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "Equipment loan {$eventName}");
     }
 }

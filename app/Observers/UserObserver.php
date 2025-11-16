@@ -38,14 +38,14 @@ class UserObserver
     {
         // Clear user-specific caches
         Cache::forget("user.{$user->id}.is_sustaining");
-        Cache::forget("user.{$user->id}.free_hours." . now()->format('Y-m'));
+        Cache::forget("user.{$user->id}.free_hours.".now()->format('Y-m'));
         Cache::forget("user_stats.{$user->id}");
         Cache::forget("user_activity.{$user->id}");
-        
+
         // Clear caches that include this user in aggregations
         Cache::forget('sustaining_members');
         Cache::forget('subscription_stats');
-        
+
         // Clear upcoming events cache if user is a manager or has edit permissions
         if ($user->can('update productions')) {
             Cache::forget('upcoming_events');

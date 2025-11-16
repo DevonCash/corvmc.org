@@ -36,21 +36,21 @@ class ContactFormSubmissionNotification extends Notification implements ShouldQu
             'practice_space' => 'Practice Space',
             'performance' => 'Performance Inquiry',
             'volunteer' => 'Volunteer Opportunities',
-            'donation' => 'Donations & Support'
+            'donation' => 'Donations & Support',
         ];
 
         $subjectLabel = $subjectLabels[$this->submissionData['subject']] ?? ucfirst($this->submissionData['subject']);
 
         return (new MailMessage)
-            ->subject('Contact Form: ' . $subjectLabel)
+            ->subject('Contact Form: '.$subjectLabel)
             ->greeting('New Contact Form Submission')
-            ->line('**From:** ' . $this->submissionData['name'])
-            ->line('**Email:** ' . $this->submissionData['email'])
-            ->lineIf($this->submissionData['phone'] ?? null, '**Phone:** ' . ($this->submissionData['phone'] ?? ''))
-            ->line('**Subject:** ' . $subjectLabel)
+            ->line('**From:** '.$this->submissionData['name'])
+            ->line('**Email:** '.$this->submissionData['email'])
+            ->lineIf($this->submissionData['phone'] ?? null, '**Phone:** '.($this->submissionData['phone'] ?? ''))
+            ->line('**Subject:** '.$subjectLabel)
             ->line('**Message:**')
             ->line($this->submissionData['message'])
-            ->action('Reply to Contact', 'mailto:' . $this->submissionData['email'])
+            ->action('Reply to Contact', 'mailto:'.$this->submissionData['email'])
             ->line('This message was submitted through the contact form on the CMC website.');
     }
 

@@ -10,6 +10,7 @@ class GetValidEndTimesForDate
     use AsAction;
 
     public const MINUTES_PER_BLOCK = 30;
+
     public const MAX_RESERVATION_DURATION = 8; // hours
 
     /**
@@ -37,9 +38,9 @@ class GetValidEndTimesForDate
             $timeString = $current->format('H:i');
 
             // Check if this end time would cause conflicts
-            $hasConflicts = !CheckTimeSlotAvailability::run($start, $current);
+            $hasConflicts = ! CheckTimeSlotAvailability::run($start, $current);
 
-            if (!$hasConflicts) {
+            if (! $hasConflicts) {
                 $slots[$timeString] = $current->format('g:i A');
             }
 

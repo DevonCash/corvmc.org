@@ -202,11 +202,11 @@
                                     </p>
                                 </div>
                                 <div class="badge badge-sm
-                                    {{ $loan->status === 'returned' ? 'badge-success' : '' }}
-                                    {{ $loan->status === 'active' ? 'badge-warning' : '' }}
-                                    {{ $loan->status === 'overdue' ? 'badge-error' : '' }}
+                                    {{ $loan->state::$name === 'returned' ? 'badge-success' : '' }}
+                                    {{ $loan->state::$name === 'checked_out' ? 'badge-warning' : '' }}
+                                    {{ $loan->state::$name === 'overdue' ? 'badge-error' : '' }}
                                 ">
-                                    {{ ucfirst($loan->status) }}
+                                    {{ ucfirst(str_replace('_', ' ', $loan->state::$name)) }}
                                 </div>
                             </div>
                         @endforeach

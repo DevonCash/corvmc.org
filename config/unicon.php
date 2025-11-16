@@ -26,7 +26,7 @@ return [
 
         'class' => '',
 
-        'prefix' => ''
+        'prefix' => '',
 
     ],
 

@@ -17,24 +17,24 @@ class GetTrustBadge
         $level = GetTrustLevel::run($user, $contentType);
         $typeName = $this->getContentTypeName($contentType);
 
-        return match($level) {
+        return match ($level) {
             'auto-approved' => [
                 'label' => "Auto-Approved {$typeName}",
                 'color' => 'success',
                 'icon' => 'tabler-shield-check',
-                'description' => "Content from this user is automatically approved"
+                'description' => 'Content from this user is automatically approved',
             ],
             'verified' => [
                 'label' => "Verified {$typeName}",
                 'color' => 'info',
                 'icon' => 'tabler-shield',
-                'description' => "Trusted community member"
+                'description' => 'Trusted community member',
             ],
             'trusted' => [
                 'label' => "Trusted {$typeName}",
                 'color' => 'warning',
                 'icon' => 'tabler-star',
-                'description' => "Reliable community member"
+                'description' => 'Reliable community member',
             ],
             default => null
         };
@@ -45,7 +45,7 @@ class GetTrustBadge
      */
     protected function getContentTypeName(string $contentType): string
     {
-        return match($contentType) {
+        return match ($contentType) {
             'App\\Models\\CommunityEvent' => 'Event Organizer',
             'App\\Models\\MemberProfile' => 'Profile Creator',
             'App\\Models\\Band' => 'Band Manager',

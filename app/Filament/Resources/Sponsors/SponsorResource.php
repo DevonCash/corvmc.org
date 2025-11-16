@@ -11,7 +11,6 @@ use App\Models\Sponsor;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -21,7 +20,7 @@ class SponsorResource extends Resource
 {
     protected static ?string $model = Sponsor::class;
 
-    protected static string|BackedEnum|null $navigationIcon = "tabler-heart-handshake";
+    protected static string|BackedEnum|null $navigationIcon = 'tabler-heart-handshake';
 
     protected static UnitEnum|string|null $navigationGroup = 'Content';
 

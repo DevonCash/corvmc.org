@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Visibility;
 use App\Models\Band;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -16,7 +17,7 @@ class BandFactory extends Factory
     {
         return $this->afterCreating(function (Band $band) {
             // Ensure the owner is set correctly
-            if (!$band->membership($band->owner)) {
+            if (! $band->membership($band->owner)) {
                 $band->members()->attach($band->owner_id, ['role' => 'admin', 'status' => 'active']);
             }
         });
@@ -29,16 +30,15 @@ class BandFactory extends Factory
         $nouns = ['Hearts', 'Souls', 'Dreams', 'Echoes', 'Shadows', 'Lights', 'Stars', 'Moons', 'Rivers', 'Mountains'];
 
         // Generate unique band name by adding a random suffix to avoid collisions
-        $baseName = $this->faker->randomElement($adjectives) . ' ' . $this->faker->randomElement($nouns);
-        $bandName = $baseName . ' ' . $this->faker->unique()->numberBetween(1000, 9999);
-
+        $baseName = $this->faker->randomElement($adjectives).' '.$this->faker->randomElement($nouns);
+        $bandName = $baseName.' '.$this->faker->unique()->numberBetween(1000, 9999);
 
         return [
             'name' => $bandName,
             'bio' => $this->faker->paragraphs(3, true),
-            'hometown' => $this->faker->city() . ', ' . $this->faker->stateAbbr(),
+            'hometown' => $this->faker->city().', '.$this->faker->stateAbbr(),
             'owner_id' => 1, // Will be overridden by seeder
-            'visibility' => $this->faker->randomElement(['public', 'members', 'private']),
+            'visibility' => $this->faker->randomElement([Visibility::Public, Visibility::Members, Visibility::Private]),
             'links' => $this->generateLinks(),
             'contact' => $this->generateContact(),
         ];
@@ -48,13 +48,13 @@ class BandFactory extends Factory
     {
         $links = [];
         $platforms = [
-            'website' => 'https://www.' . $this->faker->domainName(),
-            'spotify' => 'https://open.spotify.com/artist/' . $this->faker->uuid(),
-            'bandcamp' => 'https://' . $this->faker->slug() . '.bandcamp.com',
-            'youtube' => 'https://youtube.com/@' . $this->faker->slug(),
-            'instagram' => 'https://instagram.com/' . $this->faker->slug(),
-            'facebook' => 'https://facebook.com/' . $this->faker->slug(),
-            'soundcloud' => 'https://soundcloud.com/' . $this->faker->slug(),
+            'website' => 'https://www.'.$this->faker->domainName(),
+            'spotify' => 'https://open.spotify.com/artist/'.$this->faker->uuid(),
+            'bandcamp' => 'https://'.$this->faker->slug().'.bandcamp.com',
+            'youtube' => 'https://youtube.com/@'.$this->faker->slug(),
+            'instagram' => 'https://instagram.com/'.$this->faker->slug(),
+            'facebook' => 'https://facebook.com/'.$this->faker->slug(),
+            'soundcloud' => 'https://soundcloud.com/'.$this->faker->slug(),
         ];
 
         // Add 2-4 random links
@@ -82,15 +82,15 @@ class BandFactory extends Factory
 
     public function public(): static
     {
-        return $this->state(fn(array $attributes) => [
-            'visibility' => 'public',
+        return $this->state(fn (array $attributes) => [
+            'visibility' => Visibility::Public,
         ]);
     }
 
     public function private(): static
     {
-        return $this->state(fn(array $attributes) => [
-            'visibility' => 'private',
+        return $this->state(fn (array $attributes) => [
+            'visibility' => Visibility::Private,
         ]);
     }
 

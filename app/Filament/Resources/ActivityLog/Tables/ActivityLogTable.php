@@ -3,11 +3,11 @@
 namespace App\Filament\Resources\ActivityLog\Tables;
 
 use App\Models\User;
+use Filament\Actions;
+use Filament\Forms;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Spatie\Activitylog\Models\Activity;
-use Filament\Forms;
-use Filament\Actions;
 
 class ActivityLogTable
 {
@@ -33,11 +33,10 @@ class ActivityLogTable
                 Tables\Columns\TextColumn::make('subject_type')
                     ->label('Subject Type')
                     ->formatStateUsing(
-                        fn(?string $state): string =>
-                        $state ? class_basename($state) : 'System'
+                        fn (?string $state): string => $state ? class_basename($state) : 'System'
                     )
                     ->badge()
-                    ->color(fn(?string $state): string => match ($state) {
+                    ->color(fn (?string $state): string => match ($state) {
                         'App\\Models\\User' => 'info',
                         'App\\Models\\MemberProfile' => 'success',
                         'App\\Models\\Band' => 'warning',
@@ -50,7 +49,7 @@ class ActivityLogTable
                 Tables\Columns\TextColumn::make('event')
                     ->label('Action')
                     ->badge()
-                    ->color(fn(?string $state): string => match ($state) {
+                    ->color(fn (?string $state): string => match ($state) {
                         'created' => 'success',
                         'updated' => 'info',
                         'deleted' => 'danger',
@@ -64,8 +63,7 @@ class ActivityLogTable
                     ->sortable()
                     ->since()
                     ->description(
-                        fn(Activity $record): string =>
-                        $record->created_at->format('M j, Y g:i A')
+                        fn (Activity $record): string => $record->created_at->format('M j, Y g:i A')
                     ),
 
                 Tables\Columns\IconColumn::make('icon')
@@ -115,8 +113,8 @@ class ActivityLogTable
                     ])
                     ->query(function ($query, array $data) {
                         return $query
-                            ->when($data['created_from'], fn($q) => $q->whereDate('created_at', '>=', $data['created_from']))
-                            ->when($data['created_until'], fn($q) => $q->whereDate('created_at', '<=', $data['created_until']));
+                            ->when($data['created_from'], fn ($q) => $q->whereDate('created_at', '>=', $data['created_from']))
+                            ->when($data['created_until'], fn ($q) => $q->whereDate('created_at', '<=', $data['created_until']));
                     }),
             ])
             ->recordActions([
@@ -124,7 +122,7 @@ class ActivityLogTable
                     ->label('View Subject')
                     ->icon('tabler-eye')
                     ->url(function (Activity $record): ?string {
-                        if (!$record->subject) {
+                        if (! $record->subject) {
                             return null;
                         }
 
@@ -137,15 +135,15 @@ class ActivityLogTable
                         };
                     })
                     ->openUrlInNewTab()
-                    ->visible(fn(Activity $record): bool => $record->subject !== null),
+                    ->visible(fn (Activity $record): bool => $record->subject !== null),
 
                 Actions\DeleteAction::make()
-                    ->visible(fn(): bool => User::me()?->can('delete activity log') ?? false),
+                    ->visible(fn (): bool => User::me()?->can('delete activity log') ?? false),
             ])
             ->toolbarActions([
                 Actions\BulkActionGroup::make([
                     Actions\DeleteBulkAction::make()
-                        ->visible(fn(): bool => User::me()?->can('delete activity log') ?? false),
+                        ->visible(fn (): bool => User::me()?->can('delete activity log') ?? false),
                 ]),
             ])
             ->defaultSort('created_at', 'desc')
@@ -182,6 +180,7 @@ class ActivityLogTable
         if ($production && $production->title) {
             return "{$causerName} {$action} event \"{$production->title}\"";
         }
+
         return "{$causerName} {$action} an event";
     }
 
@@ -190,8 +189,10 @@ class ActivityLogTable
         $band = $activity->subject;
         if ($band && $band->name) {
             $actionText = $action === 'created' ? 'created' : 'updated';
+
             return "{$causerName} {$actionText} band \"{$band->name}\"";
         }
+
         return "{$causerName} {$action} a band profile";
     }
 
@@ -217,7 +218,7 @@ class ActivityLogTable
         }
 
         // Generic message for others
-        return "Practice space activity";
+        return 'Practice space activity';
     }
 
     protected static function getActivityIcon(Activity $activity): string

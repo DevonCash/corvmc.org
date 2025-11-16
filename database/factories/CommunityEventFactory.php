@@ -38,7 +38,7 @@ class CommunityEventFactory extends Factory
 
         $venue = $this->faker->randomElement($venues);
         $startTime = $this->faker->dateTimeBetween('now', '+3 months');
-        $endTime = (clone $startTime)->modify('+' . $this->faker->numberBetween(1, 4) . ' hours');
+        $endTime = (clone $startTime)->modify('+'.$this->faker->numberBetween(1, 4).' hours');
 
         return [
             'title' => $this->faker->words(3, true),
@@ -60,8 +60,8 @@ class CommunityEventFactory extends Factory
                 CommunityEvent::VISIBILITY_MEMBERS_ONLY, // Weight towards public
             ]),
             'published_at' => function (array $attributes) {
-                return $attributes['status'] === CommunityEvent::STATUS_APPROVED 
-                    ? $this->faker->dateTimeBetween('-1 month', 'now') 
+                return $attributes['status'] === CommunityEvent::STATUS_APPROVED
+                    ? $this->faker->dateTimeBetween('-1 month', 'now')
                     : null;
             },
             'organizer_id' => User::factory(),
@@ -109,7 +109,7 @@ class CommunityEventFactory extends Factory
     public function upcoming(): static
     {
         $startTime = $this->faker->dateTimeBetween('+1 day', '+2 months');
-        $endTime = (clone $startTime)->modify('+' . $this->faker->numberBetween(1, 4) . ' hours');
+        $endTime = (clone $startTime)->modify('+'.$this->faker->numberBetween(1, 4).' hours');
 
         return $this->state(fn (array $attributes) => [
             'start_time' => $startTime,

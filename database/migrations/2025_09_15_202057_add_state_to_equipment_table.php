@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('equipment', function (Blueprint $table) {
             $table->string('state')->default('available')->after('status');
         });
-        
+
         // Copy existing status values to state for initial migration
         DB::statement("UPDATE equipment SET state = CASE 
             WHEN status = 'available' THEN 'available'

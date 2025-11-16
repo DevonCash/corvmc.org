@@ -23,27 +23,28 @@ class EquipmentDamageReportsTable
                 TextColumn::make('id')
                     ->label('#')
                     ->sortable(),
-                
+
                 TextColumn::make('title')
                     ->searchable()
                     ->limit(50)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
+
                         return strlen($state) > 50 ? $state : null;
                     }),
-                
+
                 TextColumn::make('equipment.name')
                     ->label('Equipment')
                     ->searchable()
                     ->sortable(),
-                
+
                 BadgeColumn::make('severity')
                     ->colors([
                         'success' => 'low',
                         'warning' => 'medium',
                         'danger' => ['high', 'critical'],
                     ]),
-                
+
                 BadgeColumn::make('priority')
                     ->colors([
                         'gray' => 'low',
@@ -51,7 +52,7 @@ class EquipmentDamageReportsTable
                         'warning' => 'high',
                         'danger' => 'urgent',
                     ]),
-                
+
                 BadgeColumn::make('status')
                     ->colors([
                         'info' => 'reported',
@@ -59,39 +60,39 @@ class EquipmentDamageReportsTable
                         'success' => 'completed',
                         'gray' => 'cancelled',
                     ]),
-                
+
                 TextColumn::make('assignedTo.name')
                     ->label('Assigned To')
                     ->placeholder('Unassigned')
                     ->sortable(),
-                
+
                 TextColumn::make('reportedBy.name')
                     ->label('Reported By')
                     ->sortable(),
-                
+
                 TextColumn::make('estimated_cost')
                     ->label('Est. Cost')
                     ->prefix('$')
                     ->numeric(2)
                     ->sortable()
                     ->placeholder('—'),
-                
+
                 TextColumn::make('actual_cost')
                     ->label('Actual Cost')
                     ->prefix('$')
                     ->numeric(2)
                     ->sortable()
                     ->placeholder('—'),
-                
+
                 TextColumn::make('discovered_at')
                     ->label('Discovered')
                     ->date()
                     ->sortable(),
-                
+
                 TextColumn::make('days_open')
                     ->label('Days Open')
                     ->badge()
-                    ->color(fn($state) => $state > 30 ? 'danger' : ($state > 14 ? 'warning' : 'success'))
+                    ->color(fn ($state) => $state > 30 ? 'danger' : ($state > 14 ? 'warning' : 'success'))
                     ->sortable(query: function ($query, $direction) {
                         return $query->orderByRaw("
                             CASE 
@@ -100,12 +101,12 @@ class EquipmentDamageReportsTable
                             END {$direction}
                         ");
                     }),
-                
+
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -122,7 +123,7 @@ class EquipmentDamageReportsTable
                         'cancelled' => 'Cancelled',
                     ])
                     ->multiple(),
-                
+
                 SelectFilter::make('severity')
                     ->options([
                         'low' => 'Low',
@@ -131,7 +132,7 @@ class EquipmentDamageReportsTable
                         'critical' => 'Critical',
                     ])
                     ->multiple(),
-                
+
                 SelectFilter::make('priority')
                     ->options([
                         'low' => 'Low',
@@ -140,13 +141,13 @@ class EquipmentDamageReportsTable
                         'urgent' => 'Urgent',
                     ])
                     ->multiple(),
-                
+
                 SelectFilter::make('assigned_to_id')
                     ->label('Assigned To')
                     ->relationship('assignedTo', 'name')
                     ->searchable()
                     ->preload(),
-                
+
                 TrashedFilter::make(),
             ])
             ->recordActions([
@@ -160,6 +161,6 @@ class EquipmentDamageReportsTable
                     RestoreBulkAction::make(),
                 ]),
             ])
-            ->recordUrl(fn($record) => route('filament.member.resources.equipment.equipment-damage-reports.edit', $record));
+            ->recordUrl(fn ($record) => route('filament.member.resources.equipment.equipment-damage-reports.edit', $record));
     }
 }

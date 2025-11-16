@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Auth;
 class ReservationStatsOverview extends BaseWidget
 {
     protected array|int|null $columns = 4;
-    protected array|string|int $columnSpan = 'full';
 
+    protected array|string|int $columnSpan = 'full';
 
     protected function getStats(): array
     {
@@ -70,25 +70,25 @@ class ReservationStatsOverview extends BaseWidget
 
         return [
             Stat::make('Today', $todayReservations)
-                ->description($todayHours > 0 ? number_format($todayHours, 1) . ' hours booked' : 'No practice time today')
+                ->description($todayHours > 0 ? number_format($todayHours, 1).' hours booked' : 'No practice time today')
                 ->descriptionIcon('tabler-calendar-clock')
                 ->color($todayReservations > 0 ? 'success' : 'gray')
                 ->chart($this->getTodayChart()),
 
             Stat::make('This Week', $weekReservations)
-                ->description($weekHours > 0 ? number_format($weekHours, 1) . ' hours total' : 'No bookings this week')
+                ->description($weekHours > 0 ? number_format($weekHours, 1).' hours total' : 'No bookings this week')
                 ->descriptionIcon('tabler-calendar-week')
                 ->color($weekReservations > 0 ? 'info' : 'gray'),
 
             Stat::make('This Month', $monthReservations)
-                ->description($monthHours > 0 ? number_format($monthHours, 1) . ' hours total' : 'No bookings this month')
+                ->description($monthHours > 0 ? number_format($monthHours, 1).' hours total' : 'No bookings this month')
                 ->descriptionIcon('tabler-calendar-month')
                 ->color($monthReservations > 0 ? 'primary' : 'gray'),
 
-            Stat::make('Free Hours', $remainingFreeHours . '/' . $totalFreeHours)
+            Stat::make('Free Hours', $remainingFreeHours.'/'.$totalFreeHours)
                 ->description(
                     $user->isSustainingMember()
-                        ? ($usedFreeHours > 0 ? 'Used ' . number_format($usedFreeHours, 1) . ' this month' : 'None used this month')
+                        ? ($usedFreeHours > 0 ? 'Used '.number_format($usedFreeHours, 1).' this month' : 'None used this month')
                         : 'Learn More'
                 )
                 ->descriptionIcon($user->isSustainingMember() ? 'tabler-user-heart' : 'tabler-heart')

@@ -2,22 +2,21 @@
 
 namespace App\Models;
 
-use App\Casts\MoneyCast;
 use App\Concerns\HasTimePeriod;
 use Database\Factories\ReservationFactory;
 use Guava\Calendar\Contracts\Eventable;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Spatie\Period\Period;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Period\Period;
 
 /**
  * Represents a practice space reservation made by an individual user.
  */
 class RehearsalReservation extends Reservation implements Eventable
 {
-    use HasFactory, LogsActivity, HasTimePeriod;
+    use HasFactory, HasTimePeriod, LogsActivity;
 
     /**
      * Create a new factory instance for the model.
@@ -66,7 +65,7 @@ class RehearsalReservation extends Reservation implements Eventable
      */
     public function recurringSeries()
     {
-        return $this->belongsTo(RecurringReservation::class, 'recurring_reservation_id');
+        return $this->belongsTo(RecurringSeries::class, 'recurring_series_id');
     }
 
     // STI Abstract Method Implementations
@@ -139,10 +138,10 @@ class RehearsalReservation extends Reservation implements Eventable
         }
 
         if ($this->reserved_at->isSameDay($this->reserved_until)) {
-            return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('g:i A');
+            return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('g:i A');
         }
 
-        return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('M j, Y g:i A');
+        return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('M j, Y g:i A');
     }
 
     /**
@@ -291,6 +290,6 @@ class RehearsalReservation extends Reservation implements Eventable
             ->logOnly(['status', 'reserved_at', 'reserved_until', 'cost', 'payment_status'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "Practice space reservation {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "Practice space reservation {$eventName}");
     }
 }

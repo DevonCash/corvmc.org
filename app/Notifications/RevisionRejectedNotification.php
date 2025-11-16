@@ -39,22 +39,22 @@ class RevisionRejectedNotification extends Notification implements ShouldQueue
     {
         $modelName = $this->revision->getModelTypeName();
         $changesSummary = $this->revision->getChangesSummary();
-        
+
         $mailMessage = (new MailMessage)
             ->subject("Your {$modelName} Revision Has Been Rejected")
             ->greeting("Hello {$notifiable->name}!")
-            ->line("We regret to inform you that your revision could not be approved.")
+            ->line('We regret to inform you that your revision could not be approved.')
             ->line("**Model:** {$modelName}")
             ->line("**Changes:** {$changesSummary}");
-            
+
         if ($this->revision->review_reason) {
             $mailMessage->line("**Reason for rejection:** {$this->revision->review_reason}");
         }
-        
+
         $mailMessage->line("You're welcome to submit a new revision addressing the concerns mentioned above.")
             ->action('View Original Content', $this->getModelUrl())
             ->line('If you have questions about this decision, please contact our moderation team.');
-        
+
         return $mailMessage;
     }
 
@@ -82,12 +82,12 @@ class RevisionRejectedNotification extends Notification implements ShouldQueue
     {
         $modelType = $this->revision->revisionable_type;
         $modelId = $this->revision->revisionable_id;
-        
-        return match($modelType) {
+
+        return match ($modelType) {
             'App\Models\MemberProfile' => url("/member/member-profiles/{$modelId}"),
             'App\Models\Band' => url("/member/bands/{$modelId}"),
-            'App\Models\Production' => url("/member/productions/{$modelId}"),
-            'App\Models\CommunityEvent' => url("/member/community-events/{$modelId}"),
+            'App\Models\Event' => route('events.show', $modelId),
+            'App\Models\CommunityEvent' => route('events.show', $modelId),
             default => url('/member')
         };
     }

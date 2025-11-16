@@ -31,7 +31,7 @@ class BulkResolveReports
                 $resolvedCount++;
             } catch (\Exception $e) {
                 // Log error but continue with other reports
-                logger()->error("Failed to resolve report {$report->id}: " . $e->getMessage());
+                logger()->error("Failed to resolve report {$report->id}: ".$e->getMessage());
             }
         }
 

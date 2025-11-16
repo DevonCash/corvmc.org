@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Actions\Reservations\CalculateReservationCost;
+use App\Enums\PaymentStatus;
+use App\Enums\ReservationStatus;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -23,11 +25,13 @@ class ReservationFactory extends Factory
         $reservedUntil = (clone $reservedAt)->modify('+'.($duration * 60).' minutes');
 
         return [
+            'type' => $this->modelName(),
             'reservable_type' => User::class,
             'reservable_id' => User::factory(),
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
-            'status' => $this->faker->randomElement(['pending', 'confirmed', 'cancelled']),
+            'status' => $this->faker->randomElement([ReservationStatus::Pending, ReservationStatus::Confirmed, ReservationStatus::Cancelled]),
+            'payment_status' => PaymentStatus::Unpaid,
             'cost' => function (array $attributes) use ($duration) {
                 // Simple cost calculation - will be overridden by action when needed
                 return $this->faker->boolean(30) ? 0 : $duration * CalculateReservationCost::HOURLY_RATE;
@@ -54,7 +58,7 @@ class ReservationFactory extends Factory
     public function confirmed(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'confirmed',
+            'status' => ReservationStatus::Confirmed,
         ]);
     }
 
@@ -64,7 +68,7 @@ class ReservationFactory extends Factory
     public function pending(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'pending',
+            'status' => ReservationStatus::Pending,
         ]);
     }
 
@@ -74,7 +78,7 @@ class ReservationFactory extends Factory
     public function cancelled(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'cancelled',
+            'status' => ReservationStatus::Cancelled,
         ]);
     }
 
@@ -133,7 +137,7 @@ class ReservationFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
-            'status' => 'confirmed',
+            'status' => ReservationStatus::Confirmed,
         ]);
     }
 
@@ -149,7 +153,7 @@ class ReservationFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
-            'status' => 'confirmed',
+            'status' => ReservationStatus::Confirmed,
         ]);
     }
 }

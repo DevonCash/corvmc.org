@@ -12,6 +12,7 @@ abstract class SearchableGrid extends Component
 
     // Filter state
     public $search = '';
+
     public $filters = [];
 
     // Generated controls
@@ -19,7 +20,9 @@ abstract class SearchableGrid extends Component
 
     // Abstract methods that child classes must implement
     abstract protected function getModelClass(): string;
+
     abstract protected function getBaseQuery();
+
     abstract protected function getCardComponent(): string;
 
     // Methods child classes can override
@@ -115,10 +118,10 @@ abstract class SearchableGrid extends Component
     {
         $modelClass = $this->getModelClass();
         $modelInstance = new $modelClass;
-        
+
         // Check if field exists in fillable or database
         $fieldExists = in_array($field, $modelInstance->getFillable());
-        
+
         // For now, add common fields without database check to avoid issues
         if ($fieldExists || in_array($field, ['name', 'title', 'hometown'])) {
             $this->availableFilters[] = [
@@ -195,12 +198,12 @@ abstract class SearchableGrid extends Component
         $query = $this->getBaseQuery();
 
         // Build search filter
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $searchableFields = $this->getSearchableFields();
-            if (!empty($searchableFields)) {
-                $query->where(function($q) use ($searchableFields) {
+            if (! empty($searchableFields)) {
+                $query->where(function ($q) use ($searchableFields) {
                     foreach ($searchableFields as $field) {
-                        $q->orWhere($field, 'like', '%' . $this->search . '%');
+                        $q->orWhere($field, 'like', '%'.$this->search.'%');
                     }
                 });
             }
@@ -209,12 +212,12 @@ abstract class SearchableGrid extends Component
         // Build dynamic filters
         foreach ($this->availableFilters as $filter) {
             $filterKey = $filter['key'];
-            
-            if (isset($this->filters[$filterKey]) && !empty($this->filters[$filterKey])) {
+
+            if (isset($this->filters[$filterKey]) && ! empty($this->filters[$filterKey])) {
                 switch ($filter['type']) {
                     case 'text':
                         // Apply text filter directly
-                        $query->where($filterKey, 'like', '%' . $this->filters[$filterKey] . '%');
+                        $query->where($filterKey, 'like', '%'.$this->filters[$filterKey].'%');
                         break;
                     case 'select':
                         if (str_starts_with($filterKey, 'withAllTags_')) {
@@ -237,7 +240,7 @@ abstract class SearchableGrid extends Component
         $modelClass = $this->getModelClass();
         $modelInstance = new $modelClass;
         $searchableFields = [];
-        
+
         $commonFields = ['name', 'title', 'description'];
         foreach ($commonFields as $field) {
             if (in_array($field, $modelInstance->getFillable())) {

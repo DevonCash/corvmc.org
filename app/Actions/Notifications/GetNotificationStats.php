@@ -23,7 +23,7 @@ class GetNotificationStats
                 ->where('status', 'confirmed')
                 ->whereBetween('reserved_at', [
                     $tomorrow->copy()->startOfDay(),
-                    $tomorrow->copy()->endOfDay()
+                    $tomorrow->copy()->endOfDay(),
                 ])
                 ->count(),
             'pending_reservations' => Reservation::where('status', 'pending')
@@ -36,7 +36,7 @@ class GetNotificationStats
                 })
                 ->get()
                 ->filter(function ($user) {
-                    return !$user->isSustainingMember();
+                    return ! $user->isSustainingMember();
                 })
                 ->count(),
         ];

@@ -144,7 +144,7 @@ class UsersTable
                     }),
                 Impersonate::make()
                     ->hiddenLabel()
-                    ->redirectTo(route('filament.member.pages.dashboard')),
+                    ->redirectTo(fn () => filament('member')->getUrl()),
 
             ])
             ->headerActions([])

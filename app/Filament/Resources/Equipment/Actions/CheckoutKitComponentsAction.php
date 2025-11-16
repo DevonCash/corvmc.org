@@ -2,15 +2,14 @@
 
 namespace App\Filament\Resources\Equipment\Actions;
 
-use App\Models\User;;
-
+use App\Models\User;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 
 class CheckoutKitComponentsAction
@@ -28,22 +27,20 @@ class CheckoutKitComponentsAction
                 CheckboxList::make('component_ids')
                     ->label('Select Components to Check Out')
                     ->options(
-                        fn($record) =>
-                        $record->children
+                        fn ($record) => $record->children
                             ->where('status', 'available')
                             ->where('can_lend_separately', true)
                             ->pluck('name', 'id')
                             ->toArray()
                     )
                     ->descriptions(
-                        fn($record) =>
-                        $record->children
+                        fn ($record) => $record->children
                             ->where('status', 'available')
                             ->where('can_lend_separately', true)
-                            ->mapWithKeys(fn($component) => [
+                            ->mapWithKeys(fn ($component) => [
                                 $component->id => collect([$component->brand, $component->model, $component->condition])
                                     ->filter()
-                                    ->join(' • ')
+                                    ->join(' • '),
                             ])
                             ->toArray()
                     )
@@ -108,7 +105,7 @@ class CheckoutKitComponentsAction
                 $feePerItem = count($components) > 0 ? $totalFee / count($components) : 0;
 
                 foreach ($components as $component) {
-                    if (!$component->is_available || !$component->can_lend_separately) {
+                    if (! $component->is_available || ! $component->can_lend_separately) {
                         continue;
                     }
 
@@ -138,12 +135,11 @@ class CheckoutKitComponentsAction
             ->requiresConfirmation()
             ->modalIcon('tabler-category')
             ->visible(
-                fn($record) =>
-                $record->is_kit &&
+                fn ($record) => $record->is_kit &&
                     $record->children
-                    ->where('status', 'available')
-                    ->where('can_lend_separately', true)
-                    ->isNotEmpty()
+                        ->where('status', 'available')
+                        ->where('can_lend_separately', true)
+                        ->isNotEmpty()
             );
     }
 }

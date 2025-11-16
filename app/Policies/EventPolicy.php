@@ -21,7 +21,13 @@ class EventPolicy
 
     public function manage(User $user, Event $event): ?bool
     {
-        if ($user->can('manage events') && $user->id === $event->manager_id) {
+        // Staff with 'manage events' permission can manage any staff event
+        if ($user->can('manage events')) {
+            return true;
+        }
+
+        // Community event organizers can manage their own events
+        if ($event->organizer_id && $user->id === $event->organizer_id) {
             return true;
         }
 
@@ -33,11 +39,18 @@ class EventPolicy
      */
     public function view(User $user, Event $event): ?bool
     {
-        if ($user?->id === $event->manager_id || $user->can('manage events')) {
+        // Published events are visible to everyone
+        if ($event->isPublished()) {
             return true;
         }
 
-        if ($event->isPublished()) {
+        // Staff can view all events
+        if ($user->can('manage events')) {
+            return true;
+        }
+
+        // Community event organizers can view their own events
+        if ($event->organizer_id && $user->id === $event->organizer_id) {
             return true;
         }
 
@@ -49,6 +62,7 @@ class EventPolicy
      */
     public function create(User $user): ?bool
     {
+        // Only staff with 'manage events' permission can create events for now
         if ($user->can('manage events')) {
             return true;
         }
@@ -61,7 +75,13 @@ class EventPolicy
      */
     public function update(User $user, Event $event): ?bool
     {
-        if ($user->can('manage events') && $user->id === $event->manager_id) {
+        // Staff with 'manage events' permission can update any event
+        if ($user->can('manage events')) {
+            return true;
+        }
+
+        // Community event organizers can update their own events
+        if ($event->organizer_id && $user->id === $event->organizer_id) {
             return true;
         }
 
@@ -73,12 +93,13 @@ class EventPolicy
      */
     public function delete(User $user, Event $event): ?bool
     {
-        if ($user->can('manage events') && $user->id === $event->manager_id) {
+        // Staff with 'manage events' permission can delete any event
+        if ($user->can('manage events')) {
             return true;
         }
 
-        // Admins can delete any event
-        if ($user->hasRole('admin')) {
+        // Community event organizers can delete their own events
+        if ($event->organizer_id && $user->id === $event->organizer_id) {
             return true;
         }
 
@@ -90,12 +111,13 @@ class EventPolicy
      */
     public function restore(User $user, Event $event): ?bool
     {
-        if ($user->can('manage events') && $user->id === $event->manager_id) {
+        // Staff with 'manage events' permission can restore any event
+        if ($user->can('manage events')) {
             return true;
         }
 
-        // Admins can restore any event
-        if ($user->hasRole('admin')) {
+        // Community event organizers can restore their own events
+        if ($event->organizer_id && $user->id === $event->organizer_id) {
             return true;
         }
 

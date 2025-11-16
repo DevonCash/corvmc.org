@@ -4,10 +4,10 @@ use Filament\Actions\View\ActionsIconAlias;
 use Filament\Forms\View\FormsIconAlias;
 use Filament\Infolists\View\InfolistsIconAlias;
 use Filament\Notifications\View\NotificationsIconAlias;
-use Filament\View\PanelsIconAlias;
 use Filament\Schemas\View\SchemaIconAlias;
-use Filament\Tables\View\TablesIconAlias;
 use Filament\Support\View\SupportIconAlias;
+use Filament\Tables\View\TablesIconAlias;
+use Filament\View\PanelsIconAlias;
 use Filament\Widgets\View\WidgetsIconAlias;
 
 return [
@@ -178,8 +178,8 @@ return [
     // WidgetsIconAlias - All 1 constant
     WidgetsIconAlias::CHART_WIDGET_FILTER => 'tabler-filter',
 
-    'app-equipment' => "tabler-device-speaker",
-    'app-equipment-loan' => "icon-speaker-share",
-    'app-equipment-damage-report' => "icon-speaker-exclamation",
+    'app-equipment' => 'tabler-device-speaker',
+    'app-equipment-loan' => 'icon-speaker-share',
+    'app-equipment-damage-report' => 'icon-speaker-exclamation',
 
 ];

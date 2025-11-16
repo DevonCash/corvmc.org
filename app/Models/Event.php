@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\HasPublishing;
 use App\Concerns\HasTimePeriod;
 use App\Data\LocationData;
+use App\Enums\Visibility;
 use Guava\Calendar\Contracts\Eventable;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -55,6 +56,7 @@ class Event extends ContentModel implements Eventable
             'doors_time' => 'datetime',
             'published_at' => 'datetime',
             'location' => LocationData::class,
+            'visibility' => Visibility::class,
             'auto_approved' => 'boolean',
             'distance_from_corvallis' => 'float',
         ];
@@ -66,6 +68,22 @@ class Event extends ContentModel implements Eventable
     public function organizer()
     {
         return $this->belongsTo(User::class, 'organizer_id');
+    }
+
+    /**
+     * Relationship to the recurring series this event belongs to.
+     */
+    public function recurringSeries()
+    {
+        return $this->belongsTo(RecurringSeries::class, 'recurring_series_id');
+    }
+
+    /**
+     * Check if this event is part of a recurring series.
+     */
+    public function isRecurring(): bool
+    {
+        return $this->recurring_series_id !== null;
     }
 
     /**
@@ -265,6 +283,10 @@ class Event extends ContentModel implements Eventable
      */
     public function publish(): self
     {
+        if (empty($this->title)) {
+            throw new \InvalidArgumentException('Event title is required to publish');
+        }
+
         $this->update([
             'status' => 'approved',
             'published_at' => $this->published_at ?? now(),

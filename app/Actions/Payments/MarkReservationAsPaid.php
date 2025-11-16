@@ -4,6 +4,8 @@ namespace App\Actions\Payments;
 
 use App\Actions\Reservations\ConfirmReservation;
 use App\Concerns\AsFilamentAction;
+use App\Enums\PaymentStatus;
+use App\Enums\ReservationStatus;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;
@@ -38,13 +40,13 @@ class MarkReservationAsPaid
     public function handle(Reservation $reservation, ?string $paymentMethod = null, ?string $notes = null): void
     {
         // If the reservation is pending, confirm it first
-        if ($reservation instanceof RehearsalReservation && $reservation->status === 'pending') {
+        if ($reservation instanceof RehearsalReservation && $reservation->status === ReservationStatus::Pending) {
             $reservation = ConfirmReservation::run($reservation);
             $reservation->refresh();
         }
 
         $reservation->update([
-            'payment_status' => 'paid',
+            'payment_status' => PaymentStatus::Paid,
             'payment_method' => $paymentMethod,
             'paid_at' => now(),
             'payment_notes' => $notes,

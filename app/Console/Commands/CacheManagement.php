@@ -106,8 +106,9 @@ class CacheManagement extends Command
     {
         $userId = $this->option('user');
 
-        if (!$userId) {
+        if (! $userId) {
             $this->error('❌ User ID is required. Use --user=123');
+
             return;
         }
 

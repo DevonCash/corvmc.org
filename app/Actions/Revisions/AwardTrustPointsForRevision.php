@@ -19,10 +19,11 @@ class AwardTrustPointsForRevision
         $model = $revision->revisionable;
         $contentType = $model ? get_class($model) : null;
 
-        if (!$contentType || !$model) {
+        if (! $contentType || ! $model) {
             Log::warning('Cannot award trust points - model not found', [
                 'revision_id' => $revision->id,
             ]);
+
             return;
         }
 

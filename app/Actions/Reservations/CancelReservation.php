@@ -5,6 +5,7 @@ namespace App\Actions\Reservations;
 use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
 use App\Concerns\AsFilamentAction;
 use App\Enums\CreditType;
+use App\Enums\ReservationStatus;
 use App\Models\CreditTransaction;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
@@ -47,7 +48,7 @@ class CancelReservation
     public function handle(Reservation $reservation, ?string $reason = null): Reservation
     {
         $reservation->update([
-            'status' => 'cancelled',
+            'status' => ReservationStatus::Cancelled,
             'notes' => $reservation->notes.($reason ? "\nCancellation reason: ".$reason : ''),
         ]);
 

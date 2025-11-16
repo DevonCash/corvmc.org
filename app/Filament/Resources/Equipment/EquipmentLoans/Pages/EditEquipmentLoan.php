@@ -11,9 +11,9 @@ class EditEquipmentLoan extends EditRecord
 {
     protected static string $resource = EquipmentLoanResource::class;
 
-    protected static ?string $title = "Equipment Loan";
-    protected static ?string $parentResource = EquipmentResource::class;
+    protected static ?string $title = 'Equipment Loan';
 
+    protected static ?string $parentResource = EquipmentResource::class;
 
     protected function getHeaderActions(): array
     {

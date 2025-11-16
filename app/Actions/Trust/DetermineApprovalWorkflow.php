@@ -22,7 +22,7 @@ class DetermineApprovalWorkflow
                     'requires_approval' => false,
                     'auto_publish' => true,
                     'review_priority' => 'none',
-                    'estimated_review_time' => 0
+                    'estimated_review_time' => 0,
                 ];
 
             case 'verified':
@@ -31,7 +31,7 @@ class DetermineApprovalWorkflow
                     'requires_approval' => true,
                     'auto_publish' => false,
                     'review_priority' => 'fast-track',
-                    'estimated_review_time' => 24 // hours
+                    'estimated_review_time' => 24, // hours
                 ];
 
             default:
@@ -39,7 +39,7 @@ class DetermineApprovalWorkflow
                     'requires_approval' => true,
                     'auto_publish' => false,
                     'review_priority' => 'standard',
-                    'estimated_review_time' => 72 // hours
+                    'estimated_review_time' => 72, // hours
                 ];
         }
     }

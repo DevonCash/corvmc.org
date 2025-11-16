@@ -24,7 +24,7 @@ class MembershipRenewalReminderNotification extends Notification implements Shou
 
     public function toMail(object $notifiable): MailMessage
     {
-        $subject = $this->daysUntilExpiry === 1 
+        $subject = $this->daysUntilExpiry === 1
             ? 'Your CMC Membership Expires Tomorrow'
             : "Your CMC Membership Expires in {$this->daysUntilExpiry} Days";
 
@@ -33,7 +33,7 @@ class MembershipRenewalReminderNotification extends Notification implements Shou
             ->greeting("Hello {$notifiable->name}!")
             ->line("Your Corvallis Music Collective membership expires in {$this->daysUntilExpiry} days.")
             ->line('Renew now to avoid any interruption to your member benefits including free practice hours and priority booking.')
-            ->action('Renew Membership', route('filament.member.pages.dashboard'))
+            ->action('Renew Membership', url('/member'))
             ->line('Thank you for supporting the CMC!')
             ->salutation('The CMC Team');
     }
@@ -43,7 +43,7 @@ class MembershipRenewalReminderNotification extends Notification implements Shou
         return [
             'title' => 'Membership Renewal Reminder',
             'message' => "Your CMC membership expires in {$this->daysUntilExpiry} days.",
-            'action_url' => route('filament.member.pages.dashboard'),
+            'action_url' => url('/member'),
             'action_text' => 'Renew Membership',
             'days_until_expiry' => $this->daysUntilExpiry,
         ];

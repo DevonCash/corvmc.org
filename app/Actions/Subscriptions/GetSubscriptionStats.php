@@ -22,7 +22,7 @@ class GetSubscriptionStats
 
             // Calculate total allocated hours based on actual subscription amounts
             $totalAllocatedHours = GetSustainingMembers::run()
-                ->sum(fn($user) => \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user));
+                ->sum(fn ($user) => \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user));
 
             return new SubscriptionStatsData(
                 total_users: $totalUsers,

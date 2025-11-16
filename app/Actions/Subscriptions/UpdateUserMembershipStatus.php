@@ -16,13 +16,13 @@ class UpdateUserMembershipStatus
     public function handle(User $user): void
     {
         // Check if user has active subscription above threshold
-        $shouldBeSustainingMember = !!GetActiveSubscription::run($user);
+        $shouldBeSustainingMember = (bool) GetActiveSubscription::run($user);
 
         // Update role accordingly
-        if ($shouldBeSustainingMember && !$user->isSustainingMember()) {
+        if ($shouldBeSustainingMember && ! $user->isSustainingMember()) {
             $user->makeSustainingMember();
             \Log::info('Assigned sustaining member role via Stripe subscription', ['user_id' => $user->id]);
-        } elseif (!$shouldBeSustainingMember && $user->isSustainingMember()) {
+        } elseif (! $shouldBeSustainingMember && $user->isSustainingMember()) {
             $user->removeSustainingMember();
             \Log::info('Removed sustaining member role - no qualifying Stripe subscription', ['user_id' => $user->id]);
         }

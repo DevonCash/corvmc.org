@@ -18,7 +18,7 @@ class AcceptInvitation
     {
         $invitation = FindInvitationByToken::run($token);
 
-        if (!$invitation || $invitation->isExpired() || $invitation->isUsed()) {
+        if (! $invitation || $invitation->isExpired() || $invitation->isUsed()) {
             return null;
         }
 

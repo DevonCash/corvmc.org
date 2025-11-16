@@ -16,7 +16,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  */
 class Sponsor extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -39,16 +39,22 @@ class Sponsor extends Model implements HasMedia
      * Sponsorship tier constants
      */
     const TIER_HARMONY = 'harmony';           // $100/month
+
     const TIER_MELODY = 'melody';             // $250/month
+
     const TIER_RHYTHM = 'rhythm';             // $500/month
+
     const TIER_CRESCENDO = 'crescendo';       // $1000+/month
+
     const TIER_FUNDRAISING = 'fundraising';   // In-kind: $300+ generated
+
     const TIER_IN_KIND = 'in_kind';          // In-kind service partner
 
     /**
      * Type constants
      */
     const TYPE_CASH = 'cash';
+
     const TYPE_IN_KIND = 'in_kind';
 
     /**
@@ -79,7 +85,7 @@ class Sponsor extends Model implements HasMedia
      */
     public function getSponsoredMembershipsAttribute(): int
     {
-        return match($this->tier) {
+        return match ($this->tier) {
             self::TIER_HARMONY => 5,
             self::TIER_MELODY => 10,
             self::TIER_RHYTHM => 20,
@@ -123,7 +129,7 @@ class Sponsor extends Model implements HasMedia
      */
     public function getNewsletterRecognitionAttribute(): string
     {
-        return match($this->tier) {
+        return match ($this->tier) {
             self::TIER_HARMONY, self::TIER_FUNDRAISING, self::TIER_IN_KIND => 'Group supporters list',
             self::TIER_MELODY => 'Group supporters list',
             self::TIER_RHYTHM, self::TIER_CRESCENDO => 'Quarterly sentence',

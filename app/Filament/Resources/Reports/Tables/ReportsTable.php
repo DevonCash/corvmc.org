@@ -3,13 +3,12 @@
 namespace App\Filament\Resources\Reports\Tables;
 
 use App\Models\Report;
-use App\Models\User;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
-use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,19 +20,20 @@ class ReportsTable
             ->columns([
                 TextColumn::make('reportable.name')
                     ->label('Content')
-                    ->description(fn(Report $record) => class_basename($record->reportable_type) . " #" . $record->reportable_id)
+                    ->description(fn (Report $record) => class_basename($record->reportable_type).' #'.$record->reportable_id)
                     ->limit(30)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
                         if (strlen($state) <= 30) {
                             return null;
                         }
+
                         return $state;
                     }),
                 TextColumn::make('reason')
                     ->badge()
                     ->label('Reason')
-                    ->formatStateUsing(fn($state) => Report::REASONS[$state] ?? $state)
+                    ->formatStateUsing(fn ($state) => Report::REASONS[$state] ?? $state)
                     ->colors([
                         'danger' => ['inappropriate_content', 'harassment'],
                         'warning' => ['spam', 'misleading_info'],
@@ -45,12 +45,10 @@ class ReportsTable
                     ->label('Reported By')
                     ->sortable(),
 
-
-
                 TextColumn::make('status')
                     ->badge()
                     ->label('Status')
-                    ->formatStateUsing(fn($state) => Report::STATUSES[$state] ?? $state)
+                    ->formatStateUsing(fn ($state) => Report::STATUSES[$state] ?? $state)
                     ->colors([
                         'warning' => 'pending',
                         'danger' => 'upheld',
@@ -75,7 +73,7 @@ class ReportsTable
                 SelectFilter::make('reportable_type')
                     ->label('Content Type')
                     ->options([
-                        'App\Models\Production' => 'Production',
+                        'App\Models\Event' => 'Production',
                         'App\Models\MemberProfile' => 'Member Profile',
                         'App\Models\Band' => 'Band Profile',
                     ]),
@@ -84,14 +82,13 @@ class ReportsTable
                     ->options(Report::REASONS),
 
                 Filter::make('unresolved')
-                    ->query(fn(Builder $query): Builder => $query->whereIn('status', ['pending', 'escalated']))
+                    ->query(fn (Builder $query): Builder => $query->whereIn('status', ['pending', 'escalated']))
                     ->default(),
             ])
             ->recordActions([
                 ViewAction::make()
                     ->url(
-                        fn(Report $record): string =>
-                        route('filament.member.resources.reports.view', $record)
+                        fn (Report $record): string => route('filament.member.resources.reports.view', $record)
                     ),
 
             ])

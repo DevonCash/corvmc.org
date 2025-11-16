@@ -156,8 +156,8 @@
     {{-- Footer Actions --}}
     <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         @if($context['type'] !== 'dashboard')
-            <a 
-                href="{{ route('filament.member.pages.dashboard') }}" 
+            <a
+                href="{{ filament()->getUrl() }}"
                 class="inline-flex items-center gap-2 text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
             >
                 <x-tabler-arrow-left class="w-3 h-3" />

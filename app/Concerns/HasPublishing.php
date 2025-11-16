@@ -44,6 +44,7 @@ trait HasPublishing
     public function publish(): self
     {
         $this->update(['published_at' => now()]);
+
         return $this;
     }
 
@@ -53,6 +54,7 @@ trait HasPublishing
     public function schedulePublishing(\DateTimeInterface $publishAt): self
     {
         $this->update(['published_at' => $publishAt]);
+
         return $this;
     }
 
@@ -62,6 +64,7 @@ trait HasPublishing
     public function unpublish(): self
     {
         $this->update(['published_at' => null]);
+
         return $this;
     }
 
@@ -71,7 +74,7 @@ trait HasPublishing
     public function scopePublished(Builder $query): Builder
     {
         return $query->whereNotNull('published_at')
-                    ->where('published_at', '<=', now());
+            ->where('published_at', '<=', now());
     }
 
     /**
@@ -88,6 +91,6 @@ trait HasPublishing
     public function scopeScheduled(Builder $query): Builder
     {
         return $query->whereNotNull('published_at')
-                    ->where('published_at', '>', now());
+            ->where('published_at', '>', now());
     }
 }

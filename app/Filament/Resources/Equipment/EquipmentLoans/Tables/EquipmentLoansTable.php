@@ -35,7 +35,7 @@ class EquipmentLoansTable
 
                 BadgeColumn::make('state')
                     ->label('Status')
-                    ->formatStateUsing(fn($state) => match($state) {
+                    ->formatStateUsing(fn ($state) => match ($state) {
                         'requested' => 'Requested',
                         'staff_preparing' => 'Preparing',
                         'ready_for_pickup' => 'Ready',
@@ -68,7 +68,7 @@ class EquipmentLoansTable
                     ->label('Due Date')
                     ->date()
                     ->sortable()
-                    ->color(fn($record) => $record->due_at && $record->due_at->isPast() && !$record->returned_at ? 'danger' : null),
+                    ->color(fn ($record) => $record->due_at && $record->due_at->isPast() && ! $record->returned_at ? 'danger' : null),
 
                 TextColumn::make('returned_at')
                     ->label('Returned')
@@ -79,7 +79,7 @@ class EquipmentLoansTable
                 TextColumn::make('days_out')
                     ->label('Days Out')
                     ->badge()
-                    ->color(fn($state) => $state > 14 ? 'danger' : ($state > 7 ? 'warning' : 'success'))
+                    ->color(fn ($state) => $state > 14 ? 'danger' : ($state > 7 ? 'warning' : 'success'))
                     ->sortable()
                     ->placeholder('—'),
 
@@ -178,9 +178,9 @@ class EquipmentLoansTable
                     ->label('Advance Status')
                     ->icon('tabler-arrow-right')
                     ->color('primary')
-                    ->visible(fn($record) => in_array($record->state, [
+                    ->visible(fn ($record) => in_array($record->state, [
                         'requested', 'staff_preparing', 'ready_for_pickup',
-                        'dropoff_scheduled', 'staff_processing_return'
+                        'dropoff_scheduled', 'staff_processing_return',
                     ]))
                     ->action(function ($record) {
                         $nextStates = [
@@ -202,6 +202,6 @@ class EquipmentLoansTable
                     DeleteBulkAction::make(),
                 ]),
             ])
-            ->recordUrl(fn($record) => route('filament.member.resources.equipment.equipment-loans.edit', $record));
+            ->recordUrl(fn ($record) => route('filament.member.resources.equipment.equipment-loans.edit', $record));
     }
 }

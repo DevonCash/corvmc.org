@@ -2,9 +2,12 @@
 
 namespace App\Filament\Resources\Reservations\Tables\Columns;
 
+use App\Enums\PaymentStatus;
+use App\Models\EventReservation;
+use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use Filament\Support\Enums\IconPosition;
-use Filament\Tables\Columns\Summarizers\Sum;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 
 class ReservationColumns
@@ -14,17 +17,38 @@ class ReservationColumns
         return TextColumn::make('type')
             ->label('Type')
             ->badge()
-            ->getStateUsing(fn(Reservation $record) => $record->getReservationTypeLabel())
-            ->color(fn(Reservation $record) => $record instanceof \App\Models\ProductionReservation ? 'warning' : 'primary')
-            ->icon(fn(Reservation $record) => $record->getReservationIcon());
+            ->getStateUsing(fn (Reservation $record) => $record->getReservationTypeLabel())
+            ->color(fn (Reservation $record) => $record instanceof \App\Models\ProductionReservation ? 'warning' : 'primary')
+            ->icon(fn (Reservation $record) => $record->getReservationIcon());
     }
 
     public static function responsibleUser(): TextColumn
     {
         return TextColumn::make('responsible_user')
             ->label('Responsible')
-            ->getStateUsing(fn(Reservation $record) => $record->getResponsibleUser()?->name)
-            ->description(fn(Reservation $record): string => $record->getResponsibleUser()?->email ?? 'N/A')
+            ->getStateUsing(function (Reservation $record) {
+                if ($record instanceof EventReservation) {
+                    return $record->getDisplayTitle();
+                }
+
+                return $record->getResponsibleUser()?->name;
+            })
+            ->description(function (Reservation $record): string {
+                if ($record instanceof EventReservation) {
+                    return $record->getResponsibleUser()?->name ?? 'N/A';
+                }
+
+                return $record->getResponsibleUser()?->email ?? 'N/A';
+            })
+            ->icon(function (Reservation $record) {
+                if ($record instanceof EventReservation) {
+                    return 'tabler-calendar';
+                } elseif ($record instanceof RehearsalReservation) {
+                    return 'tabler-metronome';
+                }
+
+                return null;
+            })
             ->searchable()
             ->sortable();
     }
@@ -37,11 +61,11 @@ class ReservationColumns
                 return $record->reserved_at->format('M j, Y');
             })
             ->description(function (Reservation $record): string {
-                return $record->reserved_at->format('g:i A') . ' - ' . $record->reserved_until->format('g:i A');
+                return $record->reserved_at->format('g:i A').' - '.$record->reserved_until->format('g:i A');
             })
-            ->icon(fn($record) => $record->is_recurring ? 'tabler-repeat' : null)
+            ->icon(fn ($record) => $record->is_recurring ? 'tabler-repeat' : null)
             ->iconPosition(IconPosition::After)
-            ->tooltip(fn($record) => $record->is_recurring ? 'Recurring reservation' : null)
+            ->tooltip(fn ($record) => $record->is_recurring ? 'Recurring reservation' : null)
             ->searchable()
             ->sortable(['reserved_at']);
     }
@@ -51,60 +75,43 @@ class ReservationColumns
         return TextColumn::make('duration')
             ->label('Duration')
             ->getStateUsing(function (Reservation $record): string {
-                return number_format($record->duration, 1) . ' hrs';
+                return number_format($record->duration, 1).' hrs';
             })
             ->sortable(['reserved_at', 'reserved_until']);
     }
 
-    public static function statusDisplay(): TextColumn
+    public static function statusDisplay(): IconColumn
     {
-        return TextColumn::make('status_display')
-            ->label('Status')
-            ->badge()
-            ->formatStateUsing(function (Reservation $record): string {
-                // For cancelled or pending, just show that
-                if ($record->status === 'cancelled') {
-                    return 'Cancelled';
-                }
-                if ($record->status === 'pending') {
-                    return 'Pending';
-                }
-
-                // ProductionReservation doesn't have payment tracking
-                if ($record instanceof \App\Models\ProductionReservation) {
-                    return 'Confirmed';
-                }
-
-                // For RehearsalReservation with no cost, just show confirmed
-                if ($record->cost->isZero() || $record->cost->isNegative()) {
-                    return 'Confirmed';
-                }
-
-                // For confirmed with cost, show payment status
-                return match ($record->payment_status) {
-                    'paid' => 'Paid',
-                    'comped' => 'Comped',
-                    'refunded' => 'Refunded',
-                    default => 'Unpaid',
-                };
-            })
-            ->color(fn(Reservation $record): string => match (true) {
-                $record->status === 'cancelled' => 'danger',
-                $record->status === 'pending' => 'warning',
-                $record instanceof \App\Models\ProductionReservation => 'success',
-                $record->payment_status === 'paid' => 'success',
-                $record->payment_status === 'comped' => 'info',
-                $record->payment_status === 'refunded' => 'gray',
-                $record->payment_status === 'unpaid' && $record->cost->isPositive() => 'danger',
-                default => 'success',
-            })
-            ->searchable(['status', 'payment_status'])
-            ->sortable(['status']);
+        return IconColumn::make('status')
+            ->label('')
+            ->grow(false)
+            ->width('1%');
     }
 
     public static function costDisplay(): TextColumn
     {
         return TextColumn::make('cost')
+            ->iconPosition(IconPosition::After)
+            ->icon(function (Reservation $record) {
+                if ($record->cost->isZero() || $record->cost->isNegative()) {
+                    return 'tabler-circle-check';
+                }
+                if ($record->payment_status === PaymentStatus::Unpaid && $record->reserved_at->isFuture()) {
+                    return 'tabler-dots-circle-horizontal';
+                }
+
+                return $record->payment_status->getIcon();
+            })
+            ->iconColor(function (Reservation $record) {
+                if ($record->cost->isZero() || $record->cost->isNegative()) {
+                    return 'success';
+                }
+                if ($record->payment_status === PaymentStatus::Unpaid && $record->reserved_at->isFuture()) {
+                    return null;
+                }
+
+                return $record->payment_status->getColor();
+            })
             ->label('Cost')
             ->money('USD', divideBy: 100, locale: 'en_US')
             ->sortable(['cost']);

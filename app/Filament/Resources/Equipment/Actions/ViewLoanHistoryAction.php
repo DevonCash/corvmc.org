@@ -3,11 +3,11 @@
 namespace App\Filament\Resources\Equipment\Actions;
 
 use Filament\Actions\Action;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class ViewLoanHistoryAction
 {
@@ -32,12 +32,11 @@ class ViewLoanHistoryAction
                                         TextEntry::make('name')
                                             ->weight('bold'),
                                         TextEntry::make('type')
-                                            ->formatStateUsing(fn (string $state): string =>
-                                                ucwords(str_replace('_', ' ', $state))
+                                            ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state))
                                             ),
                                         TextEntry::make('status')
                                             ->badge()
-                                            ->color(fn (string $state): string => match($state) {
+                                            ->color(fn (string $state): string => match ($state) {
                                                 'available' => 'success',
                                                 'checked_out' => 'warning',
                                                 'maintenance' => 'danger',
@@ -66,7 +65,7 @@ class ViewLoanHistoryAction
                                                     ->placeholder('Still out'),
                                                 TextEntry::make('status')
                                                     ->badge()
-                                                    ->color(fn (string $state): string => match($state) {
+                                                    ->color(fn (string $state): string => match ($state) {
                                                         'active' => 'warning',
                                                         'returned' => 'success',
                                                         'overdue' => 'danger',
@@ -78,31 +77,28 @@ class ViewLoanHistoryAction
                                             ->schema([
                                                 TextEntry::make('condition_out')
                                                     ->label('Condition Out')
-                                                    ->formatStateUsing(fn (?string $state): string =>
-                                                        $state ? ucfirst($state) : 'Not recorded'
+                                                    ->formatStateUsing(fn (?string $state): string => $state ? ucfirst($state) : 'Not recorded'
                                                     ),
                                                 TextEntry::make('condition_in')
                                                     ->label('Condition In')
-                                                    ->formatStateUsing(fn (?string $state): string =>
-                                                        $state ? ucfirst($state) : 'Not recorded'
+                                                    ->formatStateUsing(fn (?string $state): string => $state ? ucfirst($state) : 'Not recorded'
                                                     ),
                                             ]),
 
                                         TextEntry::make('notes')
                                             ->columnSpanFull()
                                             ->placeholder('No notes')
-                                            ->visible(fn ($state) => !empty($state['notes'])),
+                                            ->visible(fn ($state) => ! empty($state['notes'])),
 
                                         TextEntry::make('damage_notes')
                                             ->label('Damage Notes')
                                             ->columnSpanFull()
                                             ->placeholder('No damage notes')
-                                            ->visible(fn ($state) => !empty($state['damage_notes']))
+                                            ->visible(fn ($state) => ! empty($state['damage_notes']))
                                             ->color('danger'),
                                     ])
                                     ->contained(false)
-                                    ->itemLabel(fn (array $state): ?string =>
-                                        $state['borrower']['name'] ?? 'Unknown Borrower'
+                                    ->itemLabel(fn (array $state): ?string => $state['borrower']['name'] ?? 'Unknown Borrower'
                                     ),
                             ])
                             ->visible($loanHistory->isNotEmpty()),

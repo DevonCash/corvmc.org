@@ -33,7 +33,7 @@ class SponsorsTable
                 TextColumn::make('tier_name')
                     ->label('Tier')
                     ->badge()
-                    ->color(fn ($record) => match($record->tier) {
+                    ->color(fn ($record) => match ($record->tier) {
                         Sponsor::TIER_CRESCENDO => 'success',
                         Sponsor::TIER_RHYTHM => 'info',
                         Sponsor::TIER_MELODY => 'warning',

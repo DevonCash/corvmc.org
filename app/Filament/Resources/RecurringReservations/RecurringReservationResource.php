@@ -8,10 +8,8 @@ use App\Filament\Resources\RecurringReservations\Pages\ListRecurringReservations
 use App\Filament\Resources\RecurringReservations\Schemas\RecurringReservationForm;
 use App\Filament\Resources\RecurringReservations\Tables\RecurringReservationsTable;
 use App\Models\RecurringReservation;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
 class RecurringReservationResource extends Resource
@@ -27,6 +25,8 @@ class RecurringReservationResource extends Resource
     protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'recurring-reservations';
+
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function canViewAny(): bool
     {

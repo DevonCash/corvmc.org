@@ -2,7 +2,7 @@
 
 namespace App\Actions\RecurringReservations;
 
-use App\Models\RecurringReservation;
+use App\Models\RecurringSeries;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -15,9 +15,9 @@ class SkipRecurringInstance
     /**
      * Skip a single instance without cancelling series.
      */
-    public function handle(RecurringReservation $series, Carbon $date, ?string $reason = null): void
+    public function handle(RecurringSeries $series, Carbon $date, ?string $reason = null): void
     {
-        $reservation = Reservation::where('recurring_reservation_id', $series->id)
+        $reservation = Reservation::where('recurring_series_id', $series->id)
             ->where('instance_date', $date->toDateString())
             ->first();
 
@@ -32,7 +32,7 @@ class SkipRecurringInstance
                 // Create placeholder cancelled reservation to track manual skip
                 Reservation::create([
                     'user_id' => $series->user_id,
-                    'recurring_reservation_id' => $series->id,
+                    'recurring_series_id' => $series->id,
                     'instance_date' => $date->toDateString(),
                     'reserved_at' => $date->copy()->setTimeFromTimeString($series->start_time->format('H:i:s')),
                     'reserved_until' => $date->copy()->setTimeFromTimeString($series->end_time->format('H:i:s')),

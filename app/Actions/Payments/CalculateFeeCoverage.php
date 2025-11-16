@@ -16,6 +16,7 @@ class CalculateFeeCoverage
     {
         $baseAmount = Money::ofMinor($baseAmountCents, 'USD');
         $totalWithCoverage = CalculateTotalWithFeeCoverage::run($baseAmount);
+
         return $totalWithCoverage->minus($baseAmount);
     }
 }

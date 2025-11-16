@@ -2,12 +2,9 @@
 
 namespace App\Filament\Resources\ActivityLog;
 
-use App\Filament\Resources\ActivityLog\Pages;
 use App\Filament\Resources\ActivityLog\Tables\ActivityLogTable;
-use App\Filament\Resources\ActivityLog\Widgets;
 use App\Models\User;
 use Filament\Resources\Resource;
-use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogResource extends Resource
@@ -76,7 +73,7 @@ class ActivityLogResource extends Resource
 
         $currentUser = User::me();
 
-        if (!$currentUser || !$currentUser->can('view all activity logs')) {
+        if (! $currentUser || ! $currentUser->can('view all activity logs')) {
             // Filter to only show activities the user is authorized to see
             $query->where(function ($subQuery) use ($currentUser) {
                 $subQuery->whereHasMorph('subject', [
@@ -85,62 +82,63 @@ class ActivityLogResource extends Resource
                     // Only show member profile activities if profile is visible
                     $q->whereIn('visibility', $currentUser ? ['public', 'members'] : ['public']);
                 })
-                ->orWhereHasMorph('subject', [
-                    \App\Models\Band::class,
-                ], function ($q) use ($currentUser) {
-                    // Apply band visibility rules
-                    if ($currentUser) {
-                        $q->where(function ($bandQuery) use ($currentUser) {
-                            $bandQuery->where('visibility', 'public')
-                                ->orWhere('visibility', 'members')
-                                ->orWhere(function ($privateQuery) use ($currentUser) {
-                                    $privateQuery->where('visibility', 'private')
-                                        ->where('owner_id', $currentUser->id);
-                                });
-                        });
-                    } else {
-                        $q->where('visibility', 'public');
-                    }
-                })
-                ->orWhereHasMorph('subject', [
-                    \App\Models\Production::class,
-                ], function ($q) use ($currentUser) {
-                    // Only published productions, or user's own productions, or if user has permission
-                    $q->where(function ($prodQuery) use ($currentUser) {
-                        $prodQuery->whereNotNull('published_at')
-                            ->where('published_at', '<=', now());
-
+                    ->orWhereHasMorph('subject', [
+                        \App\Models\Band::class,
+                    ], function ($q) use ($currentUser) {
+                        // Apply band visibility rules
                         if ($currentUser) {
-                            $prodQuery->orWhere('manager_id', $currentUser->id);
-
-                            if ($currentUser->can('view productions')) {
-                                $prodQuery->orWhereRaw('1=1'); // Show all
-                            }
+                            $q->where(function ($bandQuery) use ($currentUser) {
+                                $bandQuery->where('visibility', 'public')
+                                    ->orWhere('visibility', 'members')
+                                    ->orWhere(function ($privateQuery) use ($currentUser) {
+                                        $privateQuery->where('visibility', 'private')
+                                            ->where('owner_id', $currentUser->id);
+                                    });
+                            });
+                        } else {
+                            $q->where('visibility', 'public');
                         }
-                    });
-                })
-                ->orWhereHasMorph('subject', [
-                    \App\Models\Reservation::class,
-                ], function ($q) use ($currentUser) {
-                    if (!$currentUser) {
-                        $q->whereRaw('1=0'); // No reservations visible to guests
-                        return;
-                    }
+                    })
+                    ->orWhereHasMorph('subject', [
+                        \App\Models\Production::class,
+                    ], function ($q) use ($currentUser) {
+                        // Only published productions, or user's own productions, or if user has permission
+                        $q->where(function ($prodQuery) use ($currentUser) {
+                            $prodQuery->whereNotNull('published_at')
+                                ->where('published_at', '<=', now());
 
-                    // Own reservations or if user has permission
-                    $q->where('user_id', $currentUser->id);
+                            if ($currentUser) {
+                                $prodQuery->orWhere('manager_id', $currentUser->id);
 
-                    if ($currentUser->can('view reservations')) {
-                        $q->orWhereRaw('1=1'); // Show all
-                    }
-                })
-                ->orWhereHasMorph('subject', [
-                    User::class,
-                ], function ($q) {
-                    // User activities are generally visible (registration, etc.)
-                    $q->whereRaw('1=1');
-                })
-                ->orWhereNull('subject_type'); // System activities
+                                if ($currentUser->can('view productions')) {
+                                    $prodQuery->orWhereRaw('1=1'); // Show all
+                                }
+                            }
+                        });
+                    })
+                    ->orWhereHasMorph('subject', [
+                        \App\Models\Reservation::class,
+                    ], function ($q) use ($currentUser) {
+                        if (! $currentUser) {
+                            $q->whereRaw('1=0'); // No reservations visible to guests
+
+                            return;
+                        }
+
+                        // Own reservations or if user has permission
+                        $q->where('user_id', $currentUser->id);
+
+                        if ($currentUser->can('view reservations')) {
+                            $q->orWhereRaw('1=1'); // Show all
+                        }
+                    })
+                    ->orWhereHasMorph('subject', [
+                        User::class,
+                    ], function ($q) {
+                        // User activities are generally visible (registration, etc.)
+                        $q->whereRaw('1=1');
+                    })
+                    ->orWhereNull('subject_type'); // System activities
             });
         }
 

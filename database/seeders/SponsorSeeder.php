@@ -15,7 +15,7 @@ class SponsorSeeder extends Seeder
         $logoCounter = 1;
 
         // Helper to add logo from placeholder service
-        $addLogo = function($sponsor) use (&$logoCounter) {
+        $addLogo = function ($sponsor) use (&$logoCounter) {
             try {
                 // Using picsum.photos for placeholder images (300x300 squares)
                 $logoUrl = "https://picsum.photos/seed/sponsor{$logoCounter}/300/300";

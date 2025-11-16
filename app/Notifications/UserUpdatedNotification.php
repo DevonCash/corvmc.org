@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -30,12 +29,12 @@ class UserUpdatedNotification extends Notification
     public function toMail($notifiable): MailMessage
     {
         $changes = $this->getChanges();
-        
+
         return (new MailMessage)
             ->subject('Your Account Has Been Updated')
             ->greeting("Hello, {$notifiable->name}!")
             ->line('Your account information has been updated.')
-            ->when(!empty($changes), function ($mail) use ($changes) {
+            ->when(! empty($changes), function ($mail) use ($changes) {
                 $mail->line('Changes made:');
                 foreach ($changes as $change) {
                     $mail->line("• {$change}");
@@ -51,15 +50,15 @@ class UserUpdatedNotification extends Notification
     private function getChanges(): array
     {
         $changes = [];
-        
+
         if (isset($this->newData['email']) && $this->originalData['email'] !== $this->newData['email']) {
             $changes[] = 'Email address updated';
         }
-        
+
         if (isset($this->newData['name']) && $this->originalData['name'] !== $this->newData['name']) {
             $changes[] = 'Name updated';
         }
-        
+
         return $changes;
     }
 }

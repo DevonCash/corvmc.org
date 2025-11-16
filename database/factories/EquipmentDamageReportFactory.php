@@ -20,7 +20,7 @@ class EquipmentDamageReportFactory extends Factory
         $discoveredAt = $this->faker->dateTimeBetween('-6 months', 'now');
         $severity = $this->faker->randomElement(['low', 'medium', 'high', 'critical']);
         $status = $this->faker->randomElement(['reported', 'in_progress', 'waiting_parts', 'completed', 'cancelled']);
-        
+
         // More likely to be completed if older
         if ($discoveredAt < now()->subMonths(2)) {
             $status = $this->faker->randomElement(['completed', 'cancelled']);
@@ -40,11 +40,11 @@ class EquipmentDamageReportFactory extends Factory
             'actual_cost' => $status === 'completed' ? $this->faker->numberBetween(500, 60000) : null, // 5-600 dollars in cents
             'repair_notes' => $status === 'completed' ? $this->faker->paragraph() : null,
             'discovered_at' => $discoveredAt,
-            'started_at' => in_array($status, ['in_progress', 'waiting_parts', 'completed']) 
-                ? $this->faker->dateTimeBetween($discoveredAt, 'now') 
+            'started_at' => in_array($status, ['in_progress', 'waiting_parts', 'completed'])
+                ? $this->faker->dateTimeBetween($discoveredAt, 'now')
                 : null,
-            'completed_at' => $status === 'completed' 
-                ? $this->faker->dateTimeBetween($discoveredAt, 'now') 
+            'completed_at' => $status === 'completed'
+                ? $this->faker->dateTimeBetween($discoveredAt, 'now')
                 : null,
         ];
     }
@@ -66,7 +66,7 @@ class EquipmentDamageReportFactory extends Factory
             'Broken string',
             'Faulty switch',
             'Damaged finish',
-            'Loose tuning peg'
+            'Loose tuning peg',
         ];
 
         return $this->faker->randomElement($damageTypes);
@@ -85,12 +85,12 @@ class EquipmentDamageReportFactory extends Factory
             'Safety concern that requires immediate attention.',
         ];
 
-        return $this->faker->randomElement($descriptions) . ' ' . $this->faker->sentence();
+        return $this->faker->randomElement($descriptions).' '.$this->faker->sentence();
     }
 
     private function getPriorityForSeverity(string $severity): string
     {
-        return match($severity) {
+        return match ($severity) {
             'low' => $this->faker->randomElement(['low', 'normal']),
             'medium' => $this->faker->randomElement(['normal', 'high']),
             'high' => $this->faker->randomElement(['high', 'urgent']),
@@ -123,7 +123,7 @@ class EquipmentDamageReportFactory extends Factory
     public function completed(): static
     {
         $startedAt = $this->faker->dateTimeBetween('-1 month', '-1 week');
-        
+
         return $this->state([
             'status' => 'completed',
             'started_at' => $startedAt,

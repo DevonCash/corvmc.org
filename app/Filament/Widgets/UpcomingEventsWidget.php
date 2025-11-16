@@ -22,10 +22,10 @@ class UpcomingEventsWidget extends Widget
 
         return Cache::remember($cacheKey, 600, function () {
             return Event::publishedUpcoming()
-                ->with(['performers', 'manager'])
+                ->with(['performers', 'organizer'])
                 ->limit(8)
                 ->get()
-                ->map(function (Production $event) {
+                ->map(function (Event $event) {
                     return [
                         'id' => $event->id,
                         'title' => $event->title,
@@ -38,7 +38,7 @@ class UpcomingEventsWidget extends Widget
                         'venue_details' => $event->venue_details,
                         'poster_url' => $event->poster_url,
                         'poster_thumb_url' => $event->poster_thumb_url,
-                        'ticket_url' => $event->ticket_url,
+                        'ticket_url' => $event->event_link ?? $event->ticket_url,
                         'ticket_price_display' => $event->ticket_price_display,
                         'is_free' => $event->isFree(),
                         'has_tickets' => $event->hasTickets(),
@@ -54,12 +54,8 @@ class UpcomingEventsWidget extends Widget
                                     route('filament.member.resources.bands.view', $band) : null,
                             ];
                         })->sortBy('order'),
-                        'manager_name' => $event->manager?->name,
+                        'organizer_name' => $event->organizer?->name,
                         'genres' => $event->genres->pluck('name')->toArray(),
-                        'edit_url' => Auth::user() &&
-                            (Auth::user()->can('update productions') || $event->isManageredBy(Auth::user()))
-                            ? route('filament.staff.resources.productions.edit', $event)
-                            : null,
                         'public_url' => route('events.show', $event),
                     ];
                 });

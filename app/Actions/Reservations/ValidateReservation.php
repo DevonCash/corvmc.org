@@ -55,7 +55,9 @@ class ValidateReservation
 
             if ($allConflicts['reservations']->isNotEmpty()) {
                 $reservationConflicts = $allConflicts['reservations']->map(function ($r) {
-                    return $r->user->name.' ('.$r->reserved_at->format('M j, g:i A').' - '.$r->reserved_until->format('g:i A').')';
+                    $userName = $r->user?->name ?? $r->reservable?->name ?? 'Unknown';
+
+                    return $userName.' ('.$r->reserved_at->format('M j, g:i A').' - '.$r->reserved_until->format('g:i A').')';
                 })->join(', ');
                 $conflictMessages[] = 'existing reservation(s): '.$reservationConflicts;
             }

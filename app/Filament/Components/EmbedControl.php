@@ -28,7 +28,7 @@ class EmbedControl
                                 $set('url', $matches[1]);
                             }
                         }
-                    })
+                    }),
             ])
             ->table([
                 TableColumn::make('URL')->alignLeft(),

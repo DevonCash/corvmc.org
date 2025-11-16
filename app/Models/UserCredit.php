@@ -62,9 +62,9 @@ class UserCredit extends Model
     {
         return static::where('user_id', $user->id)
             ->where('credit_type', $creditType->value)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', now());
             })
             ->value('balance') ?? 0;
     }
@@ -132,7 +132,7 @@ class UserCredit extends Model
                 ->where('credit_type', $creditType->value)
                 ->first();
 
-            if (!$credit || $credit->balance < $amount) {
+            if (! $credit || $credit->balance < $amount) {
                 $currentBalance = $credit->balance ?? 0;
                 throw new InsufficientCreditsException(
                     "User has {$currentBalance} credits but needs {$amount}"
@@ -159,7 +159,7 @@ class UserCredit extends Model
      */
     protected static function getDefaultConfig(CreditType $creditType): array
     {
-        return match($creditType) {
+        return match ($creditType) {
             CreditType::FreeHours => [
                 'balance' => 0,
                 'max_balance' => null,

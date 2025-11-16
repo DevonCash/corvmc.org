@@ -39,7 +39,7 @@ class UpdateBandMember
             $updateData['user_id'] = $data['user_id'];
 
             // If changing from non-CMC to CMC, convert to invitation
-            if (!$member->user_id && $member->status === 'active') {
+            if (! $member->user_id && $member->status === 'active') {
                 $updateData['status'] = 'invited';
                 $updateData['invited_at'] = now();
 
@@ -85,7 +85,7 @@ class UpdateBandMember
                 TextInput::make('name')
                     ->label('Display Name')
                     ->placeholder('Member name or stage name')
-                    ->default(fn($record) => $record->name)
+                    ->default(fn ($record) => $record->name)
                     ->maxLength(255)
                     ->required()
                     ->helperText('This name will be displayed publicly'),
@@ -95,8 +95,7 @@ class UpdateBandMember
                         Select::make('user_id')
                             ->label('CMC Member Account (optional)')
                             ->getSearchResultsUsing(
-                                fn(string $search, $record): array =>
-                                User::where(function ($query) use ($search) {
+                                fn (string $search, $record): array => User::where(function ($query) use ($search) {
                                     $query->where('name', 'like', "%{$search}%")
                                         ->orWhere('email', 'like', "%{$search}%");
                                 })
@@ -105,17 +104,17 @@ class UpdateBandMember
                                     })
                                     ->limit(50)
                                     ->get()
-                                    ->mapWithKeys(fn($user) => [$user->id => "{$user->name} ({$user->email})"])
+                                    ->mapWithKeys(fn ($user) => [$user->id => "{$user->name} ({$user->email})"])
                                     ->toArray()
                             )
                             ->getOptionLabelUsing(
-                                fn($value): ?string => ($user = User::find($value)) ? "{$user->name} ({$user->email})" : null
+                                fn ($value): ?string => ($user = User::find($value)) ? "{$user->name} ({$user->email})" : null
                             )
                             ->searchable()
-                            ->default(fn($record) => $record->user_id)
+                            ->default(fn ($record) => $record->user_id)
                             ->reactive()
                             ->afterStateUpdated(function ($state, $set, $get) {
-                                if ($state && !$get('name_manually_changed')) {
+                                if ($state && ! $get('name_manually_changed')) {
                                     $user = User::find($state);
                                     if ($user) {
                                         $set('name', $user->name);
@@ -149,17 +148,17 @@ class UpdateBandMember
                                 'member' => 'Member',
                                 'admin' => 'Admin',
                             ])
-                            ->default(fn($record) => $record->role)
+                            ->default(fn ($record) => $record->role)
                             ->required()
                             ->disabled(
-                                fn($record): bool => ! User::me()?->can('update', $record) ||
+                                fn ($record): bool => ! User::me()?->can('update', $record) ||
                                     $record->user_id === $record->band->owner_id
                             ),
 
                         TextInput::make('position')
                             ->label('Position')
                             ->placeholder('e.g., Lead Guitarist, Vocalist, Drummer')
-                            ->default(fn($record) => $record->position)
+                            ->default(fn ($record) => $record->position)
                             ->maxLength(100),
                     ]),
             ])

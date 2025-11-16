@@ -15,13 +15,12 @@ class MarkOverdueAction
             ->color('warning')
             ->modalHeading('Mark Equipment as Overdue')
             ->modalDescription(
-                fn($record) =>
-                "Mark the current loan of '{$record->name}' as overdue. This will send notifications to the borrower."
+                fn ($record) => "Mark the current loan of '{$record->name}' as overdue. This will send notifications to the borrower."
             )
             ->action(function ($record) {
                 $currentLoan = $record->currentLoan;
 
-                if (!$currentLoan) {
+                if (! $currentLoan) {
                     throw new \Exception('No active loan found for this equipment.');
                 }
 
@@ -36,8 +35,7 @@ class MarkOverdueAction
             ->requiresConfirmation()
             ->modalIcon('tabler-alert-triangle')
             ->visible(
-                fn($record) =>
-                $record->is_checked_out &&
+                fn ($record) => $record->is_checked_out &&
                     $record->currentLoan &&
                     $record->currentLoan->due_at->isPast() &&
                     $record->currentLoan->status !== 'overdue'

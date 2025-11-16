@@ -47,5 +47,4 @@ class CalculateReservationCost
             'remaining_free_hours' => $remainingFreeHours,
         ];
     }
-
 }

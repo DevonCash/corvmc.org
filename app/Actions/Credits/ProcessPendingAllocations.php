@@ -12,6 +12,7 @@ class ProcessPendingAllocations
     use AsAction;
 
     public string $commandSignature = 'credits:allocate {--dry-run : Preview allocations without executing}';
+
     public string $commandDescription = 'Process all pending credit allocations';
 
     /**
@@ -30,6 +31,7 @@ class ProcessPendingAllocations
             if (method_exists($this, 'info')) {
                 $this->info('No pending allocations to process.');
             }
+
             return;
         }
 
@@ -78,7 +80,7 @@ class ProcessPendingAllocations
 
     protected function calculateNextAllocation(string $frequency, Carbon $from): Carbon
     {
-        return match($frequency) {
+        return match ($frequency) {
             'monthly' => $from->copy()->addMonth()->startOfMonth(),
             'weekly' => $from->copy()->addWeek(),
             'one_time' => $from->copy()->addYears(100), // Effectively never

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->timestamp('resolved_at')->nullable();
             $table->text('resolution_notes')->nullable();
             $table->timestamps();
-            
+
             // Prevent duplicate reports from same user on same content
             $table->unique(['reportable_type', 'reportable_id', 'reported_by_id'], 'unique_user_content_report');
         });

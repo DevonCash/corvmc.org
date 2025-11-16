@@ -26,10 +26,10 @@ class GetBillingPeriodPeakAmount
         ])->data);
 
         return $invoices
-            ->filter(fn($invoice) => in_array($invoice->status, ['paid', 'open']))
-            ->flatMap(fn($invoice) => $invoice->lines->data)
-            ->filter(fn($line) => $line->subscription === $subscription->stripe_id)
-            ->map(fn($line) => $line->amount)
+            ->filter(fn ($invoice) => in_array($invoice->status, ['paid', 'open']))
+            ->flatMap(fn ($invoice) => $invoice->lines->data)
+            ->filter(fn ($line) => $line->subscription === $subscription->stripe_id)
+            ->map(fn ($line) => $line->amount)
             ->sum() / 100;
     }
 }

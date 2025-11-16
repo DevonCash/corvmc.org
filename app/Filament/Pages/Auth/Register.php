@@ -22,7 +22,7 @@ class Register extends BaseRegister
         if ($this->invitationToken) {
             $invitation = \App\Actions\Invitations\FindInvitationByToken::run($this->invitationToken);
 
-            if ($invitation && !$invitation->isExpired() && !$invitation->isUsed()) {
+            if ($invitation && ! $invitation->isExpired() && ! $invitation->isUsed()) {
                 // Prefill email from invitation
                 $this->form->fill([
                     'email' => $invitation->email,
@@ -64,7 +64,7 @@ class Register extends BaseRegister
             ->required()
             ->maxLength(255)
             ->unique($this->getUserModel())
-            ->disabled(fn() => !empty($this->invitationToken)) // Disable if from invitation
+            ->disabled(fn () => ! empty($this->invitationToken)) // Disable if from invitation
             ->dehydrated();
     }
 

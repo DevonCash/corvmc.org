@@ -20,7 +20,7 @@ class GetMembershipTier
     {
         $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($user);
 
-        if (!$subscription) {
+        if (! $subscription) {
             return null;
         }
 
@@ -33,8 +33,9 @@ class GetMembershipTier
             Log::warning('Failed to get subscription amount for tier calculation', [
                 'user_id' => $user->id,
                 'subscription_id' => $subscription->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return 'custom';
         }
 

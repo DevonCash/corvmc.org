@@ -2,54 +2,54 @@
 
 namespace App\Actions\Reservations;
 
-use App\Models\Production;
+use App\Models\EventReservation;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
+use Lorisleiva\Actions\Concerns\AsAction;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetConflictingProductions
 {
     use AsAction;
 
     /**
-     * Get productions that conflict with a time slot (only those using practice space).
+     * Get event reservations that conflict with a time slot.
+     * Note: This checks EventReservation models which are automatically created for events.
      */
     public function handle(Carbon $startTime, Carbon $endTime): Collection
     {
-        $cacheKey = "productions.conflicts." . $startTime->format('Y-m-d');
+        $cacheKey = 'event-reservations.conflicts.'.$startTime->format('Y-m-d');
 
-        // Cache all day's productions, then filter for specific conflicts
-        $dayProductions = Cache::remember($cacheKey, 3600, function () use ($startTime) {
+        // Cache all day's event reservations, then filter for specific conflicts
+        $dayEventReservations = Cache::remember($cacheKey, 3600, function () use ($startTime) {
             $dayStart = $startTime->copy()->startOfDay();
             $dayEnd = $startTime->copy()->endOfDay();
 
-            return Production::query()
-                ->where('end_time', '>', $dayStart)
-                ->where('start_time', '<', $dayEnd)
-                ->get()
-                ->filter(function (Production $production) {
-                    return $production->usesPracticeSpace();
-                });
+            return EventReservation::query()
+                ->where('status', '!=', 'cancelled')
+                ->where('reserved_until', '>', $dayStart)
+                ->where('reserved_at', '<', $dayEnd)
+                ->with('event')
+                ->get();
         });
 
         // Filter cached results for the specific time range
-        $filteredProductions = $dayProductions->filter(function (Production $production) use ($startTime, $endTime) {
-            return $production->end_time > $startTime && $production->start_time < $endTime;
+        $filteredEventReservations = $dayEventReservations->filter(function (EventReservation $reservation) use ($startTime, $endTime) {
+            return $reservation->reserved_until > $startTime && $reservation->reserved_at < $endTime;
         });
 
-        // If invalid time period, return all potentially overlapping productions
+        // If invalid time period, return all potentially overlapping event reservations
         if ($endTime <= $startTime) {
-            return $filteredProductions;
+            return $filteredEventReservations;
         }
 
         // Use Period for precise overlap detection
         $requestedPeriod = Period::make($startTime, $endTime, Precision::MINUTE());
 
-        return $filteredProductions->filter(function (Production $production) use ($requestedPeriod) {
-            return $production->overlapsWith($requestedPeriod);
+        return $filteredEventReservations->filter(function (EventReservation $reservation) use ($requestedPeriod) {
+            return $reservation->overlapsWith($requestedPeriod);
         });
     }
 }

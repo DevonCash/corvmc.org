@@ -14,8 +14,7 @@ class ApproveCommunityEventAction
         return Action::make('approve')
             ->icon('tabler-check')
             ->color('success')
-            ->visible(fn (CommunityEvent $record): bool =>
-                $record->status === CommunityEvent::STATUS_PENDING &&
+            ->visible(fn (CommunityEvent $record): bool => $record->status === CommunityEvent::STATUS_PENDING &&
                 Auth::user()->can('approve community events'))
             ->requiresConfirmation()
             ->action(function (CommunityEvent $record, Action $action) {

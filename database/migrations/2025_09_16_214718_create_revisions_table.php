@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('revision_type')->default('update'); // update, create, delete
             $table->boolean('auto_approved')->default(false); // was this auto-approved by trust system
             $table->timestamps();
-            
+
             // Note: morphs() already creates an index for revisionable_type, revisionable_id
             $table->index(['status', 'created_at']);
             $table->index(['submitted_by_id', 'status']);

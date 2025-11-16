@@ -26,11 +26,11 @@ class GetAvailableTimeSlotsForDate
 
             // Only check for conflicts and past times, not duration limits
             // since users might want shorter or longer reservations
-            $hasConflicts = !CheckTimeSlotAvailability::run($testStart, $testEnd);
+            $hasConflicts = ! CheckTimeSlotAvailability::run($testStart, $testEnd);
             $isPast = $testStart->isPast();
 
             // Only include slots that don't have conflicts and are in the future
-            if (!$hasConflicts && !$isPast) {
+            if (! $hasConflicts && ! $isPast) {
                 $availableSlots[$timeString] = $label;
             }
         }

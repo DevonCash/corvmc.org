@@ -22,7 +22,7 @@ class PenalizeViolation
         string $reason = '',
         ?User $penalizedBy = null
     ): void {
-        $points = match($violationType) {
+        $points = match ($violationType) {
             'spam' => TrustConstants::POINTS_SPAM_VIOLATION,
             'major' => TrustConstants::POINTS_MAJOR_VIOLATION,
             'minor' => TrustConstants::POINTS_MINOR_VIOLATION,
@@ -45,7 +45,7 @@ class PenalizeViolation
             'violation_type' => $violationType,
             'points_deducted' => abs($points),
             'reason' => $reason,
-            'new_total' => GetTrustBalance::run($user, $contentType)
+            'new_total' => GetTrustBalance::run($user, $contentType),
         ]);
     }
 }

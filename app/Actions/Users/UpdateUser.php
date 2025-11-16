@@ -21,7 +21,7 @@ class UpdateUser
             $originalData = $user->toArray();
 
             // Handle password update
-            if (isset($data['password']) && !empty($data['password'])) {
+            if (isset($data['password']) && ! empty($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
             } else {
                 unset($data['password']);
@@ -40,7 +40,7 @@ class UpdateUser
             $user->update($data);
 
             // Update roles if provided
-            if (!empty($roleNames)) {
+            if (! empty($roleNames)) {
                 $user->syncRoles($roleNames);
             }
 

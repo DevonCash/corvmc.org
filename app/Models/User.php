@@ -7,6 +7,8 @@ namespace App\Models;
 use App\Concerns\HasCredits;
 use App\Concerns\HasMembershipStatus;
 use App\Data\UserSettingsData;
+use App\Notifications\EmailVerificationNotification;
+use App\Notifications\PasswordResetNotification;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,19 +16,17 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Permission\Traits\HasRoles;
-use App\Notifications\PasswordResetNotification;
-use App\Notifications\EmailVerificationNotification;
 use Illuminate\Support\Facades\Auth;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Cashier\Billable;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, HasRoles, LogsActivity, Notifiable, Impersonate, Billable, SoftDeletes, HasMembershipStatus, HasCredits;
+    use Billable, HasCredits, HasFactory, HasMembershipStatus, HasRoles, Impersonate, LogsActivity, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -122,7 +122,13 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public function productions()
     {
-        return $this->hasMany(Production::class, 'manager_id');
+        return $this->hasMany(Event::class, 'organizer_id');
+    }
+
+    // Alias for backward compatibility
+    public function events()
+    {
+        return $this->productions();
     }
 
     public function bands()
@@ -176,18 +182,19 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     /**
      * Get used free hours for the current month.
      *
-     * @param bool $fresh Deprecated, kept for compatibility
+     * @param  bool  $fresh  Deprecated, kept for compatibility
      */
     public function getUsedFreeHoursThisMonth(bool $fresh = false): float
     {
-        $action = new \App\Actions\MemberBenefits\GetRemainingFreeHours();
+        $action = new \App\Actions\MemberBenefits\GetRemainingFreeHours;
+
         return $action->getUsedFreeHoursThisMonth($this, $fresh);
     }
 
     /**
      * Get remaining free hours for sustaining members this month.
      *
-     * @param bool $fresh If true, bypass cache for transaction-safe calculation
+     * @param  bool  $fresh  If true, bypass cache for transaction-safe calculation
      */
     public function getRemainingFreeHours(bool $fresh = false): float
     {
@@ -226,9 +233,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             ->logOnly(['name', 'email', 'staff_title', 'staff_type', 'show_on_about_page'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "User account {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "User account {$eventName}");
     }
-
 
     public function sendPasswordResetNotification($token)
     {
@@ -237,12 +243,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public function sendEmailVerificationNotification()
     {
-        $this->notify(new EmailVerificationNotification());
+        $this->notify(new EmailVerificationNotification);
     }
 
-    public static function me(): ?self {
+    public static function me(): ?self
+    {
         /* @var self|null $user */
         $user = Auth::user();
+
         return $user;
     }
 }

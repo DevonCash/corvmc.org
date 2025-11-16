@@ -29,7 +29,7 @@ class CheckoutToMember
         $now = now();
         $period = Period::make($now, $dueDate, Precision::MINUTE());
 
-        if (!$this->isAvailableForPeriod($equipment, $period)) {
+        if (! $this->isAvailableForPeriod($equipment, $period)) {
             throw new \Exception('Equipment is not available for checkout.');
         }
 
@@ -59,11 +59,11 @@ class CheckoutToMember
     private function isAvailableForPeriod(Equipment $equipment, Period $period): bool
     {
         // Check basic equipment availability - must be loanable and available status
-        if (!$equipment->loanable || $equipment->status !== 'available') {
+        if (! $equipment->loanable || $equipment->status !== 'available') {
             return false;
         }
 
-        return !$this->hasConflictingReservations($equipment, $period);
+        return ! $this->hasConflictingReservations($equipment, $period);
     }
 
     /**

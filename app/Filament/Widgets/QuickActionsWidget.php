@@ -4,7 +4,6 @@ namespace App\Filament\Widgets;
 
 use App\Models\User;
 use Filament\Widgets\Widget;
-use Illuminate\Support\Facades\Auth;
 
 class QuickActionsWidget extends Widget
 {
@@ -12,7 +11,7 @@ class QuickActionsWidget extends Widget
 
     protected static bool $isLazy = false;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected string $view = 'filament.widgets.quick-actions-widget';
 
@@ -20,83 +19,73 @@ class QuickActionsWidget extends Widget
     {
         $user = User::me();
 
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
-        $actions = [];
-
-        // Always available actions
-        $actions[] = [
-            'label' => 'Practice Space',
-            'description' => 'Reserve a room for rehearsal',
-            'icon' => 'tabler-calendar-plus',
-            'color' => 'primary',
-            'url' => route('filament.member.resources.reservations.index'),
-        ];
-
-        // Band-related actions
-        if ($user->bands->count() === 0) {
-            $actions[] = [
-                'label' => 'New Band',
-                'description' => 'Start or join a musical group',
-                'icon' => 'tabler-users-plus',
-                'color' => 'success',
-                'url' => route('filament.member.resources.bands.index'),
-            ];
-        } else {
-            $actions[] = [
+        $actions = [
+            [
+                'label' => 'Practice Space',
+                'description' => 'Reserve a room for rehearsal',
+                'icon' => 'tabler-calendar-plus',
+                'color' => 'primary',
+                'url' => route('filament.member.resources.reservations.index'),
+            ],
+            [
                 'label' => 'My Bands',
-                'description' => 'Edit band profiles and members',
+                'description' => $user->bands->count() === 0 ? 'Start or join a musical group' : 'Edit band profiles and members',
                 'icon' => 'tabler-users',
                 'color' => 'info',
                 'url' => route('filament.member.resources.bands.index'),
-            ];
-        }
-
-
-        // Community actions
-        $actions[] = [
-            'label' => 'Members',
-            'description' => 'Connect with other musicians',
-            'icon' => 'tabler-users-group',
-            'color' => 'gray',
-            'url' => route('filament.member.resources.directory.index'),
-        ];
-
-        // Membership action for non-sustaining members
-        if (!$user->isSustainingMember()) {
-            $actions[] = [
-                'label' => 'Sustaining Member',
-                'description' => 'Support the collective and get benefits',
-                'icon' => 'tabler-heart',
+            ],
+            [
+                'label' => 'Members',
+                'description' => 'Connect with other musicians',
+                'icon' => 'tabler-users-group',
+                'color' => 'gray',
+                'url' => route('filament.member.resources.directory.index'),
+            ],
+            [
+                'label' => 'My Membership',
+                'description' => $user->isSustainingMember() ? 'Manage your membership' : 'Become a sustaining member',
+                'icon' => 'tabler-star',
                 'color' => 'warning',
                 'url' => \App\Filament\Pages\MyMembership::getUrl(),
-            ];
-        }
+            ],
+        ];
 
-        return collect($actions)->take(6)->toArray();
+        return $actions;
     }
 
-    public function getNextAvailableSlot(): ?array
+    public function getUserStats(): array
     {
-        // Get next available practice room slot (simplified)
-        $nextSlot = \App\Models\Reservation::where('reserved_at', '>', now())
-            ->orderBy('reserved_at')
-            ->first();
+        $user = User::me();
 
-        if (!$nextSlot) {
-            // Find next business hour if no existing reservations
-            $tomorrow = now()->addDay()->setHour(10)->setMinute(0)->setSecond(0);
-            return [
-                'time' => $tomorrow,
-                'available' => true,
-            ];
+        if (! $user) {
+            return [];
         }
 
-        return [
-            'time' => $nextSlot->reserved_at->addHours(2), // Assume 2-hour slots
-            'available' => true,
-        ];
+        return \Illuminate\Support\Facades\Cache::remember("user_stats.{$user->id}", 300, function () use ($user) {
+            $stats = [
+                'upcoming_reservations' => $user->rehearsals
+                    ->where('reserved_at', '>', now())
+                    ->count(),
+                'band_memberships' => $user->bands->count(),
+                'owned_bands' => $user->ownedBands->count(),
+                'is_sustaining_member' => $user->isSustainingMember(),
+            ];
+
+            if ($user->isSustainingMember()) {
+                $stats['remaining_free_hours'] = $user->getRemainingFreeHours();
+                $stats['used_free_hours'] = $user->getUsedFreeHoursThisMonth();
+            }
+
+            // Profile completion check
+            if ($user->profile) {
+                $stats['profile_complete'] = $user->profile->isComplete();
+            }
+
+            return $stats;
+        });
     }
 }

@@ -33,7 +33,7 @@ class ResetTrustPoints
                 'content_type' => $contentType,
                 'old_points' => $currentBalance,
                 'reason' => $reason,
-                'admin_id' => $admin?->id
+                'admin_id' => $admin?->id,
             ]);
         }
     }

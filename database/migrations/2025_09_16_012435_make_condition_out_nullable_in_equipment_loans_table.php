@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('equipment_loans', function (Blueprint $table) {
             $table->dropColumn('condition_out');
         });
-        
+
         Schema::table('equipment_loans', function (Blueprint $table) {
             $table->enum('condition_out', ['excellent', 'good', 'fair', 'poor', 'needs_repair'])->nullable()->after('borrower_id');
         });
@@ -28,7 +28,7 @@ return new class extends Migration
         Schema::table('equipment_loans', function (Blueprint $table) {
             $table->dropColumn('condition_out');
         });
-        
+
         Schema::table('equipment_loans', function (Blueprint $table) {
             $table->enum('condition_out', ['excellent', 'good', 'fair', 'poor', 'needs_repair'])->after('borrower_id');
         });

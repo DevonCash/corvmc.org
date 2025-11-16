@@ -24,7 +24,7 @@ class MigratePermissions extends Command
         }
 
         // Clear cached permissions
-        if (!$this->option('dry-run')) {
+        if (! $this->option('dry-run')) {
             app()[PermissionRegistrar::class]->forgetCachedPermissions();
             $this->info('✓ Cleared permission cache');
         } else {
@@ -41,9 +41,9 @@ class MigratePermissions extends Command
 
         $this->line('');
         $this->info('📊 Current State Analysis');
-        $this->line('Current permissions: ' . count($currentPermissions));
-        $this->line('New permissions: ' . count($newPermissions));
-        $this->line('Current roles: ' . $currentRoles->count());
+        $this->line('Current permissions: '.count($currentPermissions));
+        $this->line('New permissions: '.count($newPermissions));
+        $this->line('Current roles: '.$currentRoles->count());
 
         // Analyze changes
         $permissionsToAdd = array_diff($newPermissions, $currentPermissions);
@@ -53,16 +53,16 @@ class MigratePermissions extends Command
         $this->info('🔄 Changes to Apply');
 
         if (count($permissionsToAdd) > 0) {
-            $this->line('Permissions to add (' . count($permissionsToAdd) . '):');
+            $this->line('Permissions to add ('.count($permissionsToAdd).'):');
             foreach ($permissionsToAdd as $permission) {
-                $this->line('  + ' . $permission);
+                $this->line('  + '.$permission);
             }
         }
 
         if (count($permissionsToRemove) > 0) {
-            $this->warn('Permissions to remove (' . count($permissionsToRemove) . '):');
+            $this->warn('Permissions to remove ('.count($permissionsToRemove).'):');
             foreach ($permissionsToRemove as $permission) {
-                $this->line('  - ' . $permission);
+                $this->line('  - '.$permission);
             }
         }
 
@@ -76,20 +76,20 @@ class MigratePermissions extends Command
         foreach ($currentRoles as $role) {
             $currentRolePermissions = $role->permissions->pluck('name')->toArray();
             $newRolePerms = $newRolePermissions[$role->name] ?? [];
-            
+
             $toAdd = array_diff($newRolePerms, $currentRolePermissions);
             $toRemove = array_diff($currentRolePermissions, $newRolePerms);
-            
+
             if (count($toAdd) > 0 || count($toRemove) > 0) {
-                $this->line('Role: ' . $role->name);
+                $this->line('Role: '.$role->name);
                 if (count($toAdd) > 0) {
                     foreach ($toAdd as $perm) {
-                        $this->line('  + ' . $perm);
+                        $this->line('  + '.$perm);
                     }
                 }
                 if (count($toRemove) > 0) {
                     foreach ($toRemove as $perm) {
-                        $this->line('  - ' . $perm);
+                        $this->line('  - '.$perm);
                     }
                 }
             }
@@ -98,14 +98,16 @@ class MigratePermissions extends Command
         if ($this->option('dry-run')) {
             $this->line('');
             $this->info('🔍 Dry run complete - no changes made');
+
             return;
         }
 
         // Confirmation
-        if (!$this->option('force')) {
+        if (! $this->option('force')) {
             $this->line('');
-            if (!$this->confirm('Do you want to apply these changes?')) {
+            if (! $this->confirm('Do you want to apply these changes?')) {
                 $this->info('Migration cancelled');
+
                 return;
             }
         }
@@ -117,7 +119,7 @@ class MigratePermissions extends Command
         // Add new permissions
         foreach ($permissionsToAdd as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
-            $this->line('✓ Added permission: ' . $permission);
+            $this->line('✓ Added permission: '.$permission);
         }
 
         // Remove old permissions
@@ -125,7 +127,7 @@ class MigratePermissions extends Command
             $perm = Permission::where('name', $permission)->first();
             if ($perm) {
                 $perm->delete();
-                $this->line('✓ Removed permission: ' . $permission);
+                $this->line('✓ Removed permission: '.$permission);
             }
         }
 
@@ -133,7 +135,7 @@ class MigratePermissions extends Command
         foreach ($newRolePermissions as $roleName => $permissions) {
             $role = Role::firstOrCreate(['name' => $roleName]);
             $role->syncPermissions($permissions);
-            $this->line('✓ Updated role permissions: ' . $roleName);
+            $this->line('✓ Updated role permissions: '.$roleName);
         }
 
         // Clear cache again

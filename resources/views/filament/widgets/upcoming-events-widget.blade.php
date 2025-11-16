@@ -1,5 +1,5 @@
 <x-filament-widgets::widget class="fi-upcoming-events-widget">
-    <x-filament::section>
+    <x-filament::section compact>
         <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-900/10">
@@ -47,7 +47,7 @@
                                 <div class="absolute inset-0 flex flex-col items-center justify-center p-4">
                                     <x-tabler-calendar-event class="w-12 h-12 text-primary-600 dark:text-primary-400 mb-3" />
                                     <h4 class="text-sm font-bold text-center text-primary-900 dark:text-primary-100 leading-tight">
-                                        {{ $event['title'] }}
+                                        {{ $event['title'] ?? 'Untitled Event' }}
                                     </h4>
                                 </div>
                             @endif
@@ -87,7 +87,7 @@
                         {{-- Event Info --}}
                         <div class="p-3">
                             <h4 class="font-semibold text-sm text-gray-900 dark:text-white line-clamp-1 leading-tight mb-2 truncate text-ellipsis">
-                                {{ $event['title'] }}
+                                {{ $event['title'] ?? 'Untitled Event' }}
                             </h4>
 
                             {{-- Date --}}
@@ -124,8 +124,8 @@
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
                     No events are currently scheduled in the community
                 </p>
-                @if(auth()->user()?->can('create productions'))
-                    <a href="{{ route('filament.staff.resources.productions.create') }}"
+                @if(auth()->user()?->can('create events'))
+                    <a href="{{ route('filament.staff.resources.events.create') }}"
                        class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">
                         <x-tabler-plus class="w-4 h-4" />
                         Create Event

@@ -7,8 +7,9 @@ use Spatie\LaravelSettings\Settings;
 class FooterSettings extends Settings
 {
     public array $links;
+
     public array $social_links;
-    
+
     public static function group(): string
     {
         return 'footer';

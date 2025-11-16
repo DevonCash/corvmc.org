@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\RecurringReservations\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -28,7 +28,7 @@ class RecurringReservationsTable
 
                 TextColumn::make('start_time')
                     ->label('Time')
-                    ->formatStateUsing(fn ($record) => $record->start_time->format('g:i A') . ' - ' . $record->end_time->format('g:i A')),
+                    ->formatStateUsing(fn ($record) => $record->start_time->format('g:i A').' - '.$record->end_time->format('g:i A')),
 
                 TextColumn::make('series_start_date')
                     ->label('Start Date')
@@ -74,7 +74,7 @@ class RecurringReservationsTable
                     ->label('View Instances')
                     ->icon('heroicon-o-eye')
                     ->url(fn ($record) => route('filament.member.resources.reservations.index', [
-                        'tableFilters[recurring_reservation_id][value]' => $record->id
+                        'tableFilters[recurring_series_id][value]' => $record->id,
                     ])),
 
                 EditAction::make(),

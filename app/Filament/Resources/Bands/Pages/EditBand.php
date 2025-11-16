@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Bands\Pages;
 use App\Actions\Bands\DeleteBand as DeleteBandAction;
 use App\Actions\Bands\UpdateBand as UpdateBandAction;
 use App\Filament\Resources\Bands\BandResource;
-use App\Models\Band;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;

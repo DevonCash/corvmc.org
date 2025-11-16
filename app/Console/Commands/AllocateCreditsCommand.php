@@ -40,6 +40,7 @@ class AllocateCreditsCommand extends Command
             $users = User::where('id', $userId)->get();
             if ($users->isEmpty()) {
                 $this->error("User ID {$userId} not found");
+
                 return 1;
             }
         } else {

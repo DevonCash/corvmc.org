@@ -20,7 +20,7 @@ class AwardSuccessfulContent
         $contentType = $contentType ?? get_class($content);
 
         // Only award if content should be evaluated
-        if (!$forceAward && !$this->shouldEvaluateContent($content)) {
+        if (! $forceAward && ! $this->shouldEvaluateContent($content)) {
             return;
         }
 
@@ -30,14 +30,14 @@ class AwardSuccessfulContent
                 ->where('status', 'upheld')
                 ->exists();
 
-            if (!$hasUpheldReports) {
+            if (! $hasUpheldReports) {
                 AwardTrustPoints::run(
                     $user,
                     TrustConstants::POINTS_SUCCESSFUL_CONTENT,
                     $contentType,
                     'successful_content',
                     $content->id,
-                    'Successful content: ' . ($content->title ?? $content->name ?? $content->id)
+                    'Successful content: '.($content->title ?? $content->name ?? $content->id)
                 );
 
                 Log::info('Trust points awarded for successful content', [
@@ -45,7 +45,7 @@ class AwardSuccessfulContent
                     'content_type' => $contentType,
                     'content_id' => $content->id,
                     'points_awarded' => TrustConstants::POINTS_SUCCESSFUL_CONTENT,
-                    'new_total' => GetTrustBalance::run($user, $contentType)
+                    'new_total' => GetTrustBalance::run($user, $contentType),
                 ]);
             }
         }
@@ -57,7 +57,7 @@ class AwardSuccessfulContent
     protected function shouldEvaluateContent(Model $content): bool
     {
         if ($content instanceof \App\Models\CommunityEvent) {
-            return $content->isPublished() && !$content->isUpcoming();
+            return $content->isPublished() && ! $content->isUpcoming();
         }
 
         if ($content instanceof \App\Models\Production) {

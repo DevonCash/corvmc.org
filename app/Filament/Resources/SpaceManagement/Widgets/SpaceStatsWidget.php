@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\SpaceManagement\Widgets;
 
-use App\Models\Production;
+use App\Enums\PaymentStatus;
+use App\Enums\ReservationStatus;
+use App\Models\Event;
 use App\Models\Reservation;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -16,28 +18,28 @@ class SpaceStatsWidget extends BaseWidget
         // This week's reservations
         $weekReservations = Reservation::whereBetween('reserved_at', [
             now()->startOfWeek(),
-            now()->endOfWeek()
+            now()->endOfWeek(),
         ])
-        ->where('status', '!=', 'cancelled')
-        ->get();
+            ->where('status', '!=', ReservationStatus::Cancelled->value)
+            ->get();
 
         $weekHours = $weekReservations->sum('hours_used');
         $weekRevenue = $weekReservations
-            ->filter(fn($r) => $r instanceof \App\Models\RehearsalReservation && $r->payment_status === 'paid')
-            ->sum(fn($r) => $r->cost->getMinorAmount()->toInt()) / 100;
+            ->filter(fn ($r) => $r instanceof \App\Models\RehearsalReservation && $r->payment_status === PaymentStatus::Paid)
+            ->sum(fn ($r) => $r->cost->getMinorAmount()->toInt()) / 100;
         $weekReservationCount = $weekReservations->count();
 
-        // This week's productions using space
-        $weekProductions = Production::whereBetween('start_time', [
+        // This week's events using space
+        $weekEvents = Event::whereBetween('start_time', [
             now()->startOfWeek(),
-            now()->endOfWeek()
-        ])->get()->filter(fn($p) => $p->usesPracticeSpace());
+            now()->endOfWeek(),
+        ])->get()->filter(fn ($e) => $e->usesPracticeSpace());
 
-        $weekProductionHours = $weekProductions->sum(function ($p) {
-            return $p->start_time->diffInHours($p->end_time, true);
+        $weekEventHours = $weekEvents->sum(function ($e) {
+            return $e->start_time->diffInHours($e->end_time, true);
         });
 
-        $totalWeekHours = $weekHours + $weekProductionHours;
+        $totalWeekHours = $weekHours + $weekEventHours;
 
         return [
             Stat::make('Needs Attention', $needsAttention)
@@ -45,8 +47,8 @@ class SpaceStatsWidget extends BaseWidget
                 ->color($needsAttention > 0 ? 'warning' : 'success')
                 ->icon('tabler-alert-circle'),
 
-            Stat::make('This Week', number_format($totalWeekHours, 1) . ' hours')
-                ->description(sprintf('$%s revenue • %d reservations • %d events', number_format($weekRevenue, 2), $weekReservationCount, $weekProductions->count()))
+            Stat::make('This Week', number_format($totalWeekHours, 1).' hours')
+                ->description(sprintf('$%s revenue • %d reservations • %d events', number_format($weekRevenue, 2), $weekReservationCount, $weekEvents->count()))
                 ->color('primary')
                 ->icon('tabler-calendar-week'),
 
@@ -66,27 +68,27 @@ class SpaceStatsWidget extends BaseWidget
         // Reservation hours
         $bookedHours = Reservation::whereBetween('reserved_at', [
             now()->startOfWeek(),
-            now()->endOfWeek()
+            now()->endOfWeek(),
         ])
-        ->where('status', '!=', 'cancelled')
-        ->sum('hours_used');
+            ->where('status', '!=', ReservationStatus::Cancelled->value)
+            ->sum('hours_used');
 
-        // Production hours using space
-        $productions = Production::whereBetween('start_time', [
+        // Event hours using space
+        $events = Event::whereBetween('start_time', [
             now()->startOfWeek(),
-            now()->endOfWeek()
-        ])->get()->filter(fn($p) => $p->usesPracticeSpace());
+            now()->endOfWeek(),
+        ])->get()->filter(fn ($e) => $e->usesPracticeSpace());
 
-        $productionHours = $productions->sum(function ($p) {
-            return $p->start_time->diffInHours($p->end_time, true);
+        $eventHours = $events->sum(function ($e) {
+            return $e->start_time->diffInHours($e->end_time, true);
         });
 
-        $totalBookedHours = $bookedHours + $productionHours;
+        $totalBookedHours = $bookedHours + $eventHours;
 
         $rate = $totalAvailableHours > 0
             ? ($totalBookedHours / $totalAvailableHours) * 100
             : 0;
 
-        return number_format($rate, 1) . '%';
+        return number_format($rate, 1).'%';
     }
 }

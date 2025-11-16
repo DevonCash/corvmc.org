@@ -20,7 +20,7 @@ class CancelSubscription
     {
         $subscription = $user->subscription('default');
 
-        if (!$subscription || !$subscription->active()) {
+        if (! $subscription || ! $subscription->active()) {
             throw new SubscriptionNotFoundException('No active membership subscription found');
         }
 

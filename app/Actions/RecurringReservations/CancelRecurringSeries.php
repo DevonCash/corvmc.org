@@ -2,7 +2,9 @@
 
 namespace App\Actions\RecurringReservations;
 
-use App\Models\RecurringReservation;
+use App\Enums\ReservationStatus;
+use App\Models\Event;
+use App\Models\RecurringSeries;
 use App\Models\Reservation;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -14,23 +16,38 @@ class CancelRecurringSeries
     /**
      * Cancel entire recurring series and all future instances.
      */
-    public function handle(RecurringReservation $series, ?string $reason = null): void
+    public function handle(RecurringSeries $series, ?string $reason = null): void
     {
         DB::transaction(function () use ($series, $reason) {
             // Cancel series
             $series->update(['status' => 'cancelled']);
 
-            // Cancel all future instances
-            $futureReservations = Reservation::where('recurring_reservation_id', $series->id)
-                ->where('reserved_at', '>', now())
-                ->whereIn('status', ['pending', 'confirmed'])
-                ->get();
+            $modelClass = $series->recurable_type;
 
-            foreach ($futureReservations as $reservation) {
-                $reservation->update([
-                    'status' => 'cancelled',
-                    'cancellation_reason' => $reason ?? 'Recurring series cancelled',
-                ]);
+            // Cancel all future instances
+            if ($modelClass === Reservation::class) {
+                $futureInstances = Reservation::where('recurring_series_id', $series->id)
+                    ->where('reserved_at', '>', now())
+                    ->whereIn('status', [ReservationStatus::Pending->value, ReservationStatus::Confirmed->value])
+                    ->get();
+
+                foreach ($futureInstances as $reservation) {
+                    $reservation->update([
+                        'status' => ReservationStatus::Cancelled,
+                        'cancellation_reason' => $reason ?? 'Recurring series cancelled',
+                    ]);
+                }
+            } else {
+                $futureInstances = Event::where('recurring_series_id', $series->id)
+                    ->where('start_time', '>', now())
+                    ->where('status', 'approved')
+                    ->get();
+
+                foreach ($futureInstances as $event) {
+                    $event->update([
+                        'status' => 'cancelled',
+                    ]);
+                }
             }
         });
     }

@@ -15,10 +15,10 @@ return new class extends Migration
         Schema::table('reservations', function (Blueprint $table) {
             // For conflict detection queries (getConflictingReservations)
             $table->index(['reserved_at', 'reserved_until', 'status'], 'idx_reservations_conflict_detection');
-            
+
             // For user statistics and free hours calculations
             $table->index(['user_id', 'reserved_at'], 'idx_reservations_user_date');
-            
+
             // For monthly free hours queries
             $table->index(['user_id', 'created_at'], 'idx_reservations_user_created');
         });
@@ -29,7 +29,7 @@ return new class extends Migration
         Schema::table('productions', function (Blueprint $table) {
             // For conflict detection and upcoming events
             $table->index(['start_time', 'end_time'], 'idx_productions_time_range');
-            
+
             // For published upcoming events (UpcomingEventsWidget)
             $table->index(['published_at', 'start_time'], 'idx_productions_published_upcoming');
         });
@@ -38,7 +38,7 @@ return new class extends Migration
         if (Schema::hasTable('model_has_roles')) {
             Schema::table('model_has_roles', function (Blueprint $table) {
                 // For role checking (isSustainingMember, permission checks)
-                if (!Schema::hasIndex('model_has_roles', 'idx_model_has_roles_lookup')) {
+                if (! Schema::hasIndex('model_has_roles', 'idx_model_has_roles_lookup')) {
                     $table->index(['model_id', 'model_type'], 'idx_model_has_roles_lookup');
                 }
             });

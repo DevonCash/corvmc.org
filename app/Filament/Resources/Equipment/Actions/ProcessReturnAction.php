@@ -36,14 +36,13 @@ class ProcessReturnAction
                     ->placeholder('Describe any damage or condition changes')
                     ->rows(3)
                     ->visible(
-                        fn(callable $get) =>
-                        in_array($get('condition_in'), ['fair', 'poor', 'needs_repair'])
+                        fn (callable $get) => in_array($get('condition_in'), ['fair', 'poor', 'needs_repair'])
                     ),
             ])
             ->action(function (array $data, $record) {
                 $currentLoan = $record->currentLoan;
 
-                if (!$currentLoan) {
+                if (! $currentLoan) {
                     throw new \Exception('No active loan found for this equipment.');
                 }
 
@@ -66,6 +65,6 @@ class ProcessReturnAction
             })
             ->requiresConfirmation()
             ->modalIcon('tabler-receipt-refund')
-            ->visible(fn($record) => $record->is_checked_out && $record->currentLoan);
+            ->visible(fn ($record) => $record->is_checked_out && $record->currentLoan);
     }
 }

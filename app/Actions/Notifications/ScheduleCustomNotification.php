@@ -16,13 +16,13 @@ class ScheduleCustomNotification
     /**
      * Schedule a custom notification for a specific user.
      */
-    public function handle(User $user, $notification, Carbon $sendAt = null): bool
+    public function handle(User $user, $notification, ?Carbon $sendAt = null): bool
     {
-        if (!$notification instanceof Notification) {
+        if (! $notification instanceof Notification) {
             throw NotificationSchedulingException::invalidNotificationClass(get_class($notification));
         }
 
-        if (!$user->exists) {
+        if (! $user->exists) {
             throw NotificationSchedulingException::userNotFound($user->id ?? 0);
         }
 
@@ -48,6 +48,7 @@ class ScheduleCustomNotification
                     'user_id' => $user->id,
                     'notification_class' => get_class($notification),
                 ]);
+
                 return true;
             }
         } catch (\Exception $e) {

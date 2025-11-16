@@ -22,7 +22,7 @@ class MembersGrid extends SearchableGrid
     protected function getBaseQuery()
     {
         $query = MemberProfile::with(['user', 'tags'])->where('visibility', 'public');
-        
+
         return match ($this->scope) {
             'teachers' => $query->withFlag('music_teacher'),
             default => $query,
@@ -95,45 +95,45 @@ class MembersGrid extends SearchableGrid
         $query = $this->getBaseQuery();
 
         // Apply comprehensive search if we have search term
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $query->where(function ($q) {
                 $searchTerm = $this->search;
-                
+
                 // Search in user name
                 $q->whereHas('user', function ($userQuery) use ($searchTerm) {
-                      $userQuery->where('name', 'ilike', '%' . $searchTerm . '%');
-                  })
+                    $userQuery->where('name', 'ilike', '%'.$searchTerm.'%');
+                })
                   // Search in hometown
-                  ->orWhere('hometown', 'ilike', '%' . $searchTerm . '%')
+                    ->orWhere('hometown', 'ilike', '%'.$searchTerm.'%')
                   // Search in tags using spatie package methods - find skills containing search term
-                  ->orWhere(function ($skillQuery) use ($searchTerm) {
-                      // Get all skill tags that contain the search term
-                      $skillTags = \Spatie\Tags\Tag::getWithType('skill')
-                          ->filter(function ($tag) use ($searchTerm) {
-                              return stripos($tag->name, $searchTerm) !== false;
-                          });
-                      
-                      if ($skillTags->isNotEmpty()) {
-                          $skillQuery->withAnyTags($skillTags->pluck('name')->toArray(), 'skill');
-                      }
-                  })
+                    ->orWhere(function ($skillQuery) use ($searchTerm) {
+                        // Get all skill tags that contain the search term
+                        $skillTags = \Spatie\Tags\Tag::getWithType('skill')
+                            ->filter(function ($tag) use ($searchTerm) {
+                                return stripos($tag->name, $searchTerm) !== false;
+                            });
+
+                        if ($skillTags->isNotEmpty()) {
+                            $skillQuery->withAnyTags($skillTags->pluck('name')->toArray(), 'skill');
+                        }
+                    })
                   // Search in genre tags
-                  ->orWhere(function ($genreQuery) use ($searchTerm) {
-                      // Get all genre tags that contain the search term
-                      $genreTags = \Spatie\Tags\Tag::getWithType('genre')
-                          ->filter(function ($tag) use ($searchTerm) {
-                              return stripos($tag->name, $searchTerm) !== false;
-                          });
-                      
-                      if ($genreTags->isNotEmpty()) {
-                          $genreQuery->withAnyTags($genreTags->pluck('name')->toArray(), 'genre');
-                      }
-                  });
+                    ->orWhere(function ($genreQuery) use ($searchTerm) {
+                        // Get all genre tags that contain the search term
+                        $genreTags = \Spatie\Tags\Tag::getWithType('genre')
+                            ->filter(function ($tag) use ($searchTerm) {
+                                return stripos($tag->name, $searchTerm) !== false;
+                            });
+
+                        if ($genreTags->isNotEmpty()) {
+                            $genreQuery->withAnyTags($genreTags->pluck('name')->toArray(), 'genre');
+                        }
+                    });
             });
         }
 
         // Apply skills filter using spatie methods
-        if (!empty($this->filters['skill'])) {
+        if (! empty($this->filters['skill'])) {
             $query->withAnyTags([$this->filters['skill']], 'skill');
         }
 

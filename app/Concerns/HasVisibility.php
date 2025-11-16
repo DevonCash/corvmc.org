@@ -25,7 +25,7 @@ trait HasVisibility
      */
     public function isVisible(?User $user = null): bool
     {
-        if (!$user) {
+        if (! $user) {
             // Only public content is visible to guests
             return $this->visibility === 'public';
         }
@@ -74,6 +74,7 @@ trait HasVisibility
     protected function getViewPrivatePermission(): string
     {
         $modelName = strtolower(class_basename($this));
+
         return "view private {$modelName} profiles";
     }
 
@@ -82,11 +83,12 @@ trait HasVisibility
      */
     public function setVisibility(string $visibility): self
     {
-        if (!in_array($visibility, static::$visibilityOptions)) {
+        if (! in_array($visibility, static::$visibilityOptions)) {
             throw new \InvalidArgumentException("Invalid visibility option: {$visibility}");
         }
 
         $this->update(['visibility' => $visibility]);
+
         return $this;
     }
 
@@ -159,7 +161,7 @@ trait HasVisibility
      */
     public function scopeVisibleTo(Builder $query, ?User $user = null): Builder
     {
-        if (!$user) {
+        if (! $user) {
             return $query->public();
         }
 
@@ -171,7 +173,7 @@ trait HasVisibility
         // Show public and members content, plus user's own content
         return $query->where(function ($q) use ($user) {
             $q->whereIn('visibility', ['public', 'members']);
-            
+
             // Add user's own content
             if (isset($this->user_id)) {
                 $q->orWhere('user_id', $user->id);

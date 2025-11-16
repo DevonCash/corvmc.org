@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('equipment', function (Blueprint $table) {
             $table->boolean('loanable')->default(true)->after('status');
         });
-        
+
         // Set existing equipment as loanable based on current logic
         // CMC-owned equipment that's available should be loanable
         DB::statement("

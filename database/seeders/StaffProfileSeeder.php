@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\StaffProfile;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class StaffProfileSeeder extends Seeder
@@ -142,11 +141,10 @@ class StaffProfileSeeder extends Seeder
             ]
         );
 
-
         // Generate additional random StaffProfile records using factory
         StaffProfile::factory()->board()->count(2)->create();
         StaffProfile::factory()->staff()->count(3)->create();
-        
+
         // Create a board member without a specific title
         $patriciaUser = User::firstOrCreate(
             ['email' => 'patricia@example.com'],
@@ -170,7 +168,7 @@ class StaffProfileSeeder extends Seeder
                 'social_links' => null,
             ]
         );
-        
+
         // Create one inactive profile to test filtering
         StaffProfile::factory()->inactive()->create([
             'name' => 'Former Staff Member',

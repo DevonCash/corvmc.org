@@ -27,7 +27,7 @@ class SubmitReport
             'reportable_type' => get_class($reportable),
             'reportable_id' => $reportable->id,
             'reported_by_id' => $reporter->id,
-            'status' => 'pending'
+            'status' => 'pending',
         ])->first();
 
         if ($existingReport) {
@@ -36,7 +36,7 @@ class SubmitReport
 
         // Validate reason for content type
         $validReasons = Report::getReasonsForType(get_class($reportable));
-        if (!in_array($reason, $validReasons)) {
+        if (! in_array($reason, $validReasons)) {
             throw new \Exception('Invalid reason for this content type');
         }
 
@@ -79,8 +79,8 @@ class SubmitReport
      */
     private function hideContent(Model $reportable): void
     {
-        match(get_class($reportable)) {
-            'App\Models\Production' => logger()->info("Production {$reportable->id} reached report threshold"),
+        match (get_class($reportable)) {
+            'App\Models\Event' => logger()->info("Production {$reportable->id} reached report threshold"),
             'App\Models\MemberProfile' => logger()->info("Member profile {$reportable->id} reached report threshold"),
             'App\Models\Band' => logger()->info("Band {$reportable->id} reached report threshold"),
             default => null,

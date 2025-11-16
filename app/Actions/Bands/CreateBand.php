@@ -8,7 +8,6 @@ use App\Models\Band;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\UnauthorizedException;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -24,24 +23,24 @@ class CreateBand
     public function handle(array $data): Band
     {
         return DB::transaction(function () use ($data) {
-            if (!User::me()?->can('create', Band::class)) {
+            if (! User::me()?->can('create', Band::class)) {
                 throw new UnauthorizedException('User does not have permission to create bands.');
             }
 
             // Set owner to current user if not specified
-            if (!isset($data['owner_id'])) {
+            if (! isset($data['owner_id'])) {
                 $data['owner_id'] = User::me()->id;
             }
 
             $band = Band::create($data);
 
             // Attach tags if provided
-            if (!empty($data['tags'])) {
+            if (! empty($data['tags'])) {
                 $band->attachTags($data['tags']);
             }
 
             // Add the creator as a member if they're not already
-            if (!$band->memberships()->active()->where('user_id', User::me()->id)->exists()) {
+            if (! $band->memberships()->active()->where('user_id', User::me()->id)->exists()) {
                 AddBandMember::run($band, User::me(), ['role' => 'owner']);
             }
 

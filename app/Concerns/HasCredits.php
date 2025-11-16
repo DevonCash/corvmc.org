@@ -35,13 +35,12 @@ trait HasCredits
     /**
      * Add credits to this user's account.
      *
-     * @param int $amount Amount of credits to add (in blocks)
-     * @param CreditType $creditType Type of credit
-     * @param string $source What caused this credit addition
-     * @param int|null $sourceId ID of the source entity
-     * @param string|null $description Human-readable description
-     * @param Carbon|null $expiresAt Optional expiration date
-     * @return CreditTransaction
+     * @param  int  $amount  Amount of credits to add (in blocks)
+     * @param  CreditType  $creditType  Type of credit
+     * @param  string  $source  What caused this credit addition
+     * @param  int|null  $sourceId  ID of the source entity
+     * @param  string|null  $description  Human-readable description
+     * @param  Carbon|null  $expiresAt  Optional expiration date
      */
     public function addCredit(
         int $amount,
@@ -57,11 +56,11 @@ trait HasCredits
     /**
      * Deduct credits from this user's account.
      *
-     * @param int $amount Amount of credits to deduct (in blocks)
-     * @param CreditType $creditType Type of credit
-     * @param string $source What caused this credit deduction
-     * @param int|null $sourceId ID of the source entity
-     * @return CreditTransaction
+     * @param  int  $amount  Amount of credits to deduct (in blocks)
+     * @param  CreditType  $creditType  Type of credit
+     * @param  string  $source  What caused this credit deduction
+     * @param  int|null  $sourceId  ID of the source entity
+     *
      * @throws \App\Exceptions\InsufficientCreditsException
      */
     public function deductCredit(
@@ -76,7 +75,7 @@ trait HasCredits
     /**
      * Get credit balance for this user.
      *
-     * @param CreditType $creditType Type of credit
+     * @param  CreditType  $creditType  Type of credit
      * @return int Balance in blocks
      */
     public function getCreditBalance(CreditType $creditType = CreditType::FreeHours): int

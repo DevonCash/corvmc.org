@@ -16,10 +16,10 @@ use Filament\Schemas\Components\Grid;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-class DevelopmentBanner extends Component implements HasForms, HasActions
+class DevelopmentBanner extends Component implements HasActions, HasForms
 {
-    use InteractsWithForms;
     use InteractsWithActions;
+    use InteractsWithForms;
 
     public string $pageUrl = '';
 

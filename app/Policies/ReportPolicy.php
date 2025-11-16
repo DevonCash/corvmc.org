@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Report;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ReportPolicy
 {
@@ -16,7 +15,8 @@ class ReportPolicy
         // Allow admins to view reports for moderation (or all users for testing)
         if (Report::where('reported_by_id', $user->id)->exists()) {
             return true;
-        }; // Allow all users for now
+        } // Allow all users for now
+
         return null;
     }
 

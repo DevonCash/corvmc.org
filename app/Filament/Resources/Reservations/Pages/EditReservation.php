@@ -41,8 +41,8 @@ class EditReservation extends EditRecord
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
         // Combine date and time fields in the app's timezone
-        $startTime = Carbon::parse($data['reservation_date'] . ' ' . $data['start_time'], config('app.timezone'));
-        $endTime = Carbon::parse($data['reservation_date'] . ' ' . $data['end_time'], config('app.timezone'));
+        $startTime = Carbon::parse($data['reservation_date'].' '.$data['start_time'], config('app.timezone'));
+        $endTime = Carbon::parse($data['reservation_date'].' '.$data['end_time'], config('app.timezone'));
 
         $options = [
             'notes' => $data['notes'] ?? null,

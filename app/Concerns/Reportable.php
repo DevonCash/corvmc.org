@@ -11,51 +11,52 @@ trait Reportable
     {
         return $this->morphMany(Report::class, 'reportable');
     }
-    
+
     public function pendingReports()
     {
         return $this->reports()->where('status', 'pending');
     }
-    
+
     public function upheldReports()
     {
         return $this->reports()->where('status', 'upheld');
     }
-    
+
     public function getReportSummary(): array
     {
         return [
             'total' => $this->reports()->count(),
-            'pending' => $this->pendingReports()->count(), 
+            'pending' => $this->pendingReports()->count(),
             'upheld' => $this->upheldReports()->count(),
             'dismissed' => $this->reports()->where('status', 'dismissed')->count(),
         ];
     }
-    
+
     public function hasReachedReportThreshold(): bool
     {
         $pendingCount = $this->pendingReports()->count();
+
         return $pendingCount >= $this->getReportThreshold();
     }
-    
+
     // Get report threshold - uses static property or default
     public function getReportThreshold(): int
     {
         return static::$reportThreshold ?? 3;
     }
-    
+
     // Check if content should be auto-hidden when threshold reached
     public function shouldAutoHide(): bool
     {
         return static::$reportAutoHide ?? false;
     }
-    
+
     // Get human-readable content type name
     public function getReportableType(): string
     {
         return static::$reportableTypeName ?? class_basename(static::class);
     }
-    
+
     // Check if user has already reported this content
     public function hasBeenReportedBy($user): bool
     {
@@ -64,7 +65,7 @@ trait Reportable
             ->where('status', 'pending')
             ->exists();
     }
-    
+
     // Get the most common report reason for this content
     public function getMostCommonReportReason(): ?string
     {
@@ -73,7 +74,7 @@ trait Reportable
             ->groupBy('reason')
             ->orderByDesc('count')
             ->first();
-            
+
         return $mostCommon?->reason;
     }
 
@@ -88,24 +89,24 @@ trait Reportable
         if (method_exists($this, 'organizer') && $this->organizer) {
             return $this->organizer;
         }
-        
+
         if (method_exists($this, 'user') && $this->user) {
             return $this->user;
         }
-        
+
         if (method_exists($this, 'creator') && $this->creator) {
             return $this->creator;
         }
-        
+
         if (method_exists($this, 'owner') && $this->owner) {
             return $this->owner;
         }
-        
+
         // Check for direct user_id field
         if (isset($this->user_id)) {
             return User::find($this->user_id);
         }
-        
+
         return null;
     }
 
@@ -114,7 +115,7 @@ trait Reportable
      */
     public function getTrustContentType(): string
     {
-        return match(class_basename($this)) {
+        return match (class_basename($this)) {
             'CommunityEvent' => 'community_events',
             'MemberProfile' => 'member_profiles',
             'Band' => 'bands',
@@ -129,7 +130,7 @@ trait Reportable
     public function getCreatorTrustInfo(): ?array
     {
         $creator = $this->getContentCreator();
-        if (!$creator) {
+        if (! $creator) {
             return null;
         }
 
@@ -142,7 +143,7 @@ trait Reportable
     public function getCreatorTrustBadge(): ?array
     {
         $creator = $this->getContentCreator();
-        if (!$creator) {
+        if (! $creator) {
             return null;
         }
 
@@ -155,12 +156,12 @@ trait Reportable
     public function getApprovalWorkflow(): array
     {
         $creator = $this->getContentCreator();
-        if (!$creator) {
+        if (! $creator) {
             return [
                 'requires_approval' => true,
                 'auto_publish' => false,
                 'review_priority' => 'standard',
-                'estimated_review_time' => 72
+                'estimated_review_time' => 72,
             ];
         }
 
@@ -173,7 +174,7 @@ trait Reportable
     public function awardCreatorTrustPoints(): void
     {
         $creator = $this->getContentCreator();
-        if (!$creator) {
+        if (! $creator) {
             return;
         }
 
@@ -186,7 +187,7 @@ trait Reportable
     public function penalizeCreatorTrust(string $violationType, string $reason = ''): void
     {
         $creator = $this->getContentCreator();
-        if (!$creator) {
+        if (! $creator) {
             return;
         }
 
@@ -199,7 +200,7 @@ trait Reportable
     public function canAutoApprove(): bool
     {
         $creator = $this->getContentCreator();
-        if (!$creator) {
+        if (! $creator) {
             return false;
         }
 
@@ -212,11 +213,12 @@ trait Reportable
     public function getFastTrackApproval(): bool
     {
         $creator = $this->getContentCreator();
-        if (!$creator) {
+        if (! $creator) {
             return false;
         }
 
         $points = \App\Actions\Trust\GetTrustBalance::run($creator, $this->getTrustContentType());
+
         return $points >= \App\Support\TrustConstants::TRUST_TRUSTED;
     }
 }

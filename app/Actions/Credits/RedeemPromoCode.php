@@ -3,12 +3,12 @@
 namespace App\Actions\Credits;
 
 use App\Enums\CreditType;
-use App\Models\User;
-use App\Models\PromoCode;
-use App\Models\PromoCodeRedemption;
-use App\Models\CreditTransaction;
 use App\Exceptions\PromoCodeAlreadyRedeemedException;
 use App\Exceptions\PromoCodeMaxUsesException;
+use App\Models\CreditTransaction;
+use App\Models\PromoCode;
+use App\Models\PromoCodeRedemption;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -23,21 +23,21 @@ class RedeemPromoCode
     {
         $promo = PromoCode::where('code', $code)
             ->where('is_active', true)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', now());
             })
             ->firstOrFail();
 
         return DB::transaction(function () use ($user, $promo) {
             // Check if already redeemed
             if ($promo->redemptions()->where('user_id', $user->id)->exists()) {
-                throw new PromoCodeAlreadyRedeemedException();
+                throw new PromoCodeAlreadyRedeemedException;
             }
 
             // Check max uses
             if ($promo->max_uses && $promo->uses_count >= $promo->max_uses) {
-                throw new PromoCodeMaxUsesException();
+                throw new PromoCodeMaxUsesException;
             }
 
             // Add credits

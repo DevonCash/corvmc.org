@@ -10,9 +10,9 @@ use Filament\Actions;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 
 class ViewCommunityEvent extends ViewRecord
@@ -90,21 +90,33 @@ class ViewCommunityEvent extends ViewRecord
                         TextEntry::make('distance_from_corvallis')
                             ->label('Distance from Corvallis')
                             ->formatStateUsing(function ($state) {
-                                if ($state === null) return 'Unknown';
-                                if ($state == 0) return 'Local (CMC)';
-                                
+                                if ($state === null) {
+                                    return 'Unknown';
+                                }
+                                if ($state == 0) {
+                                    return 'Local (CMC)';
+                                }
+
                                 $hours = floor($state / 60);
                                 $minutes = $state % 60;
-                                
+
                                 if ($hours > 0) {
                                     return sprintf('%d hr %d min drive', $hours, $minutes);
                                 }
+
                                 return sprintf('%d min drive', $minutes);
                             })
                             ->color(function ($state) {
-                                if ($state === null) return 'gray';
-                                if ($state <= 30) return 'success';
-                                if ($state <= 60) return 'warning';
+                                if ($state === null) {
+                                    return 'gray';
+                                }
+                                if ($state <= 30) {
+                                    return 'success';
+                                }
+                                if ($state <= 60) {
+                                    return 'warning';
+                                }
+
                                 return 'danger';
                             })
                             ->badge(),
@@ -121,11 +133,13 @@ class ViewCommunityEvent extends ViewRecord
                                     ->label('Trust Level')
                                     ->formatStateUsing(function (CommunityEvent $record) {
                                         $badge = $record->getOrganizerTrustBadge();
+
                                         return $badge ? $badge['label'] : $record->getOrganizerTrustLevel();
                                     })
                                     ->badge()
                                     ->color(function (CommunityEvent $record) {
                                         $badge = $record->getOrganizerTrustBadge();
+
                                         return $badge ? $badge['color'] : 'gray';
                                     }),
                             ]),

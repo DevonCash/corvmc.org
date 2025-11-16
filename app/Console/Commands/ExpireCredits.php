@@ -38,6 +38,7 @@ class ExpireCredits extends Command
 
         if ($expiredCredits->isEmpty()) {
             $this->info('No expired credits found.');
+
             return Command::SUCCESS;
         }
 

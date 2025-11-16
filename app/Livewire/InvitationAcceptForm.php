@@ -65,12 +65,13 @@ class InvitationAcceptForm extends Component implements HasForms
             'password' => $this->data['password'],
         ]);
 
-        if (!$user) {
+        if (! $user) {
             Notification::make()
                 ->title('Invalid or Expired Invitation')
                 ->body('This invitation is invalid or has expired.')
                 ->danger()
                 ->send();
+
             return;
         }
 

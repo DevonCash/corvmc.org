@@ -19,7 +19,7 @@ trait AsFilamentAction
         $action = Action::make(static::getActionName())
             ->label(static::getLabel())
             ->color(static::getColor())
-            ->visible(fn(...$args) => static::isActionVisible(...$args));
+            ->visible(fn (...$args) => static::isActionVisible(...$args));
 
         if ($icon = static::getIcon()) {
             $action->icon($icon);
@@ -70,7 +70,7 @@ trait AsFilamentAction
         return static::$actionModalHeading ?? null;
     }
 
-    protected static  function getSuccessMessage(): string
+    protected static function getSuccessMessage(): string
     {
         return static::$actionSuccessMessage ?? 'Action completed successfully';
     }

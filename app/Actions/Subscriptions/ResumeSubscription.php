@@ -19,7 +19,7 @@ class ResumeSubscription
     {
         $subscription = $user->subscription('default');
 
-        if (!$subscription || !$subscription->cancelled()) {
+        if (! $subscription || ! $subscription->cancelled()) {
             throw new SubscriptionNotFoundException('No cancelled subscription found to resume');
         }
 

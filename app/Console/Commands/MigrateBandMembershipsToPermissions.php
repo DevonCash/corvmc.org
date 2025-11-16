@@ -6,7 +6,6 @@ use App\Models\Band;
 use App\Models\BandMember;
 use App\Models\User;
 use Illuminate\Console\Command;
-use Spatie\Permission\Models\Permission;
 
 class MigrateBandMembershipsToPermissions extends Command
 {
@@ -39,7 +38,7 @@ class MigrateBandMembershipsToPermissions extends Command
         }
 
         // Clean existing band permissions if requested
-        if ($clean && !$dryRun) {
+        if ($clean && ! $dryRun) {
             $this->cleanExistingBandPermissions();
         }
 
@@ -57,7 +56,7 @@ class MigrateBandMembershipsToPermissions extends Command
 
         foreach ($memberships as $membership) {
             $result = $this->migrateMembership($membership, $dryRun);
-            
+
             if ($result) {
                 $migrated++;
             } else {
@@ -66,7 +65,7 @@ class MigrateBandMembershipsToPermissions extends Command
         }
 
         $this->line('');
-        $this->info("✅ Migration Summary:");
+        $this->info('✅ Migration Summary:');
         $this->line("   Migrated: {$migrated}");
         $this->line("   Skipped: {$skipped}");
 
@@ -112,8 +111,9 @@ class MigrateBandMembershipsToPermissions extends Command
 
     private function migrateMembership(BandMember $membership, bool $dryRun): bool
     {
-        if (!$membership->user || !$membership->band) {
+        if (! $membership->user || ! $membership->band) {
             $this->warn("   ⚠️  Skipping membership #{$membership->id} - missing user or band");
+
             return false;
         }
 
@@ -125,6 +125,7 @@ class MigrateBandMembershipsToPermissions extends Command
 
         if (empty($permissions)) {
             $this->warn("   ⚠️  Skipping membership #{$membership->id} - unknown role: {$role}");
+
             return false;
         }
 
@@ -139,7 +140,7 @@ class MigrateBandMembershipsToPermissions extends Command
                     $user->givePermissionTo($permission, $band);
                     $this->line("      ✓ Granted '{$permission}' permission");
                 } catch (\Exception $e) {
-                    $this->error("      ✗ Failed to grant '{$permission}': " . $e->getMessage());
+                    $this->error("      ✗ Failed to grant '{$permission}': ".$e->getMessage());
                 }
             }
         }

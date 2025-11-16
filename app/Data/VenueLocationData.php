@@ -2,10 +2,10 @@
 
 namespace App\Data;
 
-use Spatie\LaravelData\Data;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Spatie\LaravelData\Data;
 
 class VenueLocationData extends Data
 {
@@ -22,7 +22,9 @@ class VenueLocationData extends Data
      * Corvallis, OR coordinates for distance calculation
      */
     private const CORVALLIS_LAT = 44.5646;
+
     private const CORVALLIS_LNG = -123.2620;
+
     private const CORVALLIS_ADDRESS = 'Corvallis, OR, USA';
 
     /**
@@ -38,22 +40,22 @@ class VenueLocationData extends Data
 
     /**
      * Calculate and set distance from Corvallis using Google Maps API.
-     * 
-     * @param string|null $apiKey Google Maps API key
-     * @return self
+     *
+     * @param  string|null  $apiKey  Google Maps API key
      */
     public function calculateDistance(?string $apiKey = null): self
     {
         $apiKey = $apiKey ?? config('services.google_maps.api_key');
-        
-        if (!$apiKey) {
+
+        if (! $apiKey) {
             Log::warning('Google Maps API key not configured for distance calculation');
+
             return $this;
         }
 
         // Cache key for this address
-        $cacheKey = 'venue_distance_' . md5($this->venue_address);
-        
+        $cacheKey = 'venue_distance_'.md5($this->venue_address);
+
         // Try to get cached distance
         $cachedData = Cache::get($cacheKey);
         if ($cachedData) {
@@ -78,13 +80,13 @@ class VenueLocationData extends Data
 
             $data = $response->json();
 
-            if ($data['status'] === 'OK' && !empty($data['routes'])) {
+            if ($data['status'] === 'OK' && ! empty($data['routes'])) {
                 $route = $data['routes'][0];
                 $leg = $route['legs'][0];
-                
+
                 // Get driving duration in minutes
                 $durationInMinutes = $leg['duration']['value'] / 60;
-                
+
                 // Get formatted address and coordinates
                 $endLocation = $leg['end_location'];
                 $formattedAddress = $leg['end_address'];
@@ -107,14 +109,14 @@ class VenueLocationData extends Data
                     longitude: $endLocation['lng'],
                 );
             } else {
-                Log::warning('Google Maps API returned error for address: ' . $this->venue_address, [
+                Log::warning('Google Maps API returned error for address: '.$this->venue_address, [
                     'status' => $data['status'] ?? 'unknown',
-                    'error_message' => $data['error_message'] ?? 'No error message'
+                    'error_message' => $data['error_message'] ?? 'No error message',
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error('Failed to calculate distance for venue: ' . $this->venue_address, [
-                'error' => $e->getMessage()
+            Log::error('Failed to calculate distance for venue: '.$this->venue_address, [
+                'error' => $e->getMessage(),
             ]);
         }
 
@@ -155,7 +157,7 @@ class VenueLocationData extends Data
     {
         $encodedDestination = urlencode($this->venue_address);
         $encodedOrigin = urlencode(self::CORVALLIS_ADDRESS);
-        
+
         return "https://www.google.com/maps/dir/{$encodedOrigin}/{$encodedDestination}";
     }
 
@@ -164,7 +166,7 @@ class VenueLocationData extends Data
      */
     public function getFullVenueDisplay(): string
     {
-        return $this->venue_name . ' - ' . ($this->formatted_address ?? $this->venue_address);
+        return $this->venue_name.' - '.($this->formatted_address ?? $this->venue_address);
     }
 
     /**
@@ -183,12 +185,12 @@ class VenueLocationData extends Data
         }
 
         // Basic address validation
-        if (!empty($this->venue_address)) {
+        if (! empty($this->venue_address)) {
             // Should contain some common address components
             $hasNumber = preg_match('/\d/', $this->venue_address);
             $hasComma = strpos($this->venue_address, ',') !== false;
-            
-            if (!$hasNumber && !$hasComma) {
+
+            if (! $hasNumber && ! $hasComma) {
                 $errors[] = 'Please provide a complete address with street number and city';
             }
         }
@@ -222,6 +224,7 @@ class VenueLocationData extends Data
 
         if ($this->distance_from_corvallis > $maxMinutes) {
             $drivingTime = $this->getDrivingTimeDisplay();
+
             return "This venue is {$drivingTime} from Corvallis, which exceeds the recommended {$maxMinutes}-minute limit for community events.";
         }
 

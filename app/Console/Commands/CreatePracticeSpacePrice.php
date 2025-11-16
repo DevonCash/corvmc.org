@@ -35,6 +35,7 @@ class CreatePracticeSpacePrice extends Command
             $this->line('  Price: $7.50 per block (30 minutes)');
             $this->line('  Currency: USD');
             $this->line('  Type: One-time payment');
+
             return 0;
         }
 
@@ -50,7 +51,8 @@ class CreatePracticeSpacePrice extends Command
 
             return 0;
         } catch (\Exception $e) {
-            $this->error('Failed to create pricing: ' . $e->getMessage());
+            $this->error('Failed to create pricing: '.$e->getMessage());
+
             return 1;
         }
     }
@@ -63,6 +65,7 @@ class CreatePracticeSpacePrice extends Command
             try {
                 $product = $this->stripe->products->retrieve($configuredProductId);
                 $this->line("   ✓ Using existing product: {$product->id}");
+
                 return $product;
             } catch (ApiErrorException $e) {
                 // Product not found, will create new one
@@ -99,6 +102,7 @@ class CreatePracticeSpacePrice extends Command
         if (! empty($existingPrices->data)) {
             $price = $existingPrices->data[0];
             $this->line("   ✓ Price already exists: {$price->id}");
+
             return $price;
         }
 

@@ -14,7 +14,7 @@ class UpdateVisibility
      */
     public function handle(MemberProfile $profile, string $visibility): bool
     {
-        if (!in_array($visibility, ['public', 'members', 'private'])) {
+        if (! in_array($visibility, ['public', 'members', 'private'])) {
             return false;
         }
 

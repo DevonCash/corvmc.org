@@ -17,12 +17,13 @@ use Illuminate\Support\Facades\Auth;
 
 class ListMemberProfiles extends Page
 {
-
     protected static ?string $breadcrumb = '';
+
     public function hasResourceBreadcrumbs(): bool
     {
         return false;
     }
+
     protected static string $resource = MemberProfileResource::class;
 
     protected string $view = 'filament.resources.member-profiles.pages.list-member-profiles';
@@ -52,7 +53,7 @@ class ListMemberProfiles extends Page
             InviteUser::filamentAction(),
             EditAction::make()
                 ->label('Edit My Profile')
-                ->record(fn(): MemberProfile => Auth::user()->profile),
+                ->record(fn (): MemberProfile => Auth::user()->profile),
         ];
     }
 
@@ -64,9 +65,9 @@ class ListMemberProfiles extends Page
             });
 
         // Apply search
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $query->where(function (Builder $query) {
-                $searchTerm = '%' . $this->search . '%';
+                $searchTerm = '%'.$this->search.'%';
 
                 // Search user name
                 $query->whereHas('user', function (Builder $subQuery) use ($searchTerm) {
@@ -82,21 +83,21 @@ class ListMemberProfiles extends Page
         }
 
         // Apply filters
-        if (!empty($this->filters['flags'])) {
+        if (! empty($this->filters['flags'])) {
             foreach ($this->filters['flags'] as $flag) {
                 $query->withFlag($flag);
             }
         }
 
-        if (!empty($this->filters['skills'])) {
+        if (! empty($this->filters['skills'])) {
             $query->withAnyTags($this->filters['skills'], 'skill');
         }
 
-        if (!empty($this->filters['genres'])) {
+        if (! empty($this->filters['genres'])) {
             $query->withAnyTags($this->filters['genres'], 'genre');
         }
 
-        if (!empty($this->filters['influences'])) {
+        if (! empty($this->filters['influences'])) {
             $query->withAnyTags($this->filters['influences'], 'influence');
         }
 
@@ -114,7 +115,6 @@ class ListMemberProfiles extends Page
         ];
         $this->search = '';
     }
-
 
     protected function filtersForm(Schema $schema): Schema
     {
@@ -161,16 +161,17 @@ class ListMemberProfiles extends Page
                     ->live()
                     ->options(function () {
                         $settings = app(MemberDirectorySettings::class);
+
                         return $settings->getAvailableFlags();
                     })
-                    ->columnSpan(fn() => User::me()?->can('view private member profiles') ? 2 : 3)
+                    ->columnSpan(fn () => User::me()?->can('view private member profiles') ? 2 : 3)
                     ->columns(function () {
                         return User::me()?->can('view private member profiles') ? 2 : 4;
                     }),
 
                 Select::make('visibility')
                     ->label('Visibility 🛡️')
-                    ->visible(fn() => User::me()?->can('view private member profiles'))
+                    ->visible(fn () => User::me()?->can('view private member profiles'))
                     ->live()
                     ->options([
                         'public' => 'Public',

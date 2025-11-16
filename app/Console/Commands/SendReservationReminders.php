@@ -35,6 +35,7 @@ class SendReservationReminders extends Command
 
         if ($results['total'] === 0) {
             $this->info('No reservations found for tomorrow that need reminders.');
+
             return 0;
         }
 
@@ -42,7 +43,7 @@ class SendReservationReminders extends Command
 
         foreach ($results['reservations'] as $reservation) {
             $this->line("- {$reservation['user_name']}: {$reservation['time_range']}");
-            
+
             match ($reservation['status']) {
                 'sent' => $this->info("  ✓ Reminder sent to {$reservation['user_email']}"),
                 'failed' => $this->error("  ✗ Failed to send reminder to {$reservation['user_email']}: {$reservation['error']}"),
@@ -58,8 +59,8 @@ class SendReservationReminders extends Command
         $this->line("   Successfully sent: {$results['sent']}");
         $this->line("   Failed: {$results['failed']}");
 
-        if (!empty($results['errors'])) {
-            $this->line("   Errors:");
+        if (! empty($results['errors'])) {
+            $this->line('   Errors:');
             foreach ($results['errors'] as $error) {
                 $this->line("     • {$error}");
             }

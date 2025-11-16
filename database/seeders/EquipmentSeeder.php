@@ -17,9 +17,10 @@ class EquipmentSeeder extends Seeder
     {
         // Get some users to be donors/lenders
         $users = User::limit(5)->get();
-        
+
         if ($users->isEmpty()) {
             $this->command->warn('No users found. Please run UserSeeder first.');
+
             return;
         }
 
@@ -250,9 +251,9 @@ class EquipmentSeeder extends Seeder
         }
 
         $this->command->info('Equipment seeder completed:');
-        $this->command->info('- ' . Equipment::count() . ' pieces of equipment created');
-        $this->command->info('- ' . EquipmentLoan::count() . ' equipment loans created');
-        $this->command->info('- ' . Equipment::available()->count() . ' pieces available');
-        $this->command->info('- ' . Equipment::where('status', 'checked_out')->count() . ' pieces currently checked out');
+        $this->command->info('- '.Equipment::count().' pieces of equipment created');
+        $this->command->info('- '.EquipmentLoan::count().' equipment loans created');
+        $this->command->info('- '.Equipment::available()->count().' pieces available');
+        $this->command->info('- '.Equipment::where('status', 'checked_out')->count().' pieces currently checked out');
     }
 }

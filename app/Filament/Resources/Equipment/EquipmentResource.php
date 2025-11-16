@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Equipment;
 
-use App\Settings\EquipmentSettings;
 use App\Filament\Resources\Equipment\Pages\CreateEquipment;
 use App\Filament\Resources\Equipment\Pages\EditEquipment;
 use App\Filament\Resources\Equipment\Pages\ListEquipment;
@@ -11,10 +10,10 @@ use App\Filament\Resources\Equipment\Schemas\EquipmentForm;
 use App\Filament\Resources\Equipment\Schemas\EquipmentInfolist;
 use App\Filament\Resources\Equipment\Tables\EquipmentTable;
 use App\Models\Equipment;
+use App\Settings\EquipmentSettings;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -25,10 +24,9 @@ class EquipmentResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'tabler-device-speaker';
 
-
     protected static ?string $navigationLabel = 'Equipment';
-    protected static ?string $recordTitleAttribute = 'name';
 
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema
     {
@@ -73,6 +71,7 @@ class EquipmentResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         $equipmentSettings = app(EquipmentSettings::class);
+
         return $equipmentSettings->enable_equipment_features;
     }
 }

@@ -22,10 +22,11 @@ class QueueRevisionForReview
         $model = $revision->revisionable;
         $contentType = $model ? get_class($model) : null;
 
-        if (!$contentType) {
+        if (! $contentType) {
             Log::warning('Cannot queue revision for review - model not found', [
                 'revision_id' => $revision->id,
             ]);
+
             return;
         }
 

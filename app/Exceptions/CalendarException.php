@@ -13,7 +13,7 @@ class CalendarException extends Exception
 
     public static function unsupportedModel(string $modelClass): self
     {
-        return new self("Unsupported model class for calendar events: {$modelClass}. Supported models: Reservation, Production");
+        return new self("Unsupported model class for calendar events: {$modelClass}. Supported models: Reservation, Event");
     }
 
     public static function missingRequiredData(string $field, string $context = ''): self
@@ -22,6 +22,7 @@ class CalendarException extends Exception
         if ($context) {
             $message .= " in context: {$context}";
         }
+
         return new self($message);
     }
 

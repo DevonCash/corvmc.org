@@ -74,31 +74,31 @@ class BandsGrid extends SearchableGrid
         $query = $this->getBaseQuery();
 
         // Apply comprehensive search if we have search term
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $query->where(function ($q) {
                 $searchTerm = $this->search;
 
                 // Search in band name
-                $q->where('name', 'ilike', '%' . $searchTerm . '%')
+                $q->where('name', 'ilike', '%'.$searchTerm.'%')
                   // Search in hometown
-                  ->orWhere('hometown', 'ilike', '%' . $searchTerm . '%')
+                    ->orWhere('hometown', 'ilike', '%'.$searchTerm.'%')
                   // Search in genre tags using spatie package methods
-                  ->orWhere(function ($genreQuery) use ($searchTerm) {
-                      // Get all genre tags that contain the search term
-                      $genreTags = \Spatie\Tags\Tag::getWithType('genre')
-                          ->filter(function ($tag) use ($searchTerm) {
-                              return stripos($tag->name, $searchTerm) !== false;
-                          });
+                    ->orWhere(function ($genreQuery) use ($searchTerm) {
+                        // Get all genre tags that contain the search term
+                        $genreTags = \Spatie\Tags\Tag::getWithType('genre')
+                            ->filter(function ($tag) use ($searchTerm) {
+                                return stripos($tag->name, $searchTerm) !== false;
+                            });
 
-                      if ($genreTags->isNotEmpty()) {
-                          $genreQuery->withAnyTags($genreTags->pluck('name')->toArray(), 'genre');
-                      }
-                  });
+                        if ($genreTags->isNotEmpty()) {
+                            $genreQuery->withAnyTags($genreTags->pluck('name')->toArray(), 'genre');
+                        }
+                    });
             });
         }
 
         // Apply hometown filter
-        if (!empty($this->filters['hometown'])) {
+        if (! empty($this->filters['hometown'])) {
             $query->where('hometown', $this->filters['hometown']);
         }
 

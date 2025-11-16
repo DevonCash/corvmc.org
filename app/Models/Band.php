@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Data\ContactData;
+use App\Enums\Visibility;
 use App\Models\Scopes\OwnedBandsScope;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Sluggable\HasSlug;
@@ -49,6 +50,7 @@ class Band extends ContentModel
         'links' => 'array',
         'contact' => ContactData::class,
         'embeds' => 'array',
+        'visibility' => Visibility::class,
     ];
 
     /**

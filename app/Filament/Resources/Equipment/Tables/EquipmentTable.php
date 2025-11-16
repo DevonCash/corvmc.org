@@ -7,16 +7,10 @@ use App\Models\Equipment;
 use App\Settings\EquipmentSettings;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Columns\Layout\Panel;
-use Filament\Tables\Columns\Layout\Split;
-use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -30,7 +24,7 @@ class EquipmentTable
         return $table
             ->defaultSort('name')
             ->modifyQueryUsing(
-                fn(Builder $query) => $query
+                fn (Builder $query) => $query
                     ->with(['children'])
                     ->whereNull('parent_equipment_id') // Only show root equipment (kits and standalone items)
                     ->where('ownership_status', 'cmc_owned')
@@ -42,14 +36,12 @@ class EquipmentTable
                     ->sortable()
                     ->weight('bold')
                     ->description(
-                        fn($record): string =>
-                        collect([$record->brand, $record->model])->filter()->join(' ')
+                        fn ($record): string => collect([$record->brand, $record->model])->filter()->join(' ')
                     ),
 
                 TextColumn::make('type')
                     ->formatStateUsing(
-                        fn(string $state): string =>
-                        ucwords(str_replace('_', ' ', $state))
+                        fn (string $state): string => ucwords(str_replace('_', ' ', $state))
                     )
                     ->colors([
                         'primary' => ['guitar', 'bass'],
@@ -62,7 +54,7 @@ class EquipmentTable
 
                 TextColumn::make('status')
                     ->badge()
-                    ->visible(fn() => app(EquipmentSettings::class)->enable_rental_features)
+                    ->visible(fn () => app(EquipmentSettings::class)->enable_rental_features)
                     ->formatStateUsing(function (string $state, $record): string {
                         if ($record->is_kit && $record->children->isNotEmpty()) {
                             $available = $record->children->where('status', 'available')->count();
@@ -86,21 +78,25 @@ class EquipmentTable
                     ->colors([
                         'success' => function ($record) {
                             if ($record->is_kit && $record->children->isNotEmpty()) {
-                                return $record->children->every(fn($child) => $child->status === 'available');
+                                return $record->children->every(fn ($child) => $child->status === 'available');
                             }
+
                             return $record->status === 'available';
                         },
                         'warning' => function ($record) {
                             if ($record->is_kit && $record->children->isNotEmpty()) {
                                 $available = $record->children->where('status', 'available')->count();
+
                                 return $available > 0 && $available < $record->children->count();
                             }
+
                             return $record->status === 'checked_out';
                         },
                         'danger' => function ($record) {
                             if ($record->is_kit && $record->children->isNotEmpty()) {
-                                return $record->children->every(fn($child) => $child->status !== 'available');
+                                return $record->children->every(fn ($child) => $child->status !== 'available');
                             }
+
                             return $record->status === 'maintenance';
                         },
                     ]),
@@ -108,8 +104,7 @@ class EquipmentTable
                 TextColumn::make('condition')
                     ->badge()
                     ->formatStateUsing(
-                        fn(string $state): string =>
-                        ucfirst(str_replace('_', ' ', $state))
+                        fn (string $state): string => ucfirst(str_replace('_', ' ', $state))
                     )
                     ->colors([
                         'success' => 'excellent',
@@ -119,11 +114,10 @@ class EquipmentTable
                     ])
                     ->toggleable(),
 
-
                 TextColumn::make('location')
                     ->toggleable()
                     ->placeholder('Not specified')
-                    ->visible(fn($record) => Auth::user()->can('manage equipment')),
+                    ->visible(fn ($record) => Auth::user()->can('manage equipment')),
             ])
             ->filters([
                 SelectFilter::make('type')
@@ -165,7 +159,7 @@ class EquipmentTable
                         '0' => 'Individual Items Only',
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        if (!isset($data['value'])) {
+                        if (! isset($data['value'])) {
                             return $query;
                         }
 
@@ -177,7 +171,7 @@ class EquipmentTable
             ->recordActions([
                 ViewAction::make(),
                 CheckoutToMemberAction::make()
-                    ->visible(fn($record) => app(EquipmentSettings::class)->enable_rental_features && $record->isAvailable())
+                    ->visible(fn ($record) => app(EquipmentSettings::class)->enable_rental_features && $record->isAvailable()),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

@@ -23,26 +23,26 @@ class BuildRRule
         $parts = [];
 
         // Frequency (required)
-        $parts[] = 'FREQ=' . strtoupper($data['frequency']);
+        $parts[] = 'FREQ='.strtoupper($data['frequency']);
 
         // Interval
         if (isset($data['interval']) && $data['interval'] > 1) {
-            $parts[] = 'INTERVAL=' . $data['interval'];
+            $parts[] = 'INTERVAL='.$data['interval'];
         }
 
         // By day (for weekly)
         if (isset($data['by_day']) && is_array($data['by_day']) && count($data['by_day']) > 0) {
-            $parts[] = 'BYDAY=' . implode(',', $data['by_day']);
+            $parts[] = 'BYDAY='.implode(',', $data['by_day']);
         }
 
         // By month day (for monthly)
         if (isset($data['by_month_day'])) {
-            $parts[] = 'BYMONTHDAY=' . $data['by_month_day'];
+            $parts[] = 'BYMONTHDAY='.$data['by_month_day'];
         }
 
         // By set pos (for "first Monday" patterns)
         if (isset($data['by_set_pos'])) {
-            $parts[] = 'BYSETPOS=' . $data['by_set_pos'];
+            $parts[] = 'BYSETPOS='.$data['by_set_pos'];
         }
 
         return implode(';', $parts);

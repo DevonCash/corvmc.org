@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Auth;
 
 class Invitation extends Model
 {
-
     use HasFactory;
+
     protected $fillable = [
         'inviter_id',
         'message',
@@ -82,7 +82,7 @@ class Invitation extends Model
 
     public function isUsed(): bool
     {
-        return !is_null($this->used_at);
+        return ! is_null($this->used_at);
     }
 
     public function markAsUsed(): void

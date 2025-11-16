@@ -4,10 +4,7 @@ namespace App\Filament\Resources\ActivityLog\Pages;
 
 use App\Actions\ActivityLogs\CleanupLogs;
 use App\Filament\Resources\ActivityLog\ActivityLogResource;
-use App\Models\User;
-use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
-use Illuminate\Support\Facades\Auth;
 
 class ListActivityLogs extends ListRecords
 {

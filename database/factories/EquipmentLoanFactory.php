@@ -5,15 +5,15 @@ namespace Database\Factories;
 use App\Models\Equipment;
 use App\Models\EquipmentLoan;
 use App\Models\User;
-use App\States\EquipmentLoan\Requested;
-use App\States\EquipmentLoan\StaffPreparing;
-use App\States\EquipmentLoan\ReadyForPickup;
-use App\States\EquipmentLoan\CheckedOut;
-use App\States\EquipmentLoan\Overdue;
-use App\States\EquipmentLoan\DropoffScheduled;
-use App\States\EquipmentLoan\StaffProcessingReturn;
-use App\States\EquipmentLoan\Returned;
 use App\States\EquipmentLoan\Cancelled;
+use App\States\EquipmentLoan\CheckedOut;
+use App\States\EquipmentLoan\DropoffScheduled;
+use App\States\EquipmentLoan\Overdue;
+use App\States\EquipmentLoan\ReadyForPickup;
+use App\States\EquipmentLoan\Requested;
+use App\States\EquipmentLoan\Returned;
+use App\States\EquipmentLoan\StaffPreparing;
+use App\States\EquipmentLoan\StaffProcessingReturn;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -32,7 +32,7 @@ class EquipmentLoanFactory extends Factory
     {
         $reservedFrom = $this->faker->dateTimeBetween('now', '+7 days');
         $dueAt = $this->faker->dateTimeBetween($reservedFrom, '+14 days');
-        
+
         return [
             'equipment_id' => Equipment::factory(),
             'borrower_id' => User::factory(),
@@ -96,6 +96,7 @@ class EquipmentLoanFactory extends Factory
     {
         $reservedFrom = $this->faker->dateTimeBetween('-30 days', 'now');
         $checkedOutAt = $this->faker->dateTimeBetween($reservedFrom, 'now');
+
         return $this->state(fn (array $attributes) => [
             'state' => CheckedOut::class,
             'reserved_from' => $reservedFrom,
@@ -113,6 +114,7 @@ class EquipmentLoanFactory extends Factory
     {
         $reservedFrom = $this->faker->dateTimeBetween('-30 days', '-8 days');
         $checkedOutAt = $this->faker->dateTimeBetween($reservedFrom, '-8 days');
+
         return $this->state(fn (array $attributes) => [
             'state' => Overdue::class,
             'reserved_from' => $reservedFrom,
@@ -129,6 +131,7 @@ class EquipmentLoanFactory extends Factory
     public function dropoffScheduled(): static
     {
         $checkedOutAt = $this->faker->dateTimeBetween('-30 days', '-1 day');
+
         return $this->state(fn (array $attributes) => [
             'state' => DropoffScheduled::class,
             'checked_out_at' => $checkedOutAt,
@@ -144,6 +147,7 @@ class EquipmentLoanFactory extends Factory
     public function staffProcessingReturn(): static
     {
         $checkedOutAt = $this->faker->dateTimeBetween('-30 days', '-1 day');
+
         return $this->state(fn (array $attributes) => [
             'state' => StaffProcessingReturn::class,
             'checked_out_at' => $checkedOutAt,
@@ -161,7 +165,7 @@ class EquipmentLoanFactory extends Factory
         $reservedFrom = $this->faker->dateTimeBetween('-30 days', '-7 days');
         $checkedOutAt = $this->faker->dateTimeBetween($reservedFrom, '-7 days');
         $returnedAt = $this->faker->dateTimeBetween($checkedOutAt, 'now');
-        
+
         return $this->state(fn (array $attributes) => [
             'state' => Returned::class,
             'reserved_from' => $reservedFrom,
@@ -190,6 +194,7 @@ class EquipmentLoanFactory extends Factory
     public function lost(): static
     {
         $checkedOutAt = $this->faker->dateTimeBetween('-30 days', '-1 day');
+
         return $this->state(fn (array $attributes) => [
             'checked_out_at' => $checkedOutAt,
             'due_at' => $this->faker->dateTimeBetween($checkedOutAt, '+14 days'),
@@ -214,7 +219,7 @@ class EquipmentLoanFactory extends Factory
     {
         $reservedFrom = $this->faker->dateTimeBetween('+1 day', '+30 days');
         $dueAt = $this->faker->dateTimeBetween($reservedFrom, (clone $reservedFrom)->modify('+7 days'));
-        
+
         return $this->state(fn (array $attributes) => [
             'state' => Requested::class,
             'reserved_from' => $reservedFrom,
@@ -232,7 +237,7 @@ class EquipmentLoanFactory extends Factory
     {
         $reservedFrom = $this->faker->dateTimeBetween('-1 day', 'now');
         $dueAt = $this->faker->dateTimeBetween('now', '+7 days');
-        
+
         return $this->state(fn (array $attributes) => [
             'state' => ReadyForPickup::class,
             'reserved_from' => $reservedFrom,
@@ -283,7 +288,7 @@ class EquipmentLoanFactory extends Factory
     {
         $reservedFrom = $this->faker->dateTimeBetween('-60 days', '-30 days');
         $checkedOutAt = $this->faker->dateTimeBetween($reservedFrom, '-30 days');
-        
+
         return $this->state(fn (array $attributes) => [
             'reserved_from' => $reservedFrom,
             'checked_out_at' => $checkedOutAt,

@@ -9,7 +9,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Revision Model
- * 
+ *
  * Represents pending changes to any model that require moderator approval.
  * Stores original data, proposed changes, and approval workflow state.
  */
@@ -43,14 +43,18 @@ class Revision extends Model
      * Revision status constants
      */
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
 
     /**
      * Revision type constants
      */
     const TYPE_UPDATE = 'update';
+
     const TYPE_CREATE = 'create';
+
     const TYPE_DELETE = 'delete';
 
     /**
@@ -131,7 +135,7 @@ class Revision extends Model
             'revision_id' => $this->id,
             'submitter_id' => $submitter->id,
             'reason' => $reason,
-            'status' => 'pending'
+            'status' => 'pending',
         ];
     }
 
@@ -171,10 +175,10 @@ class Revision extends Model
     public function getChanges(): array
     {
         $changes = [];
-        
+
         foreach ($this->proposed_changes as $field => $newValue) {
             $originalValue = $this->original_data[$field] ?? null;
-            
+
             if ($originalValue !== $newValue) {
                 $changes[$field] = [
                     'from' => $originalValue,
@@ -182,7 +186,7 @@ class Revision extends Model
                 ];
             }
         }
-        
+
         return $changes;
     }
 
@@ -193,17 +197,18 @@ class Revision extends Model
     {
         $changes = $this->getChanges();
         $count = count($changes);
-        
+
         if ($count === 0) {
             return 'No changes';
         }
-        
+
         if ($count === 1) {
             $field = array_key_first($changes);
+
             return "Updated {$field}";
         }
-        
-        return "Updated {$count} fields: " . implode(', ', array_keys($changes));
+
+        return "Updated {$count} fields: ".implode(', ', array_keys($changes));
     }
 
     /**
@@ -211,11 +216,13 @@ class Revision extends Model
      */
     public function getModelTypeName(): string
     {
-        return match($this->revisionable_type) {
+        return match ($this->revisionable_type) {
             'App\Models\MemberProfile' => 'Member Profile',
             'App\Models\Band' => 'Band',
-            'App\Models\Production' => 'Production',
-            'App\Models\CommunityEvent' => 'Community Event',
+            'App\Models\Event' => 'Event',
+            // Legacy support for old polymorphic type names
+            'App\Models\Production' => 'Event',
+            'App\Models\CommunityEvent' => 'Event',
             default => class_basename($this->revisionable_type)
         };
     }
@@ -285,8 +292,8 @@ class Revision extends Model
             ->logOnly(['status', 'reviewed_by_id', 'review_reason'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(function(string $eventName) {
-                return match($eventName) {
+            ->setDescriptionForEvent(function (string $eventName) {
+                return match ($eventName) {
                     'created' => 'Revision submitted for review',
                     'updated' => $this->getStatusChangeDescription(),
                     'deleted' => 'Revision removed',
@@ -303,14 +310,14 @@ class Revision extends Model
         if ($this->isDirty('status')) {
             $from = $this->getOriginal('status');
             $to = $this->status;
-            
-            return match([$from, $to]) {
+
+            return match ([$from, $to]) {
                 ['pending', 'approved'] => 'Revision approved',
                 ['pending', 'rejected'] => 'Revision rejected',
                 default => 'Revision status updated',
             };
         }
-        
+
         return 'Revision updated';
     }
 }

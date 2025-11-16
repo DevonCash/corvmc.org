@@ -20,7 +20,7 @@ class ResolveReport
         string $status,
         ?string $notes = null
     ): Report {
-        if (!in_array($status, ['upheld', 'dismissed', 'escalated'])) {
+        if (! in_array($status, ['upheld', 'dismissed', 'escalated'])) {
             throw new \Exception('Invalid resolution status');
         }
 
@@ -32,7 +32,7 @@ class ResolveReport
         ]);
 
         // Handle the resolution outcome
-        match($status) {
+        match ($status) {
             'upheld' => $this->handleUpheldReport($report),
             'dismissed' => $this->handleDismissedReport($report),
             'escalated' => $this->handleEscalatedReport($report),

@@ -9,6 +9,7 @@ class CalculateFreeHours
     use AsAction;
 
     public const HOURS_PER_DOLLAR_AMOUNT = 1; // Number of hours granted
+
     public const DOLLAR_AMOUNT_FOR_HOURS = 5; // Per this dollar amount
 
     /**

@@ -37,12 +37,12 @@ class EquipmentFactory extends Factory
                 'Roland TD-17',
                 'Yamaha Acoustic',
                 'Boss Delay Pedal',
-                'Audio Interface'
+                'Audio Interface',
             ]),
             'type' => $this->faker->randomElement($types),
             'brand' => $this->faker->randomElement([
-                'Fender', 'Gibson', 'Marshall', 'Shure', 'Roland', 
-                'Yamaha', 'Boss', 'Pearl', 'Zildjian', 'Behringer'
+                'Fender', 'Gibson', 'Marshall', 'Shure', 'Roland',
+                'Yamaha', 'Boss', 'Pearl', 'Zildjian', 'Behringer',
             ]),
             'model' => $this->faker->bothify('??-####'),
             'serial_number' => $this->faker->optional()->bothify('##??######'),
@@ -64,7 +64,7 @@ class EquipmentFactory extends Factory
             'status' => $this->faker->randomElement($statuses),
             'estimated_value' => $this->faker->optional(0.8)->randomFloat(2, 50, 2000),
             'location' => $this->faker->optional()->randomElement([
-                'Main storage', 'Practice room', 'Office', 'Stage area', 'Maintenance area'
+                'Main storage', 'Practice room', 'Office', 'Stage area', 'Maintenance area',
             ]),
             'notes' => $this->faker->optional()->sentence(),
         ];

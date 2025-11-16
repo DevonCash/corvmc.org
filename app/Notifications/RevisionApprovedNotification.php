@@ -39,25 +39,25 @@ class RevisionApprovedNotification extends Notification implements ShouldQueue
     {
         $modelName = $this->revision->getModelTypeName();
         $changesSummary = $this->revision->getChangesSummary();
-        
+
         $mailMessage = (new MailMessage)
             ->subject("Your {$modelName} Revision Has Been Approved")
             ->greeting("Hello {$notifiable->name}!")
-            ->line("Great news! Your revision has been approved and applied.")
+            ->line('Great news! Your revision has been approved and applied.')
             ->line("**Model:** {$modelName}")
             ->line("**Changes:** {$changesSummary}");
-            
+
         if ($this->revision->review_reason) {
             $mailMessage->line("**Reviewer Notes:** {$this->revision->review_reason}");
         }
-        
+
         if ($this->revision->auto_approved) {
-            $mailMessage->line("✅ This revision was automatically approved based on your trust level.");
+            $mailMessage->line('✅ This revision was automatically approved based on your trust level.');
         }
-        
+
         $mailMessage->action('View Updated Content', $this->getModelUrl())
             ->line('Thank you for contributing to our community!');
-        
+
         return $mailMessage;
     }
 
@@ -86,12 +86,12 @@ class RevisionApprovedNotification extends Notification implements ShouldQueue
     {
         $modelType = $this->revision->revisionable_type;
         $modelId = $this->revision->revisionable_id;
-        
-        return match($modelType) {
+
+        return match ($modelType) {
             'App\Models\MemberProfile' => url("/member/member-profiles/{$modelId}"),
             'App\Models\Band' => url("/member/bands/{$modelId}"),
-            'App\Models\Production' => url("/member/productions/{$modelId}"),
-            'App\Models\CommunityEvent' => url("/member/community-events/{$modelId}"),
+            'App\Models\Event' => route('events.show', $modelId),
+            'App\Models\CommunityEvent' => route('events.show', $modelId),
             default => url('/member')
         };
     }

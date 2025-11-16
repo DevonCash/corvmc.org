@@ -47,7 +47,7 @@ class SendReservationConfirmationReminders
                 'status' => 'pending',
             ];
 
-            if (!$dryRun) {
+            if (! $dryRun) {
                 try {
                     $reservation->getResponsibleUser()?->notify(new ReservationConfirmationNotification($reservation));
                     $reservationData['status'] = 'sent';

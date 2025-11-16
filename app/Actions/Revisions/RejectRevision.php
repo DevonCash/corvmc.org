@@ -18,7 +18,7 @@ class RejectRevision
      */
     public function handle(Revision $revision, User $reviewer, string $reason): bool
     {
-        if (!$revision->isPending()) {
+        if (! $revision->isPending()) {
             throw new \InvalidArgumentException('Revision is not pending approval');
         }
 

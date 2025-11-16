@@ -15,6 +15,7 @@ class CalculateNetAmount
     public function handle(Money $totalCharged): Money
     {
         $processingFee = CalculateProcessingFee::run($totalCharged);
+
         return $totalCharged->minus($processingFee);
     }
 }

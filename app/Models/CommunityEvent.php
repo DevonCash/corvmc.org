@@ -2,22 +2,21 @@
 
 namespace App\Models;
 
-use App\Data\LocationData;
+use App\Concerns\Reportable;
+use App\Concerns\Revisionable;
 use Guava\Calendar\Contracts\Eventable;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Image\Enums\CropPosition;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\ModelFlags\Models\Concerns\HasFlags;
 use Spatie\Tags\HasTags;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
-use App\Concerns\Reportable;
-use App\Concerns\Revisionable;
-use Spatie\Image\Enums\CropPosition;
 
 /**
  * Community Event Model
@@ -31,7 +30,9 @@ class CommunityEvent extends Model implements Eventable, HasMedia
 
     // Report configuration
     protected static int $reportThreshold = 3;
+
     protected static bool $reportAutoHide = true;
+
     protected static string $reportableTypeName = 'Community Event';
 
     /**
@@ -71,30 +72,40 @@ class CommunityEvent extends Model implements Eventable, HasMedia
      * Event status constants
      */
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_CANCELLED = 'cancelled';
 
     /**
      * Visibility level constants
      */
     const VISIBILITY_PUBLIC = 'public';
+
     const VISIBILITY_MEMBERS_ONLY = 'members_only';
 
     /**
      * Event type constants
      */
     const TYPE_PERFORMANCE = 'performance';
+
     const TYPE_WORKSHOP = 'workshop';
+
     const TYPE_OPEN_MIC = 'open_mic';
+
     const TYPE_COLLABORATIVE_SHOW = 'collaborative_show';
+
     const TYPE_ALBUM_RELEASE = 'album_release';
 
     /**
      * Trust level thresholds
      */
     const TRUST_TRUSTED = 5;
+
     const TRUST_VERIFIED = 15;
+
     const TRUST_AUTO_APPROVED = 30;
 
     /**
@@ -148,7 +159,7 @@ class CommunityEvent extends Model implements Eventable, HasMedia
      */
     public function getPosterUrlAttribute()
     {
-        return $this->getFirstMediaUrl('poster', 'medium') ?: 'https://picsum.photos/400/517?random=' . $this->id;
+        return $this->getFirstMediaUrl('poster', 'medium') ?: 'https://picsum.photos/400/517?random='.$this->id;
     }
 
     /**
@@ -156,7 +167,7 @@ class CommunityEvent extends Model implements Eventable, HasMedia
      */
     public function getPosterThumbUrlAttribute()
     {
-        return $this->getFirstMediaUrl('poster', 'thumb') ?: 'https://picsum.photos/200/258?random=' . $this->id;
+        return $this->getFirstMediaUrl('poster', 'thumb') ?: 'https://picsum.photos/200/258?random='.$this->id;
     }
 
     /**
@@ -174,10 +185,10 @@ class CommunityEvent extends Model implements Eventable, HasMedia
     {
         if ($this->start_time && $this->end_time) {
             if ($this->start_time->isSameDay($this->end_time)) {
-                return $this->start_time->format('M j, Y g:i A') . ' - ' . $this->end_time->format('g:i A');
+                return $this->start_time->format('M j, Y g:i A').' - '.$this->end_time->format('g:i A');
             }
 
-            return $this->start_time->format('M j, Y g:i A') . ' - ' . $this->end_time->format('M j, Y g:i A');
+            return $this->start_time->format('M j, Y g:i A').' - '.$this->end_time->format('M j, Y g:i A');
         }
 
         return $this->start_time ? $this->start_time->format('M j, Y g:i A') : 'TBD';
@@ -277,7 +288,7 @@ class CommunityEvent extends Model implements Eventable, HasMedia
      */
     public function hasTickets(): bool
     {
-        return !empty($this->ticket_url);
+        return ! empty($this->ticket_url);
     }
 
     /**
@@ -285,11 +296,11 @@ class CommunityEvent extends Model implements Eventable, HasMedia
      */
     public function getTicketPriceDisplayAttribute(): string
     {
-        if (!$this->hasTickets() || $this->ticket_price == 0) {
+        if (! $this->hasTickets() || $this->ticket_price == 0) {
             return 'Free';
         }
 
-        return $this->ticket_price ? '$' . number_format($this->ticket_price, 2) : 'Ticketed';
+        return $this->ticket_price ? '$'.number_format($this->ticket_price, 2) : 'Ticketed';
     }
 
     /**
@@ -297,7 +308,7 @@ class CommunityEvent extends Model implements Eventable, HasMedia
      */
     public function isFree(): bool
     {
-        return !$this->hasTickets() || ($this->ticket_price === null || $this->ticket_price == 0);
+        return ! $this->hasTickets() || ($this->ticket_price === null || $this->ticket_price == 0);
     }
 
     /**
@@ -305,7 +316,7 @@ class CommunityEvent extends Model implements Eventable, HasMedia
      */
     public function getDurationAttribute(): float
     {
-        if (!$this->start_time || !$this->end_time) {
+        if (! $this->start_time || ! $this->end_time) {
             return 0;
         }
 
@@ -327,7 +338,7 @@ class CommunityEvent extends Model implements Eventable, HasMedia
             default => '#6b7280',                               // gray
         };
 
-        if (!$this->isPublished()) {
+        if (! $this->isPublished()) {
             $color = '#6b7280'; // gray
         }
 
@@ -359,7 +370,7 @@ class CommunityEvent extends Model implements Eventable, HasMedia
             ->logOnly(['title', 'description', 'start_time', 'end_time', 'venue_name', 'venue_address', 'status', 'published_at'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "Community Event {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "Community Event {$eventName}");
     }
 
     /**

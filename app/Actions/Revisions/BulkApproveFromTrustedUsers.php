@@ -21,7 +21,7 @@ class BulkApproveFromTrustedUsers
             ->whereHas('submittedBy', function ($query) {
                 // Get revisions from users with fast-track approval
                 $query->whereRaw("JSON_EXTRACT(trust_points, '$.global') >= ?", [
-                    TrustConstants::TRUST_TRUSTED
+                    TrustConstants::TRUST_TRUSTED,
                 ]);
             })
             ->get();

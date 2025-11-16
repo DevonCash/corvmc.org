@@ -36,12 +36,8 @@
                                     {{ $next->reserved_at->format('g:i A') }} - {{ $next->reserved_until->format('g:i A') }}
                                 </div>
                             </div>
-                            <x-filament::badge :color="match($next->status ?? 'confirmed') {
-                                'confirmed' => 'success',
-                                'pending' => 'warning',
-                                default => 'gray'
-                            }">
-                                {{ ucfirst($next->status ?? 'confirmed') }}
+                            <x-filament::badge :color="$next->status?->getColor() ?? 'success'">
+                                {{ $next->status?->getLabel() ?? 'Confirmed' }}
                             </x-filament::badge>
                         </div>
 
@@ -71,7 +67,7 @@
                                 </div>
                             @endif
 
-                            @if($isRehearsalReservation && $next->payment_status === 'unpaid')
+                            @if($isRehearsalReservation && $next->payment_status?->requiresPayment())
                                 <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                     <x-filament::badge color="danger">
                                         Payment Required
@@ -124,19 +120,19 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        @if($item['payment_status'] === 'unpaid')
+                                        @if(is_string($item['payment_status']) ? $item['payment_status'] === 'unpaid' : $item['payment_status']?->requiresPayment())
                                             <x-filament::icon
                                                 icon="tabler-credit-card-off"
                                                 class="w-4 h-4 text-danger-500"
                                                 x-tooltip="'Unpaid'"
                                             />
                                         @endif
-                                        <x-filament::badge size="sm" :color="match($item['status']) {
+                                        <x-filament::badge size="sm" :color="is_string($item['status']) ? match($item['status']) {
                                             'confirmed' => 'success',
                                             'pending' => 'warning',
                                             default => 'gray'
-                                        }">
-                                            {{ substr(ucfirst($item['status']), 0, 1) }}
+                                        } : $item['status']->getColor()">
+                                            {{ substr(is_string($item['status']) ? ucfirst($item['status']) : $item['status']->getLabel(), 0, 1) }}
                                         </x-filament::badge>
                                     </div>
                                 </div>

@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Notifications\BandInvitationAcceptedNotification;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -53,7 +52,7 @@ class AcceptBandInvitation
         $adminsAndOwner = $adminMembers
             ->push($band->owner)
             ->unique('id')
-            ->filter(fn($u) => $u->id !== $user->id); // Don't notify the person who just joined
+            ->filter(fn ($u) => $u->id !== $user->id); // Don't notify the person who just joined
 
         foreach ($adminsAndOwner as $admin) {
             $admin->notify(new BandInvitationAcceptedNotification($band, $user));
@@ -68,7 +67,7 @@ class AcceptBandInvitation
             ->icon('tabler-check')
             ->requiresConfirmation()
             ->modalHeading('Accept Band Invitation')
-            ->modalDescription(fn($record) => "Accept invitation to join {$record->band->name}?")
+            ->modalDescription(fn ($record) => "Accept invitation to join {$record->band->name}?")
             ->action(function ($record): void {
                 $user = User::find($record->user_id);
                 static::run($record->band, $user);

@@ -32,42 +32,47 @@ class AssignRoleCommand extends Command
         $remove = $this->option('remove');
 
         // Find user by ID or email
-        $user = is_numeric($userIdentifier) 
+        $user = is_numeric($userIdentifier)
             ? User::find($userIdentifier)
             : User::where('email', $userIdentifier)->first();
 
-        if (!$user) {
+        if (! $user) {
             $this->error("User not found: {$userIdentifier}");
+
             return 1;
         }
 
         // Check if role exists
         $role = Role::where('name', $roleName)->first();
-        if (!$role) {
+        if (! $role) {
             $this->error("Role not found: {$roleName}");
+
             return 1;
         }
 
         try {
             if ($remove) {
-                if (!$user->hasRole($roleName)) {
+                if (! $user->hasRole($roleName)) {
                     $this->warn("User {$user->email} does not have role '{$roleName}'");
+
                     return 0;
                 }
-                
+
                 $user->removeRole($roleName);
                 $this->info("✓ Removed role '{$roleName}' from user {$user->email}");
             } else {
                 if ($user->hasRole($roleName)) {
                     $this->warn("User {$user->email} already has role '{$roleName}'");
+
                     return 0;
                 }
-                
+
                 $user->assignRole($roleName);
                 $this->info("✓ Assigned role '{$roleName}' to user {$user->email}");
             }
         } catch (\Exception $e) {
             $this->error("Error: {$e->getMessage()}");
+
             return 1;
         }
 

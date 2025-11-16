@@ -17,8 +17,7 @@ class UpholdReportAction
             ->icon('tabler-circle-check')
             ->color('danger')
             ->visible(
-                fn(Report $record): bool =>
-                $record->status === 'pending' && Auth::user()->can('uphold', [$record])
+                fn (Report $record): bool => $record->status === 'pending' && Auth::user()->can('uphold', [$record])
             )
             ->requiresConfirmation()
             ->schema([

@@ -34,7 +34,7 @@ class ReportResolvedNotification extends Notification implements ShouldQueue
         $contentType = $this->report->reportable->getReportableType();
         $contentTitle = $this->getContentTitle();
         $statusColor = $this->report->status === 'upheld' ? '🔴' : '✅';
-        
+
         return (new MailMessage)
             ->subject("Your Report Has Been {$this->report->status_label}")
             ->greeting("Hello {$notifiable->name},")
@@ -77,13 +77,13 @@ class ReportResolvedNotification extends Notification implements ShouldQueue
             'resolved_at' => $this->report->resolved_at,
         ];
     }
-    
+
     private function getContentTitle(): string
     {
         $reportable = $this->report->reportable;
-        
-        return match(get_class($reportable)) {
-            'App\Models\Production' => $reportable->title ?? 'Untitled Production',
+
+        return match (get_class($reportable)) {
+            'App\Models\Event' => $reportable->title ?? 'Untitled Production',
             'App\Models\MemberProfile' => $reportable->user->name,
             'App\Models\Band' => $reportable->name ?? 'Untitled Band',
             default => "#{$reportable->id}",

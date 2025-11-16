@@ -27,7 +27,7 @@ class DeleteUser
 
             if ($result) {
                 // Send deactivation notification
-                $user->notify(new UserDeactivatedNotification());
+                $user->notify(new UserDeactivatedNotification);
             }
 
             return $result;

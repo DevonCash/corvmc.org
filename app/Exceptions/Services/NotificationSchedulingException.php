@@ -46,9 +46,9 @@ class NotificationSchedulingException extends Exception
         $errorCount = count($errors);
         $errorSummary = implode('; ', array_slice($errors, 0, 3));
         if ($errorCount > 3) {
-            $errorSummary .= " and " . ($errorCount - 3) . " more errors";
+            $errorSummary .= ' and '.($errorCount - 3).' more errors';
         }
-        
+
         return new self("Bulk notification operation failed with {$errorCount} errors: {$errorSummary}");
     }
 }

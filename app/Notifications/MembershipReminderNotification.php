@@ -30,7 +30,7 @@ class MembershipReminderNotification extends Notification implements ShouldQueue
     public function toMail($notifiable): MailMessage
     {
         $lastReservation = $notifiable->reservations()->latest()->first();
-        $lastReservationDate = $lastReservation 
+        $lastReservationDate = $lastReservation
             ? $lastReservation->created_at->format('F j, Y')
             : 'quite some time';
 
@@ -59,7 +59,7 @@ class MembershipReminderNotification extends Notification implements ShouldQueue
     public function toArray($notifiable): array
     {
         $lastReservation = $notifiable->reservations()->latest()->first();
-        
+
         return [
             'user_id' => $this->user->id,
             'last_reservation_date' => $lastReservation?->created_at,

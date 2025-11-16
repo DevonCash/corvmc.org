@@ -10,7 +10,6 @@ use App\Models\Revision;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
 class RevisionResource extends Resource
@@ -18,15 +17,15 @@ class RevisionResource extends Resource
     protected static ?string $model = Revision::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'tabler-clipboard-check';
-    
+
     protected static ?string $navigationLabel = 'Revisions';
-    
+
     protected static ?string $modelLabel = 'Revision';
-    
+
     protected static ?string $pluralModelLabel = 'Revisions';
-    
+
     protected static string|\UnitEnum|null $navigationGroup = 'Moderation';
-    
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
@@ -53,22 +52,22 @@ class RevisionResource extends Resource
             // 'view' => ViewRevision::route('/{record}'),
         ];
     }
-    
+
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::pending()->count() ?: null;
     }
-    
+
     public static function getNavigationBadgeColor(): string|array|null
     {
         $pendingCount = static::getModel()::pending()->count();
-        
+
         if ($pendingCount > 10) {
             return 'danger';
         } elseif ($pendingCount > 5) {
             return 'warning';
         }
-        
+
         return 'primary';
     }
 }

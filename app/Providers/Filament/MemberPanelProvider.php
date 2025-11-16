@@ -2,16 +2,11 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Widgets\MyBandsWidget;
 use App\Filament\Widgets\QuickActionsWidget;
-use App\Filament\Widgets\TodayReservationsWidget;
-use App\Filament\Widgets\UpcomingEventsWidget;
-use App\Filament\Widgets\UserSummaryWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\View\PanelsRenderHook;
@@ -117,20 +112,15 @@ class MemberPanelProvider extends PanelProvider
                 \App\Filament\Resources\Equipment\EquipmentLoans\EquipmentLoanResource::class,
             ])
             ->pages([
-                Dashboard::class,
+                \App\Filament\Pages\MemberDashboard::class,
                 \App\Filament\Pages\MyProfile::class,
                 \App\Filament\Pages\MyAccount::class,
                 \App\Filament\Pages\MyMembership::class,
             ])
             ->databaseNotifications()
             ->widgets([
-                UserSummaryWidget::class,
                 QuickActionsWidget::class,
-                UpcomingEventsWidget::class,
-                MyBandsWidget::class,
-                TodayReservationsWidget::class,
             ])
-
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

@@ -9,7 +9,6 @@ use App\Notifications\UserInvitationNotification;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -50,10 +49,10 @@ class InviteUser
                     ->placeholder('Enter email address'),
 
                 CheckboxList::make('roles')
-                    ->visible(fn() => User::me()->hasRole('admin'))
+                    ->visible(fn () => User::me()->hasRole('admin'))
                     ->label('Assign Roles')
                     ->options(Role::all()->pluck('name', 'id'))
-                    ->descriptions(Role::all()->pluck('name', 'id')->map(fn($name) => "Assign {$name} role"))
+                    ->descriptions(Role::all()->pluck('name', 'id')->map(fn ($name) => "Assign {$name} role"))
                     ->columns(2),
             ])
             ->modalHeading('Invite New User')

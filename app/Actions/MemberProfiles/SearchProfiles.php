@@ -24,9 +24,9 @@ class SearchProfiles
         $profilesQuery = MemberProfile::withoutGlobalScope(\App\Models\Scopes\MemberVisibilityScope::class);
 
         // Apply visibility filter based on viewing user
-        if (!$viewingUser) {
+        if (! $viewingUser) {
             $profilesQuery->where('visibility', 'public');
-        } elseif (!$viewingUser->can('view private member profiles')) {
+        } elseif (! $viewingUser->can('view private member profiles')) {
             $profilesQuery->where(function ($q) use ($viewingUser) {
                 $q->where('visibility', 'public')
                     ->orWhere('user_id', $viewingUser->id)

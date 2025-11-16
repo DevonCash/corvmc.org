@@ -4,10 +4,11 @@ namespace App\Models;
 
 use App\Casts\MoneyCast;
 use App\Concerns\HasTimePeriod;
-use Guava\Calendar\ValueObjects\CalendarEvent;
+use App\Enums\PaymentStatus;
+use App\Enums\ReservationStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Base class for all reservation types using Single Table Inheritance.
@@ -20,15 +21,19 @@ class Reservation extends Model
     use HasFactory, HasTimePeriod;
 
     protected $table = 'reservations';
+
     protected $primaryKey = 'id';
+
     protected $guarded = ['id'];
 
     protected function casts(): array
     {
         return [
+            'status' => ReservationStatus::class,
+            'payment_status' => PaymentStatus::class,
             'reserved_at' => 'datetime',
             'reserved_until' => 'datetime',
-            'cost' => MoneyCast::class . ':USD',
+            'cost' => MoneyCast::class.':USD',
             'paid_at' => 'datetime',
             'hours_used' => 'decimal:2',
             'free_hours_used' => 'decimal:2',
@@ -94,6 +99,31 @@ class Reservation extends Model
     }
 
     /**
+     * Direct relationship to the user who created this reservation.
+     * This is separate from reservable which represents who the reservation is for.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Relationship to the recurring series this reservation belongs to.
+     */
+    public function recurringSeries()
+    {
+        return $this->belongsTo(RecurringSeries::class, 'recurring_series_id');
+    }
+
+    /**
+     * Check if this reservation is part of a recurring series.
+     */
+    public function isRecurring(): bool
+    {
+        return $this->recurring_series_id !== null;
+    }
+
+    /**
      * Get the human-readable label for this reservation type.
      * Child classes should override this method.
      */
@@ -136,7 +166,6 @@ class Reservation extends Model
      * Payment status methods (only applicable to RehearsalReservation).
      * Base implementations return false/N/A for non-payment reservations.
      */
-
     public function isPaid(): bool
     {
         return false;
@@ -178,10 +207,10 @@ class Reservation extends Model
         }
 
         if ($this->reserved_at->isSameDay($this->reserved_until)) {
-            return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('g:i A');
+            return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('g:i A');
         }
 
-        return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('M j, Y g:i A');
+        return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('M j, Y g:i A');
     }
 
     public function getPaymentStatusBadgeAttribute(): array
@@ -218,6 +247,7 @@ class Reservation extends Model
     public static function hoursToBlocks(float $hours): int
     {
         $minutesPerBlock = config('reservation.minutes_per_block', 30);
+
         return (int) ceil(($hours * 60) / $minutesPerBlock);
     }
 
@@ -227,6 +257,7 @@ class Reservation extends Model
     public static function blocksToHours(int $blocks): float
     {
         $minutesPerBlock = config('reservation.minutes_per_block', 30);
+
         return ($blocks * $minutesPerBlock) / 60;
     }
 
@@ -235,11 +266,12 @@ class Reservation extends Model
      */
     public function isInConfirmationWindow(): bool
     {
-        if (!$this->reserved_at) {
+        if (! $this->reserved_at) {
             return false;
         }
 
         $daysUntilReservation = now()->diffInDays($this->reserved_at, false);
+
         return $daysUntilReservation >= 3 && $daysUntilReservation <= 7;
     }
 
@@ -248,11 +280,12 @@ class Reservation extends Model
      */
     public function isImmediate(): bool
     {
-        if (!$this->reserved_at) {
+        if (! $this->reserved_at) {
             return false;
         }
 
         $daysUntilReservation = now()->diffInDays($this->reserved_at, false);
+
         return $daysUntilReservation < 3;
     }
 
@@ -291,12 +324,13 @@ class Reservation extends Model
      */
     public function shouldAutoCancel(): bool
     {
-        if ($this->status !== 'pending' || !$this->reserved_at) {
+        if ($this->status !== 'pending' || ! $this->reserved_at) {
             return false;
         }
 
         // Auto-cancel if we're now within 3 days and still not confirmed
         $daysUntilReservation = now()->diffInDays($this->reserved_at, false);
+
         return $daysUntilReservation < 3;
     }
 
@@ -305,7 +339,7 @@ class Reservation extends Model
      */
     public function daysUntilConfirmationDeadline(): ?int
     {
-        if (!$this->reserved_at) {
+        if (! $this->reserved_at) {
             return null;
         }
 

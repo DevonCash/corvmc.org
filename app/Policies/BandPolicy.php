@@ -126,9 +126,9 @@ class BandPolicy
         if ($band->membership($user)->role === 'admin') {
             return true;
         }
+
         return Gate::allows('create', BandMember::class);
     }
-
 
     /**
      * Determine whether the user can transfer ownership of the band.
@@ -142,7 +142,6 @@ class BandPolicy
 
         return null;
     }
-
 
     public function contact(?User $user, Band $band): ?bool
     {
@@ -198,5 +197,4 @@ class BandPolicy
 
         return false;
     }
-
 }

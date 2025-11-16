@@ -19,11 +19,11 @@ class ResendInvitation
     {
         $invitations = Invitation::withoutGlobalScopes()->forEmail($email)->get();
 
-        if ($invitations->some(fn($inv) => $inv->isUsed())) {
+        if ($invitations->some(fn ($inv) => $inv->isUsed())) {
             throw new \Exception('User has already accepted invitation.');
         }
 
-        $invitations = $invitations->filter(fn($inv) => !$inv->isUsed());
+        $invitations = $invitations->filter(fn ($inv) => ! $inv->isUsed());
         if ($invitations->isEmpty()) {
             throw new \Exception('No invitations found for this email.');
         }
@@ -31,7 +31,7 @@ class ResendInvitation
         $lastInvite = $invitations->last();
 
         // Delete existing invitations to avoid unique constraint violation
-        $invitations->each(fn($inv) => $inv->delete());
+        $invitations->each(fn ($inv) => $inv->delete());
 
         $newInvite = Invitation::create([
             'email' => $email,

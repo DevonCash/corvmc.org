@@ -43,7 +43,7 @@ class SendReservationReminders
                 'status' => 'pending',
             ];
 
-            if (!$dryRun) {
+            if (! $dryRun) {
                 try {
                     $reservation->reservable->notify(new ReservationReminderNotification($reservation));
                     $reservationData['status'] = 'sent';

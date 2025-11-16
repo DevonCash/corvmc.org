@@ -38,7 +38,7 @@ class DetermineReservationStatus
      */
     public function needsConfirmationReminder(Carbon $reservationDate, bool $isRecurring = false): bool
     {
-        return !$isRecurring && $reservationDate->isAfter(Carbon::now()->addWeek());
+        return ! $isRecurring && $reservationDate->isAfter(Carbon::now()->addWeek());
     }
 
     /**

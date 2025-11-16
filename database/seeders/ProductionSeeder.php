@@ -3,7 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Band;
-use App\Models\Production;
+use App\Models\Event;
+use App\Models\EventReservation;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -24,52 +25,52 @@ class ProductionSeeder extends Seeder
             return;
         }
 
-        // Create upcoming productions with unique times
-        $upcomingProductions = collect();
+        // Create upcoming events with unique times
+        $upcomingEvents = collect();
         for ($i = 0; $i < 8; $i++) {
-            $production = Production::factory()
+            $event = Event::factory()
                 ->upcoming()
                 ->create([
-                    'manager_id' => $users->random()->id,
+                    'organizer_id' => $users->random()->id,
                 ]);
-            $upcomingProductions->push($production);
+            $upcomingEvents->push($event);
         }
 
-        // Create completed productions with unique times
-        $completedProductions = collect();
+        // Create completed events with unique times
+        $completedEvents = collect();
         for ($i = 0; $i < 12; $i++) {
-            $production = Production::factory()
+            $event = Event::factory()
                 ->completed()
                 ->create([
-                    'manager_id' => $users->random()->id,
+                    'organizer_id' => $users->random()->id,
                 ]);
-            $completedProductions->push($production);
+            $completedEvents->push($event);
         }
 
-        // Create some in-progress productions with unique times
-        $inProgressProductions = collect();
+        // Create some draft/unpublished events with unique times
+        $draftEvents = collect();
         for ($i = 0; $i < 3; $i++) {
-            $production = Production::factory()
+            $event = Event::factory()
                 ->create([
-                    'status' => 'in-production',
-                    'manager_id' => $users->random()->id,
+                    'status' => 'pending',
+                    'organizer_id' => $users->random()->id,
                     'published_at' => null,
                 ]);
-            $inProgressProductions->push($production);
+            $draftEvents->push($event);
         }
 
-        // Combine all productions
-        $allProductions = $upcomingProductions
-            ->concat($completedProductions)
-            ->concat($inProgressProductions);
+        // Combine all events
+        $allEvents = $upcomingEvents
+            ->concat($completedEvents)
+            ->concat($draftEvents);
 
-        // Attach bands to productions with realistic performer counts and set lengths
-        foreach ($allProductions as $production) {
+        // Attach bands to events with realistic performer counts and set lengths
+        foreach ($allEvents as $event) {
             $performerCount = fake()->numberBetween(1, 5);
             $selectedBands = $bands->random($performerCount);
 
             foreach ($selectedBands as $index => $band) {
-                $production->performers()->attach($band->id, [
+                $event->performers()->attach($band->id, [
                     'order' => $index + 1,
                     'set_length' => fake()->numberBetween(20, 60), // 20-60 minute sets
                 ]);
@@ -80,10 +81,41 @@ class ProductionSeeder extends Seeder
                 ->random(fake()->numberBetween(1, 3));
 
             foreach ($genres as $genre) {
-                $production->attachTag($genre, 'genre');
+                $event->attachTag($genre, 'genre');
+            }
+
+            // Create EventReservation if event is at CMC
+            if (! $event->location->is_external) {
+                $this->createEventReservation($event);
             }
         }
 
-        $this->command->info('Created '.$allProductions->count().' productions with performers and genres.');
+        $this->command->info('Created '.$allEvents->count().' events with performers and genres.');
+    }
+
+    /**
+     * Create a space reservation for an event at CMC.
+     * Includes setup time (1 hour before) and breakdown time (1 hour after).
+     */
+    private function createEventReservation(Event $event): void
+    {
+        // Add 1 hour setup before event start and 1 hour breakdown after event end
+        $reservedAt = $event->start_time->copy()->subHour();
+        $reservedUntil = $event->end_time->copy()->addHour();
+
+        EventReservation::create([
+            'type' => EventReservation::class,
+            'reservable_type' => Event::class,
+            'reservable_id' => $event->id,
+            'reserved_at' => $reservedAt,
+            'reserved_until' => $reservedUntil,
+            'status' => $event->status === 'approved' ? 'confirmed' : 'pending',
+            'payment_status' => 'n/a',
+            'cost' => 0, // Events don't pay for space
+            'hours_used' => $reservedAt->diffInMinutes($reservedUntil) / 60,
+            'free_hours_used' => 0,
+            'is_recurring' => false,
+            'notes' => 'Space reservation for event: '.$event->title,
+        ]);
     }
 }

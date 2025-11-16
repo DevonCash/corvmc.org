@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
-use App\Models\Production;
-use App\Models\MemberProfile;
 use App\Models\Band;
+use App\Models\MemberProfile;
+use App\Models\Production;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,10 +22,10 @@ class ReportFactory extends Factory
     {
         // Default to Production to avoid Band foreign key issues
         $production = Production::factory()->create();
-        
+
         $reasons = ['inappropriate_content', 'spam', 'misleading_info', 'harassment', 'policy_violation'];
         $reason = fake()->randomElement($reasons);
-        
+
         return [
             'reportable_type' => Production::class,
             'reportable_id' => $production->id,
@@ -80,6 +80,7 @@ class ReportFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $production = Production::factory()->create();
+
             return [
                 'reportable_type' => Production::class,
                 'reportable_id' => $production->id,
@@ -91,6 +92,7 @@ class ReportFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $profile = MemberProfile::factory()->create();
+
             return [
                 'reportable_type' => MemberProfile::class,
                 'reportable_id' => $profile->id,
@@ -102,6 +104,7 @@ class ReportFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $band = Band::factory()->create();
+
             return [
                 'reportable_type' => Band::class,
                 'reportable_id' => $band->id,

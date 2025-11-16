@@ -13,8 +13,8 @@ class Subscription extends CashierSubscription
      * @var array<string, string>
      */
     protected $casts = [
-        'base_amount' => MoneyCast::class . ':USD,currency',
-        'total_amount' => MoneyCast::class . ':USD,currency',
+        'base_amount' => MoneyCast::class.':USD,currency',
+        'total_amount' => MoneyCast::class.':USD,currency',
         'covers_fees' => 'boolean',
         'metadata' => 'array',
         'trial_ends_at' => 'datetime',
@@ -41,13 +41,12 @@ class Subscription extends CashierSubscription
         'ends_at',
     ];
 
-
     /**
      * Get the base amount formatted for display.
      */
     public function getFormattedBaseAmountAttribute(): ?string
     {
-        if (!$this->base_amount) {
+        if (! $this->base_amount) {
             return null;
         }
 
@@ -59,7 +58,7 @@ class Subscription extends CashierSubscription
      */
     public function getFormattedTotalAmountAttribute(): ?string
     {
-        if (!$this->total_amount) {
+        if (! $this->total_amount) {
             return null;
         }
 
@@ -71,7 +70,7 @@ class Subscription extends CashierSubscription
      */
     public function qualifiesForSustainingMember(): bool
     {
-        if (!$this->base_amount) {
+        if (! $this->base_amount) {
             return false;
         }
 
@@ -83,12 +82,13 @@ class Subscription extends CashierSubscription
      */
     public function getMonthlyFreeHours(): int
     {
-        if (!$this->qualifiesForSustainingMember()) {
+        if (! $this->qualifiesForSustainingMember()) {
             return 0;
         }
 
         // 1 hour per $5 contributed
         $baseAmount = $this->base_amount->getAmount()->toFloat();
-        return (int)floor($baseAmount / 5);
+
+        return (int) floor($baseAmount / 5);
     }
 }

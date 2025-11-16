@@ -10,6 +10,7 @@ class GenerateFutureRecurringInstances
     use AsAction;
 
     public string $commandSignature = 'recurring:generate-instances';
+
     public string $commandDescription = 'Generate future instances for all active recurring reservation series';
 
     /**
@@ -22,7 +23,7 @@ class GenerateFutureRecurringInstances
         $activeSeries = RecurringReservation::where('status', 'active')
             ->where(function ($q) {
                 $q->whereNull('series_end_date')
-                  ->orWhere('series_end_date', '>', now());
+                    ->orWhere('series_end_date', '>', now());
             })
             ->get();
 

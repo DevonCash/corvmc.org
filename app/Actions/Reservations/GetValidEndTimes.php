@@ -10,6 +10,7 @@ class GetValidEndTimes
     use AsAction;
 
     public const MINUTES_PER_BLOCK = 30;
+
     public const MAX_RESERVATION_DURATION = 8; // hours
 
     /**

@@ -60,6 +60,8 @@ class AdminUserControlForm
                                         'price_sustaining_10' => 'Sustaining Member - $10/month',
                                         'price_sustaining_25' => 'Sustaining Member Plus - $25/month',
                                         'price_sustaining_50' => 'Sustaining Member Premium - $50/month',
+                                        'price_sustaining_55' => 'Sustaining Member - $55/month',
+                                        'price_sustaining_60' => 'Sustaining Member - $60/month',
                                     ])
                                     ->required(),
                             ])

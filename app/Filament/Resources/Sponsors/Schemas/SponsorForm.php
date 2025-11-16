@@ -4,13 +4,13 @@ namespace App\Filament\Resources\Sponsors\Schemas;
 
 use App\Models\Sponsor;
 use Filament\Forms\Components\DatePicker;
-use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\MarkdownEditor;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class SponsorForm
@@ -31,7 +31,7 @@ class SponsorForm
                                     ->options(Sponsor::getTiers())
                                     ->required()
                                     ->reactive()
-                                    ->helperText(fn ($state) => $state ? 'Benefits: ' . self::getBenefitsPreview($state) : null),
+                                    ->helperText(fn ($state) => $state ? 'Benefits: '.self::getBenefitsPreview($state) : null),
 
                                 Select::make('type')
                                     ->options([
@@ -89,7 +89,7 @@ class SponsorForm
 
     protected static function getBenefitsPreview(string $tier): string
     {
-        $memberships = match($tier) {
+        $memberships = match ($tier) {
             Sponsor::TIER_HARMONY => '5',
             Sponsor::TIER_MELODY => '10',
             Sponsor::TIER_RHYTHM => '20',
@@ -99,7 +99,7 @@ class SponsorForm
             default => '0',
         };
 
-        $benefits = ["Website logo", "Newsletter listing", "{$memberships} sponsored memberships"];
+        $benefits = ['Website logo', 'Newsletter listing', "{$memberships} sponsored memberships"];
 
         if (in_array($tier, [Sponsor::TIER_MELODY, Sponsor::TIER_RHYTHM, Sponsor::TIER_CRESCENDO])) {
             $benefits[] = 'Event logo display';

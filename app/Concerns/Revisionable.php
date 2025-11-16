@@ -101,7 +101,7 @@ trait Revisionable
         $changes = $changes ?? $this->getDirty();
         $submitter = $submitter ?? Auth::user();
 
-        if (!$submitter) {
+        if (! $submitter) {
             throw new \InvalidArgumentException('Cannot create revision without a submitter user');
         }
 
@@ -134,7 +134,7 @@ trait Revisionable
      */
     public function applyRevision(Revision $revision): bool
     {
-        if (!$revision->isApproved()) {
+        if (! $revision->isApproved()) {
             throw new \InvalidArgumentException('Cannot apply unapproved revision');
         }
 
@@ -189,11 +189,12 @@ trait Revisionable
      */
     protected function isJson(string $value): bool
     {
-        if (!str_starts_with($value, '{') && !str_starts_with($value, '[')) {
+        if (! str_starts_with($value, '{') && ! str_starts_with($value, '[')) {
             return false;
         }
 
         json_decode($value);
+
         return json_last_error() === JSON_ERROR_NONE;
     }
 
@@ -203,7 +204,7 @@ trait Revisionable
     public function update(array $attributes = [], array $options = []): bool
     {
         // If revisions are disabled or this is an exempt update, proceed normally
-        if (!$this->shouldCreateRevision($attributes)) {
+        if (! $this->shouldCreateRevision($attributes)) {
             return parent::update($attributes, $options);
         }
 
@@ -223,15 +224,15 @@ trait Revisionable
     /**
      * Determine if a revision should be created for the given attributes.
      */
-    protected function shouldCreateRevision(array $attributes = null): bool
+    protected function shouldCreateRevision(?array $attributes = null): bool
     {
         // Don't create revisions if disabled
-        if (!static::$requiresRevisions) {
+        if (! static::$requiresRevisions) {
             return false;
         }
 
         // Don't create revisions if no user is authenticated (system updates)
-        if (!Auth::id()) {
+        if (! Auth::id()) {
             return false;
         }
 
@@ -239,7 +240,7 @@ trait Revisionable
         $attributes = $attributes ?? $this->getDirty();
         $revisionableChanges = $this->filterRevisionExemptFields($attributes);
 
-        return !empty($revisionableChanges);
+        return ! empty($revisionableChanges);
     }
 
     /**
@@ -271,6 +272,7 @@ trait Revisionable
     {
         // Create revision and prevent normal update
         $this->createRevision();
+
         return false; // Prevents the update from proceeding
     }
 
@@ -293,6 +295,7 @@ trait Revisionable
         try {
             // Decode any JSON strings
             $attributes = $this->decodeJsonStrings($attributes);
+
             return parent::update($attributes, $options);
         } finally {
             static::$requiresRevisions = $originalRequirement;

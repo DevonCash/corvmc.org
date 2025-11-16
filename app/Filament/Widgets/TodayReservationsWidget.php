@@ -6,7 +6,6 @@ use App\Filament\Resources\Reservations\ReservationResource;
 use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -36,7 +35,7 @@ class TodayReservationsWidget extends BaseWidget
                     ->orderBy('reserved_at')
             )
             ->heading('Today\'s Practice Space Schedule')
-            ->description('Reservations for ' . Carbon::today()->format('l, F j, Y'))
+            ->description('Reservations for '.Carbon::today()->format('l, F j, Y'))
             ->emptyStateHeading('No reservations today')
             ->emptyStateDescription('The practice space is available all day!')
             ->emptyStateIcon('tabler-calendar-smile')
@@ -44,7 +43,7 @@ class TodayReservationsWidget extends BaseWidget
                 TextColumn::make('reserved_at')
                     ->label('Time')
                     ->formatStateUsing(function ($state, Reservation $record) {
-                        return $record->reserved_at->format('g:i A') . ' - ' . $record->reserved_until->format('g:i A');
+                        return $record->reserved_at->format('g:i A').' - '.$record->reserved_until->format('g:i A');
                     })
                     ->badge()
                     ->color(function (Reservation $record) {
@@ -73,11 +72,13 @@ class TodayReservationsWidget extends BaseWidget
                     ->icon(function (Reservation $record) use ($user) {
                         $isOwnReservation = $record->reservable_type === User::class &&
                             $record->reservable_id === $user?->id;
+
                         return $isOwnReservation ? 'tabler-user' : 'tabler-users';
                     })
                     ->iconColor(function (Reservation $record) use ($user) {
                         $isOwnReservation = $record->reservable_type === User::class &&
                             $record->reservable_id === $user?->id;
+
                         return $isOwnReservation ? 'success' : 'gray';
                     }),
 
@@ -86,7 +87,7 @@ class TodayReservationsWidget extends BaseWidget
                     ->formatStateUsing(function ($state, Reservation $record) {
                         $hours = $record->reserved_at->diffInMinutes($record->reserved_until) / 60;
 
-                        return number_format($hours, 1) . ' hrs';
+                        return number_format($hours, 1).' hrs';
                     }),
 
                 TextColumn::make('status')
@@ -106,6 +107,7 @@ class TodayReservationsWidget extends BaseWidget
                         if ($canViewAll || $isOwnReservation) {
                             return $record->notes ?: 'Practice session';
                         }
+
                         return 'Private session';
                     })
                     ->limit(30)
@@ -116,10 +118,11 @@ class TodayReservationsWidget extends BaseWidget
                         if (($canViewAll || $isOwnReservation) && $record->notes) {
                             return $record->notes;
                         }
+
                         return null;
                     }),
             ])
-            ->recordUrl(fn(Model $record) => ReservationResource::getUrl('view', ['record' => $record]))
+            ->recordUrl(fn (Model $record) => ReservationResource::getUrl('view', ['record' => $record]))
             ->defaultSort('reserved_at')
             ->paginated(false);
     }
