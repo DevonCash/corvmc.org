@@ -72,6 +72,14 @@ class CreateCheckoutSession
                 'type' => 'practice_space_reservation',
                 'free_hours_used' => $reservation->free_hours_used,
             ],
+            'payment_intent_data' => [
+                'metadata' => [
+                    'reservation_id' => $reservation->id,
+                    'user_id' => $user->id,
+                    'type' => 'practice_space_reservation',
+                    'free_hours_used' => $reservation->free_hours_used,
+                ],
+            ],
         ]);
 
         return $checkout;
@@ -84,9 +92,7 @@ class CreateCheckoutSession
             ->icon('tabler-credit-card')
             ->color('success')
             ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation &&
-                $record->cost->isPositive() &&
-                $record->isUnpaid() &&
-                ($record->reservable_id === Auth::id() || User::me()->can('manage reservations')))
+                $record->requiresPayment() && ($record->reservable_id === Auth::id() || User::me()->can('manage reservations')))
             ->action(function (Reservation $record) {
                 $session = static::run($record);
 

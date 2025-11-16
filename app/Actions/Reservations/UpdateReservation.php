@@ -20,6 +20,14 @@ class UpdateReservation
      */
     public function handle(Reservation $reservation, Carbon $startTime, Carbon $endTime, array $options = []): Reservation
     {
+        // Prevent updating paid/comped reservations unless explicitly allowed via payment_status update
+        // This prevents cost changes after payment has been processed
+        if ($reservation instanceof RehearsalReservation &&
+            ($reservation->payment_status?->isPaid() || $reservation->payment_status?->isComped()) &&
+            ! isset($options['payment_status'])) {
+            throw new \InvalidArgumentException('Cannot update paid or comped reservations. Please cancel and create a new reservation, or update via admin panel.');
+        }
+
         // Only validate and recalculate costs for rehearsal reservations
         if ($reservation instanceof RehearsalReservation) {
             $errors = ValidateReservation::run($reservation->user, $startTime, $endTime, $reservation->id);

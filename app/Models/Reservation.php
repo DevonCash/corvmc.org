@@ -348,4 +348,9 @@ class Reservation extends Model
 
         return $daysUntil >= 0 ? $daysUntil : null;
     }
+
+    public function requiresPayment(): bool
+    {
+        return $this->cost->isPositive() && $this->payment_status->isUnpaid();
+    }
 }

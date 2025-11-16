@@ -15,9 +15,15 @@ class HandleSuccessfulPayment
      * Handle successful payment and update reservation.
      *
      * Updates the reservation with payment details and automatically confirms it.
+     * Idempotent - safe to call multiple times (e.g., from both redirect and webhook).
      */
     public function handle(RehearsalReservation $reservation, string $sessionId): bool
     {
+        // Idempotency check - skip if already paid
+        if ($reservation->isPaid()) {
+            return true;
+        }
+
         // Update reservation payment status
         $reservation->update([
             'payment_status' => PaymentStatus::Paid,

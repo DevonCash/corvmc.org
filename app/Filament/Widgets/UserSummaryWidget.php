@@ -72,7 +72,7 @@ class UserSummaryWidget extends Widget
                     'date' => $reservation->reserved_at,
                     'description' => 'Practice room booked for '.$reservation->reserved_at->format('M j, g:i A'),
                     'icon' => 'tabler-calendar',
-                    'url' => route('filament.member.resources.reservations.view', ['record' => $reservation->id]),
+                    'url' => route('filament.member.resources.reservations.index'),
                     'model' => $reservation,
                 ];
             }

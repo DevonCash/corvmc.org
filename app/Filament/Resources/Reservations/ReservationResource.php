@@ -3,10 +3,7 @@
 namespace App\Filament\Resources\Reservations;
 
 use App\Filament\Resources\Reservations\Pages\CalendarReservations;
-use App\Filament\Resources\Reservations\Pages\CreateReservation;
-use App\Filament\Resources\Reservations\Pages\EditReservation;
 use App\Filament\Resources\Reservations\Pages\ListReservations;
-use App\Filament\Resources\Reservations\Pages\ViewReservation;
 use App\Filament\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\ReservationsTable;
@@ -71,9 +68,6 @@ class ReservationResource extends Resource
         return [
             'calendar' => CalendarReservations::route('/calendar'),
             'index' => ListReservations::route('/'),
-            'create' => CreateReservation::route('/create'),
-            'view' => ViewReservation::route('/{record}'),
-            'edit' => EditReservation::route('/{record}/edit'),
         ];
     }
 }

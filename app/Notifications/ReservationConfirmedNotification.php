@@ -49,7 +49,7 @@ class ReservationConfirmedNotification extends Notification implements ShouldQue
         }
 
         return $message
-            ->action('View Reservation', route('filament.member.resources.reservations.view', $this->reservation))
+            ->action('View Reservations', route('filament.member.resources.reservations.index'))
             ->line('We look forward to seeing you at the practice space!')
             ->line('If you need to make changes, please contact us at least 24 hours in advance.');
     }

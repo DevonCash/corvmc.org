@@ -16,8 +16,7 @@
             <dd class=" mt-1 flex items-center gap-2">
                 <x-filament::avatar :src="$record->user->getFilamentAvatarUrl()" :name="$record->user->name" size="lg" />
                 <div>
-                    <a href="{{ \App\Filament\Resources\Users\UserResource::getUrl('edit', ['record' => $record->user]) }}"
-                        target="_blank"
+                    <a target="_blank"
                         class="text-lg font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
                         {{ $record->user->name }}
                     </a>
@@ -70,18 +69,20 @@
         <div>
             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
                 Cost
-                <x-filament::icon :icon="match ($record->status) {
-                    'paid' => match($record->payment_method) {
+                <x-filament::icon :icon="match ($record->payment_status) {
+                    \App\Enums\PaymentStatus::Paid => match ($record->payment_method) {
                         'credit_card' => 'tabler-credit-card',
                         'cash' => 'tabler-cash',
                     },
-                    'unpaid' => $record->reserved_until->isPast() ? 'tabler-question-circle' : 'tabler-alert-circle',
+                    \App\Enums\PaymentStatus::Unpaid => $record->reserved_until->isPast()
+                        ? 'tabler-question-circle'
+                        : 'tabler-alert-circle',
                     default => 'tabler-currency-dollar',
                 }" :class="'size-4 ' .
                     match ($record->status) {
-                        'confirmed' => 'text-success-500',
-                        'cancelled' => 'text-danger-500',
-                        'pending' => 'text-warning-500',
+                        \App\Enums\ReservationStatus::Confirmed => 'text-success-500',
+                        \App\Enums\ReservationStatus::Cancelled => 'text-danger-500',
+                        \App\Enums\ReservationStatus::Pending => 'text-warning-500',
                         default => 'text-gray-500',
                     }" />
             </dt>

@@ -13,8 +13,7 @@ class CheckoutController extends Controller
 {
     /**
      * Handle successful checkout for any type (subscription, reservation, etc.).
-     * Note: The actual processing is handled by Stripe webhooks.
-     * This is just the user-facing success page with confirmation.
+     * Processes payment directly for immediate confirmation, with webhooks as backup.
      */
     public function success(Request $request)
     {
@@ -53,7 +52,12 @@ class CheckoutController extends Controller
             $checkoutType = $metadata['type'] ?? 'unknown';
 
             if ($session->payment_status === 'paid') {
-                // Success! Webhooks will handle the actual processing
+                // Process payment immediately for better UX
+                if ($checkoutType === 'practice_space_reservation') {
+                    $this->processReservationPayment($session, $metadata, $sessionId);
+                }
+
+                // Success! Show confirmation
                 $this->showSuccessNotification($checkoutType, $metadata);
 
                 Log::info('Checkout success page viewed', [
@@ -61,6 +65,7 @@ class CheckoutController extends Controller
                     'session_id' => $sessionId,
                     'checkout_type' => $checkoutType,
                     'payment_status' => $session->payment_status,
+                    'reservation_id' => $metadata['reservation_id'] ?? null,
                 ]);
             } else {
                 // Payment not completed yet
@@ -90,6 +95,48 @@ class CheckoutController extends Controller
 
         // Redirect based on checkout type
         return $this->getSuccessRedirect($checkoutType, $metadata, $user);
+    }
+
+    /**
+     * Process reservation payment directly from success page.
+     */
+    private function processReservationPayment(object $session, array $metadata, string $sessionId): void
+    {
+        try {
+            $reservationId = $metadata['reservation_id'] ?? null;
+
+            if (! $reservationId) {
+                Log::warning('No reservation ID in successful checkout metadata', ['session_id' => $sessionId]);
+
+                return;
+            }
+
+            $reservation = Reservation::find($reservationId);
+
+            if (! $reservation) {
+                Log::error('Reservation not found for successful payment', [
+                    'reservation_id' => $reservationId,
+                    'session_id' => $sessionId,
+                ]);
+
+                return;
+            }
+
+            // Process the successful payment (idempotent - safe even if webhook also processes)
+            \App\Actions\Reservations\HandleSuccessfulPayment::run($reservation, $sessionId);
+
+            Log::info('Successfully processed reservation payment on redirect', [
+                'reservation_id' => $reservationId,
+                'session_id' => $sessionId,
+                'amount' => $reservation->cost,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error processing reservation payment on redirect', [
+                'error' => $e->getMessage(),
+                'session_id' => $sessionId,
+                'metadata' => $metadata,
+            ]);
+        }
     }
 
     /**
@@ -225,12 +272,7 @@ class CheckoutController extends Controller
      */
     private function getReservationRedirect(array $metadata)
     {
-        $reservationId = $metadata['reservation_id'] ?? null;
-
-        if ($reservationId && $reservation = Reservation::find($reservationId)) {
-            return redirect()->route('filament.member.resources.reservations.view', $reservation);
-        }
-
+        // Always redirect to the index page - users can view/edit from there
         return redirect()->route('filament.member.resources.reservations.index');
     }
 }

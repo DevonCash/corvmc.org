@@ -52,6 +52,11 @@ enum PaymentStatus: string implements HasColor, HasIcon, HasLabel
         return $this === self::Unpaid;
     }
 
+    public function isUnpaid(): bool
+    {
+        return $this === self::Unpaid;
+    }
+
     public function isPaid(): bool
     {
         return $this === self::Paid;

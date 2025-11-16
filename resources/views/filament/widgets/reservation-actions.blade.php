@@ -31,7 +31,7 @@
                 @endif
 
                 <x-filament::button
-                    href="{{ route('filament.member.resources.reservations.create') }}"
+                    href="{{ route('filament.member.resources.reservations.index') }}"
                     size="sm"
                     color="primary"
                 >

@@ -2,14 +2,12 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Resources\Reservations\ReservationResource;
 use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class TodayReservationsWidget extends BaseWidget
@@ -122,7 +120,6 @@ class TodayReservationsWidget extends BaseWidget
                         return null;
                     }),
             ])
-            ->recordUrl(fn (Model $record) => ReservationResource::getUrl('view', ['record' => $record]))
             ->defaultSort('reserved_at')
             ->paginated(false);
     }

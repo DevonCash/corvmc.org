@@ -105,10 +105,9 @@ class ReservationsTable
                 CreateCheckoutSession::filamentAction(),
 
                 ActionGroup::make([
-                    MarkReservationAsPaid::filamentAction(),
-                    MarkReservationAsComped::filamentAction(),
+                    ViewAction::make()
+                        ->modalWidth('3xl'),
                     CancelReservation::filamentAction(),
-                    ViewAction::make(),
                 ])->extraDropdownAttributes(['class' => 'ml-auto']),
             ])
             ->toolbarActions([

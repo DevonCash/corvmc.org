@@ -6,9 +6,12 @@ use App\Actions\Payments\MarkReservationAsComped;
 use App\Actions\Payments\MarkReservationAsPaid;
 use App\Actions\Reservations\CancelReservation;
 use App\Actions\Reservations\ConfirmReservation;
+use App\Actions\Reservations\UpdateReservation;
+use App\Filament\Resources\Reservations\Schemas\ReservationEditForm;
 use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;
 use App\Models\Reservation;
+use Carbon\Carbon;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -18,6 +21,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class SpaceManagementTable
 {
@@ -120,10 +124,37 @@ class SpaceManagementTable
                         ->modalHeading(fn (Reservation $record): string => 'Reservation Details')
                         ->modalWidth('3xl')
                         ->modalSubmitAction(false)
-                        ->modalCancelActionLabel('Close')
-                        ->extraModalFooterActions([
-                            EditAction::make(),
-                        ]),
+                        ->modalCancelActionLabel('Close'),
+                    EditAction::make()
+                        ->modalWidth('lg')
+                        ->fillForm(function (Model $record): array {
+                            // Convert datetime to date and time components for the form
+                            $reservedAt = $record->reserved_at;
+                            $reservedUntil = $record->reserved_until;
+
+                            return [
+                                'reservation_date' => $reservedAt->toDateString(),
+                                'start_time' => $reservedAt->format('H:i'),
+                                'end_time' => $reservedUntil->format('H:i'),
+                                'status' => $record->status,
+                                'payment_status' => $record->payment_status,
+                                'notes' => $record->notes,
+                            ];
+                        })
+                        ->using(function (Model $record, array $data): Model {
+                            // Combine date and time fields in the app's timezone
+                            $startTime = Carbon::parse($data['reservation_date'].' '.$data['start_time'], config('app.timezone'));
+                            $endTime = Carbon::parse($data['reservation_date'].' '.$data['end_time'], config('app.timezone'));
+
+                            $options = [
+                                'notes' => $data['notes'] ?? null,
+                                'status' => $data['status'] ?? $record->status,
+                                'payment_status' => $data['payment_status'] ?? $record->payment_status,
+                            ];
+
+                            return UpdateReservation::run($record, $startTime, $endTime, $options);
+                        })
+                        ->form(fn ($form) => ReservationEditForm::configure($form)),
                     ConfirmReservation::filamentAction(),
                     MarkReservationAsPaid::filamentAction(),
                     MarkReservationAsComped::filamentAction(),

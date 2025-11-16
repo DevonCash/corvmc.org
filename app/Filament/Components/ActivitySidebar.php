@@ -305,7 +305,7 @@ class ActivitySidebar
                 'App\\Models\\Band' => route('filament.member.resources.bands.view', ['record' => $activity->subject]),
                 'App\\Models\\MemberProfile' => route('filament.member.resources.directory.view', ['record' => $activity->subject_id]),
                 'App\\Models\\Production' => route('filament.member.resources.productions.view', ['record' => $activity->subject_id]),
-                'App\\Models\\Reservation' => route('filament.member.resources.reservations.view', ['record' => $activity->subject_id]),
+                'App\\Models\\Reservation' => route('filament.member.resources.reservations.index'),
                 'App\\Models\\User' => $activity->subject?->profile?->id ?
                     route('filament.member.resources.directory.view', ['record' => $activity->subject->profile->id]) : null,
                 default => null,
