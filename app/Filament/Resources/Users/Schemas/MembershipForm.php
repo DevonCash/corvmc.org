@@ -57,12 +57,11 @@ class MembershipForm
                         CreateMembershipSubscriptionAction::make(),
                     ]),
 
-                // Active sustaining membership section
+                // Active sustaining membership section (hidden - rendered in blade as custom card)
                 Section::make('Your Membership Contribution')
                     ->description('Your sustaining membership is active! You can change your contribution amount or access billing details below.')
-                    ->columns(2)
                     ->visible(function ($record) {
-                        return $record->isSustainingMember();
+                        return false; // Now rendered as custom card in blade view
                     })
                     ->schema([
                         TextEntry::make('current_subscription')
@@ -142,49 +141,6 @@ class MembershipForm
 
                                 return $hasFeeCovered ? 'tabler-heart-dollar' : null;
                             }),
-                        TextEntry::make('rehearsal_hours')
-                            ->label('Rehearsal Hours')
-                            ->helperText(function ($record) {
-                                $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
-
-                                if ($subscription) {
-                                    try {
-                                        $stripeSubscription = $subscription->asStripeSubscription();
-                                        $nextBillingDate = \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_end)->format('n/j/Y');
-
-                                        $changeInfo = static::getBenefitChangeInfo($record);
-
-                                        if ($changeInfo) {
-                                            // Show change in benefits
-                                            return sprintf(
-                                                'Changes to %d hours on %s',
-                                                $changeInfo['next_month'],
-                                                $nextBillingDate
-                                            );
-                                        }
-
-                                        // Show refresh date
-                                        return sprintf('Refreshes %s', $nextBillingDate);
-                                    } catch (\Exception $e) {
-                                        Log::error('Failed to get subscription billing date', [
-                                            'user_id' => $record->id,
-                                            'error' => $e->getMessage(),
-                                        ]);
-
-                                        return null;
-                                    }
-                                }
-
-                                return null;
-                            })
-                            ->state(function ($record) {
-                                $remaining = $record->getRemainingFreeHours();
-                                $total = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($record);
-
-                                return sprintf('%g / %g hours', $remaining, $total);
-                            })
-                            ->size('lg')
-                            ->weight('bold'),
                         Flex::make([
                             OpenBillingPortalAction::make(),
                             ModifyMembershipAmountAction::make(),

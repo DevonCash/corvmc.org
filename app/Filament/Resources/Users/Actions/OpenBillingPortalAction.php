@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Actions;
 
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 
@@ -13,8 +14,10 @@ class OpenBillingPortalAction
             ->label('Manage Billing')
             ->icon('tabler-credit-card')
             ->color('info')
-            ->action(function ($record) {
-                if (! $record->stripe_id) {
+            ->action(function () {
+                $user = User::me();
+
+                if (! $user->stripe_id) {
                     Notification::make()
                         ->title('No billing account')
                         ->body('You need an active subscription to access billing management.')
@@ -23,13 +26,13 @@ class OpenBillingPortalAction
 
                     return;
                 }
-                // Return to the user's view page after billing portal
-                $returnUrl = url("/member/users/{$record->id}");
-                $billingPortal = $record->billingPortalUrl($returnUrl);
+                // Return to the membership page after billing portal
+                $returnUrl = route('filament.member.pages.membership');
+                $billingPortal = $user->billingPortalUrl($returnUrl);
 
                 // Redirect to the billing portal
                 return redirect()->away($billingPortal);
             })
-            ->disabled(fn ($record) => $record->stripe_id == null);
+            ->disabled(fn () => User::me()->stripe_id == null);
     }
 }

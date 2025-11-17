@@ -3,20 +3,20 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Resources\Users\Actions\CreateMembershipSubscriptionAction;
-use App\Filament\Resources\Users\Schemas\MembershipForm;
+use App\Filament\Resources\Users\Actions\ModifyMembershipAmountAction;
+use App\Filament\Resources\Users\Actions\ResumeMembershipAction;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Schema;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 
-class MyMembership extends Page implements HasActions, HasForms
+class MyMembership extends Page implements HasActions, HasSchemas
 {
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-star';
 
@@ -30,28 +30,34 @@ class MyMembership extends Page implements HasActions, HasForms
 
     protected static ?string $slug = 'membership';
 
-    public ?array $data = [];
-
-    public function mount(): void
-    {
-        $this->form->fill();
-    }
-
-    public function form(Schema $form): Schema
-    {
-        return $form
-            ->schema([
-                MembershipForm::configure(Grid::make(1)),
-            ])
-            ->model(User::me())
-            ->statePath('data');
-    }
-
     protected function getHeaderActions(): array
     {
         return [
             CreateMembershipSubscriptionAction::make()
                 ->visible(fn () => ! User::me()->isSustainingMember()),
         ];
+    }
+
+    public function getBillingPortalUrl(): ?string
+    {
+        $user = User::me();
+
+        if (! $user->stripe_id) {
+            return null;
+        }
+
+        $returnUrl = route('filament.member.pages.membership');
+
+        return $user->billingPortalUrl($returnUrl);
+    }
+
+    public function modifyMembershipAmountAction(): Action
+    {
+        return ModifyMembershipAmountAction::make();
+    }
+
+    public function resumeMembershipAction(): Action
+    {
+        return ResumeMembershipAction::make();
     }
 }

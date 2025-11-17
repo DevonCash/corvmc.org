@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\Subscriptions\UpdateUserMembershipStatus;
-use App\Models\Reservation;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Http\Controllers\WebhookController as CashierWebhookController;
@@ -47,95 +45,48 @@ class StripeWebhookController extends CashierWebhookController
      */
     private function handleReservationCheckout(array $session, array $metadata): SymfonyResponse
     {
-        try {
-            $sessionId = $session['id'];
-            $reservationId = $metadata['reservation_id'] ?? null;
+        $sessionId = $session['id'];
+        $reservationId = $metadata['reservation_id'] ?? null;
 
-            if (! $reservationId) {
-                Log::warning('Stripe webhook: No reservation ID in metadata', ['session_id' => $sessionId]);
+        $success = \App\Actions\Reservations\ProcessReservationCheckout::run(
+            $reservationId,
+            $sessionId
+        );
 
-                return $this->successMethod();
-            }
-
-            $reservation = Reservation::find($reservationId);
-
-            if (! $reservation) {
-                Log::error('Stripe webhook: Reservation not found', ['reservation_id' => $reservationId]);
-
-                return $this->successMethod();
-            }
-
-            // Skip if already paid to avoid duplicate processing
-            if ($reservation->isPaid()) {
-                Log::info('Stripe webhook: Reservation already paid', ['reservation_id' => $reservationId]);
-
-                return $this->successMethod();
-            }
-
-            // Process the successful payment
-            \App\Actions\Reservations\HandleSuccessfulPayment::run($reservation, $sessionId);
-
-            Log::info('Stripe webhook: Successfully processed reservation payment', [
-                'reservation_id' => $reservationId,
+        if (! $success && ! $reservationId) {
+            // Only return error if processing failed due to something other than missing ID
+            Log::warning('Stripe webhook: Failed to process reservation checkout', [
                 'session_id' => $sessionId,
-                'amount' => $reservation->cost,
+                'reservation_id' => $reservationId,
             ]);
-        } catch (\Exception $e) {
-            Log::error('Stripe webhook: Error processing reservation checkout', [
-                'error' => $e->getMessage(),
-                'session_id' => $session['id'] ?? 'unknown',
-            ]);
-
-            return response('Error processing webhook', 500);
         }
 
         return $this->successMethod();
     }
 
     /**
-     * Handle subscription checkout completion.
-     * Note: Actual subscription creation/updates are handled by Cashier automatically.
-     * We only need to update our membership status.
+     * Handle subscription checkout completion webhook.
+     *
+     * Note: checkout.session.completed fires before Cashier syncs the subscription to our DB.
+     * We can't rely on DB state here, so we process it the same as the redirect.
+     * The customer.subscription.created webhook will handle final reconciliation.
      */
     private function handleSubscriptionCheckout(array $session, array $metadata): SymfonyResponse
     {
-        try {
-            $sessionId = $session['id'];
-            $userId = $metadata['user_id'] ?? null;
+        $sessionId = $session['id'];
+        $userId = $metadata['user_id'] ?? null;
 
-            if (! $userId) {
-                Log::warning('Stripe webhook: No user ID in subscription metadata', ['session_id' => $sessionId]);
+        $success = \App\Actions\Subscriptions\ProcessSubscriptionCheckout::run(
+            $userId,
+            $sessionId,
+            $metadata
+        );
 
-                return $this->successMethod();
-            }
-
-            $user = User::find($userId);
-
-            if (! $user) {
-                Log::error('Stripe webhook: User not found for subscription', ['user_id' => $userId]);
-
-                return $this->successMethod();
-            }
-
-            // Update user membership status (Cashier handles the subscription sync automatically)
-            UpdateUserMembershipStatus::run($user);
-
-            // Note: Credit allocation happens in customer.subscription.created webhook
-            // after Cashier has created the subscription in our database
-
-            Log::info('Stripe webhook: Successfully processed subscription checkout', [
-                'user_id' => $userId,
+        if (! $success && $userId) {
+            Log::warning('Stripe webhook: Failed to process subscription checkout', [
                 'session_id' => $sessionId,
-                'base_amount' => $metadata['base_amount'] ?? null,
-                'covers_fees' => $metadata['covers_fees'] ?? null,
+                'user_id' => $userId,
             ]);
-        } catch (\Exception $e) {
-            Log::error('Stripe webhook: Error processing subscription checkout', [
-                'error' => $e->getMessage(),
-                'session_id' => $session['id'] ?? 'unknown',
-            ]);
-
-            return response('Error processing webhook', 500);
         }
 
         return $this->successMethod();

@@ -17,11 +17,21 @@ class GetUserMonthlyFreeHours
      *
      * Returns 0 if not a sustaining member.
      * Uses peak billing amount if subscription exists, otherwise returns default.
+     *
+     * @param  User  $user  The user to check
+     * @param  int|null  $subscriptionAmountInCents  Optional verified subscription amount in cents (from checkout metadata)
      */
-    public function handle(User $user): int
+    public function handle(User $user, ?int $subscriptionAmountInCents = null): int
     {
         if (! CheckIsSustainingMember::run($user)) {
             return 0;
+        }
+
+        // If we have a verified subscription amount (e.g., from checkout redirect),
+        // trust it over the DB (which may not have synced yet)
+        // Convert from cents to dollars only for the calculation
+        if ($subscriptionAmountInCents !== null) {
+            return CalculateFreeHours::run($subscriptionAmountInCents / 100);
         }
 
         // Use actions for subscription data

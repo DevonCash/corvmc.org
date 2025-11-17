@@ -94,6 +94,49 @@ app/Filament/Resources/
 - Admin functions integrated into member panel with role-based access
 - Resources auto-discovered from `app/Filament/Resources/`
 
+### Filament Actions in Livewire Components
+
+When embedding Filament actions in Livewire components (Pages, Widgets, etc.), follow these requirements:
+
+**Required traits and interfaces:**
+```php
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
+
+class MyPage extends Page implements HasActions, HasSchemas
+{
+    use InteractsWithActions;
+    use InteractsWithSchemas;
+```
+
+**Action method requirements:**
+- Method name must match the action name or action name + "Action"
+- **CRITICAL: Must have explicit `: Action` return type** (without it, Livewire cannot find the action)
+- Action name in `Action::make()` must match the method name
+
+```php
+// ✅ CORRECT - explicit return type
+public function modifyMembershipAmountAction(): Action
+{
+    return ModifyMembershipAmountAction::make();
+}
+
+// ❌ WRONG - missing return type causes "Property not found" error
+public function modifyMembershipAmountAction()
+{
+    return ModifyMembershipAmountAction::make();
+}
+```
+
+**Rendering in Blade:**
+```blade
+{{ $this->modifyMembershipAmountAction }}
+```
+
+**Note:** `<x-filament-actions::modals />` is already included in `<x-filament-panels::page>`.
+
 ### Model Architecture
 
 **Key models with important relationships:**

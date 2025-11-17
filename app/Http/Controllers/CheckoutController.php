@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Reservation;
 use App\Models\User;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
@@ -41,6 +40,23 @@ class CheckoutController extends Controller
             return redirect(filament()->getUrl());
         }
 
+        // Security: Verify the logged-in user matches the checkout user
+        if ($user->id !== auth()->id()) {
+            Log::warning('Unauthorized checkout success attempt', [
+                'authenticated_user' => auth()->id(),
+                'checkout_user' => $user->id,
+                'session_id' => $sessionId,
+            ]);
+
+            Notification::make()
+                ->title('Unauthorized')
+                ->body('You are not authorized to view this checkout.')
+                ->danger()
+                ->send();
+
+            return redirect(filament()->getUrl());
+        }
+
         // Initialize variables for use outside try block
         $checkoutType = 'unknown';
         $metadata = [];
@@ -51,10 +67,37 @@ class CheckoutController extends Controller
             $metadata = $session->metadata ? $session->metadata->toArray() : [];
             $checkoutType = $metadata['type'] ?? 'unknown';
 
+            // Additional security: Verify Stripe customer matches the user
+            if ($session->customer && $user->stripe_id && $session->customer !== $user->stripe_id) {
+                Log::warning('Stripe customer mismatch in checkout', [
+                    'user_id' => $user->id,
+                    'user_stripe_id' => $user->stripe_id,
+                    'session_customer' => $session->customer,
+                    'session_id' => $sessionId,
+                ]);
+
+                Notification::make()
+                    ->title('Payment verification failed')
+                    ->body('Unable to verify payment. Please contact support.')
+                    ->danger()
+                    ->send();
+
+                return redirect(filament()->getUrl());
+            }
+
             if ($session->payment_status === 'paid') {
                 // Process payment immediately for better UX
                 if ($checkoutType === 'practice_space_reservation') {
-                    $this->processReservationPayment($session, $metadata, $sessionId);
+                    \App\Actions\Reservations\ProcessReservationCheckout::run(
+                        $metadata['reservation_id'] ?? null,
+                        $sessionId
+                    );
+                } elseif ($checkoutType === 'sliding_scale_membership') {
+                    \App\Actions\Subscriptions\ProcessSubscriptionCheckout::run(
+                        $metadata['user_id'] ?? null,
+                        $sessionId,
+                        $metadata
+                    );
                 }
 
                 // Success! Show confirmation
@@ -95,48 +138,6 @@ class CheckoutController extends Controller
 
         // Redirect based on checkout type
         return $this->getSuccessRedirect($checkoutType, $metadata, $user);
-    }
-
-    /**
-     * Process reservation payment directly from success page.
-     */
-    private function processReservationPayment(object $session, array $metadata, string $sessionId): void
-    {
-        try {
-            $reservationId = $metadata['reservation_id'] ?? null;
-
-            if (! $reservationId) {
-                Log::warning('No reservation ID in successful checkout metadata', ['session_id' => $sessionId]);
-
-                return;
-            }
-
-            $reservation = Reservation::find($reservationId);
-
-            if (! $reservation) {
-                Log::error('Reservation not found for successful payment', [
-                    'reservation_id' => $reservationId,
-                    'session_id' => $sessionId,
-                ]);
-
-                return;
-            }
-
-            // Process the successful payment (idempotent - safe even if webhook also processes)
-            \App\Actions\Reservations\HandleSuccessfulPayment::run($reservation, $sessionId);
-
-            Log::info('Successfully processed reservation payment on redirect', [
-                'reservation_id' => $reservationId,
-                'session_id' => $sessionId,
-                'amount' => $reservation->cost,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error processing reservation payment on redirect', [
-                'error' => $e->getMessage(),
-                'session_id' => $sessionId,
-                'metadata' => $metadata,
-            ]);
-        }
     }
 
     /**

@@ -38,6 +38,12 @@ class CreateSubscription
             ->checkout([
                 'success_url' => route('checkout.success').'?user_id='.$user->id.'&session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => route('checkout.cancel').'?user_id='.$user->id.'&type=sliding_scale_membership',
+                'metadata' => [
+                    'user_id' => $user->id,
+                    'type' => 'sliding_scale_membership',
+                    'base_amount' => $baseAmount->getMinorAmount()->toInt(),
+                    'covers_fees' => $coverFees ? 'true' : 'false',
+                ],
             ]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Actions;
 
+use App\Models\User;
 use Brick\Money\Money;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Slider;
@@ -62,9 +63,9 @@ class CreateMembershipSubscriptionAction
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])
-            ->action(function (array $data, $record) {
+            ->action(function (array $data) {
                 $baseAmount = Money::of($data['amount'], 'USD');
-                $checkout = \App\Actions\Subscriptions\CreateSubscription::run($record, $baseAmount, $data['cover_fees']);
+                $checkout = \App\Actions\Subscriptions\CreateSubscription::run(User::me(), $baseAmount, $data['cover_fees']);
                 redirect($checkout->url);
             });
     }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Actions;
 
+use App\Models\User;
 use Brick\Money\Money;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Slider;
@@ -14,7 +15,7 @@ class ModifyMembershipAmountAction
 {
     public static function make(): Action
     {
-        return Action::make('modify_membership_amount')
+        return Action::make('modifyMembershipAmountAction')
             ->label('Update Contribution')
             ->icon('tabler-cash-banknote')
             ->color('primary')
@@ -28,8 +29,8 @@ class ModifyMembershipAmountAction
                     ->fillTrack()
                     ->live()
                     ->tooltips(RawJs::make('`$${$value.toFixed(2)}`'))
-                    ->default(function ($record) {
-                        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
+                    ->default(function () {
+                        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run(User::me());
 
                         if ($subscription) {
                             // Get the Stripe subscription object with pricing info
@@ -59,8 +60,8 @@ class ModifyMembershipAmountAction
                         return 'Add processing fees to support the organization';
                     })
                     ->live()
-                    ->default(function ($record) {
-                        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
+                    ->default(function () {
+                        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run(User::me());
 
                         if ($subscription) {
                             // Check if subscription has multiple items (base + fee coverage)
@@ -88,10 +89,10 @@ class ModifyMembershipAmountAction
             ])
             ->modalSubmitActionLabel('Update Contribution')
             ->modalCancelAction(false)
-            ->action(function (array $data, $record) {
+            ->action(function (array $data) {
                 $baseAmount = Money::of($data['amount'], 'USD');
 
-                \App\Actions\Subscriptions\UpdateSubscriptionAmount::run($record, $baseAmount, $data['cover_fees']);
+                \App\Actions\Subscriptions\UpdateSubscriptionAmount::run(User::me(), $baseAmount, $data['cover_fees']);
                 \Filament\Notifications\Notification::make()
                     ->title('Membership Updated')
                     ->success()
