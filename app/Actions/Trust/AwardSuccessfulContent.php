@@ -30,7 +30,7 @@ class AwardSuccessfulContent
             ->exists();
 
         if (! $hasUpheldReports) {
-            $contentId = $content->id;
+            $contentId = $content->getKey();
             $contentTitle = $content->title ?? $content->name ?? $contentId;
 
             AwardTrustPoints::run(

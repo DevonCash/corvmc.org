@@ -16,7 +16,7 @@ class HandleContentViolation
      */
     public function handle(User $user, Reportable $content, string $violationType, string $contentType = 'global'): void
     {
-        $contentId = $content->id;
+        $contentId = $content->getKey();
         $contentTitle = $content->title ?? $content->name ?? class_basename($content);
 
         $reason = 'Content violation for '.$contentTitle;

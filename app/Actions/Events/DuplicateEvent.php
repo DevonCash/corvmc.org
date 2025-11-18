@@ -30,11 +30,10 @@ class DuplicateEvent
         // Copy performers
         foreach ($originalEvent->performers as $performer) {
             if ($performer instanceof Band) {
-                /** @var \Illuminate\Database\Eloquent\Relations\Pivot|null $pivot */
                 $pivot = $performer->pivot;
                 $newEvent->performers()->attach($performer->id, [
-                    'order' => $pivot?->order,
-                    'set_length' => $pivot?->set_length,
+                    'order' => $pivot?->order ?? null,
+                    'set_length' => $pivot?->set_length ?? null,
                 ]);
             }
         }

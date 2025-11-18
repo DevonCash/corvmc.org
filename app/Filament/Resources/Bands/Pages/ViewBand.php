@@ -12,6 +12,9 @@ use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @property \App\Models\Band $record
+ */
 class ViewBand extends Page
 {
     use InteractsWithRecord;

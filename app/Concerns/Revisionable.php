@@ -337,13 +337,11 @@ trait Revisionable
      */
     public function getRevisionSummary(): array
     {
-        $revisions = $this->revisions();
-
         return [
-            'total' => $revisions->count(),
+            'total' => $this->revisions()->count(),
             'pending' => $this->pendingRevisions()->count(),
-            'approved' => $revisions->approved()->count(),
-            'rejected' => $revisions->rejected()->count(),
+            'approved' => $this->revisions()->approved()->count(),
+            'rejected' => $this->revisions()->rejected()->count(),
             'latest' => $this->latestRevision(),
         ];
     }

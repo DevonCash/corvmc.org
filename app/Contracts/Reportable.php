@@ -48,4 +48,9 @@ interface Reportable
      * Check if this content has been reported by a specific user.
      */
     public function hasBeenReportedBy($user): bool;
+
+    /**
+     * Get the model's primary key value.
+     */
+    public function getKey();
 }
