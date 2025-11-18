@@ -14,6 +14,9 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
+/**
+ * @property \App\Models\User $record
+ */
 class ViewUser extends ViewRecord
 {
     protected static string $resource = UserResource::class;
