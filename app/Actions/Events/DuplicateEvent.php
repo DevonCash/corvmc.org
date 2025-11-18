@@ -28,15 +28,16 @@ class DuplicateEvent
 
         // Copy performers
         foreach ($originalEvent->performers as $performer) {
+            $pivot = $performer->pivot;
             $newEvent->performers()->attach($performer->id, [
-                'order' => $performer->pivot->order,
-                'set_length' => $performer->pivot->set_length,
+                'order' => $pivot?->order,
+                'set_length' => $pivot?->set_length,
             ]);
         }
 
         // Copy tags
         foreach ($originalEvent->tags as $tag) {
-            $newEvent->attachTag($tag->name, $tag->type);
+            $newEvent->attachTag($tag->name ?? '', $tag->type ?? null);
         }
 
         return $newEvent;

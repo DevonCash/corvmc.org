@@ -20,7 +20,7 @@ class DeleteMemberProfile
             $profile->clearMediaCollection('avatar');
 
             // Detach all tags
-            $profile->detachTags();
+            $profile->detachTags($profile->tags);
 
             return $profile->delete();
         });

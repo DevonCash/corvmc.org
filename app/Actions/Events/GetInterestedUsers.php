@@ -2,6 +2,7 @@
 
 namespace App\Actions\Events;
 
+use App\Models\Band;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,9 +26,11 @@ class GetInterestedUsers
         }
 
         // Notify all band members performing in this event
-        foreach ($event->performers as $band) {
-            $bandMembers = $band->members()->get();
-            $users = $users->merge($bandMembers);
+        foreach ($event->performers as $performer) {
+            if ($performer instanceof Band) {
+                $bandMembers = $performer->members()->get();
+                $users = $users->merge($bandMembers);
+            }
         }
 
         // For published events, optionally notify all sustaining members
