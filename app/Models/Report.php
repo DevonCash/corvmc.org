@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/**
+ * @property-read User|null $resolvedBy
+ */
 class Report extends Model
 {
     use HasFactory, LogsActivity;

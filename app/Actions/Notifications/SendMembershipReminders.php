@@ -47,11 +47,12 @@ class SendMembershipReminders
             ];
 
             foreach ($inactiveUsers as $user) {
+                $lastReservation = $user->reservations()->latest()->first();
                 $userData = [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'last_reservation' => $user->reservations()->latest()->first()?->created_at,
+                    'last_reservation' => $lastReservation?->created_at,
                     'status' => 'pending',
                 ];
 
