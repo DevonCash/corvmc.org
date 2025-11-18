@@ -2,6 +2,7 @@
 
 namespace App\Actions\Reports;
 
+use App\Contracts\Reportable;
 use App\Models\Report;
 use App\Models\User;
 use App\Notifications\ReportSubmittedNotification;
@@ -16,12 +17,16 @@ class SubmitReport
     /**
      * Submit a report for content.
      */
+    /**
+     * @param Reportable&Model $reportable
+     */
     public function handle(
         Model $reportable,
         User $reporter,
         string $reason,
         ?string $customReason = null
     ): Report {
+        assert($reportable instanceof Reportable);
         // Prevent duplicate reports from same user on same content
         $existingReport = Report::where([
             'reportable_type' => get_class($reportable),

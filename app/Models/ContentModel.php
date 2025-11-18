@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\HasVisibility;
 use App\Concerns\Reportable;
 use App\Concerns\Revisionable;
+use App\Contracts\Reportable as ReportableContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
@@ -31,7 +32,7 @@ use Spatie\Tags\HasTags;
  * @property-read User|null $organizer
  * @property-read User|null $creator
  */
-abstract class ContentModel extends Model implements HasMedia
+abstract class ContentModel extends Model implements HasMedia, ReportableContract
 {
     use HasFactory, HasFlags, HasTags, HasVisibility, InteractsWithMedia, LogsActivity, Reportable, Revisionable;
 
