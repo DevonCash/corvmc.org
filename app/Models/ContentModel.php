@@ -21,16 +21,6 @@ use Spatie\Tags\HasTags;
  *
  * Provides common functionality for models that represent content created by users,
  * including media handling, activity logging, reporting, and tagging capabilities.
- *
- * @property \App\Enums\Visibility $visibility
- * @property int|null $user_id
- * @property int|null $owner_id
- * @property int|null $organizer_id
- * @property int|null $creator_id
- * @property-read User|null $user
- * @property-read User|null $owner
- * @property-read User|null $organizer
- * @property-read User|null $creator
  */
 abstract class ContentModel extends Model implements HasMedia, ReportableContract
 {
