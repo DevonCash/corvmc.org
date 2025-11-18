@@ -23,8 +23,10 @@ parameters:
     checkModelProperties: true
     checkOctaneCompatibility: false
 
-    # Ignore specific error patterns (currently none needed - clean codebase!)
-    # ignoreErrors:
+    # Ignore specific error patterns
+    ignoreErrors:
+        # Filament v4 form fill() method - PHPStan doesn't understand Filament's form state magic
+        - '#Call to an undefined method Filament\\Schemas\\Components\\Form::fill\(\)#'
 
     # Stub files for better type inference (optional - uncomment if needed)
     # stubFiles:
