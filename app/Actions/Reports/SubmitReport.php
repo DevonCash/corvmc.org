@@ -2,11 +2,10 @@
 
 namespace App\Actions\Reports;
 
-use App\Contracts\Reportable;
+use App\Contracts\Reportable as ReportableContract;
 use App\Models\Report;
 use App\Models\User;
 use App\Notifications\ReportSubmittedNotification;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -17,16 +16,12 @@ class SubmitReport
     /**
      * Submit a report for content.
      */
-    /**
-     * @param Reportable&Model $reportable
-     */
     public function handle(
-        Model $reportable,
+        ReportableContract $reportable,
         User $reporter,
         string $reason,
         ?string $customReason = null
     ): Report {
-        assert($reportable instanceof Reportable);
         // Prevent duplicate reports from same user on same content
         $existingReport = Report::where([
             'reportable_type' => get_class($reportable),
@@ -69,7 +64,7 @@ class SubmitReport
     /**
      * Handle when report threshold is reached.
      */
-    private function handleThresholdReached(Model $reportable): void
+    private function handleThresholdReached(ReportableContract $reportable): void
     {
         if ($reportable->shouldAutoHide()) {
             $this->hideContent($reportable);
@@ -82,7 +77,7 @@ class SubmitReport
     /**
      * Hide content (implementation depends on model type).
      */
-    private function hideContent(Model $reportable): void
+    private function hideContent(ReportableContract $reportable): void
     {
         match (get_class($reportable)) {
             'App\Models\Event' => logger()->info("Production {$reportable->id} reached report threshold"),
@@ -95,7 +90,7 @@ class SubmitReport
     /**
      * Notify moderators about flagged content.
      */
-    private function notifyModerators(Model $reportable, ?Report $report = null): void
+    private function notifyModerators(ReportableContract $reportable, ?Report $report = null): void
     {
         // Get users with moderation permissions
         $moderators = User::role(['admin'])->get();

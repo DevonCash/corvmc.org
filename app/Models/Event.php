@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Period\Period;
 
+/**
+ * @property-read User|null $organizer
+ */
 class Event extends ContentModel implements Eventable
 {
     use HasPublishing, HasTimePeriod, SoftDeletes;

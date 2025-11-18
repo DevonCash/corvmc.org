@@ -47,6 +47,7 @@ class SendMembershipReminders
             ];
 
             foreach ($inactiveUsers as $user) {
+                /** @var \App\Models\Reservation|null $lastReservation */
                 $lastReservation = $user->reservations()->latest()->first();
                 $userData = [
                     'id' => $user->id,

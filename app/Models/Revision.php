@@ -13,6 +13,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *
  * Represents pending changes to any model that require moderator approval.
  * Stores original data, proposed changes, and approval workflow state.
+ *
+ * @property-read User $submittedBy
+ * @property-read User|null $reviewedBy
  */
 class Revision extends Model
 {
