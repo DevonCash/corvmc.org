@@ -24,7 +24,7 @@ class ViewMemberProfile extends Page
 
     public function getTitle(): string|\Illuminate\Contracts\Support\Htmlable
     {
-        return $this->record->user->name;
+        return $this->record->user->name ?? 'Member Profile';
     }
 
     public function getSubheading(): string|\Illuminate\Contracts\Support\Htmlable
@@ -38,7 +38,7 @@ class ViewMemberProfile extends Page
     {
         return [
             route('filament.member.resources.directory.index') => 'Member Directory',
-            route('filament.member.resources.directory.view', ['record' => $this->record->id]) => $this->record->user->name,
+            route('filament.member.resources.directory.view', ['record' => $this->record->id]) => $this->record->user->name ?? 'Member',
         ];
     }
 

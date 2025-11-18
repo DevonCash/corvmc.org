@@ -55,12 +55,12 @@ class RevisionResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::pending()->count() ?: null;
+        return Revision::pending()->count() ?: null;
     }
 
     public static function getNavigationBadgeColor(): string|array|null
     {
-        $pendingCount = static::getModel()::pending()->count();
+        $pendingCount = Revision::pending()->count();
 
         if ($pendingCount > 10) {
             return 'danger';

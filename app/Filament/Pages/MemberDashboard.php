@@ -116,11 +116,13 @@ class MemberDashboard extends Page
                         'is_notaflof' => $event->isNotaflof(),
                         'performers' => $event->performers->map(function ($band) {
                             /** @var \App\Models\Band $band */
+                            $pivot = isset($band->pivot) ? $band->pivot : null;
+
                             return [
                                 'id' => $band->getKey(),
                                 'name' => $band->name,
-                                'order' => $band->pivot->order ?? 0,
-                                'set_length' => $band->pivot->set_length,
+                                'order' => $pivot?->order ?? 0,
+                                'set_length' => $pivot?->set_length,
                                 'can_view' => $this->canViewBand($band),
                                 'profile_url' => $this->canViewBand($band) ?
                                     route('filament.member.resources.bands.view', $band) : null,

@@ -12,6 +12,9 @@ use Filament\Resources\Pages\EditRecord;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property \App\Models\Reservation $record
+ */
 class EditReservation extends EditRecord
 {
     protected static string $resource = ReservationResource::class;
