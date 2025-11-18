@@ -169,7 +169,7 @@ class SyncReservationToGoogleCalendar
     {
         $reserver = $reservation->getResponsibleUser();
         $description = "Reserved by: {$reserver->name}\n";
-        $description .= "Status: {$reservation->status}\n";
+        $description .= "Status: {$reservation->status->value}\n";
 
         if ($reservation->notes) {
             $description .= "Notes: {$reservation->notes}\n";

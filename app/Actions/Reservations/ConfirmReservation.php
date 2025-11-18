@@ -47,8 +47,7 @@ class ConfirmReservation
                     $freeBlocks,
                     CreditType::FreeHours,
                     'reservation_usage',
-                    $reservation->id,
-                    "Deducted {$freeBlocks} blocks for reservation confirmation"
+                    $reservation->id
                 );
             }
 

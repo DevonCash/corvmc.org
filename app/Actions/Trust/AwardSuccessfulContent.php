@@ -30,19 +30,24 @@ class AwardSuccessfulContent
             ->exists();
 
         if (! $hasUpheldReports) {
+            /** @phpstan-ignore property.notFound */
+            $contentId = $content->id;
+            /** @phpstan-ignore property.notFound */
+            $contentTitle = $content->title ?? $content->name ?? $contentId;
+
             AwardTrustPoints::run(
                 $user,
                 TrustConstants::POINTS_SUCCESSFUL_CONTENT,
                 $contentType,
                 'successful_content',
-                $content->id,
-                'Successful content: '.($content->title ?? $content->name ?? $content->id)
+                $contentId,
+                'Successful content: '.$contentTitle
             );
 
             Log::info('Trust points awarded for successful content', [
                 'user_id' => $user->id,
                 'content_type' => $contentType,
-                'content_id' => $content->id,
+                'content_id' => $contentId,
                 'points_awarded' => TrustConstants::POINTS_SUCCESSFUL_CONTENT,
                 'new_total' => $user->getTrustBalance($contentType),
             ]);

@@ -25,6 +25,7 @@ class SubmitReport
         // Prevent duplicate reports from same user on same content
         $existingReport = Report::where([
             'reportable_type' => get_class($reportable),
+            /** @phpstan-ignore property.notFound */
             'reportable_id' => $reportable->id,
             'reported_by_id' => $reporter->id,
             'status' => 'pending',
@@ -43,6 +44,7 @@ class SubmitReport
         // Create the report
         $report = Report::create([
             'reportable_type' => get_class($reportable),
+            /** @phpstan-ignore property.notFound */
             'reportable_id' => $reportable->id,
             'reported_by_id' => $reporter->id,
             'reason' => $reason,
@@ -105,6 +107,7 @@ class SubmitReport
             Notification::send($moderators, new ReportSubmittedNotification($report));
         }
 
+        /** @phpstan-ignore property.notFound */
         logger()->info("Notifying {$moderators->count()} moderators about reported {$reportable->getReportableType()}: {$reportable->id}");
     }
 }

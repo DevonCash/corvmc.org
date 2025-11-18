@@ -16,14 +16,19 @@ class HandleContentViolation
      */
     public function handle(User $user, Reportable $content, string $violationType, string $contentType = 'global'): void
     {
-        $reason = 'Content violation for '.($content->title ?? $content->name ?? class_basename($content));
+        /** @phpstan-ignore property.notFound */
+        $contentId = $content->id;
+        /** @phpstan-ignore property.notFound */
+        $contentTitle = $content->title ?? $content->name ?? class_basename($content);
 
-        PenalizeViolation::run($user, $violationType, $contentType, $content->id, $reason);
+        $reason = 'Content violation for '.$contentTitle;
+
+        PenalizeViolation::run($user, $violationType, $contentType, $contentId, $reason);
 
         Log::warning('Content violation handled', [
             'user_id' => $user->id,
             'content_type' => $contentType,
-            'content_id' => $content->id,
+            'content_id' => $contentId,
             'violation_type' => $violationType,
             'new_trust_points' => $user->getTrustBalance($contentType),
         ]);

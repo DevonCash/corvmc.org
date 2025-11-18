@@ -2,6 +2,7 @@
 
 namespace App\Filament\Actions;
 
+use App\Contracts\Reportable;
 use App\Models\Report;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -21,7 +22,7 @@ class ReportContentAction
             ->visible(
                 fn (Model $record) =>
                 // Don't show if user already reported this content
-                ! $record->hasBeenReportedBy(Auth::user())
+                $record instanceof Reportable && ! $record->hasBeenReportedBy(Auth::user())
             )
             ->schema(fn (Model $record) => [
                 Select::make('reason')
@@ -50,6 +51,10 @@ class ReportContentAction
                     ->rows(3),
             ])
             ->action(function (Model $record, array $data): void {
+                if (! $record instanceof Reportable) {
+                    return;
+                }
+
                 $customReason = $data['reason'] === 'other'
                     ? $data['custom_reason']
                     : ($data['details'] ?? null);
@@ -68,7 +73,13 @@ class ReportContentAction
                     ->send();
             })
             ->requiresConfirmation()
-            ->modalHeading(fn (Model $record) => "Report {$record->getReportableType()}")
+            ->modalHeading(function (Model $record) {
+                if ($record instanceof Reportable) {
+                    return "Report {$record->getReportableType()}";
+                }
+
+                return 'Report Content';
+            })
             ->modalDescription('Please help us understand why you\'re reporting this content. False reports may impact your ability to report in the future.')
             ->modalSubmitActionLabel('Submit Report');
     }
