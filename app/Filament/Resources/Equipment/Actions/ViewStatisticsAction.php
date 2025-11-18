@@ -22,7 +22,7 @@ class ViewStatisticsAction
             ->schema(function (): Schema {
                 $stats = \App\Actions\Equipment\GetStatistics::run();
                 $valueByType = \App\Actions\Equipment\GetValueByAcquisitionType::run();
-                $popular = Equipment::popular()->limit(5)->get();;
+                $popular = Equipment::popular()->limit(5)->get();
 
                 return Schema::make()
                     ->schema([
@@ -134,7 +134,7 @@ class ViewStatisticsAction
                                         }
 
                                         return $popular
-                                            ->map(fn ($item) => "{$item->name} ({$item->loans_count} loans)")
+                                            ->map(fn (\App\Models\Equipment $item) => "{$item->name} ({$item->loans_count} loans)")
                                             ->join("\n");
                                     })
                                     ->extraAttributes(['class' => 'whitespace-pre-line']),

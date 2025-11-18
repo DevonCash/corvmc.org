@@ -115,7 +115,9 @@ class SpaceManagementTable
 
                 Filter::make('needs_attention')
                     ->label('Needs Attention')
-                    ->query(fn (Builder $query): Builder => $query->needsAttention()),
+                    ->query(fn (Builder $query): Builder => $query
+                        /** @phpstan-ignore method.notFound */
+                        ->needsAttention()),
             ])
             ->recordActions([
                 ActionGroup::make([
@@ -127,7 +129,7 @@ class SpaceManagementTable
                         ->modalCancelActionLabel('Close'),
                     EditAction::make()
                         ->modalWidth('lg')
-                        ->fillForm(function (Model $record): array {
+                        ->fillForm(function (\App\Models\Reservation $record): array {
                             // Convert datetime to date and time components for the form
                             $reservedAt = $record->reserved_at;
                             $reservedUntil = $record->reserved_until;
@@ -141,7 +143,7 @@ class SpaceManagementTable
                                 'notes' => $record->notes,
                             ];
                         })
-                        ->using(function (Model $record, array $data): Model {
+                        ->using(function (\App\Models\Reservation $record, array $data): Model {
                             // Combine date and time fields in the app's timezone
                             $startTime = Carbon::parse($data['reservation_date'].' '.$data['start_time'], config('app.timezone'));
                             $endTime = Carbon::parse($data['reservation_date'].' '.$data['end_time'], config('app.timezone'));

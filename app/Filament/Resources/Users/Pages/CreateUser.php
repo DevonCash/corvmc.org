@@ -8,6 +8,9 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property \App\Models\User $record
+ */
 class CreateUser extends CreateRecord
 {
     protected static string $resource = UserResource::class;

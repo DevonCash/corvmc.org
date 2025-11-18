@@ -13,6 +13,9 @@ use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Password;
 
+/**
+ * @property \App\Models\User $record
+ */
 class EditUser extends EditRecord
 {
     protected static string $resource = UserResource::class;
