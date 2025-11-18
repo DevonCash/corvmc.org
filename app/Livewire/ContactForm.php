@@ -83,8 +83,7 @@ class ContactForm extends Component implements HasForms
         logger('Contact form submission', $validated);
 
         // Send email notification to organization contact email
-        $organizationEmail = app(OrganizationSettings::class)->email;
-        $staffEmail = $organizationEmail ?? config('mail.from.address');
+        $staffEmail = app(OrganizationSettings::class)->email;
 
         LaravelNotification::route('mail', $staffEmail)
             ->notify(new ContactFormSubmissionNotification($validated));

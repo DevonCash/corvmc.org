@@ -6,6 +6,8 @@ use App\Data\ContactData;
 use App\States\Equipment\EquipmentState;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -77,7 +79,7 @@ class Equipment extends Model implements HasMedia
     /**
      * Get the user who provided this equipment (donor/lender).
      */
-    public function provider()
+    public function provider(): BelongsTo
     {
         return $this->belongsTo(User::class, 'provider_id');
     }
@@ -93,7 +95,7 @@ class Equipment extends Model implements HasMedia
     /**
      * Get all components of this equipment (for kits).
      */
-    public function children()
+    public function children(): HasMany
     {
         return $this->hasMany(Equipment::class, 'parent_equipment_id')
             ->orderBy('sort_order')
@@ -149,8 +151,8 @@ class Equipment extends Model implements HasMedia
     public function getIsAvailableAttribute(): bool
     {
         return $this->loanable &&
-               $this->status === 'available' &&
-               ! $this->currentLoan;
+            $this->status === 'available' &&
+            ! $this->currentLoan;
     }
 
     /**
@@ -215,8 +217,8 @@ class Equipment extends Model implements HasMedia
     public function needsReturn(): bool
     {
         return $this->isOnLoanToCmc() &&
-               $this->ownership_status === 'on_loan_to_cmc' &&
-               $this->return_due_date?->isPast();
+            $this->ownership_status === 'on_loan_to_cmc' &&
+            $this->return_due_date?->isPast();
     }
 
     public function scopePopular($query)
@@ -302,7 +304,7 @@ class Equipment extends Model implements HasMedia
 
         return $this->children
             ->where('can_lend_separately', false) // Required components
-            ->every(fn ($component) => $component->is_available);
+            ->every(fn($component) => $component->is_available);
     }
 
     /**
@@ -314,7 +316,7 @@ class Equipment extends Model implements HasMedia
             return collect();
         }
 
-        return $this->children->filter(fn ($component) => $component->is_available);
+        return $this->children->filter(fn($component) => $component->is_available);
     }
 
     /**
@@ -326,7 +328,7 @@ class Equipment extends Model implements HasMedia
             return collect();
         }
 
-        return $this->children->filter(fn ($component) => $component->is_checked_out);
+        return $this->children->filter(fn($component) => $component->is_checked_out);
     }
 
     public function getActivitylogOptions(): LogOptions
@@ -335,6 +337,6 @@ class Equipment extends Model implements HasMedia
             ->logOnly(['name', 'status', 'condition', 'location', 'ownership_status'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn (string $eventName) => "Equipment {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Equipment {$eventName}");
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -55,7 +56,7 @@ class EquipmentDamageReport extends Model implements HasMedia
     /**
      * Get the equipment this damage report is for.
      */
-    public function equipment()
+    public function equipment(): BelongsTo
     {
         return $this->belongsTo(Equipment::class);
     }
@@ -63,7 +64,7 @@ class EquipmentDamageReport extends Model implements HasMedia
     /**
      * Get the loan that discovered this damage (if applicable).
      */
-    public function loan()
+    public function loan(): BelongsTo
     {
         return $this->belongsTo(EquipmentLoan::class, 'equipment_loan_id');
     }
@@ -71,7 +72,7 @@ class EquipmentDamageReport extends Model implements HasMedia
     /**
      * Get the user who reported the damage.
      */
-    public function reportedBy()
+    public function reportedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reported_by_id');
     }
@@ -79,7 +80,7 @@ class EquipmentDamageReport extends Model implements HasMedia
     /**
      * Get the user assigned to fix the damage.
      */
-    public function assignedTo()
+    public function assignedTo(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to_id');
     }

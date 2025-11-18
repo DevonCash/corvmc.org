@@ -22,25 +22,8 @@ parameters:
     checkModelProperties: true
     checkOctaneCompatibility: false
 
-    # Ignore specific error patterns
-    ignoreErrors:
-        # Filament declarative patterns
-        - '#Call to an undefined method Filament\\.*::make\(\)#'
-
-        # Laravel magic methods we trust
-        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\(Builder|Collection).*#'
-
-        # Spatie packages with dynamic methods
-        - '#Access to an undefined property Spatie\\.*::\$.*#'
-
-        # Allow dynamic properties on Livewire components
-        - '#Access to an undefined property .*Livewire\\Component::\$.*#'
-
-        # Stripe SDK uses magic methods
-        - '#Call to an undefined method Stripe\\.*#'
-
-        # Allow null coalescing on potentially null properties (common Laravel pattern)
-        - '#.*on possibly null value of type.*#'
+    # Ignore specific error patterns (currently none needed - clean codebase!)
+    # ignoreErrors:
 
     # Stub files for better type inference (optional - uncomment if needed)
     # stubFiles:

@@ -16,6 +16,7 @@ use App\States\EquipmentLoan\StaffPreparing;
 use App\States\EquipmentLoan\StaffProcessingReturn;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\ModelStates\HasStates;
@@ -81,7 +82,7 @@ class EquipmentLoan extends Model
     /**
      * Get the equipment being loaned.
      */
-    public function equipment()
+    public function equipment(): BelongsTo
     {
         return $this->belongsTo(Equipment::class);
     }
