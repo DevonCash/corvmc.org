@@ -2,8 +2,8 @@
 
 namespace App\Actions\Trust;
 
+use App\Contracts\Reportable;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -14,7 +14,7 @@ class HandleContentViolation
     /**
      * Handle content violation and adjust trust points accordingly.
      */
-    public function handle(User $user, Model $content, string $violationType, string $contentType = 'global'): void
+    public function handle(User $user, Reportable $content, string $violationType, string $contentType = 'global'): void
     {
         $reason = 'Content violation for '.($content->title ?? $content->name ?? class_basename($content));
 

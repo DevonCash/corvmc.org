@@ -14,6 +14,9 @@ use Spatie\Period\Period;
 
 /**
  * @property-read User|null $organizer
+ * @property \Illuminate\Support\Carbon|null $published_at
+ * @property \Illuminate\Support\Carbon $start_time
+ * @property \Illuminate\Support\Carbon $end_time
  */
 class Event extends ContentModel implements Eventable
 {

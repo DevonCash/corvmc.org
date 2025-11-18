@@ -29,6 +29,7 @@ use Spatie\Tags\HasTags;
  * @property int|null $owner_id
  * @property int|null $organizer_id
  * @property int|null $creator_id
+ * @property \App\Enums\Visibility|null $visibility
  */
 abstract class ContentModel extends Model implements HasMedia, ReportableContract
 {
