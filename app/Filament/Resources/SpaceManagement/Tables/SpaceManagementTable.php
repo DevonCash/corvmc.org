@@ -154,7 +154,7 @@ class SpaceManagementTable
 
                             return UpdateReservation::run($record, $startTime, $endTime, $options);
                         })
-                        ->form(fn ($form) => ReservationEditForm::configure($form)),
+                        ->schema(fn ($form) => ReservationEditForm::configure($form)),
                     ConfirmReservation::filamentAction(),
                     MarkReservationAsPaid::filamentAction(),
                     MarkReservationAsComped::filamentAction(),

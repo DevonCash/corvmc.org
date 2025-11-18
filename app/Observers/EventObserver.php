@@ -50,7 +50,8 @@ class EventObserver
 
         // Clear conflict detection cache for the event date
         if ($event->start_time) {
-            $date = $event->start_time->format('Y-m-d');
+            $start_time = \Illuminate\Support\Carbon::parse($event->start_time);
+            $date = $start_time->format('Y-m-d');
             Cache::forget("events.conflicts.{$date}");
         }
 

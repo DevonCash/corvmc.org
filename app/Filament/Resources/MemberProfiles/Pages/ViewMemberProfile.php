@@ -43,11 +43,11 @@ class ViewMemberProfile extends Page
     {
         return [
             EditAction::make()
-                ->visible(fn () => Auth::user()->can('update', $this->record) ||
-                    $this->record->user_id === Auth::id()
+                ->visible(fn () => User::me()->can('update', $this->record) ||
+                    $this->record->user_id === User::me()->id
                 ),
             ReportContentAction::make()
-                ->visible(fn () => Auth::user()->id !== $this->record->user_id), // Don't show report button to profile owner
+                ->visible(fn () => User::me()->id !== $this->record->user_id), // Don't show report button to profile owner
         ];
     }
 

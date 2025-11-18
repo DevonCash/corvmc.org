@@ -100,13 +100,13 @@ class MarkReservationAsPaid
             ->action(function (Collection $records, array $data) {
                 $count = 0;
                 foreach ($records as $record) {
-                    if ($record->cost->isPositive() && $record->isUnpaid()) {
+                    if ($record instanceof Reservation && $record->cost->isPositive() && $record->isUnpaid()) {
                         static::run($record, $data['payment_method'], $data['payment_notes'] ?? null);
                         $count++;
                     }
                 }
             })
             ->successNotificationTitle('Payments recorded')
-            ->successNotification(fn (Collection $records, array $data) => $records->filter(fn ($r) => $r->cost->isPositive() && $r->isUnpaid())->count().' reservations marked as paid');
+            ->successNotification(fn (Collection $records, array $data) => $records->filter(fn ($r) => $r instanceof Reservation && $r->cost->isPositive() && $r->isUnpaid())->count().' reservations marked as paid');
     }
 }

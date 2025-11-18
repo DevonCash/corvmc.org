@@ -12,6 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 
 /**
@@ -80,7 +81,7 @@ class ManageBylaws extends Page implements HasForms
 
         $settings = app(BylawsSettings::class);
         $settings->content = $data['content'];
-        $settings->last_updated_by = auth()->id();
+        $settings->last_updated_by = Auth::id();
         $settings->last_updated_at = now()->toIso8601String();
         $settings->save();
 

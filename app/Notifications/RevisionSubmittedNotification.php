@@ -40,7 +40,7 @@ class RevisionSubmittedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $modelName = $this->revision->getModelTypeName();
-        $submitterName = $this->revision->submittedBy->name;
+        $submitterName = $this->revision->submittedBy?->name;
         $changesSummary = $this->revision->getChangesSummary();
 
         $mailMessage = (new MailMessage)

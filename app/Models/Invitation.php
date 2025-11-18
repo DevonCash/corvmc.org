@@ -6,8 +6,12 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @property-read \App\Models\User|null $inviter
+ */
 class Invitation extends Model
 {
     use HasFactory;
@@ -60,7 +64,7 @@ class Invitation extends Model
         });
     }
 
-    public function inviter()
+    public function inviter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'inviter_id');
     }
@@ -70,7 +74,7 @@ class Invitation extends Model
         return $this->inviter?->name ?? 'System';
     }
 
-    public function user()
+    public function user(): ?User
     {
         return User::where('email', $this->email)->first();
     }
@@ -98,13 +102,13 @@ class Invitation extends Model
     }
 
     #[Scope]
-    protected function forEmail(Builder $query, string $email)
+    protected function forEmail(Builder $query, string $email): void
     {
         $query->where('email', $email);
     }
 
     #[Scope]
-    protected function from(Builder $query, User $user)
+    protected function from(Builder $query, User $user): void
     {
         $query->where('inviter_id', '==', $user->id);
     }

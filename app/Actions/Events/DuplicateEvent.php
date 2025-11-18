@@ -2,6 +2,7 @@
 
 namespace App\Actions\Events;
 
+use App\Models\Band;
 use App\Models\Event;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -28,11 +29,13 @@ class DuplicateEvent
 
         // Copy performers
         foreach ($originalEvent->performers as $performer) {
-            $pivot = $performer->pivot;
-            $newEvent->performers()->attach($performer->id, [
-                'order' => $pivot?->order,
-                'set_length' => $pivot?->set_length,
-            ]);
+            if ($performer instanceof Band) {
+                $pivot = $performer->pivot;
+                $newEvent->performers()->attach($performer->id, [
+                    'order' => $pivot?->order,
+                    'set_length' => $pivot?->set_length,
+                ]);
+            }
         }
 
         // Copy tags

@@ -193,8 +193,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     /**
      * Get used free hours for the current month.
-     *
-     * @param  bool  $fresh  Deprecated, kept for compatibility
      */
     public function getUsedFreeHoursThisMonth(): float
     {

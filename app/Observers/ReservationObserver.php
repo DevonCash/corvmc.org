@@ -45,13 +45,14 @@ class ReservationObserver
     private function clearReservationCaches(Reservation $reservation): void
     {
         // Clear conflict detection cache for the reservation date
-        $date = $reservation->reserved_at ? $reservation->reserved_at->format('Y-m-d') : now()->format('Y-m-d');
+        $reservedAt = $reservation->reserved_at ? \Illuminate\Support\Carbon::parse($reservation->reserved_at) : now();
+        $date = $reservedAt->format('Y-m-d');
         Cache::forget("reservations.conflicts.{$date}");
 
         // Clear user-specific caches (for RehearsalReservation)
         $responsibleUser = $reservation->getResponsibleUser();
         if ($responsibleUser) {
-            $month = $reservation->reserved_at ? $reservation->reserved_at->format('Y-m') : now()->format('Y-m');
+            $month = $reservedAt->format('Y-m');
             Cache::forget("user.{$responsibleUser->id}.free_hours.{$month}");
             Cache::forget("user_stats.{$responsibleUser->id}");
             Cache::forget("user_activity.{$responsibleUser->id}");

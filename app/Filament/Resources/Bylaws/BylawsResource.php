@@ -3,13 +3,12 @@
 namespace App\Filament\Resources\Bylaws;
 
 use App\Filament\Resources\Bylaws\Pages\ManageBylaws;
-use BackedEnum;
+use App\Models\User;
 use Filament\Resources\Resource;
-use Illuminate\Support\Facades\Auth;
 
 class BylawsResource extends Resource
 {
-    protected static string|BackedEnum|null $navigationIcon = 'tabler-license';
+    protected static string|\BackedEnum|null $navigationIcon = 'tabler-license';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Content';
 
@@ -20,7 +19,7 @@ class BylawsResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
 
-        return Auth::user()->hasRole('admin');
+        return User::me()->hasRole('admin');
     }
 
     public static function getPages(): array

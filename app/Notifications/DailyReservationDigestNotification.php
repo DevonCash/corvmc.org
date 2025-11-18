@@ -13,11 +13,16 @@ class DailyReservationDigestNotification extends Notification implements ShouldQ
     use Queueable;
 
     /**
+     * @var Collection<int, \App\Models\Reservation>
+     */
+    public Collection $reservations;
+
+    /**
      * Create a new notification instance.
      */
-    public function __construct(public Collection $reservations)
+    public function __construct(Collection $reservations)
     {
-        //
+        $this->reservations = $reservations;
     }
 
     /**

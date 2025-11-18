@@ -77,13 +77,13 @@ class MarkReservationAsComped
             ->action(function (Collection $records, array $data) {
                 $count = 0;
                 foreach ($records as $record) {
-                    if ($record->cost->isPositive() && $record->isUnpaid()) {
+                    if ($record instanceof Reservation && $record->cost->isPositive() && $record->isUnpaid()) {
                         static::run($record, $data['comp_reason']);
                         $count++;
                     }
                 }
             })
             ->successNotificationTitle('Reservations comped')
-            ->successNotification(fn (Collection $records) => $records->filter(fn ($r) => $r->cost->isPositive() && $r->isUnpaid())->count().' reservations marked as comped');
+            ->successNotification(fn (Collection $records) => $records->filter(fn ($r) => $r instanceof Reservation && $r->cost->isPositive() && $r->isUnpaid())->count().' reservations marked as comped');
     }
 }

@@ -21,6 +21,11 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property-read User $user
  * @property-read Model $reservable
  * @property-read RecurringSeries|null $recurringSeries
+ * @property \Brick\Money\Money $cost
+ * @property \Illuminate\Support\Carbon|null $reserved_at
+ * @property \Illuminate\Support\Carbon|null $reserved_until
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder|self needsAttention()
  */
 class Reservation extends Model
 {
