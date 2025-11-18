@@ -348,6 +348,157 @@ it('creates a reservation with correct pricing', function () {
 - **pestphp/pest** - Testing framework
 - **guava/calendar** - Calendar widget in Filament
 
+## PHPStan Type Safety Patterns
+
+This codebase uses **PHPStan level 2** for static analysis. Follow these principles to maintain type safety:
+
+### Type Hierarchy (Best to Worst)
+
+1. **✅ Specific model classes** - Use when you know the exact type
+   ```php
+   public function handle(User $user, Event $event): Report
+   ```
+
+2. **✅ Interfaces for polymorphic cases** - Define contracts for shared behavior
+   ```php
+   // Define interface
+   interface Reportable {
+       public function reports(): MorphMany;
+       public function getContentCreator(): ?User;
+   }
+
+   // Use in Actions
+   public function handle(Reportable $content): void
+   ```
+
+3. **✅ Type checks with instanceof** - When relationships return mixed types
+   ```php
+   if ($performer instanceof Band) {
+       $pivot = $performer->pivot;
+   }
+   ```
+
+4. **✅ @property annotations** - For dynamic properties PHPStan can't infer
+   ```php
+   /**
+    * @property-read User|null $organizer
+    * @property PaymentStatus $payment_status
+    * @property \App\Enums\Visibility|null $visibility
+    */
+   ```
+
+5. **✅ @var type hints** - For query results and complex expressions
+   ```php
+   /** @var \App\Models\Reservation|null $lastReservation */
+   $lastReservation = $user->reservations()->latest()->first();
+   ```
+
+6. **❌ Generic Model types** - Avoid unless absolutely necessary
+   ```php
+   // Bad
+   public function handle(Model $content)
+
+   // Good - use interface or specific type
+   public function handle(Reportable $content)
+   ```
+
+### Common Patterns
+
+**Static Property Pattern for Polymorphic Configuration:**
+```php
+// In trait
+protected static string $creatorForeignKey = 'user_id';
+
+public function getContentCreator(): ?User {
+    $foreignKey = static::$creatorForeignKey;
+    $relationshipName = str_replace('_id', '', $foreignKey);
+    return $this->{$relationshipName};
+}
+
+// In model - override when needed
+protected static string $creatorForeignKey = 'organizer_id';
+```
+
+**Method Existence Checks for Trait Methods:**
+```php
+// When morphTo returns generic Model but you need trait methods
+if (!method_exists($model, 'forceUpdate')) {
+    throw new \InvalidArgumentException('Model does not support revisions');
+}
+$model->forceUpdate($data);
+```
+
+**Laravel Scope Methods:**
+```php
+// PHPStan doesn't understand Laravel's scope magic
+/** @phpstan-ignore method.notFound */
+return $query->public();
+```
+
+**Relationship Properties:**
+```php
+// Add to model class for relationships accessed as properties
+/**
+ * @property-read User $submittedBy
+ * @property-read User|null $reviewedBy
+ */
+```
+
+**Enum Casts:**
+```php
+// Always annotate enum properties
+/**
+ * @property PaymentStatus $payment_status
+ * @property ReservationStatus $status
+ */
+class Reservation extends Model {
+    protected function casts(): array {
+        return [
+            'payment_status' => PaymentStatus::class,
+            'status' => ReservationStatus::class,
+        ];
+    }
+}
+```
+
+**Pivot Attributes:**
+```php
+foreach ($event->performers as $performer) {
+    if ($performer instanceof Band) {
+        /** @var \Illuminate\Database\Eloquent\Relations\Pivot|null $pivot */
+        $pivot = $performer->pivot;
+        $order = $pivot?->order;
+    }
+}
+```
+
+### When to Use Annotations vs Refactoring
+
+**Use @property annotations when:**
+- Property exists on child models but not in parent (trait context)
+- Enum/cast properties that PHPStan doesn't automatically understand
+- Relationship dynamic properties (`$user->profile`)
+
+**Refactor instead of annotating when:**
+- Using generic `Model` type - create interface or use specific type
+- Method doesn't exist - use `method_exists()` check or create proper interface
+- Accessing properties that don't exist - indicates architectural issue
+
+**Example of good refactoring:**
+```php
+// Before (needed many @property annotations)
+public function handle(Model $reportable) {
+    $reportable->id; // PHPStan error
+    $reportable->reports(); // PHPStan error
+}
+
+// After (interface defines contract)
+public function handle(Reportable $reportable) {
+    $reportable->id; // Works - interface has @property
+    $reportable->reports(); // Works - interface defines method
+}
+```
+
 ===
 
 <laravel-boost-guidelines>
