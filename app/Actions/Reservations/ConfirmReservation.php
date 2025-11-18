@@ -3,7 +3,6 @@
 namespace App\Actions\Reservations;
 
 use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
-use App\Concerns\AsFilamentAction;
 use App\Enums\CreditType;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
@@ -18,7 +17,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
 class ConfirmReservation
 {
     use AsAction;
-    use AsFilamentAction;
 
     /**
      * Confirm a pending reservation.

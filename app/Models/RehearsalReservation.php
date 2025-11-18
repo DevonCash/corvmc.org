@@ -55,7 +55,7 @@ class RehearsalReservation extends Reservation implements Eventable
     /**
      * The user who made this practice reservation.
      */
-    public function user()
+    public function user(): \Illuminate\Database\Eloquent\Relations\MorphTo
     {
         return $this->morphTo(__FUNCTION__, 'reservable_type', 'reservable_id');
     }
@@ -63,7 +63,7 @@ class RehearsalReservation extends Reservation implements Eventable
     /**
      * Recurring reservation series this is an instance of (if applicable)
      */
-    public function recurringSeries()
+    public function recurringSeries(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(RecurringSeries::class, 'recurring_series_id');
     }
@@ -138,10 +138,10 @@ class RehearsalReservation extends Reservation implements Eventable
         }
 
         if ($this->reserved_at->isSameDay($this->reserved_until)) {
-            return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('g:i A');
+            return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('g:i A');
         }
 
-        return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('M j, Y g:i A');
+        return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('M j, Y g:i A');
     }
 
     /**
@@ -269,19 +269,11 @@ class RehearsalReservation extends Reservation implements Eventable
     }
 
     /**
-     * Get payment status display with badge styling.
-     */
-    public function getPaymentStatusBadgeAttribute(): array
-    {
-        return \App\Actions\Payments\GetPaymentStatusBadge::run($this);
-    }
-
-    /**
      * Convert reservation to calendar event.
      */
     public function toCalendarEvent(): CalendarEvent
     {
-        return \App\Actions\Calendar\ReservationToCalendarEvent::run($this);
+        return CalendarEvent::make($this);
     }
 
     public function getActivitylogOptions(): LogOptions
@@ -290,6 +282,6 @@ class RehearsalReservation extends Reservation implements Eventable
             ->logOnly(['status', 'reserved_at', 'reserved_until', 'cost', 'payment_status'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn (string $eventName) => "Practice space reservation {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Practice space reservation {$eventName}");
     }
 }

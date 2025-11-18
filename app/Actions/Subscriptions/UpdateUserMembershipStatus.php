@@ -4,6 +4,7 @@ namespace App\Actions\Subscriptions;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class UpdateUserMembershipStatus
@@ -22,13 +23,13 @@ class UpdateUserMembershipStatus
     public function handle(User $user): void
     {
         // First check our DB (fast)
-        $hasSubscriptionInDb = (bool) GetActiveSubscription::run($user);
+        $hasSubscriptionInDb = $user->subscription();
 
         // If DB says they have a subscription, trust it and keep role
-        if ($hasSubscriptionInDb) {
+        if ($hasSubscriptionInDb?->active()) {
             if (! $user->isSustainingMember()) {
                 $user->makeSustainingMember();
-                \Log::info('Assigned sustaining member role via DB subscription', ['user_id' => $user->id]);
+                Log::info('Assigned sustaining member role via DB subscription', ['user_id' => $user->id]);
             }
             Cache::forget("user.{$user->id}.is_sustaining");
 
@@ -47,7 +48,7 @@ class UpdateUserMembershipStatus
 
                 if ($stripeSubscriptions->data && count($stripeSubscriptions->data) > 0) {
                     // Subscription exists in Stripe but not in our DB - sync issue!
-                    \Log::warning('Subscription sync mismatch - exists in Stripe but not DB', [
+                    Log::warning('Subscription sync mismatch - exists in Stripe but not DB', [
                         'user_id' => $user->id,
                         'stripe_id' => $user->stripe_id,
                         'stripe_subscription_id' => $stripeSubscriptions->data[0]->id,
@@ -56,7 +57,7 @@ class UpdateUserMembershipStatus
                     // Keep the role - user has paid
                     if (! $user->isSustainingMember()) {
                         $user->makeSustainingMember();
-                        \Log::info('Assigned sustaining member role via Stripe API (DB sync failed)', [
+                        Log::info('Assigned sustaining member role via Stripe API (DB sync failed)', [
                             'user_id' => $user->id,
                         ]);
                     }
@@ -66,7 +67,7 @@ class UpdateUserMembershipStatus
                     return;
                 }
             } catch (\Exception $e) {
-                \Log::error('Failed to query Stripe API for subscription status', [
+                Log::error('Failed to query Stripe API for subscription status', [
                     'user_id' => $user->id,
                     'error' => $e->getMessage(),
                 ]);
@@ -79,7 +80,7 @@ class UpdateUserMembershipStatus
         // Confirmed: No subscription in DB or Stripe - safe to remove role
         if ($user->isSustainingMember()) {
             $user->removeSustainingMember();
-            \Log::info('Removed sustaining member role - no subscription in DB or Stripe', [
+            Log::info('Removed sustaining member role - no subscription in DB or Stripe', [
                 'user_id' => $user->id,
             ]);
         }

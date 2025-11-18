@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Equipment\Actions;
 
+use App\Models\Equipment;
 use Filament\Actions\Action;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
@@ -21,7 +22,7 @@ class ViewStatisticsAction
             ->schema(function (): Schema {
                 $stats = \App\Actions\Equipment\GetStatistics::run();
                 $valueByType = \App\Actions\Equipment\GetValueByAcquisitionType::run();
-                $popular = \App\Actions\Equipment\GetPopularEquipment::run(5);
+                $popular = Equipment::popular()->limit(5)->get();;
 
                 return Schema::make()
                     ->schema([

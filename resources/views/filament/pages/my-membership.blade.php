@@ -26,8 +26,8 @@
     {{-- Cancelled Membership Section --}}
     @if(!$isSustainingMember)
         @php
-            $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($user);
-            $isCancelled = $subscription && $subscription->ends_at !== null;
+            $subscription = $user->subscription();
+            $isCancelled = $subscription?->ends_at !== null;
         @endphp
 
         @if($isCancelled)
@@ -99,7 +99,7 @@
             $totalHours = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user);
             $remainingHours = $user->getRemainingFreeHours();
             $usedHours = $user->getUsedFreeHoursThisMonth();
-            $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($user);
+            $subscription = $user->subscription();
             $nextBillingDate = null;
             $contributionAmount = 'Amount unavailable';
             $hasFeeCovered = false;

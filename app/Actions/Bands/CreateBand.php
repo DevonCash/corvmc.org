@@ -2,7 +2,6 @@
 
 namespace App\Actions\Bands;
 
-use App\Concerns\AsFilamentAction;
 use App\Filament\Resources\Bands\BandResource;
 use App\Models\Band;
 use App\Models\User;
@@ -15,7 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
 class CreateBand
 {
     use AsAction;
-    use AsFilamentAction;
 
     /**
      * Create a new band with proper validation and notifications.

@@ -3,7 +3,6 @@
 namespace App\Actions\Payments;
 
 use App\Actions\Reservations\ConfirmReservation;
-use App\Concerns\AsFilamentAction;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
 use App\Models\RehearsalReservation;
@@ -16,25 +15,7 @@ use Lorisleiva\Actions\Concerns\AsAction;
 
 class MarkReservationAsComped
 {
-    use AsAction, AsFilamentAction;
-
-    protected static ?string $actionLabel = 'Comp';
-
-    protected static ?string $actionIcon = 'tabler-gift';
-
-    protected static string $actionColor = 'info';
-
-    protected static string $actionSuccessMessage = 'Reservation comped';
-
-    protected static function isActionVisible(...$args): bool
-    {
-        $record = $args[0] ?? null;
-
-        return $record instanceof RehearsalReservation &&
-            ! $record->cost->isZero() &&
-            $record->isUnpaid() &&
-            User::me()->can('manage reservations');
-    }
+    use AsAction;
 
     public function handle(Reservation $reservation, ?string $notes = null): void
     {

@@ -46,12 +46,12 @@ class Report extends Model
         'escalated' => 'Escalated',
     ];
 
-    public function reportable()
+    public function reportable(): \Illuminate\Database\Eloquent\Relations\MorphTo
     {
         return $this->morphTo();
     }
 
-    public function reportedBy()
+    public function reportedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'reported_by_id');
     }

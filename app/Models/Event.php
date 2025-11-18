@@ -65,7 +65,7 @@ class Event extends ContentModel implements Eventable
     /**
      * Get the organizer (user) of this event.
      */
-    public function organizer()
+    public function organizer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'organizer_id');
     }
@@ -89,7 +89,7 @@ class Event extends ContentModel implements Eventable
     /**
      * Get the performers/bands for this event.
      */
-    public function performers()
+    public function performers(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->belongsToMany(Band::class, 'event_bands', 'event_id', 'band_profile_id')
             ->withPivot('order', 'set_length')

@@ -23,7 +23,7 @@ class GetUserMonthlyFreeHours
      */
     public function handle(User $user, ?int $subscriptionAmountInCents = null): int
     {
-        if (! CheckIsSustainingMember::run($user)) {
+        if (!$user->isSustainingMember()) {
             return 0;
         }
 
@@ -35,8 +35,8 @@ class GetUserMonthlyFreeHours
         }
 
         // Use actions for subscription data
-        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($user);
-        if ($subscription) {
+        $subscription = $user->subscription();
+        if ($subscription?->active()) {
             try {
                 // Get the maximum contribution amount for this billing period
                 $peakAmount = \App\Actions\Subscriptions\GetBillingPeriodPeakAmount::run($subscription);

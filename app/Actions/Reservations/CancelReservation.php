@@ -3,7 +3,6 @@
 namespace App\Actions\Reservations;
 
 use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
-use App\Concerns\AsFilamentAction;
 use App\Enums\CreditType;
 use App\Enums\ReservationStatus;
 use App\Models\CreditTransaction;
@@ -17,30 +16,7 @@ use Lorisleiva\Actions\Concerns\AsAction;
 
 class CancelReservation
 {
-    use AsAction, AsFilamentAction;
-
-    protected static ?string $actionLabel = 'Cancel';
-
-    protected static ?string $actionIcon = 'tabler-calendar-x';
-
-    protected static string $actionColor = 'danger';
-
-    protected static bool $actionConfirm = true;
-
-    protected static string $actionSuccessMessage = 'Reservation cancelled';
-
-    protected static function isActionVisible(...$args): bool
-    {
-        $record = $args[0] ?? null;
-
-        if (! $record instanceof RehearsalReservation) {
-            return false;
-        }
-
-        // Allow cancellation if user is the owner or has permission
-        return ($record->reservable_id === User::me()?->id) ||
-            User::me()?->can('manage reservations');
-    }
+    use AsAction;
 
     /**
      * Cancel a reservation.

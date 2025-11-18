@@ -52,7 +52,7 @@ class SpaceUsageWidget extends Widget
         $today = $this->getTodaysSpaceUsage();
 
         $todayRehearsals = $today->where('type_class', \App\Models\RehearsalReservation::class);
-        $todayProductions = $today->where('type_class', \App\Models\ProductionReservation::class);
+        $todayProductions = $today->where('type_class', \App\Models\EventReservation::class);
 
         return [
             'nextItem' => $next,

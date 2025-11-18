@@ -3,6 +3,7 @@
 use App\Models\Band;
 use App\Models\Event;
 use App\Models\MemberProfile;
+use App\Models\Sponsor;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -29,7 +30,7 @@ Route::get('/', function () {
     ];
 
     // Get major sponsors for display
-    $majorSponsors = \App\Actions\Sponsors\GetMajorSponsors::run();
+    $majorSponsors = Sponsor::major()->get();
 
     return view('public.home', compact('upcomingEvents', 'stats', 'majorSponsors'));
 })->name('home');
@@ -124,7 +125,10 @@ Route::get('/contact', function () {
 })->name('contact');
 
 Route::get('/sponsors', function () {
-    $sponsors = \App\Actions\Sponsors\GetActiveSponsors::run();
+    $sponsors = Sponsor::active()
+        ->groupBy('tier')
+        ->ordered()
+        ->get();
 
     return view('public.sponsors', compact('sponsors'));
 })->name('sponsors');

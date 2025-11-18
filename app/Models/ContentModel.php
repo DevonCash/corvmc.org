@@ -30,6 +30,8 @@ abstract class ContentModel extends Model implements HasMedia
 
     protected static bool $reportAutoHide = false;
 
+    protected static string $reportableTypeName = 'Content';
+
     /**
      * Standard media collections for content models.
      */

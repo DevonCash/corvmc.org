@@ -8,7 +8,6 @@ use App\Models\Reservation;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Components\Component;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -47,7 +46,7 @@ class ViewUser extends ViewRecord
                         ->maxValue(1000)
                         ->required()
                         ->live()
-                        ->afterStateUpdated(function ($state, Component $component) {
+                        ->afterStateUpdated(function ($state, $component) {
                             $hours = round($state * 0.5, 1);
                             $component->helperText("1 block = 30 minutes. {$state} blocks = {$hours} hours.");
                         }),
@@ -114,7 +113,7 @@ class ViewUser extends ViewRecord
                         ->maxValue(fn () => max(1, $this->record->getCreditBalance(CreditType::FreeHours)))
                         ->required()
                         ->live()
-                        ->afterStateUpdated(function ($state, Component $component) {
+                        ->afterStateUpdated(function ($state, $component) {
                             $hours = round($state * 0.5, 1);
                             $balance = $this->record->getCreditBalance(CreditType::FreeHours);
                             $remaining = max(0, $balance - $state);

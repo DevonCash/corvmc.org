@@ -11,6 +11,8 @@ use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Support\RawJs;
 
+// TODO: Merge with CreateMembershipSubscriptionAction since they are very similar
+
 class ModifyMembershipAmountAction
 {
     public static function make(): Action
@@ -30,9 +32,9 @@ class ModifyMembershipAmountAction
                     ->live()
                     ->tooltips(RawJs::make('`$${$value.toFixed(2)}`'))
                     ->default(function () {
-                        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run(User::me());
+                        $subscription = User::me()->subscription();
 
-                        if ($subscription) {
+                        if ($subscription?->active()) {
                             // Get the Stripe subscription object with pricing info
                             $stripeSubscription = $subscription->asStripeSubscription();
                             $firstItem = $stripeSubscription->items->data[0];
@@ -61,9 +63,9 @@ class ModifyMembershipAmountAction
                     })
                     ->live()
                     ->default(function () {
-                        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run(User::me());
+                        $subscription = User::me()->subscription();
 
-                        if ($subscription) {
+                        if ($subscription?->active()) {
                             // Check if subscription has multiple items (base + fee coverage)
                             $stripeSubscription = $subscription->asStripeSubscription();
 
@@ -83,7 +85,7 @@ class ModifyMembershipAmountAction
                         $breakdown = \App\Actions\Payments\GetFeeBreakdown::run($amount, $get('cover_fees'));
                         $totalAmount = Money::of($breakdown['total_amount'], 'USD');
 
-                        return $breakdown['description'].' = '.\App\Actions\Payments\FormatMoney::run($totalAmount).' total per month';
+                        return $breakdown['description'] . ' = ' . $totalAmount->formatTo('en_US') . ' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])

@@ -30,7 +30,7 @@ class CalculateReservationCost
         $hours = $startTime->diffInMinutes($endTime) / 60;
 
         // Use fresh calculation (bypass cache) for transaction safety during reservation creation
-        $remainingFreeHours = $user->getRemainingFreeHours($fresh = true);
+        $remainingFreeHours = $user->getRemainingFreeHours();
 
         $freeHours = $user->isSustainingMember() ? min($hours, $remainingFreeHours) : 0;
         $paidHours = max(0, $hours - $freeHours);

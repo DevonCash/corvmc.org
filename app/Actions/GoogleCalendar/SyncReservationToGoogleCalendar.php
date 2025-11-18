@@ -176,7 +176,7 @@ class SyncReservationToGoogleCalendar
         }
 
         $description .= "\nDuration: {$reservation->hours_used} hours\n";
-        $description .= 'Cost: '.money($reservation->cost)->format()."\n";
+        $description .= 'Cost: '.$reservation->cost->formatTo('en_US')."\n";
 
         if ($reservation->free_hours_used > 0) {
             $description .= "Free hours used: {$reservation->free_hours_used}\n";

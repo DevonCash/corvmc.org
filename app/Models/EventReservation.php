@@ -46,7 +46,7 @@ class EventReservation extends Reservation
     /**
      * The event that owns this space reservation.
      */
-    public function event()
+    public function event(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->morphTo(__FUNCTION__, 'reservable_type', 'reservable_id');
     }

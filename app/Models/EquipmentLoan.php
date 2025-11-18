@@ -89,7 +89,7 @@ class EquipmentLoan extends Model
     /**
      * Get the user borrowing the equipment.
      */
-    public function borrower()
+    public function borrower(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'borrower_id');
     }

@@ -2,7 +2,6 @@
 
 namespace App\Actions\Bands;
 
-use App\Concerns\AsFilamentAction;
 use App\Exceptions\BandException;
 use App\Models\Band;
 use App\Models\User;
@@ -15,7 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
 class AcceptBandInvitation
 {
     use AsAction;
-    use AsFilamentAction;
 
     /**
      * Accept an invitation to join a band.
@@ -61,7 +59,7 @@ class AcceptBandInvitation
 
     public static function filamentAction(): Action
     {
-        return static::buildBaseAction()
+        return Action::make('accept_band_invitation')
             ->label('Accept')
             ->color('success')
             ->icon('tabler-check')

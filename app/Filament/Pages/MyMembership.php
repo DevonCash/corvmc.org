@@ -34,7 +34,7 @@ class MyMembership extends Page implements HasActions, HasSchemas
     {
         return [
             CreateMembershipSubscriptionAction::make()
-                ->visible(fn () => ! User::me()->isSustainingMember()),
+                ->visible(fn () => ! User::me()?->isSustainingMember()),
         ];
     }
 
@@ -42,7 +42,7 @@ class MyMembership extends Page implements HasActions, HasSchemas
     {
         $user = User::me();
 
-        if (! $user->stripe_id) {
+        if (! $user?->stripe_id) {
             return null;
         }
 

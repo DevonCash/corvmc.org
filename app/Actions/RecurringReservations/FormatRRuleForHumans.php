@@ -14,6 +14,7 @@ class FormatRRuleForHumans
      *
      * Returns the original rule string if parsing fails.
      */
+    // TODO: Turn this into a cast
     public function handle(string $ruleString): string
     {
         try {

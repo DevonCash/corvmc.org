@@ -135,7 +135,7 @@ class Equipment extends Model implements HasMedia
     /**
      * Get the current active loan for this equipment.
      */
-    public function currentLoan()
+    public function currentLoan(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(EquipmentLoan::class)
             ->active()
@@ -216,8 +216,13 @@ class Equipment extends Model implements HasMedia
     {
         return $this->isOnLoanToCmc() &&
                $this->ownership_status === 'on_loan_to_cmc' &&
-               $this->return_due_date &&
                $this->return_due_date?->isPast();
+    }
+
+    public function scopePopular($query)
+    {
+        return $query->withCount('loans')
+            ->orderByDesc('loans_count');
     }
 
     /**

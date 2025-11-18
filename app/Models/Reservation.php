@@ -9,12 +9,18 @@ use App\Enums\ReservationStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * Base class for all reservation types using Single Table Inheritance.
  *
  * Reservations can be owned by different entities (User, Production, Band, etc.)
  * using a polymorphic relationship.
+ *
+ * @property-read User $user
+ * @property-read Model $reservable
+ * @property-read RecurringSeries|null $recurringSeries
  */
 class Reservation extends Model
 {
@@ -93,7 +99,7 @@ class Reservation extends Model
      * Polymorphic relationship to the owner of this reservation.
      * Can be User, Production, Band, etc.
      */
-    public function reservable()
+    public function reservable(): MorphTo
     {
         return $this->morphTo();
     }
@@ -102,7 +108,7 @@ class Reservation extends Model
      * Direct relationship to the user who created this reservation.
      * This is separate from reservable which represents who the reservation is for.
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -110,7 +116,7 @@ class Reservation extends Model
     /**
      * Relationship to the recurring series this reservation belongs to.
      */
-    public function recurringSeries()
+    public function recurringSeries(): BelongsTo
     {
         return $this->belongsTo(RecurringSeries::class, 'recurring_series_id');
     }

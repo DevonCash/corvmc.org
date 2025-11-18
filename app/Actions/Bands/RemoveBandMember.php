@@ -2,7 +2,6 @@
 
 namespace App\Actions\Bands;
 
-use App\Concerns\AsFilamentAction;
 use App\Models\BandMember;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -11,7 +10,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
 class RemoveBandMember
 {
     use AsAction;
-    use AsFilamentAction;
 
     public function handle(BandMember $member)
     {

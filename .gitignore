@@ -30,3 +30,11 @@ _ide_helper*.php
 .phpstorm.meta.php
 .claude
 .github
+
+# PHPMD reports
+phpmd-report.html
+.phpmd.result-cache.php
+
+# PHPStan
+phpstan-baseline.neon
+.phpstan.cache/

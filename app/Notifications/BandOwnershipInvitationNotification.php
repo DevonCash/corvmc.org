@@ -60,7 +60,6 @@ class BandOwnershipInvitationNotification extends Notification implements Should
             'body' => "You've been invited to join CMC and own {$this->band->name}",
             'band_id' => $this->band->id,
             'band_name' => $this->band->name,
-            'roles' => $this->roles,
             'token' => $this->token,
         ];
     }

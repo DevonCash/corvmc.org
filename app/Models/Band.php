@@ -78,7 +78,7 @@ class Band extends ContentModel
         static::addGlobalScope(new OwnedBandsScope);
     }
 
-    public function members()
+    public function members(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'band_profile_members', 'band_profile_id', 'user_id')
             ->withPivot('role', 'position', 'name', 'status', 'invited_at')
@@ -99,17 +99,18 @@ class Band extends ContentModel
         return $this->memberships()->for($user)->first();
     }
 
-    public function activeMembers()
+
+    public function activeMembers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->memberships()->active();
     }
 
-    public function pendingInvitations()
+    public function pendingInvitations(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->memberships()->invited();
     }
 
-    public function owner()
+    public function owner(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
     }
@@ -126,7 +127,7 @@ class Band extends ContentModel
 
     public function getAvatarUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=400';
+        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=400';
     }
 
     /**
@@ -153,17 +154,17 @@ class Band extends ContentModel
 
     public function getAvatarThumbUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=150';
+        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=150';
     }
 
     public function getAvatarLargeUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=800';
+        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=800';
     }
 
     public function getAvatarOptimizedUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=1200';
+        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=1200';
     }
 
     /**
@@ -255,7 +256,7 @@ class Band extends ContentModel
         }
 
         // Check visibility settings
-        return match ($this->visibility) {
+        return match ((string) $this->visibility) {
             'public' => true,
             'members' => true, // All logged-in users are considered members
             'private' => false,

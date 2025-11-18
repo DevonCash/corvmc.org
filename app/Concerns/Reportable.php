@@ -7,17 +7,17 @@ use App\Models\User;
 
 trait Reportable
 {
-    public function reports()
+    public function reports(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(Report::class, 'reportable');
     }
 
-    public function pendingReports()
+    public function pendingReports(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->reports()->where('status', 'pending');
     }
 
-    public function upheldReports()
+    public function upheldReports(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->reports()->where('status', 'upheld');
     }

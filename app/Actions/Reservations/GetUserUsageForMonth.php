@@ -25,7 +25,7 @@ class GetUserUsageForMonth
      */
     public function handle(User $user, Carbon $month): ReservationUsageData
     {
-        $reservations = $user->reservations()
+        $reservations = $user->rehearsals()
             ->whereMonth('reserved_at', $month->month)
             ->whereYear('reserved_at', $month->year)
             ->where('free_hours_used', '>', 0)

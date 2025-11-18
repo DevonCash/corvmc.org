@@ -3,7 +3,6 @@
 namespace App\Actions\Payments;
 
 use App\Actions\Reservations\ConfirmReservation;
-use App\Concerns\AsFilamentAction;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
 use App\Models\RehearsalReservation;
@@ -17,25 +16,7 @@ use Lorisleiva\Actions\Concerns\AsAction;
 
 class MarkReservationAsPaid
 {
-    use AsAction, AsFilamentAction;
-
-    protected static ?string $actionLabel = 'Mark Paid';
-
-    protected static ?string $actionIcon = 'tabler-cash';
-
-    protected static string $actionColor = 'success';
-
-    protected static string $actionSuccessMessage = 'Payment recorded';
-
-    protected static function isActionVisible(...$args): bool
-    {
-        $record = $args[0] ?? null;
-
-        return $record instanceof RehearsalReservation &&
-            ! $record->cost->isZero() &&
-            $record->isUnpaid() &&
-            User::me()->can('manage reservations');
-    }
+    use AsAction;
 
     public function handle(Reservation $reservation, ?string $paymentMethod = null, ?string $notes = null): void
     {

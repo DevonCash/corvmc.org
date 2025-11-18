@@ -68,7 +68,7 @@ class Revision extends Model
     /**
      * Get the user who submitted this revision.
      */
-    public function submittedBy()
+    public function submittedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'submitted_by_id');
     }

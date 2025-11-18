@@ -60,7 +60,7 @@ class AwardSuccessfulContent
             return $content->isPublished() && ! $content->isUpcoming();
         }
 
-        if ($content instanceof \App\Models\Production) {
+        if ($content instanceof \App\Models\Event) {
             return $content->status === 'completed';
         }
 

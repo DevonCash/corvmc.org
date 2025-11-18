@@ -6,6 +6,7 @@ use App\Filament\Resources\Users\Actions\CreateMembershipSubscriptionAction;
 use App\Filament\Resources\Users\Actions\ModifyMembershipAmountAction;
 use App\Filament\Resources\Users\Actions\OpenBillingPortalAction;
 use App\Filament\Resources\Users\Actions\ResumeMembershipAction;
+use App\Models\User;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Section;
@@ -24,7 +25,7 @@ class MembershipForm
                 Section::make('Become a Sustaining Member')
                     ->description('Support the Corvallis Music Collective with a monthly contribution!')
                     ->visible(function ($record) {
-                        return ! $record->isSustainingMember() && ! static::hasActiveOrCancelledSubscription($record);
+                        return ! $record->isSustainingMember() && ! $record->subscription();
                     })
                     ->columns(3)
                     ->schema([
@@ -65,11 +66,12 @@ class MembershipForm
                     })
                     ->schema([
                         TextEntry::make('current_subscription')
-                            ->visible(fn ($record) => static::hasActiveOrCancelledSubscription($record))
+                            ->visible(fn(User $record) => !!$record->subscription())
                             ->label('Current Contribution')
                             ->helperText(function ($record) {
-                                $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
-                                if ($subscription) {
+                                $subscription = $record->subscription();
+
+                                if ($subscription?->active()) {
                                     try {
                                         $stripeSubscription = $subscription->asStripeSubscription();
                                         $nextBillingDate = \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_end)->format('n/j/Y');
@@ -85,9 +87,10 @@ class MembershipForm
                                 return null;
                             })
                             ->state(function ($record) {
-                                $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
 
-                                if ($subscription) {
+                                $subscription = $record->subscription();
+
+                                if ($subscription?->active()) {
                                     try {
                                         // Get the Stripe subscription object with pricing info
                                         $stripeSubscription = $subscription->asStripeSubscription();
@@ -100,7 +103,7 @@ class MembershipForm
                                         if ($hasFeesCovered) {
                                             // Calculate total cost including fees
                                             $totalAmount = collect($stripeSubscription->items->data)
-                                                ->sum(fn ($item) => $item->price->unit_amount);
+                                                ->sum(fn($item) => $item->price->unit_amount);
                                             $totalCost = \Brick\Money\Money::ofMinor($totalAmount, 'USD');
 
                                             return sprintf(
@@ -131,12 +134,11 @@ class MembershipForm
                             ->weight('bold')
                             ->iconPosition(IconPosition::After)
                             ->iconColor('danger')
-                            ->icon(function ($record) {
-                                $subscription = $record->subscription('default');
-                                if (! $subscription) {
+                            ->icon(function (User $record) {
+                                if (! $record->subscribed()) {
                                     return null;
                                 }
-
+                                $subscription = $record->subscription('default');
                                 $hasFeeCovered = count($subscription->items) > 1;
 
                                 return $hasFeeCovered ? 'tabler-heart-dollar' : null;
@@ -150,7 +152,7 @@ class MembershipForm
                 // Cancelled sustaining membership section
                 Section::make('Cancelled Sustaining Membership')
                     ->description(function ($record) {
-                        $subscription = static::getActiveSubscription($record);
+                        $subscription = $record->subscription();
                         if ($subscription && $subscription->ends_at) {
                             return sprintf(
                                 'Your contribution is cancelled and will end on %s. You can resume your contribution anytime before then. You will remain a member of the collective.',
@@ -162,13 +164,13 @@ class MembershipForm
                     })
                     ->columns(2)
                     ->visible(function ($record) {
-                        return static::isSubscriptionCancelled($record);
+                        return $record->subscription()->isSubscriptionCancelled();
                     })
                     ->schema([
                         TextEntry::make('cancellation_info')
                             ->label('Contribution Status')
-                            ->state(function ($record) {
-                                $subscription = static::getActiveSubscription($record);
+                            ->state(function (User $record) {
+                                $subscription = $record->subscription();
                                 if ($subscription && $subscription->ends_at) {
                                     // Get price from Stripe to display amount
                                     $price = \Laravel\Cashier\Cashier::stripe()->prices->retrieve($subscription->stripe_price);
@@ -188,8 +190,8 @@ class MembershipForm
                             ->color('warning'),
                         TextEntry::make('benefits_until_end')
                             ->label('Benefits Until Cancellation')
-                            ->state(function ($record) {
-                                $subscription = static::getActiveSubscription($record);
+                            ->state(function (User $record) {
+                                $subscription = $record->subscription();
                                 if ($subscription && $subscription->ends_at) {
                                     $totalHours = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($record);
 
@@ -227,67 +229,4 @@ class MembershipForm
             ]);
     }
 
-    /**
-     * Check if user's benefits will change next month and return change info
-     */
-    private static function getBenefitChangeInfo($record): ?array
-    {
-        $subscription = \App\Actions\Subscriptions\GetActiveSubscription::run($record);
-        if (! $subscription) {
-            return null;
-        }
-
-        try {
-            $currentHours = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($record);
-
-            $stripeSubscription = $subscription->asStripeSubscription();
-            $firstItem = $stripeSubscription->items->data[0];
-            $nextMonthAmount = $firstItem->price->unit_amount / 100;
-
-            // Use the proper calculation: 1 hour per $5 contributed
-            $nextMonthHours = \App\Actions\MemberBenefits\CalculateFreeHours::run($nextMonthAmount);
-
-            if ($currentHours === $nextMonthHours) {
-                return null; // No change
-            }
-
-            return [
-                'current' => $currentHours,
-                'next_month' => $nextMonthHours,
-                'is_increase' => $nextMonthHours > $currentHours,
-            ];
-        } catch (\Exception $e) {
-            Log::error($e);
-
-            return null;
-        }
-    }
-
-    /**
-     * Check if user has an active or cancelled subscription
-     */
-    private static function hasActiveOrCancelledSubscription($record): bool
-    {
-        return static::getActiveSubscription($record) !== null;
-    }
-
-    /**
-     * Check if user's subscription is cancelled (has ends_at set)
-     */
-    private static function isSubscriptionCancelled($record): bool
-    {
-        $subscription = static::getActiveSubscription($record);
-
-        return $subscription && $subscription->ends_at !== null;
-    }
-
-    /**
-     * Get the user's active subscription (even if cancelled)
-     */
-    private static function getActiveSubscription($record)
-    {
-        return $record->subscriptions()
-            ->where('stripe_status', 'active')
-            ->first();
-    }
 }

@@ -11,6 +11,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Support\RawJs;
 
+// TODO: Merge with ModifyMembershipAmountAction since they are very similar
 class CreateMembershipSubscriptionAction
 {
     public static function make(): Action
@@ -59,7 +60,7 @@ class CreateMembershipSubscriptionAction
                         $breakdown = \App\Actions\Payments\GetFeeBreakdown::run($amount, $get('cover_fees'));
                         $totalAmount = Money::of($breakdown['total_amount'], 'USD');
 
-                        return $breakdown['description'].' = '.\App\Actions\Payments\FormatMoney::run($totalAmount).' total per month';
+                        return $breakdown['description'] . ' = ' . $totalAmount->formatTo('en_US') . ' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])

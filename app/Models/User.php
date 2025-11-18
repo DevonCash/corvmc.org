@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
 use App\Concerns\HasCredits;
 use App\Concerns\HasMembershipStatus;
 use App\Data\UserSettingsData;
+use App\Enums\CreditType;
 use App\Notifications\EmailVerificationNotification;
 use App\Notifications\PasswordResetNotification;
 use Filament\Models\Contracts\FilamentUser;
@@ -22,7 +21,22 @@ use Laravel\Cashier\Billable;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
+/**
+ * @property-read MemberProfile|null $profile
+ * @property-read StaffProfile|null $staffProfile
+ * @property-read Collection<int, Band> $bands
+ * @property-read Collection<int, Band> $ownedBands
+ * @property-read Collection<int, BandMember> $bandMemberships
+ * @property-read Collection<int, RehearsalReservation> $rehearsals
+ * @property-read Collection<int, Event> $productions
+ * @property-read Collection<int, Event> $events
+ * @property-read Collection<int, Reservation> $reservations
+ */
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -120,25 +134,25 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $profile;
     }
 
-    public function productions()
+    public function productions(): HasMany
     {
         return $this->hasMany(Event::class, 'organizer_id');
     }
 
     // Alias for backward compatibility
-    public function events()
+    public function events(): HasMany
     {
         return $this->productions();
     }
 
-    public function bands()
+    public function bands(): BelongsToMany
     {
         return $this->belongsToMany(Band::class, 'band_profile_members', 'user_id', 'band_profile_id')
             ->withPivot('role', 'position', 'status')
             ->withTimestamps();
     }
 
-    public function bandMemberships()
+    public function bandMemberships(): HasMany
     {
         return $this->hasMany(BandMember::class, 'user_id');
     }
@@ -148,25 +162,22 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasOne(StaffProfile::class);
     }
 
-    public function ownedBands()
+    public function ownedBands(): HasMany
     {
         return $this->hasMany(Band::class, 'owner_id');
     }
 
-    public function rehearsals()
+    public function rehearsals(): MorphMany
     {
         return $this->morphMany(RehearsalReservation::class, 'reservable');
     }
 
-    /**
-     * Alias for rehearsals() for backward compatibility.
-     */
-    public function reservations()
+    public function reservations(): MorphMany
     {
-        return $this->rehearsals();
+        return $this->morphMany(Reservation::class, 'reservable');
     }
 
-    public function profile()
+    public function profile(): HasOne
     {
         return $this->hasOne(MemberProfile::class);
     }
@@ -176,7 +187,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function isSustainingMember(): bool
     {
-        return \App\Actions\MemberBenefits\CheckIsSustainingMember::run($this);
+        return $this->hasRole('sustaining member');
     }
 
     /**
@@ -184,11 +195,21 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      *
      * @param  bool  $fresh  Deprecated, kept for compatibility
      */
-    public function getUsedFreeHoursThisMonth(bool $fresh = false): float
+    public function getUsedFreeHoursThisMonth(): float
     {
-        $action = new \App\Actions\MemberBenefits\GetRemainingFreeHours;
+        if (!$this->isSustainingMember()) {
+            return 0;
+        }
 
-        return $action->getUsedFreeHoursThisMonth($this, $fresh);
+        // Sum all negative credit transactions (deductions) this month
+        $usedBlocks = \App\Models\CreditTransaction::where('user_id', $this->id)
+            ->where('credit_type', CreditType::FreeHours)
+            ->where('amount', '<', 0)
+            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->sum('amount');
+
+        // Convert negative value to positive and blocks to hours
+        return Reservation::blocksToHours(abs($usedBlocks));
     }
 
     /**
@@ -196,9 +217,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      *
      * @param  bool  $fresh  If true, bypass cache for transaction-safe calculation
      */
-    public function getRemainingFreeHours(bool $fresh = false): float
+    public function getRemainingFreeHours(): float
     {
-        return \App\Actions\MemberBenefits\GetRemainingFreeHours::run($this, $fresh);
+        if (!$this->isSustainingMember()) {
+            return 0;
+        }
+
+        // Use Credits System exclusively
+        $balanceInBlocks = $this->getCreditBalance(CreditType::FreeHours);
+
+        return Reservation::blocksToHours($balanceInBlocks);
     }
 
     public function scopeStaffMembers($query)
@@ -217,6 +245,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $query->staffMembers()->where('staff_type', 'staff');
     }
 
+
     public function scopeStaffOrdered($query)
     {
         return $query->orderBy('staff_sort_order')->orderBy('name');
@@ -233,7 +262,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             ->logOnly(['name', 'email', 'staff_title', 'staff_type', 'show_on_about_page'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn (string $eventName) => "User account {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "User account {$eventName}");
     }
 
     public function sendPasswordResetNotification($token)

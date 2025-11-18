@@ -2,7 +2,6 @@
 
 namespace App\Actions\Reservations;
 
-use App\Concerns\AsFilamentAction;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;
@@ -12,25 +11,7 @@ use Lorisleiva\Actions\Concerns\AsAction;
 
 class CreateCheckoutSession
 {
-    use AsAction, AsFilamentAction;
-
-    protected static ?string $actionLabel = 'Pay Online';
-
-    protected static ?string $actionIcon = 'tabler-credit-card';
-
-    protected static string $actionColor = 'success';
-
-    protected static string $actionSuccessMessage = 'Redirecting to Stripe checkout...';
-
-    protected static function isActionVisible(...$args): bool
-    {
-        $record = $args[0] ?? null;
-
-        return $record instanceof RehearsalReservation &&
-            $record->cost->isPositive() &&
-            $record->isUnpaid() &&
-            ($record->reservable_id === Auth::id() || User::me()->can('manage reservations'));
-    }
+    use AsAction;
 
     /**
      * Create a Stripe checkout session for a reservation payment.

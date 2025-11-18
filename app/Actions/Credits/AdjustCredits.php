@@ -2,7 +2,6 @@
 
 namespace App\Actions\Credits;
 
-use App\Concerns\AsFilamentAction;
 use App\Enums\CreditType;
 use App\Models\User;
 use Filament\Schemas\Components\Grid;
@@ -11,7 +10,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
 class AdjustCredits
 {
     use AsAction;
-    use AsFilamentAction;
 
     public function handle(User $user, int $amount, CreditType $creditType = CreditType::FreeHours): void
     {
@@ -21,7 +19,10 @@ class AdjustCredits
 
     public static function filamentAction(): \Filament\Actions\Action
     {
-        return static::buildBaseAction()
+        return \Filament\Actions\Action::make('adjust_credits')
+            ->label('Adjust Credits')
+            ->icon('tabler-plus-minus')
+            ->color('primary')
             ->schema(function ($livewire) {
                 $user = $livewire->ownerRecord;
 

@@ -100,7 +100,7 @@ class ActivityLogResource extends Resource
                         }
                     })
                     ->orWhereHasMorph('subject', [
-                        \App\Models\Production::class,
+                        \App\Models\Event::class,
                     ], function ($q) use ($currentUser) {
                         // Only published productions, or user's own productions, or if user has permission
                         $q->where(function ($prodQuery) use ($currentUser) {

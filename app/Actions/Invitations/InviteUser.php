@@ -2,7 +2,6 @@
 
 namespace App\Actions\Invitations;
 
-use App\Concerns\AsFilamentAction;
 use App\Models\Invitation;
 use App\Models\User;
 use App\Notifications\UserInvitationNotification;
@@ -17,7 +16,6 @@ use Spatie\Permission\Models\Role;
 class InviteUser
 {
     use AsAction;
-    use AsFilamentAction;
 
     public function handle(string $email, array $data = []): Invitation
     {

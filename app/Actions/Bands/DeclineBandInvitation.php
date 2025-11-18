@@ -2,7 +2,6 @@
 
 namespace App\Actions\Bands;
 
-use App\Concerns\AsFilamentAction;
 use App\Exceptions\BandException;
 use App\Models\Band;
 use App\Models\User;
@@ -13,7 +12,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
 class DeclineBandInvitation
 {
     use AsAction;
-    use AsFilamentAction;
 
     /**
      * Decline an invitation to join a band.

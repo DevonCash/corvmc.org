@@ -3,7 +3,6 @@
 namespace App\Actions\Bands;
 
 use App\Actions\Invitations\ResendInvitation;
-use App\Concerns\AsFilamentAction;
 use App\Models\Band;
 use App\Models\BandMember;
 use App\Models\User;
@@ -18,7 +17,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
 class UpdateBandMember
 {
     use AsAction;
-    use AsFilamentAction;
 
     /**
      * Update a band member with flexible user/non-user handling.
@@ -78,9 +76,10 @@ class UpdateBandMember
 
     public static function filamentAction(): Action
     {
-        return static::buildBaseAction()
+        return Action::make('update_band_member')
             ->label('Edit')
             ->icon('tabler-edit')
+            ->color('primary')
             ->schema([
                 TextInput::make('name')
                     ->label('Display Name')

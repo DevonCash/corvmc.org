@@ -27,13 +27,13 @@ class GetUserStats
         $thisYear = now()->startOfYear();
 
         return [
-            'total_reservations' => $user->reservations()->count(),
-            'this_month_reservations' => $user->reservations()->where('reserved_at', '>=', $thisMonth)->count(),
-            'this_year_hours' => $user->reservations()->where('reserved_at', '>=', $thisYear)->sum('hours_used'),
-            'this_month_hours' => $user->reservations()->where('reserved_at', '>=', $thisMonth)->sum('hours_used'),
+            'total_reservations' => $user->rehearsals()->count(),
+            'this_month_reservations' => $user->rehearsals()->where('reserved_at', '>=', $thisMonth)->count(),
+            'this_year_hours' => $user->rehearsals()->where('reserved_at', '>=', $thisYear)->sum('hours_used'),
+            'this_month_hours' => $user->rehearsals()->where('reserved_at', '>=', $thisMonth)->sum('hours_used'),
             'free_hours_used' => $user->getUsedFreeHoursThisMonth(),
             'remaining_free_hours' => $user->getRemainingFreeHours(),
-            'total_spent' => $user->reservations()->sum('cost'),
+            'total_spent' => $user->rehearsals()->sum('cost'),
             'is_sustaining_member' => $user->isSustainingMember(),
         ];
     }

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ActivityLog\Pages;
 
 use App\Actions\ActivityLogs\CleanupLogs;
 use App\Filament\Resources\ActivityLog\ActivityLogResource;
+use App\Filament\Resources\ActivityLog\Widgets\ActivityStatsWidget;
 use Filament\Resources\Pages\ListRecords;
 
 class ListActivityLogs extends ListRecords
@@ -21,7 +22,7 @@ class ListActivityLogs extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            ActivityLogResource\Widgets\ActivityStatsWidget::class,
+            ActivityStatsWidget::class,
         ];
     }
 

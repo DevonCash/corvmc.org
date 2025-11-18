@@ -18,7 +18,7 @@ class ReservationColumns
             ->label('Type')
             ->badge()
             ->getStateUsing(fn (Reservation $record) => $record->getReservationTypeLabel())
-            ->color(fn (Reservation $record) => $record instanceof \App\Models\ProductionReservation ? 'warning' : 'primary')
+            ->color(fn (Reservation $record) => $record instanceof \App\Models\EventReservation ? 'warning' : 'primary')
             ->icon(fn (Reservation $record) => $record->getReservationIcon());
     }
 

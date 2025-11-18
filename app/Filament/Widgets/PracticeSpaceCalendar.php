@@ -67,13 +67,13 @@ class PracticeSpaceCalendar extends CalendarWidget
                     ->textColor('#fff');
             });
 
-        $events = Event::with('manager')
+        $events = Event::with('organizer')
             ->where('end_time', '>=', $start)
             ->where('start_time', '<=', $end)
             ->where('status', '!=', 'cancelled')
             ->get()
-            ->filter(fn (Production $event) => $event->usesPracticeSpace())
-            ->map(function (Production $event) {
+            ->filter(fn (Event $event) => $event->usesPracticeSpace())
+            ->map(function (Event $event) {
                 $title = $event->title;
                 if (! $event->isPublished()) {
                     $title .= ' (Draft)';
