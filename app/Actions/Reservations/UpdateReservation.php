@@ -89,8 +89,7 @@ class UpdateReservation
                             $blocksDifference,
                             CreditType::FreeHours,
                             'reservation_update',
-                            $reservation->id,
-                            "Additional {$blocksDifference} blocks for reservation update"
+                            $reservation->id
                         );
                     } elseif ($blocksDifference < 0) {
                         // Refund credits

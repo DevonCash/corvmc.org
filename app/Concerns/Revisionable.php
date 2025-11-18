@@ -337,11 +337,14 @@ trait Revisionable
      */
     public function getRevisionSummary(): array
     {
+        /** @var \Illuminate\Database\Eloquent\Relations\MorphMany<\App\Models\Revision> $revisions */
+        $revisions = $this->revisions();
+
         return [
-            'total' => $this->revisions()->count(),
+            'total' => $revisions->count(),
             'pending' => $this->pendingRevisions()->count(),
-            'approved' => $this->revisions()->approved()->count(),
-            'rejected' => $this->revisions()->rejected()->count(),
+            'approved' => $revisions->approved()->count(),
+            'rejected' => $revisions->rejected()->count(),
             'latest' => $this->latestRevision(),
         ];
     }

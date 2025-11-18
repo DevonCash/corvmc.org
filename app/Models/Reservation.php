@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * Reservations can be owned by different entities (User, Production, Band, etc.)
  * using a polymorphic relationship.
  *
+ * @property PaymentStatus $payment_status
+ * @property ReservationStatus $status
  * @property-read User $user
  * @property-read Model $reservable
  * @property-read RecurringSeries|null $recurringSeries

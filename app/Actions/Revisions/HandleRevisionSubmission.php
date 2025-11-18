@@ -53,6 +53,11 @@ class HandleRevisionSubmission
             return false;
         }
 
+        // Ensure the model uses the Revisionable trait
+        if (! method_exists($model, 'getAutoApproveMode')) {
+            return false;
+        }
+
         // Get auto-approval mode from the model
         $autoApproveMode = $model->getAutoApproveMode();
 

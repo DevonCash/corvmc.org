@@ -154,6 +154,7 @@ trait HasVisibility
     public function scopeVisibleTo(Builder $query, ?User $user = null): Builder
     {
         if (! $user) {
+            /** @phpstan-ignore method.notFound */
             return $query->public();
         }
 

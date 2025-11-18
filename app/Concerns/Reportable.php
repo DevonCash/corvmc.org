@@ -69,6 +69,7 @@ trait Reportable
     // Get the most common report reason for this content
     public function getMostCommonReportReason(): ?string
     {
+        /** @var \App\Models\Report|null $mostCommon */
         $mostCommon = $this->reports()
             ->selectRaw('reason, COUNT(*) as count')
             ->groupBy('reason')
