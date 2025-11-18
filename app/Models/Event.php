@@ -23,6 +23,8 @@ class Event extends ContentModel implements Eventable
 
     protected static string $reportableTypeName = 'Event';
 
+    protected static string $creatorForeignKey = 'organizer_id';
+
     // Activity logging configuration
     protected static array $loggedFields = ['title', 'description', 'start_time', 'end_time', 'status', 'visibility'];
 

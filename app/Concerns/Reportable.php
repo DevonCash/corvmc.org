@@ -81,30 +81,30 @@ trait Reportable
     // Trust System Integration
 
     /**
+     * The foreign key field name for the content creator.
+     * Override in child models if needed.
+     */
+    protected static string $creatorForeignKey = 'user_id';
+
+    /**
      * Get the content creator/owner for trust calculations.
      */
     public function getContentCreator(): ?User
     {
-        // Try common relationship names
-        if (method_exists($this, 'organizer') && $this->organizer) {
-            return $this->organizer;
+        $foreignKey = static::$creatorForeignKey;
+
+        // Get the relationship method name from the foreign key
+        // e.g., 'user_id' -> 'user', 'organizer_id' -> 'organizer'
+        $relationshipName = str_replace('_id', '', $foreignKey);
+
+        // Try to use the relationship method if it exists
+        if (method_exists($this, $relationshipName)) {
+            return $this->{$relationshipName};
         }
 
-        if (method_exists($this, 'user') && $this->user) {
-            return $this->user;
-        }
-
-        if (method_exists($this, 'creator') && $this->creator) {
-            return $this->creator;
-        }
-
-        if (method_exists($this, 'owner') && $this->owner) {
-            return $this->owner;
-        }
-
-        // Check for direct user_id field
-        if (isset($this->user_id)) {
-            return User::find($this->user_id);
+        // Fall back to direct foreign key access
+        if (isset($this->{$foreignKey})) {
+            return User::find($this->{$foreignKey});
         }
 
         return null;

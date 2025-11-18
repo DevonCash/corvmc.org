@@ -33,6 +33,7 @@ interface Reportable
 
     /**
      * Get the user who created/owns this content.
+     * Each model must implement this to return the appropriate owner/creator relationship.
      */
     public function getContentCreator(): ?User;
 

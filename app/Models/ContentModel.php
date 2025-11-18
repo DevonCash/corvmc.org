@@ -21,6 +21,14 @@ use Spatie\Tags\HasTags;
  *
  * Provides common functionality for models that represent content created by users,
  * including media handling, activity logging, reporting, and tagging capabilities.
+ *
+ * Note: Property annotations below help PHPStan understand trait contexts.
+ * Child models may have different combinations of these properties.
+ *
+ * @property int|null $user_id
+ * @property int|null $owner_id
+ * @property int|null $organizer_id
+ * @property int|null $creator_id
  */
 abstract class ContentModel extends Model implements HasMedia, ReportableContract
 {
@@ -35,7 +43,7 @@ abstract class ContentModel extends Model implements HasMedia, ReportableContrac
 
     public function getFillable(): array
     {
-        return array_merge( $this->fillable ?? [], [
+        return array_merge($this->fillable ?? [], [
             'visibility',
         ]);
     }

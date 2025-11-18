@@ -26,6 +26,8 @@ class Band extends ContentModel
 
     protected static string $reportableTypeName = 'Band Profile';
 
+    protected static string $creatorForeignKey = 'owner_id';
+
     // Activity logging configuration
     protected static array $loggedFields = ['name', 'bio', 'hometown', 'visibility'];
 
