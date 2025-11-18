@@ -15,6 +15,9 @@ use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Notification as LaravelNotification;
 use Livewire\Component;
 
+/**
+ * @property \Filament\Schemas\Components\Form $form
+ */
 class ContactForm extends Component implements HasForms
 {
     use InteractsWithForms;

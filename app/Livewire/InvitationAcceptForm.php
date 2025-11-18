@@ -6,10 +6,14 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Form;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Component;
 
+/**
+ * @property Form $form
+ */
 class InvitationAcceptForm extends Component implements HasForms
 {
     use InteractsWithForms;

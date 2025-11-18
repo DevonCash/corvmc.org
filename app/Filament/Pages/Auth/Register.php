@@ -8,6 +8,10 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
 use Illuminate\Database\Eloquent\Model;
 
+
+/**
+ * @method makeForm()
+ */
 class Register extends BaseRegister
 {
     protected ?string $invitationToken = null;

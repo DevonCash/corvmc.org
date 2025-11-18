@@ -10,12 +10,16 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Flex;
+use Filament\Schemas\Components\{Flex, Form};
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
+
+/**
+ * @property Form $form
+ */
 class MyAccount extends Page implements HasForms
 {
     use InteractsWithForms;

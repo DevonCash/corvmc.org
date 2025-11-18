@@ -10,6 +10,10 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 
+
+/**
+ * @property \Filament\Schemas\Components\Form $form
+ */
 class MyProfile extends Page implements HasForms
 {
     use InteractsWithForms;

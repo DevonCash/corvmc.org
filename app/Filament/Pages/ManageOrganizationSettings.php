@@ -17,10 +17,14 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\{Form, Section};
 use Filament\Schemas\Schema;
 use UnitEnum;
 
+
+/**
+ * @property Form $form
+ */
 class ManageOrganizationSettings extends Page implements HasForms
 {
     use InteractsWithForms;
