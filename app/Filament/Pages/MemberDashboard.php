@@ -115,8 +115,9 @@ class MemberDashboard extends Page
                         'has_tickets' => $event->hasTickets(),
                         'is_notaflof' => $event->isNotaflof(),
                         'performers' => $event->performers->map(function ($band) {
+                            /** @var \App\Models\Band $band */
                             return [
-                                'id' => $band->id,
+                                'id' => $band->getKey(),
                                 'name' => $band->name,
                                 'order' => $band->pivot->order ?? 0,
                                 'set_length' => $band->pivot->set_length,

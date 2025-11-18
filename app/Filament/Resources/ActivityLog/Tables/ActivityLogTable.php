@@ -177,7 +177,7 @@ class ActivityLogTable
     protected static function formatProductionDescription(Activity $activity, string $causerName, string $action): string
     {
         $production = $activity->subject;
-        if ($production && $production->title) {
+        if ($production && isset($production->title)) {
             return "{$causerName} {$action} event \"{$production->title}\"";
         }
 
@@ -187,7 +187,7 @@ class ActivityLogTable
     protected static function formatBandDescription(Activity $activity, string $causerName, string $action): string
     {
         $band = $activity->subject;
-        if ($band && $band->name) {
+        if ($band && isset($band->name)) {
             $actionText = $action === 'created' ? 'created' : 'updated';
 
             return "{$causerName} {$actionText} band \"{$band->name}\"";
@@ -204,7 +204,7 @@ class ActivityLogTable
         // Only show details for own reservations or if user has permission
         if (
             $currentUser && $reservation &&
-            ($reservation->user_id === $currentUser->id || $currentUser->can('view reservations'))
+            (isset($reservation->user_id) && $reservation->user_id === $currentUser->id || $currentUser->can('view reservations'))
         ) {
 
             $actionText = match ($action) {

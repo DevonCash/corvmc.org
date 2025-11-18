@@ -216,7 +216,7 @@ class ActivitySidebar
     protected static function formatProductionDescription(Activity $activity, string $causerName, string $action): string
     {
         $production = $activity->subject;
-        if ($production && $production->title) {
+        if ($production && isset($production->title)) {
             return "{$causerName} {$action} event \"{$production->title}\"";
         }
 
@@ -226,7 +226,7 @@ class ActivitySidebar
     protected static function formatBandDescription(Activity $activity, string $causerName, string $action): string
     {
         $band = $activity->subject;
-        if ($band && $band->name) {
+        if ($band && isset($band->name)) {
             $actionText = $action === 'created' ? 'created' : 'updated';
 
             return "{$causerName} {$actionText} band \"{$band->name}\"";
@@ -249,7 +249,7 @@ class ActivitySidebar
 
         if (
             $currentUser && $reservation &&
-            ($reservation->user_id === $currentUser->id || $currentUser->can('view reservations'))
+            (isset($reservation->user_id) && $reservation->user_id === $currentUser->id || $currentUser->can('view reservations'))
         ) {
             $actionText = match ($action) {
                 'booked' => 'booked the practice space',
@@ -306,7 +306,7 @@ class ActivitySidebar
                 'App\\Models\\MemberProfile' => route('filament.member.resources.directory.view', ['record' => $activity->subject_id]),
                 'App\\Models\\Production' => route('filament.member.resources.productions.view', ['record' => $activity->subject_id]),
                 'App\\Models\\Reservation' => route('filament.member.resources.reservations.index'),
-                'App\\Models\\User' => $activity->subject?->profile?->id ?
+                'App\\Models\\User' => (isset($activity->subject->profile) && $activity->subject->profile?->id) ?
                     route('filament.member.resources.directory.view', ['record' => $activity->subject->profile->id]) : null,
                 default => null,
             };
