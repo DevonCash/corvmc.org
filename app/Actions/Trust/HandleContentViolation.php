@@ -16,9 +16,7 @@ class HandleContentViolation
      */
     public function handle(User $user, Reportable $content, string $violationType, string $contentType = 'global'): void
     {
-        /** @phpstan-ignore property.notFound */
         $contentId = $content->id;
-        /** @phpstan-ignore property.notFound */
         $contentTitle = $content->title ?? $content->name ?? class_basename($content);
 
         $reason = 'Content violation for '.$contentTitle;

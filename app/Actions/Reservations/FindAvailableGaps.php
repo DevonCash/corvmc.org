@@ -38,9 +38,11 @@ class FindAvailableGaps
 
         // Add reservation periods
         $reservations->each(function (Reservation $reservation) use ($occupiedPeriods) {
-            $period = $reservation->getPeriod();
-            if ($period) {
-                $occupiedPeriods->push($period);
+            if (method_exists($reservation, 'getPeriod')) {
+                $period = $reservation->getPeriod();
+                if ($period) {
+                    $occupiedPeriods->push($period);
+                }
             }
         });
 
@@ -50,7 +52,7 @@ class FindAvailableGaps
 
         // Use Period collection to find gaps
         $periodCollection = new PeriodCollection(...$occupiedPeriods->toArray());
-        $gaps = $periodCollection->gaps($businessPeriod);
+        $gaps = $periodCollection->gaps();
 
         return collect($gaps)
             ->filter(fn (Period $gap) => $gap->length() >= $minimumDurationMinutes)

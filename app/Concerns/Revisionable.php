@@ -337,7 +337,6 @@ trait Revisionable
      */
     public function getRevisionSummary(): array
     {
-        /** @var \Illuminate\Database\Eloquent\Relations\MorphMany<\App\Models\Revision> $revisions */
         $revisions = $this->revisions();
 
         return [

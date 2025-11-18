@@ -992,3 +992,4 @@ it('has emails', function (string $email) {
 | decoration-slice | box-decoration-slice |
 | decoration-clone | box-decoration-clone |
 </laravel-boost-guidelines>
+- Ask before adding phpstan-ignore annotations

@@ -43,4 +43,9 @@ interface Reportable
      * Get the trust content type for this reportable.
      */
     public function getTrustContentType(): string;
+
+    /**
+     * Check if this content has been reported by a specific user.
+     */
+    public function hasBeenReportedBy($user): bool;
 }

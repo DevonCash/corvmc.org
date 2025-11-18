@@ -30,9 +30,7 @@ class AwardSuccessfulContent
             ->exists();
 
         if (! $hasUpheldReports) {
-            /** @phpstan-ignore property.notFound */
             $contentId = $content->id;
-            /** @phpstan-ignore property.notFound */
             $contentTitle = $content->title ?? $content->name ?? $contentId;
 
             AwardTrustPoints::run(

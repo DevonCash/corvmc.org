@@ -7,6 +7,7 @@ use App\Models\User;
 use Brick\Money\Money;
 use Laravel\Cashier\Cashier;
 use Laravel\Cashier\Checkout;
+use Laravel\Cashier\Subscription;
 use Lorisleiva\Actions\Concerns\AsAction;
 use Stripe\Price;
 
@@ -34,6 +35,7 @@ class UpdateSubscriptionAmount
         }
 
         // Get user's active membership subscription
+        /** @var Subscription|null $subscription */
         $subscription = $user->subscriptions()
             ->where('stripe_status', 'active')
             ->first();
