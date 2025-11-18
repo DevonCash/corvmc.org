@@ -2,9 +2,9 @@
 
 namespace App\Actions\Trust;
 
+use App\Enums\TrustLevel;
 use App\Models\User;
 use App\Models\UserTrustBalance;
-use App\Support\TrustConstants;
 use Illuminate\Support\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -15,21 +15,11 @@ class GetUsersByTrustLevel
     /**
      * Get users by trust level for queries/admin.
      */
-    public function handle(string $level, string $contentType = 'global'): Collection
+    public function handle(TrustLevel $level, string $contentType = 'global'): Collection
     {
-        $minPoints = match ($level) {
-            'auto-approved' => TrustConstants::TRUST_AUTO_APPROVED,
-            'verified' => TrustConstants::TRUST_VERIFIED,
-            'trusted' => TrustConstants::TRUST_TRUSTED,
-            default => 0
-        };
-
-        $maxPoints = match ($level) {
-            'verified' => TrustConstants::TRUST_AUTO_APPROVED - 1,
-            'trusted' => TrustConstants::TRUST_VERIFIED - 1,
-            'pending' => TrustConstants::TRUST_TRUSTED - 1,
-            default => null
-        };
+        $minPoints = $level->getThreshold();
+        $nextLevel = $level->getNextLevel();
+        $maxPoints = $nextLevel?->getThreshold() - 1;
 
         $query = UserTrustBalance::where('content_type', $contentType)
             ->where('balance', '>=', $minPoints);

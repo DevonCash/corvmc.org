@@ -99,7 +99,6 @@ class Band extends ContentModel
         return $this->memberships()->for($user)->first();
     }
 
-
     public function activeMembers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->memberships()->active();
@@ -127,7 +126,7 @@ class Band extends ContentModel
 
     public function getAvatarUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=400';
+        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=400';
     }
 
     /**
@@ -154,17 +153,17 @@ class Band extends ContentModel
 
     public function getAvatarThumbUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=150';
+        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=150';
     }
 
     public function getAvatarLargeUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=800';
+        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=800';
     }
 
     public function getAvatarOptimizedUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=1200';
+        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=1200';
     }
 
     /**
@@ -208,7 +207,7 @@ class Band extends ContentModel
     public function primaryLink(): ?array
     {
         // Priority 1: Public profile
-        if ($this->visibility === 'public') {
+        if ($this->visibility?->isPublic()) {
             return [
                 'url' => route('bands.show', $this),
                 'text' => 'View Profile',
@@ -242,7 +241,7 @@ class Band extends ContentModel
     {
         if (! $user) {
             // Only public profiles are visible to guests
-            return $this->visibility === 'public';
+            return $this->visibility?->isPublic() ?? false;
         }
 
         // Band members and owner can always see the profile

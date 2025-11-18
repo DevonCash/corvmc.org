@@ -2,12 +2,13 @@
 
 namespace App\Data;
 
+use App\Enums\Visibility;
 use Spatie\LaravelData\Data;
 
 class ContactData extends Data
 {
     public function __construct(
-        public ?string $visibility = 'private',
+        public ?Visibility $visibility = Visibility::Private,
         public ?string $email = null,
         public ?string $phone = null,
         public ?string $address = null,

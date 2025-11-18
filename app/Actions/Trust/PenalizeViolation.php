@@ -45,7 +45,7 @@ class PenalizeViolation
             'violation_type' => $violationType,
             'points_deducted' => abs($points),
             'reason' => $reason,
-            'new_total' => GetTrustBalance::run($user, $contentType),
+            'new_total' => $user->getTrustBalance($contentType),
         ]);
     }
 }

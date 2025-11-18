@@ -33,6 +33,16 @@ abstract class ContentModel extends Model implements HasMedia
     protected static string $reportableTypeName = 'Content';
 
     /**
+     * Get the attributes that should be cast.
+     */
+    protected function casts(): array
+    {
+        return [
+            'visibility' => \App\Enums\Visibility::class,
+        ];
+    }
+
+    /**
      * Standard media collections for content models.
      */
     public function registerMediaCollections(): void
@@ -110,7 +120,7 @@ abstract class ContentModel extends Model implements HasMedia
      */
     protected function isPrivateContent(): bool
     {
-        return isset($this->visibility) && $this->visibility === 'private';
+        return $this->visibility === \App\Enums\Visibility::Private;
     }
 
     /**

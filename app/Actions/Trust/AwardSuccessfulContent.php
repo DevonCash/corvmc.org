@@ -45,7 +45,7 @@ class AwardSuccessfulContent
                     'content_type' => $contentType,
                     'content_id' => $content->id,
                     'points_awarded' => TrustConstants::POINTS_SUCCESSFUL_CONTENT,
-                    'new_total' => GetTrustBalance::run($user, $contentType),
+                    'new_total' => $user->getTrustBalance($contentType),
                 ]);
             }
         }

@@ -133,7 +133,7 @@ trait Reportable
             return null;
         }
 
-        return \App\Actions\Trust\GetTrustLevelInfo::run($creator, $this->getTrustContentType());
+        return $creator->getTrustLevelInfo($this->getTrustContentType());
     }
 
     /**
@@ -146,7 +146,7 @@ trait Reportable
             return null;
         }
 
-        return \App\Actions\Trust\GetTrustBadge::run($creator, $this->getTrustContentType());
+        return $creator->getTrustBadge($this->getTrustContentType());
     }
 
     /**
@@ -203,7 +203,7 @@ trait Reportable
             return false;
         }
 
-        return \App\Actions\Trust\CanAutoApprove::run($creator, $this->getTrustContentType());
+        return $creator->canAutoApprove($this->getTrustContentType());
     }
 
     /**
@@ -216,7 +216,7 @@ trait Reportable
             return false;
         }
 
-        $points = \App\Actions\Trust\GetTrustBalance::run($creator, $this->getTrustContentType());
+        $points = $creator->getTrustBalance($this->getTrustContentType());
 
         return $points >= \App\Support\TrustConstants::TRUST_TRUSTED;
     }

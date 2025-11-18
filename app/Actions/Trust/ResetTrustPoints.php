@@ -15,7 +15,7 @@ class ResetTrustPoints
      */
     public function handle(User $user, string $contentType = 'global', string $reason = 'Admin reset', ?User $admin = null): void
     {
-        $currentBalance = GetTrustBalance::run($user, $contentType);
+        $currentBalance = $user->getTrustBalance($contentType);
 
         if ($currentBalance != 0) {
             AwardTrustPoints::run(

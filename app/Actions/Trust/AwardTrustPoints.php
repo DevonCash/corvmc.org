@@ -109,7 +109,7 @@ class AwardTrustPoints
         $activeTypes = 0;
 
         foreach ($contentTypes as $type) {
-            $points = GetTrustBalance::run($user, $type);
+            $points = $user->getTrustBalance($type);
 
             if ($points > 0) {
                 $totalPoints += $points;

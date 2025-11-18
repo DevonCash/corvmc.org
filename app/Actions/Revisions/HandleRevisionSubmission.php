@@ -75,7 +75,7 @@ class HandleRevisionSubmission
                 // Standard trust-based auto-approval
                 $contentType = get_class($model);
 
-                return \App\Actions\Trust\CanAutoApprove::run($submitter, $contentType);
+                return $submitter->canAutoApprove($contentType);
         }
     }
 

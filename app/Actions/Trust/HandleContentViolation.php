@@ -25,7 +25,7 @@ class HandleContentViolation
             'content_type' => $contentType,
             'content_id' => $content->id,
             'violation_type' => $violationType,
-            'new_trust_points' => GetTrustBalance::run($user, $contentType),
+            'new_trust_points' => $user->getTrustBalance($contentType),
         ]);
     }
 }

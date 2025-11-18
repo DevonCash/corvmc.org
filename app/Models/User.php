@@ -4,14 +4,19 @@ namespace App\Models;
 
 use App\Concerns\HasCredits;
 use App\Concerns\HasMembershipStatus;
+use App\Concerns\HasTrust;
 use App\Data\UserSettingsData;
 use App\Enums\CreditType;
 use App\Notifications\EmailVerificationNotification;
 use App\Notifications\PasswordResetNotification;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -21,10 +26,6 @@ use Laravel\Cashier\Billable;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * @property-read MemberProfile|null $profile
@@ -40,7 +41,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use Billable, HasCredits, HasFactory, HasMembershipStatus, HasRoles, Impersonate, LogsActivity, Notifiable, SoftDeletes;
+    use Billable, HasCredits, HasFactory, HasMembershipStatus, HasRoles, HasTrust, Impersonate, LogsActivity, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -197,7 +198,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function getUsedFreeHoursThisMonth(): float
     {
-        if (!$this->isSustainingMember()) {
+        if (! $this->isSustainingMember()) {
             return 0;
         }
 
@@ -219,7 +220,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function getRemainingFreeHours(): float
     {
-        if (!$this->isSustainingMember()) {
+        if (! $this->isSustainingMember()) {
             return 0;
         }
 
@@ -245,7 +246,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $query->staffMembers()->where('staff_type', 'staff');
     }
 
-
     public function scopeStaffOrdered($query)
     {
         return $query->orderBy('staff_sort_order')->orderBy('name');
@@ -262,7 +262,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             ->logOnly(['name', 'email', 'staff_title', 'staff_type', 'show_on_about_page'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "User account {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "User account {$eventName}");
     }
 
     public function sendPasswordResetNotification($token)

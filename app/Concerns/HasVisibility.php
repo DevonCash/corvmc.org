@@ -2,22 +2,18 @@
 
 namespace App\Concerns;
 
+use App\Enums\Visibility;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
 trait HasVisibility
 {
     /**
-     * The available visibility options.
-     */
-    protected static array $visibilityOptions = ['public', 'members', 'private'];
-
-    /**
      * Get the available visibility options.
      */
     public static function getVisibilityOptions(): array
     {
-        return static::$visibilityOptions;
+        return Visibility::values();
     }
 
     /**
@@ -27,7 +23,7 @@ trait HasVisibility
     {
         if (! $user) {
             // Only public content is visible to guests
-            return $this->visibility === 'public';
+            return $this->visibility?->isVisibleToGuests() ?? false;
         }
 
         // Check if user is the owner/creator
@@ -42,9 +38,9 @@ trait HasVisibility
 
         // Check visibility settings
         return match ($this->visibility) {
-            'public' => true,
-            'members' => true, // All logged-in users are considered members
-            'private' => false,
+            Visibility::Public => true,
+            Visibility::Members => true, // All logged-in users are considered members
+            Visibility::Private => false,
             default => false,
         };
     }
@@ -81,12 +77,8 @@ trait HasVisibility
     /**
      * Set the visibility level.
      */
-    public function setVisibility(string $visibility): self
+    public function setVisibility(Visibility $visibility): self
     {
-        if (! in_array($visibility, static::$visibilityOptions)) {
-            throw new \InvalidArgumentException("Invalid visibility option: {$visibility}");
-        }
-
         $this->update(['visibility' => $visibility]);
 
         return $this;
@@ -97,7 +89,7 @@ trait HasVisibility
      */
     public function makePublic(): self
     {
-        return $this->setVisibility('public');
+        return $this->setVisibility(Visibility::Public);
     }
 
     /**
@@ -105,7 +97,7 @@ trait HasVisibility
      */
     public function makeMembersOnly(): self
     {
-        return $this->setVisibility('members');
+        return $this->setVisibility(Visibility::Members);
     }
 
     /**
@@ -113,7 +105,7 @@ trait HasVisibility
      */
     public function makePrivate(): self
     {
-        return $this->setVisibility('private');
+        return $this->setVisibility(Visibility::Private);
     }
 
     /**
@@ -121,7 +113,7 @@ trait HasVisibility
      */
     public function isPublic(): bool
     {
-        return $this->visibility === 'public';
+        return $this->visibility === Visibility::Public;
     }
 
     /**
@@ -129,7 +121,7 @@ trait HasVisibility
      */
     public function isMembersOnly(): bool
     {
-        return $this->visibility === 'members';
+        return $this->visibility === Visibility::Members;
     }
 
     /**
@@ -137,7 +129,7 @@ trait HasVisibility
      */
     public function isPrivate(): bool
     {
-        return $this->visibility === 'private';
+        return $this->visibility === Visibility::Private;
     }
 
     /**
@@ -145,7 +137,7 @@ trait HasVisibility
      */
     public function scopePublic(Builder $query): Builder
     {
-        return $query->where('visibility', 'public');
+        return $query->where('visibility', Visibility::Public);
     }
 
     /**
@@ -153,7 +145,7 @@ trait HasVisibility
      */
     public function scopeVisibleToMembers(Builder $query): Builder
     {
-        return $query->whereIn('visibility', ['public', 'members']);
+        return $query->whereIn('visibility', Visibility::visibleToMembers());
     }
 
     /**
@@ -172,7 +164,7 @@ trait HasVisibility
 
         // Show public and members content, plus user's own content
         return $query->where(function ($q) use ($user) {
-            $q->whereIn('visibility', ['public', 'members']);
+            $q->whereIn('visibility', Visibility::visibleToMembers());
 
             // Add user's own content
             if (isset($this->user_id)) {
