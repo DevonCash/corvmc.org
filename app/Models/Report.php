@@ -9,6 +9,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property-read User|null $resolvedBy
+ * @property-read User $reportedBy
  */
 class Report extends Model
 {
@@ -59,7 +60,7 @@ class Report extends Model
         return $this->belongsTo(User::class, 'reported_by_id');
     }
 
-    public function resolvedBy()
+    public function resolvedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'resolved_by_id');
     }

@@ -61,7 +61,7 @@ class Revision extends Model
     /**
      * Get the model that this revision applies to.
      */
-    public function revisionable()
+    public function revisionable(): \Illuminate\Database\Eloquent\Relations\MorphTo
     {
         return $this->morphTo();
     }
