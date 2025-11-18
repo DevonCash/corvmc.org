@@ -56,10 +56,6 @@ class AwardSuccessfulContent
      */
     protected function shouldEvaluateContent(Model $content): bool
     {
-        if ($content instanceof \App\Models\CommunityEvent) {
-            return $content->isPublished() && ! $content->isUpcoming();
-        }
-
         if ($content instanceof \App\Models\Event) {
             return $content->status === 'completed';
         }

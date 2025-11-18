@@ -220,9 +220,6 @@ class Revision extends Model
             'App\Models\MemberProfile' => 'Member Profile',
             'App\Models\Band' => 'Band',
             'App\Models\Event' => 'Event',
-            // Legacy support for old polymorphic type names
-            'App\Models\Production' => 'Event',
-            'App\Models\CommunityEvent' => 'Event',
             default => class_basename($this->revisionable_type)
         };
     }

@@ -100,10 +100,9 @@ class AwardTrustPoints
     protected function updateGlobalTrust(User $user): void
     {
         $contentTypes = [
-            'App\\Models\\CommunityEvent',
+            'App\\Models\\Event',
             'App\\Models\\MemberProfile',
             'App\\Models\\Band',
-            'App\\Models\\Production',
         ];
 
         $totalPoints = 0;

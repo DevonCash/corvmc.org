@@ -46,10 +46,9 @@ class GetTrustBadge
     protected function getContentTypeName(string $contentType): string
     {
         return match ($contentType) {
-            'App\\Models\\CommunityEvent' => 'Event Organizer',
+            'App\\Models\\Event' => 'Event Organizer',
             'App\\Models\\MemberProfile' => 'Profile Creator',
             'App\\Models\\Band' => 'Band Manager',
-            'App\\Models\\Production' => 'Production Manager',
             'global' => 'Community Member',
             default => 'Content Creator'
         };

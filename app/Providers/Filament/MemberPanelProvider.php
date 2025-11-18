@@ -106,7 +106,6 @@ class MemberPanelProvider extends PanelProvider
             ->resources([
                 \App\Filament\Resources\MemberProfiles\MemberProfileResource::class,
                 \App\Filament\Resources\Bands\BandResource::class,
-                \App\Filament\Resources\CommunityEvents\CommunityEventResource::class,
                 \App\Filament\Resources\Reservations\ReservationResource::class,
                 \App\Filament\Resources\Equipment\EquipmentResource::class,
                 \App\Filament\Resources\Equipment\EquipmentLoans\EquipmentLoanResource::class,

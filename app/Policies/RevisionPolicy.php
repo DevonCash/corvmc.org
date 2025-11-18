@@ -207,7 +207,6 @@ class RevisionPolicy
             'MemberProfile' => 'member profile',
             'Band' => 'band',
             'Event' => 'event',
-            'CommunityEvent' => 'community event',
             'StaffProfile' => 'staff profile',
             'Equipment' => 'equipment',
             default => strtolower($baseName),

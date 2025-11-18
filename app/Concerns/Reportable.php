@@ -116,10 +116,9 @@ trait Reportable
     public function getTrustContentType(): string
     {
         return match (class_basename($this)) {
-            'CommunityEvent' => 'community_events',
+            'Event' => 'events',
             'MemberProfile' => 'member_profiles',
             'Band' => 'bands',
-            'Production' => 'productions',
             default => 'global'
         };
     }

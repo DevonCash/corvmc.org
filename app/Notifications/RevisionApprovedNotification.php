@@ -91,7 +91,6 @@ class RevisionApprovedNotification extends Notification implements ShouldQueue
             'App\Models\MemberProfile' => url("/member/member-profiles/{$modelId}"),
             'App\Models\Band' => url("/member/bands/{$modelId}"),
             'App\Models\Event' => route('events.show', $modelId),
-            'App\Models\CommunityEvent' => route('events.show', $modelId),
             default => url('/member')
         };
     }

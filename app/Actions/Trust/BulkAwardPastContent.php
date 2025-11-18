@@ -17,30 +17,8 @@ class BulkAwardPastContent
     {
         $totalPoints = 0;
 
-        if ($contentType === 'App\\Models\\CommunityEvent' || $contentType === 'global') {
-            $successfulEvents = \App\Models\CommunityEvent::where('organizer_id', $user->id)
-                ->where('status', \App\Models\CommunityEvent::STATUS_APPROVED)
-                ->where('start_time', '<', now())
-                ->whereDoesntHave('reports', function ($query) {
-                    $query->where('status', 'upheld');
-                })
-                ->count();
-
-            if ($successfulEvents > 0) {
-                $points = $successfulEvents * TrustConstants::POINTS_SUCCESSFUL_CONTENT;
-                AwardTrustPoints::run(
-                    $user,
-                    $points,
-                    'App\\Models\\CommunityEvent',
-                    'bulk_award',
-                    null,
-                    "Bulk award for {$successfulEvents} successful events"
-                );
-                $totalPoints += $points;
-            }
-        }
-
-        // Add similar logic for other content types as needed
+        // CommunityEvent was removed - now handled by Event model
+        // Add logic for other content types as needed
 
         return $totalPoints;
     }
