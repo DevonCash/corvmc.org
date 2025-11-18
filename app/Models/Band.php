@@ -14,6 +14,8 @@ use Spatie\Sluggable\SlugOptions;
  *
  * It includes details about the band's name, bio, links, and contact information.
  * The band can have multiple members and exactly one owner.
+ *
+ * @property-read int|null $pending_invitations Aggregate count from withCount('pendingInvitations')
  */
 class Band extends ContentModel
 {

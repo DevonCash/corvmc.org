@@ -142,8 +142,7 @@ class ViewUser extends ViewRecord
                         $blocks,
                         $creditType,
                         'admin_adjustment',
-                        null,
-                        $description
+                        null
                     );
 
                     Notification::make()

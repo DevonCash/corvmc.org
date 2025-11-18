@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property PaymentStatus $payment_status
  * @property ReservationStatus $status
  * @property-read User $user
+ * @property int|null $user_id
  * @property-read Model $reservable
  * @property-read RecurringSeries|null $recurringSeries
  * @property \Brick\Money\Money $cost

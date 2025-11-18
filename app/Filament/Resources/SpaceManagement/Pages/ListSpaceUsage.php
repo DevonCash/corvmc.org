@@ -85,8 +85,8 @@ class ListSpaceUsage extends ListRecords
                 ->icon('tabler-alert-circle')
                 ->badge(fn () => Reservation::needsAttention()->count())
                 ->badgeColor('warning')
+                /** @phpstan-ignore method.notFound */
                 ->modifyQueryUsing(fn (Builder $query) => $query
-                    /** @phpstan-ignore method.notFound */
                     ->needsAttention()
                     ->orderBy('reserved_at', 'asc')),
 

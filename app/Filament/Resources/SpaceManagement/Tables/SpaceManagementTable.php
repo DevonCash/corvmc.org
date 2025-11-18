@@ -115,8 +115,8 @@ class SpaceManagementTable
 
                 Filter::make('needs_attention')
                     ->label('Needs Attention')
+                    /** @phpstan-ignore method.notFound */
                     ->query(fn (Builder $query): Builder => $query
-                        /** @phpstan-ignore method.notFound */
                         ->needsAttention()),
             ])
             ->recordActions([

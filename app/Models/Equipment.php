@@ -22,6 +22,8 @@ use Spatie\ModelStates\HasStates;
  *
  * Tracks both donated and loaned equipment with detailed acquisition information
  * and current lending status to members.
+ *
+ * @property-read int|null $loans_count Aggregate count from withCount('loans')
  */
 class Equipment extends Model implements HasMedia
 {
@@ -304,7 +306,7 @@ class Equipment extends Model implements HasMedia
 
         return $this->children
             ->where('can_lend_separately', false) // Required components
-            ->every(fn($component) => $component->is_available);
+            ->every(fn ($component) => $component->is_available);
     }
 
     /**
@@ -316,7 +318,7 @@ class Equipment extends Model implements HasMedia
             return collect();
         }
 
-        return $this->children->filter(fn($component) => $component->is_available);
+        return $this->children->filter(fn ($component) => $component->is_available);
     }
 
     /**
@@ -328,7 +330,7 @@ class Equipment extends Model implements HasMedia
             return collect();
         }
 
-        return $this->children->filter(fn($component) => $component->is_checked_out);
+        return $this->children->filter(fn ($component) => $component->is_checked_out);
     }
 
     public function getActivitylogOptions(): LogOptions
@@ -337,6 +339,6 @@ class Equipment extends Model implements HasMedia
             ->logOnly(['name', 'status', 'condition', 'location', 'ownership_status'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "Equipment {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "Equipment {$eventName}");
     }
 }
