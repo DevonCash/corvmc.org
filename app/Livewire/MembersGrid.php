@@ -110,7 +110,7 @@ class MembersGrid extends SearchableGrid
                         // Get all skill tags that contain the search term
                         $skillTags = \Spatie\Tags\Tag::getWithType('skill')
                             ->filter(function ($tag) use ($searchTerm) {
-                                return stripos($tag->name, $searchTerm) !== false;
+                                return isset($tag->name) && stripos($tag->name, $searchTerm) !== false;
                             });
 
                         if ($skillTags->isNotEmpty()) {
@@ -122,7 +122,7 @@ class MembersGrid extends SearchableGrid
                         // Get all genre tags that contain the search term
                         $genreTags = \Spatie\Tags\Tag::getWithType('genre')
                             ->filter(function ($tag) use ($searchTerm) {
-                                return stripos($tag->name, $searchTerm) !== false;
+                                return isset($tag->name) && stripos($tag->name, $searchTerm) !== false;
                             });
 
                         if ($genreTags->isNotEmpty()) {

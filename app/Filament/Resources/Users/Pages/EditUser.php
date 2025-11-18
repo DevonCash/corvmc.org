@@ -37,7 +37,7 @@ class EditUser extends EditRecord
         ];
 
         // Add logout action if user is editing their own profile
-        if ($this->getRecord()->id === auth()->id()) {
+        if ($this->record->id === auth()->id()) {
             $actions[] = Action::make('logout')
                 ->label('Logout')
                 ->icon('tabler-logout')
@@ -61,7 +61,7 @@ class EditUser extends EditRecord
 
     public function sendPasswordReset(): void
     {
-        $user = $this->getRecord();
+        $user = $this->record;
 
         $status = Password::sendResetLink(['email' => $user->email]);
 
