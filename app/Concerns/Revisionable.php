@@ -340,8 +340,8 @@ trait Revisionable
         return [
             'total' => $this->revisions()->count(),
             'pending' => $this->pendingRevisions()->count(),
-            'approved' => $this->revisions()->approved()->count(),
-            'rejected' => $this->revisions()->rejected()->count(),
+            'approved' => $this->revisions()->where('status', Revision::STATUS_APPROVED)->count(),
+            'rejected' => $this->revisions()->where('status', Revision::STATUS_REJECTED)->count(),
             'latest' => $this->latestRevision(),
         ];
     }

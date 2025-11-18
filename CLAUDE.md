@@ -993,3 +993,4 @@ it('has emails', function (string $email) {
 | decoration-clone | box-decoration-clone |
 </laravel-boost-guidelines>
 - Ask before adding phpstan-ignore annotations
+- When you need model IDs from interface types, use getKey() instead of ->id

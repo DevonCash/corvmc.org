@@ -11,6 +11,9 @@ use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @property \App\Models\MemberProfile $record
+ */
 class ViewMemberProfile extends Page
 {
     use InteractsWithRecord;

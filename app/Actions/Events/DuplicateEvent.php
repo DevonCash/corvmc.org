@@ -29,7 +29,7 @@ class DuplicateEvent
 
         // Copy performers
         foreach ($originalEvent->performers as $performer) {
-            if ($performer instanceof Band) {
+            if ($performer instanceof Band && isset($performer->pivot)) {
                 $pivot = $performer->pivot;
                 $newEvent->performers()->attach($performer->id, [
                     'order' => $pivot?->order ?? null,
