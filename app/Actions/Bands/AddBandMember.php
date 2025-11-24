@@ -50,14 +50,22 @@ class AddBandMember
                     'invited_at' => now(),
                 ]);
             }
+        });
 
-            // Send notification
+        // Send notification outside transaction - user can still see invitation in UI if email fails
+        try {
             $user->notify(new BandInvitationNotification(
                 $band,
                 $data['role'] ?? 'member',
                 $data['position'] ?? null
             ));
-        });
+        } catch (\Exception $e) {
+            \Log::error('Failed to send band invitation notification', [
+                'band_id' => $band->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public static function filamentAction(): Action

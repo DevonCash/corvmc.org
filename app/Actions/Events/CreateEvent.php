@@ -17,7 +17,7 @@ class CreateEvent
      */
     public function handle(array $data): Event
     {
-        return DB::transaction(function () use ($data) {
+        $event = DB::transaction(function () use ($data) {
             // Convert location data if needed
             if (isset($data['at_cmc'])) {
                 $data['location']['is_external'] = ! $data['at_cmc'];
@@ -59,12 +59,22 @@ class CreateEvent
                 $event->attachTags($data['tags']);
             }
 
-            // Notify organizer (if community event)
-            if ($event->organizer) {
-                $event->organizer->notify(new EventCreatedNotification($event));
-            }
-
             return $event;
         });
+
+        // Notify organizer outside transaction - don't let email failures affect event creation
+        if ($event->organizer) {
+            try {
+                $event->organizer->notify(new EventCreatedNotification($event));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send event creation notification', [
+                    'event_id' => $event->id,
+                    'organizer_id' => $event->organizer->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $event;
     }
 }

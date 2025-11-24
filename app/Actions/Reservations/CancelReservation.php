@@ -58,11 +58,26 @@ class CancelReservation
         // Send cancellation notification to responsible user
         $user = $reservation->getResponsibleUser();
         if ($user) {
-            $user->notify(new ReservationCancelledNotification($reservation));
+            try {
+                $user->notify(new ReservationCancelledNotification($reservation));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send reservation cancellation notification', [
+                    'reservation_id' => $reservation->id,
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         // Delete from Google Calendar
-        SyncReservationToGoogleCalendar::run($reservation, 'delete');
+        try {
+            SyncReservationToGoogleCalendar::run($reservation, 'delete');
+        } catch (\Exception $e) {
+            \Log::error('Failed to delete cancelled reservation from Google Calendar', [
+                'reservation_id' => $reservation->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $reservation;
     }

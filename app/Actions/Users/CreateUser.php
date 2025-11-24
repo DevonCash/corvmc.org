@@ -17,7 +17,7 @@ class CreateUser
      */
     public function handle(array $data): User
     {
-        return DB::transaction(function () use ($data) {
+        $user = DB::transaction(function () use ($data) {
             // Extract role names if provided
             $roleNames = [];
             if (isset($data['roles']) && is_array($data['roles'])) {
@@ -46,10 +46,19 @@ class CreateUser
 
             // Profile creation is handled automatically by the User model
 
-            // Send creation notification
-            $user->notify(new UserCreatedNotification);
-
             return $user;
         });
+
+        // Send creation notification outside transaction
+        try {
+            $user->notify(new UserCreatedNotification);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send user created notification', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $user;
     }
 }

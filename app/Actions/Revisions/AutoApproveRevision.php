@@ -22,7 +22,7 @@ class AutoApproveRevision
             'submitted_by' => $revision->submitted_by_id,
         ]);
 
-        return DB::transaction(function () use ($revision) {
+        $result = DB::transaction(function () use ($revision) {
             // Mark as auto-approved
             $revision->update([
                 'status' => Revision::STATUS_APPROVED,
@@ -37,10 +37,20 @@ class AutoApproveRevision
             // Award trust points for successful content
             AwardTrustPointsForRevision::run($revision);
 
-            // Send notification
-            $revision->submittedBy->notify(new RevisionApprovedNotification($revision));
-
             return true;
         });
+
+        // Send notification outside transaction
+        try {
+            $revision->submittedBy->notify(new RevisionApprovedNotification($revision));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send auto-approved revision notification', [
+                'revision_id' => $revision->id,
+                'submitter_id' => $revision->submitted_by_id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $result;
     }
 }

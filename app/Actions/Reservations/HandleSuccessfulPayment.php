@@ -2,9 +2,11 @@
 
 namespace App\Actions\Reservations;
 
+use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
 use App\Models\RehearsalReservation;
+use App\Notifications\ReservationConfirmedNotification;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class HandleSuccessfulPayment
@@ -24,6 +26,8 @@ class HandleSuccessfulPayment
             return true;
         }
 
+        $user = $reservation->getResponsibleUser();
+
         // Update reservation payment status
         $reservation->update([
             'payment_status' => PaymentStatus::Paid,
@@ -32,6 +36,31 @@ class HandleSuccessfulPayment
             'payment_notes' => "Paid via Stripe (Session: {$sessionId})",
             'status' => ReservationStatus::Confirmed, // Automatically confirm paid reservations
         ]);
+
+        $reservation->refresh();
+
+        // Send notification outside transaction - don't let email failures affect the payment
+        try {
+            $user->notify(new ReservationConfirmedNotification($reservation));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send reservation confirmation email after payment', [
+                'reservation_id' => $reservation->id,
+                'user_id' => $user->id,
+                'session_id' => $sessionId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Sync to Google Calendar - don't let sync failures affect the payment
+        try {
+            SyncReservationToGoogleCalendar::run($reservation, 'update');
+        } catch (\Exception $e) {
+            \Log::error('Failed to sync paid reservation to Google Calendar', [
+                'reservation_id' => $reservation->id,
+                'session_id' => $sessionId,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return true;
     }

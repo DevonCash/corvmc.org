@@ -40,7 +40,15 @@ class ResolveReport
 
         // Notify the reporter about the resolution
         if (in_array($status, ['upheld', 'dismissed'])) {
-            $report->reportedBy->notify(new ReportResolvedNotification($report));
+            try {
+                $report->reportedBy->notify(new ReportResolvedNotification($report));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send report resolved notification', [
+                    'report_id' => $report->id,
+                    'reporter_id' => $report->reportedBy->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         return $report->fresh();

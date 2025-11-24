@@ -28,7 +28,7 @@ class RejectRevision
             'reason' => $reason,
         ]);
 
-        return DB::transaction(function () use ($revision, $reviewer, $reason) {
+        $result = DB::transaction(function () use ($revision, $reviewer, $reason) {
             // Update revision status
             $revision->update([
                 'status' => Revision::STATUS_REJECTED,
@@ -40,11 +40,21 @@ class RejectRevision
             // Penalize submitter trust if this was a problematic revision
             $this->handleRejectionPenalty($revision, $reason);
 
-            // Send notification
-            $revision->submittedBy->notify(new RevisionRejectedNotification($revision));
-
             return true;
         });
+
+        // Send notification outside transaction
+        try {
+            $revision->submittedBy->notify(new RevisionRejectedNotification($revision));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send revision rejected notification', [
+                'revision_id' => $revision->id,
+                'submitter_id' => $revision->submitted_by_id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $result;
     }
 
     /**

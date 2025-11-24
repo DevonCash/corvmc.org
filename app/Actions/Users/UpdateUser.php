@@ -17,9 +17,9 @@ class UpdateUser
      */
     public function handle(User $user, array $data): User
     {
-        return DB::transaction(function () use ($user, $data) {
-            $originalData = $user->toArray();
+        $originalData = $user->toArray();
 
+        $user = DB::transaction(function () use ($user, $data) {
             // Handle password update
             if (isset($data['password']) && ! empty($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
@@ -46,11 +46,13 @@ class UpdateUser
 
             // Profile creation is handled automatically by the User model
 
-            // Send update notification if significant changes
-            $this->sendUpdateNotificationIfNeeded($user, $originalData, $data);
-
             return $user->fresh();
         });
+
+        // Send update notification if significant changes (outside transaction)
+        $this->sendUpdateNotificationIfNeeded($user, $originalData, $data);
+
+        return $user;
     }
 
     /**
@@ -69,7 +71,14 @@ class UpdateUser
         }
 
         if ($hasSignificantChanges) {
-            $user->notify(new UserUpdatedNotification($originalData, $newData));
+            try {
+                $user->notify(new UserUpdatedNotification($originalData, $newData));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send user updated notification', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 }

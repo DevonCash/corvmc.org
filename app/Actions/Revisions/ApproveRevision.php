@@ -28,7 +28,7 @@ class ApproveRevision
             'reason' => $reason,
         ]);
 
-        return DB::transaction(function () use ($revision, $reviewer, $reason) {
+        $result = DB::transaction(function () use ($revision, $reviewer, $reason) {
             // Update revision status
             $revision->update([
                 'status' => Revision::STATUS_APPROVED,
@@ -43,10 +43,20 @@ class ApproveRevision
             // Award trust points
             AwardTrustPointsForRevision::run($revision);
 
-            // Send notification
-            $revision->submittedBy->notify(new RevisionApprovedNotification($revision));
-
             return true;
         });
+
+        // Send notification outside transaction
+        try {
+            $revision->submittedBy->notify(new RevisionApprovedNotification($revision));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send revision approved notification', [
+                'revision_id' => $revision->id,
+                'submitter_id' => $revision->submitted_by_id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $result;
     }
 }

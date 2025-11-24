@@ -29,9 +29,10 @@ class AcceptBandInvitation
             $band->members()->updateExistingPivot($user->id, [
                 'status' => 'active',
             ]);
-            // Notify band owner and admins about the new member
-            $this->notifyBandLeadership($band, $user);
         });
+
+        // Notify band owner and admins about the new member (outside transaction)
+        $this->notifyBandLeadership($band, $user);
     }
 
     /**
@@ -53,7 +54,16 @@ class AcceptBandInvitation
             ->filter(fn ($u) => $u->id !== $user->id); // Don't notify the person who just joined
 
         foreach ($adminsAndOwner as $admin) {
-            $admin->notify(new BandInvitationAcceptedNotification($band, $user));
+            try {
+                $admin->notify(new BandInvitationAcceptedNotification($band, $user));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send band invitation accepted notification', [
+                    'band_id' => $band->id,
+                    'user_id' => $user->id,
+                    'admin_id' => $admin->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 

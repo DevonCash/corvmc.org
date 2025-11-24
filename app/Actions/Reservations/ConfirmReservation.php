@@ -30,9 +30,10 @@ class ConfirmReservation
             return $reservation;
         }
 
-        return DB::transaction(function () use ($reservation) {
-            $user = $reservation->getResponsibleUser();
+        $user = $reservation->getResponsibleUser();
 
+        // Complete the database transaction first
+        $reservation = DB::transaction(function () use ($reservation, $user) {
             // Recalculate cost with current credit balance
             $costCalculation = CalculateReservationCost::run(
                 $user,
@@ -67,16 +68,31 @@ class ConfirmReservation
                 ]);
             }
 
-            // Send confirmation notification
-            $user->notify(new ReservationConfirmedNotification($reservation));
-
-            $reservation = $reservation->fresh();
-
-            // Sync to Google Calendar (update from pending yellow to confirmed green)
-            SyncReservationToGoogleCalendar::run($reservation, 'update');
-
-            return $reservation;
+            return $reservation->fresh();
         });
+
+        // Send notification outside transaction - don't let email failures affect the confirmation
+        try {
+            $user->notify(new ReservationConfirmedNotification($reservation));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send reservation confirmation email', [
+                'reservation_id' => $reservation->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Sync to Google Calendar outside transaction - don't let sync failures affect the confirmation
+        try {
+            SyncReservationToGoogleCalendar::run($reservation, 'update');
+        } catch (\Exception $e) {
+            \Log::error('Failed to sync reservation to Google Calendar', [
+                'reservation_id' => $reservation->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $reservation;
     }
 
     public static function filamentAction(): Action

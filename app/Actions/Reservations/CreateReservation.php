@@ -65,17 +65,39 @@ class CreateReservation
             $reservation = ConfirmReservation::run($reservation);
         } else {
             // For future reservations, send creation notification
-            $user->notify(new ReservationCreatedNotification($reservation));
+            try {
+                $user->notify(new ReservationCreatedNotification($reservation));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send reservation creation notification', [
+                    'reservation_id' => $reservation->id,
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         // Notify admins if reservation is for today
         if ($startTime->isToday()) {
-            $admins = User::role('admin')->get();
-            Notification::send($admins, new ReservationCreatedTodayNotification($reservation));
+            try {
+                $admins = User::role('admin')->get();
+                Notification::send($admins, new ReservationCreatedTodayNotification($reservation));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send reservation today notification to admins', [
+                    'reservation_id' => $reservation->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         // Sync to Google Calendar (both pending and confirmed show on calendar)
-        SyncReservationToGoogleCalendar::run($reservation, 'create');
+        try {
+            SyncReservationToGoogleCalendar::run($reservation, 'create');
+        } catch (\Exception $e) {
+            \Log::error('Failed to sync new reservation to Google Calendar', [
+                'reservation_id' => $reservation->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $reservation;
     }
