@@ -76,6 +76,10 @@ class BandForm
                                 TextInput::make('contact.phone')
                                     ->label('Phone')
                                     ->tel()
+                                    ->rules(['phone:US,AUTO'])
+                                    ->validationMessages([
+                                        'phone' => 'Please enter a valid phone number',
+                                    ])
                                     ->placeholder('(555) 123-4567'),
                             ])
                             ->columns(2),

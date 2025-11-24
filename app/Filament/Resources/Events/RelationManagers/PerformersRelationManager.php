@@ -100,6 +100,10 @@ class PerformersRelationManager extends RelationManager
                         TextInput::make('contact.phone')
                             ->label('Contact Phone')
                             ->tel()
+                            ->rules(['phone:US,AUTO'])
+                            ->validationMessages([
+                                'phone' => 'Please enter a valid phone number',
+                            ])
                             ->placeholder('(555) 123-4567'),
                     ])
                     ->mutateDataUsing(function (array $data): array {
