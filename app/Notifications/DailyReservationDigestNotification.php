@@ -42,9 +42,10 @@ class DailyReservationDigestNotification extends Notification implements ShouldQ
     {
         $date = now()->format('l, F j, Y');
         $count = $this->reservations->count();
+        $shortDate = now()->format('M j');
 
         $message = (new MailMessage)
-            ->subject("Daily Reservation Digest - {$date}");
+            ->subject("{$shortDate}: {$count} ".str('reservation')->plural($count));
 
         if ($count === 0) {
             return $message

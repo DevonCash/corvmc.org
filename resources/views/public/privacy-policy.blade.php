@@ -40,7 +40,7 @@
                 <h2>Contact Information</h2>
                 <p>If you have questions about this Privacy Policy, please contact us:</p>
                 <ul>
-                    <li>Email: <a href="mailto:info@corvmc.org" class="link link-primary">info@corvmc.org</a></li>
+                    <li>Email: <a href="mailto:contact@corvmc.org" class="link link-primary">contact@corvmc.org</a></li>
                     <li>Contact Form: <a href="{{ route('contact') }}?topic=general" class="link link-primary">Contact Us</a></li>
                 </ul>
 

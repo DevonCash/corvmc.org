@@ -56,9 +56,9 @@ class ViewMemberProfile extends Page
         ];
     }
 
-    public function mount(int|string $key): void
+    public function mount(int|string $record): void
     {
-        $this->record = MemberProfile::find($key);
+        $this->record = $this->resolveRecord($record);
 
         // Check if user can view this profile
         if (! $this->record->isVisible(Auth::user())) {

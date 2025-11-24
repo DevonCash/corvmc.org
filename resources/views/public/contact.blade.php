@@ -62,7 +62,7 @@
                         <h3 class="card-title text-xl mb-4">Quick Contact</h3>
 
                         <div class="space-y-3">
-                            <a href="mailto:hello@corvallismusic.org"
+                            <a href="mailto:contact@corvmc.org"
                                 class="btn btn-outline btn-primary w-full justify-start">
                                 <x-tabler-mail class="size-5 mr-3" />
                                 contact@corvmc.org
