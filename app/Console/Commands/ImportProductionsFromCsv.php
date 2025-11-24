@@ -207,7 +207,7 @@ class ImportProductionsFromCsv extends Command
             'doors_time' => $data['start_time']->copy()->subMinutes(30), // Doors 30 min before
             'location' => LocationData::cmc(), // Default to CMC location
             'ticket_price' => $data['ticket_price'],
-            'status' => $data['date']->isFuture() ? 'pre-production' : 'completed',
+            'status' => 'scheduled',
             'published_at' => $data['date']->isFuture() ? null : $data['date'],
             'organizer_id' => $data['manager']?->id,
         ]);

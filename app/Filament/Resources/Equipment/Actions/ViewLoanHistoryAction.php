@@ -101,10 +101,7 @@ class ViewLoanHistoryAction
                                             ->visible(fn($state) => ! empty($state['damage_notes']))
                                             ->color('danger'),
                                     ])
-                                    ->contained(false)
-                                    ->itemLabel(
-                                        fn(array $state): ?string => $state['borrower']['name'] ?? 'Unknown Borrower'
-                                    ),
+                                    ->contained(false),
                             ])
                             ->visible($loanHistory->isNotEmpty()),
 

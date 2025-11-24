@@ -66,7 +66,6 @@ class ReservationResource extends Resource
     public static function getPages(): array
     {
         return [
-            'calendar' => CalendarReservations::route('/calendar'),
             'index' => ListReservations::route('/'),
         ];
     }

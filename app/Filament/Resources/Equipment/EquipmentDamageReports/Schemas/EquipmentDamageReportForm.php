@@ -43,7 +43,7 @@ class EquipmentDamageReportForm
                                         return EquipmentLoan::where('equipment_id', $equipmentId)
                                             ->with('borrower')
                                             ->get()
-                                            ->mapWithKeys(fn ($loan) => [
+                                            ->mapWithKeys(fn (\App\Models\EquipmentLoan $loan) => [
                                                 $loan->id => "#{$loan->id} - {$loan->borrower->name} ({$loan->checked_out_at->format('M j, Y')})",
                                             ]);
                                     })

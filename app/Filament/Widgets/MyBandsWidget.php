@@ -52,10 +52,12 @@ class MyBandsWidget extends BaseWidget
                         }
 
                         // Check if invited
+                        /** @phpstan-ignore property.notFound */
                         if ($membership->pivot->status === 'invited') {
                             return 'invited';
                         }
 
+                        /** @phpstan-ignore property.notFound */
                         return $membership->pivot->role ?? 'member';
                     })
                     ->badge()
@@ -89,7 +91,7 @@ class MyBandsWidget extends BaseWidget
                     ->sortable()
                     ->alignCenter()
                     ->formatStateUsing(
-                        fn ($state, $record) => $state.($record->pending_invitations > 0 ? " (+{$record->pending_invitations})" : '')
+                        fn ($state, Band $record) => $state.($record->pending_invitations > 0 ? " (+{$record->pending_invitations})" : '')
                     ),
             ])
             ->recordActions([
@@ -184,6 +186,7 @@ class MyBandsWidget extends BaseWidget
         // Band admins can edit (already eager loaded)
         $membership = $band->members->first();
 
+        /** @phpstan-ignore property.notFound */
         return $membership?->pivot->role === 'admin';
     }
 
@@ -208,6 +211,7 @@ class MyBandsWidget extends BaseWidget
         // Band admins can manage (already eager loaded)
         $membership = $band->members->first();
 
+        /** @phpstan-ignore property.notFound */
         return $membership?->pivot->role === 'admin';
     }
 

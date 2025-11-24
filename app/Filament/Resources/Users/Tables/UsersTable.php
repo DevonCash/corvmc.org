@@ -32,7 +32,7 @@ class UsersTable
 
                 TextColumn::make('email')
                     ->label('Email address')
-                    ->icon(fn ($record) => $record?->email_verified_at ? 'tabler-circle-check' : null)
+                    ->icon(fn (\App\Models\User $record) => $record->email_verified_at ? 'tabler-circle-check' : null)
                     ->iconColor('success')
                     ->iconPosition('after')
                     ->searchable()
@@ -144,7 +144,10 @@ class UsersTable
                     }),
                 Impersonate::make()
                     ->hiddenLabel()
-                    ->redirectTo(fn () => filament('member')->getUrl()),
+                    ->redirectTo(function () {
+                        $panel = filament('member');
+                        return method_exists($panel, 'getUrl') ? $panel->getUrl() : '/member';
+                    }),
 
             ])
             ->headerActions([])
@@ -163,6 +166,7 @@ class UsersTable
                         ->action(function (Collection $records) {
                             $canceledCount = 0;
 
+                            /** @var \App\Models\User $record */
                             foreach ($records as $record) {
                                 // Find invitation for this user's email
                                 $invitation = \App\Models\Invitation::withoutGlobalScopes()

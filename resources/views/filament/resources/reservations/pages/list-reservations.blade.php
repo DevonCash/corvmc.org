@@ -15,6 +15,6 @@
     {{-- Free Hours Widget --}}
     @livewire(\App\Filament\Resources\Reservations\Widgets\FreeHoursWidget::class)
 
-    {{-- Reservations Table --}}
-    {{ $this->table }}
+    {{-- Tabs --}}
+    {{ $this->content }}
 </x-filament-panels::page>

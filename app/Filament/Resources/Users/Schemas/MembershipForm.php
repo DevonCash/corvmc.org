@@ -173,13 +173,14 @@ class MembershipForm
                                 $subscription = $record->subscription();
                                 if ($subscription && $subscription->ends_at) {
                                     // Get price from Stripe to display amount
+                                    /** @var \Stripe\Price $price */
                                     $price = \Laravel\Cashier\Cashier::stripe()->prices->retrieve($subscription->stripe_price);
                                     $amount = \Brick\Money\Money::ofMinor($price->unit_amount, 'USD');
 
                                     return sprintf(
                                         '%s/%s contribution - Ends %s',
                                         $amount->formatTo('en_US'),
-                                        $price->recurring->interval,
+                                        $price->recurring->interval ?? 'month',
                                         $subscription->ends_at->diffForHumans()
                                     );
                                 }

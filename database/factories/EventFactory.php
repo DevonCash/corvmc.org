@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Data\LocationData;
+use App\Enums\EventStatus;
+use App\Enums\ModerationStatus;
 use App\Enums\Visibility;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -78,7 +80,8 @@ class EventFactory extends Factory
                     5.00, 8.00, 10.00, 12.00, 15.00, 18.00, 20.00, 25.00, 30.00,
                 ]);
             },
-            'status' => 'approved',
+            'status' => EventStatus::Scheduled,
+            'moderation_status' => ModerationStatus::Approved,
             'visibility' => Visibility::Public,
             'published_at' => $this->faker->boolean(70) ? $this->faker->dateTimeBetween('-1 month', 'now') : null,
             'organizer_id' => null, // Staff events by default
@@ -95,7 +98,8 @@ class EventFactory extends Factory
     public function published(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'approved',
+            'status' => EventStatus::Scheduled,
+            'moderation_status' => ModerationStatus::Approved,
             'published_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
         ]);
     }
@@ -113,7 +117,8 @@ class EventFactory extends Factory
             'start_time' => $startTime,
             'end_time' => $endTime,
             'doors_time' => $doorsTime,
-            'status' => 'approved',
+            'status' => EventStatus::Scheduled,
+            'moderation_status' => ModerationStatus::Approved,
             'published_at' => $this->faker->dateTimeBetween('-2 weeks', 'now'),
         ]);
     }
@@ -131,7 +136,8 @@ class EventFactory extends Factory
             'start_time' => $startTime,
             'end_time' => $endTime,
             'doors_time' => $doorsTime,
-            'status' => 'approved',
+            'status' => EventStatus::Scheduled,
+            'moderation_status' => ModerationStatus::Approved,
             'published_at' => $this->faker->dateTimeBetween('-7 months', $startTime),
         ]);
     }

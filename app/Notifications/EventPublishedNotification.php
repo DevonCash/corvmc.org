@@ -34,9 +34,10 @@ class EventPublishedNotification extends Notification
             ->line("The event '{$this->event->title}' has been published and is now live!")
             ->line("Date: {$this->event->start_time->format('M j, Y g:i A')}")
             ->when($this->event->location, function ($mail) {
+                /** @var \App\Data\VenueLocationData $location */
                 $location = $this->event->location;
-                if ($location->getVenueName()) {
-                    $mail->line("Venue: {$location->getVenueName()}");
+                if ($location->venue_name) {
+                    $mail->line("Venue: {$location->venue_name}");
                 }
             })
             ->action('View Event Details', url("/events/{$this->event->id}"))

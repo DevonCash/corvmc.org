@@ -10,9 +10,55 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * Community Sponsor
- *
+ * 
  * Represents organizations and partners supporting CMC through cash sponsorships
  * or in-kind partnerships. Sponsors receive benefits based on their tier level.
+ *
+ * @property int $id
+ * @property string $name
+ * @property string $tier
+ * @property string $type
+ * @property string|null $description
+ * @property string|null $website_url
+ * @property string|null $logo_path
+ * @property int $display_order
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $started_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read string $newsletter_recognition
+ * @property-read int $sponsored_memberships
+ * @property-read string $tier_name
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor byTier(string $tier)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor cash()
+ * @method static \Database\Factories\SponsorFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor inKind()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor major()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor ordered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereDisplayOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereLogoPath($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereStartedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereTier($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereWebsiteUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor withoutTrashed()
+ * @mixin \Eloquent
  */
 class Sponsor extends Model implements HasMedia
 {

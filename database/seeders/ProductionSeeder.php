@@ -52,7 +52,8 @@ class ProductionSeeder extends Seeder
         for ($i = 0; $i < 3; $i++) {
             $event = Event::factory()
                 ->create([
-                    'status' => 'pending',
+                    'status' => 'scheduled',
+                    'moderation_status' => 'pending', // These need moderation review
                     'organizer_id' => $users->random()->id,
                     'published_at' => null,
                 ]);
@@ -109,7 +110,7 @@ class ProductionSeeder extends Seeder
             'reservable_id' => $event->id,
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
-            'status' => $event->status === 'approved' ? 'confirmed' : 'pending',
+            'status' => 'confirmed',
             'payment_status' => 'n/a',
             'cost' => 0, // Events don't pay for space
             'hours_used' => $reservedAt->diffInMinutes($reservedUntil) / 60,

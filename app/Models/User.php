@@ -28,15 +28,90 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
- * @property-read MemberProfile|null $profile
- * @property-read StaffProfile|null $staffProfile
- * @property-read Collection<int, Band> $bands
- * @property-read Collection<int, Band> $ownedBands
- * @property-read Collection<int, BandMember> $bandMemberships
- * @property-read Collection<int, RehearsalReservation> $rehearsals
- * @property-read Collection<int, Event> $productions
- * @property-read Collection<int, Event> $events
- * @property-read Collection<int, Reservation> $reservations
+ * @property int $id
+ * @property string $name
+ * @property string|null $pronouns
+ * @property string $email
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string $password
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $stripe_id
+ * @property string|null $pm_type
+ * @property string|null $pm_last_four
+ * @property string|null $trial_ends_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property \Spatie\LaravelData\Contracts\BaseData|\Spatie\LaravelData\Contracts\TransformableData $settings
+ * @property-read Collection<int, \Spatie\Activitylog\Models\Activity> $activities
+ * @property-read int|null $activities_count
+ * @property-read Collection<int, \App\Models\BandMember> $bandMemberships
+ * @property-read int|null $band_memberships_count
+ * @property-read Collection<int, \App\Models\Band> $bands
+ * @property-read int|null $bands_count
+ * @property-read Collection<int, \App\Models\CreditTransaction> $creditTransactions
+ * @property-read int|null $credit_transactions_count
+ * @property-read Collection<int, \App\Models\UserCredit> $credits
+ * @property-read int|null $credits_count
+ * @property-read Collection<int, \App\Models\Event> $events
+ * @property-read int|null $events_count
+ * @property-read \App\Models\MemberProfile|null $profile
+ * @property-read string|null $staff_profile_image_url
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
+ * @property-read Collection<int, \App\Models\Band> $ownedBands
+ * @property-read int|null $owned_bands_count
+ * @property-read Collection<int, \Spatie\Permission\Models\Permission> $permissions
+ * @property-read int|null $permissions_count
+ * @property-read Collection<int, \App\Models\Event> $productions
+ * @property-read int|null $productions_count
+ * @property-read Collection<int, \App\Models\RehearsalReservation> $rehearsals
+ * @property-read int|null $rehearsals_count
+ * @property-read Collection<int, \App\Models\Reservation> $reservations
+ * @property-read int|null $reservations_count
+ * @property-read Collection<int, \Spatie\Permission\Models\Role> $roles
+ * @property-read int|null $roles_count
+ * @property-read \App\Models\StaffProfile|null $staffProfile
+ * @property-read Collection<int, \App\Models\Subscription> $subscriptions
+ * @property-read int|null $subscriptions_count
+ * @property-read Collection<int, \App\Models\TrustAchievement> $trustAchievements
+ * @property-read int|null $trust_achievements_count
+ * @property-read Collection<int, \App\Models\UserTrustBalance> $trustBalances
+ * @property-read int|null $trust_balances_count
+ * @property-read Collection<int, \App\Models\TrustTransaction> $trustTransactions
+ * @property-read int|null $trust_transactions_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User boardMembers()
+ * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User hasExpiredGenericTrial()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User onGenericTrial()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User permission($permissions, $without = false)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User role($roles, $guard = null, $without = false)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User staffMembers()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User staffOnly()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User staffOrdered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmailVerifiedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePmLastFour($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePmType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePronouns($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereStripeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTrialEndsAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutPermission($permissions)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutRole($roles, $guard = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutTrashed()
+ * @mixin \Eloquent
  */
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {

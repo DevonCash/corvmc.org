@@ -5,6 +5,39 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $content_type
+ * @property int $points
+ * @property int $balance_after
+ * @property string $reason
+ * @property string $source_type
+ * @property int|null $source_id
+ * @property int|null $awarded_by_id
+ * @property array<array-key, mixed>|null $metadata
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property-read \App\Models\User|null $awardedBy
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction awards()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction forContentType(string $contentType)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction penalties()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereAwardedById($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereBalanceAfter($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereContentType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereMetadata($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction wherePoints($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereReason($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereSourceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereSourceType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereUserId($value)
+ * @mixin \Eloquent
+ */
 class TrustTransaction extends Model
 {
     const UPDATED_AT = null; // Immutable records, no updated_at

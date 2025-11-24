@@ -33,6 +33,15 @@ class ListReservations extends ListRecords
         ];
     }
 
+    public function getTabs(): array
+    {
+        return [
+            'upcoming' => Tab::make()
+                ->modifyQueryUsing(fn(Builder $query) => $query->upcoming()),
+            'all' => Tab::make(),
+        ];
+    }
+
     protected function getReserveSpaceAction(): Action
     {
         return Action::make('create_reservation')
@@ -82,32 +91,9 @@ class ListReservations extends ListRecords
             ]);
     }
 
-    public function getTabs(): array
-    {
-        return [
-            'upcoming' => Tab::make('Upcoming')
-                ->icon('tabler-calendar-clock')
-                ->modifyQueryUsing(fn (Builder $query) => $query
-                    ->where('status', '!=', 'cancelled')
-                    ->where('reserved_at', '>', now())),
-
-            'all' => Tab::make('All')
-                ->icon('tabler-calendar'),
-        ];
-    }
-
     public function getDefaultActiveTab(): string|int|null
     {
         return 'upcoming';
     }
 
-    /**
-     * Scope reservations to current user only
-     */
-    protected function getTableQuery(): Builder
-    {
-        return parent::getTableQuery()
-            ->where('reservable_type', \App\Models\User::class)
-            ->where('reservable_id', auth()->id());
-    }
 }

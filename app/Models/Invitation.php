@@ -10,7 +10,37 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
 
 /**
+ * @property int $id
+ * @property int|null $inviter_id
+ * @property string $email
+ * @property string $token
+ * @property \Illuminate\Support\Carbon $expires_at
+ * @property \Illuminate\Support\Carbon|null $last_sent_at
+ * @property \Illuminate\Support\Carbon|null $used_at
+ * @property string|null $message
+ * @property array<array-key, mixed>|null $data
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string $inviter_name
  * @property-read \App\Models\User|null $inviter
+ * @method static \Database\Factories\InvitationFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Invitation forEmail(string $email)
+ * @method static Builder<static>|Invitation from(\App\Models\User $user)
+ * @method static Builder<static>|Invitation newModelQuery()
+ * @method static Builder<static>|Invitation newQuery()
+ * @method static Builder<static>|Invitation query()
+ * @method static Builder<static>|Invitation whereCreatedAt($value)
+ * @method static Builder<static>|Invitation whereData($value)
+ * @method static Builder<static>|Invitation whereEmail($value)
+ * @method static Builder<static>|Invitation whereExpiresAt($value)
+ * @method static Builder<static>|Invitation whereId($value)
+ * @method static Builder<static>|Invitation whereInviterId($value)
+ * @method static Builder<static>|Invitation whereLastSentAt($value)
+ * @method static Builder<static>|Invitation whereMessage($value)
+ * @method static Builder<static>|Invitation whereToken($value)
+ * @method static Builder<static>|Invitation whereUpdatedAt($value)
+ * @method static Builder<static>|Invitation whereUsedAt($value)
+ * @mixin \Eloquent
  */
 class Invitation extends Model
 {

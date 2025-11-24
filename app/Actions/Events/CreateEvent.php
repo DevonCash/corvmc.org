@@ -24,7 +24,8 @@ class CreateEvent
                 unset($data['at_cmc']);
             }
 
-            $data['status'] ??= 'approved';
+            $data['status'] ??= 'scheduled';
+            $data['moderation_status'] ??= 'pending';
 
             // Check for conflicts if this event uses the practice space
             if (isset($data['start_time']) && isset($data['end_time'])) {

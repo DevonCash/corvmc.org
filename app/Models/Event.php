@@ -5,18 +5,137 @@ namespace App\Models;
 use App\Concerns\HasPublishing;
 use App\Concerns\HasTimePeriod;
 use App\Data\LocationData;
+use App\Enums\EventStatus;
+use App\Enums\ModerationStatus;
+use App\Enums\ReservationStatus;
 use App\Enums\Visibility;
 use Guava\Calendar\Contracts\Eventable;
 use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Period\Period;
+use Illuminate\Database\Eloquent\Builder;
+use Spatie\Image\Enums\Fit;
 
 /**
- * @property-read User|null $organizer
- * @property \Illuminate\Support\Carbon|null $published_at
+ * @property int $id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string|null $title
+ * @property string|null $description
  * @property \Illuminate\Support\Carbon $start_time
- * @property \Illuminate\Support\Carbon $end_time
+ * @property \Illuminate\Support\Carbon|null $end_time
+ * @property \Illuminate\Support\Carbon|null $doors_time
+ * @property \Spatie\LaravelData\Contracts\BaseData|\Spatie\LaravelData\Contracts\TransformableData|null $location
+ * @property string|null $event_link
+ * @property string|null $ticket_url
+ * @property string|null $ticket_price
+ * @property \Illuminate\Support\Carbon|null $published_at
+ * @property int|null $organizer_id
+ * @property EventStatus $status
+ * @property int|null $rescheduled_to_id
+ * @property string|null $reschedule_reason
+ * @property ModerationStatus $moderation_status
+ * @property \Illuminate\Support\Carbon|null $moderation_reviewed_at
+ * @property int|null $moderation_reviewed_by
+ * @property Visibility $visibility
+ * @property string|null $event_type
+ * @property float|null $distance_from_corvallis
+ * @property int $trust_points
+ * @property bool $auto_approved
+ * @property int|null $recurring_series_id
+ * @property string|null $instance_date
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
+ * @property-read int|null $activities_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\ModelFlags\Models\Flag> $flags
+ * @property-read int|null $flags_count
+ * @property-read string $date_range
+ * @property-read float $duration
+ * @property-read int $estimated_duration
+ * @property-read mixed $genres
+ * @property-read mixed $poster_large_url
+ * @property-read mixed $poster_optimized_url
+ * @property-read mixed $poster_thumb_url
+ * @property-read mixed $poster_url
+ * @property-read string $ticket_price_display
+ * @property-read string $venue_details
+ * @property-read string $venue_name
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
+ * @property-read int|null $media_count
+ * @property-read \App\Models\User|null $moderationReviewer
+ * @property-read \App\Models\User|null $organizer
+ * @property-read \App\Models\Event|null $rescheduledFrom
+ * @property-read \App\Models\Event|null $rescheduledTo
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $pendingReports
+ * @property-read int|null $pending_reports_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $pendingRevisions
+ * @property-read int|null $pending_revisions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Band> $performers
+ * @property-read int|null $performers_count
+ * @property-read \App\Models\RecurringSeries|null $recurringSeries
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $reports
+ * @property-read int|null $reports_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $revisions
+ * @property-read int|null $revisions_count
+ * @property \Illuminate\Database\Eloquent\Collection<int, \Spatie\Tags\Tag> $tags
+ * @property-read \App\Models\EventReservation|null $spaceReservation
+ * @property-read int|null $tags_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $upheldReports
+ * @property-read int|null $upheld_reports_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Event byGenre($genreName)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Event dateRange($range)
+ * @method static \Database\Factories\EventFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Event flagged(\BackedEnum|string $name)
+ * @method static Builder<static>|Event forBand($bandId)
+ * @method static Builder<static>|Event newModelQuery()
+ * @method static Builder<static>|Event newQuery()
+ * @method static Builder<static>|Event notFlagged(\BackedEnum|string $name)
+ * @method static Builder<static>|Event onlyTrashed()
+ * @method static Builder<static>|Event organizedBy($userId)
+ * @method static Builder<static>|Event public()
+ * @method static Builder<static>|Event published()
+ * @method static Builder<static>|Event publishedPast()
+ * @method static Builder<static>|Event publishedToday()
+ * @method static Builder<static>|Event publishedUpcoming()
+ * @method static Builder<static>|Event query()
+ * @method static Builder<static>|Event scheduled()
+ * @method static Builder<static>|Event unpublished()
+ * @method static Builder<static>|Event venue($venueType)
+ * @method static Builder<static>|Event visibleTo(?\App\Models\User $user = null)
+ * @method static Builder<static>|Event visibleToMembers()
+ * @method static Builder<static>|Event whereAutoApproved($value)
+ * @method static Builder<static>|Event whereCreatedAt($value)
+ * @method static Builder<static>|Event whereDeletedAt($value)
+ * @method static Builder<static>|Event whereDescription($value)
+ * @method static Builder<static>|Event whereDistanceFromCorvallis($value)
+ * @method static Builder<static>|Event whereDoorsTime($value)
+ * @method static Builder<static>|Event whereEndTime($value)
+ * @method static Builder<static>|Event whereEventLink($value)
+ * @method static Builder<static>|Event whereEventType($value)
+ * @method static Builder<static>|Event whereId($value)
+ * @method static Builder<static>|Event whereInstanceDate($value)
+ * @method static Builder<static>|Event whereLocation($value)
+ * @method static Builder<static>|Event whereOrganizerId($value)
+ * @method static Builder<static>|Event wherePublishedAt($value)
+ * @method static Builder<static>|Event whereRecurringSeriesId($value)
+ * @method static Builder<static>|Event whereStartTime($value)
+ * @method static Builder<static>|Event whereStatus($value)
+ * @method static Builder<static>|Event whereTicketPrice($value)
+ * @method static Builder<static>|Event whereTicketUrl($value)
+ * @method static Builder<static>|Event whereTitle($value)
+ * @method static Builder<static>|Event whereTrustPoints($value)
+ * @method static Builder<static>|Event whereUpdatedAt($value)
+ * @method static Builder<static>|Event whereVisibility($value)
+ * @method static Builder<static>|Event withAllTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
+ * @method static Builder<static>|Event withAllTagsOfAnyType($tags)
+ * @method static Builder<static>|Event withAnyTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
+ * @method static Builder<static>|Event withAnyTagsOfAnyType($tags)
+ * @method static Builder<static>|Event withAnyTagsOfType(array|string $type)
+ * @method static Builder<static>|Event withTrashed(bool $withTrashed = true)
+ * @method static Builder<static>|Event withoutTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
+ * @method static Builder<static>|Event withoutTrashed()
+ * @mixin \Eloquent
  */
 class Event extends ContentModel implements Eventable
 {
@@ -47,8 +166,14 @@ class Event extends ContentModel implements Eventable
         'ticket_url',
         'ticket_price',
         'published_at',
+        'approved_at',
         'organizer_id',
         'status',
+        'rescheduled_to_id',
+        'reschedule_reason',
+        'moderation_status',
+        'moderation_reviewed_at',
+        'moderation_reviewed_by',
         'visibility',
         'event_type',
         'distance_from_corvallis',
@@ -63,7 +188,11 @@ class Event extends ContentModel implements Eventable
             'end_time' => 'datetime',
             'doors_time' => 'datetime',
             'published_at' => 'datetime',
+            'approved_at' => 'datetime',
+            'moderation_reviewed_at' => 'datetime',
             'location' => LocationData::class,
+            'status' => EventStatus::class,
+            'moderation_status' => ModerationStatus::class,
             'visibility' => Visibility::class,
             'auto_approved' => 'boolean',
             'distance_from_corvallis' => 'float',
@@ -76,6 +205,30 @@ class Event extends ContentModel implements Eventable
     public function organizer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'organizer_id');
+    }
+
+    /**
+     * Get the user who reviewed this event for moderation.
+     */
+    public function moderationReviewer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'moderation_reviewed_by');
+    }
+
+    /**
+     * Get the event this was rescheduled to (if this event was rescheduled).
+     */
+    public function rescheduledTo(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Event::class, 'rescheduled_to_id');
+    }
+
+    /**
+     * Get the event(s) that were rescheduled to this event.
+     */
+    public function rescheduledFrom(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Event::class, 'rescheduled_to_id');
     }
 
     /**
@@ -97,7 +250,7 @@ class Event extends ContentModel implements Eventable
     /**
      * Get the performers/bands for this event.
      */
-    public function performers(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    public function performers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Band::class, 'event_bands', 'event_id', 'band_profile_id')
             ->withPivot('order', 'set_length')
@@ -139,23 +292,23 @@ class Event extends ContentModel implements Eventable
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
-            ->fit('contain', 200, 258)
+            ->fit(Fit::Contain, 200, 258)
             ->quality(90)
             ->sharpen(10)
             ->performOnCollections('poster');
 
         $this->addMediaConversion('medium')
-            ->fit('contain', 400, 517)
+            ->fit(Fit::Contain, 400, 517)
             ->quality(85)
             ->performOnCollections('poster');
 
         $this->addMediaConversion('large')
-            ->fit('contain', 600, 776)
+            ->fit(Fit::Contain, 600, 776)
             ->quality(80)
             ->performOnCollections('poster');
 
         $this->addMediaConversion('optimized')
-            ->fit('contain', 850, 1100)
+            ->fit(Fit::Contain, 850, 1100)
             ->quality(75)
             ->performOnCollections('poster');
     }
@@ -296,7 +449,6 @@ class Event extends ContentModel implements Eventable
         }
 
         $this->update([
-            'status' => 'approved',
             'published_at' => $this->published_at ?? now(),
         ]);
 
@@ -321,10 +473,74 @@ class Event extends ContentModel implements Eventable
     public function cancel(?string $reason = null): self
     {
         $this->update([
-            'status' => 'cancelled',
+            'status' => EventStatus::Cancelled,
         ]);
 
         return $this;
+    }
+
+    /**
+     * Reschedule this event to a new event listing.
+     *
+     * @param Event|int $newEvent The new event (or its ID) this is rescheduled to
+     * @param string|null $reason Optional reason for the reschedule
+     */
+    public function reschedule(Event|int $newEvent, ?string $reason = null): self
+    {
+        $newEventId = $newEvent instanceof Event ? $newEvent->id : $newEvent;
+
+        $this->update([
+            'status' => EventStatus::Postponed,
+            'rescheduled_to_id' => $newEventId,
+            'reschedule_reason' => $reason,
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * Postpone this event (without setting a new date).
+     */
+    public function postpone(?string $reason = null): self
+    {
+        $this->update([
+            'status' => EventStatus::Postponed,
+            'reschedule_reason' => $reason,
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * Mark this event as at capacity (sold out/full).
+     */
+    public function markAtCapacity(): self
+    {
+        $this->update([
+            'status' => EventStatus::AtCapacity,
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * Mark this event as available again (reset from at capacity).
+     */
+    public function markAvailable(): self
+    {
+        $this->update([
+            'status' => EventStatus::Scheduled,
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * Check if this event has been rescheduled to a new event.
+     */
+    public function isRescheduled(): bool
+    {
+        return $this->rescheduled_to_id !== null;
     }
 
     /**
@@ -359,7 +575,7 @@ class Event extends ContentModel implements Eventable
         return $query->where('published_at', '<=', now())
             ->whereNotNull('published_at')
             ->where('start_time', '>', now())
-            ->where('status', 'approved')
+            ->whereNotIn('status', [EventStatus::Cancelled, EventStatus::Postponed])
             ->orderBy('start_time');
     }
 
@@ -371,7 +587,7 @@ class Event extends ContentModel implements Eventable
         return $query->where('published_at', '<=', now())
             ->whereNotNull('published_at')
             ->where('start_time', '<', now())
-            ->where('status', 'approved')
+            ->whereNotIn('status', [EventStatus::Cancelled, EventStatus::Postponed])
             ->orderBy('start_time', 'desc');
     }
 
@@ -384,7 +600,7 @@ class Event extends ContentModel implements Eventable
             ->whereNotNull('published_at')
             ->where('start_time', '>=', now()->startOfDay())
             ->where('start_time', '<=', now()->endOfDay())
-            ->where('status', 'approved')
+            ->whereNotIn('status', [EventStatus::Cancelled, EventStatus::Postponed])
             ->orderBy('start_time');
     }
 
@@ -658,7 +874,7 @@ class Event extends ContentModel implements Eventable
                 'type' => EventReservation::class,
                 'reserved_at' => $reservedAt,
                 'reserved_until' => $reservedUntil,
-                'status' => $this->status ?? 'confirmed',
+                'status' => ReservationStatus::Confirmed,
                 'notes' => "Setup/breakdown for event: {$this->title}",
             ]
         );
@@ -670,15 +886,17 @@ class Event extends ContentModel implements Eventable
     public function toCalendarEvent(): CalendarEvent
     {
         $color = match ($this->status) {
-            'approved' => '#3b82f6',      // blue
-            'cancelled' => '#ef4444',     // red
-            default => '#6b7280',         // gray
+            EventStatus::Scheduled => '#3b82f6',      // blue
+            EventStatus::Cancelled => '#ef4444',      // red
+            EventStatus::Postponed => '#6b7280',      // gray
+            EventStatus::AtCapacity => '#f59e0b',     // amber
         };
 
         $extendedProps = [
             'type' => 'event',
             'organizer_name' => $this->organizer?->name ?? 'Staff',
-            'status' => $this->status,
+            'status' => $this->status->value,
+            'status_label' => $this->status->getLabel(),
             'venue_name' => $this->venue_name,
             'is_published' => $this->isPublished(),
             'event_link' => $this->event_link ?? $this->ticket_url,

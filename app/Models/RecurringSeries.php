@@ -10,10 +10,52 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Recurring Series Pattern
- *
+ * 
  * Represents a recurring series (e.g., "Every Tuesday 7-9pm").
  * Can create instances of Reservations or Events.
  * Individual instances are stored in their respective tables.
+ *
+ * @property int $id
+ * @property int $user_id
+ * @property string $recurrence_rule
+ * @property \Illuminate\Support\Carbon $start_time
+ * @property \Illuminate\Support\Carbon $end_time
+ * @property int $duration_minutes
+ * @property \Illuminate\Support\Carbon $series_start_date
+ * @property \Illuminate\Support\Carbon|null $series_end_date
+ * @property int $max_advance_days
+ * @property string $status
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string $recurable_type
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Event> $activeInstances
+ * @property-read int|null $active_instances_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
+ * @property-read int|null $activities_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Event> $instances
+ * @property-read int|null $instances_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Event> $upcomingInstances
+ * @property-read int|null $upcoming_instances_count
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereDurationMinutes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereEndTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereMaxAdvanceDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereRecurableType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereRecurrenceRule($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereSeriesEndDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereSeriesStartDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereStartTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereUserId($value)
+ * @mixin \Eloquent
  */
 class RecurringSeries extends Model
 {

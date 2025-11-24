@@ -43,11 +43,13 @@ class UpcomingEventsWidget extends Widget
                         'is_free' => $event->isFree(),
                         'has_tickets' => $event->hasTickets(),
                         'is_notaflof' => $event->isNotaflof(),
-                        'performers' => $event->performers->map(function ($band) {
+                        'performers' => $event->performers->map(function (\App\Models\Band $band) {
                             return [
                                 'id' => $band->id,
                                 'name' => $band->name,
+                                /** @phpstan-ignore property.notFound */
                                 'order' => $band->pivot->order ?? 0,
+                                /** @phpstan-ignore property.notFound */
                                 'set_length' => $band->pivot->set_length,
                                 'can_view' => $this->canViewBand($band),
                                 'profile_url' => $this->canViewBand($band) ?
@@ -62,7 +64,7 @@ class UpcomingEventsWidget extends Widget
         });
     }
 
-    protected function canViewBand($band): bool
+    protected function canViewBand(\App\Models\Band $band): bool
     {
         $currentUser = Auth::user();
 

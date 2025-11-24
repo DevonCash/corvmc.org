@@ -31,7 +31,9 @@ class ReportResolvedNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $contentType = $this->report->reportable->getReportableType();
+        /** @var \App\Contracts\Reportable $reportable */
+        $reportable = $this->report->reportable;
+        $contentType = $reportable->getReportableType();
         $contentTitle = $this->getContentTitle();
         $statusColor = $this->report->status === 'upheld' ? '🔴' : '✅';
 
@@ -64,11 +66,14 @@ class ReportResolvedNotification extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
+        /** @var \App\Contracts\Reportable $reportable */
+        $reportable = $this->report->reportable;
+
         return [
             'report_id' => $this->report->id,
             'reportable_type' => $this->report->reportable_type,
             'reportable_id' => $this->report->reportable_id,
-            'content_type' => $this->report->reportable->getReportableType(),
+            'content_type' => $reportable->getReportableType(),
             'content_title' => $this->getContentTitle(),
             'status' => $this->report->status,
             'status_label' => $this->report->status_label,
@@ -82,11 +87,20 @@ class ReportResolvedNotification extends Notification implements ShouldQueue
     {
         $reportable = $this->report->reportable;
 
-        return match (get_class($reportable)) {
-            'App\Models\Event' => $reportable->title ?? 'Untitled Production',
-            'App\Models\MemberProfile' => $reportable->user->name,
-            'App\Models\Band' => $reportable->name ?? 'Untitled Band',
-            default => "#{$reportable->id}",
-        };
+        if ($reportable instanceof \App\Models\Event) {
+            return $reportable->title ?? 'Untitled Production';
+        }
+
+        if ($reportable instanceof \App\Models\MemberProfile) {
+            /** @var \App\Models\User $user */
+            $user = $reportable->user;
+            return $user->name;
+        }
+
+        if ($reportable instanceof \App\Models\Band) {
+            return $reportable->name ?? 'Untitled Band';
+        }
+
+        return "#{$reportable->getKey()}";
     }
 }

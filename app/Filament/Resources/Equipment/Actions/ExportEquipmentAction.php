@@ -102,7 +102,7 @@ class ExportEquipmentAction
                 $equipment = $query->with(['provider', 'currentLoan.borrower', 'parent'])->get();
 
                 // Prepare data
-                $exportData = $equipment->map(function ($item) use ($data) {
+                $exportData = $equipment->map(function (\App\Models\Equipment $item) use ($data) {
                     $row = [];
 
                     foreach ($data['fields'] as $field) {

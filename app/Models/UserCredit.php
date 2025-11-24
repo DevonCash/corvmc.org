@@ -12,23 +12,47 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * UserCredit - Current State Table (Double-Entry Bookkeeping Pattern)
- *
+ * 
  * Stores the CURRENT balance for each user's credit type.
  * One row per user per credit type, updated in place.
- *
+ * 
  * This is the SOURCE OF TRUTH for "what's their balance right now?"
- *
+ * 
  * Works with CreditTransaction (immutable audit log):
  * - UserCredit.balance is updated in place (fast queries)
  * - CreditTransaction records every change as new rows (audit trail)
  * - CreditTransaction.balance_after snapshots UserCredit.balance after each change
- *
+ * 
  * Example:
  * - User starts with 0 credits
  * - Monthly allocation adds 16 blocks → UserCredit.balance = 16, CreditTransaction(+16, balance_after: 16)
  * - Reservation uses 4 blocks → UserCredit.balance = 12, CreditTransaction(-4, balance_after: 12)
- *
+ * 
  * Always query current balance from UserCredit::getBalance(), not from CreditTransaction.
+ *
+ * @property int $id
+ * @property int $user_id
+ * @property string $credit_type
+ * @property int $balance
+ * @property int|null $max_balance
+ * @property bool $rollover_enabled
+ * @property \Illuminate\Support\Carbon|null $expires_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserCredit newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserCredit newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserCredit query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserCredit whereBalance($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserCredit whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserCredit whereCreditType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserCredit whereExpiresAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserCredit whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserCredit whereMaxBalance($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserCredit whereRolloverEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserCredit whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserCredit whereUserId($value)
+ * @mixin \Eloquent
  */
 class UserCredit extends Model
 {

@@ -14,21 +14,71 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * Base class for all reservation types using Single Table Inheritance.
- *
+ * 
  * Reservations can be owned by different entities (User, Production, Band, etc.)
  * using a polymorphic relationship.
  *
- * @property PaymentStatus $payment_status
+ * @property int $id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $deleted_at
  * @property ReservationStatus $status
- * @property-read User $user
- * @property int|null $user_id
- * @property-read Model $reservable
- * @property-read RecurringSeries|null $recurringSeries
- * @property \Brick\Money\Money $cost
+ * @property PaymentStatus $payment_status
+ * @property string|null $payment_method
+ * @property \Illuminate\Support\Carbon|null $paid_at
+ * @property string|null $payment_notes
+ * @property numeric $hours_used
+ * @property numeric $free_hours_used
+ * @property bool $is_recurring
+ * @property array<array-key, mixed>|null $recurrence_pattern
+ * @property string|null $notes
  * @property \Illuminate\Support\Carbon|null $reserved_at
  * @property \Illuminate\Support\Carbon|null $reserved_until
- *
- * @method static \Illuminate\Database\Eloquent\Builder|self needsAttention()
+ * @property \Brick\Money\Money $cost
+ * @property int|null $recurring_series_id
+ * @property \Illuminate\Support\Carbon|null $instance_date
+ * @property string|null $cancellation_reason
+ * @property string $type
+ * @property string|null $reservable_type
+ * @property int|null $reservable_id
+ * @property string|null $google_calendar_event_id
+ * @property-read string $cost_display
+ * @property-read float $duration
+ * @property-read array $payment_status_badge
+ * @property-read string $time_range
+ * @property-read \App\Models\RecurringSeries|null $recurringSeries
+ * @property-read Model|\Eloquent|null $reservable
+ * @property-read \App\Models\User|null $user
+ * @method static \Database\Factories\ReservationFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Reservation needsAttention()
+ * @method static Builder<static>|Reservation newModelQuery()
+ * @method static Builder<static>|Reservation newQuery()
+ * @method static Builder<static>|Reservation query()
+ * @method static Builder<static>|Reservation whereCancellationReason($value)
+ * @method static Builder<static>|Reservation whereCost($value)
+ * @method static Builder<static>|Reservation whereCreatedAt($value)
+ * @method static Builder<static>|Reservation whereDeletedAt($value)
+ * @method static Builder<static>|Reservation whereFreeHoursUsed($value)
+ * @method static Builder<static>|Reservation whereGoogleCalendarEventId($value)
+ * @method static Builder<static>|Reservation whereHoursUsed($value)
+ * @method static Builder<static>|Reservation whereId($value)
+ * @method static Builder<static>|Reservation whereInstanceDate($value)
+ * @method static Builder<static>|Reservation whereIsRecurring($value)
+ * @method static Builder<static>|Reservation whereNotes($value)
+ * @method static Builder<static>|Reservation wherePaidAt($value)
+ * @method static Builder<static>|Reservation wherePaymentMethod($value)
+ * @method static Builder<static>|Reservation wherePaymentNotes($value)
+ * @method static Builder<static>|Reservation wherePaymentStatus($value)
+ * @method static Builder<static>|Reservation whereRecurrencePattern($value)
+ * @method static Builder<static>|Reservation whereRecurringSeriesId($value)
+ * @method static Builder<static>|Reservation whereReservableId($value)
+ * @method static Builder<static>|Reservation whereReservableType($value)
+ * @method static Builder<static>|Reservation whereReservedAt($value)
+ * @method static Builder<static>|Reservation whereReservedUntil($value)
+ * @method static Builder<static>|Reservation whereStatus($value)
+ * @method static Builder<static>|Reservation whereType($value)
+ * @method static Builder<static>|Reservation whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Reservation extends Model
 {

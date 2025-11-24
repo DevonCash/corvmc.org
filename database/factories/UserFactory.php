@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Visibility;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
@@ -192,12 +193,12 @@ class UserFactory extends Factory
                     ['name' => 'Instagram', 'url' => 'https://instagram.com/corvallismusic'],
                 ],
                 'contact' => new \App\Data\ContactData(
-                    visibility: 'public',
+                    visibility: Visibility::Public,
                     email: 'admin@corvallismusic.org',
                     phone: '(541) 555-0100',
                     address: '123 Music Lane, Corvallis, OR 97330'
                 ),
-                'visibility' => 'public',
+                'visibility' => Visibility::Public,
             ]
         );
 
@@ -236,11 +237,11 @@ class UserFactory extends Factory
                     ['name' => 'Website', 'url' => 'https://sarahjohnsonmusic.com'],
                 ],
                 'contact' => new \App\Data\ContactData(
-                    visibility: 'public',
+                    visibility: Visibility::Public,
                     email: 'booking@sarahjohnsonmusic.com',
                     phone: '(503) 555-0123',
                 ),
-                'visibility' => 'public',
+                'visibility' => Visibility::Public,
             ]
         );
 
@@ -272,10 +273,10 @@ class UserFactory extends Factory
                 'hometown' => 'Corvallis, OR',
                 'links' => [],
                 'contact' => new \App\Data\ContactData(
-                    visibility: 'members',
+                    visibility: Visibility::Members,
                     email: 'alex@example.com',
                 ),
-                'visibility' => 'members',
+                'visibility' => Visibility::Members,
             ]
         );
 
@@ -308,11 +309,11 @@ class UserFactory extends Factory
                     ['name' => 'Bandcamp', 'url' => 'https://jordanmartinez.bandcamp.com'],
                 ],
                 'contact' => new \App\Data\ContactData(
-                    visibility: 'members',
+                    visibility: Visibility::Members,
                     email: 'studio@jordanmartinez.com',
                     phone: '(541) 555-0456',
                 ),
-                'visibility' => 'members',
+                'visibility' => Visibility::Members,
             ]
         );
 
@@ -342,10 +343,10 @@ class UserFactory extends Factory
                 'bio' => '<p>Drummer looking to connect with local musicians for jam sessions.</p>',
                 'links' => [],
                 'contact' => new \App\Data\ContactData(
-                    visibility: 'private',
+                    visibility: Visibility::Private,
                     email: 'morgan@example.com',
                 ),
-                'visibility' => 'private',
+                'visibility' => Visibility::Private,
             ]
         );
 
@@ -379,12 +380,12 @@ class UserFactory extends Factory
                     ['name' => 'Spotify', 'url' => 'https://open.spotify.com/artist/riverthompson'],
                 ],
                 'contact' => new \App\Data\ContactData(
-                    visibility: 'public',
+                    visibility: Visibility::Public,
                     email: 'contact@riverthompsonmusic.com',
                     phone: '(503) 555-0789',
                     address: 'Salem, OR (studio visits by appointment)'
                 ),
-                'visibility' => 'public',
+                'visibility' => Visibility::Public,
             ]
         );
 

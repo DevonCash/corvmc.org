@@ -41,7 +41,8 @@ class MemberProfilePolicy
      */
     public function update(User $user, MemberProfile $memberProfile): ?bool
     {
-        if ($user->id === $memberProfile->user->id || $user->can('update member profiles')) {
+
+        if ($user->is($memberProfile->user) || $user->can('update member profiles')) {
             return true;
         }
 
@@ -54,7 +55,7 @@ class MemberProfilePolicy
     public function delete(User $user, MemberProfile $memberProfile): ?bool
     {
         // Users can delete their own profile or admins can delete
-        if ($user->id === $memberProfile->user->id || $user->can('delete member profiles')) {
+        if ($user->is($memberProfile->user) || $user->can('delete member profiles')) {
             return true;
         }
 
@@ -67,7 +68,7 @@ class MemberProfilePolicy
     public function restore(User $user, MemberProfile $memberProfile): ?bool
     {
         // Users can restore their own profile or admins can restore
-        if ($user->id === $memberProfile->user->id || $user->can('restore member profiles')) {
+        if ($user->is($memberProfile->user) || $user->can('restore member profiles')) {
             return true;
         }
 
@@ -85,7 +86,7 @@ class MemberProfilePolicy
     public function viewContact(User $user, MemberProfile $memberProfile): ?bool
     {
         // Users can view their own contact info
-        if ($user->id === $memberProfile->user->id) {
+        if ($user->is($memberProfile->user)) {
             return true;
         }
 
