@@ -234,7 +234,6 @@ Uses **Pest** with `RefreshDatabase` trait and in-memory SQLite. Tests in `tests
 - **spatie/period** - Conflict detection
 - **spatie/laravel-model-flags** - Feature flags
 - **laravel/cashier** - Stripe integration
-- **guava/calendar** - Calendar widget
 
 ## PHPStan Type Safety (Level 2)
 

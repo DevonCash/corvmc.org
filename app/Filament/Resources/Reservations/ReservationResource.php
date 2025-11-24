@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Reservations;
 
-use App\Filament\Resources\Reservations\Pages\CalendarReservations;
 use App\Filament\Resources\Reservations\Pages\ListReservations;
 use App\Filament\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;

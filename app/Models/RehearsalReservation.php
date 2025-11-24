@@ -5,8 +5,6 @@ namespace App\Models;
 use App\Concerns\HasTimePeriod;
 use App\Enums\ReservationStatus;
 use Database\Factories\ReservationFactory;
-use Guava\Calendar\Contracts\Eventable;
-use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -82,7 +80,7 @@ use Spatie\Period\Period;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RehearsalReservation whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class RehearsalReservation extends Reservation implements Eventable
+class RehearsalReservation extends Reservation
 {
     use HasFactory, HasTimePeriod, LogsActivity;
 
@@ -334,14 +332,6 @@ class RehearsalReservation extends Reservation implements Eventable
         $this->update([
             'status' => 'cancelled',
         ]);
-    }
-
-    /**
-     * Convert reservation to calendar event.
-     */
-    public function toCalendarEvent(): CalendarEvent
-    {
-        return CalendarEvent::make($this);
     }
 
     public function getActivitylogOptions(): LogOptions

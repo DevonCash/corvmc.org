@@ -9,8 +9,6 @@ use App\Enums\EventStatus;
 use App\Enums\ModerationStatus;
 use App\Enums\ReservationStatus;
 use App\Enums\Visibility;
-use Guava\Calendar\Contracts\Eventable;
-use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Period\Period;
@@ -137,7 +135,7 @@ use Spatie\Image\Enums\Fit;
  * @method static Builder<static>|Event withoutTrashed()
  * @mixin \Eloquent
  */
-class Event extends ContentModel implements Eventable
+class Event extends ContentModel
 {
     use HasPublishing, HasTimePeriod, SoftDeletes;
 
@@ -878,36 +876,5 @@ class Event extends ContentModel implements Eventable
                 'notes' => "Setup/breakdown for event: {$this->title}",
             ]
         );
-    }
-
-    /**
-     * Convert event to calendar event.
-     */
-    public function toCalendarEvent(): CalendarEvent
-    {
-        $color = match ($this->status) {
-            EventStatus::Scheduled => '#3b82f6',      // blue
-            EventStatus::Cancelled => '#ef4444',      // red
-            EventStatus::Postponed => '#6b7280',      // gray
-            EventStatus::AtCapacity => '#f59e0b',     // amber
-        };
-
-        $extendedProps = [
-            'type' => 'event',
-            'organizer_name' => $this->organizer?->name ?? 'Staff',
-            'status' => $this->status->value,
-            'status_label' => $this->status->getLabel(),
-            'venue_name' => $this->venue_name,
-            'is_published' => $this->isPublished(),
-            'event_link' => $this->event_link ?? $this->ticket_url,
-        ];
-
-        return CalendarEvent::make($this)
-            ->title($this->title)
-            ->start($this->start_time)
-            ->end($this->end_time)
-            ->backgroundColor($color)
-            ->textColor('#fff')
-            ->extendedProps($extendedProps);
     }
 }
