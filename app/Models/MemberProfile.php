@@ -12,7 +12,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Represents a member profile in the application.
- * 
+ *
  * It includes details about the user, their bio, links, and contact information.
  *
  * @property int $id
@@ -54,6 +54,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $upheldReports
  * @property-read int|null $upheld_reports_count
  * @property-read \App\Models\User $user
+ *
  * @method static \Database\Factories\MemberProfileFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile flagged(\BackedEnum|string $name)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile newModelQuery()
@@ -81,6 +82,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile withAnyTagsOfType(array|string $type)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile withFlag(string $flag)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MemberProfile withoutTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
+ *
  * @mixin \Eloquent
  */
 class MemberProfile extends ContentModel
@@ -136,6 +138,15 @@ class MemberProfile extends ContentModel
         'embeds' => 'array',
         'visibility' => Visibility::class,
     ];
+
+    public function getSanitizedBioAttribute(): ?string
+    {
+        if (empty($this->bio)) {
+            return null;
+        }
+
+        return clean($this->bio);
+    }
 
     public function getAvatarAttribute(): ?string
     {

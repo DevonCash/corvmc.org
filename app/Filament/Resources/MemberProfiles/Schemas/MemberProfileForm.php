@@ -162,20 +162,10 @@ class MemberProfileForm
                         Select::make('contact.visibility')
                             ->label('Contact Visibility')
                             ->live()
-
-                            ->options([
-                                'private' => 'Private',
-                                'members' => 'Members Only',
-                                'public' => 'Public',
-                            ])
-                            ->helperText(fn ($state) => match ($state) {
-                                'private' => 'Only CMC staff can see your contact info',
-                                'members' => 'Only other members can see your contact info',
-                                'public' => 'Anyone who can see your profile can see your contact info',
-                                default => $state
-                            })
+                            ->options(Visibility::class)
+                            ->helperText(fn ($state) => $state ? $state->getDescription() : 'Choose who can see your contact info')
                             ->selectablePlaceholder(false)
-                            ->default('private')
+                            ->default(Visibility::Private)
                             ->required(),
 
                         Fieldset::make('Directory Flags')

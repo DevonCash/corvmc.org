@@ -59,7 +59,7 @@ class MemberProfileFactory extends Factory
             'hometown' => fake()->boolean(60) ? fake()->city().', '.fake()->stateAbbr() : null,
             'links' => $links,
             'contact' => new ContactData(
-                visibility: fake()->randomElement(['private', 'members', 'public']),
+                visibility: fake()->randomElement([Visibility::Private, Visibility::Members, Visibility::Public]),
                 email: fake()->boolean(70) ? fake()->safeEmail() : null,
                 phone: fake()->boolean(50) ? fake()->phoneNumber() : null,
                 address: fake()->boolean(30) ? fake()->address() : null,
@@ -285,7 +285,7 @@ class MemberProfileFactory extends Factory
     {
         return $this->state([
             'visibility' => Visibility::Private,
-            'contact' => new ContactData(visibility: 'private'),
+            'contact' => new ContactData(visibility: Visibility::Private),
         ]);
     }
 
@@ -293,7 +293,7 @@ class MemberProfileFactory extends Factory
     {
         return $this->state([
             'visibility' => Visibility::Public,
-            'contact' => new ContactData(visibility: 'public'),
+            'contact' => new ContactData(visibility: Visibility::Public),
         ]);
     }
 
@@ -301,7 +301,7 @@ class MemberProfileFactory extends Factory
     {
         return $this->state([
             'visibility' => Visibility::Members,
-            'contact' => new ContactData(visibility: 'members'),
+            'contact' => new ContactData(visibility: Visibility::Members),
         ]);
     }
 }

@@ -19,7 +19,9 @@ class SearchProfiles
         ?array $skills = null,
         ?array $genres = null,
         ?array $flags = null,
-        ?User $viewingUser = null
+        ?User $viewingUser = null,
+        int $limit = 50,
+        int $offset = 0
     ): Collection {
         $profilesQuery = MemberProfile::withoutGlobalScope(\App\Models\Scopes\MemberVisibilityScope::class);
 
@@ -59,7 +61,8 @@ class SearchProfiles
         }
 
         return $profilesQuery->with(['user', 'tags'])
-            ->limit(50)
+            ->offset($offset)
+            ->limit($limit)
             ->get();
     }
 }

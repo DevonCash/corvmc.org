@@ -2,6 +2,7 @@
 
 namespace App\Actions\MemberProfiles;
 
+use App\Enums\Visibility;
 use App\Models\MemberProfile;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -11,15 +12,24 @@ class UpdateVisibility
 
     /**
      * Update member profile visibility.
+     *
+     * @throws \InvalidArgumentException
      */
-    public function handle(MemberProfile $profile, string $visibility): bool
+    public function handle(MemberProfile $profile, Visibility|string $visibility): MemberProfile
     {
-        if (! in_array($visibility, ['public', 'members', 'private'])) {
-            return false;
+        // Convert string to enum if needed
+        if (is_string($visibility)) {
+            $visibility = Visibility::tryFrom($visibility);
+
+            if ($visibility === null) {
+                throw new \InvalidArgumentException(
+                    'Invalid visibility value. Must be one of: public, members, private'
+                );
+            }
         }
 
         $profile->update(['visibility' => $visibility]);
 
-        return true;
+        return $profile;
     }
 }

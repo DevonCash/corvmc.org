@@ -19,7 +19,7 @@
                         About the Band
                     </h2>
                     <div class="prose max-w-none text-base-content/80 leading-relaxed">
-                        {!! $record->bio !!}
+                        {!! $record->sanitized_bio !!}
                     </div>
                 </section>
             @endif

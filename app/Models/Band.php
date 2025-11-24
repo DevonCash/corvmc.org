@@ -11,7 +11,7 @@ use Spatie\Sluggable\SlugOptions;
 
 /**
  * Represents a band in the application.
- * 
+ *
  * It includes details about the band's name, bio, links, and contact information.
  * The band can have multiple members and exactly one owner.
  *
@@ -62,6 +62,7 @@ use Spatie\Sluggable\SlugOptions;
  * @property-read int|null $tags_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $upheldReports
  * @property-read int|null $upheld_reports_count
+ *
  * @method static \Database\Factories\BandFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Band flagged(\BackedEnum|string $name)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Band newModelQuery()
@@ -91,6 +92,7 @@ use Spatie\Sluggable\SlugOptions;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Band withAnyTagsOfAnyType($tags)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Band withAnyTagsOfType(array|string $type)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Band withoutTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
+ *
  * @mixin \Eloquent
  */
 class Band extends ContentModel
@@ -192,6 +194,15 @@ class Band extends ContentModel
     public function owner(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function getSanitizedBioAttribute(): ?string
+    {
+        if (empty($this->bio)) {
+            return null;
+        }
+
+        return clean($this->bio);
     }
 
     public function getGenresAttribute()

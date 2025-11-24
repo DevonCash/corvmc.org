@@ -150,17 +150,17 @@ class BandPolicy
          */
         $contact = $band->contact;
         // Public bands: anyone can view contact info
-        if ($contact->visibility === 'public') {
+        if ($contact->visibility === \App\Enums\Visibility::Public) {
             return true;
         }
 
         // Members-only bands: users with permission can view
-        if ($contact->visibility === 'members' && $user) {
+        if ($contact->visibility === \App\Enums\Visibility::Members && $user) {
             return true;
         }
 
         // Private bands: band members can view contact info
-        if ($contact->visibility === 'private' && $band->membership($user)) {
+        if ($contact->visibility === \App\Enums\Visibility::Private && $band->membership($user)) {
             return true;
         }
 

@@ -90,11 +90,11 @@ class MemberProfilePolicy
             return true;
         }
 
-        if ($memberProfile->contact->visibility === 'public') {
+        if ($memberProfile->contact->visibility === \App\Enums\Visibility::Public) {
             return true;
         }
 
-        if ($memberProfile->contact->visibility === 'members' && $user) {
+        if ($memberProfile->contact->visibility === \App\Enums\Visibility::Members && $user) {
             return true;
         }
 

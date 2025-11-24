@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\MemberProfiles\Tables;
 
 use App\Actions\Invitations\InviteUser;
-use App\Models\User;
 use App\Settings\MemberDirectorySettings;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -180,37 +179,17 @@ class MemberProfilesTable
                                     }),
                             ]),
 
-                        Grid::make(2)
-                            ->schema([
-                                CheckboxList::make('flags')
-                                    ->label('Services')
-                                    ->options(function () {
-                                        $settings = app(MemberDirectorySettings::class);
+                        CheckboxList::make('flags')
+                            ->label('Services')
+                            ->options(function () {
+                                $settings = app(MemberDirectorySettings::class);
 
-                                        return $settings->getAvailableFlags();
-                                    })
-                                    ->columns(function () {
-                                        return User::me()?->can('view private member profiles') ? 2 : 4;
-                                    })
-                                    ->columnSpan(function () {
-                                        return User::me()?->can('view private member profiles') ? 1 : 2;
-                                    }),
-
-                                Select::make('visibility')
-                                    ->label('Visibility 🛡️')
-                                    ->visible(fn () => User::me()?->can('view private member profiles'))
-                                    ->options([
-                                        'public' => 'Public',
-                                        'members' => 'Members Only',
-                                        'private' => 'Private',
-                                    ]),
-                            ]),
+                                return $settings->getAvailableFlags();
+                            })
+                            ->columns(4)
+                            ->columnSpanFull(),
                     ])
                     ->query(function ($query, array $data) {
-                        if (! empty($data['visibility'])) {
-                            // Handle visibility filter
-                        }
-
                         if (! empty($data['flags'])) {
                             foreach ($data['flags'] as $flag) {
                                 $query->withFlag($flag);
