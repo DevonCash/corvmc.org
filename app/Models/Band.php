@@ -163,7 +163,7 @@ class Band extends ContentModel
     public function members(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'band_profile_members', 'band_profile_id', 'user_id')
-            ->withPivot('role', 'position', 'name', 'status', 'invited_at')
+            ->withPivot('role', 'position', 'status', 'invited_at')
             ->withTimestamps();
     }
 
