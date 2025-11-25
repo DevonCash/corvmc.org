@@ -8,6 +8,7 @@ use App\Actions\Reservations\CancelReservation;
 use App\Actions\Reservations\ConfirmReservation;
 use App\Actions\Reservations\CreateCheckoutSession;
 use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;
+use App\Models\User;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
@@ -25,8 +26,8 @@ class ReservationsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->query(fn (Builder $query) => User::me()->rehearsals())
             ->columns([
-
                 Stack::make([
                     Split::make([
                         ReservationColumns::timeRange(),
@@ -35,11 +36,6 @@ class ReservationsTable
                             ReservationColumns::costDisplay()->grow(false),
                         ])->alignment(Alignment::End)->space(2),
                     ]),
-                    // Split::make([
-                    //     // ReservationColumns::duration()
-                    //     //     ->visibleFrom('md'),
-
-                    // ])->from('md'),
                 ]),
             ])
             ->contentGrid([
