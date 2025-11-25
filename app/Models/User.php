@@ -69,6 +69,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $rehearsals_count
  * @property-read Collection<int, \App\Models\Reservation> $reservations
  * @property-read int|null $reservations_count
+ * @property-read Collection<int, \App\Models\CheckIn> $checkIns
+ * @property-read int|null $check_ins_count
  * @property-read Collection<int, \Spatie\Permission\Models\Role> $roles
  * @property-read int|null $roles_count
  * @property-read \App\Models\StaffProfile|null $staffProfile
@@ -149,6 +151,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         // Staff panel requires staff or admin role
         if ($panel->getId() === 'staff') {
             return $this->hasRole(['admin', 'staff']);
+        }
+
+        // Kiosk panel requires volunteer or admin role
+        if ($panel->getId() === 'kiosk') {
+            return $this->hasRole(['volunteer', 'admin']);
         }
 
         // Member panel is accessible to all authenticated users
@@ -251,6 +258,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function reservations(): MorphMany
     {
         return $this->morphMany(Reservation::class, 'reservable');
+    }
+
+    public function checkIns(): HasMany
+    {
+        return $this->hasMany(CheckIn::class);
     }
 
     public function profile(): HasOne

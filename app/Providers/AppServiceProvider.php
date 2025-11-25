@@ -9,6 +9,8 @@ use App\Observers\ReservationObserver;
 use App\Observers\TagObserver;
 use App\Observers\UserObserver;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
+use Filament\Facades\Filament;
+use Filament\Panel;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -32,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
             // Custom configurations go here
             $panelSwitch
+                ->visible(fn() => !in_array(Filament::getCurrentPanel()->getId(), ['kiosk']))
+                ->panels(['member', 'staff'])
                 ->icons([
                     'member' => 'tabler-user',
                     'staff' => 'tabler-user-shield',

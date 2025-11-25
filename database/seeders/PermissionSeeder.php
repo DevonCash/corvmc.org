@@ -98,6 +98,9 @@ class PermissionSeeder extends Seeder
             // Member Profile Management (continued)
             'delete member profiles',
             'restore member profiles',
+
+            // POS Management
+            'manage pos',
         ];
 
         foreach ($permissions as $permission) {
@@ -217,6 +220,20 @@ class PermissionSeeder extends Seeder
             'view bands',
             'create bands',
             'view band members',
+        ]);
+
+        // Volunteer - Kiosk operations for front desk
+        $volunteer = Role::firstOrCreate(['name' => 'volunteer']);
+        $volunteer->syncPermissions([
+            'view users',
+            'view private member profiles',
+            'view bands',
+            'view band members',
+            'view reservations',
+            'manage practice space',
+            'view productions',
+            'view transactions',
+            'manage pos',
         ]);
     }
 }
