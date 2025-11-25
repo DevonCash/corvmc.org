@@ -124,7 +124,7 @@ class SpaceManagementTable
                     ViewAction::make()
                         ->schema(fn ($infolist) => ReservationInfolist::configure($infolist))
                         ->modalHeading(fn (Reservation $record): string => 'Reservation Details')
-                        ->modalWidth('3xl')
+                        ->modalWidth('sm')
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Close'),
                     EditAction::make()

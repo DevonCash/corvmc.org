@@ -11,6 +11,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class SpaceStatsWidget extends BaseWidget
 {
+    protected static bool $isLazy = false;
+
     protected function getStats(): array
     {
         $needsAttention = Reservation::needsAttention()->count();

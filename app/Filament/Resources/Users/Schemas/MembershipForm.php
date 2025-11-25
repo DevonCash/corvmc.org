@@ -164,7 +164,8 @@ class MembershipForm
                     })
                     ->columns(2)
                     ->visible(function ($record) {
-                        return $record->subscription()->isSubscriptionCancelled();
+                        $subscription = $record->subscription();
+                        return $subscription && $subscription->onGracePeriod();
                     })
                     ->schema([
                         TextEntry::make('cancellation_info')

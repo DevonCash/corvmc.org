@@ -11,6 +11,8 @@ class SpaceUsageWidget extends Widget
 {
     protected string $view = 'filament.resources.space-management.widgets.space-usage-widget';
 
+    protected static bool $isLazy = false;
+
     protected int|string|array $columnSpan = 'full';
 
     public function getNextSpaceUsage(): ?Reservation

@@ -2,33 +2,49 @@
 
 namespace App\Filament\Resources\Users\Widgets;
 
-use App\Models\User;
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
+use App\Actions\Subscriptions\GetSubscriptionStats;
+use Filament\Widgets\Widget;
 
-class UserStatsWidget extends BaseWidget
+class UserStatsWidget extends Widget
 {
-    protected function getStats(): array
+    protected int | string | array $columnSpan = 'full';
+    protected string $view = 'filament.resources.users.widgets.user-stats-widget';
+
+    protected static bool $isLazy = false;
+
+    public int $totalMembers = 0;
+
+    public int $sustainingMembers = 0;
+
+    public int $activeSubscriptions = 0;
+
+    public int $newMembersThisMonth = 0;
+
+    public int $subscriptionNetChangeLastMonth = 0;
+
+    public string $mrrTotal = '$0.00';
+
+    public string $mrrBase = '$0.00';
+
+    public string $feeCost = '$0.00';
+
+    public string $averageMrr = '$0.00';
+
+    public string $medianContribution = '$0.00';
+
+    public function mount(): void
     {
-        $totalUsers = User::count();
+        $stats = GetSubscriptionStats::run();
 
-        $sustainingMembers = User::role('sustaining member')->count();
-
-        return [
-            Stat::make('Total Members', $totalUsers)
-                ->description('All Members')
-                ->descriptionIcon('tabler-users')
-                ->color('primary'),
-
-            Stat::make('Sustaining Members', $sustainingMembers)
-                ->description('Monthly supporters')
-                ->descriptionIcon('tabler-user-heart')
-                ->color('success'),
-        ];
-    }
-
-    public function getDisplayName(): string
-    {
-        return 'Membership Overview';
+        $this->totalMembers = $stats->total_users;
+        $this->sustainingMembers = $stats->sustaining_members;
+        $this->activeSubscriptions = $stats->active_subscriptions_count;
+        $this->newMembersThisMonth = $stats->new_members_this_month;
+        $this->subscriptionNetChangeLastMonth = $stats->subscription_net_change_last_month;
+        $this->mrrTotal = $stats->mrr_total->formatTo('en_US');
+        $this->mrrBase = $stats->mrr_base->formatTo('en_US');
+        $this->feeCost = $stats->mrr_total->minus($stats->mrr_base)->formatTo('en_US');
+        $this->averageMrr = $stats->average_mrr->formatTo('en_US');
+        $this->medianContribution = $stats->median_contribution->formatTo('en_US');
     }
 }

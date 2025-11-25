@@ -272,6 +272,17 @@ class RehearsalReservation extends Reservation
     }
 
     /**
+     * Get payment status badge data.
+     */
+    public function getPaymentStatusBadgeAttribute(): array
+    {
+        return [
+            'label' => $this->payment_status->getLabel(),
+            'color' => $this->payment_status->getColor(),
+        ];
+    }
+
+    /**
      * Check if reservation is paid.
      */
     public function isPaid(): bool
