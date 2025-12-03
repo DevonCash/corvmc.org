@@ -124,7 +124,6 @@ class ReservationForm
                             self::updateDateTimes($get, $set);
                             self::calculateCost($get('user_id'), $get, $set);
                         })
-                        ->hint(fn ($state) => $state ? '' : 'Select a date')
                         ->minDate(now()->addDay()->toDateString()),
 
                     Select::make('start_time')
@@ -145,12 +144,10 @@ class ReservationForm
                             $set('end_time', null);
                             self::updateDateTimes($get, $set);
                             self::calculateCost($get('user_id'), $get, $set);
-                        })
-                        ->hint(fn (Get $get, $state) => ! $get('reservation_date') || $state ? '' : 'Select a start time'),
+                        }),
 
                     Select::make('end_time')
                         ->label('End Time')
-                        ->hint(fn (Get $get, $state) => ! $get('start_time') || $state ? '' : 'Select an end time')
                         ->options(function (Get $get) {
                             $date = $get('reservation_date');
                             $startTime = $get('start_time');

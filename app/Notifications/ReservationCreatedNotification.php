@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Enums\ReservationStatus;
 use App\Models\Reservation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -23,21 +24,21 @@ class ReservationCreatedNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $subject = $this->reservation->status === 'pending'
-            ? 'Practice Space Reservation Request Received'
-            : 'Practice Space Reservation Created';
+        $subject = $this->reservation->status->isScheduled()
+            ? 'Practice Space Reservation Scheduled'
+            : 'Practice Space Reservation Confirmed';
 
         $message = (new MailMessage)
             ->subject($subject)
             ->greeting("Hello {$notifiable->name}!");
 
-        if ($this->reservation->status === 'pending') {
-            $message->line('We\'ve received your practice space reservation request.')
-                ->line('Your reservation is currently **pending** and needs your confirmation.')
+        if ($this->reservation->status->isScheduled()) {
+            $message->line('Your practice space reservation has been scheduled!')
+                ->line('Your time slot and credits have been locked in.')
                 ->line('We\'ll send you a confirmation reminder 3 days before your reservation date.')
-                ->line('You\'ll need to confirm the reservation at that time to secure your slot.');
+                ->line('Please confirm at that time to let us know you remember your reservation.');
         } else {
-            $message->line('Your practice space reservation has been created.');
+            $message->line('Your practice space reservation has been confirmed.');
         }
 
         $message->line('**Reservation Details:**')
@@ -53,7 +54,7 @@ class ReservationCreatedNotification extends Notification implements ShouldQueue
             $message->line("Notes: {$this->reservation->notes}");
         }
 
-        $message->action('View Reservations', url('/member'))
+        $message->action('View Reservation', route('filament.member.resources.reservations.index', ['view' => $this->reservation->id]))
             ->line('Thank you for using the Corvallis Music Collective!')
             ->salutation('The CMC Team');
 
@@ -63,16 +64,16 @@ class ReservationCreatedNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => $this->reservation->status === 'pending'
-                ? 'Reservation Request Received'
-                : 'Reservation Created',
-            'message' => $this->reservation->status === 'pending'
-                ? "Practice space reservation request for {$this->reservation->time_range} received. We'll send a confirmation reminder 3 days before."
-                : "Practice space reservation for {$this->reservation->time_range} has been created.",
-            'action_url' => url('/member'),
+            'title' => $this->reservation->status->isScheduled()
+                ? 'Reservation Scheduled'
+                : 'Reservation Confirmed',
+            'message' => $this->reservation->status->isScheduled()
+                ? "Practice space reservation for {$this->reservation->time_range} has been scheduled. We'll send a confirmation reminder 3 days before."
+                : "Practice space reservation for {$this->reservation->time_range} has been confirmed.",
+            'action_url' => route('filament.member.resources.reservations.index', ['view' => $this->reservation->id]),
             'action_text' => 'View Reservations',
             'reservation_id' => $this->reservation->id,
-            'status' => $this->reservation->status,
+            'status' => $this->reservation->status->value,
         ];
     }
 }

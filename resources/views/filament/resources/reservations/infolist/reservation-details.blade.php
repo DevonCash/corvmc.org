@@ -13,7 +13,7 @@
                     <x-filament::icon icon="tabler-calendar-event" class="h-4 w-4" />
                 </dt>
                 <dd class="mt-1">
-                    <a href="{{ \App\Filament\Resources\Events\EventResource::getUrl('edit', ['record' => $record->reservable]) }}"
+                    <a href="{{ \App\Filament\Resources\Events\EventResource::getUrl('view', ['record' => $record->reservable]) }}"
                         target="_blank"
                         class="text-2xl font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
                         {{ $record->reservable->title }}
@@ -37,7 +37,7 @@
                 @if ($responsibleUser)
                     <x-filament::avatar :src="$responsibleUser->getFilamentAvatarUrl()" :name="$responsibleUser->name" size="lg" />
                     <div class="grow">
-                        <a href="{{ \App\Filament\Resources\Users\UserResource::getUrl('edit', ['record' => $responsibleUser]) }}"
+                        <a href="{{ \App\Filament\Resources\Users\UserResource::getUrl('view', ['record' => $responsibleUser]) }}"
                             target="_blank"
                             class="text-xl font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
                             {{ $responsibleUser->name }}

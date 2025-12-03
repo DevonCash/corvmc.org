@@ -3,7 +3,9 @@
 namespace App\Actions\Reservations;
 
 use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
+use App\Enums\CreditType;
 use App\Enums\ReservationStatus;
+use App\Models\Reservation;
 use App\Models\RehearsalReservation;
 use App\Models\User;
 use App\Notifications\ReservationCreatedNotification;
@@ -20,8 +22,8 @@ class CreateReservation
     /**
      * Create a new reservation.
      *
-     * Reservations are created as pending and must be confirmed within the confirmation window.
-     * Credits are applied at confirmation time, not creation time.
+     * Reservations are created as scheduled, which locks in the time slot and deducts credits immediately.
+     * Confirmation is just an acknowledgement that the user hasn't forgotten about their reservation.
      * For immediate reservations (< 3 days), auto-confirmation is triggered.
      */
     public function handle(User $user, Carbon $startTime, Carbon $endTime, array $options = []): RehearsalReservation
@@ -34,11 +36,21 @@ class CreateReservation
         }
 
         $reservation = DB::transaction(function () use ($user, $startTime, $endTime, $options) {
-            // Calculate initial cost estimate (without deducting credits yet)
+            // Calculate cost with available credits
             $costCalculation = CalculateReservationCost::run($user, $startTime, $endTime);
 
-            // Create reservation as pending
-            // Credits will be deducted when reservation is confirmed
+            // Deduct credits immediately when scheduling the reservation
+            $freeBlocks = Reservation::hoursToBlocks($costCalculation['free_hours']);
+            if ($freeBlocks > 0) {
+                $user->deductCredit(
+                    $freeBlocks,
+                    CreditType::FreeHours,
+                    'reservation_usage',
+                    null // reservation_id will be null until we create it
+                );
+            }
+
+            // Create reservation as scheduled (time and credits are now locked in)
             $reservation = RehearsalReservation::create([
                 'user_id' => $user->id,
                 'reservable_type' => User::class,
@@ -48,13 +60,20 @@ class CreateReservation
                 'cost' => $costCalculation['cost'],
                 'hours_used' => $costCalculation['total_hours'],
                 'free_hours_used' => $costCalculation['free_hours'],
-                'status' => ReservationStatus::Pending,
+                'status' => ReservationStatus::Scheduled,
                 'notes' => $options['notes'] ?? null,
                 'is_recurring' => $options['is_recurring'] ?? false,
                 'recurrence_pattern' => $options['recurrence_pattern'] ?? null,
                 'recurring_series_id' => $options['recurring_series_id'] ?? null,
                 'instance_date' => $options['instance_date'] ?? null,
             ]);
+
+            // If cost is zero after credit deduction, mark payment as not applicable
+            if ($reservation->cost->isZero()) {
+                $reservation->update([
+                    'payment_status' => \App\Enums\PaymentStatus::NotApplicable,
+                ]);
+            }
 
             return $reservation;
         });

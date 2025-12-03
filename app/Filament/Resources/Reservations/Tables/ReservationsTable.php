@@ -7,12 +7,16 @@ use App\Actions\Payments\MarkReservationAsPaid;
 use App\Actions\Reservations\CancelReservation;
 use App\Actions\Reservations\ConfirmReservation;
 use App\Actions\Reservations\CreateCheckoutSession;
+use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;
+use App\Models\Reservation;
 use App\Models\User;
+use Filament\Infolists\Infolist;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Schemas\Schema;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
@@ -45,10 +49,11 @@ class ReservationsTable
                 'xl' => 3,
             ])
             ->defaultSort('reserved_at', 'asc')
+            ->recordAction('view')
             ->filters([
                 SelectFilter::make('status')
                     ->options([
-                        'pending' => 'Pending',
+                        'pending' => 'Scheduled',
                         'confirmed' => 'Confirmed',
                         'cancelled' => 'Cancelled',
                     ])
@@ -97,14 +102,20 @@ class ReservationsTable
             ])
             ->recordActionsAlignment('end')
             ->recordActions([
+                ViewAction::make()
+                    ->slideOver()
+                    ->schema(fn (Schema $infolist) => ReservationInfolist::configure($infolist))
+                    ->modalHeading(fn (Reservation $record): string => "Reservation #{$record->id}")
+                    ->modalFooterActions([
+                        CancelReservation::filamentAction(),
+                        CreateCheckoutSession::filamentAction(),
+                        ConfirmReservation::filamentAction(),
+                    ]),
                 ConfirmReservation::filamentAction(),
                 CreateCheckoutSession::filamentAction(),
-
                 ActionGroup::make([
-                    ViewAction::make()
-                        ->modalWidth('3xl'),
                     CancelReservation::filamentAction(),
-                ])->extraDropdownAttributes(['class' => 'ml-auto']),
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

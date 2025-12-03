@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * Base class for all reservation types using Single Table Inheritance.
- * 
+ *
  * Reservations can be owned by different entities (User, Production, Band, etc.)
  * using a polymorphic relationship.
  *
@@ -51,6 +51,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property-read \App\Models\User|null $user
  * @method static \Database\Factories\ReservationFactory factory($count = null, $state = [])
  * @method static Builder<static>|Reservation needsAttention()
+ * @method static Builder<static>|Reservation status(ReservationStatus $status)
  * @method static Builder<static>|Reservation newModelQuery()
  * @method static Builder<static>|Reservation newQuery()
  * @method static Builder<static>|Reservation query()
@@ -97,7 +98,7 @@ class Reservation extends Model
             'payment_status' => PaymentStatus::class,
             'reserved_at' => 'datetime',
             'reserved_until' => 'datetime',
-            'cost' => MoneyCast::class.':USD',
+            'cost' => MoneyCast::class . ':USD',
             'paid_at' => 'datetime',
             'hours_used' => 'decimal:2',
             'free_hours_used' => 'decimal:2',
@@ -271,10 +272,10 @@ class Reservation extends Model
         }
 
         if ($this->reserved_at->isSameDay($this->reserved_until)) {
-            return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('g:i A');
+            return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('g:i A');
         }
 
-        return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('M j, Y g:i A');
+        return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('M j, Y g:i A');
     }
 
     public function getPaymentStatusBadgeAttribute(): array
@@ -354,15 +355,23 @@ class Reservation extends Model
     }
 
     /**
+     * Scope to filter reservations by status.
+     */
+    public function scopeStatus(Builder $query, ReservationStatus $status): Builder
+    {
+        return $query->where('status', $status);
+    }
+
+    /**
      * Scope to filter reservations that need attention.
-     * Includes pending reservations about to be autocancelled (< 3 days) and past unpaid reservations.
+     * Includes scheduled reservations about to be autocancelled (< 3 days) and past unpaid reservations.
      */
     public function scopeNeedsAttention(Builder $query): Builder
     {
         return $query->where(function ($q) {
             $q->where(function ($q) {
-                // Pending reservations about to be autocancelled (< 3 days away)
-                $q->where('status', 'pending')
+                // Scheduled reservations about to be autocancelled (< 3 days away)
+                $q->where('status', ReservationStatus::Scheduled)
                     ->where('reserved_at', '>', now())
                     ->where('reserved_at', '<=', now()->addDays(3));
             })->orWhere(function ($q) {
@@ -375,20 +384,20 @@ class Reservation extends Model
     }
 
     /**
-     * Check if reservation can be confirmed (pending and within confirmation window or immediate).
+     * Check if reservation can be confirmed (scheduled and within confirmation window or immediate).
      */
     public function canBeConfirmed(): bool
     {
-        return $this->status === 'pending' &&
-               ($this->isInConfirmationWindow() || $this->isImmediate());
+        return $this->status->isScheduled() &&
+            ($this->isInConfirmationWindow() || $this->isImmediate());
     }
 
     /**
-     * Check if reservation should be auto-cancelled (pending and missed confirmation window).
+     * Check if reservation should be auto-cancelled (scheduled and missed confirmation window).
      */
     public function shouldAutoCancel(): bool
     {
-        if ($this->status !== 'pending' || ! $this->reserved_at) {
+        if (! $this->status->isScheduled() || ! $this->reserved_at) {
             return false;
         }
 
@@ -415,6 +424,6 @@ class Reservation extends Model
 
     public function requiresPayment(): bool
     {
-        return $this->cost->isPositive() && $this->payment_status->isUnpaid();
+        return ($this->status == ReservationStatus::Scheduled || $this->status == ReservationStatus::Confirmed) && $this->cost->isPositive() && $this->payment_status->isUnpaid();
     }
 }

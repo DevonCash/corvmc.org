@@ -37,7 +37,7 @@ class ReservationConfirmationNotification extends Notification implements Should
             ->line("Date & Time: {$this->reservation->time_range}")
             ->line("Duration: {$this->reservation->duration} hours")
             ->line("Cost: \${$this->reservation->cost}")
-            ->action('Confirm Reservation', url("/member/reservations/{$this->reservation->id}"))
+            ->action('Confirm Reservation', route('filament.member.resources.reservations.index', ['view' => $this->reservation->id]))
             ->line('Please confirm your reservation as soon as possible to secure your time slot.')
             ->line('If you need to make changes or cancel, you can do so from your dashboard.')
             ->salutation('Thanks for being part of the Corvallis Music Collective!');

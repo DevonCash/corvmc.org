@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Actions\Reservations\CancelReservation;
+use App\Enums\ReservationStatus;
 use App\Models\RehearsalReservation;
 use Illuminate\Console\Command;
 
@@ -20,7 +21,7 @@ class AutoCancelUnconfirmedReservations extends Command
      *
      * @var string
      */
-    protected $description = 'Auto-cancel pending reservations that missed their confirmation window';
+    protected $description = 'Auto-cancel scheduled reservations that missed their confirmation window';
 
     /**
      * Execute the console command.
@@ -29,11 +30,11 @@ class AutoCancelUnconfirmedReservations extends Command
     {
         $this->info('Finding unconfirmed reservations past their confirmation deadline...');
 
-        // Find pending rehearsal reservations that are now within 3 days
+        // Find scheduled rehearsal reservations that are now within 3 days
         // (they should have been confirmed by now)
         $threeDaysFromNow = now()->addDays(3);
 
-        $unconfirmedReservations = RehearsalReservation::where('status', 'pending')
+        $unconfirmedReservations = RehearsalReservation::status(ReservationStatus::Scheduled)
             ->where('reserved_at', '<=', $threeDaysFromNow)
             ->where('reserved_at', '>', now()) // Don't cancel past reservations
             ->get();

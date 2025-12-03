@@ -31,7 +31,7 @@ class ReservationCancelledNotification extends Notification implements ShouldQue
             ->line("Date & Time: {$this->reservation->time_range}")
             ->line("Duration: {$this->reservation->hours_used} hours")
             ->line('If this cancellation was unexpected, please contact us immediately.')
-            ->action('View Reservations', url('/member'))
+            ->action('View Reservations', route('filament.member.resources.reservations.index', ['view' => $this->reservation->id]))
             ->line('You can make a new reservation anytime from your dashboard.')
             ->salutation('The CMC Team');
     }
@@ -41,7 +41,7 @@ class ReservationCancelledNotification extends Notification implements ShouldQue
         return [
             'title' => 'Reservation Cancelled',
             'message' => "Your practice space reservation for {$this->reservation->time_range} has been cancelled.",
-            'action_url' => url('/member'),
+            'action_url' => route('filament.member.resources.reservations.index', ['view' => $this->reservation->id]),
             'action_text' => 'View Reservations',
             'reservation_id' => $this->reservation->id,
         ];

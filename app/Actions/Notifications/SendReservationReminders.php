@@ -2,6 +2,7 @@
 
 namespace App\Actions\Notifications;
 
+use App\Enums\ReservationStatus;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Notifications\ReservationReminderNotification;
@@ -23,7 +24,7 @@ class SendReservationReminders
         $endOfTomorrow = $tomorrow->copy()->endOfDay();
 
         $reservations = Reservation::with('reservable')
-            ->where('status', 'confirmed')
+            ->status(ReservationStatus::Confirmed)
             ->whereBetween('reserved_at', [$startOfTomorrow, $endOfTomorrow])
             ->get();
 

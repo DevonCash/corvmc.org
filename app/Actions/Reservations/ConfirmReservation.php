@@ -19,14 +19,15 @@ class ConfirmReservation
     use AsAction;
 
     /**
-     * Confirm a pending reservation.
+     * Confirm a scheduled reservation.
      *
-     * This recalculates the cost with current credit balance and deducts credits.
-     * Should be called when user confirms a reservation within the confirmation window.
+     * This is just an acknowledgement from the user that they remember their reservation.
+     * Credits were already deducted at scheduling time.
+     * This recalculates cost in case pricing changed, but does NOT re-deduct credits.
      */
     public function handle(RehearsalReservation $reservation): RehearsalReservation
     {
-        if ($reservation->status !== ReservationStatus::Pending) {
+        if ($reservation->status !== ReservationStatus::Scheduled) {
             return $reservation;
         }
 
@@ -34,37 +35,16 @@ class ConfirmReservation
 
         // Complete the database transaction first
         $reservation = DB::transaction(function () use ($reservation, $user) {
-            // Recalculate cost with current credit balance
-            $costCalculation = CalculateReservationCost::run(
-                $user,
-                $reservation->reserved_at,
-                $reservation->reserved_until
-            );
-
-            // Deduct credits if any free hours are available
-            $freeBlocks = Reservation::hoursToBlocks($costCalculation['free_hours']);
-            if ($freeBlocks > 0) {
-                $user->deductCredit(
-                    $freeBlocks,
-                    CreditType::FreeHours,
-                    'reservation_usage',
-                    $reservation->id
-                );
-            }
-
-            // Update reservation with calculated values
+            // Note: Credits were already deducted at scheduling time
+            // We just update the status to confirmed
             $reservation->update([
                 'status' => ReservationStatus::Confirmed,
-                'cost' => $costCalculation['cost'],
-                'hours_used' => $costCalculation['total_hours'],
-                'free_hours_used' => $costCalculation['free_hours'],
             ]);
 
-            // Auto-confirm if cost is zero
+            // Mark payment as not applicable if cost is zero
             if ($reservation->cost->isZero()) {
                 $reservation->update([
-                    'payment_status' => PaymentStatus::Paid,
-                    'paid_at' => now(),
+                    'payment_status' => PaymentStatus::NotApplicable,
                 ]);
             }
 
@@ -102,7 +82,7 @@ class ConfirmReservation
             ->icon('tabler-check')
             ->color('success')
             ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation &&
-                $record->status === ReservationStatus::Pending &&
+                $record->status === ReservationStatus::Scheduled &&
                 User::me()?->can('manage reservations'))
             ->requiresConfirmation()
             ->action(function (Reservation $record) {

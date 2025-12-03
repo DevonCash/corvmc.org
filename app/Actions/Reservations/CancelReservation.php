@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Notifications\ReservationCancelledNotification;
 use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class CancelReservation
@@ -25,7 +26,7 @@ class CancelReservation
     {
         $reservation->update([
             'status' => ReservationStatus::Cancelled,
-            'notes' => $reservation->notes.($reason ? "\nCancellation reason: ".$reason : ''),
+            'notes' => $reservation->notes . ($reason ? "\nCancellation reason: " . $reason : ''),
         ]);
 
         // Refund credits if this was a rehearsal reservation with free hours used
@@ -61,7 +62,7 @@ class CancelReservation
             try {
                 $user->notify(new ReservationCancelledNotification($reservation));
             } catch (\Exception $e) {
-                \Log::error('Failed to send reservation cancellation notification', [
+                Log::error('Failed to send reservation cancellation notification', [
                     'reservation_id' => $reservation->id,
                     'user_id' => $user->id,
                     'error' => $e->getMessage(),
@@ -73,7 +74,7 @@ class CancelReservation
         try {
             SyncReservationToGoogleCalendar::run($reservation, 'delete');
         } catch (\Exception $e) {
-            \Log::error('Failed to delete cancelled reservation from Google Calendar', [
+            Log::error('Failed to delete cancelled reservation from Google Calendar', [
                 'reservation_id' => $reservation->id,
                 'error' => $e->getMessage(),
             ]);
@@ -86,14 +87,19 @@ class CancelReservation
     {
         return Action::make('cancel')
             ->label('Cancel')
+            ->modalSubmitActionLabel('Cancel Reservation')
+            ->modalCancelActionLabel('Keep Reservation')
+            ->modalDescription('Are you sure you want to cancel this reservation? This action cannot be undone.')
             ->icon('tabler-calendar-x')
             ->color('danger')
-            ->visible(fn (Reservation $record) => ($record instanceof RehearsalReservation && $record->reservable_id === User::me()?->id) ||
-                User::me()?->can('manage reservations'))
+            ->visible(
+                fn(Reservation $record) =>
+                $record->status->isActive()
+            )
+            ->authorize('update')
             ->requiresConfirmation()
             ->action(function (Reservation $record) {
                 static::run($record);
-
                 \Filament\Notifications\Notification::make()
                     ->title('Reservation cancelled')
                     ->success()
@@ -107,7 +113,7 @@ class CancelReservation
             ->label('Cancel Reservations')
             ->icon('tabler-calendar-x')
             ->color('danger')
-            ->visible(fn () => User::me()->can('manage reservations'))
+            ->authorize('manage reservations')
             ->requiresConfirmation()
             ->action(function (Collection $records) {
                 foreach ($records as $record) {
@@ -115,6 +121,6 @@ class CancelReservation
                 }
             })
             ->successNotificationTitle('Reservations cancelled')
-            ->successNotification(fn (Collection $records) => $records->count().' reservations marked as cancelled');
+            ->successNotification(fn(Collection $records) => $records->count() . ' reservations marked as cancelled');
     }
 }

@@ -8,7 +8,7 @@ use Filament\Support\Contracts\HasLabel;
 
 enum ReservationStatus: string implements HasColor, HasIcon, HasLabel
 {
-    case Pending = 'pending';
+    case Scheduled = 'pending';
     case Confirmed = 'confirmed';
     case Cancelled = 'cancelled';
     case Completed = 'completed';
@@ -16,7 +16,7 @@ enum ReservationStatus: string implements HasColor, HasIcon, HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::Pending => 'Pending',
+            self::Scheduled => 'Scheduled',
             self::Confirmed => 'Confirmed',
             self::Cancelled => 'Cancelled',
             self::Completed => 'Completed',
@@ -27,7 +27,7 @@ enum ReservationStatus: string implements HasColor, HasIcon, HasLabel
     {
         return match ($this) {
             self::Confirmed => 'tabler-clock-check',
-            self::Pending => 'tabler-dots-circle-horizontal',
+            self::Scheduled => 'tabler-calendar-check',
             self::Cancelled => 'tabler-clock-x',
             self::Completed => 'tabler-circle-check',
         };
@@ -37,7 +37,7 @@ enum ReservationStatus: string implements HasColor, HasIcon, HasLabel
     {
         return match ($this) {
             self::Cancelled => 'danger',
-            self::Pending => 'warning',
+            self::Scheduled => 'info',
             self::Confirmed, self::Completed => 'success',
         };
     }
@@ -47,9 +47,9 @@ enum ReservationStatus: string implements HasColor, HasIcon, HasLabel
         return ! in_array($this, [self::Cancelled, self::Completed]);
     }
 
-    public function isPending(): bool
+    public function isScheduled(): bool
     {
-        return $this === self::Pending;
+        return $this === self::Scheduled;
     }
 
     public function isConfirmed(): bool

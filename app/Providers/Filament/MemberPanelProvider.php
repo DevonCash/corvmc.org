@@ -32,6 +32,7 @@ class MemberPanelProvider extends PanelProvider
             ->emailVerification()
             ->font('Lexend')
             ->darkMode()
+            ->breadcrumbs(false)
             ->colors([
                 'primary' => [
                     50 => 'oklch(0.98 0.04 43)',
