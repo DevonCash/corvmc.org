@@ -8,7 +8,7 @@ use App\Enums\ReservationStatus;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;
-use Filament\Actions\Action;
+use App\Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -19,12 +19,6 @@ class MarkReservationAsComped
 
     public function handle(Reservation $reservation, ?string $notes = null): void
     {
-        // If the reservation is pending, confirm it first
-        if ($reservation instanceof RehearsalReservation && $reservation->status === ReservationStatus::Pending) {
-            $reservation = ConfirmReservation::run($reservation);
-            $reservation->refresh();
-        }
-
         $reservation->update([
             'payment_status' => PaymentStatus::Comped,
             'payment_method' => 'comp',
@@ -39,10 +33,8 @@ class MarkReservationAsComped
             ->label('Comp')
             ->icon('tabler-gift')
             ->color('info')
-            ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation &&
-                ! $record->cost->isZero() &&
-                $record->isUnpaid() &&
-                User::me()->can('manage reservations'))
+            ->authorize('manage reservations')
+            ->visible(fn(Reservation $record) => $record->requiresPayment())
             ->schema([
                 Textarea::make('comp_reason')
                     ->label('Comp Reason')
@@ -66,7 +58,7 @@ class MarkReservationAsComped
             ->label('Comp Reservations')
             ->icon('tabler-gift')
             ->color('info')
-            ->visible(fn () => User::me()->can('manage reservations'))
+            ->authorize('manage reservations')
             ->schema([
                 Textarea::make('comp_reason')
                     ->label('Comp Reason')
@@ -77,13 +69,13 @@ class MarkReservationAsComped
             ->action(function (Collection $records, array $data) {
                 $count = 0;
                 foreach ($records as $record) {
-                    if ($record instanceof Reservation && $record->cost->isPositive() && $record->isUnpaid()) {
+                    if ($record->requiresPayment()) {
                         static::run($record, $data['comp_reason']);
                         $count++;
                     }
                 }
             })
             ->successNotificationTitle('Reservations comped')
-            ->successNotification(fn (Collection $records) => $records->filter(fn ($r) => $r instanceof Reservation && $r->cost->isPositive() && $r->isUnpaid())->count().' reservations marked as comped');
+            ->successNotification(fn(Collection $records) => $records->filter(fn($r) => $r->requiresPayment())->count() . ' reservations marked as comped');
     }
 }

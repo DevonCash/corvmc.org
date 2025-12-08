@@ -73,13 +73,8 @@ class CreateReservation extends CreateRecord
 
     protected function shouldRedirectToCheckout(Reservation $record): bool
     {
-        // Must have a positive cost
-        if ($record->cost->isZero() || $record->cost->isNegative()) {
-            return false;
-        }
-
-        // Must be unpaid
-        if (! $record->isUnpaid()) {
+        // Must require payment
+        if (! $record->requiresPayment()) {
             return false;
         }
 

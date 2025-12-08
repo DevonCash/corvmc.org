@@ -10,7 +10,7 @@ use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Notifications\ReservationConfirmedNotification;
-use Filament\Actions\Action;
+use App\Filament\Actions\Action;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 

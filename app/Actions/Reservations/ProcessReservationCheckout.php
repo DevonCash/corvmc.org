@@ -2,6 +2,7 @@
 
 namespace App\Actions\Reservations;
 
+use App\Enums\PaymentStatus;
 use App\Models\Reservation;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -41,7 +42,7 @@ class ProcessReservationCheckout
             }
 
             // Skip if already paid (idempotency check)
-            if ($reservation->isPaid()) {
+            if ($reservation->payment_status == PaymentStatus::Paid) {
                 Log::info('Reservation already paid, skipping', [
                     'reservation_id' => $reservationId,
                     'session_id' => $sessionId,

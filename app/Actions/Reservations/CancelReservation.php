@@ -8,9 +8,9 @@ use App\Enums\ReservationStatus;
 use App\Models\CreditTransaction;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
-use App\Models\User;
 use App\Notifications\ReservationCancelledNotification;
-use Filament\Actions\Action;
+use App\Filament\Actions\Action;
+use Filament\Tables\Columns\Concerns\HasRecord;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -18,12 +18,17 @@ use Lorisleiva\Actions\Concerns\AsAction;
 class CancelReservation
 {
     use AsAction;
+    use HasRecord;
 
     /**
      * Cancel a reservation.
      */
     public function handle(Reservation $reservation, ?string $reason = null): Reservation
     {
+        if (!$reservation) {
+            throw new \InvalidArgumentException('Reservation not found.');
+        }
+
         $reservation->update([
             'status' => ReservationStatus::Cancelled,
             'notes' => $reservation->notes . ($reason ? "\nCancellation reason: " . $reason : ''),
@@ -85,7 +90,7 @@ class CancelReservation
 
     public static function filamentAction(): Action
     {
-        return Action::make('cancel')
+        return Action::make('cancelReservation')
             ->label('Cancel')
             ->modalSubmitActionLabel('Cancel Reservation')
             ->modalCancelActionLabel('Keep Reservation')
@@ -93,12 +98,11 @@ class CancelReservation
             ->icon('tabler-calendar-x')
             ->color('danger')
             ->visible(
-                fn(Reservation $record) =>
-                $record->status->isActive()
+                fn(?Reservation $record) => $record?->status->isActive()
             )
             ->authorize('update')
             ->requiresConfirmation()
-            ->action(function (Reservation $record) {
+            ->action(function (?Reservation $record) {
                 static::run($record);
                 \Filament\Notifications\Notification::make()
                     ->title('Reservation cancelled')
@@ -109,7 +113,7 @@ class CancelReservation
 
     public static function filamentBulkAction(): Action
     {
-        return Action::make('bulk_cancel')
+        return Action::make('bulkCancelReservations')
             ->label('Cancel Reservations')
             ->icon('tabler-calendar-x')
             ->color('danger')

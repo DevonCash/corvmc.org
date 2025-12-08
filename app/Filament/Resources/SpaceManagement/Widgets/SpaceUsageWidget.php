@@ -31,21 +31,7 @@ class SpaceUsageWidget extends Widget
             ->whereDate('reserved_at', today())
             ->where('status', '!=', ReservationStatus::Cancelled->value)
             ->orderBy('reserved_at', 'asc')
-            ->get()
-            ->map(function ($r) {
-                return [
-                    'type' => $r->getReservationTypeLabel(),
-                    'type_class' => get_class($r),
-                    'model' => $r,
-                    'start' => $r->reserved_at,
-                    'end' => $r->reserved_until,
-                    'title' => $r->getDisplayTitle(),
-                    'duration' => $r->duration,
-                    'status' => $r->status,
-                    'payment_status' => $r instanceof \App\Models\RehearsalReservation ? $r->payment_status : null,
-                    'cost' => $r instanceof \App\Models\RehearsalReservation ? $r->cost : null,
-                ];
-            });
+            ->get();
     }
 
     public function getViewData(): array
@@ -63,8 +49,8 @@ class SpaceUsageWidget extends Widget
             'todaysCount' => $today->count(),
             'hoursToday' => $today->sum('duration'),
             'revenueToday' => $todayRehearsals
-                ->filter(fn ($r) => $r['cost'] !== null && $r['payment_status'] === PaymentStatus::Paid)
-                ->sum(fn ($r) => $r['cost']->getMinorAmount()->toInt()) / 100,
+                ->filter(fn($r) => $r['cost'] !== null && $r['payment_status'] === PaymentStatus::Paid)
+                ->sum(fn($r) => $r['cost']->getMinorAmount()->toInt()) / 100,
             'rehearsalCount' => $todayRehearsals->count(),
             'productionCount' => $todayProductions->count(),
         ];

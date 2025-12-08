@@ -26,10 +26,10 @@ enum ReservationStatus: string implements HasColor, HasIcon, HasLabel
     public function getIcon(): string
     {
         return match ($this) {
-            self::Confirmed => 'tabler-clock-check',
-            self::Scheduled => 'tabler-calendar-check',
-            self::Cancelled => 'tabler-clock-x',
-            self::Completed => 'tabler-circle-check',
+            self::Confirmed => 'tabler-calendar-check',
+            self::Scheduled => 'tabler-calendar-event',
+            self::Cancelled => 'tabler-calendar-cancel',
+            self::Completed => 'tabler-checkbox',
         };
     }
 

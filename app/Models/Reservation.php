@@ -3,14 +3,21 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use App\Concerns\HasPaymentStatus;
 use App\Concerns\HasTimePeriod;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Base class for all reservation types using Single Table Inheritance.
@@ -81,9 +88,9 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @method static Builder<static>|Reservation whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Reservation extends Model
+class Reservation extends Model implements HasLabel, HasIcon, HasColor
 {
-    use HasFactory, HasTimePeriod;
+    use HasFactory, HasTimePeriod, HasPaymentStatus, LogsActivity;
 
     protected $table = 'reservations';
 
@@ -95,7 +102,6 @@ class Reservation extends Model
     {
         return [
             'status' => ReservationStatus::class,
-            'payment_status' => PaymentStatus::class,
             'reserved_at' => 'datetime',
             'reserved_until' => 'datetime',
             'cost' => MoneyCast::class . ':USD',
@@ -106,6 +112,14 @@ class Reservation extends Model
             'recurrence_pattern' => 'array',
             'instance_date' => 'date',
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->useLogName(static::getLabel())
+            ->setDescriptionForEvent(fn(string $eventName) => "Reservation has been {$eventName}");
     }
 
     /**
@@ -212,7 +226,7 @@ class Reservation extends Model
      */
     public function getDisplayTitle(): string
     {
-        return 'Unknown';
+        throw new \RuntimeException('getDisplayTitle() not implemented in subclass of Reservation');
     }
 
     /**
@@ -227,42 +241,9 @@ class Reservation extends Model
         return $this->reservable instanceof User ? $this->reservable : null;
     }
 
-    /**
-     * Payment status methods (only applicable to RehearsalReservation).
-     * Base implementations return false/N/A for non-payment reservations.
-     */
-    public function isPaid(): bool
-    {
-        return false;
-    }
-
-    public function isComped(): bool
-    {
-        return false;
-    }
-
-    public function isUnpaid(): bool
-    {
-        return false;
-    }
-
-    public function isRefunded(): bool
-    {
-        return false;
-    }
-
     public function getCostDisplayAttribute(): string
     {
         return 'N/A';
-    }
-
-    public function getDurationAttribute(): float
-    {
-        if (! $this->reserved_at || ! $this->reserved_until) {
-            return 0;
-        }
-
-        return $this->reserved_at->diffInMinutes($this->reserved_until) / 60;
     }
 
     public function getTimeRangeAttribute(): string
@@ -277,14 +258,19 @@ class Reservation extends Model
 
         return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('M j, Y g:i A');
     }
-
-    public function getPaymentStatusBadgeAttribute(): array
+    public function getColor(): string|array
     {
-        // Default implementation for non-payment reservations
-        return [
-            'label' => 'N/A',
-            'color' => 'gray',
-        ];
+        return 'gray';
+    }
+
+    public function getLabel(): string
+    {
+        return 'Reservation';
+    }
+
+    public function getIcon(): string
+    {
+        return 'tabler-calendar';
     }
 
     /**
@@ -326,49 +312,21 @@ class Reservation extends Model
         return ($blocks * $minutesPerBlock) / 60;
     }
 
-    /**
-     * Check if reservation is in the confirmation window (3-7 days before).
-     */
-    public function isInConfirmationWindow(): bool
+    public function requiresPayment(): bool
     {
-        if (! $this->reserved_at) {
-            return false;
-        }
-
-        $daysUntilReservation = now()->diffInDays($this->reserved_at, false);
-
-        return $daysUntilReservation >= 3 && $daysUntilReservation <= 7;
-    }
-
-    /**
-     * Check if reservation is an immediate reservation (< 3 days).
-     */
-    public function isImmediate(): bool
-    {
-        if (! $this->reserved_at) {
-            return false;
-        }
-
-        $daysUntilReservation = now()->diffInDays($this->reserved_at, false);
-
-        return $daysUntilReservation < 3;
-    }
-
-    /**
-     * Scope to filter reservations by status.
-     */
-    public function scopeStatus(Builder $query, ReservationStatus $status): Builder
-    {
-        return $query->where('status', $status);
+        return $this->status->isActive()
+            && $this->cost->isPositive()
+            && $this->payment_status->isUnpaid();
     }
 
     /**
      * Scope to filter reservations that need attention.
      * Includes scheduled reservations about to be autocancelled (< 3 days) and past unpaid reservations.
      */
-    public function scopeNeedsAttention(Builder $query): Builder
+    #[Scope]
+    protected function needsAttention(Builder $query)
     {
-        return $query->where(function ($q) {
+        $query->where(function ($q) {
             $q->where(function ($q) {
                 // Scheduled reservations about to be autocancelled (< 3 days away)
                 $q->where('status', ReservationStatus::Scheduled)
@@ -383,47 +341,19 @@ class Reservation extends Model
         })->where('status', '!=', 'cancelled');
     }
 
-    /**
-     * Check if reservation can be confirmed (scheduled and within confirmation window or immediate).
-     */
-    public function canBeConfirmed(): bool
+
+
+    #[Scope]
+    protected function upcoming(Builder $query): void
     {
-        return $this->status->isScheduled() &&
-            ($this->isInConfirmationWindow() || $this->isImmediate());
+        $query->where('reserved_at', '>', now())
+            ->where('status', '!=', ReservationStatus::Cancelled)
+            ->where('status', '!=', ReservationStatus::Completed);
     }
 
-    /**
-     * Check if reservation should be auto-cancelled (scheduled and missed confirmation window).
-     */
-    public function shouldAutoCancel(): bool
+    #[Scope]
+    protected function status(Builder $query, ReservationStatus $status): void
     {
-        if (! $this->status->isScheduled() || ! $this->reserved_at) {
-            return false;
-        }
-
-        // Auto-cancel if we're now within 3 days and still not confirmed
-        $daysUntilReservation = now()->diffInDays($this->reserved_at, false);
-
-        return $daysUntilReservation < 3;
-    }
-
-    /**
-     * Get days until confirmation deadline (3 days before reservation).
-     */
-    public function daysUntilConfirmationDeadline(): ?int
-    {
-        if (! $this->reserved_at) {
-            return null;
-        }
-
-        $confirmationDeadline = $this->reserved_at->copy()->subDays(3);
-        $daysUntil = now()->diffInDays($confirmationDeadline, false);
-
-        return $daysUntil >= 0 ? $daysUntil : null;
-    }
-
-    public function requiresPayment(): bool
-    {
-        return ($this->status == ReservationStatus::Scheduled || $this->status == ReservationStatus::Confirmed) && $this->cost->isPositive() && $this->payment_status->isUnpaid();
+        $query->where('status', $status);
     }
 }

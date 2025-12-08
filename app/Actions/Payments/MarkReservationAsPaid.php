@@ -8,7 +8,7 @@ use App\Enums\ReservationStatus;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;
-use Filament\Actions\Action;
+use App\Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Collection;
@@ -40,10 +40,8 @@ class MarkReservationAsPaid
             ->label('Mark Paid')
             ->icon('tabler-cash')
             ->color('success')
-            ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation &&
-                ! $record->cost->isZero() &&
-                $record->isUnpaid() &&
-                User::me()->can('manage reservations'))
+            ->authorize('manage reservations')
+            ->visible(fn(Reservation $record) => $record->requiresPayment())
             ->schema([
                 Select::make('payment_method')
                     ->label('Payment Method')
@@ -78,7 +76,7 @@ class MarkReservationAsPaid
             ->label('Mark as Paid')
             ->icon('tabler-cash')
             ->color('success')
-            ->visible(fn () => User::me()->can('manage reservations'))
+            ->authorize('manage reservations')
             ->schema([
                 Select::make('payment_method')
                     ->label('Payment Method')
@@ -100,13 +98,13 @@ class MarkReservationAsPaid
             ->action(function (Collection $records, array $data) {
                 $count = 0;
                 foreach ($records as $record) {
-                    if ($record instanceof Reservation && $record->cost->isPositive() && $record->isUnpaid()) {
+                    if ($record->requiresPayment()) {
                         static::run($record, $data['payment_method'], $data['payment_notes'] ?? null);
                         $count++;
                     }
                 }
             })
             ->successNotificationTitle('Payments recorded')
-            ->successNotification(fn (Collection $records, array $data) => $records->filter(fn ($r) => $r instanceof Reservation && $r->cost->isPositive() && $r->isUnpaid())->count().' reservations marked as paid');
+            ->successNotification(fn(Collection $records, array $data) => $records->filter(fn($r) => $r->requiresPayment())->count() . ' reservations marked as paid');
     }
 }

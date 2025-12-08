@@ -44,7 +44,7 @@ class ReservationConfirmedNotification extends Notification implements ShouldQue
             $message->line('**Notes:** '.$this->reservation->notes);
         }
 
-        if ($this->reservation->isUnpaid() && ! $this->reservation->cost->isZero()) {
+        if ($this->reservation->requiresPayment()) {
             $message->line('**Payment Required:** Please bring payment or pay online before your session.');
         }
 

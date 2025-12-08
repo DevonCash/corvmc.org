@@ -36,23 +36,19 @@
                                     {{ $next->reserved_at->format('g:i A') }} - {{ $next->reserved_until->format('g:i A') }}
                                 </div>
                             </div>
-                            <x-filament::badge :color="$next->status?->getColor() ?? 'success'">
-                                {{ $next->status?->getLabel() ?? 'Confirmed' }}
+                            <x-filament::badge :color="$next->status?->getColor() ?? 'success'" :icon="$next->status?->getIcon()">
+                                {{ $next->status?->getLabel() }}
                             </x-filament::badge>
                         </div>
 
                         <div class="space-y-2">
+
                             <div class="flex items-center gap-2 text-sm">
                                 <x-filament::icon
-                                    icon="{{ $next->getReservationIcon() }}"
+                                    icon="{{ $next->getIcon() }}"
                                     class="w-4 h-4 text-gray-400"
                                 />
                                 <span class="font-medium">{{ $next->getDisplayTitle() }}</span>
-                            </div>
-
-                            <div class="flex items-center gap-2 text-sm">
-                                <x-filament::icon icon="tabler-clock" class="w-4 h-4 text-gray-400" />
-                                <span>{{ number_format($next->duration, 1) }} hours</span>
                             </div>
 
                             @if($isRehearsalReservation && $next->cost->isPositive())
@@ -108,15 +104,14 @@
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2 mb-1">
-                                            <x-filament::badge size="xs" :color="$isRehearsalRes ? 'primary' : 'warning'">
-                                                {{ $isRehearsalRes ? 'R' : 'P' }}
-                                            </x-filament::badge>
-                                            <span class="font-medium text-sm">{{ $item['start']->format('g:i A') }}</span>
+                                            <x-filament::icon :icon="$item->getIcon()">
+                                            </x-filament::icon>
+                                            <span class="font-medium text-sm">{{ $item->reserved_at->format('g:i A') }}</span>
                                             <span class="text-gray-400">→</span>
-                                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ $item['end']->format('g:i A') }}</span>
+                                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ $item->reserved_until->format('g:i A') }}</span>
                                         </div>
                                         <div class="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                            {{ $item['title'] }}
+                                            {{ $item->getDisplayTitle() }}
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2">

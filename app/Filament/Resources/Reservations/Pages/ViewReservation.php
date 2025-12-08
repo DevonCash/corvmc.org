@@ -16,38 +16,12 @@ class ViewReservation extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        $reservation = $this->getRecord();
-        $user = Auth::user();
         $actions = [];
 
         // Add confirm action for scheduled reservations
-        if (
-            $reservation instanceof \App\Models\RehearsalReservation &&
-            $reservation->canBeConfirmed() &&
-            ($reservation->reservable_id === $user->id || $user->can('manage reservations'))
-        ) {
-            $actions[] = ConfirmReservation::filamentAction();
-        }
-
-        // Add payment action if reservation requires payment and user owns it or has permission
-        if (
-            $reservation instanceof \App\Models\RehearsalReservation &&
-            $reservation->cost->isPositive() &&
-            ! $reservation->isPaid() &&
-            ($reservation->reservable_id === $user->id || $user->can('manage reservations'))
-        ) {
-
-            $actions[] = CreateCheckoutSession::filamentAction();
-        }
-
-        // Add cancel action for active reservations
-        if (
-            $reservation instanceof \App\Models\RehearsalReservation &&
-            $reservation->status->isActive() &&
-            ($reservation->reservable_id === $user->id || $user->can('manage reservations'))
-        ) {
-            $actions[] = CancelReservation::filamentAction();
-        }
+        $actions[] = ConfirmReservation::filamentAction();
+        $actions[] = CreateCheckoutSession::filamentAction();
+        $actions[] = CancelReservation::filamentAction();
 
         return $actions;
     }

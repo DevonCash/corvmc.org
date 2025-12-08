@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Represents a space reservation for an event.
- * 
+ *
  * Owned by an Event, includes setup and breakdown time.
  *
  * @property int $id
@@ -81,6 +81,10 @@ class EventReservation extends Reservation
 {
     use HasFactory, HasTimePeriod;
 
+    protected $attributes = [
+        'type' => self::class,
+    ];
+
     /**
      * Create a new factory instance for the model.
      */
@@ -88,27 +92,6 @@ class EventReservation extends Reservation
     {
         return ReservationFactory::new();
     }
-
-    // Table and primary key are inherited from parent
-
-    /**
-     * Get the name of the start time field for this model.
-     */
-    protected function getStartTimeField(): string
-    {
-        return 'reserved_at';
-    }
-
-    /**
-     * Get the name of the end time field for this model.
-     */
-    protected function getEndTimeField(): string
-    {
-        return 'reserved_until';
-    }
-
-    // Guarded is inherited from parent - using $guarded = ['id'] from Reservation
-    // Casts are inherited from parent Reservation class
 
     /**
      * The event that owns this space reservation.
@@ -120,12 +103,12 @@ class EventReservation extends Reservation
 
     // STI Abstract Method Implementations
 
-    public function getReservationTypeLabel(): string
+    public function getLabel(): string
     {
         return 'Event';
     }
 
-    public function getReservationIcon(): string
+    public function getIcon(): string
     {
         return 'tabler-calendar-event';
     }
@@ -143,42 +126,6 @@ class EventReservation extends Reservation
     // Event-Specific Methods
 
     /**
-     * Get the duration of the space reservation in hours.
-     */
-    public function getDurationAttribute(): float
-    {
-        if (! $this->reserved_at || ! $this->reserved_until) {
-            return 0;
-        }
-
-        return $this->reserved_at->diffInMinutes($this->reserved_until) / 60;
-    }
-
-    /**
-     * Get setup time in hours (before event start).
-     */
-    public function getSetupTimeAttribute(): float
-    {
-        if (! $this->reserved_at || ! $this->event?->start_time) {
-            return 0;
-        }
-
-        return $this->reserved_at->diffInMinutes($this->event->start_time) / 60;
-    }
-
-    /**
-     * Get breakdown time in hours (after event end).
-     */
-    public function getBreakdownTimeAttribute(): float
-    {
-        if (! $this->reserved_until || ! $this->event?->end_time) {
-            return 0;
-        }
-
-        return $this->event->end_time->diffInMinutes($this->reserved_until) / 60;
-    }
-
-    /**
      * Get a formatted time range for display.
      */
     public function getTimeRangeAttribute(): string
@@ -188,59 +135,9 @@ class EventReservation extends Reservation
         }
 
         if ($this->reserved_at->isSameDay($this->reserved_until)) {
-            return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('g:i A');
+            return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('g:i A');
         }
 
-        return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('M j, Y g:i A');
-    }
-
-    /**
-     * Check if reservation is confirmed.
-     */
-    public function isConfirmed(): bool
-    {
-        return $this->status === 'confirmed';
-    }
-
-    /**
-     * Check if reservation is cancelled.
-     */
-    public function isCancelled(): bool
-    {
-        return $this->status === 'cancelled';
-    }
-
-    /**
-     * Check if reservation is upcoming.
-     */
-    public function isUpcoming(): bool
-    {
-        return $this->reserved_at && $this->reserved_at->isFuture();
-    }
-
-    /**
-     * Check if reservation is in progress.
-     */
-    public function isInProgress(): bool
-    {
-        return $this->reserved_at && $this->reserved_until &&
-            $this->reserved_at->isPast() && $this->reserved_until->isFuture();
-    }
-
-    /**
-     * Event reservations don't have payment tracking.
-     * Payment is handled separately via tickets.
-     */
-    public function getCostDisplayAttribute(): string
-    {
-        return 'N/A';
-    }
-
-    /**
-     * Get formatted status display.
-     */
-    public function getStatusDisplayAttribute(): string
-    {
-        return ucfirst($this->status ?? '');
+        return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('M j, Y g:i A');
     }
 }

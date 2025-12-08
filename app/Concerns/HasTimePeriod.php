@@ -26,6 +26,22 @@ trait HasTimePeriod
         );
     }
 
+    public function getPeriodAttribute(): ?Period
+    {
+        return $this->createPeriod();
+    }
+
+    public function getDurationAttribute(): float
+    {
+        $period = $this->createPeriod();
+
+        if (! $period) {
+            return 0;
+        }
+
+        return $period->length() / 60;
+    }
+
     /**
      * Check if this model's time period overlaps with another period.
      */
