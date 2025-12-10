@@ -22,9 +22,9 @@ use Spatie\Image\Enums\Fit;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property string|null $title
  * @property string|null $description
- * @property \Illuminate\Support\Carbon $start_time
- * @property \Illuminate\Support\Carbon|null $end_time
- * @property \Illuminate\Support\Carbon|null $doors_time
+ * @property \Illuminate\Support\Carbon $start_datetime
+ * @property \Illuminate\Support\Carbon|null $end_datetime
+ * @property \Illuminate\Support\Carbon|null $doors_datetime
  * @property \Spatie\LaravelData\Contracts\BaseData|\Spatie\LaravelData\Contracts\TransformableData|null $location
  * @property string|null $event_link
  * @property string|null $ticket_url
@@ -107,8 +107,8 @@ use Spatie\Image\Enums\Fit;
  * @method static Builder<static>|Event whereDeletedAt($value)
  * @method static Builder<static>|Event whereDescription($value)
  * @method static Builder<static>|Event whereDistanceFromCorvallis($value)
- * @method static Builder<static>|Event whereDoorsTime($value)
- * @method static Builder<static>|Event whereEndTime($value)
+ * @method static Builder<static>|Event whereDoorsDatetime($value)
+ * @method static Builder<static>|Event whereEndDatetime($value)
  * @method static Builder<static>|Event whereEventLink($value)
  * @method static Builder<static>|Event whereEventType($value)
  * @method static Builder<static>|Event whereId($value)
@@ -117,7 +117,7 @@ use Spatie\Image\Enums\Fit;
  * @method static Builder<static>|Event whereOrganizerId($value)
  * @method static Builder<static>|Event wherePublishedAt($value)
  * @method static Builder<static>|Event whereRecurringSeriesId($value)
- * @method static Builder<static>|Event whereStartTime($value)
+ * @method static Builder<static>|Event whereStartDatetime($value)
  * @method static Builder<static>|Event whereStatus($value)
  * @method static Builder<static>|Event whereTicketPrice($value)
  * @method static Builder<static>|Event whereTicketUrl($value)
@@ -149,16 +149,16 @@ class Event extends ContentModel
     protected static string $creatorForeignKey = 'organizer_id';
 
     // Activity logging configuration
-    protected static array $loggedFields = ['title', 'description', 'start_time', 'end_time', 'status', 'visibility'];
+    protected static array $loggedFields = ['title', 'description', 'start_datetime', 'end_datetime', 'status', 'visibility'];
 
     protected static string $logTitle = 'Event';
 
     protected $fillable = [
         'title',
         'description',
-        'start_time',
-        'end_time',
-        'doors_time',
+        'start_datetime',
+        'end_datetime',
+        'doors_datetime',
         'location',
         'event_link',
         'ticket_url',
@@ -177,14 +177,27 @@ class Event extends ContentModel
         'distance_from_corvallis',
         'trust_points',
         'auto_approved',
+        // Virtual attributes for form handling
+        'event_date',
+        'start_time',
+        'end_time',
+        'doors_time',
     ];
+
+    /**
+     * Temporary storage for virtual date/time attributes during hydration.
+     */
+    protected ?string $tempEventDate = null;
+    protected ?string $tempStartTime = null;
+    protected ?string $tempEndTime = null;
+    protected ?string $tempDoorsTime = null;
 
     protected function casts(): array
     {
         return [
-            'start_time' => 'datetime',
-            'end_time' => 'datetime',
-            'doors_time' => 'datetime',
+            'start_datetime' => 'datetime',
+            'end_datetime' => 'datetime',
+            'doors_datetime' => 'datetime',
             'published_at' => 'datetime',
             'approved_at' => 'datetime',
             'moderation_reviewed_at' => 'datetime',
@@ -270,6 +283,128 @@ class Event extends ContentModel
     public function getGenresAttribute()
     {
         return $this->tagsWithType('genre');
+    }
+
+    /**
+     * Virtual attribute accessors for form handling.
+     * These extract date and time components from the datetime fields.
+     */
+
+    /**
+     * Get the event date (extracted from start_datetime).
+     */
+    public function getEventDateAttribute(): ?string
+    {
+        return $this->start_datetime?->format('Y-m-d');
+    }
+
+    /**
+     * Get the start time only (extracted from start_datetime).
+     */
+    public function getStartTimeAttribute(): ?string
+    {
+        // Only return the time if start_datetime exists and this isn't the actual database column
+        if (isset($this->attributes['start_datetime'])) {
+            return $this->start_datetime?->format('H:i');
+        }
+        return null;
+    }
+
+    /**
+     * Get the end time only (extracted from end_datetime).
+     */
+    public function getEndTimeAttribute(): ?string
+    {
+        // Only return the time if end_datetime exists and this isn't the actual database column
+        if (isset($this->attributes['end_datetime'])) {
+            return $this->end_datetime?->format('H:i');
+        }
+        return null;
+    }
+
+    /**
+     * Get the doors time only (extracted from doors_datetime).
+     */
+    public function getDoorsTimeAttribute(): ?string
+    {
+        // Only return the time if doors_datetime exists and this isn't the actual database column
+        if (isset($this->attributes['doors_datetime'])) {
+            return $this->doors_datetime?->format('H:i');
+        }
+        return null;
+    }
+
+    /**
+     * Virtual attribute mutators for form handling.
+     * These temporarily store values and combine them when all parts are present.
+     */
+
+    /**
+     * Set the event date (temporarily stores for later combination).
+     */
+    public function setEventDateAttribute($value): void
+    {
+        $this->tempEventDate = $value;
+        $this->combineVirtualDateTimeAttributes();
+    }
+
+    /**
+     * Set the start time only (temporarily stores for later combination).
+     */
+    public function setStartTimeAttribute($value): void
+    {
+        $this->tempStartTime = $value;
+        $this->combineVirtualDateTimeAttributes();
+    }
+
+    /**
+     * Set the end time only (temporarily stores for later combination).
+     */
+    public function setEndTimeAttribute($value): void
+    {
+        $this->tempEndTime = $value;
+        $this->combineVirtualDateTimeAttributes();
+    }
+
+    /**
+     * Set the doors time only (temporarily stores for later combination).
+     */
+    public function setDoorsTimeAttribute($value): void
+    {
+        $this->tempDoorsTime = $value;
+        $this->combineVirtualDateTimeAttributes();
+    }
+
+    /**
+     * Combine the virtual date/time attributes into actual datetime fields.
+     */
+    protected function combineVirtualDateTimeAttributes(): void
+    {
+        $timezone = config('app.timezone');
+
+        // Combine event_date + start_time -> start_datetime
+        if ($this->tempEventDate && $this->tempStartTime) {
+            $this->attributes['start_datetime'] = \Carbon\Carbon::parse(
+                "{$this->tempEventDate} {$this->tempStartTime}",
+                $timezone
+            );
+        }
+
+        // Combine event_date + end_time -> end_datetime
+        if ($this->tempEventDate && $this->tempEndTime) {
+            $this->attributes['end_datetime'] = \Carbon\Carbon::parse(
+                "{$this->tempEventDate} {$this->tempEndTime}",
+                $timezone
+            );
+        }
+
+        // Combine event_date + doors_time -> doors_datetime
+        if ($this->tempEventDate && $this->tempDoorsTime) {
+            $this->attributes['doors_datetime'] = \Carbon\Carbon::parse(
+                "{$this->tempEventDate} {$this->tempDoorsTime}",
+                $timezone
+            );
+        }
     }
 
     /**
@@ -546,15 +681,15 @@ class Event extends ContentModel
      */
     public function getDateRangeAttribute(): string
     {
-        if ($this->start_time && $this->end_time) {
-            if ($this->start_time->isSameDay($this->end_time)) {
-                return $this->start_time->format('M j, Y g:i A').' - '.$this->end_time->format('g:i A');
+        if ($this->start_datetime && $this->end_datetime) {
+            if ($this->start_datetime->isSameDay($this->end_datetime)) {
+                return $this->start_datetime->format('M j, Y g:i A').' - '.$this->end_datetime->format('g:i A');
             }
 
-            return $this->start_time->format('M j, Y g:i A').' - '.$this->end_time->format('M j, Y g:i A');
+            return $this->start_datetime->format('M j, Y g:i A').' - '.$this->end_datetime->format('M j, Y g:i A');
         }
 
-        return $this->start_time ? $this->start_time->format('M j, Y g:i A') : 'TBD';
+        return $this->start_datetime ? $this->start_datetime->format('M j, Y g:i A') : 'TBD';
     }
 
     /**
@@ -562,7 +697,7 @@ class Event extends ContentModel
      */
     public function isUpcoming(): bool
     {
-        return $this->start_time && $this->start_time->isFuture();
+        return $this->start_datetime && $this->start_datetime->isFuture();
     }
 
     /**
@@ -572,9 +707,9 @@ class Event extends ContentModel
     {
         return $query->where('published_at', '<=', now())
             ->whereNotNull('published_at')
-            ->where('start_time', '>', now())
+            ->where('start_datetime', '>', now())
             ->whereNotIn('status', [EventStatus::Cancelled, EventStatus::Postponed])
-            ->orderBy('start_time');
+            ->orderBy('start_datetime');
     }
 
     /**
@@ -584,9 +719,9 @@ class Event extends ContentModel
     {
         return $query->where('published_at', '<=', now())
             ->whereNotNull('published_at')
-            ->where('start_time', '<', now())
+            ->where('start_datetime', '<', now())
             ->whereNotIn('status', [EventStatus::Cancelled, EventStatus::Postponed])
-            ->orderBy('start_time', 'desc');
+            ->orderBy('start_datetime', 'desc');
     }
 
     /**
@@ -596,10 +731,10 @@ class Event extends ContentModel
     {
         return $query->where('published_at', '<=', now())
             ->whereNotNull('published_at')
-            ->where('start_time', '>=', now()->startOfDay())
-            ->where('start_time', '<=', now()->endOfDay())
+            ->where('start_datetime', '>=', now()->startOfDay())
+            ->where('start_datetime', '<=', now()->endOfDay())
             ->whereNotIn('status', [EventStatus::Cancelled, EventStatus::Postponed])
-            ->orderBy('start_time');
+            ->orderBy('start_datetime');
     }
 
     /**
@@ -609,11 +744,11 @@ class Event extends ContentModel
     {
         switch ($range) {
             case 'this_week':
-                return $query->whereBetween('start_time', [now()->startOfWeek(), now()->endOfWeek()]);
+                return $query->whereBetween('start_datetime', [now()->startOfWeek(), now()->endOfWeek()]);
             case 'this_month':
-                return $query->whereBetween('start_time', [now()->startOfMonth(), now()->endOfMonth()]);
+                return $query->whereBetween('start_datetime', [now()->startOfMonth(), now()->endOfMonth()]);
             case 'next_month':
-                return $query->whereBetween('start_time', [now()->addMonth()->startOfMonth(), now()->addMonth()->endOfMonth()]);
+                return $query->whereBetween('start_datetime', [now()->addMonth()->startOfMonth(), now()->addMonth()->endOfMonth()]);
             default:
                 return $query;
         }
@@ -825,11 +960,11 @@ class Event extends ContentModel
      */
     public function getDurationAttribute(): float
     {
-        if (! $this->start_time || ! $this->end_time) {
+        if (! $this->start_datetime || ! $this->end_datetime) {
             return 0;
         }
 
-        return $this->start_time->diffInMinutes($this->end_time) / 60;
+        return $this->start_datetime->diffInMinutes($this->end_datetime) / 60;
     }
 
     /**
@@ -863,8 +998,8 @@ class Event extends ContentModel
      */
     protected function syncSpaceReservation(): void
     {
-        $reservedAt = $this->start_time->copy()->subHours(2);
-        $reservedUntil = $this->end_time?->copy()->addHour() ?? $this->start_time->copy()->addHours(3);
+        $reservedAt = $this->start_datetime->copy()->subHours(2);
+        $reservedUntil = $this->end_datetime?->copy()->addHour() ?? $this->start_datetime->copy()->addHours(3);
 
         $this->spaceReservation()->updateOrCreate(
             [],
@@ -876,5 +1011,21 @@ class Event extends ContentModel
                 'notes' => "Setup/breakdown for event: {$this->title}",
             ]
         );
+    }
+
+    /**
+     * Override HasTimePeriod trait to use correct field names.
+     */
+    protected function getStartTimeField(): string
+    {
+        return 'start_datetime';
+    }
+
+    /**
+     * Override HasTimePeriod trait to use correct field names.
+     */
+    protected function getEndTimeField(): string
+    {
+        return 'end_datetime';
     }
 }

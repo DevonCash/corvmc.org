@@ -6,6 +6,7 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
@@ -95,56 +96,32 @@ class EventForm
             ->label('Event Date')
             ->timezone(config('app.timezone'))
             ->native(false)
-            ->required()
-            ->dehydrated(false)
-            ->afterStateHydrated(function (DatePicker $component, $record) {
-                if ($record?->start_time) {
-                    $component->state($record->start_time->format('Y-m-d'));
-                }
-            });
+            ->required();
     }
 
     protected static function doorsTimeField(): TimePicker
     {
-        return TimePicker::make('doors_time_only')
+        return TimePicker::make('doors_time')
             ->label('Doors Time')
             ->timezone(config('app.timezone'))
-            ->seconds(false)
-            ->dehydrated(false)
-            ->afterStateHydrated(function (TimePicker $component, $record) {
-                if ($record?->doors_time) {
-                    $component->state($record->doors_time->format('H:i'));
-                }
-            });
+            ->seconds(false);
     }
 
     protected static function startTimeField(): TimePicker
     {
-        return TimePicker::make('start_time_only')
+        return TimePicker::make('start_time')
             ->label('Start Time')
             ->timezone(config('app.timezone'))
             ->seconds(false)
-            ->required()
-            ->dehydrated(false)
-            ->afterStateHydrated(function (TimePicker $component, $record) {
-                if ($record?->start_time) {
-                    $component->state($record->start_time->format('H:i'));
-                }
-            });
+            ->required();
     }
 
     protected static function endTimeField(): TimePicker
     {
-        return TimePicker::make('end_time_only')
+        return TimePicker::make('end_time')
             ->label('End Time')
             ->timezone(config('app.timezone'))
-            ->seconds(false)
-            ->dehydrated(false)
-            ->afterStateHydrated(function (TimePicker $component, $record) {
-                if ($record?->end_time) {
-                    $component->state($record->end_time->format('H:i'));
-                }
-            });
+            ->seconds(false);
     }
 
     protected static function ticketingGrid(): Grid
@@ -158,6 +135,7 @@ class EventForm
             ->schema([
                 static::eventLinkField(),
                 static::ticketPriceField(),
+                static::notaflofField(),
             ]);
     }
 
@@ -213,6 +191,12 @@ class EventForm
             ]);
     }
 
+    protected static function notaflofField(): Hidden
+    {
+        return Hidden::make('notaflof')
+            ->default(false);
+    }
+
     protected static function locationFieldset(): Fieldset
     {
         return Fieldset::make('Location')
@@ -237,7 +221,6 @@ class EventForm
                     $component->state(! $record->location->isExternal());
                 }
             })
-            ->dehydrated(false)
             ->columnSpanFull();
     }
 

@@ -182,8 +182,8 @@ class ImportProductionsFromCsv extends Command
         return [
             'title' => $title,
             'date' => $date,
-            'start_time' => $showStart,
-            'end_time' => $showEnd,
+            'start_datetime' => $showStart,
+            'end_datetime' => $showEnd,
             'touring_bands' => $touringBands,
             'local_bands' => $localBands,
             'cover' => $coverStr,
@@ -202,9 +202,9 @@ class ImportProductionsFromCsv extends Command
         $event = Event::create([
             'title' => $data['title'],
             'description' => $this->buildDescription($data),
-            'start_time' => $data['start_time'],
-            'end_time' => $data['end_time'],
-            'doors_time' => $data['start_time']->copy()->subMinutes(30), // Doors 30 min before
+            'start_datetime' => $data['start_datetime'],
+            'end_datetime' => $data['end_datetime'],
+            'doors_datetime' => $data['start_datetime']->copy()->subMinutes(30), // Doors 30 min before
             'location' => LocationData::cmc(), // Default to CMC location
             'ticket_price' => $data['ticket_price'],
             'status' => 'scheduled',

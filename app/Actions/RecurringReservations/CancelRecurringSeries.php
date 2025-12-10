@@ -39,7 +39,7 @@ class CancelRecurringSeries
                 }
             } else {
                 $futureInstances = Event::where('recurring_series_id', $series->id)
-                    ->where('start_time', '>', now())
+                    ->where('start_datetime', '>', now())
                     ->where('status', 'approved')
                     ->get();
 

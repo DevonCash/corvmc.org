@@ -43,9 +43,9 @@ class EventFactory extends Factory
                 'Community Concert',
             ]),
             'description' => $this->faker->paragraphs(3, true),
-            'start_time' => $startTime,
-            'end_time' => $endTime,
-            'doors_time' => $doorsTime,
+            'start_datetime' => $startTime,
+            'end_datetime' => $endTime,
+            'doors_datetime' => $doorsTime,
             'location' => $this->faker->boolean(30)
                 ? LocationData::external($this->faker->randomElement([
                     'The Underground - 123 Main St, Corvallis, OR 97330',
@@ -114,9 +114,9 @@ class EventFactory extends Factory
         $doorsTime = (clone $startTime)->modify('-30 minutes');
 
         return $this->state(fn (array $attributes) => [
-            'start_time' => $startTime,
-            'end_time' => $endTime,
-            'doors_time' => $doorsTime,
+            'start_datetime' => $startTime,
+            'end_datetime' => $endTime,
+            'doors_datetime' => $doorsTime,
             'status' => EventStatus::Scheduled,
             'moderation_status' => ModerationStatus::Approved,
             'published_at' => $this->faker->dateTimeBetween('-2 weeks', 'now'),
@@ -133,9 +133,9 @@ class EventFactory extends Factory
         $doorsTime = (clone $startTime)->modify('-30 minutes');
 
         return $this->state(fn (array $attributes) => [
-            'start_time' => $startTime,
-            'end_time' => $endTime,
-            'doors_time' => $doorsTime,
+            'start_datetime' => $startTime,
+            'end_datetime' => $endTime,
+            'doors_datetime' => $doorsTime,
             'status' => EventStatus::Scheduled,
             'moderation_status' => ModerationStatus::Approved,
             'published_at' => $this->faker->dateTimeBetween('-7 months', $startTime),

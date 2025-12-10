@@ -32,13 +32,13 @@ class SpaceStatsWidget extends BaseWidget
         $weekReservationCount = $weekReservations->count();
 
         // This week's events using space
-        $weekEvents = Event::whereBetween('start_time', [
+        $weekEvents = Event::whereBetween('start_datetime', [
             now()->startOfWeek(),
             now()->endOfWeek(),
         ])->get()->filter(fn ($e) => $e->usesPracticeSpace());
 
         $weekEventHours = $weekEvents->sum(function ($e) {
-            return $e->start_time->diffInHours($e->end_time, true);
+            return $e->start_datetime->diffInHours($e->end_datetime, true);
         });
 
         $totalWeekHours = $weekHours + $weekEventHours;
@@ -76,13 +76,13 @@ class SpaceStatsWidget extends BaseWidget
             ->sum('hours_used');
 
         // Event hours using space
-        $events = Event::whereBetween('start_time', [
+        $events = Event::whereBetween('start_datetime', [
             now()->startOfWeek(),
             now()->endOfWeek(),
         ])->get()->filter(fn ($e) => $e->usesPracticeSpace());
 
         $eventHours = $events->sum(function ($e) {
-            return $e->start_time->diffInHours($e->end_time, true);
+            return $e->start_datetime->diffInHours($e->end_datetime, true);
         });
 
         $totalBookedHours = $bookedHours + $eventHours;

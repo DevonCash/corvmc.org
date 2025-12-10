@@ -51,13 +51,27 @@ class UpdateEvent
     protected function sendUpdateNotificationIfNeeded(Event $event, array $originalData, array $newData): void
     {
         try {
-            $significantFields = ['title', 'start_time', 'end_time', 'location', 'status'];
+            // Check both actual fields and virtual fields for significant changes
+            $significantFields = ['title', 'start_datetime', 'end_datetime', 'location', 'status'];
+            $virtualFields = ['event_date', 'start_time', 'end_time'];
             $hasSignificantChanges = false;
 
+            // Check actual database fields
             foreach ($significantFields as $field) {
                 if (isset($newData[$field]) && ($originalData[$field] ?? null) !== $newData[$field]) {
                     $hasSignificantChanges = true;
                     break;
+                }
+            }
+
+            // If no changes detected yet, check if virtual date/time fields were provided
+            // (which indicates the date/time was changed via the form)
+            if (!$hasSignificantChanges) {
+                foreach ($virtualFields as $field) {
+                    if (isset($newData[$field])) {
+                        $hasSignificantChanges = true;
+                        break;
+                    }
                 }
             }
 

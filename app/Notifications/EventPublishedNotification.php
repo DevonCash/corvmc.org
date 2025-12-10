@@ -32,7 +32,7 @@ class EventPublishedNotification extends Notification
             ->subject("Event Published: {$this->event->title}")
             ->greeting("Hello, {$notifiable->name}!")
             ->line("The event '{$this->event->title}' has been published and is now live!")
-            ->line("Date: {$this->event->start_time->format('M j, Y g:i A')}")
+            ->line("Date: {$this->event->start_datetime->format('M j, Y g:i A')}")
             ->when($this->event->location, function ($mail) {
                 /** @var \App\Data\VenueLocationData $location */
                 $location = $this->event->location;
