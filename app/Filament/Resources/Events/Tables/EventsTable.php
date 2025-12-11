@@ -32,41 +32,19 @@ class EventsTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('title')
                     ->searchable(),
-                TextColumn::make('start_date')
-                    ->state(fn ($record) => $record->start_time)
-                    ->date(),
-                TextColumn::make('start_time')
-                    ->description(fn ($record) => 'Doors '.$record->start_time->format('g:i A'))
-                    ->dateTime('g:i A')
-                    ->suffix(fn ($record) => ' - '.$record->end_time?->format('g:i A'))
-                    ->sortable(),
+                TextColumn::make('start_datetime')
+                    ->sortable()
+                    ->label('Start Time')
+                    ->dateTime('M d, Y H:i A'),
                 TextColumn::make('status')
                     ->searchable(),
-                IconColumn::make('published_at')
-                    ->default(false)
-                    ->label('Published')
+                IconColumn::make('publication_status')
+                    ->label('Publication')
                     ->alignCenter()
-                    ->icon(function ($state) {
-                        if (! $state) {
-                            return 'tabler-clock-edit';
-                        }
-                        if ($state->isFuture()) {
-                            return 'tabler-clock';
-                        }
-
-                        return 'tabler-circle-check';
-                    })
-                    ->color(function ($state) {
-                        if (! $state) {
-                            return 'gray';
-                        }
-                        if ($state->isFuture()) {
-                            return 'warning';
-                        }
-
-                        return 'success';
-                    })
-                    ->tooltip(fn ($state) => $state ? 'Published on '.$state->format('M j, Y H:i A') : 'Not published'),
+                    ->tooltip(fn(IconColumn $column, $record): ?string => match ($column->getState()) {
+                        'scheduled' => 'This event is scheduled to be published at ' . $column->getRecord()->published_at->format('M d, Y H:i A') . '.',
+                        default => $record->publication_status->getLabel()
+                    }),
                 TextColumn::make('organizer.name')
                     ->sortable(),
             ])

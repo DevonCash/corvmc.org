@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\MoneyCast;
 use App\Concerns\HasPaymentStatus;
+use App\Concerns\HasRecurringSeries;
 use App\Concerns\HasTimePeriod;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
@@ -90,7 +91,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  */
 class Reservation extends Model implements HasLabel, HasIcon, HasColor
 {
-    use HasFactory, HasTimePeriod, HasPaymentStatus, LogsActivity;
+    use HasFactory, HasPaymentStatus, HasRecurringSeries, HasTimePeriod, LogsActivity;
 
     protected $table = 'reservations';
 
@@ -184,22 +185,6 @@ class Reservation extends Model implements HasLabel, HasIcon, HasColor
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Relationship to the recurring series this reservation belongs to.
-     */
-    public function recurringSeries(): BelongsTo
-    {
-        return $this->belongsTo(RecurringSeries::class, 'recurring_series_id');
-    }
-
-    /**
-     * Check if this reservation is part of a recurring series.
-     */
-    public function isRecurring(): bool
-    {
-        return $this->recurring_series_id !== null;
     }
 
     /**

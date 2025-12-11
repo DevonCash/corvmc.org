@@ -10,11 +10,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Fix the sequence for events table after migration
-        DB::statement("SELECT setval('events_id_seq', (SELECT MAX(id) FROM events))");
+        // Only run on PostgreSQL (not SQLite for tests)
+        if (DB::getDriverName() === 'pgsql') {
+            // Fix the sequence for events table after migration
+            DB::statement("SELECT setval('events_id_seq', (SELECT MAX(id) FROM events))");
 
-        // Fix the sequence for event_bands table after migration
-        DB::statement("SELECT setval('event_bands_id_seq', (SELECT MAX(id) FROM event_bands))");
+            // Fix the sequence for event_bands table after migration
+            DB::statement("SELECT setval('event_bands_id_seq', (SELECT MAX(id) FROM event_bands))");
+        }
     }
 
     /**

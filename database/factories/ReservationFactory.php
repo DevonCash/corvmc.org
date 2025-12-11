@@ -30,7 +30,7 @@ class ReservationFactory extends Factory
             'reservable_id' => User::factory(),
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
-            'status' => $this->faker->randomElement([ReservationStatus::Pending, ReservationStatus::Confirmed, ReservationStatus::Cancelled]),
+            'status' => $this->faker->randomElement([ReservationStatus::Scheduled, ReservationStatus::Confirmed, ReservationStatus::Cancelled]),
             'payment_status' => PaymentStatus::Unpaid,
             'cost' => function (array $attributes) use ($duration) {
                 // Simple cost calculation - will be overridden by action when needed
@@ -68,7 +68,7 @@ class ReservationFactory extends Factory
     public function pending(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => ReservationStatus::Pending,
+            'status' => ReservationStatus::Scheduled,
         ]);
     }
 

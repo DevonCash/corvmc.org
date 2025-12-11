@@ -46,7 +46,7 @@ class AwardTrustPoints
             $balance->save();
 
             // Check if achievement unlocked
-            $this->checkAchievement($user, $contentType, $oldBalance, $newBalance);
+            // $this->checkAchievement($user, $contentType, $oldBalance, $newBalance);
 
             // Record transaction
             $transaction = TrustTransaction::create([

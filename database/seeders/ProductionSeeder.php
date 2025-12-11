@@ -53,7 +53,6 @@ class ProductionSeeder extends Seeder
             $event = Event::factory()
                 ->create([
                     'status' => 'scheduled',
-                    'moderation_status' => 'pending', // These need moderation review
                     'organizer_id' => $users->random()->id,
                     'published_at' => null,
                 ]);

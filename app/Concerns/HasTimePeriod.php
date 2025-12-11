@@ -2,6 +2,7 @@
 
 namespace App\Concerns;
 
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
 
@@ -111,5 +112,24 @@ trait HasTimePeriod
     protected function getEndTimeField(): string
     {
         return 'end_time';
+    }
+
+    /**
+     * Scope to filter by common date ranges.
+     */
+    public function scopeDateRange(Builder $query, string $range): Builder
+    {
+        $startField = $this->getStartTimeField();
+
+        switch ($range) {
+            case 'this_week':
+                return $query->whereBetween($startField, [now()->startOfWeek(), now()->endOfWeek()]);
+            case 'this_month':
+                return $query->whereBetween($startField, [now()->startOfMonth(), now()->endOfMonth()]);
+            case 'next_month':
+                return $query->whereBetween($startField, [now()->addMonth()->startOfMonth(), now()->addMonth()->endOfMonth()]);
+            default:
+                return $query;
+        }
     }
 }

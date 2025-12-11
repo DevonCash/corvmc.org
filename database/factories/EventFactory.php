@@ -2,10 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Data\LocationData;
 use App\Enums\EventStatus;
-use App\Enums\ModerationStatus;
 use App\Enums\Visibility;
+use App\Models\Venue;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -46,18 +45,14 @@ class EventFactory extends Factory
             'start_datetime' => $startTime,
             'end_datetime' => $endTime,
             'doors_datetime' => $doorsTime,
-            'location' => $this->faker->boolean(30)
-                ? LocationData::external($this->faker->randomElement([
-                    'The Underground - 123 Main St, Corvallis, OR 97330',
-                    'City Music Hall - 456 Oak Ave, Corvallis, OR 97330',
-                    'Riverside Amphitheater - 789 River Rd, Corvallis, OR 97333',
-                    'The Corner Stage - 321 2nd St, Corvallis, OR 97330',
-                    'Main Street Venue - 654 Main St, Corvallis, OR 97330',
-                    'Park Pavilion - Avery Park, Corvallis, OR 97330',
-                    'Community Center - 2121 NW Kings Blvd, Corvallis, OR 97330',
-                    'The Music Box - 987 Monroe Ave, Corvallis, OR 97330',
-                ]))
-                : LocationData::cmc(),
+            'venue_id' => function () {
+                // 70% CMC, 30% external venue
+                if ($this->faker->boolean(70)) {
+                    return Venue::cmc()->first()?->id ?? 1;
+                }
+
+                return Venue::external()->inRandomOrder()->first()?->id ?? 1;
+            },
             'event_link' => $this->faker->boolean(60) ? $this->faker->randomElement([
                 'https://eventbrite.com/event/'.$this->faker->numerify('############'),
                 'https://ticketmaster.com/event/'.$this->faker->numerify('##########'),
@@ -81,7 +76,6 @@ class EventFactory extends Factory
                 ]);
             },
             'status' => EventStatus::Scheduled,
-            'moderation_status' => ModerationStatus::Approved,
             'visibility' => Visibility::Public,
             'published_at' => $this->faker->boolean(70) ? $this->faker->dateTimeBetween('-1 month', 'now') : null,
             'organizer_id' => null, // Staff events by default
@@ -99,7 +93,6 @@ class EventFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => EventStatus::Scheduled,
-            'moderation_status' => ModerationStatus::Approved,
             'published_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
         ]);
     }
@@ -118,7 +111,6 @@ class EventFactory extends Factory
             'end_datetime' => $endTime,
             'doors_datetime' => $doorsTime,
             'status' => EventStatus::Scheduled,
-            'moderation_status' => ModerationStatus::Approved,
             'published_at' => $this->faker->dateTimeBetween('-2 weeks', 'now'),
         ]);
     }
@@ -137,7 +129,6 @@ class EventFactory extends Factory
             'end_datetime' => $endTime,
             'doors_datetime' => $doorsTime,
             'status' => EventStatus::Scheduled,
-            'moderation_status' => ModerationStatus::Approved,
             'published_at' => $this->faker->dateTimeBetween('-7 months', $startTime),
         ]);
     }

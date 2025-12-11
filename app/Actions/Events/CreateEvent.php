@@ -18,29 +18,35 @@ class CreateEvent
     public function handle(array $data): Event
     {
         $event = DB::transaction(function () use ($data) {
-            // Convert location data if needed
-            if (isset($data['at_cmc'])) {
-                $data['location']['is_external'] = ! $data['at_cmc'];
-                unset($data['at_cmc']);
-            }
-
             $data['status'] ??= 'scheduled';
-            $data['moderation_status'] ??= 'pending';
 
             // Combine virtual date/time fields into datetime fields for conflict checking
             // This handles both the new format (event_date + time_only) and old format (start_time directly)
             $startTime = $this->getStartTime($data);
             $endTime = $this->getEndTime($data);
+            $doorsTime = $this->getDoorsTime($data);
 
             // Validate required fields
             if (! $startTime) {
                 throw new \InvalidArgumentException('Event start time is required but was not provided.');
             }
 
-            // Check for conflicts if this event uses the practice space
-            if ($startTime && $endTime) {
-                $isExternal = isset($data['location']['is_external']) ? $data['location']['is_external'] : false;
-                if (! $isExternal) {
+            // Convert time-only fields to full datetimes
+            if ($doorsTime) {
+                $data['doors_datetime'] = $doorsTime;
+                unset($data['doors_time']);
+            }
+
+            // Handle end_time if provided as time-only field
+            if ($endTime) {
+                $data['end_datetime'] = $endTime;
+                unset($data['end_time']);
+            }
+
+            // Check for conflicts if this event uses the CMC practice space
+            if ($startTime && $endTime && isset($data['venue_id'])) {
+                $venue = \App\Models\Venue::find($data['venue_id']);
+                if ($venue && $venue->is_cmc) {
                     $conflicts = \App\Actions\Reservations\GetAllConflicts::run($startTime, $endTime);
 
                     if ($conflicts['reservations']->isNotEmpty()) {
@@ -118,11 +124,51 @@ class CreateEvent
             );
         }
 
+        // Time-only format with start_datetime
+        if (isset($data['end_time']) && isset($data['start_datetime'])) {
+            $baseDate = $data['start_datetime'] instanceof Carbon
+                ? $data['start_datetime']
+                : Carbon::parse($data['start_datetime'], config('app.timezone'));
+
+            return Carbon::parse(
+                $baseDate->format('Y-m-d') . ' ' . $data['end_time'],
+                config('app.timezone')
+            );
+        }
+
         // Direct format: end_datetime
         if (isset($data['end_datetime'])) {
             return $data['end_datetime'] instanceof Carbon
                 ? $data['end_datetime']
                 : Carbon::parse($data['end_datetime'], config('app.timezone'));
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract or build the doors datetime from the data array.
+     * Handles time-only format by combining with start_datetime date.
+     */
+    protected function getDoorsTime(array $data): ?Carbon
+    {
+        // Time-only format with start_datetime
+        if (isset($data['doors_time']) && isset($data['start_datetime'])) {
+            $baseDate = $data['start_datetime'] instanceof Carbon
+                ? $data['start_datetime']
+                : Carbon::parse($data['start_datetime'], config('app.timezone'));
+
+            return Carbon::parse(
+                $baseDate->format('Y-m-d') . ' ' . $data['doors_time'],
+                config('app.timezone')
+            );
+        }
+
+        // Direct format: doors_datetime
+        if (isset($data['doors_datetime'])) {
+            return $data['doors_datetime'] instanceof Carbon
+                ? $data['doors_datetime']
+                : Carbon::parse($data['doors_datetime'], config('app.timezone'));
         }
 
         return null;

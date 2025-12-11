@@ -9,6 +9,7 @@ use App\Observers\ReservationObserver;
 use App\Observers\TagObserver;
 use App\Observers\UserObserver;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
+use Filament\Support\Facades\FilamentTimezone;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -28,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+
+        FilamentTimezone::set(config('app.timezone'));
 
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
             // Custom configurations go here

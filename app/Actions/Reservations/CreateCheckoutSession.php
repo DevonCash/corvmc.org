@@ -20,7 +20,7 @@ class CreateCheckoutSession
      */
     public function handle(RehearsalReservation $reservation)
     {
-        $user = $reservation->user;
+        $user = $reservation->reservable;
 
         // Ensure user has a Stripe customer ID
         if (! $user->hasStripeId()) {
