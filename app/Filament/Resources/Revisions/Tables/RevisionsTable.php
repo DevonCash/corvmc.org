@@ -2,11 +2,10 @@
 
 namespace App\Filament\Resources\Revisions\Tables;
 
+use App\Filament\Resources\Revisions\Actions\ReviewRevisionAction;
 use App\Models\Revision;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -23,62 +22,60 @@ class RevisionsTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                TextColumn::make('revisionable_type')
-                    ->label('Model Type')
-                    ->formatStateUsing(fn (Revision $record) => $record->getModelTypeName())
-                    ->searchable()
-                    ->sortable(),
-
-                TextColumn::make('changes_summary')
-                    ->label('Changes')
-                    ->getStateUsing(fn (Revision $record) => $record->getChangesSummary())
-                    ->wrap()
-                    ->limit(50),
-
                 TextColumn::make('submittedBy.name')
                     ->label('Submitted By')
+                    ->description(fn(Revision $record) => $record->submittedBy?->email)
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('status')
-                    ->badge()
-                    ->colors([
-                        'warning' => Revision::STATUS_PENDING,
-                        'success' => Revision::STATUS_APPROVED,
-                        'danger' => Revision::STATUS_REJECTED,
-                    ])
-                    ->sortable(),
+                TextColumn::make('revisionable_type')
+                    ->label('Item')
+                    ->description(fn(Revision $record) => $record->getModelTypeName() . ' #' . $record->revisionable_id)
+                    ->formatStateUsing(fn(Revision $record) => $record->getRevisionableTitle())
+                    ->searchable()
+                    ->wrap(),
 
-                IconColumn::make('auto_approved')
-                    ->label('Auto')
-                    ->boolean()
-                    ->trueIcon('tabler-circle-check')
-                    ->falseIcon('tabler-user')
-                    ->trueColor('success')
-                    ->falseColor('gray')
-                    ->tooltip(fn (Revision $record) => $record->auto_approved ? 'Auto-approved by trust system' : 'Manual review')
-                    ->toggleable(isToggledHiddenByDefault: false),
+                TextColumn::make('status')
+                    ->label('Approval')
+                    ->iconColor(fn($record) => match ($record->status) {
+                        Revision::STATUS_PENDING => 'warning',
+                        Revision::STATUS_APPROVED => 'success',
+                        Revision::STATUS_REJECTED => 'danger',
+                    })
+                    ->icon(fn(Revision $record) => $record->auto_approved ?
+                        match ($record->status) {
+                            Revision::STATUS_APPROVED => 'tabler-settings-check',
+                            Revision::STATUS_REJECTED => 'tabler-settings-cancel',
+                            default => null,
+                        } :
+                        match ($record->status) {
+                            Revision::STATUS_APPROVED => 'tabler-circle-check',
+                            Revision::STATUS_REJECTED => 'tabler-cancel',
+                            default => 'tabler-dots-circle-horizontal',
+                        })
+                    ->tooltip(fn(Revision $record) => $record->auto_approved ? 'Auto-approved by trust system' : null)
+                    ->sortable()
+                    ->description(fn($record) => $record->reviewed_at?->format('M j, Y g:i A'))
+                    ->formatStateUsing(fn(Revision $record) => $record->auto_approved ? 'Automatic' : ($record->reviewedBy?->name ?? 'Pending'))
+                    ->searchable(query: function ($query, $search) {
+                        $query->whereHas('reviewedBy', function ($query) use ($search) {
+                            $query->where('name', 'like', "%{$search}%");
+                        });
+                    }),
 
                 TextColumn::make('created_at')
                     ->label('Submitted')
                     ->dateTime()
                     ->sortable()
                     ->since()
-                    ->description(fn (Revision $record) => $record->created_at->format('M j, Y g:i A')),
-
-                TextColumn::make('reviewedBy.name')
-                    ->label('Reviewed By')
-                    ->searchable()
-                    ->sortable()
-                    ->placeholder('—')
-                    ->toggleable(),
+                    ->description(fn(Revision $record) => $record->created_at->format('M j, Y g:i A')),
 
                 TextColumn::make('reviewed_at')
                     ->label('Reviewed')
                     ->dateTime()
                     ->sortable()
                     ->since()
-                    ->description(fn ($state) => $state?->format('M j, Y g:i A'))
+                    ->description(fn($state) => $state?->format('M j, Y g:i A'))
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('revision_type')
@@ -130,9 +127,9 @@ class RevisionsTable
                         }
                     }),
             ])
+            ->recordAction('reviewRevision')
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ReviewRevisionAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

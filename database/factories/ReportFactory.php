@@ -3,8 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\Band;
+use App\Models\Event;
 use App\Models\MemberProfile;
-use App\Models\Production;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,15 +20,15 @@ class ReportFactory extends Factory
      */
     public function definition(): array
     {
-        // Default to Production to avoid Band foreign key issues
-        $production = Production::factory()->create();
+        // Default to Event
+        $event = Event::factory()->create();
 
         $reasons = ['inappropriate_content', 'spam', 'misleading_info', 'harassment', 'policy_violation'];
         $reason = fake()->randomElement($reasons);
 
         return [
-            'reportable_type' => Production::class,
-            'reportable_id' => $production->id,
+            'reportable_type' => Event::class,
+            'reportable_id' => $event->id,
             'reported_by_id' => User::factory()->create()->id,
             'reason' => $reason,
             'custom_reason' => $reason === 'other' ? fake()->sentence() : null,
@@ -76,14 +76,14 @@ class ReportFactory extends Factory
         ]);
     }
 
-    public function forProduction(): static
+    public function forEvent(): static
     {
         return $this->state(function (array $attributes) {
-            $production = Production::factory()->create();
+            $event = Event::factory()->create();
 
             return [
-                'reportable_type' => Production::class,
-                'reportable_id' => $production->id,
+                'reportable_type' => Event::class,
+                'reportable_id' => $event->id,
             ];
         });
     }

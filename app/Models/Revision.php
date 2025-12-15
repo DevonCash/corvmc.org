@@ -276,6 +276,26 @@ class Revision extends Model
     }
 
     /**
+     * Get a human-readable title for the revisionable model.
+     * Uses the model's getRevisionableTitle() method if available,
+     * otherwise falls back to type + ID.
+     */
+    public function getRevisionableTitle(): string
+    {
+        $revisionable = $this->revisionable;
+
+        if (! $revisionable) {
+            return $this->getModelTypeName() . ' #' . $this->revisionable_id;
+        }
+
+        if (method_exists($revisionable, 'getRevisionableTitle')) {
+            return $revisionable->getRevisionableTitle();
+        }
+
+        return $this->getModelTypeName() . ' #' . $this->revisionable_id;
+    }
+
+    /**
      * Scope for pending revisions.
      */
     public function scopePending($query)
