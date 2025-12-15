@@ -16,17 +16,19 @@ trait HasMemberBenefits
         return $this->membership_type === 'sustaining';
     }
 
-    public function getMonthlyFreeHours(): int {
-        if(!$this->isSustainingMember()) {
+    public function getMonthlyFreeHours(): int
+    {
+        if (! $this->isSustainingMember()) {
             return 0;
         }
 
-        if($this->subscribed()) {
+        if ($this->subscribed()) {
 
         }
     }
 
-    public function calculateFreeHours(int $contributionAmountInCents): int {
+    public function calculateFreeHours(int $contributionAmountInCents): int
+    {
         // For every $5 contributed, the user gets 1 free hour
         return floor($contributionAmountInCents / 500);
     }

@@ -80,6 +80,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $trust_balances_count
  * @property-read Collection<int, \App\Models\TrustTransaction> $trustTransactions
  * @property-read int|null $trust_transactions_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User boardMembers()
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User hasExpiredGenericTrial()
@@ -111,6 +112,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutPermission($permissions)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutRole($roles, $guard = null)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class User extends Authenticatable implements FilamentUser, HasAvatar

@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Builder;
 
 trait HasPublishing
 {
-
     public function getPublicationDatetimeField(): string
     {
         return static::$publicationDatetimeField ?? 'published_at';
     }
+
     /**
      * Initialize the trait.
      */
@@ -185,7 +185,7 @@ trait HasPublishing
         $publishedAtField = $this[$this->getPublicationDatetimeField()];
         if (is_null($publishedAtField)) {
             return PublicationStatus::Draft;
-        } else if ($publishedAtField->isFuture()) {
+        } elseif ($publishedAtField->isFuture()) {
             return PublicationStatus::Scheduled;
         } else {
             return PublicationStatus::Published;

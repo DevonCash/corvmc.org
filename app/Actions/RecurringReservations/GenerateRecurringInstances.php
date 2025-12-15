@@ -75,7 +75,7 @@ class GenerateRecurringInstances
                     'instance_date' => $date->toDateString(),
                     'is_recurring' => true,
                     'recurrence_pattern' => ['source' => 'recurring_series'],
-                    'status' => ReservationStatus::Pending,
+                    'status' => ReservationStatus::Reserved,
                 ]
             );
         }
@@ -100,27 +100,17 @@ class GenerateRecurringInstances
         $startDateTime = $date->copy()->setTimeFromTimeString($series->start_time->format('H:i:s'));
         $endDateTime = $date->copy()->setTimeFromTimeString($series->end_time->format('H:i:s'));
 
-        if ($series->recurable_type === Reservation::class) {
-            Reservation::create([
-                'user_id' => $series->user_id,
-                'recurring_series_id' => $series->id,
-                'instance_date' => $date->toDateString(),
-                'reserved_at' => $startDateTime,
-                'reserved_until' => $endDateTime,
-                'status' => ReservationStatus::Cancelled,
-                'cancellation_reason' => 'Scheduling conflict',
-                'is_recurring' => true,
-                'cost' => 0,
-            ]);
-        } else {
-            Event::create([
-                'organizer_id' => $series->user_id,
-                'recurring_series_id' => $series->id,
-                'instance_date' => $date->toDateString(),
-                'start_time' => $startDateTime,
-                'end_time' => $endDateTime,
-                'status' => 'cancelled',
-            ]);
-        }
+        Reservation::create([
+            'user_id' => $series->user_id,
+            'type' => $series->recurable_type,
+            'recurring_series_id' => $series->id,
+            'instance_date' => $date->toDateString(),
+            'reserved_at' => $startDateTime,
+            'reserved_until' => $endDateTime,
+            'status' => ReservationStatus::Cancelled,
+            'cancellation_reason' => 'Scheduling conflict',
+            'is_recurring' => true,
+            'cost' => 0,
+        ]);
     }
 }

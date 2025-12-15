@@ -131,7 +131,7 @@ class CreateEvent
                 : Carbon::parse($data['start_datetime'], config('app.timezone'));
 
             return Carbon::parse(
-                $baseDate->format('Y-m-d') . ' ' . $data['end_time'],
+                $baseDate->format('Y-m-d').' '.$data['end_time'],
                 config('app.timezone')
             );
         }
@@ -159,7 +159,7 @@ class CreateEvent
                 : Carbon::parse($data['start_datetime'], config('app.timezone'));
 
             return Carbon::parse(
-                $baseDate->format('Y-m-d') . ' ' . $data['doors_time'],
+                $baseDate->format('Y-m-d').' '.$data['doors_time'],
                 config('app.timezone')
             );
         }

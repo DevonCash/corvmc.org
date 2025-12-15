@@ -6,17 +6,13 @@ use App\Models\Venue;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
-use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class EventForm
@@ -107,7 +103,6 @@ class EventForm
             ->seconds(false);
     }
 
-
     protected static function endTimeField(): TimePicker
     {
         return TimePicker::make('end_datetime')
@@ -127,7 +122,7 @@ class EventForm
                     ->schema([
                         static::ticketPriceField(),
                         static::notaflofField(),
-                    ])
+                    ]),
             ]);
     }
 
@@ -141,7 +136,7 @@ class EventForm
             ->afterStateUpdated(function (TextInput $component, $state) {
                 // Ensure the URL starts with http:// or https://
                 if ($state && ! preg_match('/^https?:\/\//', $state)) {
-                    $component->state('https://' . ltrim($state, '/'));
+                    $component->state('https://'.ltrim($state, '/'));
                 }
             })
             ->columnSpan([
@@ -180,10 +175,10 @@ class EventForm
             ->searchable()
             ->preload()
             ->required()
-            ->default(fn() => Venue::cmc()->first()?->id)
-            ->getOptionLabelFromRecordUsing(fn(Venue $venue) => $venue->is_cmc
+            ->default(fn () => Venue::cmc()->first()?->id)
+            ->getOptionLabelFromRecordUsing(fn (Venue $venue) => $venue->is_cmc
                 ? $venue->name
-                : $venue->name . ' - ' . $venue->city)
+                : $venue->name.' - '.$venue->city)
             ->createOptionForm([
                 TextInput::make('name')
                     ->required()
@@ -241,7 +236,7 @@ class EventForm
                 }
                 $date = is_string($state) ? \Carbon\Carbon::parse($state) : $state;
 
-                return $date->isFuture() ? 'Publish in ' . $date->shortAbsoluteDiffForHumans() : 'Published';
+                return $date->isFuture() ? 'Publish in '.$date->shortAbsoluteDiffForHumans() : 'Published';
             })
             ->live();
     }

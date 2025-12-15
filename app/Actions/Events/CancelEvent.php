@@ -13,8 +13,8 @@ class CancelEvent
     /**
      * Cancel an event.
      *
-     * @param Event $event The event to cancel
-     * @param string|null $reason Optional cancellation reason
+     * @param  Event  $event  The event to cancel
+     * @param  string|null  $reason  Optional cancellation reason
      * @return Event The updated event
      */
     public function handle(Event $event, ?string $reason = null): Event

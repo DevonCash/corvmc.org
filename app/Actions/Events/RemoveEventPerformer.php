@@ -13,8 +13,8 @@ class RemoveEventPerformer
     /**
      * Remove a performer (band) from an event.
      *
-     * @param Event $event The event to remove the performer from
-     * @param Band $band The band to remove
+     * @param  Event  $event  The event to remove the performer from
+     * @param  Band  $band  The band to remove
      * @return bool True if performer was removed, false if not found
      */
     public function handle(Event $event, Band $band): bool

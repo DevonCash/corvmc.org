@@ -13,9 +13,9 @@ class RescheduleEvent
     /**
      * Reschedule an event to a new date/time by creating a new event listing.
      *
-     * @param Event $originalEvent The event to reschedule
-     * @param array $newEventData Data for the new event (must include start_time)
-     * @param string|null $reason Optional reason for rescheduling
+     * @param  Event  $originalEvent  The event to reschedule
+     * @param  array  $newEventData  Data for the new event (must include start_time)
+     * @param  string|null  $reason  Optional reason for rescheduling
      * @return Event The newly created event
      */
     public function handle(Event $originalEvent, array $newEventData, ?string $reason = null): Event

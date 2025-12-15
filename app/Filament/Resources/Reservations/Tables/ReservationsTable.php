@@ -11,7 +11,6 @@ use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;
 use App\Models\Reservation;
 use App\Models\User;
-use Filament\Infolists\Infolist;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
@@ -54,6 +53,7 @@ class ReservationsTable
                 SelectFilter::make('status')
                     ->options([
                         'pending' => 'Scheduled',
+                        'reserved' => 'Reserved',
                         'confirmed' => 'Confirmed',
                         'cancelled' => 'Cancelled',
                     ])

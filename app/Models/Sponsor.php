@@ -10,7 +10,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * Community Sponsor
- * 
+ *
  * Represents organizations and partners supporting CMC through cash sponsorships
  * or in-kind partnerships. Sponsors receive benefits based on their tier level.
  *
@@ -32,6 +32,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property-read string $tier_name
  * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
  * @property-read int|null $media_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor byTier(string $tier)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor cash()
@@ -58,6 +59,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereWebsiteUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Sponsor extends Model implements HasMedia

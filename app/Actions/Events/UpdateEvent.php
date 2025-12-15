@@ -4,8 +4,8 @@ namespace App\Actions\Events;
 
 use App\Models\Event;
 use App\Notifications\EventUpdatedNotification;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\{DB, Log};
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;
 

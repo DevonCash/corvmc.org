@@ -13,9 +13,9 @@ class UpdatePerformerSetLength
     /**
      * Update a performer's set length.
      *
-     * @param Event $event The event
-     * @param Band $band The band whose set length to update
-     * @param int $setLength The new set length in minutes
+     * @param  Event  $event  The event
+     * @param  Band  $band  The band whose set length to update
+     * @param  int  $setLength  The new set length in minutes
      * @return bool True if set length was updated, false if band not found
      */
     public function handle(Event $event, Band $band, int $setLength): bool

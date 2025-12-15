@@ -10,7 +10,7 @@ Tasks to work on in this project.
 
     Go through each of the email notifications and make sure each one is still completely true after revisions to the workflow.
 
-- [ ] Event creation workflow
+- [x] Event creation workflow
 
     Validate the event creation workflow. Create a new event, schedule it to be published, allow for cancellations, rescheduling, etc.
 

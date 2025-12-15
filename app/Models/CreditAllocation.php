@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CreditAllocation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CreditAllocation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CreditAllocation query()
@@ -39,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CreditAllocation whereStartsAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CreditAllocation whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CreditAllocation whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class CreditAllocation extends Model

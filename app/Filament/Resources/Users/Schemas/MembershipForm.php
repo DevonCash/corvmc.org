@@ -66,7 +66,7 @@ class MembershipForm
                     })
                     ->schema([
                         TextEntry::make('current_subscription')
-                            ->visible(fn(User $record) => !!$record->subscription())
+                            ->visible(fn (User $record) => (bool) $record->subscription())
                             ->label('Current Contribution')
                             ->helperText(function ($record) {
                                 $subscription = $record->subscription();
@@ -103,7 +103,7 @@ class MembershipForm
                                         if ($hasFeesCovered) {
                                             // Calculate total cost including fees
                                             $totalAmount = collect($stripeSubscription->items->data)
-                                                ->sum(fn($item) => $item->price->unit_amount);
+                                                ->sum(fn ($item) => $item->price->unit_amount);
                                             $totalCost = \Brick\Money\Money::ofMinor($totalAmount, 'USD');
 
                                             return sprintf(
@@ -165,6 +165,7 @@ class MembershipForm
                     ->columns(2)
                     ->visible(function ($record) {
                         $subscription = $record->subscription();
+
                         return $subscription && $subscription->onGracePeriod();
                     })
                     ->schema([
@@ -230,5 +231,4 @@ class MembershipForm
 
             ]);
     }
-
 }

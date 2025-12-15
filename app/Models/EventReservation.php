@@ -46,6 +46,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property-read \App\Models\RecurringSeries|null $recurringSeries
  * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent|null $reservable
  * @property-read \App\Models\User|null $user
+ *
  * @method static \Database\Factories\ReservationFactory factory($count = null, $state = [])
  * @method static Builder<static>|EventReservation needsAttention()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EventReservation newModelQuery()
@@ -75,23 +76,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EventReservation whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EventReservation whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EventReservation whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class EventReservation extends Reservation
 {
     use HasFactory, HasTimePeriod;
 
-    protected $attributes = [
-        'type' => self::class,
-    ];
-
     /**
      * Create a new factory instance for the model.
      */
     protected static function newFactory()
     {
-        return ReservationFactory::new();
+        return ReservationFactory::new()->setModelName(static::class);
     }
+
+    protected $attributes = [
+        'type' => self::class,
+    ];
 
     /**
      * The event that owns this space reservation.
@@ -135,9 +137,9 @@ class EventReservation extends Reservation
         }
 
         if ($this->reserved_at->isSameDay($this->reserved_until)) {
-            return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('g:i A');
+            return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('g:i A');
         }
 
-        return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('M j, Y g:i A');
+        return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('M j, Y g:i A');
     }
 }

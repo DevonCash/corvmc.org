@@ -17,8 +17,7 @@ class SyncEventSpaceReservation
      * This creates an EventReservation that blocks the practice space
      * for the event duration plus setup/breakdown time.
      *
-     * @param Event $event The event to sync the space reservation for
-     * @return void
+     * @param  Event  $event  The event to sync the space reservation for
      */
     public function handle(Event $event): void
     {

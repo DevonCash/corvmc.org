@@ -44,6 +44,7 @@ return new class extends Migration
                 if (! $location) {
                     // No location data, default to CMC
                     $event->update(['venue_id' => $cmcVenue->id]);
+
                     continue;
                 }
 
@@ -60,6 +61,7 @@ return new class extends Migration
                     if (empty($details)) {
                         // External but no details, still default to CMC
                         $event->update(['venue_id' => $cmcVenue->id]);
+
                         continue;
                     }
 

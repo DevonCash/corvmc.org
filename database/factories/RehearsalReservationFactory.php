@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Reservation>
  */
-class ReservationFactory extends Factory
+class RehearsalReservationFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -25,7 +25,7 @@ class ReservationFactory extends Factory
         $reservedUntil = (clone $reservedAt)->modify('+'.($duration * 60).' minutes');
 
         return [
-            'type' => $this->modelName(),
+            // Don't set 'type' here - let the model's $attributes or boot() method handle it
             'reservable_type' => User::class,
             'reservable_id' => User::factory(),
             'reserved_at' => $reservedAt,

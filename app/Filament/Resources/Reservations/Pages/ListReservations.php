@@ -37,7 +37,7 @@ class ListReservations extends ListRecords
     {
         return [
             'upcoming' => Tab::make()
-                ->modifyQueryUsing(fn(Builder $query) => $query->upcoming()),
+                ->modifyQueryUsing(fn (Builder $query) => $query->upcoming()),
             'all' => Tab::make(),
         ];
     }
@@ -95,5 +95,4 @@ class ListReservations extends ListRecords
     {
         return 'upcoming';
     }
-
 }

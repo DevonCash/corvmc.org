@@ -5,11 +5,11 @@ namespace App\Actions\Reservations;
 use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
 use App\Enums\CreditType;
 use App\Enums\ReservationStatus;
+use App\Filament\Actions\Action;
 use App\Models\CreditTransaction;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Notifications\ReservationCancelledNotification;
-use App\Filament\Actions\Action;
 use Filament\Tables\Columns\Concerns\HasRecord;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
@@ -25,17 +25,23 @@ class CancelReservation
      */
     public function handle(Reservation $reservation, ?string $reason = null): Reservation
     {
-        if (!$reservation) {
+        if (! $reservation) {
             throw new \InvalidArgumentException('Reservation not found.');
         }
 
+        // Capture original status before cancelling
+        $originalStatus = $reservation->status;
+
         $reservation->update([
             'status' => ReservationStatus::Cancelled,
-            'notes' => $reservation->notes . ($reason ? "\nCancellation reason: " . $reason : ''),
+            'notes' => $reservation->notes.($reason ? "\nCancellation reason: ".$reason : ''),
         ]);
 
         // Refund credits if this was a rehearsal reservation with free hours used
-        if ($reservation instanceof RehearsalReservation && $reservation->free_hours_used > 0) {
+        // Only refund for Scheduled/Confirmed status (Reserved status never had credits deducted)
+        if ($reservation instanceof RehearsalReservation &&
+            $reservation->free_hours_used > 0 &&
+            in_array($originalStatus->value, ['pending', 'confirmed'])) {
             $user = $reservation->getResponsibleUser();
 
             if ($user) {
@@ -98,7 +104,7 @@ class CancelReservation
             ->icon('tabler-calendar-x')
             ->color('danger')
             ->visible(
-                fn(?Reservation $record) => $record?->status->isActive()
+                fn (?Reservation $record) => $record?->status->isActive()
             )
             ->authorize('update')
             ->requiresConfirmation()
@@ -125,6 +131,6 @@ class CancelReservation
                 }
             })
             ->successNotificationTitle('Reservations cancelled')
-            ->successNotification(fn(Collection $records) => $records->count() . ' reservations marked as cancelled');
+            ->successNotification(fn (Collection $records) => $records->count().' reservations marked as cancelled');
     }
 }

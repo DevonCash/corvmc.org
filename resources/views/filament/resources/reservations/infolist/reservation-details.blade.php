@@ -108,7 +108,8 @@
                     match ($record->status) {
                         \App\Enums\ReservationStatus::Confirmed => 'text-success-500',
                         \App\Enums\ReservationStatus::Cancelled => 'text-danger-500',
-                        \App\Enums\ReservationStatus::Pending => 'text-warning-500',
+                        \App\Enums\ReservationStatus::Scheduled => 'text-info-500',
+                        \App\Enums\ReservationStatus::Reserved => 'text-warning-500',
                         default => 'text-gray-500',
                     }" />
             </dt>

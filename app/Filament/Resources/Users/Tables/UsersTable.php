@@ -146,6 +146,7 @@ class UsersTable
                     ->hiddenLabel()
                     ->redirectTo(function () {
                         $panel = filament('member');
+
                         return method_exists($panel, 'getUrl') ? $panel->getUrl() : '/member';
                     }),
 

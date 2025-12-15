@@ -9,6 +9,7 @@ use Filament\Support\Contracts\HasLabel;
 enum ReservationStatus: string implements HasColor, HasIcon, HasLabel
 {
     case Scheduled = 'pending';
+    case Reserved = 'reserved';
     case Confirmed = 'confirmed';
     case Cancelled = 'cancelled';
     case Completed = 'completed';
@@ -17,6 +18,7 @@ enum ReservationStatus: string implements HasColor, HasIcon, HasLabel
     {
         return match ($this) {
             self::Scheduled => 'Scheduled',
+            self::Reserved => 'Reserved',
             self::Confirmed => 'Confirmed',
             self::Cancelled => 'Cancelled',
             self::Completed => 'Completed',
@@ -28,6 +30,7 @@ enum ReservationStatus: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::Confirmed => 'tabler-calendar-check',
             self::Scheduled => 'tabler-calendar-event',
+            self::Reserved => 'tabler-hourglass',
             self::Cancelled => 'tabler-calendar-cancel',
             self::Completed => 'tabler-checkbox',
         };
@@ -38,6 +41,7 @@ enum ReservationStatus: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::Cancelled => 'danger',
             self::Scheduled => 'info',
+            self::Reserved => 'warning',
             self::Confirmed, self::Completed => 'success',
         };
     }
@@ -55,5 +59,10 @@ enum ReservationStatus: string implements HasColor, HasIcon, HasLabel
     public function isConfirmed(): bool
     {
         return $this === self::Confirmed;
+    }
+
+    public function isReserved(): bool
+    {
+        return $this === self::Reserved;
     }
 }

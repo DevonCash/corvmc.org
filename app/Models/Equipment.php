@@ -19,7 +19,7 @@ use Spatie\ModelStates\HasStates;
 
 /**
  * Represents equipment in the CMC gear lending library.
- * 
+ *
  * Tracks both donated and loaned equipment with detailed acquisition information
  * and current lending status to members.
  *
@@ -70,6 +70,7 @@ use Spatie\ModelStates\HasStates;
  * @property-read int|null $open_damage_reports_count
  * @property-read Equipment|null $parent
  * @property-read \App\Models\User|null $provider
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment available()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment components()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment donated()
@@ -116,6 +117,7 @@ use Spatie\ModelStates\HasStates;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Equipment withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Equipment extends Model implements HasMedia

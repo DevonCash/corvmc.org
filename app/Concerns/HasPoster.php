@@ -71,7 +71,7 @@ trait HasPoster
      */
     protected function getPosterPlaceholderUrl(int $width, int $height): string
     {
-        return "https://picsum.photos/{$width}/{$height}?random=" . $this->id;
+        return "https://picsum.photos/{$width}/{$height}?random=".$this->id;
     }
 
     /**

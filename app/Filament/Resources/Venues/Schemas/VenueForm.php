@@ -99,7 +99,7 @@ class VenueForm
                 }
 
                 if ($record->distance_from_corvallis !== null) {
-                    return number_format($record->distance_from_corvallis, 1) . ' miles from Corvallis';
+                    return number_format($record->distance_from_corvallis, 1).' miles from Corvallis';
                 }
 
                 return 'Not calculated';

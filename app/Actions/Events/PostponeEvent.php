@@ -13,8 +13,8 @@ class PostponeEvent
     /**
      * Postpone an event (without setting a new date).
      *
-     * @param Event $event The event to postpone
-     * @param string|null $reason Optional postponement reason
+     * @param  Event  $event  The event to postpone
+     * @param  string|null  $reason  Optional postponement reason
      * @return Event The updated event
      */
     public function handle(Event $event, ?string $reason = null): Event

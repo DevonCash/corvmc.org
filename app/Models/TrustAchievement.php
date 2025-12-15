@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $level
  * @property \Illuminate\Support\Carbon $achieved_at
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustAchievement forContentType(string $contentType)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustAchievement forLevel(string $level)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustAchievement newModelQuery()
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustAchievement whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustAchievement whereLevel($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustAchievement whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class TrustAchievement extends Model

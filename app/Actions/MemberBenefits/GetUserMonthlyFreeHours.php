@@ -23,7 +23,7 @@ class GetUserMonthlyFreeHours
      */
     public function handle(User $user, ?int $subscriptionAmountInCents = null): int
     {
-        if (!$user->isSustainingMember()) {
+        if (! $user->isSustainingMember()) {
             return 0;
         }
 

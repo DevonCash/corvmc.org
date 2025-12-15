@@ -13,9 +13,9 @@ class AddEventPerformer
     /**
      * Add a performer (band) to an event.
      *
-     * @param Event $event The event to add the performer to
-     * @param Band $band The band to add as a performer
-     * @param array $options Additional options (order, set_length)
+     * @param  Event  $event  The event to add the performer to
+     * @param  Band  $band  The band to add as a performer
+     * @param  array  $options  Additional options (order, set_length)
      * @return bool True if performer was added, false if already exists
      */
     public function handle(Event $event, Band $band, array $options = []): bool

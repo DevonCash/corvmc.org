@@ -36,7 +36,7 @@ class VenuesTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('distance_from_corvallis')
                     ->label('Distance')
-                    ->formatStateUsing(fn (?float $state) => $state ? number_format($state, 1) . ' mi' : 'N/A')
+                    ->formatStateUsing(fn (?float $state) => $state ? number_format($state, 1).' mi' : 'N/A')
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('events_count')

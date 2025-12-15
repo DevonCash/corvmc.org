@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon $created_at
  * @property-read \App\Models\User|null $awardedBy
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction awards()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction forContentType(string $contentType)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction newModelQuery()
@@ -36,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereSourceId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereSourceType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustTransaction whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class TrustTransaction extends Model

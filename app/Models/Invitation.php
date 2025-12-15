@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Auth;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $inviter_name
  * @property-read \App\Models\User|null $inviter
+ *
  * @method static \Database\Factories\InvitationFactory factory($count = null, $state = [])
  * @method static Builder<static>|Invitation forEmail(string $email)
  * @method static Builder<static>|Invitation from(\App\Models\User $user)
@@ -40,6 +41,7 @@ use Illuminate\Support\Facades\Auth;
  * @method static Builder<static>|Invitation whereToken($value)
  * @method static Builder<static>|Invitation whereUpdatedAt($value)
  * @method static Builder<static>|Invitation whereUsedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Invitation extends Model

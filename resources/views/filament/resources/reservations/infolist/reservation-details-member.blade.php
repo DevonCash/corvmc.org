@@ -105,6 +105,22 @@
         </div>
     @endif
 
+    {{-- Additional Info (for reserved recurring reservations) --}}
+    @if ($record->status->isReserved())
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                <div class="flex gap-3">
+                    <x-filament::icon icon="tabler-hourglass" class="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div class="text-sm text-amber-900 dark:text-amber-100">
+                        <p class="font-semibold mb-1">Time slot reserved - confirmation required</p>
+                        <p class="mb-2">This is part of your recurring reservation series. You must confirm this reservation within 3 days before the scheduled time, or it will be automatically cancelled.</p>
+                        <p class="font-semibold">Credits will be deducted when you confirm.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Recurring info --}}
     @if ($record->isRecurring())
         <div class="border-t border-gray-200 dark:border-gray-700 pt-6">

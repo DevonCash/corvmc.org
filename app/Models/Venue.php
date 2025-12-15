@@ -73,7 +73,7 @@ class Venue extends Model
         $parts = array_filter([
             $this->address,
             $this->city,
-            $this->state . ($this->zip ? ' ' . $this->zip : ''),
+            $this->state.($this->zip ? ' '.$this->zip : ''),
         ]);
 
         return implode(', ', $parts);
@@ -84,7 +84,7 @@ class Venue extends Model
      */
     public function getFullVenueDisplayAttribute(): string
     {
-        return $this->name . ' - ' . $this->formatted_address;
+        return $this->name.' - '.$this->formatted_address;
     }
 
     /**
@@ -136,13 +136,13 @@ class Venue extends Model
 
                 return true;
             } else {
-                Log::warning('Google Maps API returned error for address: ' . $this->formatted_address, [
+                Log::warning('Google Maps API returned error for address: '.$this->formatted_address, [
                     'status' => $data['status'] ?? 'unknown',
                     'error_message' => $data['error_message'] ?? 'No error message',
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error('Failed to calculate distance for venue: ' . $this->formatted_address, [
+            Log::error('Failed to calculate distance for venue: '.$this->formatted_address, [
                 'error' => $e->getMessage(),
             ]);
         }

@@ -10,7 +10,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Recurring Series Pattern
- * 
+ *
  * Represents a recurring series (e.g., "Every Tuesday 7-9pm").
  * Can create instances of Reservations or Events.
  * Individual instances are stored in their respective tables.
@@ -38,6 +38,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Event> $upcomingInstances
  * @property-read int|null $upcoming_instances_count
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries query()
@@ -55,6 +56,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringSeries whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class RecurringSeries extends Model
@@ -84,6 +86,7 @@ class RecurringSeries extends Model
         'end_time' => 'datetime:H:i:s',
         'duration_minutes' => 'integer',
         'max_advance_days' => 'integer',
+        'status' => \App\Enums\RecurringSeriesStatus::class,
     ];
 
     /**

@@ -8,13 +8,10 @@ use App\Concerns\HasRecurringSeries;
 use App\Concerns\HasTimePeriod;
 use App\Data\LocationData;
 use App\Enums\EventStatus;
-use App\Enums\ReservationStatus;
 use App\Enums\Visibility;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Spatie\Period\Period;
-use Illuminate\Database\Eloquent\Builder;
-use Spatie\Image\Enums\Fit;
 
 /**
  * @property int $id
@@ -78,6 +75,7 @@ use Spatie\Image\Enums\Fit;
  * @property-read int|null $tags_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $upheldReports
  * @property-read int|null $upheld_reports_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Event byGenre($genreName)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Event dateRange($range)
  * @method static \Database\Factories\EventFactory factory($count = null, $state = [])
@@ -130,6 +128,7 @@ use Spatie\Image\Enums\Fit;
  * @method static Builder<static>|Event withTrashed(bool $withTrashed = true)
  * @method static Builder<static>|Event withoutTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
  * @method static Builder<static>|Event withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Event extends ContentModel
@@ -185,7 +184,6 @@ class Event extends ContentModel
      * Virtual attributes that should be appended to array/JSON output.
      * This makes them available to Filament forms during hydration.
      */
-
     protected function casts(): array
     {
         return [
@@ -324,8 +322,8 @@ class Event extends ContentModel
     /**
      * Reschedule this event to a new event listing.
      *
-     * @param Event|int $newEvent The new event (or its ID) this is rescheduled to
-     * @param string|null $reason Optional reason for the reschedule
+     * @param  Event|int  $newEvent  The new event (or its ID) this is rescheduled to
+     * @param  string|null  $reason  Optional reason for the reschedule
      */
     public function reschedule(Event|int $newEvent, ?string $reason = null): self
     {
@@ -355,10 +353,10 @@ class Event extends ContentModel
     {
         if ($this->start_datetime && $this->end_datetime) {
             if ($this->start_datetime->isSameDay($this->end_datetime)) {
-                return $this->start_datetime->format('M j, Y g:i A') . ' - ' . $this->end_datetime->format('g:i A');
+                return $this->start_datetime->format('M j, Y g:i A').' - '.$this->end_datetime->format('g:i A');
             }
 
-            return $this->start_datetime->format('M j, Y g:i A') . ' - ' . $this->end_datetime->format('M j, Y g:i A');
+            return $this->start_datetime->format('M j, Y g:i A').' - '.$this->end_datetime->format('M j, Y g:i A');
         }
 
         return $this->start_datetime ? $this->start_datetime->format('M j, Y g:i A') : 'TBD';
@@ -482,7 +480,7 @@ class Event extends ContentModel
         }
 
         if (! str_starts_with($value, 'http://') && ! str_starts_with($value, 'https://')) {
-            return 'https://' . $value;
+            return 'https://'.$value;
         }
 
         return $value;
@@ -498,7 +496,7 @@ class Event extends ContentModel
         }
 
         if (! str_starts_with($value, 'http://') && ! str_starts_with($value, 'https://')) {
-            return 'https://' . $value;
+            return 'https://'.$value;
         }
 
         return $value;
@@ -535,7 +533,7 @@ class Event extends ContentModel
             return 'Free';
         }
 
-        $price = $this->ticket_price ? '$' . number_format($this->ticket_price, 2) : 'Ticketed';
+        $price = $this->ticket_price ? '$'.number_format($this->ticket_price, 2) : 'Ticketed';
 
         if ($this->isNotaflof()) {
             $price .= ' (NOTAFLOF)';
@@ -610,5 +608,4 @@ class Event extends ContentModel
     {
         return 'end_datetime';
     }
-
 }

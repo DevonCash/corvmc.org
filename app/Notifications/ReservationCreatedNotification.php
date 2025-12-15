@@ -2,7 +2,6 @@
 
 namespace App\Notifications;
 
-use App\Enums\ReservationStatus;
 use App\Models\Reservation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

@@ -41,8 +41,8 @@ class EventsTable
                 IconColumn::make('publication_status')
                     ->label('Publication')
                     ->alignCenter()
-                    ->tooltip(fn(IconColumn $column, $record): ?string => match ($column->getState()) {
-                        'scheduled' => 'This event is scheduled to be published at ' . $column->getRecord()->published_at->format('M d, Y H:i A') . '.',
+                    ->tooltip(fn (IconColumn $column, $record): ?string => match ($column->getState()) {
+                        'scheduled' => 'This event is scheduled to be published at '.$column->getRecord()->published_at->format('M d, Y H:i A').'.',
                         default => $record->publication_status->getLabel()
                     }),
                 TextColumn::make('organizer.name')

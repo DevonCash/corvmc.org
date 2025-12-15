@@ -36,21 +36,22 @@ class UserInvitationNotification extends Notification implements ShouldQueue
 
         $rolesText = empty($this->data['roles'])
             ? 'as a member'
-            : 'with the role(s): ' . implode(', ', $this->data['roles']);
+            : 'with the role(s): '.implode(', ', $this->data['roles']);
 
         $invitation = $this->invitation;
 
         // @var \App\Models\User|null $inviter
         $inviter = $this->invitation->inviter;
+
         return (new MailMessage)
             ->subject('Welcome to Corvallis Music Collective!')
             ->greeting('Hello!')
-            ->line('You have been invited to join the Corvallis Music Collective ' . $rolesText . '.')
+            ->line('You have been invited to join the Corvallis Music Collective '.$rolesText.'.')
             ->when(! empty($invitation->message), function ($message) use ($invitation) {
-                return $message->line('Message from the inviter: "' . $invitation->message . '"');
+                return $message->line('Message from the inviter: "'.$invitation->message.'"');
             })
             ->when(! empty($inviter), function ($message) use ($inviter) {
-                return $message->line('Invited by: ' . $inviter->name);
+                return $message->line('Invited by: '.$inviter->name);
             })
             ->line('The Corvallis Music Collective is a community-driven space for musicians to connect, collaborate, and create.')
             ->action('Accept Invitation', $acceptUrl)

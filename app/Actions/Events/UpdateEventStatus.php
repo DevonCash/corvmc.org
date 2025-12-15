@@ -13,8 +13,8 @@ class UpdateEventStatus
     /**
      * Update an event's status.
      *
-     * @param Event $event The event to update
-     * @param EventStatus $status The new status
+     * @param  Event  $event  The event to update
+     * @param  EventStatus  $status  The new status
      * @return Event The updated event
      */
     public function handle(Event $event, EventStatus $status): Event

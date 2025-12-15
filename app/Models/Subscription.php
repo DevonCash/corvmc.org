@@ -28,6 +28,7 @@ use Laravel\Cashier\Subscription as CashierSubscription;
  * @property-read int|null $items_count
  * @property-read \App\Models\User|null $owner
  * @property-read \App\Models\User|null $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription canceled()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription ended()
@@ -60,6 +61,7 @@ use Laravel\Cashier\Subscription as CashierSubscription;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class Subscription extends CashierSubscription

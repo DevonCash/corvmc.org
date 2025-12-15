@@ -4,7 +4,6 @@ namespace App\Filament\Resources\MemberProfiles\Pages;
 
 use App\Filament\Actions\ReportContentAction;
 use App\Filament\Resources\MemberProfiles\MemberProfileResource;
-use App\Models\MemberProfile;
 use App\Models\User;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
@@ -32,7 +31,7 @@ class ViewMemberProfile extends Page
     {
         $location = $this->record->hometown ? " • {$this->record->hometown}" : '';
 
-        return 'Member since ' . $this->record->created_at->format('F Y') . $location;
+        return 'Member since '.$this->record->created_at->format('F Y').$location;
     }
 
     public function getBreadCrumbs(): array
@@ -48,11 +47,11 @@ class ViewMemberProfile extends Page
         return [
             EditAction::make()
                 ->visible(
-                    fn() => User::me()->can('update', $this->record) ||
+                    fn () => User::me()->can('update', $this->record) ||
                         $this->record->user_id === User::me()->id
                 ),
             ReportContentAction::make()
-                ->visible(fn() => User::me()->id !== $this->record->user_id), // Don't show report button to profile owner
+                ->visible(fn () => User::me()->id !== $this->record->user_id), // Don't show report button to profile owner
         ];
     }
 
