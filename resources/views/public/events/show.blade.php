@@ -56,9 +56,9 @@
                         <x-unicon name="tabler:calendar" class="size-8 text-primary" />
                         <div class='grow'>
                             <div class="font-semibold text-xl">
-                                {{ $event->start_time->format('M j, Y') }}</div>
+                                {{ $event->start_datetime->format('M j, Y') }}</div>
                             <div class="text-base opacity-70">
-                                {{ $event->start_time->format('l') }}</div>
+                                {{ $event->start_datetime->format('l') }}</div>
                         </div>
                     </div>
 
@@ -66,10 +66,10 @@
                         <x-unicon name="tabler:clock" class="size-8 text-primary " />
                         <div class='grow'>
                             <div class="font-semibold text-xl">
-                                {{ $event->start_time->format('g:i A') }}</div>
-                            @if ($event->doors_time)
+                                {{ $event->start_datetime->format('g:i A') }}</div>
+                            @if ($event->doors_datetime)
                                 <div class="text-base opacity-70">Doors:
-                                    {{ $event->doors_time->format('g:i A') }}</div>
+                                    {{ $event->doors_datetime->format('g:i A') }}</div>
                             @endif
                         </div>
                     </div>
@@ -160,7 +160,7 @@
                                 @endif
                                 <div class="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-3 rounded-b-lg">
                                     <h3 class="font-bold text-sm truncate">{{ $relatedEvent->title }}</h3>
-                                    <p class="text-xs opacity-90">{{ $relatedEvent->start_time->format('M j, Y') }}</p>
+                                    <p class="text-xs opacity-90">{{ $relatedEvent->start_datetime->format('M j, Y') }}</p>
                                     @if ($relatedEvent->venue_name)
                                         <p class="text-xs opacity-75 truncate">{{ $relatedEvent->venue_name }}</p>
                                     @endif

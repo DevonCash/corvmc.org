@@ -36,8 +36,8 @@
                         @if($reportable->description)
                             <p><strong>Description:</strong> {{ Str::limit($reportable->description, 200) }}</p>
                         @endif
-                        @if($reportable->start_time)
-                            <p><strong>Date:</strong> {{ $reportable->start_time->format('M j, Y g:i A') }}</p>
+                        @if($reportable->start_datetime)
+                            <p><strong>Date:</strong> {{ $reportable->start_datetime->format('M j, Y g:i A') }}</p>
                         @endif
                         @if($reportable->location)
                             <p><strong>Location:</strong> {{ $reportable->venue_name }}</p>
