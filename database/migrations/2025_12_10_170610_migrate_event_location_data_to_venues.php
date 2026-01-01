@@ -49,14 +49,14 @@ return new class extends Migration
                 }
 
                 // Check if external venue
-                $isExternal = $location['is_external'] ?? false;
+                $isExternal = $location->is_external;
 
                 if (! $isExternal) {
                     // CMC event
                     $event->update(['venue_id' => $cmcVenue->id]);
                 } else {
                     // External event - parse details
-                    $details = $location['details'] ?? '';
+                    $details = $location->details ?? '';
 
                     if (empty($details)) {
                         // External but no details, still default to CMC
