@@ -349,10 +349,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             ->setDescriptionForEvent(fn (string $eventName) => "User account {$eventName}");
     }
 
-    public function sendPasswordResetNotification($token)
-    {
-        $this->notify(new PasswordResetNotification($token));
-    }
+    // public function sendPasswordResetNotification($token)
+    // {
+    //     $this->notify(new PasswordResetNotification($token));
+    // }
+    
+    // Temporarily using stock Filament notification to debug signature issue
 
     public function sendEmailVerificationNotification()
     {
