@@ -71,6 +71,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $reservations_count
  * @property-read Collection<int, \Spatie\Permission\Models\Role> $roles
  * @property-read int|null $roles_count
+ * @property-read Collection<int, \App\Models\Sponsor> $sponsors
+ * @property-read int|null $sponsors_count
  * @property-read \App\Models\StaffProfile|null $staffProfile
  * @property-read Collection<int, \App\Models\Subscription> $subscriptions
  * @property-read int|null $subscriptions_count
@@ -258,6 +260,13 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function profile(): HasOne
     {
         return $this->hasOne(MemberProfile::class);
+    }
+
+    public function sponsors(): BelongsToMany
+    {
+        return $this->belongsToMany(Sponsor::class, 'sponsor_user')
+            ->withTimestamps()
+            ->orderBy('sponsor_user.created_at', 'desc');
     }
 
     /**
