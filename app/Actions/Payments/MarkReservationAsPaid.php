@@ -5,10 +5,9 @@ namespace App\Actions\Payments;
 use App\Actions\Reservations\ConfirmReservation;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
+use App\Filament\Actions\Action;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
-use App\Models\User;
-use App\Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Collection;
@@ -20,8 +19,9 @@ class MarkReservationAsPaid
 
     public function handle(Reservation $reservation, ?string $paymentMethod = null, ?string $notes = null): void
     {
-        // If the reservation is pending, confirm it first
-        if ($reservation instanceof RehearsalReservation && $reservation->status === ReservationStatus::Pending) {
+        // If the reservation is scheduled or reserved, confirm it first
+        if ($reservation instanceof RehearsalReservation &&
+            in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
             $reservation = ConfirmReservation::run($reservation);
             $reservation->refresh();
         }
@@ -41,7 +41,7 @@ class MarkReservationAsPaid
             ->icon('tabler-cash')
             ->color('success')
             ->authorize('manage reservations')
-            ->visible(fn(Reservation $record) => $record->requiresPayment())
+            ->visible(fn (Reservation $record) => $record->requiresPayment())
             ->schema([
                 Select::make('payment_method')
                     ->label('Payment Method')
@@ -105,6 +105,6 @@ class MarkReservationAsPaid
                 }
             })
             ->successNotificationTitle('Payments recorded')
-            ->successNotification(fn(Collection $records, array $data) => $records->filter(fn($r) => $r->requiresPayment())->count() . ' reservations marked as paid');
+            ->successNotification(fn (Collection $records, array $data) => $records->filter(fn ($r) => $r->requiresPayment())->count().' reservations marked as paid');
     }
 }

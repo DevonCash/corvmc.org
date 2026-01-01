@@ -93,46 +93,9 @@ class MemberDashboard extends Page
 
         return \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () {
             return \App\Models\Event::publishedUpcoming()
-                ->with(['performers', 'organizer'])
+                ->with(['performers', 'organizer', 'venue'])
                 ->limit(8)
-                ->get()
-                ->map(function (\App\Models\Event $event) {
-                    return [
-                        'id' => $event->id,
-                        'title' => $event->title,
-                        'description' => $event->description,
-                        'start_time' => $event->start_time,
-                        'end_time' => $event->end_time,
-                        'doors_time' => $event->doors_time,
-                        'date_range' => $event->date_range,
-                        'venue_name' => $event->venue_name,
-                        'venue_details' => $event->venue_details,
-                        'poster_url' => $event->poster_url,
-                        'poster_thumb_url' => $event->poster_thumb_url,
-                        'ticket_url' => $event->event_link ?? $event->ticket_url,
-                        'ticket_price_display' => $event->ticket_price_display,
-                        'is_free' => $event->isFree(),
-                        'has_tickets' => $event->hasTickets(),
-                        'is_notaflof' => $event->isNotaflof(),
-                        'performers' => $event->performers->map(function ($band) {
-                            /** @var \App\Models\Band $band */
-                            $pivot = isset($band->pivot) ? $band->pivot : null;
-
-                            return [
-                                'id' => $band->getKey(),
-                                'name' => $band->name,
-                                'order' => $pivot?->order ?? 0,
-                                'set_length' => $pivot?->set_length,
-                                'can_view' => $this->canViewBand($band),
-                                'profile_url' => $this->canViewBand($band) ?
-                                    route('filament.member.resources.bands.view', $band) : null,
-                            ];
-                        })->sortBy('order'),
-                        'organizer_name' => $event->organizer?->name,
-                        'genres' => $event->genres->pluck('name')->toArray(),
-                        'public_url' => route('events.show', $event),
-                    ];
-                });
+                ->get();
         });
     }
 

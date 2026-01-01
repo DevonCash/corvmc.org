@@ -3,7 +3,6 @@
 namespace App\Actions\Trust;
 
 use App\Models\User;
-use App\Support\TrustConstants;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class BulkAwardPastContent

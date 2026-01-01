@@ -20,7 +20,7 @@ Route::get('/', function () {
     $stats = [
         'active_members' => MemberProfile::whereIn('visibility', ['public', 'members'])->count(),
         'monthly_events' => Event::publishedUpcoming()
-            ->whereBetween('start_time', [now()->startOfMonth(), now()->endOfMonth()])
+            ->whereBetween('start_datetime', [now()->startOfMonth(), now()->endOfMonth()])
             ->count(),
         'practice_hours' => \App\Models\Reservation::status(ReservationStatus::Confirmed)
             ->whereBetween('reserved_at', [now()->startOfMonth(), now()->endOfMonth()])

@@ -85,6 +85,7 @@ class ReportSubmittedNotification extends Notification implements ShouldQueue
         if ($reportable instanceof \App\Models\MemberProfile) {
             /** @var \App\Models\User $user */
             $user = $reportable->user;
+
             return $user->name;
         }
 

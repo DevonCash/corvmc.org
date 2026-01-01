@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read \App\Models\CreditTransaction $creditTransaction
  * @property-read \App\Models\PromoCode $promoCode
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromoCodeRedemption newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromoCodeRedemption newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromoCodeRedemption query()
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromoCodeRedemption wherePromoCodeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromoCodeRedemption whereRedeemedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromoCodeRedemption whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class PromoCodeRedemption extends Model

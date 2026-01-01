@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\Sponsor;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -119,6 +120,51 @@ class AdminUserControlForm
                                 return 'No Stripe customer ID';
                             })
                             ->html(),
+                    ]),
+
+                Section::make('Sponsored Membership')
+                    ->description('Assign sponsored memberships from active sponsors.')
+                    ->schema([
+                        Select::make('sponsor_id')
+                            ->label('Sponsor')
+                            ->relationship('sponsors', 'name')
+                            ->options(function () {
+                                return Sponsor::active()
+                                    ->orderBy('name')
+                                    ->get()
+                                    ->mapWithKeys(function ($sponsor) {
+                                        $available = $sponsor->availableSlots();
+                                        $total = $sponsor->sponsored_memberships;
+                                        $used = $sponsor->usedSlots();
+
+                                        $label = "{$sponsor->name} ({$available} of {$total} available)";
+
+                                        return [$sponsor->id => $label];
+                                    });
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->helperText('Select a sponsor to provide this member with a sponsored membership.')
+                            ->placeholder('No sponsor assigned')
+                            ->disabled(fn (?User $record) => $record === null),
+
+                        TextEntry::make('sponsors')
+                            ->label('Current Sponsors')
+                            ->formatStateUsing(function ($record) {
+                                if (! $record || $record->sponsors()->count() === 0) {
+                                    return 'Not sponsored';
+                                }
+
+                                return $record->sponsors()
+                                    ->get()
+                                    ->map(function ($sponsor) {
+                                        $since = $sponsor->pivot->created_at->format('M j, Y');
+                                        return "{$sponsor->name} (since {$since})";
+                                    })
+                                    ->implode('<br>');
+                            })
+                            ->html()
+                            ->placeholder('Not sponsored'),
                     ]),
 
                 Section::make('Staff Profile Management')

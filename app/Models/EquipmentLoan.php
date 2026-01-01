@@ -24,7 +24,7 @@ use Spatie\Period\Period;
 
 /**
  * Represents a loan of equipment from CMC to a member.
- * 
+ *
  * Tracks the checkout/return process, condition, and financial aspects
  * of equipment loans to members.
  *
@@ -57,6 +57,7 @@ use Spatie\Period\Period;
  * @property-read bool $is_reservation_upcoming
  * @property-read bool $is_returned
  * @property-read string $total_fees
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan byBorrower(\App\Models\User $borrower)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan cancelled()
@@ -93,6 +94,7 @@ use Spatie\Period\Period;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentLoan withActiveReservations()
+ *
  * @mixin \Eloquent
  */
 class EquipmentLoan extends Model

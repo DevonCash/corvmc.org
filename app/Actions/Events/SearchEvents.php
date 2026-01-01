@@ -21,7 +21,7 @@ class SearchEvents
             ->orWhereHas('performers', function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%");
             })
-            ->orderBy('start_time', 'desc')
+            ->orderBy('start_datetime', 'desc')
             ->limit(50)
             ->get();
     }

@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             StaffProfileSeeder::class,
             EquipmentSeeder::class,
             SponsorSeeder::class,
+            ReportSeeder::class,
+            RevisionSeeder::class,
         ]);
     }
 }

@@ -81,6 +81,7 @@ class PermissionSeeder extends Seeder
 
             // Production/Events Management
             'view productions',
+            'manage events',
             'manage productions',
 
             // Practice Space Management
@@ -142,6 +143,7 @@ class PermissionSeeder extends Seeder
         $productionManager = Role::firstOrCreate(['name' => 'production manager']);
         $productionManager->syncPermissions([
             'view productions',
+            'manage events',
             'manage productions',
             'view bands',
             'create bands',

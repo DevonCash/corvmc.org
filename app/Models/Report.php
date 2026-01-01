@@ -5,7 +5,8 @@ namespace App\Models;
 use App\Contracts\Reportable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\{BelongsTo, MorphTo};
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -29,6 +30,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property-read Model|\Eloquent $reportable
  * @property-read \App\Models\User $reportedBy
  * @property-read \App\Models\User|null $resolvedBy
+ *
  * @method static \Database\Factories\ReportFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Report newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Report newQuery()
@@ -45,6 +47,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereResolvedById($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Report extends Model

@@ -365,6 +365,30 @@ trait Revisionable
     }
 
     /**
+     * Get a human-readable title for this revisionable model.
+     * Override in models to provide a more specific title.
+     *
+     * Examples:
+     * - MemberProfile: "John Doe's Profile"
+     * - Band: "The Beatles"
+     * - Event: "Summer Music Festival 2024"
+     */
+    public function getRevisionableTitle(): string
+    {
+        // Try common title/name properties
+        if (isset($this->title)) {
+            return $this->title;
+        }
+
+        if (isset($this->name)) {
+            return $this->name;
+        }
+
+        // Fallback to model type + ID
+        return class_basename($this) . ' #' . $this->getKey();
+    }
+
+    /**
      * Get revision workflow information for this content.
      */
     public function getRevisionWorkflow(): array

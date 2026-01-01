@@ -28,7 +28,7 @@ class CancelRecurringSeries
             if ($modelClass === Reservation::class) {
                 $futureInstances = Reservation::where('recurring_series_id', $series->id)
                     ->where('reserved_at', '>', now())
-                    ->whereIn('status', [ReservationStatus::Pending->value, ReservationStatus::Confirmed->value])
+                    ->whereIn('status', [ReservationStatus::Scheduled->value, ReservationStatus::Reserved->value, ReservationStatus::Confirmed->value])
                     ->get();
 
                 foreach ($futureInstances as $reservation) {
@@ -39,7 +39,7 @@ class CancelRecurringSeries
                 }
             } else {
                 $futureInstances = Event::where('recurring_series_id', $series->id)
-                    ->where('start_time', '>', now())
+                    ->where('start_datetime', '>', now())
                     ->where('status', 'approved')
                     ->get();
 

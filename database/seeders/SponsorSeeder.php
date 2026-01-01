@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Sponsor;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class SponsorSeeder extends Seeder
@@ -142,5 +143,57 @@ class SponsorSeeder extends Seeder
             'name' => 'Former Sponsor LLC',
             'display_order' => 99,
         ]);
+
+        // Add example sponsored memberships
+        $this->assignSponsoredMemberships();
+    }
+
+    /**
+     * Assign example sponsored memberships to demonstrate the feature
+     */
+    private function assignSponsoredMemberships(): void
+    {
+        // Get some sponsors
+        $crescendoSponsor = Sponsor::where('tier', Sponsor::TIER_CRESCENDO)->first();
+        $rhythmSponsor = Sponsor::where('tier', Sponsor::TIER_RHYTHM)->first();
+        $melodySponsor = Sponsor::where('tier', Sponsor::TIER_MELODY)->first();
+        $harmonySponsor = Sponsor::where('tier', Sponsor::TIER_HARMONY)->first();
+
+        // Get some users (if they exist)
+        $users = User::limit(10)->get();
+
+        if ($users->isEmpty()) {
+            // If no users exist, skip sponsored membership assignments
+            return;
+        }
+
+        // Assign sponsored memberships to demonstrate different usage levels
+        if ($crescendoSponsor && $users->count() >= 5) {
+            // Crescendo sponsor sponsors 5 members (25 total available)
+            foreach ($users->slice(0, 5) as $user) {
+                $crescendoSponsor->sponsoredMembers()->attach($user->id);
+            }
+        }
+
+        if ($rhythmSponsor && $users->count() >= 8) {
+            // Rhythm sponsor sponsors 8 members (20 total available)
+            foreach ($users->slice(0, 8) as $user) {
+                $rhythmSponsor->sponsoredMembers()->attach($user->id);
+            }
+        }
+
+        if ($melodySponsor && $users->count() >= 10) {
+            // Melody sponsor is at capacity (10 total available)
+            foreach ($users->slice(0, 10) as $user) {
+                $melodySponsor->sponsoredMembers()->attach($user->id);
+            }
+        }
+
+        if ($harmonySponsor && $users->count() >= 3) {
+            // Harmony sponsor sponsors 3 members (5 total available)
+            foreach ($users->slice(0, 3) as $user) {
+                $harmonySponsor->sponsoredMembers()->attach($user->id);
+            }
+        }
     }
 }

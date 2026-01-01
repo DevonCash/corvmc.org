@@ -38,6 +38,7 @@ enum StaffProfileType: string
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $revisions
  * @property-read int|null $revisions_count
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile board()
  * @method static \Database\Factories\StaffProfileFactory factory($count = null, $state = [])
@@ -59,6 +60,7 @@ enum StaffProfileType: string
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StaffProfile whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class StaffProfile extends Model implements HasMedia

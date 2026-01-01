@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Reservations\Widgets;
 
+use App\Actions\RecurringReservations\CreateRecurringRehearsal;
 use App\Models\RecurringSeries;
+use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -32,14 +34,20 @@ class RecurringSeriesTableWidget extends BaseWidget
         return $table
             ->query(
                 RecurringSeries::query()
-                    ->where('recurable_type', Reservation::class)
+                    ->where('recurable_type', RehearsalReservation::class)
                     ->where('user_id', Auth::id())
                     ->with(['user', 'instances'])
             )
             ->heading('My Recurring Reservations')
+            ->headerActions([
+                CreateRecurringRehearsal::filamentAction()
+            ])
+            ->emptyStateActions([
+                CreateRecurringRehearsal::filamentAction()->label('Create Recurring Reservation')
+            ])
             ->emptyStateHeading('No recurring reservations')
             ->emptyStateDescription('Create a recurring reservation to automatically book the practice space on a regular schedule.')
-            ->emptyStateIcon('tabler-clock-repeat')
+            ->emptyStateIcon('tabler-calendar-repeat')
             ->columns([
 
                 TextColumn::make('recurrence_rule')

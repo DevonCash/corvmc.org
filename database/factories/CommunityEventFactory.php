@@ -43,8 +43,8 @@ class CommunityEventFactory extends Factory
         return [
             'title' => $this->faker->words(3, true),
             'description' => $this->faker->optional(0.8)->paragraphs(2, true),
-            'start_time' => $startTime,
-            'end_time' => $endTime,
+            'start_datetime' => $startTime,
+            'end_datetime' => $endTime,
             'venue_name' => $venue['name'],
             'venue_address' => $venue['address'],
             'event_type' => $this->faker->randomElement($eventTypes),
@@ -112,8 +112,8 @@ class CommunityEventFactory extends Factory
         $endTime = (clone $startTime)->modify('+'.$this->faker->numberBetween(1, 4).' hours');
 
         return $this->state(fn (array $attributes) => [
-            'start_time' => $startTime,
-            'end_time' => $endTime,
+            'start_datetime' => $startTime,
+            'end_datetime' => $endTime,
         ]);
     }
 

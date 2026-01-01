@@ -7,7 +7,8 @@ use Filament\Widgets\Widget;
 
 class UserStatsWidget extends Widget
 {
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
+
     protected string $view = 'filament.resources.users.widgets.user-stats-widget';
 
     protected static bool $isLazy = false;

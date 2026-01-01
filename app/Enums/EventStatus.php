@@ -14,7 +14,7 @@ use Filament\Support\Contracts\HasLabel;
  * Moderation state is tracked by moderation_status enum.
  * Reschedule tracking is via rescheduled_to_id column.
  */
-enum EventStatus: string implements HasColor, HasLabel, HasIcon
+enum EventStatus: string implements HasColor, HasIcon, HasLabel
 {
     case Scheduled = 'scheduled';
     case Cancelled = 'cancelled';
@@ -31,7 +31,7 @@ enum EventStatus: string implements HasColor, HasLabel, HasIcon
         };
     }
 
-    public function getColor(): string | array | null
+    public function getColor(): string|array|null
     {
         return match ($this) {
             self::Scheduled => 'success',

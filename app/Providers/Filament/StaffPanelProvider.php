@@ -60,6 +60,7 @@ class StaffPanelProvider extends PanelProvider
                 \App\Filament\Resources\RecurringReservations\RecurringReservationResource::class,
                 \App\Filament\Resources\Bylaws\BylawsResource::class,
                 \App\Filament\Resources\Equipment\EquipmentDamageReports\EquipmentDamageReportResource::class,
+                \App\Filament\Resources\Venues\VenueResource::class,
                 EventResource::class,
             ])
             ->pages([

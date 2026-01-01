@@ -4,18 +4,19 @@ namespace App\Models;
 
 use App\Casts\MoneyCast;
 use App\Concerns\HasPaymentStatus;
+use App\Concerns\HasRecurringSeries;
 use App\Concerns\HasTimePeriod;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
-use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -56,6 +57,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property-read \App\Models\RecurringSeries|null $recurringSeries
  * @property-read Model|\Eloquent|null $reservable
  * @property-read \App\Models\User|null $user
+ *
  * @method static \Database\Factories\ReservationFactory factory($count = null, $state = [])
  * @method static Builder<static>|Reservation needsAttention()
  * @method static Builder<static>|Reservation status(ReservationStatus $status)
@@ -86,11 +88,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @method static Builder<static>|Reservation whereStatus($value)
  * @method static Builder<static>|Reservation whereType($value)
  * @method static Builder<static>|Reservation whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
-class Reservation extends Model implements HasLabel, HasIcon, HasColor
+class Reservation extends Model implements HasColor, HasIcon, HasLabel
 {
-    use HasFactory, HasTimePeriod, HasPaymentStatus, LogsActivity;
+    use HasPaymentStatus, HasRecurringSeries, HasTimePeriod, LogsActivity;
 
     protected $table = 'reservations';
 
@@ -104,7 +107,7 @@ class Reservation extends Model implements HasLabel, HasIcon, HasColor
             'status' => ReservationStatus::class,
             'reserved_at' => 'datetime',
             'reserved_until' => 'datetime',
-            'cost' => MoneyCast::class . ':USD',
+            'cost' => MoneyCast::class.':USD',
             'paid_at' => 'datetime',
             'hours_used' => 'decimal:2',
             'free_hours_used' => 'decimal:2',
@@ -119,7 +122,7 @@ class Reservation extends Model implements HasLabel, HasIcon, HasColor
         return LogOptions::defaults()
             ->logAll()
             ->useLogName(static::getLabel())
-            ->setDescriptionForEvent(fn(string $eventName) => "Reservation has been {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "Reservation has been {$eventName}");
     }
 
     /**
@@ -187,22 +190,6 @@ class Reservation extends Model implements HasLabel, HasIcon, HasColor
     }
 
     /**
-     * Relationship to the recurring series this reservation belongs to.
-     */
-    public function recurringSeries(): BelongsTo
-    {
-        return $this->belongsTo(RecurringSeries::class, 'recurring_series_id');
-    }
-
-    /**
-     * Check if this reservation is part of a recurring series.
-     */
-    public function isRecurring(): bool
-    {
-        return $this->recurring_series_id !== null;
-    }
-
-    /**
      * Get the human-readable label for this reservation type.
      * Child classes should override this method.
      */
@@ -253,11 +240,12 @@ class Reservation extends Model implements HasLabel, HasIcon, HasColor
         }
 
         if ($this->reserved_at->isSameDay($this->reserved_until)) {
-            return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('g:i A');
+            return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('g:i A');
         }
 
-        return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('M j, Y g:i A');
+        return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('M j, Y g:i A');
     }
+
     public function getColor(): string|array
     {
         return 'gray';
@@ -340,8 +328,6 @@ class Reservation extends Model implements HasLabel, HasIcon, HasColor
             });
         })->where('status', '!=', 'cancelled');
     }
-
-
 
     #[Scope]
     protected function upcoming(Builder $query): void

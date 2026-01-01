@@ -10,7 +10,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Revision Model
- * 
+ *
  * Represents pending changes to any model that require moderator approval.
  * Stores original data, proposed changes, and approval workflow state.
  *
@@ -34,6 +34,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property-read \App\Models\User|null $reviewedBy
  * @property-read Model|\Eloquent $revisionable
  * @property-read \App\Models\User $submittedBy
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision approved()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision autoApproved()
  * @method static \Database\Factories\RevisionFactory factory($count = null, $state = [])
@@ -60,6 +61,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereSubmissionReason($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereSubmittedById($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Revision extends Model
@@ -271,6 +273,26 @@ class Revision extends Model
             'App\Models\Event' => 'Event',
             default => class_basename($this->revisionable_type)
         };
+    }
+
+    /**
+     * Get a human-readable title for the revisionable model.
+     * Uses the model's getRevisionableTitle() method if available,
+     * otherwise falls back to type + ID.
+     */
+    public function getRevisionableTitle(): string
+    {
+        $revisionable = $this->revisionable;
+
+        if (! $revisionable) {
+            return $this->getModelTypeName() . ' #' . $this->revisionable_id;
+        }
+
+        if (method_exists($revisionable, 'getRevisionableTitle')) {
+            return $revisionable->getRevisionableTitle();
+        }
+
+        return $this->getModelTypeName() . ' #' . $this->revisionable_id;
     }
 
     /**

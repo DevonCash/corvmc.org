@@ -2,13 +2,9 @@
 
 namespace App\Actions\Payments;
 
-use App\Actions\Reservations\ConfirmReservation;
 use App\Enums\PaymentStatus;
-use App\Enums\ReservationStatus;
-use App\Models\RehearsalReservation;
-use App\Models\Reservation;
-use App\Models\User;
 use App\Filament\Actions\Action;
+use App\Models\Reservation;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -34,7 +30,7 @@ class MarkReservationAsComped
             ->icon('tabler-gift')
             ->color('info')
             ->authorize('manage reservations')
-            ->visible(fn(Reservation $record) => $record->requiresPayment())
+            ->visible(fn (Reservation $record) => $record->requiresPayment())
             ->schema([
                 Textarea::make('comp_reason')
                     ->label('Comp Reason')
@@ -76,6 +72,6 @@ class MarkReservationAsComped
                 }
             })
             ->successNotificationTitle('Reservations comped')
-            ->successNotification(fn(Collection $records) => $records->filter(fn($r) => $r->requiresPayment())->count() . ' reservations marked as comped');
+            ->successNotification(fn (Collection $records) => $records->filter(fn ($r) => $r->requiresPayment())->count().' reservations marked as comped');
     }
 }

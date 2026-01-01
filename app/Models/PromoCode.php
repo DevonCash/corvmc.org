@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PromoCodeRedemption> $redemptions
  * @property-read int|null $redemptions_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromoCode newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromoCode newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromoCode query()
@@ -32,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromoCode whereMaxUses($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromoCode whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromoCode whereUsesCount($value)
+ *
  * @mixin \Eloquent
  */
 class PromoCode extends Model

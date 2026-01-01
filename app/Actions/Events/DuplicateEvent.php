@@ -20,9 +20,9 @@ class DuplicateEvent
         ?\DateTime $newDoorsTime = null
     ): Event {
         $newEvent = $originalEvent->replicate();
-        $newEvent->start_time = $newStartTime;
-        $newEvent->end_time = $newEndTime;
-        $newEvent->doors_time = $newDoorsTime;
+        $newEvent->start_datetime = $newStartTime;
+        $newEvent->end_datetime = $newEndTime;
+        $newEvent->doors_datetime = $newDoorsTime;
         $newEvent->status = 'approved';
         $newEvent->published_at = null;
         $newEvent->save();

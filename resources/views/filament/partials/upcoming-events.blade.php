@@ -33,20 +33,20 @@
             {{-- Poster Card --}}
             <div class="flex-shrink-0 group">
                 <div class="block w-48 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600 overflow-hidden cursor-pointer"
-                     onclick="window.open('{{ $event['public_url'] }}', '_blank')">
+                     onclick="window.open('{{ route('events.show', $event) }}', '_blank')">
 
                     {{-- Poster Image --}}
                     <div class="relative aspect-[3/4] bg-primary">
-                        @if($event['poster_thumb_url'] || $event['poster_url'])
-                            <img src="{{ $event['poster_thumb_url'] ?: $event['poster_url'] }}"
-                                 alt="{{ $event['title'] }} poster "
+                        @if($event->poster_thumb_url || $event->poster_url)
+                            <img src="{{ $event->poster_thumb_url ?: $event->poster_url }}"
+                                 alt="{{ $event->title }} poster "
                                  class="w-full h-full object-cover">
                         @else
                             {{-- Fallback poster design --}}
                             <div class="absolute inset-0 flex flex-col items-center justify-center p-4">
                                 <x-tabler-calendar-event class="w-12 h-12 text-primary-600 dark:text-primary-400 mb-3" />
                                 <h4 class="text-sm font-bold text-center text-primary-900 dark:text-primary-100 leading-tight">
-                                    {{ $event['title'] ?? 'Untitled Event' }}
+                                    {{ $event->title ?? 'Untitled Event' }}
                                 </h4>
                             </div>
                         @endif
@@ -54,9 +54,9 @@
                         {{-- Price Badge --}}
                         <div class="absolute top-2 right-2">
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm {{
-                                $event['is_free'] ? 'bg-green-500/90 text-white' : 'bg-amber-500/90 text-white'
+                                $event->isFree() ? 'bg-green-500/90 text-white' : 'bg-amber-500/90 text-white'
                             }}">
-                                {{ $event['ticket_price_display'] }}
+                                {{ $event->ticket_price_display }}
                             </span>
                         </div>
 
@@ -64,8 +64,8 @@
                         <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4">
                             <div class="flex flex-col gap-3 items-center justify-center">
                                 {{-- Tickets button (if available) --}}
-                                @if($event['ticket_url'])
-                                    <a href="{{ $event['ticket_url'] }}"
+                                @if($event->event_link ?? $event->ticket_url)
+                                    <a href="{{ $event->event_link ?? $event->ticket_url }}"
                                        target="_blank"
                                        onclick="event.stopPropagation()"
                                        class="flex items-center justify-center w-12 h-12 bg-primary-600 text-white rounded-full hover:bg-primary-700 transition-colors shadow-lg">
@@ -74,7 +74,7 @@
                                 @endif
 
                                 {{-- View Details button (always available) --}}
-                                <a href="{{ $event['public_url'] }}"
+                                <a href="{{ route('events.show', $event) }}"
                                    target="_blank"
                                    class="flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors shadow-lg">
                                     <x-tabler-eye class="w-5 h-5" />
@@ -86,25 +86,25 @@
                     {{-- Event Info --}}
                     <div class="p-3">
                         <h4 class="font-semibold text-sm text-gray-900 dark:text-white line-clamp-1 leading-tight mb-2 truncate text-ellipsis">
-                            {{ $event['title'] ?? 'Untitled Event' }}
+                            {{ $event->title ?? 'Untitled Event' }}
                         </h4>
 
                         {{-- Date --}}
                         <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mb-1">
                             <x-tabler-calendar class="w-3 h-3" />
-                            <span class="truncate">{{ $event['start_time']->format('M j, Y') }}</span>
+                            <span class="truncate">{{ $event->start_datetime->format('M j, Y') }}</span>
                         </div>
 
                         {{-- Time --}}
                         <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mb-1">
                             <x-tabler-clock class="w-3 h-3" />
-                            <span class="truncate">{{ $event['start_time']->format('g:i A') }}</span>
+                            <span class="truncate">{{ $event->start_datetime->format('g:i A') }}</span>
                         </div>
 
                         {{-- Venue --}}
                         <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
                             <x-tabler-map-pin class="w-3 h-3" />
-                            <span class="truncate">{{ $event['venue_name'] }}</span>
+                            <span class="truncate">{{ $event->venue_name }}</span>
                         </div>
                     </div>
                 </div>

@@ -53,6 +53,16 @@ class HandleRevisionSubmission
             return false;
         }
 
+        // Auto-approve if submitter is admin/staff with manage events permission
+        if ($submitter->can('manage events')) {
+            Log::info('Auto-approving revision - user has manage events permission', [
+                'revision_id' => $revision->id,
+                'user_id' => $submitter->id,
+            ]);
+
+            return true;
+        }
+
         // Ensure the model uses the Revisionable trait
         if (! method_exists($model, 'getAutoApproveMode')) {
             return false;

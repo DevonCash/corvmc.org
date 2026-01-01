@@ -2,15 +2,9 @@
 
 namespace App\Models;
 
-use App\Concerns\HasTimePeriod;
-use App\Enums\ReservationStatus;
 use Database\Factories\ReservationFactory;
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Period\Period;
 
 /**
  * Represents a practice space reservation made by an individual user.
@@ -49,6 +43,7 @@ use Spatie\Period\Period;
  * @property-read \App\Models\RecurringSeries|null $recurringSeries
  * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent|null $reservable
  * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent|null $user
+ *
  * @method static \Database\Factories\ReservationFactory factory($count = null, $state = [])
  * @method static Builder<static>|RehearsalReservation needsAttention()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RehearsalReservation newModelQuery()
@@ -78,25 +73,16 @@ use Spatie\Period\Period;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RehearsalReservation whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RehearsalReservation whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RehearsalReservation whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class RehearsalReservation extends Reservation
 {
-
-
-    /**
-     * Create a new factory instance for the model.
-     */
-    protected static function newFactory()
-    {
-        return ReservationFactory::new();
-    }
+    use HasFactory;
 
     protected $attributes = [
-        'type' => self::class,
         'payment_status' => 'unpaid',
     ];
-
 
     // STI Abstract Method Implementations
     public function getReservationTypeLabel(): string

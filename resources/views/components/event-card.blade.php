@@ -23,7 +23,7 @@
             </h2>
 
             <div class="text-xs opacity-70">
-                {{ $event->start_time->format('M j, g:i A') }}
+                {{ $event->start_datetime->format('M j, g:i A') }}
             </div>
         </hgroup>
 

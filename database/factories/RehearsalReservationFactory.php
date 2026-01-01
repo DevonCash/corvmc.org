@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Reservation>
  */
-class ReservationFactory extends Factory
+class RehearsalReservationFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -25,12 +25,12 @@ class ReservationFactory extends Factory
         $reservedUntil = (clone $reservedAt)->modify('+'.($duration * 60).' minutes');
 
         return [
-            'type' => $this->modelName(),
+            // Don't set 'type' here - let the model's $attributes or boot() method handle it
             'reservable_type' => User::class,
             'reservable_id' => User::factory(),
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
-            'status' => $this->faker->randomElement([ReservationStatus::Pending, ReservationStatus::Confirmed, ReservationStatus::Cancelled]),
+            'status' => $this->faker->randomElement([ReservationStatus::Scheduled, ReservationStatus::Confirmed, ReservationStatus::Cancelled]),
             'payment_status' => PaymentStatus::Unpaid,
             'cost' => function (array $attributes) use ($duration) {
                 // Simple cost calculation - will be overridden by action when needed
@@ -68,7 +68,7 @@ class ReservationFactory extends Factory
     public function pending(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => ReservationStatus::Pending,
+            'status' => ReservationStatus::Scheduled,
         ]);
     }
 

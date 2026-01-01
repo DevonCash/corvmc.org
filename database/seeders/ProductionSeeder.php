@@ -53,7 +53,6 @@ class ProductionSeeder extends Seeder
             $event = Event::factory()
                 ->create([
                     'status' => 'scheduled',
-                    'moderation_status' => 'pending', // These need moderation review
                     'organizer_id' => $users->random()->id,
                     'published_at' => null,
                 ]);
@@ -101,8 +100,8 @@ class ProductionSeeder extends Seeder
     private function createEventReservation(Event $event): void
     {
         // Add 1 hour setup before event start and 1 hour breakdown after event end
-        $reservedAt = $event->start_time->copy()->subHour();
-        $reservedUntil = $event->end_time->copy()->addHour();
+        $reservedAt = $event->start_datetime->copy()->subHour();
+        $reservedUntil = $event->end_datetime->copy()->addHour();
 
         EventReservation::create([
             'type' => EventReservation::class,

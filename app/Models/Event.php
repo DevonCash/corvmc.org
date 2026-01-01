@@ -2,18 +2,16 @@
 
 namespace App\Models;
 
+use App\Concerns\HasPoster;
 use App\Concerns\HasPublishing;
+use App\Concerns\HasRecurringSeries;
 use App\Concerns\HasTimePeriod;
 use App\Data\LocationData;
 use App\Enums\EventStatus;
-use App\Enums\ModerationStatus;
-use App\Enums\ReservationStatus;
 use App\Enums\Visibility;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Spatie\Period\Period;
-use Illuminate\Database\Eloquent\Builder;
-use Spatie\Image\Enums\Fit;
 
 /**
  * @property int $id
@@ -22,9 +20,9 @@ use Spatie\Image\Enums\Fit;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property string|null $title
  * @property string|null $description
- * @property \Illuminate\Support\Carbon $start_time
- * @property \Illuminate\Support\Carbon|null $end_time
- * @property \Illuminate\Support\Carbon|null $doors_time
+ * @property \Illuminate\Support\Carbon $start_datetime
+ * @property \Illuminate\Support\Carbon|null $end_datetime
+ * @property \Illuminate\Support\Carbon|null $doors_datetime
  * @property \Spatie\LaravelData\Contracts\BaseData|\Spatie\LaravelData\Contracts\TransformableData|null $location
  * @property string|null $event_link
  * @property string|null $ticket_url
@@ -34,9 +32,6 @@ use Spatie\Image\Enums\Fit;
  * @property EventStatus $status
  * @property int|null $rescheduled_to_id
  * @property string|null $reschedule_reason
- * @property ModerationStatus $moderation_status
- * @property \Illuminate\Support\Carbon|null $moderation_reviewed_at
- * @property int|null $moderation_reviewed_by
  * @property Visibility $visibility
  * @property string|null $event_type
  * @property float|null $distance_from_corvallis
@@ -61,7 +56,6 @@ use Spatie\Image\Enums\Fit;
  * @property-read string $venue_name
  * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read \App\Models\User|null $moderationReviewer
  * @property-read \App\Models\User|null $organizer
  * @property-read \App\Models\Event|null $rescheduledFrom
  * @property-read \App\Models\Event|null $rescheduledTo
@@ -81,6 +75,7 @@ use Spatie\Image\Enums\Fit;
  * @property-read int|null $tags_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $upheldReports
  * @property-read int|null $upheld_reports_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Event byGenre($genreName)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Event dateRange($range)
  * @method static \Database\Factories\EventFactory factory($count = null, $state = [])
@@ -107,8 +102,8 @@ use Spatie\Image\Enums\Fit;
  * @method static Builder<static>|Event whereDeletedAt($value)
  * @method static Builder<static>|Event whereDescription($value)
  * @method static Builder<static>|Event whereDistanceFromCorvallis($value)
- * @method static Builder<static>|Event whereDoorsTime($value)
- * @method static Builder<static>|Event whereEndTime($value)
+ * @method static Builder<static>|Event whereDoorsDatetime($value)
+ * @method static Builder<static>|Event whereEndDatetime($value)
  * @method static Builder<static>|Event whereEventLink($value)
  * @method static Builder<static>|Event whereEventType($value)
  * @method static Builder<static>|Event whereId($value)
@@ -117,7 +112,7 @@ use Spatie\Image\Enums\Fit;
  * @method static Builder<static>|Event whereOrganizerId($value)
  * @method static Builder<static>|Event wherePublishedAt($value)
  * @method static Builder<static>|Event whereRecurringSeriesId($value)
- * @method static Builder<static>|Event whereStartTime($value)
+ * @method static Builder<static>|Event whereStartDatetime($value)
  * @method static Builder<static>|Event whereStatus($value)
  * @method static Builder<static>|Event whereTicketPrice($value)
  * @method static Builder<static>|Event whereTicketUrl($value)
@@ -133,11 +128,20 @@ use Spatie\Image\Enums\Fit;
  * @method static Builder<static>|Event withTrashed(bool $withTrashed = true)
  * @method static Builder<static>|Event withoutTags(\ArrayAccess|\Spatie\Tags\Tag|array|string $tags, ?string $type = null)
  * @method static Builder<static>|Event withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Event extends ContentModel
 {
-    use HasPublishing, HasTimePeriod, SoftDeletes;
+    use HasPoster, HasPublishing, HasRecurringSeries, HasTimePeriod, SoftDeletes;
+
+    // HasPublishing configuration
+    protected static string $startTimeField = 'start_datetime';
+
+    protected static array $excludedStatuses = [
+        EventStatus::Cancelled,
+        EventStatus::Postponed,
+    ];
 
     // Report configuration
     protected static int $reportThreshold = 3;
@@ -149,29 +153,26 @@ class Event extends ContentModel
     protected static string $creatorForeignKey = 'organizer_id';
 
     // Activity logging configuration
-    protected static array $loggedFields = ['title', 'description', 'start_time', 'end_time', 'status', 'visibility'];
+    protected static array $loggedFields = ['title', 'description', 'start_datetime', 'end_datetime', 'status', 'visibility'];
 
     protected static string $logTitle = 'Event';
 
     protected $fillable = [
         'title',
         'description',
-        'start_time',
-        'end_time',
-        'doors_time',
+        'start_datetime',
+        'end_datetime',
+        'doors_datetime',
         'location',
+        'venue_id',
         'event_link',
         'ticket_url',
         'ticket_price',
         'published_at',
-        'approved_at',
         'organizer_id',
         'status',
         'rescheduled_to_id',
         'reschedule_reason',
-        'moderation_status',
-        'moderation_reviewed_at',
-        'moderation_reviewed_by',
         'visibility',
         'event_type',
         'distance_from_corvallis',
@@ -179,18 +180,19 @@ class Event extends ContentModel
         'auto_approved',
     ];
 
+    /**
+     * Virtual attributes that should be appended to array/JSON output.
+     * This makes them available to Filament forms during hydration.
+     */
     protected function casts(): array
     {
         return [
-            'start_time' => 'datetime',
-            'end_time' => 'datetime',
-            'doors_time' => 'datetime',
+            'start_datetime' => 'datetime',
+            'end_datetime' => 'datetime',
+            'doors_datetime' => 'datetime',
             'published_at' => 'datetime',
-            'approved_at' => 'datetime',
-            'moderation_reviewed_at' => 'datetime',
             'location' => LocationData::class,
             'status' => EventStatus::class,
-            'moderation_status' => ModerationStatus::class,
             'visibility' => Visibility::class,
             'auto_approved' => 'boolean',
             'distance_from_corvallis' => 'float',
@@ -203,14 +205,6 @@ class Event extends ContentModel
     public function organizer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'organizer_id');
-    }
-
-    /**
-     * Get the user who reviewed this event for moderation.
-     */
-    public function moderationReviewer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-    {
-        return $this->belongsTo(User::class, 'moderation_reviewed_by');
     }
 
     /**
@@ -227,22 +221,6 @@ class Event extends ContentModel
     public function rescheduledFrom(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Event::class, 'rescheduled_to_id');
-    }
-
-    /**
-     * Relationship to the recurring series this event belongs to.
-     */
-    public function recurringSeries()
-    {
-        return $this->belongsTo(RecurringSeries::class, 'recurring_series_id');
-    }
-
-    /**
-     * Check if this event is part of a recurring series.
-     */
-    public function isRecurring(): bool
-    {
-        return $this->recurring_series_id !== null;
     }
 
     /**
@@ -265,6 +243,14 @@ class Event extends ContentModel
     }
 
     /**
+     * Get the venue for this event.
+     */
+    public function venue(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Venue::class);
+    }
+
+    /**
      * Get genre tags.
      */
     public function getGenresAttribute()
@@ -277,11 +263,7 @@ class Event extends ContentModel
      */
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('poster')
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
-            ->singleFile()
-            ->onlyKeepLatest(1)
-            ->useFallbackUrl('/images/default-poster.png');
+        $this->registerPosterMediaCollection();
     }
 
     /**
@@ -289,49 +271,7 @@ class Event extends ContentModel
      */
     public function registerMediaConversions(?Media $media = null): void
     {
-        $this->addMediaConversion('thumb')
-            ->fit(Fit::Contain, 200, 258)
-            ->quality(90)
-            ->sharpen(10)
-            ->performOnCollections('poster');
-
-        $this->addMediaConversion('medium')
-            ->fit(Fit::Contain, 400, 517)
-            ->quality(85)
-            ->performOnCollections('poster');
-
-        $this->addMediaConversion('large')
-            ->fit(Fit::Contain, 600, 776)
-            ->quality(80)
-            ->performOnCollections('poster');
-
-        $this->addMediaConversion('optimized')
-            ->fit(Fit::Contain, 850, 1100)
-            ->quality(75)
-            ->performOnCollections('poster');
-    }
-
-    /**
-     * Get poster URL attributes.
-     */
-    public function getPosterUrlAttribute()
-    {
-        return $this->getFirstMediaUrl('poster', 'medium') ?: 'https://picsum.photos/400/517?random='.$this->id;
-    }
-
-    public function getPosterThumbUrlAttribute()
-    {
-        return $this->getFirstMediaUrl('poster', 'thumb') ?: 'https://picsum.photos/200/258?random='.$this->id;
-    }
-
-    public function getPosterLargeUrlAttribute()
-    {
-        return $this->getFirstMediaUrl('poster', 'large') ?: 'https://picsum.photos/600/776?random='.$this->id;
-    }
-
-    public function getPosterOptimizedUrlAttribute()
-    {
-        return $this->getFirstMediaUrl('poster', 'optimized') ?: 'https://picsum.photos/850/1100?random='.$this->id;
+        $this->registerPosterMediaConversions($media);
     }
 
     /**
@@ -374,114 +314,16 @@ class Event extends ContentModel
         return $this->performers()->where('band_profile_id', $band->id)->exists();
     }
 
-    /**
-     * Add a performer (band) to this event.
-     */
-    public function addPerformer(Band $band, array $options = []): bool
+    public function canPublish(): bool
     {
-        if ($this->hasPerformer($band)) {
-            return false;
-        }
-
-        if (! isset($options['order'])) {
-            $options['order'] = $this->performers()->max('event_bands.order') + 1 ?? 1;
-        }
-
-        $this->performers()->attach($band->id, [
-            'order' => $options['order'],
-            'set_length' => $options['set_length'] ?? null,
-        ]);
-
-        return true;
-    }
-
-    /**
-     * Remove a performer from this event.
-     */
-    public function removePerformer(Band $band): bool
-    {
-        if (! $this->hasPerformer($band)) {
-            return false;
-        }
-
-        $this->performers()->detach($band->id);
-
-        return true;
-    }
-
-    /**
-     * Update a performer's order in the lineup.
-     */
-    public function updatePerformerOrder(Band $band, int $order): bool
-    {
-        if (! $this->hasPerformer($band)) {
-            return false;
-        }
-
-        $this->performers()->updateExistingPivot($band->id, ['order' => $order]);
-
-        return true;
-    }
-
-    /**
-     * Update a performer's set length.
-     */
-    public function updatePerformerSetLength(Band $band, int $setLength): bool
-    {
-        if (! $this->hasPerformer($band)) {
-            return false;
-        }
-
-        $this->performers()->updateExistingPivot($band->id, ['set_length' => $setLength]);
-
-        return true;
-    }
-
-    /**
-     * Publish this event.
-     */
-    public function publish(): self
-    {
-        if (empty($this->title)) {
-            throw new \InvalidArgumentException('Event title is required to publish');
-        }
-
-        $this->update([
-            'published_at' => $this->published_at ?? now(),
-        ]);
-
-        return $this;
-    }
-
-    /**
-     * Unpublish this event.
-     */
-    public function unpublish(): self
-    {
-        $this->update([
-            'published_at' => null,
-        ]);
-
-        return $this;
-    }
-
-    /**
-     * Cancel this event.
-     */
-    public function cancel(?string $reason = null): self
-    {
-        $this->update([
-            'status' => EventStatus::Cancelled,
-        ]);
-
-        return $this;
+        return ! empty($this->title);
     }
 
     /**
      * Reschedule this event to a new event listing.
      *
-     * @param Event|int $newEvent The new event (or its ID) this is rescheduled to
-     * @param string|null $reason Optional reason for the reschedule
+     * @param  Event|int  $newEvent  The new event (or its ID) this is rescheduled to
+     * @param  string|null  $reason  Optional reason for the reschedule
      */
     public function reschedule(Event|int $newEvent, ?string $reason = null): self
     {
@@ -491,43 +333,6 @@ class Event extends ContentModel
             'status' => EventStatus::Postponed,
             'rescheduled_to_id' => $newEventId,
             'reschedule_reason' => $reason,
-        ]);
-
-        return $this;
-    }
-
-    /**
-     * Postpone this event (without setting a new date).
-     */
-    public function postpone(?string $reason = null): self
-    {
-        $this->update([
-            'status' => EventStatus::Postponed,
-            'reschedule_reason' => $reason,
-        ]);
-
-        return $this;
-    }
-
-    /**
-     * Mark this event as at capacity (sold out/full).
-     */
-    public function markAtCapacity(): self
-    {
-        $this->update([
-            'status' => EventStatus::AtCapacity,
-        ]);
-
-        return $this;
-    }
-
-    /**
-     * Mark this event as available again (reset from at capacity).
-     */
-    public function markAvailable(): self
-    {
-        $this->update([
-            'status' => EventStatus::Scheduled,
         ]);
 
         return $this;
@@ -546,15 +351,15 @@ class Event extends ContentModel
      */
     public function getDateRangeAttribute(): string
     {
-        if ($this->start_time && $this->end_time) {
-            if ($this->start_time->isSameDay($this->end_time)) {
-                return $this->start_time->format('M j, Y g:i A').' - '.$this->end_time->format('g:i A');
+        if ($this->start_datetime && $this->end_datetime) {
+            if ($this->start_datetime->isSameDay($this->end_datetime)) {
+                return $this->start_datetime->format('M j, Y g:i A').' - '.$this->end_datetime->format('g:i A');
             }
 
-            return $this->start_time->format('M j, Y g:i A').' - '.$this->end_time->format('M j, Y g:i A');
+            return $this->start_datetime->format('M j, Y g:i A').' - '.$this->end_datetime->format('M j, Y g:i A');
         }
 
-        return $this->start_time ? $this->start_time->format('M j, Y g:i A') : 'TBD';
+        return $this->start_datetime ? $this->start_datetime->format('M j, Y g:i A') : 'TBD';
     }
 
     /**
@@ -562,61 +367,7 @@ class Event extends ContentModel
      */
     public function isUpcoming(): bool
     {
-        return $this->start_time && $this->start_time->isFuture();
-    }
-
-    /**
-     * Scope to get published upcoming events.
-     */
-    public function scopePublishedUpcoming($query)
-    {
-        return $query->where('published_at', '<=', now())
-            ->whereNotNull('published_at')
-            ->where('start_time', '>', now())
-            ->whereNotIn('status', [EventStatus::Cancelled, EventStatus::Postponed])
-            ->orderBy('start_time');
-    }
-
-    /**
-     * Scope to get published past events.
-     */
-    public function scopePublishedPast($query)
-    {
-        return $query->where('published_at', '<=', now())
-            ->whereNotNull('published_at')
-            ->where('start_time', '<', now())
-            ->whereNotIn('status', [EventStatus::Cancelled, EventStatus::Postponed])
-            ->orderBy('start_time', 'desc');
-    }
-
-    /**
-     * Scope to get published events happening today.
-     */
-    public function scopePublishedToday($query)
-    {
-        return $query->where('published_at', '<=', now())
-            ->whereNotNull('published_at')
-            ->where('start_time', '>=', now()->startOfDay())
-            ->where('start_time', '<=', now()->endOfDay())
-            ->whereNotIn('status', [EventStatus::Cancelled, EventStatus::Postponed])
-            ->orderBy('start_time');
-    }
-
-    /**
-     * Scope to filter by date range.
-     */
-    public function scopeDateRange($query, $range)
-    {
-        switch ($range) {
-            case 'this_week':
-                return $query->whereBetween('start_time', [now()->startOfWeek(), now()->endOfWeek()]);
-            case 'this_month':
-                return $query->whereBetween('start_time', [now()->startOfMonth(), now()->endOfMonth()]);
-            case 'next_month':
-                return $query->whereBetween('start_time', [now()->addMonth()->startOfMonth(), now()->addMonth()->endOfMonth()]);
-            default:
-                return $query;
-        }
+        return $this->start_datetime && $this->start_datetime->isFuture();
     }
 
     /**
@@ -626,11 +377,13 @@ class Event extends ContentModel
     {
         switch ($venueType) {
             case 'cmc':
-                return $query->where(function ($q) {
-                    $q->whereNull('location->is_external')->orWhere('location->is_external', false);
+                return $query->whereHas('venue', function ($q) {
+                    $q->where('is_cmc', true);
                 });
             case 'external':
-                return $query->where('location->is_external', true);
+                return $query->whereHas('venue', function ($q) {
+                    $q->where('is_cmc', false);
+                });
             default:
                 return $query;
         }
@@ -675,6 +428,11 @@ class Event extends ContentModel
      */
     public function isExternalVenue(): bool
     {
+        // Use venue relationship if available, fallback to location JSON for backward compatibility
+        if ($this->venue) {
+            return ! $this->venue->is_cmc;
+        }
+
         return $this->location?->isExternal() ?? false;
     }
 
@@ -683,6 +441,11 @@ class Event extends ContentModel
      */
     public function getVenueNameAttribute(): string
     {
+        // Use venue relationship if available, fallback to location JSON for backward compatibility
+        if ($this->venue) {
+            return $this->venue->name;
+        }
+
         return $this->location?->getVenueName() ?? 'Corvallis Music Collective';
     }
 
@@ -691,6 +454,11 @@ class Event extends ContentModel
      */
     public function getVenueDetailsAttribute(): string
     {
+        // Use venue relationship if available, fallback to location JSON for backward compatibility
+        if ($this->venue) {
+            return $this->venue->formatted_address;
+        }
+
         return $this->location?->getVenueDetails() ?? 'Corvallis Music Collective';
     }
 
@@ -783,56 +551,6 @@ class Event extends ContentModel
     }
 
     /**
-     * Get the event as a Period object.
-     *
-     * @deprecated Use createPeriod() instead
-     */
-    public function getPeriod(): ?Period
-    {
-        return $this->createPeriod();
-    }
-
-    /**
-     * Check if this event overlaps with another period.
-     */
-    public function overlapsWith(Period $period): bool
-    {
-        $thisPeriod = $this->getPeriod();
-
-        if (! $thisPeriod) {
-            return false;
-        }
-
-        return $thisPeriod->overlapsWith($period);
-    }
-
-    /**
-     * Check if this event touches another period (adjacent periods).
-     */
-    public function touchesWith(Period $period): bool
-    {
-        $thisPeriod = $this->getPeriod();
-
-        if (! $thisPeriod) {
-            return false;
-        }
-
-        return $thisPeriod->touchesWith($period);
-    }
-
-    /**
-     * Get the duration of the event in hours.
-     */
-    public function getDurationAttribute(): float
-    {
-        if (! $this->start_time || ! $this->end_time) {
-            return 0;
-        }
-
-        return $this->start_time->diffInMinutes($this->end_time) / 60;
-    }
-
-    /**
      * Check if this event uses the CMC practice space (not external venue).
      */
     public function usesPracticeSpace(): bool
@@ -841,11 +559,20 @@ class Event extends ContentModel
     }
 
     /**
-     * Set a default location if none exists.
+     * Set a default venue if none exists.
      */
     protected static function booted(): void
     {
         static::creating(function (Event $event) {
+            // Set default venue to CMC if not specified
+            if (! $event->venue_id) {
+                $cmcVenue = Venue::cmc()->first();
+                if ($cmcVenue) {
+                    $event->venue_id = $cmcVenue->id;
+                }
+            }
+
+            // Backward compatibility: Set location JSON if not set
             if (! $event->location) {
                 $event->location = LocationData::cmc();
             }
@@ -863,18 +590,22 @@ class Event extends ContentModel
      */
     protected function syncSpaceReservation(): void
     {
-        $reservedAt = $this->start_time->copy()->subHours(2);
-        $reservedUntil = $this->end_time?->copy()->addHour() ?? $this->start_time->copy()->addHours(3);
+        \App\Actions\Events\SyncEventSpaceReservation::run($this);
+    }
 
-        $this->spaceReservation()->updateOrCreate(
-            [],
-            [
-                'type' => EventReservation::class,
-                'reserved_at' => $reservedAt,
-                'reserved_until' => $reservedUntil,
-                'status' => ReservationStatus::Confirmed,
-                'notes' => "Setup/breakdown for event: {$this->title}",
-            ]
-        );
+    /**
+     * Override HasTimePeriod trait to use correct field names.
+     */
+    protected function getStartTimeField(): string
+    {
+        return 'start_datetime';
+    }
+
+    /**
+     * Override HasTimePeriod trait to use correct field names.
+     */
+    protected function getEndTimeField(): string
+    {
+        return 'end_datetime';
     }
 }

@@ -4,6 +4,7 @@ use App\Actions\Notifications\SendMembershipReminders;
 use App\Actions\Notifications\SendReservationConfirmationReminders;
 use App\Actions\Notifications\SendReservationReminders;
 use App\Actions\RecurringReservations\GenerateFutureRecurringInstances;
+use App\Actions\Reservations\AutoCancelUnconfirmedReservations;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -34,8 +35,8 @@ Schedule::call(function () {
     GenerateFutureRecurringInstances::run();
 })->daily()->at('00:00');
 
-// Auto-cancel unconfirmed reservations daily
-// Schedule::command('reservations:auto-cancel')->dailyAt('08:00');
+// Auto-cancel unconfirmed Reserved reservations daily at 9:15 AM (after confirmation reminders)
+Schedule::call(fn () => AutoCancelUnconfirmedReservations::run())->dailyAt('09:15');
 
 // Expire credits daily
 Schedule::command('credits:expire')->dailyAt('01:00');

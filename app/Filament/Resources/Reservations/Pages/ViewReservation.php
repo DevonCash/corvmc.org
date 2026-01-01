@@ -8,7 +8,6 @@ use App\Actions\Reservations\CreateCheckoutSession;
 use App\Filament\Resources\Reservations\ReservationResource;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ViewRecord;
-use Illuminate\Support\Facades\Auth;
 
 class ViewReservation extends ViewRecord
 {

@@ -2,16 +2,22 @@
 
 namespace App\Concerns;
 
+use App\Enums\PublicationStatus;
 use Illuminate\Database\Eloquent\Builder;
 
 trait HasPublishing
 {
+    public function getPublicationDatetimeField(): string
+    {
+        return static::$publicationDatetimeField ?? 'published_at';
+    }
+
     /**
      * Initialize the trait.
      */
     public function initializeHasPublishing(): void
     {
-        $this->casts['published_at'] = 'datetime';
+        $this->casts[$this->getPublicationDatetimeField()] = 'datetime';
     }
 
     /**
@@ -38,11 +44,20 @@ trait HasPublishing
         return $this->published_at === null;
     }
 
+    public function canPublish(): bool
+    {
+        return true;
+    }
+
     /**
      * Publish the content immediately.
      */
     public function publish(): self
     {
+        if (! $this->canPublish()) {
+            throw new \Exception('This content cannot be published.');
+        }
+
         $this->update(['published_at' => now()]);
 
         return $this;
@@ -92,5 +107,88 @@ trait HasPublishing
     {
         return $query->whereNotNull('published_at')
             ->where('published_at', '>', now());
+    }
+
+    /**
+     * Get the start time field name for time-based published scopes.
+     */
+    protected function getStartTimeField(): string
+    {
+        return static::$startTimeField ?? 'start_datetime';
+    }
+
+    /**
+     * Get statuses to exclude from published time scopes.
+     */
+    protected function getExcludedStatuses(): array
+    {
+        return static::$excludedStatuses ?? [];
+    }
+
+    /**
+     * Scope to get published content that starts in the future (upcoming).
+     */
+    public function scopePublishedUpcoming(Builder $query): Builder
+    {
+        $startField = $this->getStartTimeField();
+        $query = $query->published()
+            ->where($startField, '>', now())
+            ->orderBy($startField);
+
+        $excludedStatuses = $this->getExcludedStatuses();
+        if (! empty($excludedStatuses)) {
+            $query->whereNotIn('status', $excludedStatuses);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Scope to get published content that already started (past).
+     */
+    public function scopePublishedPast(Builder $query): Builder
+    {
+        $startField = $this->getStartTimeField();
+        $query = $query->published()
+            ->where($startField, '<', now())
+            ->orderBy($startField, 'desc');
+
+        $excludedStatuses = $this->getExcludedStatuses();
+        if (! empty($excludedStatuses)) {
+            $query->whereNotIn('status', $excludedStatuses);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Scope to get published content happening today.
+     */
+    public function scopePublishedToday(Builder $query): Builder
+    {
+        $startField = $this->getStartTimeField();
+        $query = $query->published()
+            ->where($startField, '>=', now()->startOfDay())
+            ->where($startField, '<=', now()->endOfDay())
+            ->orderBy($startField);
+
+        $excludedStatuses = $this->getExcludedStatuses();
+        if (! empty($excludedStatuses)) {
+            $query->whereNotIn('status', $excludedStatuses);
+        }
+
+        return $query;
+    }
+
+    public function getPublicationStatusAttribute(): PublicationStatus
+    {
+        $publishedAtField = $this[$this->getPublicationDatetimeField()];
+        if (is_null($publishedAtField)) {
+            return PublicationStatus::Draft;
+        } elseif ($publishedAtField->isFuture()) {
+            return PublicationStatus::Scheduled;
+        } else {
+            return PublicationStatus::Published;
+        }
     }
 }

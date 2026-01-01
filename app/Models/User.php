@@ -71,6 +71,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $reservations_count
  * @property-read Collection<int, \Spatie\Permission\Models\Role> $roles
  * @property-read int|null $roles_count
+ * @property-read Collection<int, \App\Models\Sponsor> $sponsors
+ * @property-read int|null $sponsors_count
  * @property-read \App\Models\StaffProfile|null $staffProfile
  * @property-read Collection<int, \App\Models\Subscription> $subscriptions
  * @property-read int|null $subscriptions_count
@@ -80,6 +82,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $trust_balances_count
  * @property-read Collection<int, \App\Models\TrustTransaction> $trustTransactions
  * @property-read int|null $trust_transactions_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User boardMembers()
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User hasExpiredGenericTrial()
@@ -111,6 +114,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutPermission($permissions)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutRole($roles, $guard = null)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class User extends Authenticatable implements FilamentUser, HasAvatar
@@ -256,6 +260,13 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function profile(): HasOne
     {
         return $this->hasOne(MemberProfile::class);
+    }
+
+    public function sponsors(): BelongsToMany
+    {
+        return $this->belongsToMany(Sponsor::class, 'sponsor_user')
+            ->withTimestamps()
+            ->orderBy('sponsor_user.created_at', 'desc');
     }
 
     /**

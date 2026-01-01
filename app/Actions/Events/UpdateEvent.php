@@ -5,6 +5,7 @@ namespace App\Actions\Events;
 use App\Models\Event;
 use App\Notifications\EventUpdatedNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -20,14 +21,7 @@ class UpdateEvent
         return DB::transaction(function () use ($event, $data) {
             $originalData = $event->toArray();
 
-            // Convert location data if needed
-            if (isset($data['at_cmc'])) {
-                $data['location']['is_external'] = ! $data['at_cmc'];
-                unset($data['at_cmc']);
-            }
-
             $event->update($data);
-
             // Update flags if provided
             if (isset($data['notaflof'])) {
                 $event->setNotaflof($data['notaflof']);
@@ -51,9 +45,11 @@ class UpdateEvent
     protected function sendUpdateNotificationIfNeeded(Event $event, array $originalData, array $newData): void
     {
         try {
-            $significantFields = ['title', 'start_time', 'end_time', 'location', 'status'];
+            // Check for significant changes
+            $significantFields = ['title', 'start_datetime', 'end_datetime', 'venue_id', 'status'];
             $hasSignificantChanges = false;
 
+            // Check if any significant fields changed
             foreach ($significantFields as $field) {
                 if (isset($newData[$field]) && ($originalData[$field] ?? null) !== $newData[$field]) {
                     $hasSignificantChanges = true;
@@ -68,7 +64,7 @@ class UpdateEvent
                 }
             }
         } catch (\Exception $e) {
-            \Log::error('Failed to send event update notifications', [
+            Log::error('Failed to send event update notifications', [
                 'event_id' => $event->id,
                 'error' => $e->getMessage(),
             ]);

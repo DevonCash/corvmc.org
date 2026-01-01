@@ -2,19 +2,17 @@
 
 namespace App\Filament\Resources\Events\Schemas;
 
+use App\Models\Venue;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
-use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class EventForm
@@ -48,7 +46,7 @@ class EventForm
                         static::descriptionField(),
                         static::timeFieldsGrid(),
                         static::ticketingGrid(),
-                        static::locationFieldset(),
+                        static::venueField(),
                     ]),
             ]);
     }
@@ -76,7 +74,7 @@ class EventForm
     protected static function timeFieldsGrid(): Grid
     {
         return Grid::make([
-            'sm' => 1,
+            'sm' => 2,
             'md' => 4,
             'lg' => 4,
         ])
@@ -84,80 +82,47 @@ class EventForm
             ->schema([
                 static::eventDateField(),
                 static::doorsTimeField(),
-                static::startTimeField(),
                 static::endTimeField(),
             ]);
     }
 
-    protected static function eventDateField(): DatePicker
+    protected static function eventDateField(): DateTimePicker
     {
-        return DatePicker::make('event_date')
-            ->label('Event Date')
-            ->timezone(config('app.timezone'))
-            ->native(false)
-            ->required()
-            ->dehydrated(false)
-            ->afterStateHydrated(function (DatePicker $component, $record) {
-                if ($record?->start_time) {
-                    $component->state($record->start_time->format('Y-m-d'));
-                }
-            });
+        return DateTimePicker::make('start_datetime')
+            ->label('Start Time')
+            ->native(true)
+            ->seconds(false)
+            ->columnSpan(2)
+            ->required();
     }
 
     protected static function doorsTimeField(): TimePicker
     {
-        return TimePicker::make('doors_time_only')
+        return TimePicker::make('doors_datetime')
             ->label('Doors Time')
-            ->timezone(config('app.timezone'))
-            ->seconds(false)
-            ->dehydrated(false)
-            ->afterStateHydrated(function (TimePicker $component, $record) {
-                if ($record?->doors_time) {
-                    $component->state($record->doors_time->format('H:i'));
-                }
-            });
-    }
-
-    protected static function startTimeField(): TimePicker
-    {
-        return TimePicker::make('start_time_only')
-            ->label('Start Time')
-            ->timezone(config('app.timezone'))
-            ->seconds(false)
-            ->required()
-            ->dehydrated(false)
-            ->afterStateHydrated(function (TimePicker $component, $record) {
-                if ($record?->start_time) {
-                    $component->state($record->start_time->format('H:i'));
-                }
-            });
+            ->seconds(false);
     }
 
     protected static function endTimeField(): TimePicker
     {
-        return TimePicker::make('end_time_only')
+        return TimePicker::make('end_datetime')
             ->label('End Time')
-            ->timezone(config('app.timezone'))
-            ->seconds(false)
-            ->dehydrated(false)
-            ->afterStateHydrated(function (TimePicker $component, $record) {
-                if ($record?->end_time) {
-                    $component->state($record->end_time->format('H:i'));
-                }
-            });
+            ->seconds(false);
     }
 
     protected static function ticketingGrid(): Grid
     {
-        return Grid::make([
-            'sm' => 1,
-            'md' => 2,
-            'lg' => 2,
-        ])
+        return Grid::make([])
+            ->columns(3)
             ->columnSpanFull()
             ->schema([
                 static::eventLinkField(),
-                static::ticketPriceField(),
+                Grid::make()
+                    ->columns(1)
+                    ->schema([
+                        static::ticketPriceField(),
+                        static::notaflofField(),
+                    ]),
             ]);
     }
 
@@ -168,10 +133,16 @@ class EventForm
             ->placeholder('https://example.com/tickets')
             ->url()
             ->helperText('Link to tickets, Facebook event, or more info')
+            ->afterStateUpdated(function (TextInput $component, $state) {
+                // Ensure the URL starts with http:// or https://
+                if ($state && ! preg_match('/^https?:\/\//', $state)) {
+                    $component->state('https://'.ltrim($state, '/'));
+                }
+            })
             ->columnSpan([
-                'sm' => 1,
-                'md' => 1,
-                'lg' => 1,
+                'sm' => 2,
+                'md' => 2,
+                'lg' => 2,
             ]);
     }
 
@@ -183,79 +154,54 @@ class EventForm
             ->numeric()
             ->step(0.01)
             ->helperText('Leave blank for multiple prices')
-            ->hintIcon('tabler-info-circle')
-            ->hintIconTooltip('Use the heart button to toggle NOTAFLOF')
             ->placeholder('15.00')
-            ->live()
-            ->suffixAction(
-                Action::make('toggle_notaflof')
-                    ->label('NOTAFLOF')
-                    ->icon(function ($get) {
-                        return $get('notaflof') ? 'tabler-heart-filled' : 'tabler-heart';
-                    })
-                    ->color(function ($get) {
-                        return $get('notaflof') ? 'danger' : 'gray';
-                    })
-                    ->extraAttributes(function ($get) {
-                        return $get('notaflof') ?
-                            ['style' => '--gray-400: rgb(239 68 68);'] :
-                            [];
-                    })
-                    ->tooltip('Toggle NOTAFLOF (No One Turned Away For Lack of Funds)')
-                    ->action(function ($set, $get) {
-                        $set('notaflof', ! $get('notaflof'));
-                    })
-            )
-            ->columnSpan([
-                'sm' => 1,
-                'md' => 1,
-                'lg' => 1,
-            ]);
+            ->live();
     }
 
-    protected static function locationFieldset(): Fieldset
+    protected static function notaflofField(): Checkbox
     {
-        return Fieldset::make('Location')
-            ->columnSpanFull()
-            ->schema([
-                static::locationCheckboxField(),
-                static::locationDetailsField(),
-            ]);
+        return Checkbox::make('notaflof')
+            ->label('NOTAFLOF')
+            ->hintIcon('tabler-info-circle')
+            ->hintIconTooltip('No One Turned Away For Lack of Funds')
+            ->default(false);
     }
 
-    protected static function locationCheckboxField(): Checkbox
+    protected static function venueField(): Select
     {
-        return Checkbox::make('at_cmc')
-            ->label('At Corvallis Music Collective')
-            ->hintIcon('tabler-building-circus')
-            ->hintIconTooltip('Uncheck this box if the show is at an external venue')
-            ->default(true)
-            ->live()
-            ->afterStateHydrated(function (Checkbox $component, $record) {
-                if ($record && $record->location) {
-                    // Invert the stored is_external value for display
-                    $component->state(! $record->location->isExternal());
-                }
-            })
-            ->dehydrated(false)
+        return Select::make('venue_id')
+            ->label('Venue')
+            ->relationship('venue', 'name')
+            ->searchable()
+            ->preload()
+            ->required()
+            ->default(fn () => Venue::cmc()->first()?->id)
+            ->getOptionLabelFromRecordUsing(fn (Venue $venue) => $venue->is_cmc
+                ? $venue->name
+                : $venue->name.' - '.$venue->city)
+            ->createOptionForm([
+                TextInput::make('name')
+                    ->required()
+                    ->maxLength(255),
+                TextInput::make('address')
+                    ->maxLength(255),
+                TextInput::make('city')
+                    ->default('Corvallis')
+                    ->maxLength(100),
+                TextInput::make('state')
+                    ->default('OR')
+                    ->maxLength(2),
+                TextInput::make('zip')
+                    ->maxLength(10),
+            ])
             ->columnSpanFull();
-    }
-
-    protected static function locationDetailsField(): Textarea
-    {
-        return Textarea::make('location.details')
-            ->label('External Venue Details')
-            ->placeholder('Venue name, address, contact info, special instructions...')
-            ->visible(fn (Get $get) => ! $get('at_cmc'))
-            ->columnSpanFull()
-            ->rows(3);
     }
 
     protected static function publishedAtField(): DateTimePicker
     {
         return DateTimePicker::make('published_at')
             ->label('Publish At')
-            ->withoutSeconds()
+            ->seconds(false)
             ->prefixIconColor(function ($state) {
                 if (! $state) {
                     return 'gray';

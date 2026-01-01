@@ -13,7 +13,7 @@ Laravel 12 application for the Corvallis Music Collective, a nonprofit in Corval
 - **Spatie ecosystem**: permissions, tags, media library, model flags, periods, data DTOs
 - **Pest testing** with SQLite in-memory database
 - **Vite + TailwindCSS v4** with DaisyUI components
-- **Stripe** (Laravel Cashier) for reservation payments
+- **Stripe** (Laravel Cashier) for payments
 
 ## Development Commands
 
@@ -45,6 +45,7 @@ app/Actions/
 ```
 
 **Key patterns:**
+
 - Use `AsAction` trait, return strongly-typed results, single responsibility
 - Call as: `ActionName::run($params)` or `ActionName::dispatch($params)` (queued)
 
@@ -68,6 +69,7 @@ app/Filament/Resources/
 When embedding Filament actions in Livewire components (Pages, Widgets, etc.), follow these requirements:
 
 **Required traits and interfaces:**
+
 ```php
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -81,6 +83,7 @@ class MyPage extends Page implements HasActions, HasSchemas
 ```
 
 **Action method requirements:**
+
 - Method name must match the action name or action name + "Action"
 - **CRITICAL: Must have explicit `: Action` return type** (without it, Livewire cannot find the action)
 - Action name in `Action::make()` must match the method name
@@ -100,6 +103,7 @@ public function modifyMembershipAmountAction()
 ```
 
 **Rendering in Blade:**
+
 ```blade
 {{ $this->modifyMembershipAmountAction }}
 ```
@@ -109,6 +113,7 @@ public function modifyMembershipAmountAction()
 ### Model Architecture
 
 **Key models with important relationships:**
+
 - `User` → `MemberProfile` (one-to-one extended profiles)
 - `Band` → `BandMember` (many-to-many with roles: owner, admin, member)
 - `Production` → polymorphic lineup with `Band` performers
@@ -116,6 +121,7 @@ public function modifyMembershipAmountAction()
 - `Reservation` → polymorphic `reserver` (User, Production, Band, etc.)
 
 **Common Spatie traits:**
+
 ```php
 use HasRoles;           // Role-based permissions
 use HasTags;            // Genre/skill tagging
@@ -134,11 +140,13 @@ Uses `spatie/laravel-data` DTOs: `VenueLocationData`, cost calculation responses
 ## Business Logic Domains
 
 ### Membership System
+
 - **Roles**: member, sustaining member, staff, admin (via `spatie/laravel-permission`)
 - **Sustaining members**: Manually assigned role by administrators
 - **Benefits**: 4 free practice hours/month with credits system
 
 ### Practice Space Reservations
+
 - **Pricing**: $15/hour base rate
 - **Free hours**: Tracked via credits system (`user_credits` table)
 - **Business hours**: 9 AM - 10 PM
@@ -148,6 +156,7 @@ Uses `spatie/laravel-data` DTOs: `VenueLocationData`, cost calculation responses
 - **Recurring**: Sustaining members can create recurring reservations
 
 ### Productions (Events/Shows)
+
 - **Lifecycle**: pre-production → published → completed/cancelled (via `spatie/laravel-model-states`)
 - **Public routes**: `/events`, `/events/{production}`, `/show-tonight`
 - **Conflict detection**: Automatically checks for practice space conflicts
@@ -155,24 +164,29 @@ Uses `spatie/laravel-data` DTOs: `VenueLocationData`, cost calculation responses
 - **Performers**: Many-to-many with `Band`, includes set order and duration
 
 ### Member Directory
+
 - **Public directory**: `/members` route with search/filtering
 - **Visibility**: public, members-only, or private profiles
 - **Skills/genres**: Tagged via `spatie/laravel-tags`
 - **Flags**: `is_teacher`, `is_professional` for directory filtering
 
 ### Band Profiles
+
 - Public directory at `/bands`
 - Member roles: owner, admin, member (pivot table)
 - Email-based invitation system
 
 ### Equipment Management
+
 - Checkout/return system with condition tracking
 - Damage reports for equipment issues
 
 ## Database Conventions
 
 ### Money Handling
+
 **CRITICAL**: All monetary values are stored as **integers in cents**:
+
 ```php
 // $15.00 is stored as 1500
 protected function casts(): array {
@@ -183,11 +197,13 @@ protected function casts(): array {
 ```
 
 ### Timestamps & Conventions
+
 - Standard Laravel timestamps: `created_at`, `updated_at`
 - Many models use soft deletes
 - Reservations: `reserved_at`, `reserved_until` for time slots
 
 ### Time Handling
+
 **App Timezone**: `America/Los_Angeles` (PST/PDT)  
 **Database**: PostgreSQL stores timestamps in UTC internally  
 **Model Casts**: Automatically convert to/from app timezone
@@ -195,20 +211,25 @@ protected function casts(): array {
 **CRITICAL Best Practices:**
 
 ✅ **DO:**
+
 - Trust model casts - `$record->reserved_at` is already a Carbon instance
 - Check instance type before parsing:
+
   ```php
   $reservedAt = $data['reserved_at'] instanceof Carbon
       ? $data['reserved_at']
       : Carbon::parse($data['reserved_at'], config('app.timezone'));
   ```
+
 - Use `now()` and `today()` helpers (automatically use app timezone)
 - Specify timezone when creating from strings:
+
   ```php
   Carbon::parse('2024-10-11 14:00', config('app.timezone'));
   ```
 
 ❌ **DON'T:**
+
 - Re-parse Carbon instances: `Carbon::parse($record->reserved_at)` is wrong
 - Create datetimes without timezone: `Carbon::parse('2024-10-11 14:00')` uses UTC!
 - Use `toDateString()` then re-parse (loses time and timezone info)
@@ -238,6 +259,7 @@ Uses **Pest** with `RefreshDatabase` trait and in-memory SQLite. Tests in `tests
 ## PHPStan Type Safety (Level 2)
 
 ### Type Hierarchy
+
 1. Specific model classes (`User`, `Event`)
 2. Interfaces for polymorphic cases (`Reportable`)
 3. Type checks with `instanceof`
@@ -248,6 +270,7 @@ Uses **Pest** with `RefreshDatabase` trait and in-memory SQLite. Tests in `tests
 ### Key Patterns
 
 **Static Property Pattern:**
+
 ```php
 // In trait - define default
 protected static string $creatorForeignKey = 'user_id';
@@ -257,22 +280,26 @@ protected static string $creatorForeignKey = 'organizer_id';
 ```
 
 **@property Annotations:**
+
 - Enum casts: `@property PaymentStatus $payment_status`
 - Relationships: `@property-read User|null $organizer`
 - Aggregate counts: `@property-read int|null $loans_count`
 
 **Typed Closure Parameters:**
+
 ```php
 ->map(fn (\App\Models\Equipment $item) => $item->name)
 ```
 
 **PHPStan Ignores for Framework Magic:**
+
 ```php
 /** @phpstan-ignore method.notFound */
 return $query->public();
 ```
 
 ### Conventions
+
 - Ask before adding `@phpstan-ignore` annotations
 - Use `getKey()` instead of `->id` for interface types
 - Prefer interfaces over generic `Model` types

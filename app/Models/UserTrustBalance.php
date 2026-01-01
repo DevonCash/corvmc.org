@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserTrustBalance aboveThreshold(int $threshold)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserTrustBalance between(int $min, int $max)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserTrustBalance forContentType(string $contentType)
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserTrustBalance whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserTrustBalance whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserTrustBalance whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class UserTrustBalance extends Model

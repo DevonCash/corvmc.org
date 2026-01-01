@@ -13,7 +13,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * Tracks equipment damage reports and repair workflows.
- * 
+ *
  * Similar to GitHub issues for tracking equipment problems from discovery
  * through completion of repairs, with assignment, priority, and cost tracking.
  *
@@ -50,6 +50,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
  * @property-read int|null $media_count
  * @property-read \App\Models\User $reportedBy
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport assigned()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport bySeverity(string $severity)
  * @method static \Database\Factories\EquipmentDamageReportFactory factory($count = null, $state = [])
@@ -82,6 +83,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EquipmentDamageReport withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class EquipmentDamageReport extends Model implements HasMedia

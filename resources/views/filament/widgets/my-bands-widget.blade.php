@@ -153,7 +153,7 @@
                                         @foreach($band['recent_productions'] as $production)
                                             <p class="text-xs text-gray-600 dark:text-gray-400">
                                                 • {{ $production['title'] }} at {{ $production['venue_name'] }}
-                                                ({{ $production['start_time']->format('M j') }})
+                                                ({{ $production['start_datetime']->format('M j') }})
                                             </p>
                                         @endforeach
                                     </div>

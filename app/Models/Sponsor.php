@@ -10,7 +10,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * Community Sponsor
- * 
+ *
  * Represents organizations and partners supporting CMC through cash sponsorships
  * or in-kind partnerships. Sponsors receive benefits based on their tier level.
  *
@@ -32,6 +32,9 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property-read string $tier_name
  * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
  * @property-read int|null $media_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $sponsoredMembers
+ * @property-read int|null $sponsored_members_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor byTier(string $tier)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor cash()
@@ -58,6 +61,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor whereWebsiteUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Sponsor withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Sponsor extends Model implements HasMedia
@@ -80,6 +84,20 @@ class Sponsor extends Model implements HasMedia
         'is_active' => 'boolean',
         'started_at' => 'date',
     ];
+
+    /**
+     * Relationships
+     */
+
+    /**
+     * Get the members sponsored by this sponsor
+     */
+    public function sponsoredMembers()
+    {
+        return $this->belongsToMany(User::class, 'sponsor_user')
+            ->withTimestamps()
+            ->orderBy('sponsor_user.created_at', 'desc');
+    }
 
     /**
      * Sponsorship tier constants
@@ -140,6 +158,30 @@ class Sponsor extends Model implements HasMedia
             self::TIER_IN_KIND => 10,
             default => 0,
         };
+    }
+
+    /**
+     * Get the number of currently used sponsorship slots
+     */
+    public function usedSlots(): int
+    {
+        return $this->sponsoredMembers()->count();
+    }
+
+    /**
+     * Get the number of available sponsorship slots
+     */
+    public function availableSlots(): int
+    {
+        return max(0, $this->sponsored_memberships - $this->usedSlots());
+    }
+
+    /**
+     * Check if sponsor has available sponsorship slots
+     */
+    public function hasAvailableSlots(): bool
+    {
+        return $this->availableSlots() > 0;
     }
 
     /**

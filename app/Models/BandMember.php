@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $status
  * @property-read \App\Models\Band $band
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember active()
  * @method static \Database\Factories\BandMemberFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember for(\App\Models\User $user)
@@ -35,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class BandMember extends Model

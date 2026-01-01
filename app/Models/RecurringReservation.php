@@ -4,11 +4,12 @@ namespace App\Models;
 
 /**
  * Recurring Reservation Pattern (DEPRECATED - Use RecurringSeries instead)
- * 
+ *
  * This class is kept for backwards compatibility.
  * All new code should use RecurringSeries with recurable_type = Reservation::class
  *
  * @deprecated Use RecurringSeries instead
+ *
  * @property int $id
  * @property int $user_id
  * @property string $recurrence_rule
@@ -32,6 +33,7 @@ namespace App\Models;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Reservation> $upcomingInstances
  * @property-read int|null $upcoming_instances_count
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringReservation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringReservation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringReservation query()
@@ -49,6 +51,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringReservation whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringReservation whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecurringReservation whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class RecurringReservation extends RecurringSeries

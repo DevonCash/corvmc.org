@@ -85,7 +85,7 @@ class ModifyMembershipAmountAction
                         $breakdown = \App\Actions\Payments\GetFeeBreakdown::run($amount, $get('cover_fees'));
                         $totalAmount = Money::of($breakdown['total_amount'], 'USD');
 
-                        return $breakdown['description'] . ' = ' . $totalAmount->formatTo('en_US') . ' total per month';
+                        return $breakdown['description'].' = '.$totalAmount->formatTo('en_US').' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])

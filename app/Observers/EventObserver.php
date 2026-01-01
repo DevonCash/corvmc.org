@@ -23,8 +23,8 @@ class EventObserver
         $this->clearEventCaches($event);
 
         // If event date changed, clear both old and new date caches
-        if ($event->isDirty('start_time')) {
-            $originalDate = $event->getOriginal('start_time');
+        if ($event->isDirty('start_datetime')) {
+            $originalDate = $event->getOriginal('start_datetime');
             if ($originalDate) {
                 Cache::forget('events.conflicts.'.date('Y-m-d', strtotime($originalDate)));
             }
@@ -49,9 +49,9 @@ class EventObserver
         // Clear all user-specific upcoming events caches (wildcard not supported, so we'll clear on next load)
 
         // Clear conflict detection cache for the event date
-        if ($event->start_time) {
-            $start_time = \Illuminate\Support\Carbon::parse($event->start_time);
-            $date = $start_time->format('Y-m-d');
+        if ($event->start_datetime) {
+            $start_datetime = \Illuminate\Support\Carbon::parse($event->start_datetime);
+            $date = $start_datetime->format('Y-m-d');
             Cache::forget("events.conflicts.{$date}");
         }
 

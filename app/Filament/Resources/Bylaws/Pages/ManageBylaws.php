@@ -14,7 +14,6 @@ use Filament\Schemas\Components\Form;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 
-
 /**
  * @property Form $form
  */

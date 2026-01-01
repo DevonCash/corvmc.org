@@ -93,13 +93,13 @@
                             {{-- Date --}}
                             <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mb-1">
                                 <x-tabler-calendar class="w-3 h-3" />
-                                <span class="truncate">{{ $event['start_time']->format('M j, Y') }}</span>
+                                <span class="truncate">{{ $event['start_datetime']->format('M j, Y') }}</span>
                             </div>
 
                             {{-- Time --}}
                             <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mb-1">
                                 <x-tabler-clock class="w-3 h-3" />
-                                <span class="truncate">{{ $event['start_time']->format('g:i A') }}</span>
+                                <span class="truncate">{{ $event['start_datetime']->format('g:i A') }}</span>
                             </div>
 
                             {{-- Venue --}}
