@@ -4,7 +4,7 @@ namespace App\Actions\SpamPrevention;
 
 use App\Data\SpamCheckResultData;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\{DB, Log};
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class ScanUsersForSpam
@@ -36,7 +36,6 @@ class ScanUsersForSpam
         foreach ($users as $user) {
             /** @var SpamCheckResultData $checkResult */
             $checkResult = CheckEmailAgainstStopForumSpam::run($user->email);
-
             // Track errors
             if ($checkResult->hasError()) {
                 $errors++;
@@ -69,7 +68,7 @@ class ScanUsersForSpam
                         $results[count($results) - 1]['deleted'] = true;
                         $deleted++;
                     } catch (\Exception $e) {
-                        \Log::error('Failed to delete spam user', [
+                        Log::error('Failed to delete spam user', [
                             'user_id' => $user->id,
                             'email' => $user->email,
                             'error' => $e->getMessage(),

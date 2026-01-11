@@ -60,7 +60,7 @@ class DailyReservationDigestNotification extends Notification implements ShouldQ
             $startTime = $reservation->reserved_at->format('g:i A');
             $endTime = $reservation->reserved_until->format('g:i A');
             $duration = $reservation->duration;
-            $status = ucfirst($reservation->status);
+            $status = ucfirst($reservation->status->name);
 
             $message->line('---');
             $message->line("**{$startTime} - {$endTime}** ({$duration} hours)");

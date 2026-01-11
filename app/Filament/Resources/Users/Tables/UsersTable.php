@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -27,6 +28,8 @@ class UsersTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->icon(fn (User $record) => $record->hasRole('admin') ? 'tabler-settings' : ($record->hasRole('sustaining member') ? 'tabler-heart' : null))
+                    ->iconPosition('after')
                     ->searchable()
                     ->sortable(),
 
@@ -41,6 +44,7 @@ class UsersTable
                 TextColumn::make('roles.name')
                     ->badge()
                     ->label('Roles')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->separator(','),
 
                 TextColumn::make('created_at')

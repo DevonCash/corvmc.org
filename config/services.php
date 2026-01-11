@@ -65,6 +65,7 @@ return [
 
     'stopforumspam' => [
         'api_url' => env('STOPFORUMSPAM_API_URL', 'https://api.stopforumspam.org/api'),
+        'api_key' => env('STOPFORUMSPAM_API_KEY', ''),
         'cache_duration_hours' => env('STOPFORUMSPAM_CACHE_HOURS', 24),
         'enabled' => env('STOPFORUMSPAM_ENABLED', true),
     ],

@@ -45,16 +45,10 @@ class ScanUsersForSpam extends Command
         $this->newLine();
 
         // Run the scan with progress bar
-        $results = $this->withProgressBar(
-            range(1, 1), // Single step since action handles all users internally
-            function () use ($dryRun, $removeSpam) {
-                return ScanUsersForSpamAction::run(
-                    dryRun: $dryRun,
-                    removeSpam: $removeSpam
-                );
-            }
+        $results = ScanUsersForSpamAction::run(
+            dryRun: $dryRun,
+            removeSpam: $removeSpam
         );
-
         $this->newLine(2);
 
         // Extract results from array
@@ -112,24 +106,5 @@ class ScanUsersForSpam extends Command
         }
 
         return self::SUCCESS;
-    }
-
-    /**
-     * Execute callback with progress bar
-     */
-    private function withProgressBar(array $items, callable $callback): mixed
-    {
-        $bar = $this->output->createProgressBar(count($items));
-        $bar->start();
-
-        $result = null;
-        foreach ($items as $item) {
-            $result = $callback($item);
-            $bar->advance();
-        }
-
-        $bar->finish();
-
-        return $result;
     }
 }

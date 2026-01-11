@@ -3,6 +3,7 @@
 namespace App\Actions\SpamPrevention;
 
 use App\Data\SpamCheckResultData;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -39,11 +40,9 @@ class CheckEmailAgainstStopForumSpam
 
         try {
             // Call StopForumSpam API with MD5 hash for privacy
+            $url = config('services.stopforumspam.api_url') . '?api_key=' . config('services.stopforumspam.api_key') . '&email=' . urlencode($email) . '&json';
             $response = Http::timeout(10)
-                ->get($config['api_url'], [
-                    'email' => $emailHash,
-                    'f' => 'json',
-                ]);
+                ->get($url);
 
             // Check if request was successful
             if (! $response->successful()) {
@@ -74,11 +73,9 @@ class CheckEmailAgainstStopForumSpam
             Cache::put(
                 $cacheKey,
                 $result,
-                now()->addHours($config['cache_duration_hours'])
             );
 
             return $result;
-
         } catch (\Exception $e) {
             Log::error('StopForumSpam API check failed', [
                 'email_hash' => $emailHash,
