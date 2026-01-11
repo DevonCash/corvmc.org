@@ -13,6 +13,11 @@ class ListEquipmentLoans extends ListRecords
 
     protected static ?string $parentResource = EquipmentResource::class;
 
+    protected function getTableQuery(): ?\Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getTableQuery()->with(['borrower', 'equipment']);
+    }
+
     protected function getHeaderActions(): array
     {
         return [

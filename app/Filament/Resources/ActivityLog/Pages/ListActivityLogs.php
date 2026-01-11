@@ -11,6 +11,11 @@ class ListActivityLogs extends ListRecords
 {
     protected static string $resource = ActivityLogResource::class;
 
+    protected function getTableQuery(): ?\Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getTableQuery()->with(['causer', 'subject']);
+    }
+
     protected function getHeaderActions(): array
     {
         return [

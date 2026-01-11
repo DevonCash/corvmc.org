@@ -33,10 +33,10 @@ class ListBands extends ListRecords
     {
         return [
             'all_bands' => Tab::make('All Bands')
-                ->modifyQueryUsing(fn (Builder $query) => $query->with(['media', 'tags'])),
+                ->modifyQueryUsing(fn (Builder $query) => $query->with(['media', 'tags', 'owner', 'members'])),
             'my_bands' => Tab::make('My Bands')
                 ->modifyQueryUsing(
-                    fn (Builder $query) => $query->with(['media', 'tags'])->where(function (Builder $query) {
+                    fn (Builder $query) => $query->with(['media', 'tags', 'owner', 'members'])->where(function (Builder $query) {
                         $query->where('owner_id', User::me()->id)
                             ->orWhereHas('members', function (Builder $query) {
                                 $query->where('user_id', User::me()->id)
