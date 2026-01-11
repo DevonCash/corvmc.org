@@ -58,7 +58,6 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
             'report' => false,
-            'temporary_url' => true,
         ],
 
         'r2' => [
@@ -72,7 +71,6 @@ return [
             'use_path_style_endpoint' => true,
             'throw' => true,
             'report' => false,
-            'temporary_url' => true, // Important for temp file access
         ],
 
         'media' => [
