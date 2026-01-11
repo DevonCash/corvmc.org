@@ -346,11 +346,10 @@ class Band extends ContentModel
         }
 
         // Check visibility settings
-        return match ((string) $this->visibility) {
-            'public' => true,
-            'members' => true, // All logged-in users are considered members
-            'private' => false,
-            default => false,
+        return match ($this->visibility) {
+            Visibility::Public => true,
+            Visibility::Members => true, // All logged-in users are considered members
+            Visibility::Private => false,
         };
     }
 
