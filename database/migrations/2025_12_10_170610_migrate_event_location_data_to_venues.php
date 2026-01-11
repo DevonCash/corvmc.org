@@ -30,37 +30,46 @@ return new class extends Migration
             ]);
         }
 
-        // Process all events
-        Event::chunk(100, function ($events) use ($cmcVenue) {
+        // Process all events using raw database queries for stability
+        DB::table('events')->orderBy('id')->chunk(100, function ($events) use ($cmcVenue) {
             foreach ($events as $event) {
                 // Skip if already has venue_id (shouldn't happen, but be safe)
                 if ($event->venue_id) {
                     continue;
                 }
 
-                // Parse location JSON
-                $location = $event->location;
+                // Parse location JSON directly from database
+                $locationJson = $event->location;
 
-                if (! $location) {
+                if (! $locationJson) {
                     // No location data, default to CMC
-                    $event->update(['venue_id' => $cmcVenue->id]);
+                    DB::table('events')
+                        ->where('id', $event->id)
+                        ->update(['venue_id' => $cmcVenue->id]);
 
                     continue;
                 }
 
+                // Decode JSON to array
+                $location = is_string($locationJson) ? json_decode($locationJson, true) : (array) $locationJson;
+
                 // Check if external venue
-                $isExternal = $location->is_external;
+                $isExternal = $location['is_external'] ?? false;
 
                 if (! $isExternal) {
                     // CMC event
-                    $event->update(['venue_id' => $cmcVenue->id]);
+                    DB::table('events')
+                        ->where('id', $event->id)
+                        ->update(['venue_id' => $cmcVenue->id]);
                 } else {
                     // External event - parse details
-                    $details = $location->details ?? '';
+                    $details = $location['details'] ?? '';
 
                     if (empty($details)) {
                         // External but no details, still default to CMC
-                        $event->update(['venue_id' => $cmcVenue->id]);
+                        DB::table('events')
+                            ->where('id', $event->id)
+                            ->update(['venue_id' => $cmcVenue->id]);
 
                         continue;
                     }
@@ -99,7 +108,9 @@ return new class extends Migration
                         ]);
                     }
 
-                    $event->update(['venue_id' => $venue->id]);
+                    DB::table('events')
+                        ->where('id', $event->id)
+                        ->update(['venue_id' => $venue->id]);
                 }
             }
         });
