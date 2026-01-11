@@ -62,4 +62,10 @@ return [
             storage_path('app/google-calendar-service-account.json')
         ),
     ],
+
+    'stopforumspam' => [
+        'api_url' => env('STOPFORUMSPAM_API_URL', 'https://api.stopforumspam.org/api'),
+        'cache_duration_hours' => env('STOPFORUMSPAM_CACHE_HOURS', 24),
+        'enabled' => env('STOPFORUMSPAM_ENABLED', true),
+    ],
 ];

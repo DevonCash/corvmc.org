@@ -3,6 +3,7 @@
 namespace App\Filament\Pages\Auth;
 
 use App\Models\Invitation;
+use App\Rules\NotSpamEmail;
 use Filament\Auth\Pages\Register as BaseRegister;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
@@ -68,7 +69,8 @@ class Register extends BaseRegister
             ->maxLength(255)
             ->unique($this->getUserModel())
             ->disabled(fn () => ! empty($this->invitationToken)) // Disable if from invitation
-            ->dehydrated();
+            ->dehydrated()
+            ->rule(new NotSpamEmail());
     }
 
     protected function handleRegistration(array $data): Model
