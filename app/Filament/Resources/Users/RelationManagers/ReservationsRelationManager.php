@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\Users\RelationManagers;
 
+use App\Enums\ReservationStatus;
+use App\Filament\Resources\SpaceManagement\Tables\SpaceManagementTable;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Google\Service\Compute\Resource\Reservations;
 
 class ReservationsRelationManager extends RelationManager
 {
@@ -29,22 +32,17 @@ class ReservationsRelationManager extends RelationManager
                     ->numeric()
                     ->default(0),
                 Forms\Components\Select::make('status')
-                    ->options([
-                        'confirmed' => 'Confirmed',
-                        'pending' => 'Pending',
-                        'cancelled' => 'Cancelled',
-                    ])
-                    ->default('pending'),
+                    ->options(ReservationStatus::class)
+                    ->default(ReservationStatus::Scheduled),
             ]);
     }
 
     public function table(Table $table): Table
     {
+        return SpaceManagementTable::configure($table)->groups([])->defaultGroup(null);
         return $table
             ->recordTitleAttribute('title')
             ->columns([
-                Tables\Columns\TextColumn::make('title')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('reserved_at')
                     ->dateTime()
                     ->sortable(),
@@ -55,13 +53,7 @@ class ReservationsRelationManager extends RelationManager
                     ->numeric()
                     ->suffix(' hrs'),
                 Tables\Columns\TextColumn::make('status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'confirmed' => 'success',
-                        'pending' => 'warning',
-                        'cancelled' => 'danger',
-                        default => 'gray',
-                    }),
+                    ->badge(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -69,11 +61,7 @@ class ReservationsRelationManager extends RelationManager
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'confirmed' => 'Confirmed',
-                        'pending' => 'Pending',
-                        'cancelled' => 'Cancelled',
-                    ]),
+                    ->options(ReservationStatus::class),
             ])
             ->headerActions([
                 Actions\CreateAction::make(),

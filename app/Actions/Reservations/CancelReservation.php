@@ -104,7 +104,7 @@ class CancelReservation
             ->icon('tabler-calendar-x')
             ->color('danger')
             ->visible(
-                fn (?Reservation $record) => $record?->status->isActive()
+                fn (?Reservation $record) => $record?->status->isActive() && $record->reserved_until > now()
             )
             ->authorize('update')
             ->requiresConfirmation()

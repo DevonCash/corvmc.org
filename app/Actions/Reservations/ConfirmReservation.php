@@ -11,7 +11,8 @@ use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Notifications\ReservationConfirmedNotification;
-use Illuminate\Support\Facades\DB;
+use Filament\Forms\Components\Toggle;
+use Illuminate\Support\Facades\{DB, Log};
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class ConfirmReservation
@@ -24,7 +25,7 @@ class ConfirmReservation
      * For Scheduled reservations: Credits were already deducted at scheduling time.
      * For Reserved reservations: Credits are deducted now at confirmation time.
      */
-    public function handle(RehearsalReservation $reservation): RehearsalReservation
+    public function handle(RehearsalReservation $reservation, bool $notify_user = true): RehearsalReservation
     {
         if (! in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
             return $reservation;
@@ -64,9 +65,11 @@ class ConfirmReservation
 
         // Send notification outside transaction - don't let email failures affect the confirmation
         try {
-            $user->notify(new ReservationConfirmedNotification($reservation));
+            if ($notify_user) {
+                $user->notify(new ReservationConfirmedNotification($reservation));
+            }
         } catch (\Exception $e) {
-            \Log::error('Failed to send reservation confirmation email', [
+            Log::error('Failed to send reservation confirmation email', [
                 'reservation_id' => $reservation->id,
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
@@ -77,7 +80,7 @@ class ConfirmReservation
         try {
             SyncReservationToGoogleCalendar::run($reservation, 'update');
         } catch (\Exception $e) {
-            \Log::error('Failed to sync reservation to Google Calendar', [
+            Log::error('Failed to sync reservation to Google Calendar', [
                 'reservation_id' => $reservation->id,
                 'error' => $e->getMessage(),
             ]);
@@ -92,11 +95,17 @@ class ConfirmReservation
             ->label('Confirm')
             ->icon('tabler-check')
             ->color('success')
-            ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation &&
+            ->visible(fn(Reservation $record) => $record instanceof RehearsalReservation &&
                 in_array($record->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved]) &&
                 User::me()?->can('manage reservations'))
+            ->schema([
+                Toggle::make('notify_user')
+                    ->label('Notify User')
+                    ->default(true)
+                    ->helperText('Send a confirmation email to the user.'),
+            ])
             ->requiresConfirmation()
-            ->action(function (Reservation $record) {
+            ->action(function (Reservation $record, array $data) {
                 static::run($record);
 
                 \Filament\Notifications\Notification::make()
