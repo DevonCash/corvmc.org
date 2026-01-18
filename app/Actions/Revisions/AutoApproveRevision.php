@@ -23,12 +23,19 @@ class AutoApproveRevision
         ]);
 
         $result = DB::transaction(function () use ($revision) {
+            // Check if this revision was coalesced
+            $wasCoalesced = $revision->created_at->diffInSeconds($revision->updated_at) > 2;
+            $reviewReason = 'Auto-approved based on user trust level';
+            if ($wasCoalesced) {
+                $reviewReason .= ' (after coalescing additional changes)';
+            }
+
             // Mark as auto-approved
             $revision->update([
                 'status' => Revision::STATUS_APPROVED,
                 'auto_approved' => true,
                 'reviewed_at' => now(),
-                'review_reason' => 'Auto-approved based on user trust level',
+                'review_reason' => $reviewReason,
             ]);
 
             // Apply the changes to the model

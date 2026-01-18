@@ -72,13 +72,7 @@ class ReviewRevisionAction
         $submitter = $record->submittedBy->name ?? 'Unknown';
         $submittedAt = $record->created_at->diffForHumans();
 
-        $description = "Submitted by {$submitter} {$submittedAt}";
-
-        if ($record->submission_reason) {
-            $description .= " — \"{$record->submission_reason}\"";
-        }
-
-        return $description;
+        return "Submitted by {$submitter} {$submittedAt}";
     }
 
     protected static function approveAction(): Action

@@ -49,6 +49,17 @@ class QueueRevisionForReview
     protected function notifyModerators(Revision $revision, string $priority): void
     {
         try {
+            // Only notify if this is a new revision (not being coalesced)
+            $wasRecentlyCreated = $revision->created_at->diffInSeconds($revision->updated_at) < 2;
+
+            if (! $wasRecentlyCreated) {
+                Log::info('Skipping moderator notification - revision was coalesced', [
+                    'revision_id' => $revision->id,
+                ]);
+
+                return;
+            }
+
             // Get users with revision approval permissions
             $moderators = User::permission('approve revisions')->get();
 

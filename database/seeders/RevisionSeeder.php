@@ -71,7 +71,6 @@ class RevisionSeeder extends Seeder
                     'reviewed_by_id' => $status !== Revision::STATUS_PENDING ? $users->random()->id : null,
                     'reviewed_at' => $status !== Revision::STATUS_PENDING ? fake()->dateTimeBetween('-1 week', 'now') : null,
                     'review_reason' => $status !== Revision::STATUS_PENDING ? $this->getReviewReason($status) : null,
-                    'submission_reason' => fake()->optional(0.5)->sentence(),
                     'revision_type' => Revision::TYPE_UPDATE,
                     'auto_approved' => false,
                 ]);
@@ -92,7 +91,6 @@ class RevisionSeeder extends Seeder
                 'reviewed_by_id' => null,
                 'reviewed_at' => now(),
                 'review_reason' => null,
-                'submission_reason' => 'Updated my profile information',
                 'revision_type' => Revision::TYPE_UPDATE,
                 'auto_approved' => true,
             ]);
@@ -122,7 +120,6 @@ class RevisionSeeder extends Seeder
                 'reviewed_by_id' => $status !== Revision::STATUS_PENDING ? $users->random()->id : null,
                 'reviewed_at' => $status !== Revision::STATUS_PENDING ? fake()->dateTimeBetween('-3 days', 'now') : null,
                 'review_reason' => $status !== Revision::STATUS_PENDING ? $this->getReviewReason($status) : null,
-                'submission_reason' => 'Updated band information',
                 'revision_type' => Revision::TYPE_UPDATE,
                 'auto_approved' => false,
             ]);
@@ -142,7 +139,6 @@ class RevisionSeeder extends Seeder
                 'reviewed_by_id' => $users->random()->id,
                 'reviewed_at' => fake()->dateTimeBetween('-1 week', 'now'),
                 'review_reason' => 'Contains promotional links and violates community guidelines.',
-                'submission_reason' => 'Updated my bio',
                 'revision_type' => Revision::TYPE_UPDATE,
                 'auto_approved' => false,
             ]);
@@ -162,7 +158,6 @@ class RevisionSeeder extends Seeder
                 'reviewed_by_id' => null,
                 'reviewed_at' => null,
                 'review_reason' => null,
-                'submission_reason' => 'Added more details about the event',
                 'revision_type' => Revision::TYPE_UPDATE,
                 'auto_approved' => false,
             ]);

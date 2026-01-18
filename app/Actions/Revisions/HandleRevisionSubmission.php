@@ -15,6 +15,16 @@ class HandleRevisionSubmission
      */
     public function handle(Revision $revision): void
     {
+        // Guard: Don't re-process already-reviewed revisions
+        if ($revision->isReviewed()) {
+            Log::info('Skipping review handling - revision already reviewed', [
+                'revision_id' => $revision->id,
+                'status' => $revision->status,
+            ]);
+
+            return;
+        }
+
         Log::info('Revision submitted for review', [
             'revision_id' => $revision->id,
             'model_type' => $revision->revisionable_type,
@@ -25,7 +35,17 @@ class HandleRevisionSubmission
 
         // Check if this revision can be auto-approved based on trust
         if ($this->shouldAutoApprove($revision)) {
-            AutoApproveRevision::run($revision);
+            try {
+                AutoApproveRevision::run($revision);
+            } catch (\Exception $e) {
+                Log::error('Auto-approval failed, falling back to manual review', [
+                    'revision_id' => $revision->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                // Fall back to manual review
+                QueueRevisionForReview::run($revision);
+            }
 
             return;
         }

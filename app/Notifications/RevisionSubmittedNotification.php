@@ -50,13 +50,8 @@ class RevisionSubmittedNotification extends Notification implements ShouldQueue
             ->line("**Model:** {$modelName}")
             ->line("**Submitted by:** {$submitterName}")
             ->line("**Changes:** {$changesSummary}")
-            ->line('**Priority:** '.ucfirst($this->priority));
-
-        if ($this->revision->submission_reason) {
-            $mailMessage->line("**Reason:** {$this->revision->submission_reason}");
-        }
-
-        $mailMessage->action('Review Revision', url("/member/revisions/{$this->revision->id}"))
+            ->line('**Priority:** '.ucfirst($this->priority))
+            ->action('Review Revision', url("/member/revisions/{$this->revision->id}"))
             ->line('Please review this revision at your earliest convenience.');
 
         if ($this->priority === 'urgent') {
@@ -81,7 +76,6 @@ class RevisionSubmittedNotification extends Notification implements ShouldQueue
             'submitter_id' => $this->revision->submitted_by_id,
             'changes_summary' => $this->revision->getChangesSummary(),
             'priority' => $this->priority,
-            'submission_reason' => $this->revision->submission_reason,
             'created_at' => $this->revision->created_at,
         ];
     }

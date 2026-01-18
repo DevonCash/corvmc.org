@@ -33,7 +33,6 @@ class RevisionFactory extends Factory
             'reviewed_by_id' => null,
             'reviewed_at' => null,
             'review_reason' => null,
-            'submission_reason' => $this->faker->optional()->sentence(),
             'revision_type' => 'update',
             'auto_approved' => false,
         ];

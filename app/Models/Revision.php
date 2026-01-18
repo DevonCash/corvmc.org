@@ -24,7 +24,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property int|null $reviewed_by_id
  * @property \Illuminate\Support\Carbon|null $reviewed_at
  * @property string|null $review_reason
- * @property string|null $submission_reason
  * @property string $revision_type
  * @property bool $auto_approved
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -58,7 +57,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereRevisionableId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereRevisionableType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereSubmissionReason($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereSubmittedById($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Revision whereUpdatedAt($value)
  *
@@ -78,7 +76,6 @@ class Revision extends Model
         'reviewed_by_id',
         'reviewed_at',
         'review_reason',
-        'submission_reason',
         'revision_type',
         'auto_approved',
     ];

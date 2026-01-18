@@ -7,6 +7,8 @@ use App\Models\Revision;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Revisionable Trait
@@ -95,7 +97,6 @@ trait Revisionable
     public function createRevision(
         ?array $changes = null,
         ?User $submitter = null,
-        ?string $reason = null,
         string $type = Revision::TYPE_UPDATE
     ): Revision {
         $changes = $changes ?? $this->getDirty();
@@ -112,13 +113,21 @@ trait Revisionable
             throw new \InvalidArgumentException('No revisionable changes to submit');
         }
 
+        // Check for existing pending revision to coalesce
+        $existingRevision = $this->pendingRevisions()
+            ->where('submitted_by_id', $submitter->id)
+            ->first();
+
+        if ($existingRevision) {
+            return $this->coalesceRevision($existingRevision, $changes);
+        }
+
         $revision = Revision::create([
             'revisionable_type' => static::class,
             'revisionable_id' => $this->getKey(),
             'original_data' => $this->getOriginal(),
             'proposed_changes' => $changes,
             'submitted_by_id' => $submitter->id,
-            'submission_reason' => $reason,
             'revision_type' => $type,
             'status' => Revision::STATUS_PENDING,
         ]);
@@ -127,6 +136,48 @@ trait Revisionable
         \App\Actions\Revisions\HandleRevisionSubmission::run($revision);
 
         return $revision;
+    }
+
+    /**
+     * Coalesce new changes into an existing pending revision.
+     *
+     * Merges proposed changes while preserving the original snapshot.
+     * Re-evaluates auto-approval after merging.
+     */
+    protected function coalesceRevision(Revision $revision, array $newChanges): Revision
+    {
+        return DB::transaction(function () use ($revision, $newChanges) {
+            // Log if multiple pending revisions exist (edge case)
+            $pendingCount = $this->pendingRevisions()
+                ->where('submitted_by_id', $revision->submitted_by_id)
+                ->count();
+
+            if ($pendingCount > 1) {
+                Log::warning('Multiple pending revisions found for coalescing', [
+                    'model_type' => static::class,
+                    'model_id' => $this->getKey(),
+                    'submitter_id' => $revision->submitted_by_id,
+                    'count' => $pendingCount,
+                ]);
+            }
+
+            // Merge changes: new values override existing proposed changes
+            $mergedChanges = array_merge(
+                $revision->proposed_changes,
+                $newChanges
+            );
+
+            // Update revision with merged changes
+            // Note: original_data is intentionally NOT updated
+            $revision->update([
+                'proposed_changes' => $mergedChanges,
+            ]);
+
+            // Re-evaluate auto-approval with merged changes
+            \App\Actions\Revisions\HandleRevisionSubmission::run($revision);
+
+            return $revision->fresh();
+        });
     }
 
     /**
