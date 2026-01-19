@@ -13,11 +13,15 @@ use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;
 use App\Models\Reservation;
 use Filament\Forms\Components\DatePicker;
+use Filament\Support\Enums\IconPosition;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+
 
 class SpaceManagementTable
 {
@@ -28,7 +32,13 @@ class SpaceManagementTable
                 ReservationColumns::statusDisplay(),
                 ReservationColumns::responsibleUser(),
                 ReservationColumns::timeRange(),
-                ReservationColumns::costDisplay(),
+                TextColumn::make('cost')
+                    ->iconPosition(IconPosition::After)
+                    ->icon(fn(Reservation $record) => $record->payment_status->getIcon())
+                    ->iconColor(fn(Reservation $record) => $record->payment_status->getColor())
+                    ->label('Cost')
+                    ->formatStateUsing(fn($state) => $state?->formatTo('en_US'))
+                    ->sortable(['cost']),
                 ReservationColumns::createdAt(),
                 ReservationColumns::updatedAt(),
             ])
@@ -111,7 +121,7 @@ class SpaceManagementTable
             ->recordActions([
                 ViewAction::make()
                     ->schema(fn($infolist) => ReservationInfolist::configure($infolist))
-                    ->modalHeading(fn(Reservation $record): string => 'Reservation Details')
+                    ->modalHeading(fn(Reservation $record): string => 'Reservation #' . $record->id)
                     ->modalWidth('sm')
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Close'),

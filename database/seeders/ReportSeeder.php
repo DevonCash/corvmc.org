@@ -35,19 +35,31 @@ class ReportSeeder extends Seeder
         }
 
         $reportsCreated = 0;
+        $usedCombinations = [];
 
         // Create reports for events
         foreach ($events->take(5) as $event) {
-            $reportCount = fake()->numberBetween(1, 3);
+            $reportCount = fake()->numberBetween(1, min(3, $users->count()));
+            $availableUsers = $users->shuffle();
+            $usedForThisEvent = 0;
 
-            for ($i = 0; $i < $reportCount; $i++) {
-                // Mix of pending, upheld, and dismissed
+            foreach ($availableUsers as $user) {
+                if ($usedForThisEvent >= $reportCount) {
+                    break;
+                }
+
+                $key = Event::class.'|'.$event->id.'|'.$user->id;
+                if (isset($usedCombinations[$key])) {
+                    continue;
+                }
+                $usedCombinations[$key] = true;
+
                 $status = fake()->randomElement(['pending', 'upheld', 'dismissed']);
 
-                $report = Report::create([
+                Report::create([
                     'reportable_type' => Event::class,
                     'reportable_id' => $event->id,
-                    'reported_by_id' => $users->random()->id,
+                    'reported_by_id' => $user->id,
                     'reason' => fake()->randomElement(['inappropriate_content', 'spam', 'misleading_info', 'harassment']),
                     'custom_reason' => fake()->optional(0.3)->sentence(),
                     'status' => $status,
@@ -57,15 +69,23 @@ class ReportSeeder extends Seeder
                 ]);
 
                 $reportsCreated++;
+                $usedForThisEvent++;
             }
         }
 
         // Create reports for bands
         foreach ($bands->take(3) as $band) {
-            $report = Report::create([
+            $user = $users->random();
+            $key = Band::class.'|'.$band->id.'|'.$user->id;
+            if (isset($usedCombinations[$key])) {
+                continue;
+            }
+            $usedCombinations[$key] = true;
+
+            Report::create([
                 'reportable_type' => Band::class,
                 'reportable_id' => $band->id,
-                'reported_by_id' => $users->random()->id,
+                'reported_by_id' => $user->id,
                 'reason' => fake()->randomElement(['inappropriate_content', 'copyright', 'misleading_info']),
                 'custom_reason' => fake()->optional(0.3)->sentence(),
                 'status' => 'pending',
@@ -76,12 +96,19 @@ class ReportSeeder extends Seeder
 
         // Create reports for member profiles
         foreach ($profiles->take(3) as $profile) {
+            $user = $users->random();
+            $key = MemberProfile::class.'|'.$profile->id.'|'.$user->id;
+            if (isset($usedCombinations[$key])) {
+                continue;
+            }
+            $usedCombinations[$key] = true;
+
             $status = fake()->randomElement(['pending', 'upheld', 'dismissed']);
 
-            $report = Report::create([
+            Report::create([
                 'reportable_type' => MemberProfile::class,
                 'reportable_id' => $profile->id,
-                'reported_by_id' => $users->random()->id,
+                'reported_by_id' => $user->id,
                 'reason' => fake()->randomElement(['inappropriate_content', 'fake_profile', 'harassment']),
                 'custom_reason' => fake()->optional(0.3)->sentence(),
                 'status' => $status,
@@ -95,19 +122,27 @@ class ReportSeeder extends Seeder
 
         // Create some escalated reports
         if ($events->count() > 5) {
-            $report = Report::create([
-                'reportable_type' => Event::class,
-                'reportable_id' => $events->random()->id,
-                'reported_by_id' => $users->random()->id,
-                'reason' => 'harassment',
-                'custom_reason' => 'This requires immediate attention from the board.',
-                'status' => 'escalated',
-                'resolved_by_id' => $users->random()->id,
-                'resolved_at' => now(),
-                'resolution_notes' => 'Escalated to board for review.',
-            ]);
+            $event = $events->random();
+            $user = $users->random();
+            $key = Event::class.'|'.$event->id.'|'.$user->id;
 
-            $reportsCreated++;
+            if (! isset($usedCombinations[$key])) {
+                $usedCombinations[$key] = true;
+
+                Report::create([
+                    'reportable_type' => Event::class,
+                    'reportable_id' => $event->id,
+                    'reported_by_id' => $user->id,
+                    'reason' => 'harassment',
+                    'custom_reason' => 'This requires immediate attention from the board.',
+                    'status' => 'escalated',
+                    'resolved_by_id' => $users->random()->id,
+                    'resolved_at' => now(),
+                    'resolution_notes' => 'Escalated to board for review.',
+                ]);
+
+                $reportsCreated++;
+            }
         }
 
         $this->command->info("Created {$reportsCreated} reports across events, bands, and member profiles.");

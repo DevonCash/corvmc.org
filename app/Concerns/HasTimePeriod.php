@@ -40,7 +40,7 @@ trait HasTimePeriod
             return 0;
         }
 
-        return $period->length() / 60;
+        return round($period->length() / 30) / 2.0;
     }
 
     /**

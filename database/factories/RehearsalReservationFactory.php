@@ -6,6 +6,7 @@ use App\Actions\Reservations\CalculateReservationCost;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,8 +22,8 @@ class RehearsalReservationFactory extends Factory
     public function definition(): array
     {
         $reservedAt = $this->faker->dateTimeBetween('+1 hour', '+1 month');
-        $duration = $this->faker->randomElement([1, 1.5, 2, 2.5, 3, 4, 6]); // hours
-        $reservedUntil = (clone $reservedAt)->modify('+'.($duration * 60).' minutes');
+        $durationHours = $this->faker->randomElement([1, 1.5, 2, 2.5, 3, 4, 6]);
+        $reservedUntil = (clone $reservedAt)->modify("+{$durationHours} hours");
 
         return [
             // Don't set 'type' here - let the model's $attributes or boot() method handle it
@@ -31,17 +32,22 @@ class RehearsalReservationFactory extends Factory
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
             'status' => $this->faker->randomElement([ReservationStatus::Scheduled, ReservationStatus::Confirmed, ReservationStatus::Cancelled]),
-            'cost' => function (array $attributes) use ($duration) {
-                // Simple cost calculation - will be overridden by action when needed
-                return $this->faker->boolean(30) ? 0 : $duration * CalculateReservationCost::HOURLY_RATE;
+            'hours_used' => function (array $attributes) {
+                $start = Carbon::parse($attributes['reserved_at']);
+                $end = Carbon::parse($attributes['reserved_until']);
+
+                return $start->diffInMinutes($end) / 60;
+            },
+            'cost' => function (array $attributes) {
+                $hours = $attributes['hours_used'];
+
+                return $this->faker->boolean(30) ? 0 : $hours * CalculateReservationCost::HOURLY_RATE;
             },
             'payment_status' => function (array $attributes) {
                 return $attributes['cost'] == 0 ? PaymentStatus::NotApplicable : PaymentStatus::Unpaid;
             },
-            'hours_used' => $duration,
-            'free_hours_used' => function (array $attributes) use ($duration) {
-                // If cost is 0, it's all free hours
-                return $attributes['cost'] == 0 ? $duration : 0;
+            'free_hours_used' => function (array $attributes) {
+                return $attributes['cost'] == 0 ? $attributes['hours_used'] : 0;
             },
             'is_recurring' => $this->faker->boolean(20),
             'recurrence_pattern' => function (array $attributes) {
@@ -135,8 +141,8 @@ class RehearsalReservationFactory extends Factory
     public function upcoming(): static
     {
         $reservedAt = $this->faker->dateTimeBetween('+1 hour', '+2 weeks');
-        $duration = $this->faker->randomElement([1, 1.5, 2, 2.5, 3, 4]);
-        $reservedUntil = (clone $reservedAt)->modify('+'.($duration * 60).' minutes');
+        $durationHours = $this->faker->randomElement([1, 1.5, 2, 2.5, 3, 4]);
+        $reservedUntil = (clone $reservedAt)->modify("+{$durationHours} hours");
 
         return $this->state(fn (array $attributes) => [
             'reserved_at' => $reservedAt,
@@ -151,8 +157,8 @@ class RehearsalReservationFactory extends Factory
     public function past(): static
     {
         $reservedAt = $this->faker->dateTimeBetween('-2 months', '-1 hour');
-        $duration = $this->faker->randomElement([1, 1.5, 2, 2.5, 3, 4]);
-        $reservedUntil = (clone $reservedAt)->modify('+'.($duration * 60).' minutes');
+        $durationHours = $this->faker->randomElement([1, 1.5, 2, 2.5, 3, 4]);
+        $reservedUntil = (clone $reservedAt)->modify("+{$durationHours} hours");
 
         return $this->state(fn (array $attributes) => [
             'reserved_at' => $reservedAt,

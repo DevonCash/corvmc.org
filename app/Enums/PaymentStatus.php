@@ -28,11 +28,11 @@ enum PaymentStatus: string implements HasColor, HasIcon, HasLabel
     public function getIcon(): string
     {
         return match ($this) {
-            self::Paid => 'tabler-circle-check',
+            self::Paid => 'tabler-coin',
             self::Comped => 'tabler-gift',
             self::Refunded => 'tabler-receipt-refund',
-            self::Unpaid => 'tabler-alert-circle',
-            self::NotApplicable => 'tabler-minus',
+            self::Unpaid => 'tabler-clock-dollar',
+            self::NotApplicable => 'tabler-coin-off',
         };
     }
 

@@ -31,7 +31,6 @@ class AppServiceProvider extends ServiceProvider
     {
 
         FilamentTimezone::set(config('app.timezone'));
-
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
             // Custom configurations go here
             $panelSwitch
