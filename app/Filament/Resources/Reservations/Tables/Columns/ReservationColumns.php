@@ -39,6 +39,10 @@ class ReservationColumns
                     return $record->getResponsibleUser()?->name ?? 'N/A';
                 }
 
+                if ($record->isFirstReservationForUser()) {
+                    return 'First reservation!';
+                }
+
                 return $record->getResponsibleUser()?->email ?? 'N/A';
             })
             ->icon(function (Reservation $record) {

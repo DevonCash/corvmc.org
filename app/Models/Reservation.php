@@ -342,4 +342,22 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     {
         $query->where('status', $status);
     }
+
+    /**
+     * Check if this is the first reservation for the responsible user.
+     */
+    public function isFirstReservationForUser(): bool
+    {
+        $user = $this->getResponsibleUser();
+
+        if (! $user) {
+            return false;
+        }
+
+        return ! self::query()
+            ->where('reservable_type', User::class)
+            ->where('reservable_id', $user->id)
+            ->where('id', '!=', $this->id)
+            ->exists();
+    }
 }

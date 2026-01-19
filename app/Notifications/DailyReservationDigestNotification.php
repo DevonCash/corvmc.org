@@ -68,7 +68,13 @@ class DailyReservationDigestNotification extends Notification implements ShouldQ
 
             $message->line('---');
             $message->line("**{$startTime} - {$endTime}** ({$duration} hours)");
-            $message->line("Member: {$user->name}");
+
+            $memberLine = "Member: {$user->name}";
+            if ($reservation->isFirstReservationForUser()) {
+                $memberLine .= ' ⭐ First reservation!';
+            }
+            $message->line($memberLine);
+
             $message->line("Status: {$status}");
 
             if ($reservation->notes) {
