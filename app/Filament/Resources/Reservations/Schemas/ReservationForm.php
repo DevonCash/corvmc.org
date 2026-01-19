@@ -6,12 +6,15 @@ use App\Actions\Reservations\CalculateReservationCost;
 use App\Actions\Reservations\DetermineReservationStatus;
 use App\Actions\Reservations\GetAvailableTimeSlotsForDate;
 use App\Actions\Reservations\GetValidEndTimesForDate;
+use App\Data\ContactData;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ViewField;
 use Filament\Schemas\Components\Icon;
 use Filament\Schemas\Components\Section;
@@ -64,20 +67,65 @@ class ReservationForm
     public static function getSteps(): array
     {
         return [
-            // Step 1: Reservation Details
+            // Step 1: Contact Info
+            Wizard\Step::make('Contact')
+                ->icon('tabler-phone')
+                ->schema(static::contactStep())
+                ->afterValidation(function (Get $get) {
+                    $phone = $get('contact_phone');
+                    if ($phone) {
+                        static::saveContactPhone($phone);
+                    }
+                }),
+
+            // Step 2: Reservation Details
             Wizard\Step::make('Schedule')
-                // ->description('Set up your reservation')
                 ->icon('tabler-calendar-time')
                 ->schema(static::reservationStep())
                 ->columns(2),
 
-            // Step 2: Confirmation
+            // Step 3: Confirmation
             Wizard\Step::make('Confirm')
-                // ->description('Review and confirm your reservation')
                 ->icon('tabler-circle-check')
                 ->schema(static::confirmationStep()),
 
         ];
+    }
+
+    public static function contactStep(): array
+    {
+        $user = Auth::user();
+        $existingPhone = $user?->profile?->contact?->phone;
+
+        return [
+            Placeholder::make('phone_confirmed')
+                ->label('')
+                ->content(fn () => 'Contact phone: '.$existingPhone)
+                ->visible(fn () => $existingPhone !== null),
+
+            Placeholder::make('phone_required')
+                ->label('')
+                ->content('We need a contact phone number for your reservation.')
+                ->visible(fn () => $existingPhone === null),
+
+            TextInput::make('contact_phone')
+                ->label('Phone Number')
+                ->tel()
+                ->required()
+                ->visible(fn () => $existingPhone === null)
+                ->dehydrated(false),
+        ];
+    }
+
+    protected static function saveContactPhone(string $phone): void
+    {
+        $user = Auth::user();
+        if ($user?->profile) {
+            $contact = $user->profile->contact ?? new ContactData;
+            $contact->phone = $phone;
+            $user->profile->contact = $contact;
+            $user->profile->save();
+        }
     }
 
     public static function reservationStep(): array
