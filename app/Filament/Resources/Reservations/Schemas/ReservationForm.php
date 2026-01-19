@@ -9,6 +9,7 @@ use App\Actions\Reservations\GetValidEndTimesForDate;
 use App\Data\ContactData;
 use App\Models\User;
 use Carbon\Carbon;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
@@ -73,8 +74,9 @@ class ReservationForm
                 ->schema(static::contactStep())
                 ->afterValidation(function (Get $get) {
                     $phone = $get('contact_phone');
-                    if ($phone) {
-                        static::saveContactPhone($phone);
+                    $smsOk = $get('sms_ok');
+                    if ($phone || $smsOk !== null) {
+                        static::saveContactInfo($phone, (bool) $smsOk);
                     }
                 }),
 
@@ -95,7 +97,8 @@ class ReservationForm
     public static function contactStep(): array
     {
         $user = Auth::user();
-        $existingPhone = $user?->profile?->contact?->phone;
+        $contact = $user?->profile?->contact;
+        $existingPhone = $contact?->phone;
 
         return [
             Placeholder::make('phone_confirmed')
@@ -114,15 +117,23 @@ class ReservationForm
                 ->required()
                 ->visible(fn () => $existingPhone === null)
                 ->dehydrated(false),
+
+            Checkbox::make('sms_ok')
+                ->label('This number can receive text messages')
+                ->default($contact?->sms_ok ?? false)
+                ->dehydrated(false),
         ];
     }
 
-    protected static function saveContactPhone(string $phone): void
+    protected static function saveContactInfo(?string $phone, bool $smsOk): void
     {
         $user = Auth::user();
         if ($user?->profile) {
             $contact = $user->profile->contact ?? new ContactData;
-            $contact->phone = $phone;
+            if ($phone) {
+                $contact->phone = $phone;
+            }
+            $contact->sms_ok = $smsOk;
             $user->profile->contact = $contact;
             $user->profile->save();
         }

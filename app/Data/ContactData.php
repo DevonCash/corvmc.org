@@ -14,6 +14,7 @@ class ContactData extends Data
         public ?string $email = null,
         #[WithCast(PhoneNumberCast::class, 'US')]
         public ?string $phone = null,
+        public bool $sms_ok = false,
         public ?string $address = null,
     ) {}
 }
