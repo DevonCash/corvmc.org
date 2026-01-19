@@ -31,10 +31,12 @@ class RehearsalReservationFactory extends Factory
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
             'status' => $this->faker->randomElement([ReservationStatus::Scheduled, ReservationStatus::Confirmed, ReservationStatus::Cancelled]),
-            'payment_status' => PaymentStatus::Unpaid,
             'cost' => function (array $attributes) use ($duration) {
                 // Simple cost calculation - will be overridden by action when needed
                 return $this->faker->boolean(30) ? 0 : $duration * CalculateReservationCost::HOURLY_RATE;
+            },
+            'payment_status' => function (array $attributes) {
+                return $attributes['cost'] == 0 ? PaymentStatus::NotApplicable : PaymentStatus::Unpaid;
             },
             'hours_used' => $duration,
             'free_hours_used' => function (array $attributes) use ($duration) {
@@ -89,6 +91,7 @@ class RehearsalReservationFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'cost' => 0,
+            'payment_status' => PaymentStatus::NotApplicable,
         ]);
     }
 
@@ -120,6 +123,7 @@ class RehearsalReservationFactory extends Factory
                 'reservable_type' => User::class,
                 'reservable_id' => $user->id,
                 'cost' => 0, // Sustaining members often get free hours
+                'payment_status' => PaymentStatus::NotApplicable,
                 'free_hours_used' => $hours,
             ];
         });
