@@ -3,6 +3,7 @@
 namespace App\Actions\Reservations;
 
 use App\Models\Reservation;
+use App\Settings\ReservationSettings;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -17,9 +18,14 @@ class GetConflictingReservations
     /**
      * Get potentially conflicting reservations for a time slot.
      * Uses a broader database query then filters with Period for precision.
+     * Expands the requested period by the configured buffer time on both ends.
      */
     public function handle(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): Collection
     {
+        $bufferMinutes = app(ReservationSettings::class)->buffer_minutes;
+        $bufferedStart = $startTime->copy()->subMinutes($bufferMinutes);
+        $bufferedEnd = $endTime->copy()->addMinutes($bufferMinutes);
+
         $cacheKey = 'reservations.conflicts.'.$startTime->format('Y-m-d');
 
         // Cache all day's reservations, then filter for specific conflicts
@@ -34,22 +40,22 @@ class GetConflictingReservations
                 ->get();
         });
 
-        // Filter cached results for the specific time range and exclusion
-        $filteredReservations = $dayReservations->filter(function (Reservation $reservation) use ($startTime, $endTime, $excludeReservationId) {
+        // Filter cached results for the specific time range (with buffer) and exclusion
+        $filteredReservations = $dayReservations->filter(function (Reservation $reservation) use ($bufferedStart, $bufferedEnd, $excludeReservationId) {
             if ($excludeReservationId && $reservation->id === $excludeReservationId) {
                 return false;
             }
 
-            return $reservation->reserved_until > $startTime && $reservation->reserved_at < $endTime;
+            return $reservation->reserved_until > $bufferedStart && $reservation->reserved_at < $bufferedEnd;
         });
 
         // If invalid time period, return all potentially overlapping reservations
-        if ($endTime <= $startTime) {
+        if ($bufferedEnd <= $bufferedStart) {
             return $filteredReservations;
         }
 
-        // Use Period for precise overlap detection
-        $requestedPeriod = Period::make($startTime, $endTime, Precision::MINUTE());
+        // Use Period for precise overlap detection with buffered times
+        $requestedPeriod = Period::make($bufferedStart, $bufferedEnd, Precision::MINUTE());
 
         return $filteredReservations->filter(function (Reservation $reservation) use ($requestedPeriod) {
             return $reservation->overlapsWith($requestedPeriod);

@@ -36,4 +36,10 @@ return [
         'min' => 1,
         'max' => 8,
     ],
+
+    /**
+     * Buffer time in minutes between reservations.
+     * This gap prevents back-to-back bookings.
+     */
+    'buffer_minutes' => env('RESERVATION_BUFFER_MINUTES', 0),
 ];

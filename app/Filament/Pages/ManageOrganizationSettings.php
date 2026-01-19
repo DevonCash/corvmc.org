@@ -9,6 +9,7 @@ use App\Settings\EquipmentSettings;
 use App\Settings\FooterSettings;
 use App\Settings\GoogleCalendarSettings;
 use App\Settings\OrganizationSettings;
+use App\Settings\ReservationSettings;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms;
@@ -48,6 +49,7 @@ class ManageOrganizationSettings extends Page implements HasForms
         $equipmentSettings = app(EquipmentSettings::class);
         $communityCalendarSettings = app(CommunityCalendarSettings::class);
         $googleCalendarSettings = app(GoogleCalendarSettings::class);
+        $reservationSettings = app(ReservationSettings::class);
 
         $this->form->fill([
             'name' => $settings->name,
@@ -63,6 +65,7 @@ class ManageOrganizationSettings extends Page implements HasForms
             'enable_community_calendar' => $communityCalendarSettings->enable_community_calendar,
             'enable_google_calendar_sync' => $googleCalendarSettings->enable_google_calendar_sync,
             'google_calendar_id' => $googleCalendarSettings->google_calendar_id,
+            'reservation_buffer_minutes' => $reservationSettings->buffer_minutes,
         ]);
     }
 
@@ -156,6 +159,19 @@ class ManageOrganizationSettings extends Page implements HasForms
                             ->label('Service Account Setup')
                             ->content('Place your Google service account JSON key file at: storage/app/google-calendar-service-account.json. Set the path in your .env file: GOOGLE_CALENDAR_CREDENTIALS_PATH')
                             ->visible(fn (callable $get) => $get('enable_google_calendar_sync')),
+                    ]),
+
+                Section::make('Reservation Settings')
+                    ->description('Configure practice space reservation behavior')
+                    ->schema([
+                        Forms\Components\TextInput::make('reservation_buffer_minutes')
+                            ->label('Buffer Time Between Reservations')
+                            ->helperText('Minutes of gap required between reservations (e.g., 15 means a 2-3pm booking blocks 1:45pm-3:15pm)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(60)
+                            ->default(0)
+                            ->suffix('minutes'),
                     ]),
 
                 Section::make('Footer Links')
@@ -321,6 +337,7 @@ class ManageOrganizationSettings extends Page implements HasForms
         $equipmentSettings = app(EquipmentSettings::class);
         $communityCalendarSettings = app(CommunityCalendarSettings::class);
         $googleCalendarSettings = app(GoogleCalendarSettings::class);
+        $reservationSettings = app(ReservationSettings::class);
 
         $settings->name = $data['name'];
         $settings->description = $data['description'];
@@ -339,11 +356,14 @@ class ManageOrganizationSettings extends Page implements HasForms
         $googleCalendarSettings->enable_google_calendar_sync = $data['enable_google_calendar_sync'] ?? false;
         $googleCalendarSettings->google_calendar_id = $data['google_calendar_id'] ?? null;
 
+        $reservationSettings->buffer_minutes = (int) ($data['reservation_buffer_minutes'] ?? 0);
+
         $settings->save();
         $footerSettings->save();
         $equipmentSettings->save();
         $communityCalendarSettings->save();
         $googleCalendarSettings->save();
+        $reservationSettings->save();
 
         Notification::make()
             ->success()
