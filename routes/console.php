@@ -13,8 +13,8 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Send daily reservation digest to admins at 7 AM
-Schedule::command('reservations:daily-digest')->dailyAt('07:00');
+// Send daily reservation digest to admins at 8 PM the night before
+Schedule::command('reservations:daily-digest')->dailyAt('20:00');
 
 // Schedule confirmation reminders to be sent daily at 9 AM
 Schedule::call(fn () => SendReservationConfirmationReminders::run())->dailyAt('09:00');

@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection;
@@ -17,12 +18,15 @@ class DailyReservationDigestNotification extends Notification implements ShouldQ
      */
     public Collection $reservations;
 
+    public Carbon $date;
+
     /**
      * Create a new notification instance.
      */
-    public function __construct(Collection $reservations)
+    public function __construct(Collection $reservations, Carbon $date)
     {
         $this->reservations = $reservations;
+        $this->date = $date;
     }
 
     /**
@@ -40,20 +44,20 @@ class DailyReservationDigestNotification extends Notification implements ShouldQ
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $date = now()->format('l, F j, Y');
+        $date = $this->date->format('l, F j, Y');
         $count = $this->reservations->count();
-        $shortDate = now()->format('M j');
+        $shortDate = $this->date->format('M j');
 
         $message = (new MailMessage)
             ->subject("{$shortDate}: {$count} ".str('reservation')->plural($count));
 
         if ($count === 0) {
             return $message
-                ->line("**No reservations scheduled for today** ({$date}).")
+                ->line("**No reservations scheduled for tomorrow** ({$date}).")
                 ->line('The practice space is available all day.');
         }
 
-        $message->line("**{$count} ".str('reservation')->plural($count)." scheduled for today** ({$date}):");
+        $message->line("**{$count} ".str('reservation')->plural($count)." scheduled for tomorrow** ({$date}):");
 
         foreach ($this->reservations as $reservation) {
             $user = $reservation->getResponsibleUser();
@@ -85,7 +89,7 @@ class DailyReservationDigestNotification extends Notification implements ShouldQ
     public function toArray(object $notifiable): array
     {
         return [
-            'date' => now()->toDateString(),
+            'date' => $this->date->toDateString(),
             'count' => $this->reservations->count(),
             'reservations' => $this->reservations->map(fn ($r) => [
                 'id' => $r->id,

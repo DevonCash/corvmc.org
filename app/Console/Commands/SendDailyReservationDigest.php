@@ -22,7 +22,7 @@ class SendDailyReservationDigest extends Command
      *
      * @var string
      */
-    protected $description = 'Send daily digest of today\'s reservations to admins';
+    protected $description = 'Send daily digest of tomorrow\'s reservations to admins';
 
     /**
      * Execute the console command.
@@ -31,15 +31,17 @@ class SendDailyReservationDigest extends Command
     {
         $this->info('Sending daily reservation digest...');
 
-        // Get all reservations for today, ordered by start time
-        $todaysReservations = RehearsalReservation::with('reservable')
-            ->whereDate('reserved_at', today())
+        $tomorrow = now()->addDay();
+
+        // Get all reservations for tomorrow, ordered by start time
+        $tomorrowsReservations = RehearsalReservation::with('reservable')
+            ->whereDate('reserved_at', $tomorrow)
             ->whereIn('status', ['confirmed', 'pending'])
             ->orderBy('reserved_at')
             ->get();
 
-        $count = $todaysReservations->count();
-        $date = now()->format('l, F j, Y');
+        $count = $tomorrowsReservations->count();
+        $date = $tomorrow->format('l, F j, Y');
 
         // Get all admin users
         $admins = User::role('admin')->get();
@@ -51,7 +53,7 @@ class SendDailyReservationDigest extends Command
         }
 
         // Send digest to all admins
-        Notification::send($admins, new DailyReservationDigestNotification($todaysReservations));
+        Notification::send($admins, new DailyReservationDigestNotification($tomorrowsReservations, $tomorrow));
 
         if ($count === 0) {
             $this->info("Sent digest to {$admins->count()} admin(s): No reservations for {$date}");
