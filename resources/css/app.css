@@ -299,3 +299,7 @@ html, body {
 .fi-page {
     padding: 0 1rem !important;
 }
+.fi-sc-wizard-header {
+    margin: calc(var(--spacing) * -6);
+  margin-bottom: 0;
+}

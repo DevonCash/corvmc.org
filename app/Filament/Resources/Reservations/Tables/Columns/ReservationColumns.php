@@ -92,9 +92,15 @@ class ReservationColumns
             ->width('1%');
     }
 
-    public static function costDisplay(): void
+    public static function costDisplay(): TextColumn
     {
-        return;
+        return  TextColumn::make('cost')
+            ->iconPosition(IconPosition::After)
+            ->icon(fn(Reservation $record) => $record->payment_status->getIcon())
+            ->iconColor(fn(Reservation $record) => $record->payment_status->getColor())
+            ->label('Cost')
+            ->formatStateUsing(fn($state) => $state?->formatTo('en_US'))
+            ->sortable(['cost']);
     }
 
     public static function createdAt(): TextColumn

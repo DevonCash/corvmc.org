@@ -32,13 +32,7 @@ class SpaceManagementTable
                 ReservationColumns::statusDisplay(),
                 ReservationColumns::responsibleUser(),
                 ReservationColumns::timeRange(),
-                TextColumn::make('cost')
-                    ->iconPosition(IconPosition::After)
-                    ->icon(fn(Reservation $record) => $record->payment_status->getIcon())
-                    ->iconColor(fn(Reservation $record) => $record->payment_status->getColor())
-                    ->label('Cost')
-                    ->formatStateUsing(fn($state) => $state?->formatTo('en_US'))
-                    ->sortable(['cost']),
+               ReservationColumns::costDisplay(),
                 ReservationColumns::createdAt(),
                 ReservationColumns::updatedAt(),
             ])
