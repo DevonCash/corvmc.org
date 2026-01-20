@@ -1,0 +1,24 @@
+{
+	"name": "corvmc/sponsorship",
+	"description": "",
+	"type": "library",
+	"version": "1.0",
+	"license": "proprietary",
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"CorvMC\\Sponsorship\\": "src/",
+			"CorvMC\\Sponsorship\\Tests\\": "tests/",
+			"CorvMC\\Sponsorship\\Database\\Factories\\": "database/factories/",
+			"CorvMC\\Sponsorship\\Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"laravel": {
+			"providers": [
+				"CorvMC\\Sponsorship\\Providers\\SponsorshipServiceProvider"
+			]
+		}
+	}
+}

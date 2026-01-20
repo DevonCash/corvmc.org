@@ -9,8 +9,10 @@ use App\Notifications\BandInvitationAcceptedNotification;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/** @package App\Actions\Bands */
 class AcceptBandInvitation
 {
     use AsAction;
@@ -57,7 +59,7 @@ class AcceptBandInvitation
             try {
                 $admin->notify(new BandInvitationAcceptedNotification($band, $user));
             } catch (\Exception $e) {
-                \Log::error('Failed to send band invitation accepted notification', [
+                Log::error('Failed to send band invitation accepted notification', [
                     'band_id' => $band->id,
                     'user_id' => $user->id,
                     'admin_id' => $admin->id,

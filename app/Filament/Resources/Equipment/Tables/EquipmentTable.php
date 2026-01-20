@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Equipment\Tables;
 
 use App\Filament\Resources\Equipment\Actions\CheckoutToMemberAction;
-use App\Models\Equipment;
+use CorvMC\Equipment\Models\Equipment;
 use App\Settings\EquipmentSettings;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;

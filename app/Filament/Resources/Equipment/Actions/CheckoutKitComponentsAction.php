@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Equipment\Actions;
 
 use App\Models\User;
 use Carbon\Carbon;
+use CorvMC\Equipment\Actions\CheckoutToMember;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
@@ -109,7 +110,7 @@ class CheckoutKitComponentsAction
                         continue;
                     }
 
-                    \App\Actions\Equipment\CheckoutToMember::run(
+                    CheckoutToMember::run(
                         equipment: $component,
                         borrower: $borrower,
                         dueDate: Carbon::parse($data['due_at']),

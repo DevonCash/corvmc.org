@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Equipment\Actions;
 
-use App\Models\Equipment;
 use App\Models\User;
+use CorvMC\Equipment\Models\Equipment;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
@@ -102,7 +102,7 @@ class ExportEquipmentAction
                 $equipment = $query->with(['provider', 'currentLoan.borrower', 'parent'])->get();
 
                 // Prepare data
-                $exportData = $equipment->map(function (\App\Models\Equipment $item) use ($data) {
+                $exportData = $equipment->map(function (Equipment $item) use ($data) {
                     $row = [];
 
                     foreach ($data['fields'] as $field) {

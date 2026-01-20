@@ -22,13 +22,11 @@ class BandResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationLabel = 'Bands';
+    protected static ?string $navigationLabel = 'Band Directory';
 
     protected static ?string $pluralModelLabel = 'Bands';
 
     protected static ?string $slug = 'bands';
-
-    protected static string|\UnitEnum|null $navigationGroup = 'Directory';
 
     protected static ?string $modelLabel = 'Band';
 

@@ -35,6 +35,7 @@ class BandPanelProvider extends PanelProvider
             ->tenantRegistration(RegisterBand::class)
             ->font('Lexend')
             ->darkMode()
+            ->login()
             ->breadcrumbs(false)
             ->colors([
                 'primary' => [

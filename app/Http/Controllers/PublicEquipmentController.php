@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Equipment;
+use CorvMC\Equipment\Models\Equipment;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 

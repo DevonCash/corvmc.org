@@ -1,0 +1,24 @@
+{
+	"name": "corvmc/equipment",
+	"description": "",
+	"type": "library",
+	"version": "1.0",
+	"license": "proprietary",
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"CorvMC\\Equipment\\": "src/",
+			"CorvMC\\Equipment\\Tests\\": "tests/",
+			"CorvMC\\Equipment\\Database\\Factories\\": "database/factories/",
+			"CorvMC\\Equipment\\Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"laravel": {
+			"providers": [
+				"CorvMC\\Equipment\\Providers\\EquipmentServiceProvider"
+			]
+		}
+	}
+}

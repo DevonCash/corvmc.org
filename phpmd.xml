@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <ruleset name="Corvallis Music Collective PHPMD Rules"
-         xmlns="http://pmd.sf.net/ruleset/1.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://pmd.sf.net/ruleset/1.0.0 http://pmd.sf.net/ruleset_xml_schema.xsd"
-         xsi:noNamespaceSchemaLocation="http://pmd.sf.net/ruleset_xml_schema.xsd">
+    xmlns="http://pmd.sf.net/ruleset/1.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sf.net/ruleset/1.0.0 http://pmd.sf.net/ruleset_xml_schema.xsd"
+    xsi:noNamespaceSchemaLocation="http://pmd.sf.net/ruleset_xml_schema.xsd">
     <description>
         Custom PHPMD rules for CMC Laravel application.
         Adjusted for Laravel patterns, Filament declarative code, and descriptive naming.
@@ -12,137 +12,138 @@
     <!-- Include clean code rules with some exceptions -->
     <rule ref="rulesets/cleancode.xml">
         <!-- Allow static access - common in Laravel -->
-        <exclude name="StaticAccess"/>
+        <exclude name="StaticAccess" />
         <!-- Allow else expressions - sometimes clearer than early returns -->
-        <exclude name="ElseExpression"/>
+        <exclude name="ElseExpression" />
     </rule>
 
     <!-- Code size rules with adjusted thresholds -->
     <rule ref="rulesets/codesize.xml/CyclomaticComplexity">
         <properties>
             <!-- Increased from 10 to 15 - complex business logic is acceptable -->
-            <property name="reportLevel" value="15"/>
+            <property name="reportLevel" value="15" />
         </properties>
     </rule>
 
     <rule ref="rulesets/codesize.xml/NPathComplexity">
         <properties>
             <!-- Increased from 200 to 300 - validation logic can be complex -->
-            <property name="minimum" value="300"/>
+            <property name="minimum" value="300" />
         </properties>
     </rule>
 
     <rule ref="rulesets/codesize.xml/ExcessiveMethodLength">
         <properties>
             <!-- Increased from 100 to 120 - Filament forms get long -->
-            <property name="minimum" value="120"/>
+            <property name="minimum" value="120" />
         </properties>
     </rule>
 
     <rule ref="rulesets/codesize.xml/ExcessiveClassLength">
         <properties>
             <!-- Default is 1000, keep it -->
-            <property name="minimum" value="1000"/>
+            <property name="minimum" value="1000" />
         </properties>
     </rule>
 
     <rule ref="rulesets/codesize.xml/ExcessiveParameterList">
         <properties>
             <!-- Increased from 10 to 12 - DTOs can have many properties -->
-            <property name="minimum" value="12"/>
+            <property name="minimum" value="12" />
         </properties>
     </rule>
 
     <rule ref="rulesets/codesize.xml/ExcessivePublicCount">
         <properties>
             <!-- Default is 45 -->
-            <property name="minimum" value="45"/>
+            <property name="minimum" value="45" />
         </properties>
     </rule>
 
     <rule ref="rulesets/codesize.xml/TooManyFields">
         <properties>
             <!-- Increased from 15 to 20 - models can have many fields -->
-            <property name="maxfields" value="20"/>
+            <property name="maxfields" value="20" />
         </properties>
     </rule>
 
     <rule ref="rulesets/codesize.xml/TooManyMethods">
         <properties>
             <!-- Default is 25, keep it -->
-            <property name="maxmethods" value="25"/>
+            <property name="maxmethods" value="25" />
         </properties>
     </rule>
 
     <rule ref="rulesets/codesize.xml/TooManyPublicMethods">
         <properties>
             <!-- Increased from 10 to 15 - resources/actions have many public methods -->
-            <property name="maxmethods" value="15"/>
+            <property name="maxmethods" value="15" />
         </properties>
     </rule>
 
     <rule ref="rulesets/codesize.xml/ExcessiveClassComplexity">
         <properties>
             <!-- Increased from 50 to 75 - complex resources are acceptable -->
-            <property name="maximum" value="75"/>
+            <property name="maximum" value="75" />
         </properties>
     </rule>
 
     <!-- Design rules -->
     <rule ref="rulesets/design.xml">
         <!-- Allow exit in console commands -->
-        <exclude name="ExitExpression"/>
+        <exclude name="ExitExpression" />
     </rule>
 
     <!-- Naming rules with adjusted thresholds -->
     <rule ref="rulesets/naming.xml/ShortVariable">
         <properties>
             <!-- Allow 2-char variables like $id, $ip, $tz -->
-            <property name="minimum" value="2"/>
-            <property name="exceptions" value="i,j,k,e"/>
+            <property name="minimum" value="2" />
+            <property name="exceptions" value="i,j,k,e" />
         </properties>
     </rule>
 
     <rule ref="rulesets/naming.xml/LongVariable">
         <properties>
             <!-- Increased from 20 to 30 - descriptive names are good -->
-            <property name="maximum" value="30"/>
+            <property name="maximum" value="30" />
         </properties>
     </rule>
 
     <rule ref="rulesets/naming.xml/ShortMethodName">
         <properties>
             <!-- Allow 3-char methods like run, get, set -->
-            <property name="minimum" value="3"/>
-            <property name="exceptions" value="go,up,id,db"/>
+            <property name="minimum" value="3" />
+            <property name="exceptions" value="go,up,id,db" />
         </properties>
     </rule>
 
     <rule ref="rulesets/naming.xml/LongClassName">
         <properties>
             <!-- Allow longer class names for clarity -->
-            <property name="maximum" value="50"/>
+            <property name="maximum" value="50" />
         </properties>
     </rule>
 
     <rule ref="rulesets/naming.xml/BooleanGetMethodName">
         <properties>
             <!-- Allow get* methods that return boolean -->
-            <property name="checkParameterizedMethods" value="true"/>
+            <property name="checkParameterizedMethods" value="true" />
         </properties>
     </rule>
 
     <!-- Include unused code detection -->
     <rule ref="rulesets/unusedcode.xml">
         <!-- Don't flag unused parameters in casts, middleware, etc. -->
-        <exclude name="UnusedFormalParameter"/>
+        <exclude name="UnusedFormalParameter" />
     </rule>
 
     <!-- Re-add UnusedFormalParameter with suppressions -->
     <rule ref="rulesets/unusedcode.xml/UnusedFormalParameter">
         <properties>
             <!-- Allow unused params in common Laravel patterns -->
-            <property name="ignoredNames" value="$model,$key,$attributes,$args,$attribute,$user,$ability"/>
+            <property name="ignoredNames"
+                value="$model,$key,$attributes,$args,$attribute,$user,$ability" />
         </properties>
     </rule>
 

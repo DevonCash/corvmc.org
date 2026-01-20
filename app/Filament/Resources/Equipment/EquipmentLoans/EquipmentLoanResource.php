@@ -7,7 +7,7 @@ use App\Filament\Resources\Equipment\EquipmentLoans\Pages\EditEquipmentLoan;
 use App\Filament\Resources\Equipment\EquipmentLoans\Pages\ListEquipmentLoans;
 use App\Filament\Resources\Equipment\EquipmentLoans\Schemas\EquipmentLoanForm;
 use App\Filament\Resources\Equipment\EquipmentLoans\Tables\EquipmentLoansTable;
-use App\Models\EquipmentLoan;
+use CorvMC\Equipment\Models\EquipmentLoan;
 use App\Models\User;
 use App\Settings\EquipmentSettings;
 use BackedEnum;

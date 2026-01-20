@@ -9,7 +9,7 @@ use App\Filament\Resources\Equipment\Pages\ViewEquipment;
 use App\Filament\Resources\Equipment\Schemas\EquipmentForm;
 use App\Filament\Resources\Equipment\Schemas\EquipmentInfolist;
 use App\Filament\Resources\Equipment\Tables\EquipmentTable;
-use App\Models\Equipment;
+use CorvMC\Equipment\Models\Equipment;
 use App\Settings\EquipmentSettings;
 use BackedEnum;
 use Filament\Resources\Resource;

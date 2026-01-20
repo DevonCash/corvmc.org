@@ -7,7 +7,7 @@ use App\Filament\Resources\Equipment\EquipmentDamageReports\Pages\EditEquipmentD
 use App\Filament\Resources\Equipment\EquipmentDamageReports\Pages\ListEquipmentDamageReports;
 use App\Filament\Resources\Equipment\EquipmentDamageReports\Schemas\EquipmentDamageReportForm;
 use App\Filament\Resources\Equipment\EquipmentDamageReports\Tables\EquipmentDamageReportsTable;
-use App\Models\EquipmentDamageReport;
+use CorvMC\Equipment\Models\EquipmentDamageReport;
 use App\Settings\EquipmentSettings;
 use BackedEnum;
 use Filament\Resources\Resource;

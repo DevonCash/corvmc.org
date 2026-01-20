@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Data\ContactData;
-use App\Models\Equipment;
-use App\Models\EquipmentLoan;
 use App\Models\User;
+use CorvMC\Equipment\Models\Equipment;
+use CorvMC\Equipment\Models\EquipmentLoan;
 use Illuminate\Database\Seeder;
 
 class EquipmentSeeder extends Seeder

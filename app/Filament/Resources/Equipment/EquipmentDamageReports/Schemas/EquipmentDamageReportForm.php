@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Equipment\EquipmentDamageReports\Schemas;
 
-use App\Models\EquipmentLoan;
+use CorvMC\Equipment\Models\EquipmentLoan;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -43,7 +43,7 @@ class EquipmentDamageReportForm
                                         return EquipmentLoan::where('equipment_id', $equipmentId)
                                             ->with('borrower')
                                             ->get()
-                                            ->mapWithKeys(fn (\App\Models\EquipmentLoan $loan) => [
+                                            ->mapWithKeys(fn (EquipmentLoan $loan) => [
                                                 $loan->id => "#{$loan->id} - {$loan->borrower->name} ({$loan->checked_out_at->format('M j, Y')})",
                                             ]);
                                     })

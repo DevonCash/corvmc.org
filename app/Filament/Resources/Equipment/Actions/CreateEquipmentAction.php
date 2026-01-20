@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Equipment\Actions;
 
-use App\Models\Equipment;
+use CorvMC\Equipment\Models\Equipment;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;

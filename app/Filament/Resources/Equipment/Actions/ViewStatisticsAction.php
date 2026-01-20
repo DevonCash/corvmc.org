@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Equipment\Actions;
 
-use App\Models\Equipment;
+use CorvMC\Equipment\Actions\GetStatistics;
+use CorvMC\Equipment\Actions\GetValueByAcquisitionType;
+use CorvMC\Equipment\Models\Equipment;
 use Filament\Actions\Action;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
@@ -20,8 +22,8 @@ class ViewStatisticsAction
             ->modalWidth(width: '3xl')
             ->modalHeading('Equipment Library Statistics')
             ->schema(function (): Schema {
-                $stats = \App\Actions\Equipment\GetStatistics::run();
-                $valueByType = \App\Actions\Equipment\GetValueByAcquisitionType::run();
+                $stats = GetStatistics::run();
+                $valueByType = GetValueByAcquisitionType::run();
                 $popular = Equipment::popular()->limit(5)->get();
 
                 return Schema::make()
@@ -134,7 +136,7 @@ class ViewStatisticsAction
                                         }
 
                                         return $popular
-                                            ->map(fn (\App\Models\Equipment $item) => "{$item->name} ({$item->loans_count} loans)")
+                                            ->map(fn (Equipment $item) => "{$item->name} ({$item->loans_count} loans)")
                                             ->join("\n");
                                     })
                                     ->extraAttributes(['class' => 'whitespace-pre-line']),

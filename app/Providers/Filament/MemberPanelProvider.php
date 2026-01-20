@@ -3,10 +3,13 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Widgets\QuickActionsWidget;
+use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\View\PanelsRenderHook;
@@ -116,6 +119,11 @@ class MemberPanelProvider extends PanelProvider
                 \App\Filament\Pages\MyProfile::class,
                 \App\Filament\Pages\MyAccount::class,
                 \App\Filament\Pages\MyMembership::class,
+                \App\Filament\Pages\AcceptBandInvitationPage::class,
+            ])
+            ->navigationGroups([
+                'My Bands',
+                'My Account'
             ])
             ->databaseNotifications()
             ->widgets([
@@ -149,5 +157,71 @@ class MemberPanelProvider extends PanelProvider
                 fn (): string => view('filament.components.sidebar-footer')->render()
             )
             ->viteTheme('resources/css/app.css');
+    }
+
+    public function boot(): void
+    {
+        Filament::serving(function () {
+            if (Filament::getCurrentPanel()?->getId() !== 'member') {
+                return;
+            }
+
+            $user = User::me();
+
+            if (! $user) {
+                return;
+            }
+
+            // Get user's active bands (limit 5, alphabetically)
+            $activeBands = $user->bands()
+                ->wherePivot('status', 'active')
+                ->orderBy('name')
+                ->limit(5)
+                ->get();
+
+            // Get user's invited bands (alphabetically)
+            $invitedBands = $user->bands()
+                ->wherePivot('status', 'invited')
+                ->orderBy('name')
+                ->get();
+
+            // Add individual band navigation items
+            $sort = 1;
+            foreach ($activeBands as $band) {
+
+                Filament::registerNavigationItems([
+                    NavigationItem::make($band->name)
+                        ->url("/band/{$band->slug}")
+                        ->icon('tabler-users')
+                        ->group('My Bands')
+                        ->sort($sort++),
+                ]);
+            }
+
+            // Add invited band navigation items with badges
+            foreach ($invitedBands as $band) {
+                Filament::registerNavigationItems([
+                    NavigationItem::make($band->name)
+                        ->url("/member/band-invitation/{$band->slug}")
+                        ->icon('tabler-users')
+                        ->badge('Invited')
+                        ->badgeColor('warning')
+                        ->group('My Bands')
+                        ->sort($sort++),
+                ]);
+            }
+
+            // Calculate sort to always appear last
+            $finalSort = 6 + $invitedBands->count();
+
+            // Add "Register New Band" utility link
+            Filament::registerNavigationItems([
+                NavigationItem::make('Create Band')
+                    ->url('/band/new')
+                    ->icon('tabler-plus')
+                    ->group('My Bands')
+                    ->sort($finalSort),
+            ]);
+        });
     }
 }
