@@ -28,6 +28,8 @@ class BandResource extends Resource
 
     protected static ?string $slug = 'bands';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Directory';
+
     protected static ?string $modelLabel = 'Band';
 
     public static function getNavigationBadge(): ?string

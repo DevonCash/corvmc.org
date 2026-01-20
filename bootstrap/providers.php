@@ -2,6 +2,7 @@
 
 return [
     App\Providers\AppServiceProvider::class,
+    App\Providers\Filament\BandPanelProvider::class,
     App\Providers\Filament\MemberPanelProvider::class,
     App\Providers\Filament\StaffPanelProvider::class,
 ];

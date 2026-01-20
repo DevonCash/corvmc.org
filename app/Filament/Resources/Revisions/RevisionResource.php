@@ -70,4 +70,14 @@ class RevisionResource extends Resource
 
         return 'primary';
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return config('revision.show_resource', true);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return config('revision.show_resource', true) && parent::canViewAny();
+    }
 }

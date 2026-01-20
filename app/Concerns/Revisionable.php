@@ -277,6 +277,11 @@ trait Revisionable
      */
     protected function shouldCreateRevision(?array $attributes = null): bool
     {
+        // Check global revision system status
+        if (!config('revision.enabled', true)) {
+            return false;
+        }
+
         // Don't create revisions if disabled
         if (! static::$requiresRevisions) {
             return false;

@@ -27,6 +27,8 @@ class MemberProfileResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'tabler-users';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Directory';
+
     protected static ?string $recordTitleAttribute = 'user.name';
 
     protected static ?string $recordSubtitleAttribute = 'hometown';

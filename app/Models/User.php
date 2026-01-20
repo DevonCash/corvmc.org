@@ -11,6 +11,8 @@ use App\Notifications\EmailVerificationNotification;
 use App\Notifications\PasswordResetNotification;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
+use Filament\Models\Contracts\HasTenants;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -117,7 +119,7 @@ use Spatie\Permission\Traits\HasRoles;
  *
  * @mixin \Eloquent
  */
-class User extends Authenticatable implements FilamentUser, HasAvatar
+class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenants
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use Billable, HasCredits, HasFactory, HasMembershipStatus, HasRoles, HasTrust, Impersonate, LogsActivity, Notifiable, SoftDeletes;
@@ -157,6 +159,28 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
         // Member panel is accessible to all authenticated users
         return true;
+    }
+
+    public function getTenants(Panel $panel): Collection
+    {
+        // Only provide tenants for band panel
+        if ($panel->getId() !== 'band') {
+            return new Collection();
+        }
+
+        // Return all bands where user is active member or owner
+        return $this->bands()
+            ->wherePivot('status', 'active')
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function canAccessTenant(\Illuminate\Database\Eloquent\Model $tenant): bool
+    {
+        // Use existing BandPolicy logic
+        return $tenant instanceof Band
+            && ($tenant->owner_id === $this->id
+                || $tenant->activeMembers()->where('user_id', $this->id)->exists());
     }
 
     public function getFilamentAvatarUrl(): ?string

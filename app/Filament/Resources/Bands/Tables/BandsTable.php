@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Bands\Tables;
 
+use App\Models\Band;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Support\Enums\FontWeight;
@@ -98,6 +100,12 @@ class BandsTable
                     }),
             ])
             ->recordActions([
+                Action::make('manage')
+                    ->label('Manage')
+                    ->icon('heroicon-o-arrow-right-circle')
+                    ->color('primary')
+                    ->url(fn (Band $record): string => route('filament.band.pages.band-dashboard', ['tenant' => $record->slug]))
+                    ->visible(fn (Band $record): bool => auth()->user()?->canAccessTenant($record) ?? false),
                 ViewAction::make(),
                 EditAction::make(),
             ])
