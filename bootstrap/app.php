@@ -34,27 +34,35 @@ return Application::configure(basePath: dirname(__DIR__))
         // ->withExceptions(function (Exceptions $exceptions) {
         Integration::handles($exceptions);
 
-        // Custom rendering for Filament
+        // Custom rendering for Livewire requests
         $exceptions->render(function (Throwable $e, $request) {
             if ($request->header('X-Livewire')) {
-                // Report the exception so it gets logged and sent to Sentry
                 try {
                     report($e);
                 } catch (Throwable $reportException) {
                     // Silently fail if reporting fails to prevent infinite loop
                 }
 
-                $message = app()->environment('production')
-                    ? 'Something went wrong. Our team has been notified.'
-                    : $e->getMessage();
+                // In development, show the default error modal with full details
+                if (! app()->environment('production')) {
+                    return null;
+                }
 
+                // In production, show a user-friendly message
                 \Filament\Notifications\Notification::make()
                     ->title('An error occurred')
-                    ->body($message)
+                    ->body('Something went wrong. Our team has been notified.')
                     ->danger()
                     ->send();
 
-                return response()->noContent();
+                // Return HTML that Livewire can display in its error modal
+                return response(
+                    '<div style="padding: 2rem; text-align: center;">
+                        <h2 style="margin-bottom: 1rem;">Something went wrong</h2>
+                        <p>Our team has been notified. Please try again.</p>
+                    </div>',
+                    500
+                );
             }
         });
     })->create();

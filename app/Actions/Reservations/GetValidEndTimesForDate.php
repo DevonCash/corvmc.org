@@ -17,9 +17,14 @@ class GetValidEndTimesForDate
      * Get valid end times for a specific date and start time, avoiding conflicts.
      *
      * Combines time validation with conflict checking to return only truly available end times.
+     *
+     * @param  ConflictData|null  $conflicts  Pre-fetched conflicts for in-memory filtering
      */
-    public function handle(Carbon $date, string $startTime): array
+    public function handle(Carbon $date, string $startTime, ?ConflictData $conflicts = null): array
     {
+        // Fetch conflicts once if not provided
+        $conflicts ??= GetConflictsForDate::run($date);
+
         $slots = [];
         $start = $date->copy()->setTimeFromTimeString($startTime);
 
@@ -38,7 +43,7 @@ class GetValidEndTimesForDate
             $timeString = $current->format('H:i');
 
             // Check if this end time would cause conflicts
-            $hasConflicts = ! CheckTimeSlotAvailability::run($start, $current);
+            $hasConflicts = $conflicts->hasConflict($start, $current);
 
             if (! $hasConflicts) {
                 $slots[$timeString] = $current->format('g:i A');

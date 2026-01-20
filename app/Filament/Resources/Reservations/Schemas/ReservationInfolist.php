@@ -6,8 +6,10 @@ use App\Filament\Actions\Action;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\RehearsalReservation;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Panel;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Schema;
@@ -79,6 +81,7 @@ class ReservationInfolist
                             ->url(fn(?Model $record): ?string => UserResource::getUrl('edit', [
                                 'record' => $record?->reservable->getKey(),
                             ]))
+                            ->visible(fn(): bool => in_array(UserResource::class, Filament::getCurrentPanel()->getResources()))
                             ->openUrlInNewTab(true)
                             ->icon('heroicon-o-arrow-top-right-on-square'),
                     ])

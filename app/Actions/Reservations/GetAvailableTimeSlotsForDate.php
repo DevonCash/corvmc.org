@@ -14,9 +14,14 @@ class GetAvailableTimeSlotsForDate
      *
      * Returns simplified format of available start times (not full slot objects).
      * Tests each slot with 1 hour duration for availability.
+     *
+     * @param  ConflictData|null  $conflicts  Pre-fetched conflicts for in-memory filtering
      */
-    public function handle(Carbon $date): array
+    public function handle(Carbon $date, ?ConflictData $conflicts = null): array
     {
+        // Fetch conflicts once if not provided
+        $conflicts ??= GetConflictsForDate::run($date);
+
         $allSlots = GetAllTimeSlots::run();
         $availableSlots = [];
 
@@ -26,7 +31,7 @@ class GetAvailableTimeSlotsForDate
 
             // Only check for conflicts and past times, not duration limits
             // since users might want shorter or longer reservations
-            $hasConflicts = ! CheckTimeSlotAvailability::run($testStart, $testEnd);
+            $hasConflicts = $conflicts->hasConflict($testStart, $testEnd);
             $isPast = $testStart->isPast();
 
             // Only include slots that don't have conflicts and are in the future

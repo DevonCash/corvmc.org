@@ -4,8 +4,7 @@
         <p>
             Our practice space is available for $15/hour between 9 AM and 10 PM daily. Click "Reserve Space"
             above to book your session—you can reserve anywhere from 1 to 8 hours at a time. At least one day's notice
-            is required, and payment is due at
-            the reservation start time via cash in person, or via card online.
+            is required, and payment is due at the reservation start time via cash in person, or via card online.
         </p>
         <p>
             If you have specific needs for equipment or space, please make a note in the reservation form.

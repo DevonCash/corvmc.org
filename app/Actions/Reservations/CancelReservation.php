@@ -100,7 +100,7 @@ class CancelReservation
             ->label('Cancel')
             ->modalSubmitActionLabel('Cancel Reservation')
             ->modalCancelActionLabel('Keep Reservation')
-            ->modalDescription('Are you sure you want to cancel this reservation? This action cannot be undone.')
+            ->modalDescription('Are you sure you want to cancel this reservation? This action cannot be undone. Free hours used will be refunded if applicable.')
             ->icon('tabler-calendar-x')
             ->color('danger')
             ->visible(

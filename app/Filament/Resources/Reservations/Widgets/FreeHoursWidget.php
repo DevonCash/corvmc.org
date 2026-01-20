@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Reservations\Widgets;
 use App\Enums\CreditType;
 use App\Models\CreditTransaction;
 use App\Models\Reservation;
+use App\Models\User;
 use Filament\Widgets\Widget;
 
 class FreeHoursWidget extends Widget
@@ -27,7 +28,7 @@ class FreeHoursWidget extends Widget
 
     public function mount(): void
     {
-        $user = auth()->user();
+        $user = User::me();
         $this->isSustainingMember = $user?->hasRole('sustaining member') ?? false;
 
         if ($this->isSustainingMember) {

@@ -303,3 +303,7 @@ html, body {
     margin: calc(var(--spacing) * -6);
   margin-bottom: 0;
 }
+
+.fi-modal-header:has(+.fi-modal-footer) {
+    margin-bottom: calc(var(--spacing) * -6 - 1px);
+}

@@ -19,6 +19,13 @@ class ConfirmReservation
 {
     use AsAction;
 
+    public static function allowed(RehearsalReservation $reservation, User $user): bool
+    {
+        return in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved]) &&
+            $user->can('manage reservations')
+            && $reservation->reserved_at->subDays(5)->isNowOrPast(); // Can't confirm more than 3 days in advance
+    }
+
     /**
      * Confirm a scheduled or reserved reservation.
      *
@@ -27,7 +34,7 @@ class ConfirmReservation
      */
     public function handle(RehearsalReservation $reservation, bool $notify_user = true): RehearsalReservation
     {
-        if (! in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
+        if (! self::allowed($reservation, $reservation->getResponsibleUser())) {
             return $reservation;
         }
 
@@ -95,9 +102,7 @@ class ConfirmReservation
             ->label('Confirm')
             ->icon('tabler-check')
             ->color('success')
-            ->visible(fn(Reservation $record) => $record instanceof RehearsalReservation &&
-                in_array($record->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved]) &&
-                User::me()?->can('manage reservations'))
+            ->visible(fn(Reservation $record) => self::allowed($record, User::me()))
             ->schema([
                 Toggle::make('notify_user')
                     ->label('Notify User')

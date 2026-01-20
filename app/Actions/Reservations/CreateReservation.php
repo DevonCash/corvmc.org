@@ -44,19 +44,7 @@ class CreateReservation
             // Calculate cost with available credits
             $costCalculation = CalculateReservationCost::run($user, $startTime, $endTime);
 
-            // Deduct credits immediately for Scheduled/Confirmed status
-            // Reserved status defers credit deduction until confirmation
-            $freeBlocks = Reservation::hoursToBlocks($costCalculation['free_hours']);
-            if ($freeBlocks > 0 && $status !== ReservationStatus::Reserved) {
-                $user->deductCredit(
-                    $freeBlocks,
-                    CreditType::FreeHours,
-                    'reservation_usage',
-                    null // reservation_id will be null until we create it
-                );
-            }
-
-            // Create reservation with specified status
+            // Create reservation first so we have an ID for credit tracking
             $reservation = RehearsalReservation::create([
                 'user_id' => $user->id,
                 'reservable_type' => User::class,
@@ -73,6 +61,18 @@ class CreateReservation
                 'recurring_series_id' => $options['recurring_series_id'] ?? null,
                 'instance_date' => $options['instance_date'] ?? null,
             ]);
+
+            // Deduct credits immediately for Scheduled/Confirmed status
+            // Reserved status defers credit deduction until confirmation
+            $freeBlocks = Reservation::hoursToBlocks($costCalculation['free_hours']);
+            if ($freeBlocks > 0 && $status !== ReservationStatus::Reserved) {
+                $user->deductCredit(
+                    $freeBlocks,
+                    CreditType::FreeHours,
+                    'reservation_usage',
+                    $reservation->id
+                );
+            }
 
             // If cost is zero after credit deduction, mark payment as not applicable
             if ($reservation->cost->isZero()) {

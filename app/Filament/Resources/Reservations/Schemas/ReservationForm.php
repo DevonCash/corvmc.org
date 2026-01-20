@@ -7,7 +7,6 @@ use App\Actions\Reservations\DetermineReservationStatus;
 use App\Actions\Reservations\GetAvailableTimeSlotsForDate;
 use App\Actions\Reservations\GetValidEndTimesForDate;
 use App\Data\ContactData;
-use App\Models\User;
 use Carbon\Carbon;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
@@ -99,23 +98,22 @@ class ReservationForm
         $user = Auth::user();
         $contact = $user?->profile?->contact;
         $existingPhone = $contact?->phone;
+        // Remove '+1' prefix if present
+        if ($existingPhone && str_starts_with($existingPhone, '+1')) {
+            $existingPhone = substr($existingPhone, 2);
+        }
 
         return [
-            Placeholder::make('phone_confirmed')
-                ->label('')
-                ->content(fn () => 'Contact phone: '.$existingPhone)
-                ->visible(fn () => $existingPhone !== null),
-
-            Placeholder::make('phone_required')
-                ->label('')
-                ->content('We need a contact phone number for your reservation.')
-                ->visible(fn () => $existingPhone === null),
+            
 
             TextInput::make('contact_phone')
+                ->default($existingPhone)
                 ->label('Phone Number')
+                ->prefix('+1')
+                ->mask('(999) 999-9999')
+                ->helperText("We'll use this to send you reservation updates.")
                 ->tel()
                 ->required()
-                ->visible(fn () => $existingPhone === null)
                 ->dehydrated(false),
 
             Checkbox::make('sms_ok')
@@ -180,8 +178,11 @@ class ReservationForm
                         ->live()
                         ->columnSpanFull()
                         ->afterStateUpdated(function ($state, callable $set, Get $get) {
+                            // Clear time selections when date changes
+                            $set('start_time', null);
+                            $set('end_time', null);
                             self::updateDateTimes($get, $set);
-                            self::calculateCost($get('user_id'), $get, $set);
+                            self::calculateCost($get, $set);
                         })
                         ->minDate(now()->addDay()->toDateString()),
 
@@ -193,16 +194,16 @@ class ReservationForm
                                 return [];
                             }
 
-                            return GetAvailableTimeSlotsForDate::run(Carbon::parse($date));
+                            return GetAvailableTimeSlotsForDate::run(Carbon::parse($date, config('app.timezone')));
                         })
                         ->disabled(fn (Get $get) => ! $get('reservation_date'))
                         ->required()
-                        ->live()
+                        ->live(debounce: 300)
                         ->afterStateUpdated(function ($state, callable $set, Get $get) {
                             // Clear end time when start time changes
                             $set('end_time', null);
                             self::updateDateTimes($get, $set);
-                            self::calculateCost($get('user_id'), $get, $set);
+                            self::calculateCost($get, $set);
                         }),
 
                     Select::make('end_time')
@@ -214,13 +215,13 @@ class ReservationForm
                                 return [];
                             }
 
-                            return GetValidEndTimesForDate::run(Carbon::parse($date), $startTime);
+                            return GetValidEndTimesForDate::run(Carbon::parse($date, config('app.timezone')), $startTime);
                         })
                         ->required()
-                        ->live()
+                        ->live(debounce: 300)
                         ->afterStateUpdated(function ($state, callable $set, Get $get) {
                             self::updateDateTimes($get, $set);
-                            self::calculateCost($get('user_id'), $get, $set);
+                            self::calculateCost($get, $set);
                         })
                         ->disabled(fn (Get $get) => ! $get('start_time')),
                 ])->columnSpanFull(),
@@ -299,9 +300,10 @@ class ReservationForm
         $set('status', $status);
     }
 
-    private static function calculateCost(?int $userId, Get $get, callable $set): void
+    private static function calculateCost(Get $get, callable $set): void
     {
-        if (! $userId) {
+        $user = Auth::user();
+        if (! $user) {
             $set('cost', 0);
             $set('free_hours_used', 0);
             $set('hours_used', 0);
@@ -317,11 +319,6 @@ class ReservationForm
             $set('free_hours_used', 0);
             $set('hours_used', 0);
 
-            return;
-        }
-
-        $user = User::find($userId);
-        if (! $user) {
             return;
         }
 
