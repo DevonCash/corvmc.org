@@ -22,7 +22,7 @@ class HandleSuccessfulPayment
     public function handle(RehearsalReservation $reservation, string $sessionId): bool
     {
         // Idempotency check - skip if already paid
-        if ($reservation->requiresPayment()) {
+        if (!$reservation->requiresPayment()) {
             return true;
         }
 
