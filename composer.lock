@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2beabe0ee0417f43e46c5e49bbb3a340",
+    "content-hash": "4dbd684ef98b42e4df657cd831af66a3",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -1530,6 +1530,38 @@
             }
         },
         {
+            "name": "corvmc/events",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/events",
+                "reference": "6316a29d4fa6512211357d6bbde7f94ae35ab51b"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "CorvMC\\Events\\Providers\\EventsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CorvMC\\Events\\": "src/",
+                    "CorvMC\\Events\\Tests\\": "tests/",
+                    "CorvMC\\Events\\Database\\Factories\\": "database/factories/",
+                    "CorvMC\\Events\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "corvmc/moderation",
             "version": "1.0",
             "dist": {
@@ -1567,7 +1599,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/space-management",
-                "reference": "7dd90f75a58cfeb0b1bee090952eb4e9ff8e699e"
+                "reference": "5e03c216ac33ff62a0a24f19cf92874c577e0a2a"
             },
             "type": "library",
             "extra": {
@@ -1588,6 +1620,7 @@
             "license": [
                 "proprietary"
             ],
+            "description": "Practice space reservations, conflict detection, and recurring booking management",
             "transport-options": {
                 "symlink": true,
                 "relative": true

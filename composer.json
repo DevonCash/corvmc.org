@@ -12,6 +12,7 @@
         "php": "^8.2",
         "bezhansalleh/filament-panel-switch": "dev-main",
         "corvmc/equipment": "*",
+        "corvmc/events": "*",
         "corvmc/moderation": "*",
         "corvmc/space-management": "*",
         "corvmc/sponsorship": "*",

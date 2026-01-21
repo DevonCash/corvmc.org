@@ -1,0 +1,48 @@
+<?php
+
+namespace CorvMC\Events\Actions;
+
+use App\Models\Band;
+use CorvMC\Events\Models\Event;
+use Lorisleiva\Actions\Concerns\AsAction;
+
+class DuplicateEvent
+{
+    use AsAction;
+
+    /**
+     * Duplicate an event with new date/time.
+     */
+    public function handle(
+        Event $originalEvent,
+        \DateTime $newStartTime,
+        ?\DateTime $newEndTime = null,
+        ?\DateTime $newDoorsTime = null
+    ): Event {
+        $newEvent = $originalEvent->replicate();
+        $newEvent->start_datetime = $newStartTime;
+        $newEvent->end_datetime = $newEndTime;
+        $newEvent->doors_datetime = $newDoorsTime;
+        $newEvent->status = 'approved';
+        $newEvent->published_at = null;
+        $newEvent->save();
+
+        // Copy performers
+        foreach ($originalEvent->performers as $performer) {
+            if ($performer instanceof Band && isset($performer->pivot)) {
+                $pivot = $performer->pivot;
+                $newEvent->performers()->attach($performer->id, [
+                    'order' => $pivot?->order ?? null,
+                    'set_length' => $pivot?->set_length ?? null,
+                ]);
+            }
+        }
+
+        // Copy tags
+        foreach ($originalEvent->tags as $tag) {
+            $newEvent->attachTag($tag->name ?? '', $tag->type ?? null);
+        }
+
+        return $newEvent;
+    }
+}
