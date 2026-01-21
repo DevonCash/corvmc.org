@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Reservations\Widgets;
 
 use App\Actions\RecurringReservations\CreateRecurringRehearsal;
-use App\Models\RecurringSeries;
+use CorvMC\Support\Models\RecurringSeries;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;

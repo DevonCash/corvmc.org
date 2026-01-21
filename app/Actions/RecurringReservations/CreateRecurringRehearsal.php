@@ -2,11 +2,11 @@
 
 namespace App\Actions\RecurringReservations;
 
-use App\Enums\RecurringSeriesStatus;
 use App\Filament\Actions\Action;
 use App\Filament\Resources\RecurringReservations\Schemas\RecurringReservationForm;
 use App\Models\Event;
-use App\Models\RecurringSeries;
+use CorvMC\Support\Enums\RecurringSeriesStatus;
+use CorvMC\Support\Models\RecurringSeries;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;

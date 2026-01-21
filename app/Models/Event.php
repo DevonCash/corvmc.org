@@ -4,8 +4,8 @@ namespace App\Models;
 
 use App\Concerns\HasPoster;
 use App\Concerns\HasPublishing;
-use App\Concerns\HasRecurringSeries;
-use App\Concerns\HasTimePeriod;
+use CorvMC\Support\Concerns\HasRecurringSeries;
+use CorvMC\Support\Concerns\HasTimePeriod;
 use App\Data\LocationData;
 use App\Enums\EventStatus;
 use App\Enums\Visibility;

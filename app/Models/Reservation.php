@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use App\Casts\MoneyCast;
 use App\Concerns\HasPaymentStatus;
-use App\Concerns\HasRecurringSeries;
-use App\Concerns\HasTimePeriod;
+use CorvMC\Support\Casts\MoneyCast;
+use CorvMC\Support\Concerns\HasRecurringSeries;
+use CorvMC\Support\Concerns\HasTimePeriod;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
 use Filament\Support\Contracts\HasColor;

@@ -2,7 +2,7 @@
 
 namespace App\Actions\RecurringReservations;
 
-use App\Models\RecurringSeries;
+use CorvMC\Support\Models\RecurringSeries;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;

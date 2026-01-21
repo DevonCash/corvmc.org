@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\RecurringSeries;
+use CorvMC\Support\Models\RecurringSeries;
 use App\Models\User;
 
 class RecurringSeriesPolicy

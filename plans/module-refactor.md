@@ -5,8 +5,7 @@
 Transform the current action-based monolithic architecture into a **Monolithic Modular Architecture** using **internachi/modular** with clear domain boundaries, explicit interfaces, and managed cross-cutting concerns. This maintains single-deployment simplicity while improving organization, testability, and maintainability.
 
 **Package**: [internachi/modular](https://github.com/InterNACHI/modular) - Laravel module system using Composer path repositories
-**Scope**: ~30k LOC organized into 7 domain modules + shared kernel
-**Timeline**: 8-10 weeks (6 phases) - Faster with built-in tooling
+**Scope**: ~30k LOC organized into 8 domain modules + support library
 **Approach**: Incremental migration using internachi/modular commands
 
 ---
@@ -20,31 +19,25 @@ Using **internachi/modular** conventions, modules are Laravel packages in `app-m
 ```
 app-modules/
 ├── space-management/          # Reservations + Recurring (43 actions)
-│   ├── composer.json
-│   ├── src/                   # Models, Actions, Services
-│   ├── routes/                # Module routes
-│   ├── resources/             # Views, lang, Filament components
-│   ├── database/migrations/
-│   └── tests/
-│
 ├── events/                    # Events & Productions (16 actions)
-├── membership/                # MemberProfiles + Bands (23 actions)
+├── membership/                # Users + Profiles + Bands (23 actions)
 ├── finance/                   # Payments + Subscriptions + Credits (26 actions)
-├── equipment/                 # Equipment Library (6 actions)
-└── sponsorship/               # Sponsorship system (3 actions)
+├── equipment/                 # Equipment Library (6 actions) ✅ DONE
+├── sponsorship/               # Sponsorship system (3 actions) ✅ DONE
+└── moderation/                # Trust + Reports + Revisions ✅ DONE
 ```
 
-### Shared Module (Cross-Cutting)
+### Support Module (Library/Infrastructure)
 
 ```
 app-modules/
-└── shared/                    # Cross-cutting concerns
+└── support/                   # Library components used across domains
     ├── composer.json
     ├── src/
-    │   ├── ContentModeration/ # Trust + Reports + Revisions
-    │   ├── Notifications/     # 33 notification classes
-    │   ├── Integrations/      # GoogleCalendar
-    │   └── Support/           # Shared concerns, DTOs, casts
+    │   ├── Models/            # RecurringSeries
+    │   ├── Concerns/          # HasTimePeriod, HasRecurringSeries
+    │   ├── Casts/             # MoneyCast
+    │   └── Enums/             # RecurringSeriesStatus
     └── tests/
 ```
 
@@ -73,15 +66,29 @@ app/
 - `EventReservation`
 
 **Key Actions**:
-- Conflict detection (30 actions)
-- Recurring reservations (13 actions)
+- Conflict detection (~30 actions)
+- Recurring reservations (~13 actions)
 - Cost calculation
 - Availability checking
 
-**Note**: `RecurringReservation` is deprecated. `RecurringSeries` moved to Shared module as it's used across domains.
+**Concerns** (domain-specific):
+- `HasPaymentStatus` - only used by Reservation
+
+**Notifications** (domain-specific):
+- `ReservationCreatedNotification`
+- `ReservationConfirmedNotification`
+- `ReservationCancelledNotification`
+- `ReservationReminderNotification`
+- `ReservationConfirmationReminderNotification`
+- `ReservationAutoCancelledNotification`
+- `ReservationCreatedTodayNotification`
+- `DailyReservationDigestNotification`
+
+**Note**: `RecurringReservation` is deprecated - do not migrate.
 
 **Dependencies**:
 - **Finance**: `CreditManagerInterface` for free hours
+- **Support**: `RecurringSeries`, `MoneyCast`, `HasTimePeriod`
 
 **Provides**:
 - `ConflictDetectorInterface` - Used by Events when creating EventReservations
@@ -97,15 +104,30 @@ app/
 - `Venue`
 
 **Key Actions**:
-- Event CRUD (16 actions)
+- Event CRUD (~16 actions)
 - Publishing workflow
 - Performer management
 - Rescheduling
 
+**Concerns** (domain-specific):
+- `HasPublishing` - only used by Event
+- `HasPoster` - only used by Event
+
+**DTOs** (domain-specific):
+- `LocationData`
+- `VenueLocationData`
+
+**Notifications** (domain-specific):
+- `EventCreatedNotification`
+- `EventUpdatedNotification`
+- `EventCancelledNotification`
+- `EventPublishedNotification`
+
 **Dependencies**:
 - **SpaceManagement**: `ReservationManagerInterface` to create/manage EventReservations
 - **Membership**: Band performers
-- **Shared**: Content moderation
+- **Moderation**: Content moderation (reports, revisions)
+- **Support**: `RecurringSeries`, `HasTimePeriod`
 
 **Note**: Events don't do conflict checking directly - they attempt to create EventReservations through SpaceManagement, which handles all conflict detection internally.
 
@@ -119,15 +141,37 @@ app/
 - `Band`
 - `BandMember`
 - `StaffProfile`
+- `Invitation`
 
 **Key Actions**:
-- User management (5 actions)
-- Member profiles (9 actions)
-- Band operations (9 actions)
-- Invitation system
+- User management (~5 actions)
+- Member profiles (~9 actions)
+- Band operations (~9 actions)
+- Invitation system (~10 actions)
+- Staff profiles (~11 actions)
+
+**Concerns** (domain-specific):
+- `HasMembershipStatus` - only used by User
+
+**DTOs** (domain-specific):
+- `UserSettingsData`
+- `ContactData`
+
+**Notifications** (domain-specific):
+- `NewMemberWelcomeNotification`
+- `UserCreatedNotification`
+- `UserUpdatedNotification`
+- `UserDeactivatedNotification`
+- `UserInvitationNotification`
+- `EmailVerificationNotification`
+- `PasswordResetNotification`
+- `BandInvitationNotification`
+- `BandInvitationAcceptedNotification`
+- `BandOwnershipInvitationNotification`
+- `ContactFormSubmissionNotification`
 
 **Dependencies**:
-- **Shared**: Content moderation, invitations
+- **Moderation**: Content moderation for bands/profiles
 
 **Provides**:
 - `MemberRepositoryInterface`
@@ -142,21 +186,31 @@ app/
 - `CreditTransaction`
 - `CreditAllocation`
 - `PromoCode`
+- `PromoCodeRedemption`
 
 **Key Actions**:
-- Payment calculations (10 actions)
-- Subscription management (9 actions)
-- Credit system (4 actions)
-- Member benefits (3 actions)
+- Payment calculations (~10 actions)
+- Subscription management (~9 actions)
+- Credit system (~4 actions)
+- Member benefits (~3 actions)
+
+**Concerns** (domain-specific):
+- `HasCredits` - only used by User (for credits)
+
+**Notifications** (domain-specific):
+- `MembershipExpiredNotification`
+- `MembershipRenewalReminderNotification`
+- `MembershipReminderNotification`
+
+**Dependencies**:
+- Stripe (via Laravel Cashier)
+- **Support**: `MoneyCast`
 
 **Provides**:
 - `PaymentProcessorInterface`
 - `CreditManagerInterface`
 
-**Dependencies**:
-- Stripe (via Laravel Cashier)
-
-### Equipment Module
+### Equipment Module ✅ COMPLETE
 
 **Owns**: Equipment tracking and loans
 
@@ -167,9 +221,13 @@ app/
 
 **Key Actions**: 6 actions for checkout/return
 
-**Dependencies**: Minimal (most isolated module)
+**DTOs** (domain-specific):
+- `EquipmentData`
 
-### Sponsorship Module
+**Dependencies**:
+- **Support**: `HasTimePeriod` (for loans), `MoneyCast` (for values)
+
+### Sponsorship Module ✅ COMPLETE
 
 **Owns**: Corporate/organizational sponsorships
 
@@ -177,30 +235,102 @@ app/
 
 **Key Actions**: 3 actions for sponsor management
 
-### Shared Module
+### Moderation Module ✅ COMPLETE
 
-**Owns**: Cross-cutting concerns used across multiple domains
+**Owns**: Content moderation, trust system, reports, revisions
 
-**ContentModeration Sub-domain**:
-- **Models**: `ContentModel` (abstract base), `Report`, `Revision`, `TrustTransaction`, `UserTrustBalance`
-- **Traits**: `Reportable`, `Revisionable`, `HasTrust`
-- **Used By**: All content types (Event, Band, MemberProfile)
-- **Why Shared**: Genuinely cross-cutting concern with identical logic
+**Models**:
+- `ContentModel` (abstract base)
+- `Report`
+- `Revision`
+- `TrustTransaction`
+- `UserTrustBalance`
+- `TrustAchievement`
 
-**Support Sub-domain**:
-- **Models**: `RecurringSeries` (used by Events and Reservations)
-- **Traits**: `HasTimePeriod`, `HasVisibility`, `HasPublishing`, `HasPaymentStatus`
-- **Casts**: `MoneyCast`
-- **DTOs**: `LocationData`, etc.
-- **Why Shared**: Reusable across multiple modules
+**Actions**:
+- Trust actions (~10)
+- Report actions (~4)
+- Revision actions (~11)
 
-**Integrations Sub-domain**:
-- **GoogleCalendar**: Syncs reservations and events
-- **Why Shared**: Used by both SpaceManagement and Events modules
+**Concerns**:
+- `Reportable`
+- `Revisionable`
+- `HasTrust`
 
-**Notifications Sub-domain**:
-- Organized by domain (Reservations, Events, Membership, etc.)
-- **Why Shared**: Consistent notification patterns across domains
+**DTOs** (domain-specific):
+- `SpamCheckResultData`
+
+**Used By**: Events, Bands, MemberProfiles (any content that can be reported/revised)
+
+### Support Module (Library)
+
+**Owns**: Infrastructure components used across multiple domains
+
+**This is a library module, not a domain module.** It contains reusable utilities with no business logic.
+
+**Models**:
+- `RecurringSeries` - scheduling pattern used by Events and Reservations
+
+**Concerns** (truly cross-cutting):
+- `HasTimePeriod` - used by Event, Reservation, EquipmentLoan (3+ modules)
+- `HasRecurringSeries` - trait for models that use recurring series
+
+**Casts**:
+- `MoneyCast` - used by Reservation, Subscription, Equipment (3+ modules)
+
+**Enums**:
+- `RecurringSeriesStatus`
+
+**Why these belong here**: Each is used by 3+ modules with identical logic. They're infrastructure, not domain logic.
+
+---
+
+## Distribution Summary
+
+### Notifications → Domain Modules
+
+| Notification | Target Module |
+|--------------|---------------|
+| Reservation* | SpaceManagement |
+| Event* | Events |
+| User*, Band*, Membership*, Password*, Email* | Membership |
+| Membership*Reminder, MembershipExpired | Finance |
+
+### DTOs → Domain Modules
+
+| DTO | Target Module |
+|-----|---------------|
+| `LocationData`, `VenueLocationData` | Events |
+| `UserSettingsData`, `ContactData` | Membership |
+| `EquipmentData` | Equipment |
+| `SpamCheckResultData` | Moderation |
+
+### Concerns → Domain Modules
+
+| Concern | Target Module | Reason |
+|---------|---------------|--------|
+| `HasPaymentStatus` | SpaceManagement | Only used by Reservation |
+| `HasPublishing` | Events | Only used by Event |
+| `HasPoster` | Events | Only used by Event |
+| `HasCredits` | Finance | Only used for user credits |
+| `HasMembershipStatus` | Membership | Only used by User |
+| `HasTimePeriod` | **Support** | Used by 3+ modules |
+| `HasRecurringSeries` | **Support** | Used by 2+ modules |
+
+### Casts → Support Module
+
+| Cast | Target Module | Reason |
+|------|---------------|--------|
+| `MoneyCast` | **Support** | Used by 3+ modules |
+
+---
+
+## Removed from Plan
+
+### GoogleCalendar Integration
+- **Status**: Unused, future uncertain
+- **Action**: Do not migrate, leave in place or remove entirely
+- **Location**: `app/Actions/GoogleCalendar/`
 
 ---
 
@@ -237,11 +367,6 @@ Event::listen(
 );
 ```
 
-**Benefits**:
-- No direct module coupling
-- Async processing possible
-- Testable with mock interfaces
-
 ### Problem 2: Event → SpaceManagement Dependency (Practice Space)
 
 **Current**: Events need to reserve practice space, creating potential for conflicts
@@ -267,72 +392,15 @@ interface ReservationManagerInterface {
 
     public function cancelEventReservation(EventReservation $reservation): void;
 }
-
-// app-modules/space-management/src/Services/ReservationManager.php
-class ReservationManager implements ReservationManagerInterface {
-    public function __construct(
-        private ConflictDetector $conflictDetector
-    ) {}
-
-    public function createEventReservation(...): EventReservation {
-        // Check conflicts internally (SpaceManagement responsibility)
-        $conflicts = $this->conflictDetector->findConflicts($start, $end);
-
-        if ($conflicts->isNotEmpty()) {
-            throw new ReservationConflictException($conflicts);
-        }
-
-        return EventReservation::create([...]);
-    }
-}
-
-// app-modules/events/src/Actions/Events/SyncEventSpaceReservation.php
-class SyncEventSpaceReservation extends Action {
-    public function __construct(
-        private ReservationManagerInterface $reservationManager
-    ) {}
-
-    public function handle(Event $event): void {
-        if (!$event->usesPracticeSpace()) {
-            return;
-        }
-
-        try {
-            if ($event->spaceReservation) {
-                $this->reservationManager->updateEventReservation(
-                    $event->spaceReservation,
-                    $event->start_datetime,
-                    $event->end_datetime
-                );
-            } else {
-                $reservation = $this->reservationManager->createEventReservation(
-                    $event,
-                    $event->start_datetime,
-                    $event->end_datetime
-                );
-                $event->spaceReservation()->save($reservation);
-            }
-        } catch (ReservationConflictException $e) {
-            // Handle conflict (notify user, prevent save, etc.)
-            throw $e;
-        }
-    }
-}
 ```
-
-**Benefits**:
-- Clear ownership: SpaceManagement owns all conflict detection
-- One-way dependency: Events → SpaceManagement (not bidirectional)
-- ConflictDetector stays internal to SpaceManagement
-- Events just uses public API to manage EventReservations
 
 ### Problem 3: ContentModel Inheritance (Trust/Reports/Revisions)
 
 **Current**: All content types extend ContentModel
 
-**Solution**: Keep in Shared Kernel (Appropriate Cross-Cutting)
+**Solution**: Keep in Moderation Module
 
-This is genuinely shared behavior that applies identical logic across all content types. The shared kernel explicitly owns this.
+This is genuinely shared behavior that applies identical logic across all content types. The moderation module explicitly owns this cross-cutting concern.
 
 ---
 
@@ -368,21 +436,23 @@ Event::listen(
     ReservationCreated::class,
     DeductCreditsOnReservation::class
 );
-
-// GoogleCalendar listens
-Event::listen(
-    ReservationCreated::class,
-    SyncToGoogleCalendar::class
-);
 ```
 
-### 3. Shared Services (Common Utilities)
+### 3. Support Module (Common Utilities)
 
-Use for genuinely shared logic:
+Use for genuinely shared infrastructure:
 
-- `ContentModerationService` (trust/reports/revisions)
-- Shared traits, casts, DTOs
-- GoogleCalendar integration
+```php
+// Any module can use MoneyCast
+use CorvMC\Support\Casts\MoneyCast;
+
+protected function casts(): array {
+    return ['cost' => MoneyCast::class . ':USD'];
+}
+
+// Any module can use RecurringSeries
+use CorvMC\Support\Models\RecurringSeries;
+```
 
 ---
 
@@ -392,7 +462,7 @@ Use for genuinely shared logic:
 
 **Module-Level Components** (reusable):
 ```
-modules/SpaceManagement/Filament/
+app-modules/space-management/src/Filament/
 ├── Schemas/ReservationForm.php        # Reusable form schema
 ├── Tables/ReservationTable.php        # Reusable table columns
 └── Actions/CreateReservationAction.php # Reusable actions
@@ -404,351 +474,102 @@ app/Filament/Member/Resources/MyReservationsResource.php
   → Uses ReservationForm from module
   → Filters to current user's reservations
   → Member-specific actions
-
-app/Filament/Band/Resources/BandReservationsResource.php
-  → Uses ReservationForm from module
-  → Filters to current band's reservations
-  → Band-specific actions
 ```
-
-**Benefits**:
-- DRY: Shared schemas/tables
-- Flexibility: Panel-specific customization
-- Clear ownership: Business logic in modules, UI in panels
 
 ---
 
 ## Migration Strategy
 
-Using **internachi/modular**, the migration is faster and more automated thanks to built-in commands.
+### Phase 1: Install & Setup ✅ COMPLETE
 
-### Phase 1: Install & Setup (Week 1)
+- [x] Install internachi/modular
+- [x] Configure namespace to "CorvMC"
+- [x] Run `php artisan modules:sync`
+- [x] Create initial module scaffolds
 
-**Goal**: Install internachi/modular and create module scaffolds
+### Phase 2: Equipment Module ✅ COMPLETE
 
-**Tasks**:
-1. Install package:
-   ```bash
-   composer require internachi/modular
-   ```
+- [x] Move models, actions, migrations
+- [x] Update namespaces
 
-2. Publish and customize config (recommended):
-   ```bash
-   php artisan vendor:publish --tag=modular-config
-   ```
-   - Change default namespace from "Modules" to "CorvMC" in `config/app-modules.php`
-   - This makes modules easier to extract into separate packages later
+### Phase 3: Migrate Domain Modules
 
-3. Sync configuration:
-   ```bash
-   php artisan modules:sync
-   ```
-   - Updates `phpunit.xml` with Modules test suite
-   - Configures PhpStorm Laravel plugin for module views
-
-4. Create module scaffolds (least to most coupled):
-   ```bash
-   php artisan make:module equipment
-   php artisan make:module sponsorship
-   php artisan make:module space-management
-   php artisan make:module events
-   php artisan make:module membership
-   php artisan make:module finance
-   php artisan make:module shared
-   ```
-   - Each command creates directory structure and registers in `composer.json`
-   - Run `composer update` after creating all modules
-
-**Verification**:
-- Application runs without errors
-- `composer.json` contains path repositories for all modules
-- Run `php artisan modules:list` to see all modules
-
-### Phase 2: Migrate Equipment Module (Week 2)
-
-**Goal**: Complete one full module migration to validate the pattern
-
-**Tasks**:
-1. Move models:
-   ```bash
-   # Equipment module uses CorvMC\Equipment namespace
-   mv app/Models/Equipment.php → app-modules/equipment/src/Models/
-   mv app/Models/EquipmentLoan.php → app-modules/equipment/src/Models/
-   mv app/Models/EquipmentDamageReport.php → app-modules/equipment/src/Models/
-   ```
-   - Update namespaces to `CorvMC\Equipment\Models`
-   - Update `composer.json` PSR-4 autoloading in module
-
-2. Move actions:
-   ```bash
-   mv app/Actions/Equipment/ → app-modules/equipment/src/Actions/
-   ```
-   - Update namespaces to `CorvMC\Equipment\Actions`
-
-3. Move migrations:
-   ```bash
-   mv database/migrations/*equipment* → app-modules/equipment/database/migrations/
-   ```
-
-4. Create class aliases for backward compatibility:
-   ```php
-   // app/Models/Equipment.php (temporary)
-   class_alias(
-       \CorvMC\Equipment\Models\Equipment::class,
-       \App\Models\Equipment::class
-   );
-   ```
-
-5. Find/replace imports across codebase (IDE assistance)
-
-6. Create module service provider if needed for custom bindings
-
-**Verification**:
-- All tests pass
-- Equipment functionality works (view, checkout, return)
-- Migrations run successfully
-
-### Phase 3: Migrate Remaining Domain Modules (Week 3-5)
-
-**Goal**: Migrate all domain modules following Equipment pattern
-
-**Order**: Sponsorship → SpaceManagement → Events → Membership → Finance
+**Order**: Sponsorship ✅ → SpaceManagement ✅ → Events → Membership → Finance
 
 **Process per module**:
-1. Move models to `app-modules/{module}/src/Models/`
-2. Move actions to `app-modules/{module}/src/Actions/`
-3. Move migrations to `app-modules/{module}/database/migrations/`
-4. Move Filament resources to `app-modules/{module}/src/Filament/`
-5. Update all namespaces to `CorvMC\{Module}\`
-6. Create class aliases in `app/Models/` for backward compatibility
-7. Find/replace imports
-8. Test module functionality
-
-**Using internachi/modular generators**:
-```bash
-# Generate new classes directly in modules
-php artisan make:model Equipment --module=equipment
-php artisan make:controller EquipmentController --module=equipment
-php artisan make:migration create_equipment_table --module=equipment
-php artisan make:test EquipmentTest --module=equipment
-```
+1. Create module scaffold if not exists
+2. Move models to `app-modules/{module}/src/Models/`
+3. Move actions to `app-modules/{module}/src/Actions/`
+4. Move domain-specific concerns to `app-modules/{module}/src/Concerns/`
+5. Move domain-specific DTOs to `app-modules/{module}/src/Data/`
+6. Move domain-specific notifications to `app-modules/{module}/src/Notifications/`
+7. Move migrations to `app-modules/{module}/database/migrations/`
+8. Update all namespaces to `CorvMC\{Module}\`
+9. Find/replace imports
+10. Test module functionality
 
 **SpaceManagement specifics**:
-- Move all Reservation STI classes together (Reservation, RehearsalReservation, EventReservation)
+- Move all Reservation STI classes together
+- Move `HasPaymentStatus` concern
+- Move all Reservation* notifications
 - Note: `RecurringReservation` is deprecated, do not migrate
-- Move conflict detection logic (stays in SpaceManagement - it's their domain)
-- `RecurringSeries` will be moved to Shared module in Phase 4
 
 **Events specifics**:
 - Move Event and Venue models
-- Keep space conflict integration working
+- Move `HasPublishing`, `HasPoster` concerns
+- Move `LocationData`, `VenueLocationData` DTOs
+- Move all Event* notifications
 
 **Membership specifics**:
-- Move User, MemberProfile, Band, BandMember
+- Move User, MemberProfile, Band, BandMember, StaffProfile, Invitation
+- Move `HasMembershipStatus` concern
+- Move `UserSettingsData`, `ContactData` DTOs
+- Move all User*, Band*, membership notifications
 - Keep auth working (User model must be discoverable)
 
 **Finance specifics**:
 - Move subscription and credit models
+- Move `HasCredits` concern
+- Move Membership*Reminder notifications
 - Keep Cashier integration working
 
-**Verification after each module**:
-- Run `composer dump-autoload`
-- All tests pass
-- Module-specific features work
+### Phase 4: Create Support Module ✅ COMPLETE
 
-### Phase 4: Create Shared Module (Week 6)
+**Goal**: Consolidate truly cross-cutting infrastructure
 
-**Goal**: Consolidate cross-cutting concerns into shared module
+**Moved to `app-modules/support/src/`**:
+- `Models/RecurringSeries.php`
+- `Concerns/HasTimePeriod.php`
+- `Concerns/HasRecurringSeries.php`
+- `Casts/MoneyCast.php`
+- `Enums/RecurringSeriesStatus.php`
 
-**Tasks**:
-1. Move to `app-modules/shared/src/ContentModeration/`:
-   - `app/Models/ContentModel.php`
-   - `app/Concerns/Reportable.php`, `Revisionable.php`
-   - `app/Models/Report.php`, `Revision.php`, trust models
-   - `app/Actions/Trust/`, `Reports/`, `Revisions/`
+**Namespace**: `CorvMC\Support\`
 
-2. Move to `app-modules/shared/src/Support/`:
-   - **Models**: `app/Models/RecurringSeries.php` (used by Events and Reservations)
-   - **Concerns**: `app/Concerns/HasTimePeriod.php`, `HasPaymentStatus.php`, `HasVisibility.php`, `HasPublishing.php`
-   - **Casts**: `app/Casts/MoneyCast.php`
-   - **DTOs**: `app/Data/LocationData.php`
+### Phase 5: Moderation Module ✅ COMPLETE
 
-3. Move to `app-modules/shared/src/Notifications/`:
-   - Organize by domain (Reservations/, Events/, Membership/)
+Already migrated as standalone module.
 
-4. Move to `app-modules/shared/src/Integrations/`:
-   - `GoogleCalendar/` service (used by both SpaceManagement and Events)
-
-5. Update `app-modules/shared/composer.json` to provide shared dependencies
-
-**Namespace**: `CorvMC\Shared\`
-
-**Verification**: Cross-cutting features work (reports, revisions, trust, recurring series)
-
-### Phase 5: Decouple & Refactor (Week 7-8)
-
-**Goal**: Implement interface contracts and event-driven architecture
+### Phase 6: Decouple & Refactor
 
 **Tasks**:
-1. Create interface contracts:
-   ```bash
-   php artisan make:interface CreditManagerInterface --module=finance
-   php artisan make:interface PaymentProcessorInterface --module=finance
-   php artisan make:interface ReservationManagerInterface --module=space-management
-   ```
+1. Create interface contracts in domain modules
+2. Implement service provider bindings
+3. Add domain events and listeners
+4. Replace direct dependencies with interfaces
 
-2. Implement in module service providers:
-   ```php
-   // app-modules/finance/src/FinanceServiceProvider.php
-   public function register(): void
-   {
-       $this->app->bind(
-           CreditManagerInterface::class,
-           CreditManager::class
-       );
-   }
-
-   // app-modules/space-management/src/SpaceManagementServiceProvider.php
-   public function register(): void
-   {
-       $this->app->bind(
-           ReservationManagerInterface::class,
-           ReservationManager::class
-       );
-   }
-   ```
-
-3. Add domain events:
-   ```bash
-   php artisan make:event MembershipStatusChanged --module=membership
-   php artisan make:event ReservationCreated --module=space-management
-   php artisan make:event EventPublished --module=events
-   ```
-
-4. Add event listeners:
-   ```bash
-   php artisan make:listener AllocateCreditsOnMembershipChange --module=finance
-   php artisan make:listener DeductCreditsOnReservation --module=finance
-   ```
-
-5. Extract Filament components:
-   - Move shared schemas/tables to `app-modules/{module}/src/Filament/`
-   - Refactor panel resources to use module components
-
-6. Replace direct dependencies with interfaces
-
-**Verification**:
-- Reservation flow works (pricing, credits, payment)
-- Credit allocation works on subscription
-- Conflict detection works
-- All Filament panels work
-
-### Phase 6: Remove Backward Compatibility (Week 9-10)
-
-**Goal**: Clean up aliases, finalize boundaries, optimize
+### Phase 7: Final Cleanup
 
 **Tasks**:
-1. Remove class aliases from `app/Models/`
-2. Update any remaining hardcoded namespace references
+1. Remove any class aliases
+2. Update hardcoded namespace references
 3. Run full test suite
-4. Cache modules for production:
-   ```bash
-   php artisan modules:cache
-   ```
-5. Update `CLAUDE.md` with module architecture:
-   - Document module structure
-   - Explain how to work with modules
-   - List module-specific commands
-6. Add PHPStan rules to prevent cross-module violations
-7. Configure CI/CD to test modules individually
-
-**Verification**:
-- All tests pass without aliases
-- No direct cross-module model imports (use interfaces)
-- PHPStan passes at current level
-- `php artisan modules:list` shows all active modules
-- Production build works with cached modules
-
----
-
-## Trade-offs Analysis
-
-### Benefits
-
-✅ **Improved Organization**
-- Clear domain boundaries (easier navigation)
-- Smaller contexts (reduced cognitive load)
-- New developers understand modules independently
-- **internachi/modular**: Auto-discovery for commands, migrations, policies, factories
-
-✅ **Better Testability**
-- Test modules in isolation
-- Mock interfaces for dependencies
-- Faster focused test suites
-- **internachi/modular**: Auto-configures `phpunit.xml` with module test suite
-
-✅ **Reduced Coupling**
-- Explicit interfaces prevent hidden dependencies
-- Event-driven allows async processing
-- Clear shared kernel boundaries
-- **internachi/modular**: Composer path repositories enforce package isolation
-
-✅ **Scalability**
-- Modules evolve independently
-- Team members can own modules
-- Can extract to services later if needed
-- **internachi/modular**: Each module is already a Laravel package (easy extraction)
-
-✅ **Type Safety**
-- Interface contracts improve PHPStan
-- Explicit dependencies easier to type-hint
-- Better IDE autocomplete
-- **internachi/modular**: Clear namespacing improves static analysis
-
-✅ **Developer Experience**
-- **internachi/modular**: Built-in commands (`make:module`, `modules:list`, `modules:cache`)
-- **internachi/modular**: `--module=` flag on all Laravel generators
-- **internachi/modular**: Blade component namespacing (`<x-equipment::card />`)
-- **internachi/modular**: Translation namespacing (`__('equipment::messages.welcome')`)
-
-### Costs
-
-❌ **Migration Effort**
-- 8-10 weeks focused work (reduced from 12-14 with custom solution)
-- Risk of breaking changes
-- Requires comprehensive test coverage
-- **Mitigated**: Built-in commands reduce manual work
-
-❌ **Added Complexity**
-- More directories to navigate
-- Service provider boilerplate (if needed)
-- Learning curve for events/interfaces
-- **Mitigated**: Follows standard Laravel package conventions
-
-❌ **Performance** (negligible)
-- Module discovery overhead (minimal with caching)
-- Event dispatching latency (sub-ms)
-- More autoload paths (cached by opcache)
-- **Optimization**: `php artisan modules:cache` for production
-
-❌ **Maintenance**
-- Keep boundaries clear
-- Prevent module drift
-- Resist creating "god modules"
-- **Mitigated**: Package structure provides natural boundaries
-
-### Risk Mitigation
-
-**Backward Compatibility**: Class aliases during migration
-**Testing**: Maintain 80%+ coverage throughout
-**Rollback**: Git branches per phase, can pause in hybrid state
-**Incremental**: One module at a time, validate before next
+4. Cache modules for production
+5. Update `CLAUDE.md` with module architecture
 
 ---
 
 ## Directory Structure (Final State)
-
-Using **internachi/modular** conventions:
 
 ```
 corvmc-redux/
@@ -763,127 +584,76 @@ corvmc-redux/
 │   └── Providers/
 │       └── AppServiceProvider.php
 │
-├── app-modules/                 # Module directory (internachi/modular)
+├── app-modules/
 │   ├── space-management/
-│   │   ├── composer.json        # Module package definition
 │   │   ├── src/
 │   │   │   ├── Models/          # Reservation, RehearsalReservation, EventReservation
-│   │   │   ├── Actions/         # 43 actions
+│   │   │   ├── Actions/         # ~43 actions
+│   │   │   ├── Concerns/        # HasPaymentStatus
+│   │   │   ├── Notifications/   # Reservation notifications
 │   │   │   ├── Contracts/       # ReservationManagerInterface
-│   │   │   ├── Services/        # ReservationManager, ConflictDetector, PricingCalculator
-│   │   │   ├── Events/          # ReservationCreated
-│   │   │   ├── Listeners/
-│   │   │   ├── Filament/        # Shared Filament components
-│   │   │   └── SpaceManagementServiceProvider.php
-│   │   ├── routes/              # Module-specific routes
-│   │   ├── resources/
-│   │   │   ├── views/
-│   │   │   └── lang/
-│   │   ├── database/migrations/
-│   │   ├── tests/
-│   │   └── config/
+│   │   │   └── Services/        # ReservationManager, ConflictDetector
+│   │   └── database/migrations/
 │   │
 │   ├── events/
-│   │   ├── composer.json
 │   │   ├── src/
 │   │   │   ├── Models/          # Event, Venue
-│   │   │   ├── Actions/         # 16 actions
-│   │   │   └── EventsServiceProvider.php
-│   │   └── ...
+│   │   │   ├── Actions/         # ~16 actions
+│   │   │   ├── Concerns/        # HasPublishing, HasPoster
+│   │   │   ├── Data/            # LocationData, VenueLocationData
+│   │   │   └── Notifications/   # Event notifications
+│   │   └── database/migrations/
 │   │
 │   ├── membership/
-│   │   ├── composer.json
 │   │   ├── src/
-│   │   │   ├── Models/          # User, MemberProfile, Band
-│   │   │   ├── Actions/         # 23 actions
-│   │   │   └── MembershipServiceProvider.php
-│   │   └── ...
+│   │   │   ├── Models/          # User, MemberProfile, Band, etc.
+│   │   │   ├── Actions/         # ~23 actions
+│   │   │   ├── Concerns/        # HasMembershipStatus
+│   │   │   ├── Data/            # UserSettingsData, ContactData
+│   │   │   └── Notifications/   # User/Band notifications
+│   │   └── database/migrations/
 │   │
 │   ├── finance/
-│   │   ├── composer.json
 │   │   ├── src/
-│   │   │   ├── Models/          # Subscription, Credits
-│   │   │   ├── Actions/         # 26 actions
+│   │   │   ├── Models/          # Subscription, Credits, PromoCode
+│   │   │   ├── Actions/         # ~26 actions
+│   │   │   ├── Concerns/        # HasCredits
 │   │   │   ├── Contracts/       # CreditManagerInterface
-│   │   │   └── FinanceServiceProvider.php
-│   │   └── ...
+│   │   │   └── Notifications/   # Membership reminder notifications
+│   │   └── database/migrations/
 │   │
-│   ├── equipment/
-│   │   ├── composer.json
+│   ├── equipment/               # ✅ COMPLETE
 │   │   ├── src/
-│   │   │   ├── Models/          # Equipment, EquipmentLoan
-│   │   │   └── Actions/         # 6 actions
-│   │   └── ...
+│   │   │   ├── Models/
+│   │   │   ├── Actions/
+│   │   │   └── Data/            # EquipmentData
+│   │   └── database/migrations/
 │   │
-│   ├── sponsorship/
-│   │   ├── composer.json
+│   ├── sponsorship/             # ✅ COMPLETE
 │   │   ├── src/
-│   │   │   ├── Models/          # Sponsor
-│   │   │   └── Actions/         # 3 actions
-│   │   └── ...
+│   │   │   ├── Models/
+│   │   │   └── Actions/
+│   │   └── database/migrations/
 │   │
-│   └── shared/                  # Cross-cutting concerns module
-│       ├── composer.json
+│   ├── moderation/              # ✅ COMPLETE
+│   │   ├── src/
+│   │   │   ├── Models/          # ContentModel, Report, Revision, Trust*
+│   │   │   ├── Actions/         # Trust, Reports, Revisions actions
+│   │   │   ├── Concerns/        # Reportable, Revisionable, HasTrust
+│   │   │   └── Data/            # SpamCheckResultData
+│   │   └── database/migrations/
+│   │
+│   └── support/                 # Library module
 │       ├── src/
-│       │   ├── ContentModeration/
-│       │   │   ├── Models/      # ContentModel, Report, Revision
-│       │   │   ├── Actions/     # Trust, Reports, Revisions
-│       │   │   └── Concerns/    # Reportable, Revisionable traits
-│       │   ├── Support/
-│       │   │   ├── Models/      # RecurringSeries (used across domains)
-│       │   │   ├── Data/        # DTOs (LocationData, etc.)
-│       │   │   ├── Casts/       # MoneyCast
-│       │   │   └── Concerns/    # HasTimePeriod, HasVisibility, etc.
-│       │   ├── Notifications/   # By domain (Reservations, Events, etc.)
-│       │   ├── Integrations/
-│       │   │   └── GoogleCalendar/
-│       │   └── SharedServiceProvider.php
+│       │   ├── Models/          # RecurringSeries
+│       │   ├── Concerns/        # HasTimePeriod, HasRecurringSeries
+│       │   ├── Casts/           # MoneyCast
+│       │   └── Enums/           # RecurringSeriesStatus
 │       └── tests/
 │
-├── tests/
-│   ├── Feature/
-│   └── Unit/
-│
 ├── composer.json                # Path repositories for all modules
-├── phpunit.xml                  # Auto-updated by modules:sync
 └── CLAUDE.md                    # Updated with module info
 ```
-
-**Key Features**:
-- Each module in `app-modules/` is a Laravel package with `composer.json`
-- Modules auto-register via Composer path repositories
-- Auto-discovery for migrations, commands, policies, factories
-- Blade components: `<x-equipment::component />`
-- Translations: `__('equipment::messages.key')`
-
----
-
-## Critical Files to Modify
-
-### Phase 1: Install & Setup
-- `/Users/dcash/Projects/_sites/corvmc-redux/composer.json` - Auto-updated by `make:module` commands with path repositories
-- `/Users/dcash/Projects/_sites/corvmc-redux/config/app-modules.php` - CREATE: Configure namespace to "CorvMC"
-- `/Users/dcash/Projects/_sites/corvmc-redux/phpunit.xml` - Auto-updated by `modules:sync`
-
-### Phase 2: Equipment Module (Example)
-- `/Users/dcash/Projects/_sites/corvmc-redux/app/Models/Equipment.php` - Move to `app-modules/equipment/src/Models/`
-- `/Users/dcash/Projects/_sites/corvmc-redux/app/Actions/Equipment/` - Move to `app-modules/equipment/src/Actions/`
-- `/Users/dcash/Projects/_sites/corvmc-redux/database/migrations/*equipment*` - Move to `app-modules/equipment/database/migrations/`
-
-### Phase 3-4: All Modules
-- Move models from `app/Models/` to `app-modules/{module}/src/Models/`
-- Move actions from `app/Actions/` to `app-modules/{module}/src/Actions/`
-- Move migrations to module `database/migrations/` directories
-- Update all namespaces to `CorvMC\{Module}\`
-
-### Phase 5: Decoupling
-- Create interface contracts in module `src/Contracts/` directories
-- Implement service providers in each module
-- Add domain events and listeners
-
-### Phase 6: Final
-- `/Users/dcash/Projects/_sites/corvmc-redux/CLAUDE.md` - Document module architecture
-- Remove class aliases from `app/Models/`
 
 ---
 
@@ -891,90 +661,180 @@ corvmc-redux/
 
 ✅ All modules have explicit service providers
 ✅ No direct cross-module model imports (use interfaces)
-✅ Shared kernel limited to ContentModeration, Support, Notifications
-✅ 80%+ test coverage maintained throughout migration
+✅ Notifications distributed to domain modules
+✅ DTOs distributed to domain modules
+✅ Domain-specific concerns in their modules
+✅ Support module contains only true cross-cutting infrastructure
+✅ Critical flow tests pass after each phase
 ✅ All Filament panels work without disruption
-✅ No performance regression (<5% response time increase acceptable)
 ✅ PHPStan level 2 maintained or improved
 
 ---
 
-## Verification Plan
+## Testing Strategy
 
-After each phase:
+### Approach: Hybrid Testing
 
-1. **Run full test suite**: `composer test`
-2. **Check manual flows**:
-   - Create reservation (with credits)
-   - Create event (check conflicts)
-   - Create band + invite member
-   - Process subscription payment
-3. **Test Filament panels**:
-   - Member panel navigation
-   - Band tenant switching
-   - Admin functions
-4. **Performance check**: Response time for homepage, events, reservations
-5. **PHPStan**: `vendor/bin/phpstan analyse`
+The migration is mostly mechanical (moving files, updating namespaces). PHP will fail loudly if imports are broken. The real risk isn't subtle logic bugs—it's broken references.
+
+**Three-phase testing approach:**
+
+1. **Before migration**: Critical flow tests (feature tests for key business flows)
+2. **During migration**: Run critical flow tests after each module
+3. **After migration**: Add unit tests to modules in their final location
+
+### Critical Flow Tests ✅ CREATED
+
+Location: `tests/Feature/CriticalFlowsTest.php`
+
+These tests verify the 4 core business flows continue working. They test external behavior through Actions, not internal structure, so they survive namespace changes without modification.
+
+| Flow | Tests | What's Verified |
+|------|-------|-----------------|
+| **Reservation + Credits** | 4 | Sustaining members use free hours, partial credits charged, non-member pricing, conflict prevention |
+| **Event + Conflicts** | 4 | CMC venue creation, conflict detection with reservations, external venue bypass, GetAllConflicts action |
+| **Band + Invitations** | 4 | Band creation with owner, invitation sending, acceptance workflow, duplicate prevention |
+| **Credit Allocation** | 4 | Monthly allocation, reset behavior, mid-month upgrades, deduction on reservation |
+
+**Run after each migration phase:**
+```bash
+php artisan test tests/Feature/CriticalFlowsTest.php
+```
+
+### Why Feature Tests Over Unit Tests (During Migration)
+
+| Aspect | Feature Tests | Unit Tests |
+|--------|--------------|------------|
+| **Namespace sensitivity** | Low - test through Actions | High - import specific classes |
+| **Migration maintenance** | None - test behavior | High - update imports constantly |
+| **What they catch** | Broken flows, integration issues | Broken individual components |
+| **When to write** | Before migration | After migration |
+
+### Testing Workflow Per Phase
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. Start phase                                             │
+│     └─> Run critical flow tests (baseline)                  │
+│                                                             │
+│  2. Move files to module                                    │
+│     └─> Update namespaces                                   │
+│     └─> Run `composer dump-autoload`                        │
+│                                                             │
+│  3. Verify                                                  │
+│     └─> Run critical flow tests                             │
+│     └─> Run PHPStan                                         │
+│     └─> Manual smoke test Filament panels                   │
+│                                                             │
+│  4. If tests fail                                           │
+│     └─> Fix broken imports/references                       │
+│     └─> Re-run tests                                        │
+│                                                             │
+│  5. Phase complete                                          │
+│     └─> Commit changes                                      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Unit Tests (Post-Migration)
+
+After all modules are in place, add unit tests to each module:
+
+```
+app-modules/space-management/tests/
+├── Unit/
+│   ├── Actions/
+│   │   ├── CreateReservationTest.php
+│   │   ├── CalculateReservationCostTest.php
+│   │   └── GetAllConflictsTest.php
+│   └── Models/
+│       └── ReservationTest.php
+└── Feature/
+    └── ReservationFlowTest.php
+```
+
+**Benefits of post-migration unit tests:**
+- Tests live alongside code they test
+- No namespace churn during migration
+- Module-level test isolation
+- Can run per-module: `php artisan test --filter=SpaceManagement`
+
+### Existing Tests
+
+Some tests already exist and should continue passing:
+
+```
+tests/Feature/Actions/Credits/           # Credit system tests
+tests/Feature/Actions/Events/            # Event update tests
+tests/Feature/Actions/Reservations/      # Payment handling tests
+tests/Feature/Actions/Sponsors/          # Sponsorship tests
+tests/Feature/Actions/Revisions/         # Revision coalescing tests
+tests/Unit/Models/SponsorTest.php        # Sponsor model tests
+tests/Unit/Tenancy/BandTenancyTest.php   # Band tenancy tests
+```
+
+**During migration**: Update imports in these tests as modules move, or temporarily use class aliases.
+
+### Test Commands
+
+```bash
+# Run critical flow tests (primary migration verification)
+php artisan test tests/Feature/CriticalFlowsTest.php
+
+# Run all tests
+composer test
+
+# Run tests for specific module (post-migration)
+php artisan test app-modules/space-management/tests/
+
+# Run with coverage
+composer test:coverage
+```
 
 ---
 
-## Alternative Approaches Considered
+## Verification Checklist
 
-### ✅ internachi/modular Package (RECOMMENDED)
-**Why this is the best choice:**
-- ✅ Follows Laravel conventions (not opinionated like nWidart)
-- ✅ Lightweight - uses Composer path repositories
-- ✅ Built-in tooling (`make:module`, `modules:list`, `--module=` flags)
-- ✅ Auto-discovery for migrations, commands, policies, factories
-- ✅ Each module is already a Laravel package (easy extraction)
-- ✅ Well-maintained, active community
-- ✅ Works perfectly with action-based architecture
-- ✅ Compatible with Filament (follows standard package patterns)
-- ✅ Reduces migration effort with automation (8-10 weeks vs 12-14)
-- ✅ No need for custom service provider registration
-- ✅ Production optimization with `modules:cache`
+After each phase:
 
-### ❌ nWidart/laravel-modules Package
-- Opinionated MVC structure doesn't match action-based architecture
-- Overkill for monolithic deployment (designed for dynamic module loading)
-- Harder to customize for Filament
-- More boilerplate and configuration
-- **Verdict**: Too heavy for our needs
+1. **Run critical flow tests**:
+   ```bash
+   php artisan test tests/Feature/CriticalFlowsTest.php
+   ```
 
-### ❌ Custom Monolithic Modular Solution
-- Would require manual service provider registration
-- No built-in tooling (need to create own generators)
-- More maintenance overhead
-- Reinventing the wheel when internachi/modular exists
-- **Verdict**: Unnecessary when better solution exists
+2. **Run full test suite** (if time permits):
+   ```bash
+   composer test
+   ```
 
-### ❌ Keep Monolith, Add Namespaces Only
-- Doesn't solve tight coupling
-- No boundary enforcement
-- Limited testability improvements
-- No module-level testing support
-- **Verdict**: Insufficient for long-term maintainability
+3. **Run static analysis**:
+   ```bash
+   vendor/bin/phpstan analyse
+   ```
 
-### ❌ Microservices
-- Massive complexity increase (distributed systems challenges)
-- Not justified by current scale (~30k LOC)
-- Would destroy Filament integration (requires single app)
-- Network latency, transaction boundaries, debugging complexity
-- **Verdict**: Premature optimization
+4. **Manual smoke test** (quick verification):
+   - Member panel: Navigate to reservations
+   - Create a test reservation (don't save)
+   - View events list
+   - View band profiles
+
+5. **Check for runtime errors**:
+   ```bash
+   php artisan route:list  # Verify routes resolve
+   php artisan config:cache && php artisan config:clear  # Verify config
+   ```
 
 ---
 
 ## Recommendation
 
-**Proceed with internachi/modular** for modular architecture using 6-phase incremental migration over 8-10 weeks. This provides:
+**Proceed with internachi/modular** for modular architecture with:
 
-✅ Organization and testability benefits of modules
-✅ Simplicity of monolithic deployment
-✅ Built-in Laravel tooling and conventions
-✅ Easy extraction to packages later if needed
-✅ Reduced migration effort with automation
+✅ Domain modules own their notifications, DTOs, and concerns
+✅ Support module contains only true library components
+✅ Moderation as standalone module for content moderation
+✅ No "shared" catch-all module
 
-**Start with Equipment module** (most isolated) to validate the pattern before tackling more complex modules.
+**Next step**: Migrate SpaceManagement module (largest, validates complex patterns)
 
 **Sources:**
 - [InterNACHI/modular GitHub](https://github.com/InterNACHI/modular)

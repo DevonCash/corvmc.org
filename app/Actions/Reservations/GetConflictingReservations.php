@@ -2,7 +2,7 @@
 
 namespace App\Actions\Reservations;
 
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Settings\ReservationSettings;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;

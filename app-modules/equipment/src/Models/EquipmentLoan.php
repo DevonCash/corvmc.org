@@ -2,7 +2,7 @@
 
 namespace CorvMC\Equipment\Models;
 
-use App\Concerns\HasTimePeriod;
+use CorvMC\Support\Concerns\HasTimePeriod;
 use App\Models\User;
 use CorvMC\Equipment\States\EquipmentLoan\Cancelled;
 use CorvMC\Equipment\States\EquipmentLoan\CheckedOut;

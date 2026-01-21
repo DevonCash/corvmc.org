@@ -6,7 +6,7 @@ use App\Actions\Events\CreateEvent;
 use App\Actions\Reservations\CreateReservation;
 use App\Enums\ReservationStatus;
 use App\Models\Event;
-use App\Models\RecurringSeries;
+use CorvMC\Support\Models\RecurringSeries;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;

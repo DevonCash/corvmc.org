@@ -2,9 +2,9 @@
 
 namespace App\Actions\RecurringReservations;
 
-use App\Enums\RecurringSeriesStatus;
 use App\Filament\Actions\Action;
-use App\Models\RecurringSeries;
+use CorvMC\Support\Enums\RecurringSeriesStatus;
+use CorvMC\Support\Models\RecurringSeries;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class PauseRecurringSeries

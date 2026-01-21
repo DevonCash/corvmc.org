@@ -2,7 +2,7 @@
 
 namespace App\Actions\RecurringReservations;
 
-use App\Enums\RecurringSeriesStatus;
+use CorvMC\Support\Enums\RecurringSeriesStatus;
 use App\Filament\Actions\Action;
 use Lorisleiva\Actions\Concerns\AsAction;
 

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Casts\MoneyCast;
+use CorvMC\Support\Casts\MoneyCast;
 use Laravel\Cashier\Subscription as CashierSubscription;
 
 /**

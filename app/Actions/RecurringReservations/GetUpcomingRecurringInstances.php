@@ -2,7 +2,7 @@
 
 namespace App\Actions\RecurringReservations;
 
-use App\Models\RecurringSeries;
+use CorvMC\Support\Models\RecurringSeries;
 use Illuminate\Support\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
 

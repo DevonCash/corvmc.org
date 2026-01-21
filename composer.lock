@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "06d5a0c8d2a85c46cdb83bf9f920d155",
+    "content-hash": "2beabe0ee0417f43e46c5e49bbb3a340",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -1562,33 +1562,32 @@
             }
         },
         {
-            "name": "corvmc/shared",
+            "name": "corvmc/space-management",
             "version": "1.0",
             "dist": {
                 "type": "path",
-                "url": "app-modules/shared",
-                "reference": "01a0e3dd13c80539a864bec49ded4d99cbc3bc6f"
+                "url": "app-modules/space-management",
+                "reference": "7dd90f75a58cfeb0b1bee090952eb4e9ff8e699e"
             },
             "type": "library",
             "extra": {
                 "laravel": {
                     "providers": [
-                        "CorvMC\\Shared\\Providers\\SharedServiceProvider"
+                        "CorvMC\\SpaceManagement\\Providers\\SpaceManagementServiceProvider"
                     ]
                 }
             },
             "autoload": {
                 "psr-4": {
-                    "CorvMC\\Shared\\": "src/",
-                    "CorvMC\\Shared\\Tests\\": "tests/",
-                    "CorvMC\\Shared\\Database\\Factories\\": "database/factories/",
-                    "CorvMC\\Shared\\Database\\Seeders\\": "database/seeders/"
+                    "CorvMC\\SpaceManagement\\": "src/",
+                    "CorvMC\\SpaceManagement\\Tests\\": "tests/",
+                    "CorvMC\\SpaceManagement\\Database\\Factories\\": "database/factories/",
+                    "CorvMC\\SpaceManagement\\Database\\Seeders\\": "database/seeders/"
                 }
             },
             "license": [
                 "proprietary"
             ],
-            "description": "Shared utilities and concerns for CorvMC modules",
             "transport-options": {
                 "symlink": true,
                 "relative": true
@@ -1621,6 +1620,39 @@
             "license": [
                 "proprietary"
             ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "corvmc/support",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/support",
+                "reference": "c3f9a833816e147bc6daf1ac1f596bf4c25be081"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "CorvMC\\Support\\Providers\\SupportServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CorvMC\\Support\\": "src/",
+                    "CorvMC\\Support\\Tests\\": "tests/",
+                    "CorvMC\\Support\\Database\\Factories\\": "database/factories/",
+                    "CorvMC\\Support\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Library components and cross-cutting utilities for CorvMC modules",
             "transport-options": {
                 "symlink": true,
                 "relative": true

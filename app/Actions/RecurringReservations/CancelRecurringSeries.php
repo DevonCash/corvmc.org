@@ -4,7 +4,7 @@ namespace App\Actions\RecurringReservations;
 
 use App\Enums\ReservationStatus;
 use App\Models\Event;
-use App\Models\RecurringSeries;
+use CorvMC\Support\Models\RecurringSeries;
 use App\Models\Reservation;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
