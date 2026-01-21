@@ -4,12 +4,12 @@ namespace App\Models;
 
 use App\Concerns\HasCredits;
 use App\Concerns\HasMembershipStatus;
-use App\Concerns\HasTrust;
 use CorvMC\Sponsorship\Models\Sponsor;
 use App\Data\UserSettingsData;
 use App\Enums\CreditType;
 use App\Notifications\EmailVerificationNotification;
 use App\Notifications\PasswordResetNotification;
+use CorvMC\Moderation\Concerns\HasTrust;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasTenants;
