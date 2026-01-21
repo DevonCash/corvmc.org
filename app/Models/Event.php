@@ -9,6 +9,7 @@ use App\Concerns\HasTimePeriod;
 use App\Data\LocationData;
 use App\Enums\EventStatus;
 use App\Enums\Visibility;
+use CorvMC\Moderation\Models\ContentModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;

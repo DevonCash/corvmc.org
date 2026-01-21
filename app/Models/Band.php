@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Data\ContactData;
 use App\Enums\Visibility;
 use App\Models\Scopes\OwnedBandsScope;
+use CorvMC\Moderation\Models\ContentModel;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;

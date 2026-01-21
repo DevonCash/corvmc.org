@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "33497f436dc456d9d638910941bc9744",
+    "content-hash": "06d5a0c8d2a85c46cdb83bf9f920d155",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -1556,6 +1556,39 @@
             "license": [
                 "proprietary"
             ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "corvmc/shared",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/shared",
+                "reference": "01a0e3dd13c80539a864bec49ded4d99cbc3bc6f"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "CorvMC\\Shared\\Providers\\SharedServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CorvMC\\Shared\\": "src/",
+                    "CorvMC\\Shared\\Tests\\": "tests/",
+                    "CorvMC\\Shared\\Database\\Factories\\": "database/factories/",
+                    "CorvMC\\Shared\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Shared utilities and concerns for CorvMC modules",
             "transport-options": {
                 "symlink": true,
                 "relative": true

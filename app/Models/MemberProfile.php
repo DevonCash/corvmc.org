@@ -6,6 +6,7 @@ use App\Data\ContactData;
 use App\Enums\Visibility;
 use App\Models\Scopes\MemberVisibilityScope;
 use App\Settings\MemberDirectorySettings;
+use CorvMC\Moderation\Models\ContentModel;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
