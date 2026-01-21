@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4dbd684ef98b42e4df657cd831af66a3",
+    "content-hash": "12b92bf0427bb50f52a440e90a7a6413",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -1551,6 +1551,38 @@
                     "CorvMC\\Events\\Tests\\": "tests/",
                     "CorvMC\\Events\\Database\\Factories\\": "database/factories/",
                     "CorvMC\\Events\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "corvmc/membership",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/membership",
+                "reference": "d296cd26251957c9c9bee76c0476e85b22f91e54"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "CorvMC\\Membership\\Providers\\MembershipServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CorvMC\\Membership\\": "src/",
+                    "CorvMC\\Membership\\Tests\\": "tests/",
+                    "CorvMC\\Membership\\Database\\Factories\\": "database/factories/",
+                    "CorvMC\\Membership\\Database\\Seeders\\": "database/seeders/"
                 }
             },
             "license": [

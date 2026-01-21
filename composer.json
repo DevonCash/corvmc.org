@@ -13,6 +13,7 @@
         "bezhansalleh/filament-panel-switch": "dev-main",
         "corvmc/equipment": "*",
         "corvmc/events": "*",
+        "corvmc/membership": "*",
         "corvmc/moderation": "*",
         "corvmc/space-management": "*",
         "corvmc/sponsorship": "*",

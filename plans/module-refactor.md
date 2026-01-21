@@ -494,7 +494,7 @@ app/Filament/Member/Resources/MyReservationsResource.php
 
 ### Phase 3: Migrate Domain Modules
 
-**Order**: Sponsorship ✅ → SpaceManagement ✅ → Events ✅ → Membership → Finance
+**Order**: Sponsorship ✅ → SpaceManagement ✅ → Events ✅ → Membership ✅ → Finance
 
 **Process per module**:
 1. Create module scaffold if not exists
