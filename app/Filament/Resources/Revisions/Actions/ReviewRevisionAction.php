@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Revisions\Actions;
 use App\Actions\Revisions\ApproveRevision;
 use App\Actions\Revisions\RejectRevision;
 use App\Filament\Actions\Action;
-use App\Models\Revision;
+use CorvMC\Moderation\Models\Revision;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\ViewField;
 use Filament\Notifications\Notification;

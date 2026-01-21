@@ -4,7 +4,7 @@ use App\Enums\ReservationStatus;
 use App\Models\Band;
 use App\Models\Event;
 use App\Models\MemberProfile;
-use App\Models\Sponsor;
+use CorvMC\Sponsorship\Models\Sponsor;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;

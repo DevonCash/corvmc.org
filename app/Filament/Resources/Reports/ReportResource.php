@@ -8,7 +8,7 @@ use App\Filament\Resources\Reports\Pages\ListReports;
 use App\Filament\Resources\Reports\Pages\ViewReport;
 use App\Filament\Resources\Reports\Schemas\ReportForm;
 use App\Filament\Resources\Reports\Tables\ReportsTable;
-use App\Models\Report;
+use CorvMC\Moderation\Models\Report;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

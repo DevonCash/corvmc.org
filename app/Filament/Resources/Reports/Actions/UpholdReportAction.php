@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Reports\Actions;
 
-use App\Models\Report;
+use CorvMC\Moderation\Models\Report;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;

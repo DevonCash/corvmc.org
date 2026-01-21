@@ -6,7 +6,7 @@ use App\Filament\Resources\Reports\Actions\DismissReportAction;
 use App\Filament\Resources\Reports\Actions\EscalateReportAction;
 use App\Filament\Resources\Reports\Actions\UpholdReportAction;
 use App\Filament\Resources\Reports\ReportResource;
-use App\Models\Report;
+use CorvMC\Moderation\Models\Report;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Resources\Pages\ViewRecord;

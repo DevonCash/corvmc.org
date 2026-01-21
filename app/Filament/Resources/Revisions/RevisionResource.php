@@ -6,7 +6,7 @@ use App\Filament\Resources\Revisions\Pages\ListRevisions;
 // use App\Filament\Resources\Revisions\Pages\ViewRevision;
 use App\Filament\Resources\Revisions\Schemas\RevisionForm;
 use App\Filament\Resources\Revisions\Tables\RevisionsTable;
-use App\Models\Revision;
+use CorvMC\Moderation\Models\Revision;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

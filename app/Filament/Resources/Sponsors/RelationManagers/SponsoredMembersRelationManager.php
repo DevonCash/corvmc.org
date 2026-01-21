@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Sponsors\RelationManagers;
 
-use App\Actions\Sponsors\AssignSponsoredMembership;
-use App\Actions\Sponsors\RevokeSponsoredMembership;
+use CorvMC\Sponsorship\Actions\AssignSponsoredMembership;
+use CorvMC\Sponsorship\Actions\RevokeSponsoredMembership;
 use App\Models\User;
 use Filament\Actions\AttachAction;
 use Filament\Actions\DetachAction;

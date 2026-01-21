@@ -1,7 +1,7 @@
 <?php
 
-use App\Actions\Sponsors\GetSponsorAvailableSlots;
-use App\Models\Sponsor;
+use CorvMC\Sponsorship\Actions\GetSponsorAvailableSlots;
+use CorvMC\Sponsorship\Models\Sponsor;
 use App\Models\User;
 
 it('returns correct slot data for sponsor with no sponsored members', function () {

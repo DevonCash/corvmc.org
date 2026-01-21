@@ -8,7 +8,7 @@ use App\Filament\Resources\Sponsors\Pages\ListSponsors;
 use App\Filament\Resources\Sponsors\RelationManagers\SponsoredMembersRelationManager;
 use App\Filament\Resources\Sponsors\Schemas\SponsorForm;
 use App\Filament\Resources\Sponsors\Tables\SponsorsTable;
-use App\Models\Sponsor;
+use CorvMC\Sponsorship\Models\Sponsor;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

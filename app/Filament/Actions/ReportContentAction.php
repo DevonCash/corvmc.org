@@ -2,8 +2,7 @@
 
 namespace App\Filament\Actions;
 
-use App\Contracts\Reportable;
-use App\Models\Report;
+use CorvMC\Moderation\Contracts\Reportable;use CorvMC\Moderation\Models\Report;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;

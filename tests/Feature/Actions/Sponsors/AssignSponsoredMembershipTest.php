@@ -1,7 +1,7 @@
 <?php
 
-use App\Actions\Sponsors\AssignSponsoredMembership;
-use App\Models\Sponsor;
+use CorvMC\Sponsorship\Actions\AssignSponsoredMembership;
+use CorvMC\Sponsorship\Models\Sponsor;
 use App\Models\User;
 
 it('assigns a sponsored membership to a user', function () {

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Sponsors\Tables;
 
-use App\Models\Sponsor;
+use CorvMC\Sponsorship\Models\Sponsor;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;

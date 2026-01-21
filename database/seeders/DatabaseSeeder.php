@@ -3,8 +3,15 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
 use Illuminate\Database\Seeder;
 
+use CorvMC\Equipment\Database\Seeders\EquipmentSeeder;
+use CorvMC\Moderation\Database\Seeders\ReportSeeder;
+use CorvMC\Moderation\Database\Seeders\RevisionSeeder;
+use CorvMC\Sponsorship\Database\Seeders\SponsorSeeder;
+
+/** @package Database\Seeders */
 class DatabaseSeeder extends Seeder
 {
     /**

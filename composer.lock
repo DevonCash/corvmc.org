@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "86e56c8e639a6f6cae3f4cc54e3b0e5a",
+    "content-hash": "33497f436dc456d9d638910941bc9744",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -1519,6 +1519,38 @@
                     "CorvMC\\Equipment\\Tests\\": "tests/",
                     "CorvMC\\Equipment\\Database\\Factories\\": "database/factories/",
                     "CorvMC\\Equipment\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "corvmc/moderation",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/moderation",
+                "reference": "6db6136384c504a82ee0af6b4b89fd1b79e2a1c5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "CorvMC\\Moderation\\Providers\\ModerationServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CorvMC\\Moderation\\": "src/",
+                    "CorvMC\\Moderation\\Tests\\": "tests/",
+                    "CorvMC\\Moderation\\Database\\Factories\\": "database/factories/",
+                    "CorvMC\\Moderation\\Database\\Seeders\\": "database/seeders/"
                 }
             },
             "license": [

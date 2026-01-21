@@ -28,7 +28,7 @@ app-modules/
 │   └── tests/
 │
 ├── events/                    # Events & Productions (16 actions)
-├── membership/                # Users + MemberProfiles + Bands (23 actions)
+├── membership/                # MemberProfiles + Bands (23 actions)
 ├── finance/                   # Payments + Subscriptions + Credits (26 actions)
 ├── equipment/                 # Equipment Library (6 actions)
 └── sponsorship/               # Sponsorship system (3 actions)

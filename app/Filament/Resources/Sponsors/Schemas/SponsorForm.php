@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Sponsors\Schemas;
 
-use App\Models\Sponsor;
+use CorvMC\Sponsorship\Models\Sponsor;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;

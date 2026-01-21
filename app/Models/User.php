@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\HasCredits;
 use App\Concerns\HasMembershipStatus;
 use App\Concerns\HasTrust;
+use CorvMC\Sponsorship\Models\Sponsor;
 use App\Data\UserSettingsData;
 use App\Enums\CreditType;
 use App\Notifications\EmailVerificationNotification;
@@ -73,7 +74,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $reservations_count
  * @property-read Collection<int, \Spatie\Permission\Models\Role> $roles
  * @property-read int|null $roles_count
- * @property-read Collection<int, \App\Models\Sponsor> $sponsors
+ * @property-read Collection<int, \CorvMC\Sponsorship\Models\Sponsor> $sponsors
  * @property-read int|null $sponsors_count
  * @property-read \App\Models\StaffProfile|null $staffProfile
  * @property-read Collection<int, \App\Models\Subscription> $subscriptions

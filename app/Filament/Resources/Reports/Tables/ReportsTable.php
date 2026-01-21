@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Reports\Tables;
 
-use App\Models\Report;
+use CorvMC\Moderation\Models\Report;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;

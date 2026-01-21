@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use App\Models\Sponsor;
+use CorvMC\Sponsorship\Models\Sponsor;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;

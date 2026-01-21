@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Revisions\Tables;
 
 use App\Filament\Resources\Revisions\Actions\ReviewRevisionAction;
-use App\Models\Revision;
+use CorvMC\Moderation\Models\Revision;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\IconColumn;

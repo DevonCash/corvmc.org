@@ -1,7 +1,7 @@
 <?php
 
-use App\Actions\Sponsors\RevokeSponsoredMembership;
-use App\Models\Sponsor;
+use CorvMC\Sponsorship\Actions\RevokeSponsoredMembership;
+use CorvMC\Sponsorship\Models\Sponsor;
 use App\Models\User;
 
 it('revokes a sponsored membership from a user', function () {
