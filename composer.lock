@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "12b92bf0427bb50f52a440e90a7a6413",
+    "content-hash": "6f89ab34741e701af558a6ae6f17b5cf",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -1551,6 +1551,38 @@
                     "CorvMC\\Events\\Tests\\": "tests/",
                     "CorvMC\\Events\\Database\\Factories\\": "database/factories/",
                     "CorvMC\\Events\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "corvmc/finance",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/finance",
+                "reference": "7c6271354c7389064b207f05304cf794e33e163b"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "CorvMC\\Finance\\Providers\\FinanceServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CorvMC\\Finance\\": "src/",
+                    "CorvMC\\Finance\\Tests\\": "tests/",
+                    "CorvMC\\Finance\\Database\\Factories\\": "database/factories/",
+                    "CorvMC\\Finance\\Database\\Seeders\\": "database/seeders/"
                 }
             },
             "license": [
