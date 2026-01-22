@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Reservations\Schemas;
 
-use App\Actions\Reservations\GetAvailableTimeSlotsForDate;
-use App\Actions\Reservations\GetValidEndTimesForDate;
-use App\Enums\PaymentStatus;
+use CorvMC\SpaceManagement\Actions\Reservations\GetAvailableTimeSlotsForDate;
+use CorvMC\SpaceManagement\Actions\Reservations\GetValidEndTimesForDate;
 use App\Enums\ReservationStatus;
 use App\Models\User;
 use Carbon\Carbon;
@@ -92,8 +91,14 @@ class ReservationEditForm
 
                         Select::make('payment_status')
                             ->label('Payment Status')
-                            ->options(PaymentStatus::class)
-                            ->default(PaymentStatus::Unpaid)
+                            ->options([
+                                'unpaid' => 'Unpaid',
+                                'paid' => 'Paid',
+                                'refunded' => 'Refunded',
+                                'comped' => 'Comped',
+                                'n/a' => 'N/A',
+                            ])
+                            ->default('unpaid')
                             ->required(),
                     ])
                     ->visible(fn () => User::me()?->can('manage practice space'))

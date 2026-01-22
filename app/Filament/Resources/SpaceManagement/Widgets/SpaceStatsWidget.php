@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\SpaceManagement\Widgets;
 
-use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use App\Models\Reservation;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -27,7 +26,7 @@ class SpaceStatsWidget extends BaseWidget
 
         $weekHours = $weekReservations->sum('hours_used');
         $weekRevenue = $weekReservations
-            ->filter(fn ($r) => $r instanceof \App\Models\RehearsalReservation && $r->payment_status === PaymentStatus::Paid)
+            ->filter(fn ($r) => $r instanceof \App\Models\RehearsalReservation && $r->payment_status === 'paid')
             ->sum(fn ($r) => $r->cost->getMinorAmount()->toInt()) / 100;
         $weekReservationCount = $weekReservations->count();
 

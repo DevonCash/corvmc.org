@@ -110,7 +110,7 @@ class Report extends Model
         $baseReasons = ['inappropriate_content', 'spam', 'harassment', 'policy_violation', 'other'];
 
         return match ($type) {
-            'App\Models\Event' => array_merge($baseReasons, ['misleading_info']),
+            'CorvMC\Events\Models\Event' => array_merge($baseReasons, ['misleading_info']),
             'App\Models\Production' => array_merge($baseReasons, ['misleading_info']), // Legacy support
             'App\Models\MemberProfile' => array_merge($baseReasons, ['fake_profile']),
             'App\Models\Band' => array_merge($baseReasons, ['copyright', 'misleading_info']),

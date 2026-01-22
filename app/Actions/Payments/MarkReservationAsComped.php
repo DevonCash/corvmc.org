@@ -2,7 +2,6 @@
 
 namespace App\Actions\Payments;
 
-use App\Enums\PaymentStatus;
 use App\Filament\Actions\Action;
 use App\Models\Reservation;
 use Filament\Forms\Components\Textarea;
@@ -16,7 +15,7 @@ class MarkReservationAsComped
     public function handle(Reservation $reservation, ?string $notes = null): void
     {
         $reservation->update([
-            'payment_status' => PaymentStatus::Comped,
+            'payment_status' => 'comped',
             'payment_method' => 'comp',
             'paid_at' => now(),
             'payment_notes' => $notes,

@@ -2,7 +2,7 @@
 
 namespace CorvMC\Membership\Actions\Users;
 
-use CorvMC\Membership\Models\User;
+use App\Models\User;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetUserStats

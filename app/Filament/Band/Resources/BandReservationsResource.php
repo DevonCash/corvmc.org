@@ -2,7 +2,7 @@
 
 namespace App\Filament\Band\Resources;
 
-use App\Actions\Reservations\CancelReservation;
+use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
 use App\Filament\Band\Resources\BandReservationsResource\Pages;
 use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;

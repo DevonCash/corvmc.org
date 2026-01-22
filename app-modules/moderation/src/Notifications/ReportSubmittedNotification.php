@@ -78,7 +78,7 @@ class ReportSubmittedNotification extends Notification implements ShouldQueue
     {
         $reportable = $this->report->reportable;
 
-        if ($reportable instanceof \App\Models\Event) {
+        if ($reportable instanceof \CorvMC\Events\Models\Event) {
             return $reportable->title ?? 'Untitled Production';
         }
 

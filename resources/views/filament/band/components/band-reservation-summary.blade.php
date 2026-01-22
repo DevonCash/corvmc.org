@@ -1,7 +1,7 @@
 @php
     use App\Models\User;
     use Carbon\Carbon;
-    use App\Actions\Reservations\CalculateReservationCost;
+    use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
     use Filament\Facades\Filament;
 
     $start = $get('reserved_at');

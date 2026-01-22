@@ -3,9 +3,9 @@
 namespace CorvMC\Membership\Actions\Bands;
 
 use App\Actions\Invitations\ResendInvitation;
-use CorvMC\Membership\Models\Band;
-use CorvMC\Membership\Models\BandMember;
-use CorvMC\Membership\Models\User;
+use App\Models\Band;
+use App\Models\BandMember;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;

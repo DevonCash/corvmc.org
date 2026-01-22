@@ -82,7 +82,7 @@ class SubmitReport
     private function hideContent(ReportableContract $reportable): void
     {
         match (get_class($reportable)) {
-            'App\Models\Event' => logger()->info("Production {$reportable->id} reached report threshold"),
+            'CorvMC\Events\Models\Event' => logger()->info("Production {$reportable->id} reached report threshold"),
             'App\Models\MemberProfile' => logger()->info("Member profile {$reportable->id} reached report threshold"),
             'App\Models\Band' => logger()->info("Band {$reportable->id} reached report threshold"),
             default => null,

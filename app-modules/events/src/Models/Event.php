@@ -3,6 +3,7 @@
 namespace CorvMC\Events\Models;
 
 use App\Models\Band;
+use App\Models\EventReservation;
 use App\Models\User;
 use CorvMC\Events\Concerns\HasPoster;
 use CorvMC\Events\Concerns\HasPublishing;
@@ -10,10 +11,11 @@ use CorvMC\Events\Data\LocationData;
 use CorvMC\Events\Enums\EventStatus;
 use CorvMC\Events\Enums\Visibility;
 use CorvMC\Moderation\Models\ContentModel;
-use CorvMC\SpaceManagement\Models\EventReservation;
 use CorvMC\Support\Concerns\HasRecurringSeries;
 use CorvMC\Support\Concerns\HasTimePeriod;
+use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -61,8 +63,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
  * @property-read int|null $media_count
  * @property-read \App\Models\User|null $organizer
- * @property-read \App\Models\Event|null $rescheduledFrom
- * @property-read \App\Models\Event|null $rescheduledTo
+ * @property-read \CorvMC\Events\Models\Event|null $rescheduledFrom
+ * @property-read \CorvMC\Events\Models\Event|null $rescheduledTo
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $pendingReports
  * @property-read int|null $pending_reports_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $pendingRevisions
@@ -75,7 +77,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $revisions
  * @property-read int|null $revisions_count
  * @property \Illuminate\Database\Eloquent\Collection<int, \Spatie\Tags\Tag> $tags
- * @property-read \CorvMC\SpaceManagement\Models\EventReservation|null $spaceReservation
+ * @property-read \CorvMC\Events\Models\EventReservation|null $spaceReservation
  * @property-read int|null $tags_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $upheldReports
  * @property-read int|null $upheld_reports_count
@@ -137,7 +139,12 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class Event extends ContentModel
 {
-    use HasPoster, HasPublishing, HasRecurringSeries, HasTimePeriod, SoftDeletes;
+    use HasFactory, HasPoster, HasPublishing, HasRecurringSeries, HasTimePeriod, SoftDeletes;
+
+    protected static function newFactory(): EventFactory
+    {
+        return EventFactory::new();
+    }
 
     // HasPublishing configuration
     protected static string $startTimeField = 'start_datetime';
@@ -177,6 +184,7 @@ class Event extends ContentModel
         'status',
         'rescheduled_to_id',
         'reschedule_reason',
+        'cancellation_reason',
         'visibility',
         'event_type',
         'distance_from_corvallis',
@@ -581,20 +589,6 @@ class Event extends ContentModel
                 $event->location = LocationData::cmc();
             }
         });
-
-        static::saved(function (Event $event) {
-            if ($event->usesPracticeSpace()) {
-                $event->syncSpaceReservation();
-            }
-        });
-    }
-
-    /**
-     * Create or update the space reservation for this event.
-     */
-    protected function syncSpaceReservation(): void
-    {
-        \CorvMC\Events\Actions\SyncEventSpaceReservation::run($this);
     }
 
     /**

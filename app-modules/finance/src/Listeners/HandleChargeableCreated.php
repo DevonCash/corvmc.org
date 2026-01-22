@@ -4,13 +4,11 @@ namespace CorvMC\Finance\Listeners;
 
 use App\Enums\CreditType;
 use Brick\Money\Money;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\Finance\Actions\Pricing\CalculatePriceForUser;
 use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\Finance\Models\Charge;
-use CorvMC\SpaceManagement\Enums\PaymentStatus;
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use CorvMC\SpaceManagement\Models\Reservation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -97,9 +95,7 @@ class HandleChargeableCreated
         $chargeable->updateQuietly([
             'cost' => Money::ofMinor($pricing->net_amount, 'USD'),
             'free_hours_used' => $freeHours,
-            'payment_status' => $pricing->net_amount === 0
-                ? PaymentStatus::NotApplicable
-                : PaymentStatus::Unpaid,
+            'payment_status' => $pricing->net_amount === 0 ? 'n/a' : 'unpaid',
         ]);
     }
 

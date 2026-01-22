@@ -2,8 +2,8 @@
 
 namespace CorvMC\Membership\Notifications;
 
-use CorvMC\Membership\Models\Band;
-use CorvMC\Membership\Models\User;
+use App\Models\Band;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;

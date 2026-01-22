@@ -2,7 +2,7 @@
 
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
-use CorvMC\SpaceManagement\Models\EventReservation;
+use App\Models\EventReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Settings\ReservationSettings;
 use Carbon\Carbon;

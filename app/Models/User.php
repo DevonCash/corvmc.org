@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\Concerns\HasCredits;
-use App\Concerns\HasMembershipStatus;
+use CorvMC\Membership\Concerns\HasMembershipStatus;
 use CorvMC\Sponsorship\Models\Sponsor;
-use App\Data\UserSettingsData;
+use CorvMC\Membership\Data\UserSettingsData;
 use App\Enums\CreditType;
 use App\Notifications\EmailVerificationNotification;
 use App\Notifications\PasswordResetNotification;
@@ -56,7 +56,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $credit_transactions_count
  * @property-read Collection<int, \App\Models\UserCredit> $credits
  * @property-read int|null $credits_count
- * @property-read Collection<int, \App\Models\Event> $events
+ * @property-read Collection<int, \CorvMC\Events\Models\Event> $events
  * @property-read int|null $events_count
  * @property-read \App\Models\MemberProfile|null $profile
  * @property-read string|null $staff_profile_image_url
@@ -66,7 +66,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $owned_bands_count
  * @property-read Collection<int, \Spatie\Permission\Models\Permission> $permissions
  * @property-read int|null $permissions_count
- * @property-read Collection<int, \App\Models\Event> $productions
+ * @property-read Collection<int, \CorvMC\Events\Models\Event> $productions
  * @property-read int|null $productions_count
  * @property-read Collection<int, \App\Models\RehearsalReservation> $rehearsals
  * @property-read int|null $rehearsals_count

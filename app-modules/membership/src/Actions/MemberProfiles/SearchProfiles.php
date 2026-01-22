@@ -2,8 +2,8 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use CorvMC\Membership\Models\MemberProfile;
-use CorvMC\Membership\Models\User;
+use App\Models\MemberProfile;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
 

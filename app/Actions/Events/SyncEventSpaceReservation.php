@@ -3,8 +3,8 @@
 namespace App\Actions\Events;
 
 use App\Enums\ReservationStatus;
-use App\Models\Event;
 use App\Models\EventReservation;
+use CorvMC\Events\Models\Event;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class SyncEventSpaceReservation

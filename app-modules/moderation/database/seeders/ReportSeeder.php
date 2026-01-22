@@ -3,7 +3,7 @@
 namespace CorvMC\Moderation\Database\Seeders;
 
 use App\Models\Band;
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use App\Models\MemberProfile;
 use CorvMC\Moderation\Models\Report;
 use App\Models\User;

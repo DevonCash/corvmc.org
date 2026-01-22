@@ -1,7 +1,7 @@
 <?php
 
 use CorvMC\Events\Actions\UpdateEvent;
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use Carbon\Carbon;
 
 it('persists time changes when editing an event', function () {

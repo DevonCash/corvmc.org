@@ -2,7 +2,7 @@
 
 namespace CorvMC\Membership\Actions\StaffProfiles;
 
-use CorvMC\Membership\Models\StaffProfile;
+use App\Models\StaffProfile;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class UnlinkFromUser

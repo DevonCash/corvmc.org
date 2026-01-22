@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use App\Concerns\HasPaymentStatus;
 use CorvMC\Support\Casts\MoneyCast;
 use CorvMC\Support\Concerns\HasRecurringSeries;
 use CorvMC\Support\Concerns\HasTimePeriod;
-use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
@@ -31,7 +29,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $deleted_at
  * @property ReservationStatus $status
- * @property PaymentStatus $payment_status
+ * @property string $payment_status
  * @property string|null $payment_method
  * @property \Illuminate\Support\Carbon|null $paid_at
  * @property string|null $payment_notes
@@ -93,7 +91,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  */
 class Reservation extends Model implements HasColor, HasIcon, HasLabel
 {
-    use HasPaymentStatus, HasRecurringSeries, HasTimePeriod, LogsActivity;
+    use HasRecurringSeries, HasTimePeriod, LogsActivity;
 
     protected $table = 'reservations';
 
@@ -304,7 +302,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     {
         return $this->status->isActive()
             && $this->cost->isPositive()
-            && $this->payment_status->isUnpaid();
+            && $this->payment_status === 'unpaid';
     }
 
     /**

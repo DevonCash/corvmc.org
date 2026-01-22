@@ -3,7 +3,7 @@
 namespace CorvMC\Finance\Actions\Credits;
 
 use App\Enums\CreditType;
-use CorvMC\Membership\Models\User;
+use App\Models\User;
 use Filament\Schemas\Components\Grid;
 use Lorisleiva\Actions\Concerns\AsAction;
 

@@ -42,7 +42,7 @@ class RescheduleEvent
 
             // Copy performers if they exist
             foreach ($originalEvent->performers as $performer) {
-                $newEvent->addPerformer($performer, [
+                AddEventPerformer::run($newEvent, $performer, [
                     'order' => $performer->pivot->order,
                     'set_length' => $performer->pivot->set_length,
                 ]);

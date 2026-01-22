@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Reservations\Pages;
 
-use App\Actions\Reservations\CancelReservation;
-use App\Actions\Reservations\ConfirmReservation;
-use App\Actions\Reservations\CreateCheckoutSession;
+use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
+use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
+use CorvMC\SpaceManagement\Actions\Reservations\CreateCheckoutSession;
 use App\Filament\Resources\Reservations\ReservationResource;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ViewRecord;

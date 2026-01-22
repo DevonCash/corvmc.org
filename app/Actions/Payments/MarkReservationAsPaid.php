@@ -2,7 +2,7 @@
 
 namespace App\Actions\Payments;
 
-use App\Actions\Reservations\ConfirmReservation;
+use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
 use App\Enums\ReservationStatus;
 use App\Filament\Actions\Action;
 use App\Models\RehearsalReservation;

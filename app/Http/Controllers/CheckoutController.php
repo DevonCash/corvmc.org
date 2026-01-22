@@ -88,7 +88,7 @@ class CheckoutController extends Controller
             if ($session->payment_status === 'paid') {
                 // Process payment immediately for better UX
                 if ($checkoutType === 'practice_space_reservation') {
-                    \App\Actions\Reservations\ProcessReservationCheckout::run(
+                    \CorvMC\SpaceManagement\Actions\Reservations\ProcessReservationCheckout::run(
                         $metadata['reservation_id'] ?? null,
                         $sessionId
                     );

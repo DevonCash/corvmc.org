@@ -58,7 +58,7 @@ class AwardSuccessfulContent
      */
     protected function shouldEvaluateContent(Reportable $content): bool
     {
-        if ($content instanceof \App\Models\Event) {
+        if ($content instanceof \CorvMC\Events\Models\Event) {
             return $content->status === 'completed';
         }
 

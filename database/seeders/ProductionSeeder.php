@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Band;
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use App\Models\EventReservation;
 use App\Models\User;
 use Illuminate\Database\Seeder;

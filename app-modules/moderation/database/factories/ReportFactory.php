@@ -3,7 +3,7 @@
 namespace CorvMC\Moderation\Database\Factories;
 
 use App\Models\Band;
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use App\Models\MemberProfile;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;

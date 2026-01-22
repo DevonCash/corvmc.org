@@ -2,7 +2,6 @@
 
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
-use CorvMC\SpaceManagement\Enums\PaymentStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -13,15 +12,18 @@ class HandleFailedPayment
     /**
      * Handle failed or cancelled payment.
      *
-     * Updates the reservation with payment failure details.
+     * The Charge record remains in Pending status - no update needed.
+     * This just logs the failure for debugging purposes.
      */
     public function handle(RehearsalReservation $reservation, ?string $sessionId = null): void
     {
         $notes = $sessionId ? "Payment failed/cancelled (Session: {$sessionId})" : 'Payment cancelled by user';
 
-        $reservation->update([
-            'payment_status' => PaymentStatus::Unpaid,
-            'payment_notes' => $notes,
-        ]);
+        // Log the failure on the charge if it exists
+        if ($reservation->charge) {
+            $reservation->charge->update([
+                'notes' => $notes,
+            ]);
+        }
     }
 }

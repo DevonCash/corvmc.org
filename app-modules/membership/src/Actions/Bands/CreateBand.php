@@ -3,8 +3,8 @@
 namespace CorvMC\Membership\Actions\Bands;
 
 use App\Filament\Resources\Bands\BandResource;
-use CorvMC\Membership\Models\Band;
-use CorvMC\Membership\Models\User;
+use App\Models\Band;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Support\Facades\DB;
@@ -37,10 +37,11 @@ class CreateBand
                 $band->attachTags($data['tags']);
             }
 
-            // Add the creator as a member if they're not already
-            if (! $band->memberships()->active()->where('user_id', User::me()->id)->exists()) {
-                AddBandMember::run($band, User::me(), ['role' => 'owner']);
-            }
+            // Add the creator as the owner (directly active, no invitation needed)
+            $band->members()->attach(User::me()->id, [
+                'role' => 'owner',
+                'status' => 'active',
+            ]);
 
             return $band;
         });

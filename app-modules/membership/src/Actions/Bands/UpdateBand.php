@@ -2,7 +2,7 @@
 
 namespace CorvMC\Membership\Actions\Bands;
 
-use CorvMC\Membership\Models\Band;
+use App\Models\Band;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 

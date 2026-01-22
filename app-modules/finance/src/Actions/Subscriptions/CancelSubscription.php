@@ -3,7 +3,7 @@
 namespace CorvMC\Finance\Actions\Subscriptions;
 
 use App\Exceptions\SubscriptionNotFoundException;
-use CorvMC\Membership\Models\User;
+use App\Models\User;
 use Carbon\Carbon;
 use Lorisleiva\Actions\Concerns\AsAction;
 

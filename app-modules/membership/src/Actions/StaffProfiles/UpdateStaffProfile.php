@@ -2,7 +2,7 @@
 
 namespace CorvMC\Membership\Actions\StaffProfiles;
 
-use CorvMC\Membership\Models\StaffProfile;
+use App\Models\StaffProfile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;

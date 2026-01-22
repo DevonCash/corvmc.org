@@ -2,7 +2,7 @@
 
 namespace CorvMC\Finance\Actions\Subscriptions;
 
-use CorvMC\Membership\Models\User;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use Lorisleiva\Actions\Concerns\AsAction;

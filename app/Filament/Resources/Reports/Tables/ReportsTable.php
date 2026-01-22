@@ -73,7 +73,7 @@ class ReportsTable
                 SelectFilter::make('reportable_type')
                     ->label('Content Type')
                     ->options([
-                        'App\Models\Event' => 'Production',
+                        'CorvMC\Events\Models\Event' => 'Production',
                         'App\Models\MemberProfile' => 'Member Profile',
                         'App\Models\Band' => 'Band Profile',
                     ]),

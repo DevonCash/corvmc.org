@@ -5,7 +5,6 @@ namespace CorvMC\SpaceManagement\Database\Factories;
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
-use CorvMC\SpaceManagement\Enums\PaymentStatus;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -47,7 +46,7 @@ class RehearsalReservationFactory extends Factory
                 return $this->faker->boolean(30) ? 0 : $hours * CalculateReservationCost::HOURLY_RATE;
             },
             'payment_status' => function (array $attributes) {
-                return $attributes['cost'] == 0 ? PaymentStatus::NotApplicable : PaymentStatus::Unpaid;
+                return $attributes['cost'] == 0 ? 'n/a' : 'unpaid';
             },
             'free_hours_used' => function (array $attributes) {
                 return $attributes['cost'] == 0 ? $attributes['hours_used'] : 0;
@@ -100,7 +99,7 @@ class RehearsalReservationFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'cost' => 0,
-            'payment_status' => PaymentStatus::NotApplicable,
+            'payment_status' => 'n/a',
         ]);
     }
 
@@ -132,7 +131,7 @@ class RehearsalReservationFactory extends Factory
                 'reservable_type' => User::class,
                 'reservable_id' => $user->id,
                 'cost' => 0, // Sustaining members often get free hours
-                'payment_status' => PaymentStatus::NotApplicable,
+                'payment_status' => 'n/a',
                 'free_hours_used' => $hours,
             ];
         });

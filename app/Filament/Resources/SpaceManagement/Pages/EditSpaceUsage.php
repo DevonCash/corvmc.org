@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\SpaceManagement\Pages;
 
-use App\Actions\Reservations\UpdateReservation;
+use CorvMC\SpaceManagement\Actions\Reservations\UpdateReservation;
 use App\Filament\Resources\Reservations\Schemas\ReservationEditForm;
 use App\Filament\Resources\SpaceManagement\SpaceManagementResource;
 use Carbon\Carbon;

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Reservations\Pages;
 
-use App\Actions\Reservations\CreateCheckoutSession;
+use CorvMC\SpaceManagement\Actions\Reservations\CreateCheckoutSession;
 use App\Filament\Resources\Reservations\ReservationResource;
 use App\Models\Reservation;
 use Carbon\Carbon;
@@ -22,7 +22,7 @@ class CreateReservation extends CreateRecord
         $startTime = Carbon::parse($data['reserved_at']);
         $endTime = Carbon::parse($data['reserved_until']);
 
-        return \App\Actions\Reservations\CreateReservation::run(
+        return \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run(
             $user,
             $startTime,
             $endTime,

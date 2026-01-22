@@ -3,7 +3,7 @@
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use CorvMC\Support\Models\RecurringSeries;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Illuminate\Support\Facades\DB;

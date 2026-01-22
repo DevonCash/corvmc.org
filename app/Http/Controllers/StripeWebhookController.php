@@ -50,7 +50,7 @@ class StripeWebhookController extends CashierWebhookController
         $sessionId = $session['id'];
         $reservationId = $metadata['reservation_id'] ?? null;
 
-        $success = \App\Actions\Reservations\ProcessReservationCheckout::run(
+        $success = \CorvMC\SpaceManagement\Actions\Reservations\ProcessReservationCheckout::run(
             $reservationId,
             $sessionId
         );
@@ -125,7 +125,7 @@ class StripeWebhookController extends CashierWebhookController
             }
 
             // Handle failed payment
-            \App\Actions\Reservations\HandleFailedPayment::run($reservation);
+            \CorvMC\SpaceManagement\Actions\Reservations\HandleFailedPayment::run($reservation);
 
             Log::info('Stripe webhook: Processed payment failure', [
                 'reservation_id' => $reservationId,

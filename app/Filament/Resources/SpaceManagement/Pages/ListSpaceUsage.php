@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\SpaceManagement\Pages;
 
-use App\Actions\Reservations\CreateReservation;
+use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use App\Filament\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Resources\SpaceManagement\SpaceManagementResource;
 use App\Filament\Resources\SpaceManagement\Widgets\SpaceStatsWidget;

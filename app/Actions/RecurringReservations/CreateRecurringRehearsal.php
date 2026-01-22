@@ -4,7 +4,7 @@ namespace App\Actions\RecurringReservations;
 
 use App\Filament\Actions\Action;
 use App\Filament\Resources\RecurringReservations\Schemas\RecurringReservationForm;
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use CorvMC\Support\Enums\RecurringSeriesStatus;
 use CorvMC\Support\Models\RecurringSeries;
 use App\Models\RehearsalReservation;

@@ -3,7 +3,7 @@
 namespace App\Actions\RecurringReservations;
 
 use App\Enums\ReservationStatus;
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use CorvMC\Support\Models\RecurringSeries;
 use App\Models\Reservation;
 use Illuminate\Support\Facades\DB;

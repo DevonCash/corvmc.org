@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Reservations\Schemas;
 
-use App\Actions\Reservations\CalculateReservationCost;
-use App\Actions\Reservations\DetermineReservationStatus;
-use App\Actions\Reservations\GetAvailableTimeSlotsForDate;
-use App\Actions\Reservations\GetValidEndTimesForDate;
+use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
+use CorvMC\SpaceManagement\Actions\Reservations\DetermineReservationStatus;
+use CorvMC\SpaceManagement\Actions\Reservations\GetAvailableTimeSlotsForDate;
+use CorvMC\SpaceManagement\Actions\Reservations\GetValidEndTimesForDate;
 use App\Data\ContactData;
 use Carbon\Carbon;
 use Filament\Forms\Components\Checkbox;

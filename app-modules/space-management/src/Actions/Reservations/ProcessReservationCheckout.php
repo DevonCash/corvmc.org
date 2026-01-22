@@ -2,7 +2,6 @@
 
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
-use CorvMC\SpaceManagement\Enums\PaymentStatus;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -41,8 +40,8 @@ class ProcessReservationCheckout
                 return false;
             }
 
-            // Skip if already paid (idempotency check)
-            if ($reservation->payment_status == PaymentStatus::Paid) {
+            // Skip if already paid (idempotency check via Charge)
+            if ($reservation->charge && !$reservation->charge->requiresPayment()) {
                 Log::info('Reservation already paid, skipping', [
                     'reservation_id' => $reservationId,
                     'session_id' => $sessionId,

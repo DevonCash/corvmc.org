@@ -2,7 +2,7 @@
 
 namespace CorvMC\Membership\Actions\Bands;
 
-use CorvMC\Membership\Models\BandMember;
+use App\Models\BandMember;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;

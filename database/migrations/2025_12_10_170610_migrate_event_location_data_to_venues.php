@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use App\Models\Venue;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;

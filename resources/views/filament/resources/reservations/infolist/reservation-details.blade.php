@@ -96,20 +96,21 @@
             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
                 Cost & Payment
                 <x-filament::icon :icon="match ($record->payment_status) {
-                    \App\Enums\PaymentStatus::Paid => match ($record->payment_method) {
+                    'paid' => match ($record->payment_method) {
                         'credit_card' => 'tabler-credit-card',
                         'cash' => 'tabler-cash',
+                        default => 'tabler-check',
                     },
-                    \App\Enums\PaymentStatus::Unpaid => $record->reserved_until->isPast()
+                    'unpaid' => $record->reserved_until->isPast()
                         ? 'tabler-question-circle'
                         : 'tabler-alert-circle',
                     default => 'tabler-currency-dollar',
                 }" :class="'size-4 ' .
-                    match ($record->status) {
-                        \App\Enums\ReservationStatus::Confirmed => 'text-success-500',
-                        \App\Enums\ReservationStatus::Cancelled => 'text-danger-500',
-                        \App\Enums\ReservationStatus::Scheduled => 'text-info-500',
-                        \App\Enums\ReservationStatus::Reserved => 'text-warning-500',
+                    match ($record->status->value ?? $record->status) {
+                        'confirmed' => 'text-success-500',
+                        'cancelled' => 'text-danger-500',
+                        'scheduled' => 'text-info-500',
+                        'reserved' => 'text-warning-500',
                         default => 'text-gray-500',
                     }" />
             </dt>
@@ -133,8 +134,26 @@
                 @if ($record->cost->isPositive())
                     <div class="flex items-center gap-3">
                         <div class="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
-                        <x-filament::badge :color="$record->payment_status->getColor()" size="lg">
-                            {{ $record->payment_status->getLabel() }}
+                        @php
+                            $paymentStatusColor = match ($record->payment_status) {
+                                'paid' => 'success',
+                                'unpaid' => 'warning',
+                                'refunded' => 'info',
+                                'comped' => 'primary',
+                                'n/a' => 'gray',
+                                default => 'gray',
+                            };
+                            $paymentStatusLabel = match ($record->payment_status) {
+                                'paid' => 'Paid',
+                                'unpaid' => 'Unpaid',
+                                'refunded' => 'Refunded',
+                                'comped' => 'Comped',
+                                'n/a' => 'N/A',
+                                default => ucfirst($record->payment_status ?? 'Unknown'),
+                            };
+                        @endphp
+                        <x-filament::badge :color="$paymentStatusColor" size="lg">
+                            {{ $paymentStatusLabel }}
                         </x-filament::badge>
                         @if ($record->payment_method || $record->paid_at)
                             <span class="text-sm text-gray-600 dark:text-gray-400">

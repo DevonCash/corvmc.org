@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $deleted_at
  * @property \CorvMC\SpaceManagement\Enums\ReservationStatus $status
- * @property \CorvMC\SpaceManagement\Enums\PaymentStatus $payment_status
+ * @property string $payment_status
  * @property string|null $payment_method
  * @property \Illuminate\Support\Carbon|null $paid_at
  * @property string|null $payment_notes

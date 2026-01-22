@@ -102,7 +102,7 @@ class RevisionsTable
                     ->options([
                         'App\Models\MemberProfile' => 'Member Profile',
                         'App\Models\Band' => 'Band',
-                        'App\Models\Event' => 'Event',
+                        'CorvMC\Events\Models\Event' => 'Event',
                     ]),
 
                 SelectFilter::make('revision_type')

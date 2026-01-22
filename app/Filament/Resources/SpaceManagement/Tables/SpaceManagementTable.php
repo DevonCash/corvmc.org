@@ -4,9 +4,8 @@ namespace App\Filament\Resources\SpaceManagement\Tables;
 
 use App\Actions\Payments\MarkReservationAsComped;
 use App\Actions\Payments\MarkReservationAsPaid;
-use App\Actions\Reservations\CancelReservation;
-use App\Actions\Reservations\ConfirmReservation;
-use App\Enums\PaymentStatus;
+use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
+use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
 use App\Enums\ReservationStatus;
 use App\Filament\Actions\ViewAction;
 use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
@@ -57,7 +56,13 @@ class SpaceManagementTable
 
                 SelectFilter::make('payment_status')
                     ->label('Payment Status')
-                    ->options(PaymentStatus::class)
+                    ->options([
+                        'unpaid' => 'Unpaid',
+                        'paid' => 'Paid',
+                        'refunded' => 'Refunded',
+                        'comped' => 'Comped',
+                        'n/a' => 'N/A',
+                    ])
                     ->multiple(),
 
                 SelectFilter::make('type')

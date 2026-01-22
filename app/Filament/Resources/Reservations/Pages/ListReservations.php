@@ -57,7 +57,7 @@ class ListReservations extends ListRecords
                 $reservedUntil = $data['reserved_until'];
 
                 // Use CreateReservation action to properly create reservation with notifications
-                $reservation = \App\Actions\Reservations\CreateReservation::run(
+                $reservation = \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run(
                     $user,
                     $reservedAt,
                     $reservedUntil,

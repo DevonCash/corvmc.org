@@ -3,8 +3,8 @@
 namespace CorvMC\Membership\Actions\Bands;
 
 use App\Exceptions\BandException;
-use CorvMC\Membership\Models\Band;
-use CorvMC\Membership\Models\User;
+use App\Models\Band;
+use App\Models\User;
 use CorvMC\Membership\Notifications\BandInvitationAcceptedNotification;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;

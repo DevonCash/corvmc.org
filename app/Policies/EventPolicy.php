@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\Event;
 use App\Models\User;
+use CorvMC\Events\Models\Event;
 
 class EventPolicy
 {

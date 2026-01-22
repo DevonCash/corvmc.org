@@ -3,9 +3,9 @@
 namespace App\Actions\RecurringReservations;
 
 use CorvMC\Events\Actions\CreateEvent;
-use App\Actions\Reservations\CreateReservation;
+use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use App\Enums\ReservationStatus;
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use CorvMC\Support\Models\RecurringSeries;
 use App\Models\Reservation;
 use Carbon\Carbon;

@@ -60,7 +60,10 @@ class HandleRevisionSubmission
     protected function shouldAutoApprove(Revision $revision): bool
     {
         $submitter = $revision->submittedBy;
-        $model = $revision->revisionable;
+
+        // Load model without global scopes (e.g., visibility) to ensure we can always check
+        $modelClass = $revision->revisionable_type;
+        $model = $modelClass::withoutGlobalScopes()->find($revision->revisionable_id);
 
         // Check if model exists (could be soft-deleted or missing)
         if (! $model) {

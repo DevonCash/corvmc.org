@@ -5,7 +5,7 @@ namespace CorvMC\Finance\Actions\MemberBenefits;
 use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
 use App\Enums\CreditType;
 use CorvMC\SpaceManagement\Models\Reservation;
-use CorvMC\Membership\Models\User;
+use App\Models\User;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class AllocateUserMonthlyCredits

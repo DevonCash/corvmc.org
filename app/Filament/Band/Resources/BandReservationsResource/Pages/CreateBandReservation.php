@@ -2,11 +2,11 @@
 
 namespace App\Filament\Band\Resources\BandReservationsResource\Pages;
 
-use App\Actions\Reservations\CalculateReservationCost;
-use App\Actions\Reservations\DetermineReservationStatus;
-use App\Actions\Reservations\GetAvailableTimeSlotsForDate;
-use App\Actions\Reservations\GetValidEndTimesForDate;
-use App\Actions\Reservations\ValidateReservation;
+use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
+use CorvMC\SpaceManagement\Actions\Reservations\DetermineReservationStatus;
+use CorvMC\SpaceManagement\Actions\Reservations\GetAvailableTimeSlotsForDate;
+use CorvMC\SpaceManagement\Actions\Reservations\GetValidEndTimesForDate;
+use CorvMC\SpaceManagement\Actions\Reservations\ValidateReservation;
 use App\Enums\ReservationStatus;
 use App\Filament\Band\Resources\BandReservationsResource;
 use App\Models\Band;
@@ -277,7 +277,7 @@ class CreateBandReservation extends CreateRecord
             // Mark payment as not applicable if free
             if ($reservation->cost->isZero()) {
                 $reservation->update([
-                    'payment_status' => \App\Enums\PaymentStatus::NotApplicable,
+                    'payment_status' => 'n/a',
                 ]);
             }
 

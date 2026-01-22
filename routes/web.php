@@ -2,7 +2,7 @@
 
 use App\Enums\ReservationStatus;
 use App\Models\Band;
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use App\Models\MemberProfile;
 use CorvMC\Sponsorship\Models\Sponsor;
 use App\Models\User;

@@ -4,7 +4,7 @@ namespace App\Filament\Band\Resources;
 
 use App\Filament\Band\Resources\BandProductionsResource\Pages;
 use App\Models\Band;
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;

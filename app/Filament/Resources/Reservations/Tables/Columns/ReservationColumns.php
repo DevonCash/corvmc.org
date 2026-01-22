@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Reservations\Tables\Columns;
 
-use App\Enums\PaymentStatus;
 use App\Models\EventReservation;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
@@ -96,8 +95,22 @@ class ReservationColumns
     {
         return  TextColumn::make('cost')
             ->iconPosition(IconPosition::After)
-            ->icon(fn(Reservation $record) => $record->payment_status->getIcon())
-            ->iconColor(fn(Reservation $record) => $record->payment_status->getColor())
+            ->icon(fn(Reservation $record) => match ($record->payment_status) {
+                'paid' => 'tabler-check',
+                'unpaid' => 'tabler-clock',
+                'refunded' => 'tabler-arrow-back',
+                'comped' => 'tabler-gift',
+                'n/a' => 'tabler-minus',
+                default => 'tabler-question-mark',
+            })
+            ->iconColor(fn(Reservation $record) => match ($record->payment_status) {
+                'paid' => 'success',
+                'unpaid' => 'warning',
+                'refunded' => 'info',
+                'comped' => 'primary',
+                'n/a' => 'gray',
+                default => 'gray',
+            })
             ->label('Cost')
             ->formatStateUsing(fn($state) => $state?->formatTo('en_US'))
             ->sortable(['cost']);

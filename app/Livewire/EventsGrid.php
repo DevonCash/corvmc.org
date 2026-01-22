@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 
 class EventsGrid extends SearchableGrid
 {

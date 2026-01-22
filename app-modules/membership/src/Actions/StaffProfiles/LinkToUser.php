@@ -2,8 +2,8 @@
 
 namespace CorvMC\Membership\Actions\StaffProfiles;
 
-use CorvMC\Membership\Models\StaffProfile;
-use CorvMC\Membership\Models\User;
+use App\Models\StaffProfile;
+use App\Models\User;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class LinkToUser

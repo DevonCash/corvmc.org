@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\CheckEventSpaceConflicts;
 use App\Livewire\Synthesizers\MoneySynthesizer;
 use App\Models\Subscription;
 use App\Models\User;
@@ -9,7 +10,17 @@ use App\Observers\ReservationObserver;
 use App\Observers\TagObserver;
 use App\Observers\UserObserver;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
+use CorvMC\Events\Events\EventScheduling;
+use CorvMC\Finance\Listeners\HandleChargeableCancelled;
+use CorvMC\Finance\Listeners\HandleChargeableConfirmed;
+use CorvMC\Finance\Listeners\HandleChargeableCreated;
+use CorvMC\Finance\Listeners\HandleChargeableUpdated;
+use CorvMC\SpaceManagement\Events\ReservationCancelled;
+use CorvMC\SpaceManagement\Events\ReservationConfirmed;
+use CorvMC\SpaceManagement\Events\ReservationCreated;
+use CorvMC\SpaceManagement\Events\ReservationUpdated;
 use Filament\Support\Facades\FilamentTimezone;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -29,6 +40,14 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Register event listeners for cross-module integration
+        Event::listen(EventScheduling::class, CheckEventSpaceConflicts::class);
+
+        // SpaceManagement → Finance integration (reservation pricing/charges)
+        Event::listen(ReservationCreated::class, HandleChargeableCreated::class);
+        Event::listen(ReservationCancelled::class, HandleChargeableCancelled::class);
+        Event::listen(ReservationUpdated::class, HandleChargeableUpdated::class);
+        Event::listen(ReservationConfirmed::class, HandleChargeableConfirmed::class);
 
         FilamentTimezone::set(config('app.timezone'));
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
@@ -51,7 +70,7 @@ class AppServiceProvider extends ServiceProvider
         User::observe(UserObserver::class);
         \App\Models\RehearsalReservation::observe(ReservationObserver::class);
         \App\Models\EventReservation::observe(ReservationObserver::class);
-        \App\Models\Event::observe(\App\Observers\EventObserver::class);
+        \CorvMC\Events\Models\Event::observe(\App\Observers\EventObserver::class);
         Tag::observe(TagObserver::class);
 
         // Register facade aliases

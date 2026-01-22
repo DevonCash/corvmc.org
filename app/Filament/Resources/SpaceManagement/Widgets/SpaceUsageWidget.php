@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\SpaceManagement\Widgets;
 
-use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
 use App\Models\Reservation;
 use Filament\Widgets\Widget;
@@ -49,7 +48,7 @@ class SpaceUsageWidget extends Widget
             'todaysCount' => $today->count(),
             'hoursToday' => $today->sum('duration'),
             'revenueToday' => $todayRehearsals
-                ->filter(fn ($r) => $r['cost'] !== null && $r['payment_status'] === PaymentStatus::Paid)
+                ->filter(fn ($r) => $r['cost'] !== null && $r['payment_status'] === 'paid')
                 ->sum(fn ($r) => $r['cost']->getMinorAmount()->toInt()) / 100,
             'rehearsalCount' => $todayRehearsals->count(),
             'productionCount' => $todayProductions->count(),

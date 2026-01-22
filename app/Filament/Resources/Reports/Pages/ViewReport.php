@@ -67,7 +67,7 @@ class ViewReport extends ViewRecord
                                     ->label('Content Type')
                                     ->formatStateUsing(function ($state) {
                                         return match ($state) {
-                                            'App\Models\Event' => 'Production',
+                                            'CorvMC\Events\Models\Event' => 'Production',
                                             'App\Models\MemberProfile' => 'Member Profile',
                                             'App\Models\Band' => 'Band Profile',
                                             default => $state
@@ -141,7 +141,7 @@ class ViewReport extends ViewRecord
     public function getContentUrl($reportable): string
     {
         return match (get_class($reportable)) {
-            'App\Models\Event' => route('events.show', $reportable),
+            'CorvMC\Events\Models\Event' => route('events.show', $reportable),
             'App\Models\MemberProfile' => route('filament.member.resources.directory.view', $reportable),
             'App\Models\Band' => route('filament.member.resources.bands.view', $reportable),
             default => '#',

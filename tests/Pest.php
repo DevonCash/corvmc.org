@@ -15,6 +15,11 @@ pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in('Feature', 'Unit');
 
+// Module tests configuration
+pest()->extend(Tests\TestCase::class)
+    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->in('../app-modules/*/tests/Feature', '../app-modules/*/tests/Unit');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

@@ -14,7 +14,9 @@ class ApplyRevision
      */
     public function handle(Revision $revision): bool
     {
-        $model = $revision->revisionable;
+        // Load model without global scopes (e.g., visibility) to ensure we can always apply revisions
+        $modelClass = $revision->revisionable_type;
+        $model = $modelClass::withoutGlobalScopes()->find($revision->revisionable_id);
 
         if (! $model) {
             throw new \InvalidArgumentException('Revisionable model not found');

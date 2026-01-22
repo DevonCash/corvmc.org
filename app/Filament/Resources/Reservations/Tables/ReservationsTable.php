@@ -4,9 +4,9 @@ namespace App\Filament\Resources\Reservations\Tables;
 
 use App\Actions\Payments\MarkReservationAsComped;
 use App\Actions\Payments\MarkReservationAsPaid;
-use App\Actions\Reservations\CancelReservation;
-use App\Actions\Reservations\ConfirmReservation;
-use App\Actions\Reservations\CreateCheckoutSession;
+use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
+use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
+use CorvMC\SpaceManagement\Actions\Reservations\CreateCheckoutSession;
 use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;
 use App\Models\Reservation;

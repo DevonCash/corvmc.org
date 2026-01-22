@@ -90,7 +90,7 @@ class RevisionApprovedNotification extends Notification implements ShouldQueue
         return match ($modelType) {
             'App\Models\MemberProfile' => url("/member/member-profiles/{$modelId}"),
             'App\Models\Band' => url("/member/bands/{$modelId}"),
-            'App\Models\Event' => route('events.show', $modelId),
+            'CorvMC\Events\Models\Event' => route('events.show', $modelId),
             default => url('/member')
         };
     }

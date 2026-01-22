@@ -2,16 +2,18 @@
 
 namespace Database\Factories;
 
-use App\Enums\EventStatus;
-use App\Enums\Visibility;
-use App\Models\Venue;
+use CorvMC\Events\Enums\EventStatus;
+use CorvMC\Events\Enums\Visibility;
+use CorvMC\Events\Models\Event;
+use CorvMC\Events\Models\Venue;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Event>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\CorvMC\Events\Models\Event>
  */
 class EventFactory extends Factory
 {
+    protected $model = Event::class;
     /**
      * Define the model's default state.
      *
@@ -138,7 +140,7 @@ class EventFactory extends Factory
      */
     public function configure(): static
     {
-        return $this->afterCreating(function (\App\Models\Event $event) {
+        return $this->afterCreating(function (Event $event) {
             if ($event->hasTickets() && $this->faker->boolean(40)) {
                 $event->setNotaflof(true);
             }

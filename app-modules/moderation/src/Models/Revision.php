@@ -268,7 +268,7 @@ class Revision extends Model
         return match ($this->revisionable_type) {
             'App\Models\MemberProfile' => 'Member Profile',
             'App\Models\Band' => 'Band',
-            'App\Models\Event' => 'Event',
+            'CorvMC\Events\Models\Event' => 'Event',
             default => class_basename($this->revisionable_type)
         };
     }

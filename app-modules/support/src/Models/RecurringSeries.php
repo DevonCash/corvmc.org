@@ -2,7 +2,7 @@
 
 namespace CorvMC\Support\Models;
 
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use App\Models\Reservation;
 use App\Models\User;
 use CorvMC\Support\Enums\RecurringSeriesStatus;
@@ -33,13 +33,13 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string $recurable_type
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Event> $activeInstances
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \CorvMC\Events\Models\Event> $activeInstances
  * @property-read int|null $active_instances_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
  * @property-read int|null $activities_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Event> $instances
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \CorvMC\Events\Models\Event> $instances
  * @property-read int|null $instances_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Event> $upcomingInstances
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \CorvMC\Events\Models\Event> $upcomingInstances
  * @property-read int|null $upcoming_instances_count
  * @property-read \App\Models\User $user
  *

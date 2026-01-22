@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Data\LocationData;
 use App\Models\Band;
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Console\Command;

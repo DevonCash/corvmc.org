@@ -1,7 +1,6 @@
 <?php
 
-use App\Actions\Reservations\HandleSuccessfulPayment;
-use App\Enums\PaymentStatus;
+use CorvMC\SpaceManagement\Actions\Reservations\HandleSuccessfulPayment;
 use App\Enums\ReservationStatus;
 use App\Models\RehearsalReservation;
 
@@ -10,16 +9,16 @@ it('updates payment status to paid for unpaid reservation', function () {
         ->pending()
         ->create([
             'cost' => 3000, // $30.00
-            'payment_status' => PaymentStatus::Unpaid,
+            'payment_status' => 'unpaid',
         ]);
 
-    expect($reservation->payment_status)->toBe(PaymentStatus::Unpaid);
+    expect($reservation->payment_status)->toBe('unpaid');
 
     HandleSuccessfulPayment::run($reservation, 'cs_test_session_123');
 
     $reservation->refresh();
 
-    expect($reservation->payment_status)->toBe(PaymentStatus::Paid)
+    expect($reservation->payment_status)->toBe('paid')
         ->and($reservation->status)->toBe(ReservationStatus::Confirmed)
         ->and($reservation->payment_method)->toBe('stripe')
         ->and($reservation->paid_at)->not->toBeNull();
@@ -32,7 +31,7 @@ it('is idempotent - skips if already paid', function () {
         ->confirmed()
         ->create([
             'cost' => 3000,
-            'payment_status' => PaymentStatus::Paid,
+            'payment_status' => 'paid',
             'payment_method' => 'stripe',
             'paid_at' => $paidAt,
             'payment_notes' => 'Original payment',

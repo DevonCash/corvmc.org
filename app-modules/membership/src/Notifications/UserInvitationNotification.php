@@ -2,7 +2,7 @@
 
 namespace CorvMC\Membership\Notifications;
 
-use CorvMC\Membership\Models\Invitation;
+use App\Models\Invitation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;

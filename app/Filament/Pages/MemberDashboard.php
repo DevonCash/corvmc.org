@@ -92,7 +92,7 @@ class MemberDashboard extends Page
         $cacheKey = 'upcoming_events'.($userId ? ".user_{$userId}" : '');
 
         return \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () {
-            return \App\Models\Event::publishedUpcoming()
+            return \CorvMC\Events\Models\Event::publishedUpcoming()
                 ->with(['performers', 'organizer', 'venue'])
                 ->limit(8)
                 ->get();

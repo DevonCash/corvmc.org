@@ -133,7 +133,7 @@
 
         <!-- Related Events -->
         @php
-            $relatedEvents = \App\Models\Event::publishedUpcoming()
+            $relatedEvents = \CorvMC\Events\Models\Event::publishedUpcoming()
                 ->where('id', '!=', $event->id)
                 ->limit(3)
                 ->get();

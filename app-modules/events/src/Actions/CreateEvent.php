@@ -2,6 +2,7 @@
 
 namespace CorvMC\Events\Actions;
 
+use CorvMC\Events\Events\EventScheduling;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Notifications\EventCreatedNotification;
 use Carbon\Carbon;
@@ -19,6 +20,7 @@ class CreateEvent
     {
         $event = DB::transaction(function () use ($data) {
             $data['status'] ??= 'scheduled';
+            $data['visibility'] ??= 'public';
 
             // Combine virtual date/time fields into datetime fields for conflict checking
             // This handles both the new format (event_date + time_only) and old format (start_time directly)
@@ -43,17 +45,13 @@ class CreateEvent
                 unset($data['end_time']);
             }
 
-            // Check for conflicts if this event uses the CMC practice space
-            if ($startTime && $endTime && isset($data['venue_id'])) {
-                $venue = \CorvMC\Events\Models\Venue::find($data['venue_id']);
-                if ($venue && $venue->is_cmc) {
-                    $conflicts = \CorvMC\SpaceManagement\Actions\Reservations\GetAllConflicts::run($startTime, $endTime);
-
-                    if ($conflicts['reservations']->isNotEmpty()) {
-                        throw new \InvalidArgumentException('Event conflicts with existing reservation');
-                    }
-                }
-            }
+            // Fire scheduling hook - listeners can throw SchedulingConflictException
+            EventScheduling::dispatch(
+                $data,
+                $startTime,
+                $endTime,
+                $data['venue_id'] ?? null
+            );
 
             $event = Event::create($data);
 

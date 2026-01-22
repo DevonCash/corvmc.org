@@ -2,7 +2,7 @@
 
 namespace App\Notifications;
 
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;

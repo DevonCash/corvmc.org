@@ -4,7 +4,7 @@ namespace CorvMC\Finance\Actions\Credits;
 
 use App\Enums\CreditType;
 use CorvMC\Finance\Models\CreditTransaction;
-use CorvMC\Membership\Models\User;
+use App\Models\User;
 use CorvMC\Finance\Models\UserCredit;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
