@@ -2,7 +2,7 @@
 
 namespace CorvMC\Finance\Actions\Subscriptions;
 
-use CorvMC\Membership\Models\User;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -60,7 +60,7 @@ class ProcessSubscriptionCheckout
             // (idempotent - won't double-allocate in same month)
             // Pass cents (integer) to maintain precision
             $baseAmountInCents = $metadata['base_amount'] ?? null;
-            \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user, $baseAmountInCents);
+            \CorvMC\Finance\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user, $baseAmountInCents);
 
             Log::info('Successfully processed subscription checkout', [
                 'user_id' => $userId,

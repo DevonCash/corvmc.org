@@ -2,7 +2,7 @@
 
 namespace CorvMC\Finance\Actions\MemberBenefits;
 
-use CorvMC\Membership\Models\User;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -39,7 +39,7 @@ class GetUserMonthlyFreeHours
         if ($subscription?->active()) {
             try {
                 // Get the maximum contribution amount for this billing period
-                $peakAmount = \App\Actions\Subscriptions\GetBillingPeriodPeakAmount::run($subscription);
+                $peakAmount = \CorvMC\Finance\Actions\Subscriptions\GetBillingPeriodPeakAmount::run($subscription);
 
                 return CalculateFreeHours::run($peakAmount);
             } catch (\Exception $e) {

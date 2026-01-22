@@ -3,11 +3,13 @@
 namespace App\Actions\Payments;
 
 use App\Actions\Reservations\ConfirmReservation;
-use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
 use App\Filament\Actions\Action;
 use App\Models\RehearsalReservation;
 use App\Models\Reservation;
+use CorvMC\SpaceManagement\Enums\ReservationStatus as SpaceManagementReservationStatus;
+use CorvMC\SpaceManagement\Models\RehearsalReservation as SpaceManagementRehearsalReservation;
+use CorvMC\SpaceManagement\Models\Reservation as SpaceManagementReservation;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Collection;
@@ -17,17 +19,22 @@ class MarkReservationAsPaid
 {
     use AsAction;
 
-    public function handle(Reservation $reservation, ?string $paymentMethod = null, ?string $notes = null): void
+    public function handle(Reservation|SpaceManagementReservation $reservation, ?string $paymentMethod = null, ?string $notes = null): void
     {
         // If the reservation is scheduled or reserved, confirm it first
         if ($reservation instanceof RehearsalReservation &&
             in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
             $reservation = ConfirmReservation::run($reservation);
             $reservation->refresh();
+        } elseif ($reservation instanceof SpaceManagementRehearsalReservation &&
+            in_array($reservation->status, [SpaceManagementReservationStatus::Scheduled, SpaceManagementReservationStatus::Reserved])) {
+            // Handle module's RehearsalReservation using its ConfirmReservation action
+            $reservation = \CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation::run($reservation);
+            $reservation->refresh();
         }
 
         $reservation->update([
-            'payment_status' => PaymentStatus::Paid,
+            'payment_status' => 'paid',
             'payment_method' => $paymentMethod,
             'paid_at' => now(),
             'payment_notes' => $notes,

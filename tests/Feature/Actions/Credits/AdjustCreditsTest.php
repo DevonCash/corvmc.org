@@ -1,6 +1,6 @@
 <?php
 
-use App\Actions\Credits\AdjustCredits;
+use CorvMC\Finance\Actions\Credits\AdjustCredits;
 use App\Enums\CreditType;
 use App\Models\User;
 

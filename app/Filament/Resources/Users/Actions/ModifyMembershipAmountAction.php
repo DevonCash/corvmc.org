@@ -54,7 +54,7 @@ class ModifyMembershipAmountAction
                     ->helperText(function ($get) {
                         $amount = Money::of($get('amount'), 'USD');
                         if (! $amount->isZero()) {
-                            $feeInfo = \App\Actions\Payments\GetFeeDisplayInfo::run($amount);
+                            $feeInfo = \CorvMC\Finance\Actions\Payments\GetFeeDisplayInfo::run($amount);
 
                             return $feeInfo['message'];
                         }
@@ -82,7 +82,7 @@ class ModifyMembershipAmountAction
                             return 'Please select a contribution amount';
                         }
 
-                        $breakdown = \App\Actions\Payments\GetFeeBreakdown::run($amount, $get('cover_fees'));
+                        $breakdown = \CorvMC\Finance\Actions\Payments\GetFeeBreakdown::run($amount, $get('cover_fees'));
                         $totalAmount = Money::of($breakdown['total_amount'], 'USD');
 
                         return $breakdown['description'].' = '.$totalAmount->formatTo('en_US').' total per month';
@@ -94,7 +94,7 @@ class ModifyMembershipAmountAction
             ->action(function (array $data) {
                 $baseAmount = Money::of($data['amount'], 'USD');
 
-                \App\Actions\Subscriptions\UpdateSubscriptionAmount::run(User::me(), $baseAmount, $data['cover_fees']);
+                \CorvMC\Finance\Actions\Subscriptions\UpdateSubscriptionAmount::run(User::me(), $baseAmount, $data['cover_fees']);
                 \Filament\Notifications\Notification::make()
                     ->title('Membership Updated')
                     ->success()

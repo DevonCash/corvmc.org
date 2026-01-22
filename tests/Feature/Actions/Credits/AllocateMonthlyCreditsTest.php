@@ -1,6 +1,6 @@
 <?php
 
-use App\Actions\Credits\AllocateMonthlyCredits;
+use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
 use App\Enums\CreditType;
 use App\Models\CreditTransaction;
 use App\Models\User;

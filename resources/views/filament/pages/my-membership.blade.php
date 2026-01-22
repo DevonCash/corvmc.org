@@ -2,7 +2,7 @@
     @php
         $user = \App\Models\User::me();
         $isSustainingMember = $user->isSustainingMember();
-        $stats = \App\Actions\Subscriptions\GetSubscriptionStats::run();
+        $stats = \CorvMC\Finance\Actions\Subscriptions\GetSubscriptionStats::run();
     @endphp
     {{-- Hero Section --}}
     <div class="mb-8 rounded-xl bg-primary/10 p-8 text-center">
@@ -58,7 +58,7 @@
                     <div>
                         <div class="text-sm font-medium text-gray-600 dark:text-gray-400">Benefits Until Cancellation</div>
                         @php
-                            $totalHours = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user);
+                            $totalHours = \CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user);
                         @endphp
                         <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
                             {{ $totalHours }} free hours/month until {{ $subscription->ends_at->format('M j, Y') }}
@@ -96,7 +96,7 @@
     {{-- Your Membership Benefits (for sustaining members) --}}
     @if($isSustainingMember)
         @php
-            $totalHours = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user);
+            $totalHours = \CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user);
             $remainingHours = $user->getRemainingFreeHours();
             $usedHours = $user->getUsedFreeHoursThisMonth();
             $subscription = $user->subscription();

@@ -2,7 +2,7 @@
 
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
-use App\Actions\MemberBenefits\GetUserMonthlyFreeHours;
+use CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours;
 use App\Enums\CreditType;
 use App\Models\CreditTransaction;
 use CorvMC\SpaceManagement\Models\Reservation;

@@ -3,7 +3,7 @@
 namespace CorvMC\Finance\Actions\Subscriptions;
 
 use App\Exceptions\SubscriptionPriceNotFoundException;
-use CorvMC\Membership\Models\User;
+use App\Models\User;
 use Brick\Money\Money;
 use Laravel\Cashier\Cashier;
 use Laravel\Cashier\Checkout;
@@ -47,11 +47,11 @@ class UpdateSubscriptionAmount
 
         $newTotal = $baseAmount;
         if ($coverFees) {
-            $newTotal = $newTotal->plus(\App\Actions\Payments\CalculateProcessingFee::run($baseAmount));
+            $newTotal = $newTotal->plus(\CorvMC\Finance\Actions\Payments\CalculateProcessingFee::run($baseAmount));
         }
         $billingPeriodPeak = GetBillingPeriodPeakAmount::run($subscription);
 
-        $breakdown = \App\Actions\Payments\GetFeeBreakdown::run($baseAmount, $coverFees);
+        $breakdown = \CorvMC\Finance\Actions\Payments\GetFeeBreakdown::run($baseAmount, $coverFees);
 
         if ($newTotal->isGreaterThan(Money::ofMinor($billingPeriodPeak * 100, 'USD'))) {
             // True upgrade: New amount exceeds what's been paid this billing period

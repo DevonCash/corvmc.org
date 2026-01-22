@@ -41,7 +41,7 @@ class CreateMembershipSubscriptionAction
                     ->helperText(function ($get) {
                         $amount = Money::of($get('amount'), 'USD');
                         if (! $amount->isZero()) {
-                            $feeInfo = \App\Actions\Payments\GetFeeDisplayInfo::run($amount);
+                            $feeInfo = \CorvMC\Finance\Actions\Payments\GetFeeDisplayInfo::run($amount);
 
                             return $feeInfo['message'];
                         }
@@ -57,7 +57,7 @@ class CreateMembershipSubscriptionAction
                         if ($amount->isZero()) {
                             return 'Please select a contribution amount';
                         }
-                        $breakdown = \App\Actions\Payments\GetFeeBreakdown::run($amount, $get('cover_fees'));
+                        $breakdown = \CorvMC\Finance\Actions\Payments\GetFeeBreakdown::run($amount, $get('cover_fees'));
                         $totalAmount = Money::of($breakdown['total_amount'], 'USD');
 
                         return $breakdown['description'].' = '.$totalAmount->formatTo('en_US').' total per month';
@@ -66,7 +66,7 @@ class CreateMembershipSubscriptionAction
             ])
             ->action(function (array $data) {
                 $baseAmount = Money::of($data['amount'], 'USD');
-                $checkout = \App\Actions\Subscriptions\CreateSubscription::run(User::me(), $baseAmount, $data['cover_fees']);
+                $checkout = \CorvMC\Finance\Actions\Subscriptions\CreateSubscription::run(User::me(), $baseAmount, $data['cover_fees']);
                 redirect($checkout->url);
             });
     }

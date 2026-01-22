@@ -13,7 +13,7 @@
 use App\Actions\Bands\AcceptBandInvitation;
 use App\Actions\Bands\AddBandMember;
 use App\Actions\Bands\CreateBand;
-use App\Actions\Credits\AllocateMonthlyCredits;
+use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
 use App\Actions\Events\CreateEvent;
 use App\Enums\CreditType;
 use App\Models\Band;

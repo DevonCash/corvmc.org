@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\Subscriptions\UpdateUserMembershipStatus;
+use CorvMC\Finance\Actions\Subscriptions\UpdateUserMembershipStatus;
 use App\Models\Reservation;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
@@ -78,7 +78,7 @@ class StripeWebhookController extends CashierWebhookController
         $sessionId = $session['id'];
         $userId = $metadata['user_id'] ?? null;
 
-        $success = \App\Actions\Subscriptions\ProcessSubscriptionCheckout::run(
+        $success = \CorvMC\Finance\Actions\Subscriptions\ProcessSubscriptionCheckout::run(
             $userId,
             $sessionId,
             $metadata
@@ -161,7 +161,7 @@ class StripeWebhookController extends CashierWebhookController
                 UpdateUserMembershipStatus::run($user);
 
                 // Allocate monthly credits now that subscription exists and role is assigned
-                \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
+                \CorvMC\Finance\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
 
                 Log::info('Stripe webhook: Updated membership status and allocated credits after subscription creation', [
                     'user_id' => $user->id,
@@ -265,7 +265,7 @@ class StripeWebhookController extends CashierWebhookController
                 // Allocate monthly credits if they're a sustaining member
                 // This is idempotent - won't double-allocate in same month
                 if ($user->hasRole('sustaining member')) {
-                    \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
+                    \CorvMC\Finance\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
 
                     Log::info('Stripe webhook: Allocated monthly credits after invoice payment', [
                         'user_id' => $user->id,

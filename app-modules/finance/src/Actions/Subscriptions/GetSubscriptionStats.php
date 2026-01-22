@@ -4,7 +4,7 @@ namespace CorvMC\Finance\Actions\Subscriptions;
 
 use App\Data\Subscription\SubscriptionStatsData;
 use CorvMC\Finance\Models\Subscription;
-use CorvMC\Membership\Models\User;
+use App\Models\User;
 use Brick\Money\Money;
 use Illuminate\Support\Facades\Cache;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -24,7 +24,7 @@ class GetSubscriptionStats
 
             // Calculate total allocated hours based on actual subscription amounts
             $totalAllocatedHours = GetSustainingMembers::run()
-                ->sum(fn ($user) => \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user));
+                ->sum(fn ($user) => \CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user));
 
             // Get all active subscriptions
             $activeSubscriptions = Subscription::query()->active()->get();

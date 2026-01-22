@@ -36,7 +36,7 @@ class WarmUpCaches
         }
 
         // Warm up subscription stats
-        \App\Actions\Subscriptions\GetSubscriptionStats::run();
-        \App\Actions\Subscriptions\GetSustainingMembers::run();
+        \CorvMC\Finance\Actions\Subscriptions\GetSubscriptionStats::run();
+        \CorvMC\Finance\Actions\Subscriptions\GetSustainingMembers::run();
     }
 }

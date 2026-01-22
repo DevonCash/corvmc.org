@@ -19,7 +19,7 @@ class ResumeMembershipAction
             ->modalDescription('Are you sure you want to resume your contribution? Your contribution will continue until you cancel it again.')
             ->modalSubmitActionLabel('Yes, Resume Contribution')
             ->action(function () {
-                \App\Actions\Subscriptions\ResumeSubscription::run(User::me());
+                \CorvMC\Finance\Actions\Subscriptions\ResumeSubscription::run(User::me());
 
                 \Filament\Notifications\Notification::make()
                     ->title('Contribution Resumed')

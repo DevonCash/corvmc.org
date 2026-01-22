@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Users\Widgets;
 
-use App\Actions\Subscriptions\GetSubscriptionStats;
+use CorvMC\Finance\Actions\Subscriptions\GetSubscriptionStats;
 use Filament\Widgets\Widget;
 
 class UserStatsWidget extends Widget

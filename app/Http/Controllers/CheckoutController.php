@@ -93,7 +93,7 @@ class CheckoutController extends Controller
                         $sessionId
                     );
                 } elseif ($checkoutType === 'sliding_scale_membership') {
-                    \App\Actions\Subscriptions\ProcessSubscriptionCheckout::run(
+                    \CorvMC\Finance\Actions\Subscriptions\ProcessSubscriptionCheckout::run(
                         $metadata['user_id'] ?? null,
                         $sessionId,
                         $metadata

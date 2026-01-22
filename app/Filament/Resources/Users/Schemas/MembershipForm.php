@@ -196,7 +196,7 @@ class MembershipForm
                             ->state(function (User $record) {
                                 $subscription = $record->subscription();
                                 if ($subscription && $subscription->ends_at) {
-                                    $totalHours = \App\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($record);
+                                    $totalHours = \CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($record);
 
                                     return sprintf('You retain %d free hours/month until %s', $totalHours, $subscription->ends_at->format('M j, Y'));
                                 }

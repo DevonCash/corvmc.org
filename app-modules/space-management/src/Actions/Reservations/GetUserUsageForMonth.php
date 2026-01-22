@@ -2,7 +2,7 @@
 
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
-use App\Actions\MemberBenefits\GetUserMonthlyFreeHours;
+use CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours;
 use App\Data\Reservation\ReservationUsageData;
 use App\Models\User;
 use Carbon\Carbon;

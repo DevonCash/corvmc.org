@@ -1,6 +1,6 @@
 <?php
 
-use App\Actions\Credits\ProcessPendingAllocations;
+use CorvMC\Finance\Actions\Credits\ProcessPendingAllocations;
 use App\Enums\CreditType;
 use App\Models\CreditAllocation;
 use App\Models\User;
