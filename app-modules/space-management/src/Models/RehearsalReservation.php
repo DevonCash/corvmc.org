@@ -2,6 +2,9 @@
 
 namespace CorvMC\SpaceManagement\Models;
 
+use App\Models\User;
+use CorvMC\Finance\Concerns\HasCharges;
+use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\SpaceManagement\Database\Factories\RehearsalReservationFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,12 +36,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property string|null $reservable_type
  * @property int|null $reservable_id
  * @property string|null $google_calendar_event_id
+ * @property-read \CorvMC\Finance\Models\Charge|null $charge
  *
  * @mixin \Eloquent
  */
-class RehearsalReservation extends Reservation
+class RehearsalReservation extends Reservation implements Chargeable
 {
-    use HasFactory;
+    use HasCharges, HasFactory;
 
     protected $attributes = [
         'payment_status' => 'unpaid',
@@ -58,5 +62,48 @@ class RehearsalReservation extends Reservation
     public function getDisplayTitle(): string
     {
         return $this->reservable?->name ?? 'Unknown User';
+    }
+
+    /**
+     * Get the billable hours for this reservation.
+     *
+     * Implements Chargeable::getBillableUnits()
+     */
+    public function getBillableUnits(): float
+    {
+        if (! $this->reserved_at || ! $this->reserved_until) {
+            return 0;
+        }
+
+        return $this->reserved_at->diffInMinutes($this->reserved_until) / 60;
+    }
+
+    /**
+     * Get a human-readable description for the charge.
+     *
+     * Implements Chargeable::getChargeableDescription()
+     */
+    public function getChargeableDescription(): string
+    {
+        $hours = $this->getBillableUnits();
+        $date = $this->reserved_at?->format('M j, Y') ?? 'TBD';
+
+        return "Practice Space - {$hours} hour(s) on {$date}";
+    }
+
+    /**
+     * Get the user responsible for payment.
+     *
+     * Implements Chargeable::getBillableUser()
+     */
+    public function getBillableUser(): User
+    {
+        // For rehearsal reservations, the reservable is always the User
+        if ($this->reservable instanceof User) {
+            return $this->reservable;
+        }
+
+        // Fallback to the user relationship
+        return $this->user ?? throw new \RuntimeException('No billable user found for reservation');
     }
 }

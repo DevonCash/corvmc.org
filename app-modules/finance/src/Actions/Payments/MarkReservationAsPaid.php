@@ -2,11 +2,11 @@
 
 namespace CorvMC\Finance\Actions\Payments;
 
-use App\Actions\Reservations\ConfirmReservation;
-use App\Enums\PaymentStatus;
-use App\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use App\Filament\Actions\Action;
-use App\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Enums\PaymentStatus;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -26,12 +26,18 @@ class MarkReservationAsPaid
             $reservation->refresh();
         }
 
+        // Update legacy fields on reservation
         $reservation->update([
             'payment_status' => PaymentStatus::Paid,
             'payment_method' => $paymentMethod,
             'paid_at' => now(),
             'payment_notes' => $notes,
         ]);
+
+        // Update Charge record if exists
+        if ($reservation instanceof RehearsalReservation && $reservation->charge) {
+            $reservation->charge->markAsPaid($paymentMethod ?? 'other', null, $notes);
+        }
     }
 
     public static function filamentAction(): Action

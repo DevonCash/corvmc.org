@@ -2,10 +2,8 @@
 
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
-use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
-use App\Enums\CreditType;
-use CorvMC\SpaceManagement\Enums\PaymentStatus;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Events\ReservationConfirmed;
 use App\Filament\Actions\Action;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
@@ -21,16 +19,33 @@ class ConfirmReservation
 
     public static function allowed(RehearsalReservation $reservation, User $user): bool
     {
-        return in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved]) &&
-            $user->can('manage reservations')
-            && $reservation->reserved_at->subDays(5)->isNowOrPast(); // Can't confirm more than 3 days in advance
+        // Must be in a confirmable status
+        if (!in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
+            return false;
+        }
+
+        // Can't confirm more than 5 days in advance (3 days before reservation)
+        if (!$reservation->reserved_at->subDays(5)->isNowOrPast()) {
+            return false;
+        }
+
+        // User can confirm their own reservation OR have manage permission
+        // Check both user_id (direct owner) and reservable_id (polymorphic owner)
+        $isOwnReservation = (int) $reservation->user_id === (int) $user->getKey()
+            || (int) $reservation->reservable_id === (int) $user->getKey();
+        $canManage = $user->can('manage reservations');
+
+        return $isOwnReservation || $canManage;
     }
 
     /**
      * Confirm a scheduled or reserved reservation.
      *
      * For Scheduled reservations: Credits were already deducted at scheduling time.
-     * For Reserved reservations: Credits are deducted now at confirmation time.
+     * For Reserved reservations: Credits are deducted now via ReservationConfirmed event.
+     *
+     * NOTE: Credit deduction for Reserved status is handled by Finance module via
+     * ReservationConfirmed event listener.
      */
     public function handle(RehearsalReservation $reservation, bool $notify_user = true): RehearsalReservation
     {
@@ -40,32 +55,18 @@ class ConfirmReservation
 
         $user = $reservation->getResponsibleUser();
 
-        // Complete the database transaction first
-        $reservation = DB::transaction(function () use ($reservation, $user) {
-            // For Reserved status, deduct credits now (they weren't deducted at creation)
-            if ($reservation->status === ReservationStatus::Reserved && $reservation->free_hours_used > 0) {
-                $freeBlocks = Reservation::hoursToBlocks($reservation->free_hours_used);
-                if ($freeBlocks > 0) {
-                    $user->deductCredit(
-                        $freeBlocks,
-                        CreditType::FreeHours,
-                        'reservation_usage',
-                        $reservation->id
-                    );
-                }
-            }
+        // Capture previous status for event
+        $previousStatus = $reservation->status;
 
+        // Complete the database transaction first
+        $reservation = DB::transaction(function () use ($reservation, $previousStatus) {
             // Update status to confirmed
             $reservation->update([
                 'status' => ReservationStatus::Confirmed,
             ]);
 
-            // Mark payment as not applicable if cost is zero
-            if ($reservation->cost->isZero()) {
-                $reservation->update([
-                    'payment_status' => PaymentStatus::NotApplicable,
-                ]);
-            }
+            // Fire event for Finance module to deduct deferred credits (Reserved → Confirmed)
+            ReservationConfirmed::dispatch($reservation, $previousStatus);
 
             return $reservation->fresh();
         });
@@ -79,16 +80,6 @@ class ConfirmReservation
             Log::error('Failed to send reservation confirmation email', [
                 'reservation_id' => $reservation->id,
                 'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        // Sync to Google Calendar outside transaction - don't let sync failures affect the confirmation
-        try {
-            SyncReservationToGoogleCalendar::run($reservation, 'update');
-        } catch (\Exception $e) {
-            Log::error('Failed to sync reservation to Google Calendar', [
-                'reservation_id' => $reservation->id,
                 'error' => $e->getMessage(),
             ]);
         }

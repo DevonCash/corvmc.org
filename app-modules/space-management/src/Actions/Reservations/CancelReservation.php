@@ -2,11 +2,9 @@
 
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
-use App\Actions\GoogleCalendar\SyncReservationToGoogleCalendar;
-use App\Enums\CreditType;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Events\ReservationCancelled;
 use App\Filament\Actions\Action;
-use App\Models\CreditTransaction;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Notifications\ReservationCancelledNotification;
@@ -22,6 +20,9 @@ class CancelReservation
 
     /**
      * Cancel a reservation.
+     *
+     * NOTE: Credit refunds are handled by Finance module via
+     * ReservationCancelled event listener. This action only handles status changes.
      */
     public function handle(Reservation $reservation, ?string $reason = null): Reservation
     {
@@ -34,37 +35,12 @@ class CancelReservation
 
         $reservation->update([
             'status' => ReservationStatus::Cancelled,
-            'notes' => $reservation->notes.($reason ? "\nCancellation reason: ".$reason : ''),
+            'cancellation_reason' => $reason,
         ]);
 
-        // Refund credits if this was a rehearsal reservation with free hours used
-        // Only refund for Scheduled/Confirmed status (Reserved status never had credits deducted)
-        if ($reservation instanceof RehearsalReservation &&
-            $reservation->free_hours_used > 0 &&
-            in_array($originalStatus->value, ['pending', 'confirmed'])) {
-            $user = $reservation->getResponsibleUser();
-
-            if ($user) {
-                // Find the original deduction transaction
-                $deductionTransaction = CreditTransaction::where('user_id', $user->id)
-                    ->where('credit_type', CreditType::FreeHours->value)
-                    ->where('source', 'reservation_usage')
-                    ->where('source_id', $reservation->id)
-                    ->where('amount', '<', 0)
-                    ->first();
-
-                if ($deductionTransaction) {
-                    // Refund the credits (add back the absolute value)
-                    $blocksToRefund = abs($deductionTransaction->amount);
-                    $user->addCredit(
-                        $blocksToRefund,
-                        CreditType::FreeHours,
-                        'reservation_cancellation',
-                        $reservation->id,
-                        "Refund for cancelled reservation #{$reservation->id}"
-                    );
-                }
-            }
+        // Fire event for Finance module to handle credit refunds
+        if ($reservation instanceof RehearsalReservation) {
+            ReservationCancelled::dispatch($reservation, $originalStatus);
         }
 
         // Send cancellation notification to responsible user
@@ -79,16 +55,6 @@ class CancelReservation
                     'error' => $e->getMessage(),
                 ]);
             }
-        }
-
-        // Delete from Google Calendar
-        try {
-            SyncReservationToGoogleCalendar::run($reservation, 'delete');
-        } catch (\Exception $e) {
-            Log::error('Failed to delete cancelled reservation from Google Calendar', [
-                'reservation_id' => $reservation->id,
-                'error' => $e->getMessage(),
-            ]);
         }
 
         return $reservation;

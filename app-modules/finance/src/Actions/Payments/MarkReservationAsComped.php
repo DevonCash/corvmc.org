@@ -2,8 +2,9 @@
 
 namespace CorvMC\Finance\Actions\Payments;
 
-use App\Enums\PaymentStatus;
+use CorvMC\SpaceManagement\Enums\PaymentStatus;
 use App\Filament\Actions\Action;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Collection;
@@ -15,12 +16,18 @@ class MarkReservationAsComped
 
     public function handle(Reservation $reservation, ?string $notes = null): void
     {
+        // Update legacy fields on reservation
         $reservation->update([
             'payment_status' => PaymentStatus::Comped,
             'payment_method' => 'comp',
             'paid_at' => now(),
             'payment_notes' => $notes,
         ]);
+
+        // Update Charge record if exists
+        if ($reservation instanceof RehearsalReservation && $reservation->charge) {
+            $reservation->charge->markAsComped($notes);
+        }
     }
 
     public static function filamentAction(): Action

@@ -2,8 +2,8 @@
 
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
-use App\Enums\CreditType;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Events\ReservationCreated;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
@@ -22,11 +22,14 @@ class CreateReservation
      * Create a new reservation.
      *
      * Reservations can be created with different statuses:
-     * - Scheduled: Standard reservation, credits deducted immediately
+     * - Scheduled: Standard reservation, credits deducted immediately via Finance listener
      * - Reserved: Recurring instance, credits deducted at confirmation
      * - Confirmed: Pre-confirmed reservation
      *
      * For immediate reservations (< 3 days), auto-confirmation is triggered.
+     *
+     * NOTE: Pricing and credit deduction are handled by Finance module via
+     * ReservationCreated event listener. This action only handles scheduling.
      */
     public function handle(User $user, Carbon $startTime, Carbon $endTime, array $options = []): RehearsalReservation
     {
@@ -40,19 +43,17 @@ class CreateReservation
         $status = $options['status'] ?? ReservationStatus::Scheduled;
 
         $reservation = DB::transaction(function () use ($user, $startTime, $endTime, $options, $status) {
-            // Calculate cost with available credits
-            $costCalculation = CalculateReservationCost::run($user, $startTime, $endTime);
+            // Calculate hours for display/tracking (pricing handled by Finance)
+            $hours = $startTime->diffInMinutes($endTime) / 60;
 
-            // Create reservation first so we have an ID for credit tracking
+            // Create reservation (scheduling only - no pricing/credit logic)
             $reservation = RehearsalReservation::create([
                 'user_id' => $user->id,
                 'reservable_type' => User::class,
                 'reservable_id' => $user->id,
                 'reserved_at' => $startTime,
                 'reserved_until' => $endTime,
-                'cost' => $costCalculation['cost'],
-                'hours_used' => $costCalculation['total_hours'],
-                'free_hours_used' => $costCalculation['free_hours'],
+                'hours_used' => $hours,
                 'status' => $status,
                 'notes' => $options['notes'] ?? null,
                 'is_recurring' => $options['is_recurring'] ?? false,
@@ -61,24 +62,10 @@ class CreateReservation
                 'instance_date' => $options['instance_date'] ?? null,
             ]);
 
-            // Deduct credits immediately for Scheduled/Confirmed status
-            // Reserved status defers credit deduction until confirmation
-            $freeBlocks = Reservation::hoursToBlocks($costCalculation['free_hours']);
-            if ($freeBlocks > 0 && $status !== ReservationStatus::Reserved) {
-                $user->deductCredit(
-                    $freeBlocks,
-                    CreditType::FreeHours,
-                    'reservation_usage',
-                    $reservation->id
-                );
-            }
-
-            // If cost is zero after credit deduction, mark payment as not applicable
-            if ($reservation->cost->isZero()) {
-                $reservation->update([
-                    'payment_status' => \CorvMC\SpaceManagement\Enums\PaymentStatus::NotApplicable,
-                ]);
-            }
+            // Fire event for Finance module to create Charge and handle credits
+            // Defer credits for Reserved status (deducted at confirmation)
+            $deferCredits = $status === ReservationStatus::Reserved;
+            ReservationCreated::dispatch($reservation, $deferCredits);
 
             return $reservation;
         });
