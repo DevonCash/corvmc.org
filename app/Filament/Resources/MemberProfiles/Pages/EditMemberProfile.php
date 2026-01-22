@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\MemberProfiles\Pages;
 
-use App\Actions\MemberProfiles\DeleteMemberProfile as DeleteMemberProfileAction;
-use App\Actions\MemberProfiles\UpdateMemberProfile as UpdateMemberProfileAction;
+use CorvMC\Membership\Actions\MemberProfiles\DeleteMemberProfile as DeleteMemberProfileAction;
+use CorvMC\Membership\Actions\MemberProfiles\UpdateMemberProfile as UpdateMemberProfileAction;
 use App\Filament\Resources\MemberProfiles\MemberProfileResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;

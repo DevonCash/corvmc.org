@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Bands\Pages;
 
-use App\Actions\Bands\CreateBand;
+use CorvMC\Membership\Actions\Bands\CreateBand;
 use App\Filament\Resources\Bands\BandResource;
 use App\Filament\Resources\Bands\Widgets\PendingBandInvitationsWidget;
 use App\Models\Band;

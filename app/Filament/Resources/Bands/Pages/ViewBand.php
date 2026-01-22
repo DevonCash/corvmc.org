@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Bands\Pages;
 
-use App\Actions\Bands\AddBandMember;
+use CorvMC\Membership\Actions\Bands\AddBandMember;
 use App\Filament\Actions\ReportContentAction;
 use App\Filament\Resources\Bands\BandResource;
 use App\Models\User;

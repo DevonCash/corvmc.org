@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
-use App\Actions\Users\CreateUser as CreateUserAction;
+use CorvMC\Membership\Actions\Users\CreateUser as CreateUserAction;
 use App\Filament\Resources\Users\UserResource;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;

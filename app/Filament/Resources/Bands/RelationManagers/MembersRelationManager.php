@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Bands\RelationManagers;
 
-use App\Actions\Bands\AcceptBandInvitation;
-use App\Actions\Bands\AddBandMember;
-use App\Actions\Bands\CancelBandInvitation;
-use App\Actions\Bands\DeclineBandInvitation;
-use App\Actions\Bands\RemoveBandMember;
-use App\Actions\Bands\UpdateBandMember;
+use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
+use CorvMC\Membership\Actions\Bands\AddBandMember;
+use CorvMC\Membership\Actions\Bands\CancelBandInvitation;
+use CorvMC\Membership\Actions\Bands\DeclineBandInvitation;
+use CorvMC\Membership\Actions\Bands\RemoveBandMember;
+use CorvMC\Membership\Actions\Bands\UpdateBandMember;
 use App\Models\User;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Enums\FontWeight;

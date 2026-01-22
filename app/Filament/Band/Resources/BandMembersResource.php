@@ -2,12 +2,12 @@
 
 namespace App\Filament\Band\Resources;
 
-use App\Actions\Bands\AcceptBandInvitation;
-use App\Actions\Bands\AddBandMember;
-use App\Actions\Bands\CancelBandInvitation;
-use App\Actions\Bands\DeclineBandInvitation;
-use App\Actions\Bands\RemoveBandMember;
-use App\Actions\Bands\UpdateBandMember;
+use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
+use CorvMC\Membership\Actions\Bands\AddBandMember;
+use CorvMC\Membership\Actions\Bands\CancelBandInvitation;
+use CorvMC\Membership\Actions\Bands\DeclineBandInvitation;
+use CorvMC\Membership\Actions\Bands\RemoveBandMember;
+use CorvMC\Membership\Actions\Bands\UpdateBandMember;
 use App\Filament\Band\Resources\BandMembersResource\Pages;
 use App\Models\Band;
 use App\Models\BandMember;

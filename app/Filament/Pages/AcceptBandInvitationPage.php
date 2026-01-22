@@ -2,8 +2,8 @@
 
 namespace App\Filament\Pages;
 
-use App\Actions\Bands\AcceptBandInvitation;
-use App\Actions\Bands\DeclineBandInvitation;
+use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
+use CorvMC\Membership\Actions\Bands\DeclineBandInvitation;
 use App\Models\Band;
 use App\Models\BandMember;
 use App\Models\User;

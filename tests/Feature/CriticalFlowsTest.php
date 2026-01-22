@@ -10,9 +10,9 @@
  * Run these after each module migration phase.
  */
 
-use App\Actions\Bands\AcceptBandInvitation;
-use App\Actions\Bands\AddBandMember;
-use App\Actions\Bands\CreateBand;
+use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
+use CorvMC\Membership\Actions\Bands\AddBandMember;
+use CorvMC\Membership\Actions\Bands\CreateBand;
 use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
 use App\Actions\Events\CreateEvent;
 use App\Enums\CreditType;

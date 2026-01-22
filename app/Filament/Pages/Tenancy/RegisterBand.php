@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages\Tenancy;
 
-use App\Actions\Bands\CreateBand;
+use CorvMC\Membership\Actions\Bands\CreateBand;
 use App\Models\Band;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TextInput;

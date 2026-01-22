@@ -2,7 +2,7 @@
 
 namespace App\Filament\Band\Pages;
 
-use App\Actions\Bands\UpdateBand;
+use CorvMC\Membership\Actions\Bands\UpdateBand;
 use App\Filament\Resources\Bands\Schemas\BandForm;
 use App\Models\Band;
 use Filament\Facades\Filament;

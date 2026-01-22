@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
-use App\Actions\Users\DeleteUser as DeleteUserAction;
-use App\Actions\Users\UpdateUser as UpdateUserAction;
+use CorvMC\Membership\Actions\Users\DeleteUser as DeleteUserAction;
+use CorvMC\Membership\Actions\Users\UpdateUser as UpdateUserAction;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use Filament\Actions\Action;

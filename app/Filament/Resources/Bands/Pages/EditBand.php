@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Bands\Pages;
 
-use App\Actions\Bands\DeleteBand as DeleteBandAction;
-use App\Actions\Bands\UpdateBand as UpdateBandAction;
+use CorvMC\Membership\Actions\Bands\DeleteBand as DeleteBandAction;
+use CorvMC\Membership\Actions\Bands\UpdateBand as UpdateBandAction;
 use App\Filament\Resources\Bands\BandResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
