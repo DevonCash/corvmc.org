@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Events\Pages;
 
-use App\Actions\Events\DeleteEvent as DeleteEventAction;
-use App\Actions\Events\UpdateEvent as UpdateEventAction;
+use CorvMC\Events\Actions\DeleteEvent as DeleteEventAction;
+use CorvMC\Events\Actions\UpdateEvent as UpdateEventAction;
 use App\Filament\Resources\Events\EventResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;

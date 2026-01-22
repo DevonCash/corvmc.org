@@ -1,6 +1,6 @@
 <?php
 
-use App\Actions\Events\UpdateEvent;
+use CorvMC\Events\Actions\UpdateEvent;
 use App\Models\Event;
 use Carbon\Carbon;
 

@@ -2,7 +2,7 @@
 
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
-use App\Actions\Events\CreateEvent;
+use CorvMC\Events\Actions\CreateEvent;
 use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use App\Models\Event;

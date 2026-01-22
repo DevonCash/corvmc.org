@@ -2,7 +2,7 @@
 
 namespace App\Actions\RecurringReservations;
 
-use App\Actions\Events\CreateEvent;
+use CorvMC\Events\Actions\CreateEvent;
 use App\Actions\Reservations\CreateReservation;
 use App\Enums\ReservationStatus;
 use App\Models\Event;

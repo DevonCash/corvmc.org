@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Events\Pages;
 
-use App\Actions\Events\CreateEvent as CreateEventAction;
+use CorvMC\Events\Actions\CreateEvent as CreateEventAction;
 use App\Filament\Resources\Events\EventResource;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;

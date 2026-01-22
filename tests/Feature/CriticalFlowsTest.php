@@ -14,12 +14,13 @@ use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
 use CorvMC\Membership\Actions\Bands\AddBandMember;
 use CorvMC\Membership\Actions\Bands\CreateBand;
 use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
-use App\Actions\Events\CreateEvent;
+use CorvMC\Events\Actions\CreateEvent;
 use App\Enums\CreditType;
 use App\Models\Band;
-use App\Models\Event;
 use App\Models\User;
 use App\Models\Venue;
+use CorvMC\Events\Exceptions\SchedulingConflictException;
+use CorvMC\Events\Models\Event;
 use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
 use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use CorvMC\SpaceManagement\Actions\Reservations\GetAllConflicts;
@@ -232,7 +233,7 @@ describe('Flow 2: Create Event with Conflict Checking', function () {
             'end_datetime' => $endTime,
             'venue_id' => $this->cmcVenue->id,
             'organizer_id' => $this->organizer->id,
-        ]))->toThrow(\InvalidArgumentException::class, 'conflicts with existing reservation');
+        ]))->toThrow(SchedulingConflictException::class);
     });
 
     it('allows event creation at external venue regardless of CMC conflicts', function () {
