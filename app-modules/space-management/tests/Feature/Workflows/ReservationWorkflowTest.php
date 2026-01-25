@@ -3,6 +3,7 @@
 use App\Enums\CreditType;
 use App\Models\User;
 use Carbon\Carbon;
+use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
 use CorvMC\SpaceManagement\Actions\Reservations\CheckTimeSlotAvailability;
 use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
@@ -30,7 +31,7 @@ describe('Reservation Workflow: Create Single Reservation', function () {
         expect($reservation->reservable_id)->toBe($user->id);
         expect((float) $reservation->hours_used)->toBe(2.0);
         expect($reservation->status)->toBe(ReservationStatus::Scheduled);
-        expect($reservation->cost->getMinorAmount()->toInt())->toBe(3000); // $15/hour * 2 hours = $30
+        expect($reservation->charge->net_amount->getMinorAmount()->toInt())->toBe(3000); // $15/hour * 2 hours = $30
     });
 
     it('creates a free reservation for sustaining member using credits', function () {
@@ -45,9 +46,9 @@ describe('Reservation Workflow: Create Single Reservation', function () {
 
         $reservation = CreateReservation::run($user, $startTime, $endTime);
 
-        expect($reservation->cost->getAmount()->toInt())->toBe(0);
+        expect($reservation->charge->net_amount->getMinorAmount()->toInt())->toBe(0);
         expect((float) $reservation->free_hours_used)->toBe(2.0);
-        expect($reservation->payment_status)->toBe('n/a');
+        expect($reservation->getChargeStatus())->toBe(ChargeStatus::Paid); // Free hours = auto-paid
 
         // Credits should be deducted (4 blocks for 2 hours)
         $newBalance = $user->fresh()->getCreditBalance(CreditType::FreeHours);

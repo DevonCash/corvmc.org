@@ -3,8 +3,6 @@
 namespace CorvMC\Finance\Listeners;
 
 use App\Enums\CreditType;
-use Brick\Money\Money;
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\Finance\Actions\Pricing\CalculatePriceForUser;
 use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\Finance\Enums\ChargeStatus;
@@ -61,9 +59,8 @@ class HandleChargeableCreated
                 ]);
             }
 
-            // Update legacy fields on reservation for backward compatibility
-            // TODO: Remove this once Step 7 migration is complete
-            $this->updateLegacyFields($chargeable, $pricing, $charge);
+            // Update derived fields on reservation (cost, free_hours_used)
+            $this->updateDerivedFields($chargeable, $pricing);
 
             // Deduct credits if not deferred
             if (! $deferCredits && ! empty($pricing->credits_applied)) {
@@ -73,30 +70,21 @@ class HandleChargeableCreated
     }
 
     /**
-     * Update legacy payment fields on reservation for backward compatibility.
+     * Update derived fields on chargeable (free_hours_used) if supported.
      *
      * @param  Chargeable&Model  $chargeable
      * @param  \CorvMC\Finance\Data\PriceCalculationData  $pricing
-     * @param  Charge  $charge
      */
-    protected function updateLegacyFields($chargeable, $pricing, Charge $charge): void
+    protected function updateDerivedFields($chargeable, $pricing): void
     {
-        if (! $chargeable instanceof RehearsalReservation) {
-            return;
+        // Calculate free hours from credits applied if the model supports it
+        if ($chargeable->isFillable('free_hours_used')) {
+            $freeHoursBlocks = $pricing->credits_applied['free_hours'] ?? 0;
+            $minutesPerBlock = config('finance.credits.minutes_per_block', 30);
+            $chargeable->updateQuietly([
+                'free_hours_used' => ($freeHoursBlocks * $minutesPerBlock) / 60,
+            ]);
         }
-
-        // Calculate free hours from credits applied
-        $freeHoursBlocks = $pricing->credits_applied['free_hours'] ?? 0;
-        $minutesPerBlock = config('finance.credits.minutes_per_block', 30);
-        $freeHours = ($freeHoursBlocks * $minutesPerBlock) / 60;
-
-        // Update reservation with legacy payment fields
-        // Note: cost field uses MoneyCast which expects Money object or dollar amount
-        $chargeable->updateQuietly([
-            'cost' => Money::ofMinor($pricing->net_amount, 'USD'),
-            'free_hours_used' => $freeHours,
-            'payment_status' => $pricing->net_amount === 0 ? 'n/a' : 'unpaid',
-        ]);
     }
 
     /**

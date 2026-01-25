@@ -45,11 +45,11 @@ class ReservationInfolist
                     ->columns(3)
                     ->schema([
                         Flex::make([
-                            TextEntry::make('cost')
+                            TextEntry::make('charge.net_amount')
                                 ->label('Total Cost')
-                                ->state(fn(?Model $record) => ($record->cost?->getMinorAmount()->toFloat() ?? 0.0) / 100.0)
+                                ->state(fn(?Model $record) => ($record->charge?->net_amount?->getMinorAmount()->toFloat() ?? 0.0) / 100.0)
                                 ->money('USD'),
-                            TextEntry::make('payment_status')->badge()
+                            TextEntry::make('charge.status')->badge()
                         ])->columnSpanFull(),
                         TextEntry::make('hours_used')->suffix(' hrs'),
                         TextEntry::make('free_hours_used')

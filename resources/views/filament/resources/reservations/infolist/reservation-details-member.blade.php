@@ -68,14 +68,14 @@
 
             <div class="flex justify-between items-center text-lg font-semibold border-t border-gray-200 dark:border-gray-700 pt-3">
                 <span>Total Cost</span>
-                <span>{{ $record->cost_display }}</span>
+                <span>{{ $record->charge?->net_amount?->formatTo('en_US') ?? 'Free' }}</span>
             </div>
 
-            @if ($record->cost->isPositive())
+            @if ($record->charge?->net_amount?->isPositive())
                 <div class="flex justify-between items-center">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Payment Status</span>
-                    <x-filament::badge :color="$record->payment_status->getColor()">
-                        {{ $record->payment_status->getLabel() }}
+                    <x-filament::badge :color="$record->charge->status->getColor()">
+                        {{ $record->charge->status->getLabel() }}
                     </x-filament::badge>
                 </div>
             @endif

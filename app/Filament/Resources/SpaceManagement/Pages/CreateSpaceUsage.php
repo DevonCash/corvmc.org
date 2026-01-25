@@ -47,7 +47,6 @@ class CreateSpaceUsage extends CreateRecord
                 'status' => $data['status'] ?? 'confirmed',
                 'notes' => $data['notes'] ?? null,
                 'is_recurring' => $data['is_recurring'] ?? false,
-                'payment_status' => $data['payment_status'] ?? 'unpaid',
             ]
         );
 

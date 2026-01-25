@@ -18,6 +18,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use CorvMC\Finance\Enums\ChargeStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -54,15 +55,9 @@ class SpaceManagementTable
                     ->options(ReservationStatus::class)
                     ->multiple(),
 
-                SelectFilter::make('payment_status')
+                SelectFilter::make('charge.status')
                     ->label('Payment Status')
-                    ->options([
-                        'unpaid' => 'Unpaid',
-                        'paid' => 'Paid',
-                        'refunded' => 'Refunded',
-                        'comped' => 'Comped',
-                        'n/a' => 'N/A',
-                    ])
+                    ->options(ChargeStatus::class)
                     ->multiple(),
 
                 SelectFilter::make('type')

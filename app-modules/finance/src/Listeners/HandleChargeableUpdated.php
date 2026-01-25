@@ -3,8 +3,6 @@
 namespace CorvMC\Finance\Listeners;
 
 use App\Enums\CreditType;
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use Brick\Money\Money;
 use CorvMC\Finance\Actions\Pricing\CalculatePriceForUser;
 use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\Finance\Enums\ChargeStatus;
@@ -82,36 +80,27 @@ class HandleChargeableUpdated
                 ]);
             }
 
-            // Update legacy fields for backward compatibility
-            $this->updateLegacyFields($chargeable, $pricing);
+            // Update derived fields on reservation
+            $this->updateDerivedFields($chargeable, $pricing);
         });
     }
 
     /**
-     * Update legacy payment fields on reservation for backward compatibility.
+     * Update derived fields on chargeable (free_hours_used) if supported.
      *
      * @param  Chargeable&Model  $chargeable
      * @param  \CorvMC\Finance\Data\PriceCalculationData  $pricing
      */
-    protected function updateLegacyFields($chargeable, $pricing): void
+    protected function updateDerivedFields($chargeable, $pricing): void
     {
-        if (! $chargeable instanceof RehearsalReservation) {
-            return;
+        // Calculate free hours from credits applied if the model supports it
+        if ($chargeable->isFillable('free_hours_used')) {
+            $freeHoursBlocks = $pricing->credits_applied['free_hours'] ?? 0;
+            $minutesPerBlock = config('finance.credits.minutes_per_block', 30);
+            $chargeable->updateQuietly([
+                'free_hours_used' => ($freeHoursBlocks * $minutesPerBlock) / 60,
+            ]);
         }
-
-        // Calculate free hours from credits applied
-        $freeHoursBlocks = $pricing->credits_applied['free_hours'] ?? 0;
-        $minutesPerBlock = config('finance.credits.minutes_per_block', 30);
-        $freeHours = ($freeHoursBlocks * $minutesPerBlock) / 60;
-
-        // Update reservation with legacy payment fields
-        $chargeable->updateQuietly([
-            'cost' => Money::ofMinor($pricing->net_amount, 'USD'),
-            'free_hours_used' => $freeHours,
-            'payment_status' => $pricing->net_amount === 0
-                ? 'n/a'
-                : ($chargeable->payment_status ?? 'unpaid'),
-        ]);
     }
 
     /**

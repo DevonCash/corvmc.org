@@ -21,27 +21,18 @@ class HandleSuccessfulPayment
     public function handle(RehearsalReservation $reservation, string $sessionId): bool
     {
         // Idempotency check - skip if already paid
-        if ($reservation->charge && !$reservation->charge->requiresPayment()) {
-            return true;
-        }
-        if ($reservation->payment_status === 'paid') {
+        if ($reservation->isPaid()) {
             return true;
         }
 
         $user = $reservation->getResponsibleUser();
 
         // Update Charge record
-        if ($reservation->charge) {
-            $reservation->charge->markAsPaid('stripe', $sessionId, "Paid via Stripe checkout");
-        }
+        $reservation->charge?->markAsPaid('stripe', $sessionId, "Paid via Stripe checkout");
 
         // Confirm the reservation
         $reservation->update([
             'status' => ReservationStatus::Confirmed,
-            'payment_status' => 'paid',
-            'payment_method' => 'stripe',
-            'paid_at' => now(),
-            'payment_notes' => "Checkout session: {$sessionId}",
         ]);
 
         $reservation->refresh();

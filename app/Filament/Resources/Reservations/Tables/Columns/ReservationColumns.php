@@ -93,27 +93,7 @@ class ReservationColumns
 
     public static function costDisplay(): TextColumn
     {
-        return  TextColumn::make('cost')
-            ->iconPosition(IconPosition::After)
-            ->icon(fn(Reservation $record) => match ($record->payment_status) {
-                'paid' => 'tabler-check',
-                'unpaid' => 'tabler-clock',
-                'refunded' => 'tabler-arrow-back',
-                'comped' => 'tabler-gift',
-                'n/a' => 'tabler-minus',
-                default => 'tabler-question-mark',
-            })
-            ->iconColor(fn(Reservation $record) => match ($record->payment_status) {
-                'paid' => 'success',
-                'unpaid' => 'warning',
-                'refunded' => 'info',
-                'comped' => 'primary',
-                'n/a' => 'gray',
-                default => 'gray',
-            })
-            ->label('Cost')
-            ->formatStateUsing(fn($state) => $state?->formatTo('en_US'))
-            ->sortable(['cost']);
+        return  TextColumn::make('charge.status');
     }
 
     public static function createdAt(): TextColumn

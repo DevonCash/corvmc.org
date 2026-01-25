@@ -1,47 +1,78 @@
 <?php
 
+use Brick\Money\Money;
+use CorvMC\Finance\Enums\ChargeStatus;
+use CorvMC\Finance\Models\Charge;
 use CorvMC\SpaceManagement\Actions\Reservations\HandleSuccessfulPayment;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use App\Models\User;
+
+beforeEach(function () {
+    $this->seed(\Database\Seeders\PermissionSeeder::class);
+});
 
 it('updates payment status to paid for unpaid reservation', function () {
+    $user = User::factory()->create();
+
     $reservation = RehearsalReservation::factory()
         ->pending()
         ->create([
-            'cost' => 3000, // $30.00
-            'payment_status' => 'unpaid',
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
         ]);
 
-    expect($reservation->payment_status)->toBe('unpaid');
+    // Create a pending charge for the reservation
+    Charge::create([
+        'user_id' => $user->id,
+        'chargeable_type' => RehearsalReservation::class,
+        'chargeable_id' => $reservation->id,
+        'amount' => Money::ofMinor(3000, 'USD'),
+        'net_amount' => Money::ofMinor(3000, 'USD'),
+        'status' => ChargeStatus::Pending,
+    ]);
+
+    expect($reservation->getChargeStatus())->toBe(ChargeStatus::Pending);
 
     HandleSuccessfulPayment::run($reservation, 'cs_test_session_123');
 
     $reservation->refresh();
 
-    expect($reservation->payment_status)->toBe('paid')
+    expect($reservation->getChargeStatus())->toBe(ChargeStatus::Paid)
         ->and($reservation->status)->toBe(ReservationStatus::Confirmed)
-        ->and($reservation->payment_method)->toBe('stripe')
-        ->and($reservation->paid_at)->not->toBeNull();
+        ->and($reservation->charge->payment_method)->toBe('stripe')
+        ->and($reservation->charge->paid_at)->not->toBeNull();
 });
 
 it('is idempotent - skips if already paid', function () {
+    $user = User::factory()->create();
     $paidAt = now()->subHour();
 
     $reservation = RehearsalReservation::factory()
         ->confirmed()
         ->create([
-            'cost' => 3000,
-            'payment_status' => 'paid',
-            'payment_method' => 'stripe',
-            'paid_at' => $paidAt,
-            'payment_notes' => 'Original payment',
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
         ]);
+
+    // Create a paid charge for the reservation
+    Charge::create([
+        'user_id' => $user->id,
+        'chargeable_type' => RehearsalReservation::class,
+        'chargeable_id' => $reservation->id,
+        'amount' => Money::ofMinor(3000, 'USD'),
+        'net_amount' => Money::ofMinor(3000, 'USD'),
+        'status' => ChargeStatus::Paid,
+        'payment_method' => 'stripe',
+        'paid_at' => $paidAt,
+        'notes' => 'Original payment',
+    ]);
 
     HandleSuccessfulPayment::run($reservation, 'cs_test_different_session');
 
     $reservation->refresh();
 
     // Should not have changed
-    expect($reservation->payment_notes)->toBe('Original payment')
-        ->and($reservation->paid_at->timestamp)->toBe($paidAt->timestamp);
+    expect($reservation->charge->notes)->toBe('Original payment')
+        ->and($reservation->charge->paid_at->timestamp)->toBe($paidAt->timestamp);
 });

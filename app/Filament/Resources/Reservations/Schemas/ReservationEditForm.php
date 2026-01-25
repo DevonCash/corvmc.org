@@ -88,18 +88,6 @@ class ReservationEditForm
                             ->options(ReservationStatus::class)
                             ->default(ReservationStatus::Confirmed)
                             ->required(),
-
-                        Select::make('payment_status')
-                            ->label('Payment Status')
-                            ->options([
-                                'unpaid' => 'Unpaid',
-                                'paid' => 'Paid',
-                                'refunded' => 'Refunded',
-                                'comped' => 'Comped',
-                                'n/a' => 'N/A',
-                            ])
-                            ->default('unpaid')
-                            ->required(),
                     ])
                     ->visible(fn () => User::me()?->can('manage practice space'))
                     ->columnSpan(2),

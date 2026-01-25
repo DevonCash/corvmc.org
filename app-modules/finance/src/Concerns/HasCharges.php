@@ -26,7 +26,7 @@ trait HasCharges
      *
      * Delegates to the charge record if it exists.
      */
-    public function requiresChargePayment(): bool
+    public function needsPayment(): bool
     {
         return $this->charge?->requiresPayment() ?? false;
     }
@@ -58,7 +58,7 @@ trait HasCharges
     /**
      * Check if payment is settled (paid, comped, or refunded).
      */
-    public function isPaymentSettled(): bool
+    public function isPaid(): bool
     {
         return $this->charge?->status?->isSettled() ?? false;
     }

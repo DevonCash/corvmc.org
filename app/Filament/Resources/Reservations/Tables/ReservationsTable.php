@@ -22,6 +22,7 @@ use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use CorvMC\Finance\Enums\ChargeStatus;
 use Illuminate\Database\Eloquent\Builder;
 
 class ReservationsTable
@@ -59,14 +60,9 @@ class ReservationsTable
                     ])
                     ->multiple(),
 
-                SelectFilter::make('payment_status')
+                SelectFilter::make('charge.status')
                     ->label('Payment Status')
-                    ->options([
-                        'unpaid' => 'Unpaid',
-                        'paid' => 'Paid',
-                        'comped' => 'Comped',
-                        'refunded' => 'Refunded',
-                    ])
+                    ->options(ChargeStatus::class)
                     ->multiple(),
 
                 Filter::make('date_range')

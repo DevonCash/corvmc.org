@@ -3,7 +3,7 @@
 namespace App\Actions\Payments;
 
 use App\Filament\Actions\Action;
-use CorvMC\SpaceManagement\Models\Reservation;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -12,14 +12,9 @@ class MarkReservationAsComped
 {
     use AsAction;
 
-    public function handle(Reservation $reservation, ?string $notes = null): void
+    public function handle(RehearsalReservation $reservation, ?string $notes = null): void
     {
-        $reservation->update([
-            'payment_status' => 'comped',
-            'payment_method' => 'comp',
-            'paid_at' => now(),
-            'payment_notes' => $notes,
-        ]);
+        $reservation->charge?->markAsComped($notes);
     }
 
     public static function filamentAction(): Action
@@ -29,7 +24,7 @@ class MarkReservationAsComped
             ->icon('tabler-gift')
             ->color('info')
             ->authorize('manage reservations')
-            ->visible(fn (Reservation $record) => $record->requiresPayment())
+            ->visible(fn (RehearsalReservation $record) => $record->needsPayment())
             ->schema([
                 Textarea::make('comp_reason')
                     ->label('Comp Reason')
@@ -37,7 +32,7 @@ class MarkReservationAsComped
                     ->required()
                     ->rows(2),
             ])
-            ->action(function (Reservation $record, array $data) {
+            ->action(function (RehearsalReservation $record, array $data) {
                 static::run($record, $data['comp_reason']);
 
                 \Filament\Notifications\Notification::make()
@@ -47,6 +42,9 @@ class MarkReservationAsComped
             });
     }
 
+    /**
+     * @param  Collection<int, RehearsalReservation>  $records
+     */
     public static function filamentBulkAction(): Action
     {
         return Action::make('mark_comped_bulk')
@@ -64,13 +62,13 @@ class MarkReservationAsComped
             ->action(function (Collection $records, array $data) {
                 $count = 0;
                 foreach ($records as $record) {
-                    if ($record->requiresPayment()) {
+                    if ($record instanceof RehearsalReservation && $record->needsPayment()) {
                         static::run($record, $data['comp_reason']);
                         $count++;
                     }
                 }
             })
             ->successNotificationTitle('Reservations comped')
-            ->successNotification(fn (Collection $records) => $records->filter(fn ($r) => $r->requiresPayment())->count().' reservations marked as comped');
+            ->successNotification(fn (Collection $records) => $records->filter(fn ($r) => $r instanceof RehearsalReservation && $r->needsPayment())->count().' reservations marked as comped');
     }
 }

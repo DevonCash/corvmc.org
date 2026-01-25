@@ -6,7 +6,6 @@ use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
 use App\Filament\Actions\Action;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Collection;
@@ -16,21 +15,16 @@ class MarkReservationAsPaid
 {
     use AsAction;
 
-    public function handle(Reservation $reservation, ?string $paymentMethod = null, ?string $notes = null): void
+    public function handle(RehearsalReservation $reservation, ?string $paymentMethod = null, ?string $notes = null): void
     {
         // If the reservation is scheduled or reserved, confirm it first
-        if ($reservation instanceof RehearsalReservation &&
-            in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
+        if (in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
             $reservation = ConfirmReservation::run($reservation);
             $reservation->refresh();
         }
 
-        $reservation->update([
-            'payment_status' => 'paid',
-            'payment_method' => $paymentMethod,
-            'paid_at' => now(),
-            'payment_notes' => $notes,
-        ]);
+        // Update charge record
+        $reservation->charge?->markAsPaid($paymentMethod ?? 'manual', null, $notes);
     }
 
     public static function filamentAction(): Action
@@ -40,7 +34,7 @@ class MarkReservationAsPaid
             ->icon('tabler-cash')
             ->color('success')
             ->authorize('manage reservations')
-            ->visible(fn (Reservation $record) => $record->requiresPayment())
+            ->visible(fn (RehearsalReservation $record) => $record->needsPayment())
             ->schema([
                 Select::make('payment_method')
                     ->label('Payment Method')
@@ -59,7 +53,7 @@ class MarkReservationAsPaid
                     ->placeholder('Optional notes about the payment...')
                     ->rows(2),
             ])
-            ->action(function (Reservation $record, array $data) {
+            ->action(function (RehearsalReservation $record, array $data) {
                 static::run($record, $data['payment_method'], $data['payment_notes'] ?? null);
 
                 \Filament\Notifications\Notification::make()
@@ -69,6 +63,9 @@ class MarkReservationAsPaid
             });
     }
 
+    /**
+     * @param  Collection<int, RehearsalReservation>  $records
+     */
     public static function filamentBulkAction(): Action
     {
         return Action::make('mark_paid_bulk')
@@ -97,13 +94,13 @@ class MarkReservationAsPaid
             ->action(function (Collection $records, array $data) {
                 $count = 0;
                 foreach ($records as $record) {
-                    if ($record->requiresPayment()) {
+                    if ($record instanceof RehearsalReservation && $record->needsPayment()) {
                         static::run($record, $data['payment_method'], $data['payment_notes'] ?? null);
                         $count++;
                     }
                 }
             })
             ->successNotificationTitle('Payments recorded')
-            ->successNotification(fn (Collection $records, array $data) => $records->filter(fn ($r) => $r->requiresPayment())->count().' reservations marked as paid');
+            ->successNotification(fn (Collection $records, array $data) => $records->filter(fn ($r) => $r instanceof RehearsalReservation && $r->needsPayment())->count().' reservations marked as paid');
     }
 }

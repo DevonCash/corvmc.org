@@ -4,7 +4,6 @@ namespace CorvMC\SpaceManagement\Models;
 
 use App\Models\User;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
-use CorvMC\Support\Casts\MoneyCast;
 use CorvMC\Support\Concerns\HasRecurringSeries;
 use CorvMC\Support\Concerns\HasTimePeriod;
 use Filament\Support\Contracts\HasColor;
@@ -14,7 +13,9 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use CorvMC\Finance\Models\Charge;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -30,10 +31,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $deleted_at
  * @property ReservationStatus $status
- * @property string $payment_status
- * @property string|null $payment_method
- * @property \Illuminate\Support\Carbon|null $paid_at
- * @property string|null $payment_notes
  * @property numeric $hours_used
  * @property numeric $free_hours_used
  * @property bool $is_recurring
@@ -41,7 +38,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property string|null $notes
  * @property \Illuminate\Support\Carbon|null $reserved_at
  * @property \Illuminate\Support\Carbon|null $reserved_until
- * @property \Brick\Money\Money $cost
  * @property int|null $recurring_series_id
  * @property \Illuminate\Support\Carbon|null $instance_date
  * @property string|null $cancellation_reason
@@ -49,13 +45,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property string|null $reservable_type
  * @property int|null $reservable_id
  * @property string|null $google_calendar_event_id
- * @property-read string $cost_display
  * @property-read float $duration
- * @property-read array $payment_status_badge
  * @property-read string $time_range
  * @property-read \CorvMC\Support\Models\RecurringSeries|null $recurringSeries
  * @property-read Model|\Eloquent|null $reservable
  * @property-read \App\Models\User|null $user
+ * @property-read \CorvMC\Finance\Models\Charge|null $charge
  *
  * @method static \Database\Factories\ReservationFactory factory($count = null, $state = [])
  * @method static Builder<static>|Reservation needsAttention()
@@ -82,8 +77,6 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
             'status' => ReservationStatus::class,
             'reserved_at' => 'datetime',
             'reserved_until' => 'datetime',
-            'cost' => MoneyCast::class.':USD',
-            'paid_at' => 'datetime',
             'hours_used' => 'decimal:2',
             'free_hours_used' => 'decimal:2',
             'is_recurring' => 'boolean',
@@ -172,6 +165,16 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the charge for this reservation.
+     * Only RehearsalReservations have charges, but this relationship
+     * is defined here to support queries on the base model.
+     */
+    public function charge(): MorphOne
+    {
+        return $this->morphOne(Charge::class, 'chargeable');
     }
 
     /**
@@ -285,11 +288,15 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         return ($blocks * $minutesPerBlock) / 60;
     }
 
+    /**
+     * Check if this reservation requires payment.
+     *
+     * For RehearsalReservations with charges, this delegates to the charge system.
+     * Override in subclasses that implement Chargeable.
+     */
     public function requiresPayment(): bool
     {
-        return $this->status->isActive()
-            && $this->cost->isPositive()
-            && $this->payment_status === 'unpaid';
+        return false;
     }
 
     /**
@@ -306,9 +313,11 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
                     ->where('reserved_at', '>', now())
                     ->where('reserved_at', '<=', now()->addDays(3));
             })->orWhere(function ($q) {
-                // Past reservations that are unpaid
-                $q->where('payment_status', 'unpaid')
-                    ->where('cost', '>', 0)
+                // Past reservations that are unpaid (check via charges table)
+                $q->whereHas('charge', function ($chargeQuery) {
+                    $chargeQuery->where('status', 'pending')
+                        ->where('net_amount', '>', 0);
+                })
                     ->where('reserved_at', '<', now());
             });
         })->where('status', '!=', 'cancelled');

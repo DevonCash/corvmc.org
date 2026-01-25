@@ -26,8 +26,8 @@ class SpaceStatsWidget extends BaseWidget
 
         $weekHours = $weekReservations->sum('hours_used');
         $weekRevenue = $weekReservations
-            ->filter(fn ($r) => $r instanceof \CorvMC\SpaceManagement\Models\RehearsalReservation && $r->payment_status === 'paid')
-            ->sum(fn ($r) => $r->cost->getMinorAmount()->toInt()) / 100;
+            ->filter(fn ($r) => $r instanceof \CorvMC\SpaceManagement\Models\RehearsalReservation && $r->isPaid())
+            ->sum(fn ($r) => $r->charge?->net_amount?->getMinorAmount()->toInt() ?? 0) / 100;
         $weekReservationCount = $weekReservations->count();
 
         // This week's events using space

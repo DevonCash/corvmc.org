@@ -95,32 +95,19 @@
         <div>
             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
                 Cost & Payment
-                <x-filament::icon :icon="match ($record->payment_status) {
-                    'paid' => match ($record->payment_method) {
-                        'credit_card' => 'tabler-credit-card',
-                        'cash' => 'tabler-cash',
-                        default => 'tabler-check',
-                    },
-                    'unpaid' => $record->reserved_until->isPast()
-                        ? 'tabler-question-circle'
-                        : 'tabler-alert-circle',
-                    default => 'tabler-currency-dollar',
-                }" :class="'size-4 ' .
-                    match ($record->status->value ?? $record->status) {
-                        'confirmed' => 'text-success-500',
-                        'cancelled' => 'text-danger-500',
-                        'scheduled' => 'text-info-500',
-                        'reserved' => 'text-warning-500',
-                        default => 'text-gray-500',
-                    }" />
+                @if ($record->charge)
+                    <x-filament::icon :icon="$record->charge->status->getIcon()" :class="'size-4 text-' . $record->charge->status->getColor() . '-500'" />
+                @else
+                    <x-filament::icon icon="tabler-currency-dollar" class="size-4 text-gray-500" />
+                @endif
             </dt>
             <dd class="mt-1 flex items-center gap-4">
                 <div>
                     <div class="text-lg font-semibold">
-                        @if ($record->cost->isZero())
+                        @if (!$record->charge?->net_amount || $record->charge->net_amount->isZero())
                             Free
                         @else
-                            {{ $record->cost->formatTo('en_US') }}
+                            {{ $record->charge->net_amount->formatTo('en_US') }}
                         @endif
                     </div>
                     <div class="text-sm text-gray-600 dark:text-gray-400">
@@ -131,38 +118,20 @@
                         @endif
                     </div>
                 </div>
-                @if ($record->cost->isPositive())
+                @if ($record->charge?->net_amount?->isPositive())
                     <div class="flex items-center gap-3">
                         <div class="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
-                        @php
-                            $paymentStatusColor = match ($record->payment_status) {
-                                'paid' => 'success',
-                                'unpaid' => 'warning',
-                                'refunded' => 'info',
-                                'comped' => 'primary',
-                                'n/a' => 'gray',
-                                default => 'gray',
-                            };
-                            $paymentStatusLabel = match ($record->payment_status) {
-                                'paid' => 'Paid',
-                                'unpaid' => 'Unpaid',
-                                'refunded' => 'Refunded',
-                                'comped' => 'Comped',
-                                'n/a' => 'N/A',
-                                default => ucfirst($record->payment_status ?? 'Unknown'),
-                            };
-                        @endphp
-                        <x-filament::badge :color="$paymentStatusColor" size="lg">
-                            {{ $paymentStatusLabel }}
+                        <x-filament::badge :color="$record->charge->status->getColor()" size="lg">
+                            {{ $record->charge->status->getLabel() }}
                         </x-filament::badge>
-                        @if ($record->payment_method || $record->paid_at)
+                        @if ($record->charge->payment_method || $record->charge->paid_at)
                             <span class="text-sm text-gray-600 dark:text-gray-400">
-                                @if ($record->payment_method)
-                                    {{ ucfirst($record->payment_method) }}
+                                @if ($record->charge->payment_method)
+                                    {{ ucfirst($record->charge->payment_method) }}
                                 @endif
-                                @if ($record->paid_at)
-                                    @if ($record->payment_method) &middot; @endif
-                                    {{ $record->paid_at->format('M j, Y') }}
+                                @if ($record->charge->paid_at)
+                                    @if ($record->charge->payment_method) &middot; @endif
+                                    {{ $record->charge->paid_at->format('M j, Y') }}
                                 @endif
                             </span>
                         @endif
@@ -180,10 +149,10 @@
         @endif
 
         {{-- Payment Notes (if filled) --}}
-        @if (filled($record->payment_notes))
+        @if (filled($record->charge?->notes))
             <div class="col-span-2 @if(!filled($record->notes)) pt-2 border-t border-gray-200 dark:border-gray-700 @endif">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Payment Notes</dt>
-                <dd class="mt-1 text-base text-gray-900 dark:text-gray-100">{{ $record->payment_notes }}</dd>
+                <dd class="mt-1 text-base text-gray-900 dark:text-gray-100">{{ $record->charge->notes }}</dd>
             </div>
         @endif
     </div>

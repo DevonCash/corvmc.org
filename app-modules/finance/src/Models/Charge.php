@@ -3,6 +3,7 @@
 namespace CorvMC\Finance\Models;
 
 use App\Models\User;
+use Brick\Money\Money;
 use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\Support\Casts\MoneyCast;
@@ -110,9 +111,9 @@ class Charge extends Model
             'user_id' => $chargeable->getBillableUser()->getKey(),
             'chargeable_type' => get_class($chargeable),
             'chargeable_id' => $chargeable->getKey(),
-            'amount' => $amount,
+            'amount' => Money::ofMinor($amount, 'USD'),
             'credits_applied' => $creditsApplied,
-            'net_amount' => $netAmount,
+            'net_amount' => Money::ofMinor($netAmount, 'USD'),
             'status' => ChargeStatus::Pending,
         ]);
     }

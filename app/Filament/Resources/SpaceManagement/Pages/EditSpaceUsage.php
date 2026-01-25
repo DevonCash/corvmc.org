@@ -51,7 +51,6 @@ class EditSpaceUsage extends EditRecord
         $options = [
             'notes' => $data['notes'] ?? null,
             'status' => $data['status'] ?? $record->status,
-            'payment_status' => $data['payment_status'] ?? $record->payment_status,
         ];
 
         return UpdateReservation::run($record, $startTime, $endTime, $options);

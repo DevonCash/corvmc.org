@@ -17,10 +17,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $deleted_at
  * @property \CorvMC\SpaceManagement\Enums\ReservationStatus $status
- * @property string $payment_status
- * @property string|null $payment_method
- * @property \Illuminate\Support\Carbon|null $paid_at
- * @property string|null $payment_notes
  * @property numeric $hours_used
  * @property numeric $free_hours_used
  * @property bool $is_recurring
@@ -28,7 +24,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property string|null $notes
  * @property \Illuminate\Support\Carbon|null $reserved_at
  * @property \Illuminate\Support\Carbon|null $reserved_until
- * @property \Brick\Money\Money $cost
  * @property int|null $recurring_series_id
  * @property \Illuminate\Support\Carbon|null $instance_date
  * @property string|null $cancellation_reason
@@ -44,9 +39,15 @@ class RehearsalReservation extends Reservation implements Chargeable
 {
     use HasCharges, HasFactory;
 
-    protected $attributes = [
-        'payment_status' => 'unpaid',
-    ];
+    /**
+     * Check if this reservation requires payment.
+     *
+     * Delegates to the charge system via HasCharges trait.
+     */
+    public function requiresPayment(): bool
+    {
+        return $this->status->isActive() && $this->needsPayment();
+    }
 
     // STI Abstract Method Implementations
     public function getReservationTypeLabel(): string

@@ -7,6 +7,7 @@ use CorvMC\Finance\Actions\Credits\AdjustCredits;
 use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
 use CorvMC\Finance\Actions\Payments\CalculateFeeCoverage;
 use CorvMC\Finance\Actions\Payments\CalculateTotalWithFeeCoverage;
+use CorvMC\Finance\Enums\ChargeStatus;
 use App\Actions\Payments\MarkReservationAsPaid;
 use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use Illuminate\Support\Facades\Notification;
@@ -111,14 +112,14 @@ describe('Finance Workflow: Payment Processing', function () {
         $endTime = $startTime->copy()->addHours(2);
 
         $reservation = CreateReservation::run($user, $startTime, $endTime);
-        expect($reservation->payment_status)->toBe('unpaid');
+        expect($reservation->getChargeStatus())->toBe(ChargeStatus::Pending);
 
         MarkReservationAsPaid::run($reservation, 'cash', 'Paid in person');
 
         $reservation->refresh();
-        expect($reservation->payment_status)->toBe('paid');
-        expect($reservation->payment_method)->toBe('cash');
-        expect($reservation->paid_at)->not->toBeNull();
+        expect($reservation->getChargeStatus())->toBe(ChargeStatus::Paid);
+        expect($reservation->charge->payment_method)->toBe('cash');
+        expect($reservation->charge->paid_at)->not->toBeNull();
     });
 });
 
