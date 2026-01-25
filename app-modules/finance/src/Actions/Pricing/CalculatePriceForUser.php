@@ -6,7 +6,6 @@ use App\Enums\CreditType;
 use App\Models\User;
 use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\Finance\Data\PriceCalculationData;
-use CorvMC\SpaceManagement\Models\Reservation;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 /**

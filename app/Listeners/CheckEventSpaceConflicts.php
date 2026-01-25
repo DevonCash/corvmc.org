@@ -2,10 +2,10 @@
 
 namespace App\Listeners;
 
-use CorvMC\SpaceManagement\Actions\Reservations\GetAllConflicts;
 use App\Models\Venue;
 use CorvMC\Events\Events\EventScheduling;
 use CorvMC\Events\Exceptions\SchedulingConflictException;
+use CorvMC\SpaceManagement\Contracts\ConflictCheckerInterface;
 
 /**
  * Checks for space reservation conflicts when scheduling an event.
@@ -16,6 +16,10 @@ use CorvMC\Events\Exceptions\SchedulingConflictException;
  */
 class CheckEventSpaceConflicts
 {
+    public function __construct(
+        private readonly ConflictCheckerInterface $conflictChecker
+    ) {}
+
     public function handle(EventScheduling $event): void
     {
         // Only check conflicts for CMC venue events with valid time range
@@ -28,7 +32,7 @@ class CheckEventSpaceConflicts
             return;
         }
 
-        $conflicts = GetAllConflicts::run($event->startTime, $event->endTime);
+        $conflicts = $this->conflictChecker->checkConflicts($event->startTime, $event->endTime);
 
         if ($conflicts['reservations']->isNotEmpty()) {
             throw new SchedulingConflictException(

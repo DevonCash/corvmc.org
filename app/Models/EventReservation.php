@@ -44,7 +44,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property-read float $setup_time
  * @property-read string $status_display
  * @property-read string $time_range
- * @property-read \App\Models\RecurringSeries|null $recurringSeries
+ * @property-read \CorvMC\Support\Models\RecurringSeries|null $recurringSeries
  * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent|null $reservable
  * @property-read \App\Models\User|null $user
  *
