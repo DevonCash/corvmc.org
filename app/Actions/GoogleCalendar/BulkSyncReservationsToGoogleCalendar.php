@@ -2,7 +2,7 @@
 
 namespace App\Actions\GoogleCalendar;
 
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Settings\GoogleCalendarSettings;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;

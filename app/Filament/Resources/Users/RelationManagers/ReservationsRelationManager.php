@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Users\RelationManagers;
 
-use App\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use App\Filament\Resources\SpaceManagement\Tables\SpaceManagementTable;
 use Filament\Actions;
 use Filament\Forms;

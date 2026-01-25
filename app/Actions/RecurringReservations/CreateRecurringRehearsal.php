@@ -8,7 +8,7 @@ use CorvMC\Events\Models\Event;
 use CorvMC\Support\Enums\RecurringSeriesStatus;
 use CorvMC\Support\Models\RecurringSeries;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
 use Lorisleiva\Actions\Concerns\AsAction;

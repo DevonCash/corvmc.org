@@ -2,8 +2,8 @@
 
 namespace App\Actions\Notifications;
 
-use App\Enums\ReservationStatus;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use App\Notifications\ReservationReminderNotification;
 use Carbon\Carbon;

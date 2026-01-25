@@ -9,7 +9,7 @@ use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
 use CorvMC\SpaceManagement\Actions\Reservations\CreateCheckoutSession;
 use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;

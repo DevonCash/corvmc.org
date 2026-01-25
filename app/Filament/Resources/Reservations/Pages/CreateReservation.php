@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Reservations\Pages;
 
 use CorvMC\SpaceManagement\Actions\Reservations\CreateCheckoutSession;
 use App\Filament\Resources\Reservations\ReservationResource;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;

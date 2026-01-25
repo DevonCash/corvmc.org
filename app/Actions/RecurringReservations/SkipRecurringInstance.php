@@ -3,7 +3,7 @@
 namespace App\Actions\RecurringReservations;
 
 use CorvMC\Support\Models\RecurringSeries;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;

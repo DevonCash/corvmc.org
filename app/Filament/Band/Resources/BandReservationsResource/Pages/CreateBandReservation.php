@@ -7,7 +7,7 @@ use CorvMC\SpaceManagement\Actions\Reservations\DetermineReservationStatus;
 use CorvMC\SpaceManagement\Actions\Reservations\GetAvailableTimeSlotsForDate;
 use CorvMC\SpaceManagement\Actions\Reservations\GetValidEndTimesForDate;
 use CorvMC\SpaceManagement\Actions\Reservations\ValidateReservation;
-use App\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use App\Filament\Band\Resources\BandReservationsResource;
 use App\Models\Band;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;

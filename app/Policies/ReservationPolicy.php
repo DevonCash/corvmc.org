@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 
 class ReservationPolicy

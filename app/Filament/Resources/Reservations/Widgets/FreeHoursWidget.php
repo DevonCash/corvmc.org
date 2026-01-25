@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Reservations\Widgets;
 
 use App\Enums\CreditType;
 use App\Models\CreditTransaction;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Filament\Widgets\Widget;
 

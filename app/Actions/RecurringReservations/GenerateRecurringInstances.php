@@ -4,10 +4,10 @@ namespace App\Actions\RecurringReservations;
 
 use CorvMC\Events\Actions\CreateEvent;
 use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
-use App\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\Events\Models\Event;
 use CorvMC\Support\Models\RecurringSeries;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;

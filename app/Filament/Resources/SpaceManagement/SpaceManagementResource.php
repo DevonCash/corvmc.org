@@ -5,7 +5,7 @@ namespace App\Filament\Resources\SpaceManagement;
 use App\Filament\Resources\SpaceManagement\Pages\ListSpaceUsage;
 use App\Filament\Resources\SpaceManagement\Schemas\SpaceManagementForm;
 use App\Filament\Resources\SpaceManagement\Tables\SpaceManagementTable;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;

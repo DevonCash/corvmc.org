@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Reservations\Schemas;
 
 use CorvMC\SpaceManagement\Actions\Reservations\GetAvailableTimeSlotsForDate;
 use CorvMC\SpaceManagement\Actions\Reservations\GetValidEndTimesForDate;
-use App\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;

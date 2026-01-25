@@ -3,7 +3,7 @@
 namespace App\Actions\Payments;
 
 use App\Filament\Actions\Action;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;

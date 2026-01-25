@@ -2,7 +2,7 @@
 
 namespace App\Actions\Notifications;
 
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
 use Lorisleiva\Actions\Concerns\AsAction;

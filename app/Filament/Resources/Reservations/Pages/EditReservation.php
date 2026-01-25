@@ -13,7 +13,7 @@ use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property \App\Models\Reservation $record
+ * @property \CorvMC\SpaceManagement\Models\Reservation $record
  */
 class EditReservation extends EditRecord
 {
@@ -43,7 +43,7 @@ class EditReservation extends EditRecord
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        /** @var \App\Models\Reservation $record */
+        /** @var \CorvMC\SpaceManagement\Models\Reservation $record */
         // Combine date and time fields in the app's timezone
         $startTime = Carbon::parse($data['reservation_date'].' '.$data['start_time'], config('app.timezone'));
         $endTime = Carbon::parse($data['reservation_date'].' '.$data['end_time'], config('app.timezone'));

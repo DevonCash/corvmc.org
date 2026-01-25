@@ -70,7 +70,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $productions_count
  * @property-read Collection<int, \CorvMC\SpaceManagement\Models\RehearsalReservation> $rehearsals
  * @property-read int|null $rehearsals_count
- * @property-read Collection<int, \App\Models\Reservation> $reservations
+ * @property-read Collection<int, \CorvMC\SpaceManagement\Models\Reservation> $reservations
  * @property-read int|null $reservations_count
  * @property-read Collection<int, \Spatie\Permission\Models\Role> $roles
  * @property-read int|null $roles_count

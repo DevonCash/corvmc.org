@@ -59,9 +59,9 @@ class AllocateCreditsCommand extends Command
         foreach ($users as $user) {
             try {
                 $hours = \CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user);
-                $blocks = \App\Models\Reservation::hoursToBlocks($hours);
+                $blocks = \CorvMC\SpaceManagement\Models\Reservation::hoursToBlocks($hours);
                 $currentBalance = $user->getCreditBalance(\App\Enums\CreditType::FreeHours);
-                $currentHours = \App\Models\Reservation::blocksToHours($currentBalance);
+                $currentHours = \CorvMC\SpaceManagement\Models\Reservation::blocksToHours($currentBalance);
 
                 if ($this->option('dry-run')) {
                     $this->line("→ Would allocate {$blocks} blocks ({$hours} hours) to {$user->name}");

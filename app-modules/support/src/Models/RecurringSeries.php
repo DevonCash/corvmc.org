@@ -3,7 +3,7 @@
 namespace CorvMC\Support\Models;
 
 use CorvMC\Events\Models\Event;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use CorvMC\Support\Enums\RecurringSeriesStatus;
 use Illuminate\Database\Eloquent\Model;

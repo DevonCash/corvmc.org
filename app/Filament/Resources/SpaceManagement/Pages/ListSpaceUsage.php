@@ -7,7 +7,7 @@ use App\Filament\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Resources\SpaceManagement\SpaceManagementResource;
 use App\Filament\Resources\SpaceManagement\Widgets\SpaceStatsWidget;
 use App\Filament\Resources\SpaceManagement\Widgets\SpaceUsageWidget;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;

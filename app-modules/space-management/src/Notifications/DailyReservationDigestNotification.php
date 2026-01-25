@@ -14,7 +14,7 @@ class DailyReservationDigestNotification extends Notification implements ShouldQ
     use Queueable;
 
     /**
-     * @var Collection<int, \App\Models\Reservation>
+     * @var Collection<int, \CorvMC\SpaceManagement\Models\Reservation>
      */
     public Collection $reservations;
 

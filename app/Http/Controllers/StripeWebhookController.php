@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use CorvMC\Finance\Actions\Subscriptions\UpdateUserMembershipStatus;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Http\Controllers\WebhookController as CashierWebhookController;

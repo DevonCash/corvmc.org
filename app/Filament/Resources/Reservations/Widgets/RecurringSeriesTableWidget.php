@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Reservations\Widgets;
 use App\Actions\RecurringReservations\CreateRecurringRehearsal;
 use CorvMC\Support\Models\RecurringSeries;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;

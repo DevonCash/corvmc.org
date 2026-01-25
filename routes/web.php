@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use App\Models\Band;
 use CorvMC\Events\Models\Event;
 use App\Models\MemberProfile;
@@ -22,7 +22,7 @@ Route::get('/', function () {
         'monthly_events' => Event::publishedUpcoming()
             ->whereBetween('start_datetime', [now()->startOfMonth(), now()->endOfMonth()])
             ->count(),
-        'practice_hours' => \App\Models\Reservation::status(ReservationStatus::Confirmed)
+        'practice_hours' => \CorvMC\SpaceManagement\Models\Reservation::status(ReservationStatus::Confirmed)
             ->whereBetween('reserved_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->get()
             ->sum(function ($reservation) {

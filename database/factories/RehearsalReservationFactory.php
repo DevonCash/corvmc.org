@@ -3,13 +3,13 @@
 namespace Database\Factories;
 
 use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
-use App\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Reservation>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\CorvMC\SpaceManagement\Models\Reservation>
  */
 class RehearsalReservationFactory extends Factory
 {

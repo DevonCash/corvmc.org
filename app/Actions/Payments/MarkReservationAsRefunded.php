@@ -2,7 +2,7 @@
 
 namespace App\Actions\Payments;
 
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class MarkReservationAsRefunded

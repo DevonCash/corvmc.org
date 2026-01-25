@@ -24,13 +24,13 @@ namespace App\Models;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string $recurable_type
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Reservation> $activeInstances
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \CorvMC\SpaceManagement\Models\Reservation> $activeInstances
  * @property-read int|null $active_instances_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
  * @property-read int|null $activities_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Reservation> $instances
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \CorvMC\SpaceManagement\Models\Reservation> $instances
  * @property-read int|null $instances_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Reservation> $upcomingInstances
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \CorvMC\SpaceManagement\Models\Reservation> $upcomingInstances
  * @property-read int|null $upcoming_instances_count
  * @property-read \App\Models\User $user
  *

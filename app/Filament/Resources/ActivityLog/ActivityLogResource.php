@@ -117,7 +117,7 @@ class ActivityLogResource extends Resource
                         });
                     })
                     ->orWhereHasMorph('subject', [
-                        \App\Models\Reservation::class,
+                        \CorvMC\SpaceManagement\Models\Reservation::class,
                     ], function ($q) use ($currentUser) {
                         if (! $currentUser) {
                             $q->whereRaw('1=0'); // No reservations visible to guests

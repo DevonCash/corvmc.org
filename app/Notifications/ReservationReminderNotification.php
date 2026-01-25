@@ -2,7 +2,7 @@
 
 namespace App\Notifications;
 
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;

@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Reservations\Tables\Columns;
 
 use App\Models\EventReservation;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Support\Enums\IconPosition;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;

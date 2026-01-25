@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\SpaceManagement\Widgets;
 
-use App\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\Events\Models\Event;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 

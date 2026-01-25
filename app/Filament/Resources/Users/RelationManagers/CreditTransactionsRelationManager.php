@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Users\RelationManagers;
 
 use CorvMC\Finance\Actions\Credits\AdjustCredits;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables;

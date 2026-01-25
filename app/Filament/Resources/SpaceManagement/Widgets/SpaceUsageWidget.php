@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\SpaceManagement\Widgets;
 
-use App\Enums\ReservationStatus;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Widgets\Widget;
 
 class SpaceUsageWidget extends Widget

@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Enums\CreditType;
 use App\Filament\Resources\Users\UserResource;
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
