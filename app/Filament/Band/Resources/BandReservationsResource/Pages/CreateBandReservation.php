@@ -10,7 +10,7 @@ use CorvMC\SpaceManagement\Actions\Reservations\ValidateReservation;
 use App\Enums\ReservationStatus;
 use App\Filament\Band\Resources\BandReservationsResource;
 use App\Models\Band;
-use App\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;

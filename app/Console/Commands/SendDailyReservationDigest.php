@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use App\Models\User;
 use App\Notifications\DailyReservationDigestNotification;
 use Illuminate\Console\Command;

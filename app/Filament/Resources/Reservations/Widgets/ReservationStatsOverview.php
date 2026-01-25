@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Reservations\Widgets;
 
-use App\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;

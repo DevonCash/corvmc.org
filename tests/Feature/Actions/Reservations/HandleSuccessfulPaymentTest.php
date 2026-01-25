@@ -1,8 +1,8 @@
 <?php
 
 use CorvMC\SpaceManagement\Actions\Reservations\HandleSuccessfulPayment;
-use App\Enums\ReservationStatus;
-use App\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 
 it('updates payment status to paid for unpaid reservation', function () {
     $reservation = RehearsalReservation::factory()

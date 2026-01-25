@@ -122,6 +122,15 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     }
 
     /**
+     * Map legacy class names to current module classes.
+     * Used for backward compatibility with existing database records.
+     */
+    protected static array $typeMap = [
+        'App\Models\RehearsalReservation' => RehearsalReservation::class,
+        'App\Models\EventReservation' => \App\Models\EventReservation::class,
+    ];
+
+    /**
      * Create a new model instance from database results.
      * This enables Single Table Inheritance by instantiating the correct child class.
      */
@@ -130,7 +139,8 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         $attributes = (object) $attributes;
         // If we have a type attribute, instantiate that class instead
         if (isset($attributes->type) && $attributes->type !== static::class) {
-            $class = $attributes->type;
+            // Map legacy class names to current module classes
+            $class = static::$typeMap[$attributes->type] ?? $attributes->type;
 
             if (class_exists($class)) {
                 $instance = new $class;

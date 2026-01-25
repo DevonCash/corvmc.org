@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;

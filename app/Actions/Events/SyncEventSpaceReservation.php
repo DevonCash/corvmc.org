@@ -2,9 +2,9 @@
 
 namespace App\Actions\Events;
 
-use App\Enums\ReservationStatus;
 use App\Models\EventReservation;
 use CorvMC\Events\Models\Event;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class SyncEventSpaceReservation

@@ -1,5 +1,5 @@
 @php
-    /** @var \App\Models\RehearsalReservation $record */
+    /** @var \CorvMC\SpaceManagement\Models\RehearsalReservation $record */
 @endphp
 
 <div class="space-y-6">

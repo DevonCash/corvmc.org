@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Reservations\Schemas;
 
 use App\Filament\Actions\Action;
 use App\Filament\Resources\Users\UserResource;
-use App\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Infolists\Components\ImageEntry;

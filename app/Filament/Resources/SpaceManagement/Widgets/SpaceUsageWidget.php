@@ -38,7 +38,7 @@ class SpaceUsageWidget extends Widget
         $next = $this->getNextSpaceUsage();
         $today = $this->getTodaysSpaceUsage();
 
-        $todayRehearsals = $today->where('type_class', \App\Models\RehearsalReservation::class);
+        $todayRehearsals = $today->where('type_class', \CorvMC\SpaceManagement\Models\RehearsalReservation::class);
         $todayProductions = $today->where('type_class', \App\Models\EventReservation::class);
 
         return [

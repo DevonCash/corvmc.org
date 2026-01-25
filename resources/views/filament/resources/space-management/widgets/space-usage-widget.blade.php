@@ -17,7 +17,7 @@
 
                 @if($next)
                     @php
-                        $isRehearsalReservation = $next instanceof \App\Models\RehearsalReservation;
+                        $isRehearsalReservation = $next instanceof \CorvMC\SpaceManagement\Models\RehearsalReservation;
                         $typeColor = $isRehearsalReservation ? 'primary' : 'warning';
                     @endphp
 
@@ -98,7 +98,7 @@
                     <div class="space-y-2 max-h-96 overflow-y-auto">
                         @foreach($today as $item)
                             @php
-                                $isRehearsalRes = $item['type_class'] === \App\Models\RehearsalReservation::class;
+                                $isRehearsalRes = $item['type_class'] === \CorvMC\SpaceManagement\Models\RehearsalReservation::class;
                             @endphp
                             <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-800 hover:border-primary-500 transition-colors">
                                 <div class="flex items-start justify-between gap-3">

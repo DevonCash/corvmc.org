@@ -2,7 +2,7 @@
 
 namespace App\Observers;
 
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Illuminate\Support\Facades\Cache;
 
 class ReservationObserver

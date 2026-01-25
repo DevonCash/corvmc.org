@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\Support\Concerns\HasTimePeriod;
 use Database\Factories\ReservationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

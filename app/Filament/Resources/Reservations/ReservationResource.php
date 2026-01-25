@@ -8,7 +8,7 @@ use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\ReservationsTable;
 use App\Filament\Resources\Reservations\Widgets\FreeHoursWidget;
 use App\Filament\Resources\Reservations\Widgets\RecurringSeriesTableWidget;
-use App\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;

@@ -7,7 +7,7 @@ use App\Filament\Resources\RecurringReservations\Schemas\RecurringReservationFor
 use CorvMC\Events\Models\Event;
 use CorvMC\Support\Enums\RecurringSeriesStatus;
 use CorvMC\Support\Models\RecurringSeries;
-use App\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;

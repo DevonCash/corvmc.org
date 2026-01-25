@@ -68,7 +68,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $permissions_count
  * @property-read Collection<int, \CorvMC\Events\Models\Event> $productions
  * @property-read int|null $productions_count
- * @property-read Collection<int, \App\Models\RehearsalReservation> $rehearsals
+ * @property-read Collection<int, \CorvMC\SpaceManagement\Models\RehearsalReservation> $rehearsals
  * @property-read int|null $rehearsals_count
  * @property-read Collection<int, \App\Models\Reservation> $reservations
  * @property-read int|null $reservations_count

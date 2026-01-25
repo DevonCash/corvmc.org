@@ -68,7 +68,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Register model observers for cache invalidation
         User::observe(UserObserver::class);
-        \App\Models\RehearsalReservation::observe(ReservationObserver::class);
+        \CorvMC\SpaceManagement\Models\RehearsalReservation::observe(ReservationObserver::class);
         \App\Models\EventReservation::observe(ReservationObserver::class);
         \CorvMC\Events\Models\Event::observe(\App\Observers\EventObserver::class);
         Tag::observe(TagObserver::class);
