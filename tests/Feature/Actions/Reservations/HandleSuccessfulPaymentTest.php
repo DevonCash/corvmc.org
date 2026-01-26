@@ -25,7 +25,7 @@ it('updates payment status to paid for unpaid reservation', function () {
     // Create a pending charge for the reservation
     Charge::create([
         'user_id' => $user->id,
-        'chargeable_type' => RehearsalReservation::class,
+        'chargeable_type' => $reservation->getMorphClass(),
         'chargeable_id' => $reservation->id,
         'amount' => Money::ofMinor(3000, 'USD'),
         'net_amount' => Money::ofMinor(3000, 'USD'),
@@ -58,7 +58,7 @@ it('is idempotent - skips if already paid', function () {
     // Create a paid charge for the reservation
     Charge::create([
         'user_id' => $user->id,
-        'chargeable_type' => RehearsalReservation::class,
+        'chargeable_type' => $reservation->getMorphClass(),
         'chargeable_id' => $reservation->id,
         'amount' => Money::ofMinor(3000, 'USD'),
         'net_amount' => Money::ofMinor(3000, 'USD'),
