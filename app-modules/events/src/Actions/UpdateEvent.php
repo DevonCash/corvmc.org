@@ -2,6 +2,7 @@
 
 namespace CorvMC\Events\Actions;
 
+use CorvMC\Events\Data\EventFormData;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Notifications\EventUpdatedNotification;
 use Illuminate\Support\Facades\DB;
@@ -18,22 +19,30 @@ class UpdateEvent
      */
     public function handle(Event $event, array $data): Event
     {
-        return DB::transaction(function () use ($event, $data) {
+        $formData = EventFormData::from($data);
+
+        return DB::transaction(function () use ($event, $formData, $data) {
             $originalData = $event->toArray();
 
-            $event->update($data);
+            // Get resolved model attributes from DTO
+            $attributes = $formData->toModelAttributes();
+
+            $event->update($attributes);
+
             // Update flags if provided
-            if (isset($data['notaflof'])) {
-                $event->setNotaflof($data['notaflof']);
+            $notaflof = $formData->getNotaflof();
+            if ($notaflof !== null) {
+                $event->setNotaflof($notaflof);
             }
 
             // Update tags if provided
-            if (isset($data['tags'])) {
-                $event->syncTags($data['tags']);
+            $tags = $formData->getTags();
+            if ($tags !== null) {
+                $event->syncTags($tags);
             }
 
             // Send update notification if significant changes
-            $this->sendUpdateNotificationIfNeeded($event, $originalData, $data);
+            $this->sendUpdateNotificationIfNeeded($event, $originalData, $attributes);
 
             return $event->fresh();
         });
