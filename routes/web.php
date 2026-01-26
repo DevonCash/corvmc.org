@@ -90,12 +90,22 @@ Route::get('/show-tonight', function () {
     return redirect()->route('events.show', $tonightShow);
 })->name('show-tonight');
 
-Route::get('/members', [\App\Http\Controllers\PublicMemberController::class, 'index'])->name('members.index');
-Route::get('/members/{memberProfile}', [\App\Http\Controllers\PublicMemberController::class, 'show'])->where('memberProfile', '[0-9]+')->name('members.show');
+// Directory (combined musicians & bands)
+Route::get('/directory', function () {
+    return view('public.directory');
+})->name('directory');
+
+// Redirect old URLs to directory with appropriate tab
+Route::get('/members', function () {
+    return redirect()->route('directory', ['tab' => 'musicians']);
+})->name('members.index');
 
 Route::get('/bands', function () {
-    return view('bands::public.index');
+    return redirect()->route('directory', ['tab' => 'bands']);
 })->name('bands.index');
+
+// Individual profile pages still work
+Route::get('/members/{memberProfile}', [\App\Http\Controllers\PublicMemberController::class, 'show'])->where('memberProfile', '[0-9]+')->name('members.show');
 
 Route::get('/bands/{band}', function (Band $band) {
     abort_unless($band->isVisible(Auth::user()), 404);

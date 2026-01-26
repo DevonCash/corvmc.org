@@ -74,8 +74,7 @@
         $links = [
             ['label' => 'About Us', 'route' => 'about', 'pattern' => 'about', 'icon' => 'tabler-info-circle'],
             ['label' => 'Events', 'route' => 'events.index', 'pattern' => 'events.*', 'icon' => 'tabler-calendar'],
-            ['label' => 'Members', 'route' => 'members.index', 'pattern' => 'members.*', 'icon' => 'tabler-users'],
-            ['label' => 'Bands', 'route' => 'bands.index', 'pattern' => 'bands.*', 'icon' => 'tabler-microphone-2'],
+            ['label' => 'Directory', 'route' => 'directory', 'pattern' => 'directory', 'icon' => 'tabler-users'],
             ['label' => 'Programs', 'route' => 'programs', 'pattern' => 'programs', 'icon' => 'tabler-apps'],
             ['label' => 'Contact', 'route' => 'contact', 'pattern' => 'contact', 'icon' => 'tabler-mail'],
         ];
