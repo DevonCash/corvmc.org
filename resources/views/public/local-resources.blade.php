@@ -13,7 +13,7 @@
     </div>
 
     <!-- Quick Navigation -->
-    @if ($lists->count() > 0)
+    @if ($lists->count() > 1)
         <div class="bg-base-200 py-4 sticky top-0 z-10">
             <div class="container mx-auto px-4">
                 <div class="flex flex-wrap justify-center gap-2">
@@ -22,10 +22,6 @@
                             {{ $list->name }}
                         </a>
                     @endforeach
-                    <a href="#suggest" class="btn btn-sm btn-primary">
-                        <x-tabler-plus class="w-4 h-4" />
-                        Suggest
-                    </a>
                 </div>
             </div>
         </div>
@@ -114,23 +110,16 @@
         </div>
     </div>
 
-    <!-- Suggest a Resource Form -->
-    <div id="suggest" class="bg-base-200 py-16 scroll-mt-20">
+    <!-- Suggest a Resource CTA -->
+    <div class="bg-primary text-primary-content py-16">
         <div class="container mx-auto px-4">
-            <div class="max-w-2xl mx-auto">
-                <div class="text-center mb-8">
-                    <h2 class="text-4xl font-bold mb-4">Suggest a Resource</h2>
-                    <p class="text-lg text-base-content/70">
-                        Know a great local business or service that would benefit the Corvallis music community?
-                        Let us know and we'll consider adding it to our directory.
-                    </p>
-                </div>
-
-                <div class="card bg-base-100 shadow-xl">
-                    <div class="card-body">
-                        @livewire('resource-suggestion-form')
-                    </div>
-                </div>
+            <div class="text-center max-w-3xl mx-auto">
+                <h2 class="text-4xl font-bold mb-6">Know a Great Local Resource?</h2>
+                <p class="text-lg mb-8 opacity-90">
+                    Help us build this directory! If you know of a local business or service
+                    that would benefit the Corvallis music community, share your recommendation.
+                </p>
+                @livewire('resource-suggestion-form')
             </div>
         </div>
     </div>

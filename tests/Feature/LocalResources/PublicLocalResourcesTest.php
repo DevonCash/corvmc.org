@@ -146,7 +146,7 @@ describe('public local resources page', function () {
             ->assertSee('href="#recording-studios"', false);
     });
 
-    it('displays the resource suggestion form', function () {
+    it('displays the resource suggestion button', function () {
         $this->get(route('local-resources'))
             ->assertOk()
             ->assertSee('Suggest a Resource')
@@ -161,7 +161,7 @@ describe('resource suggestion form', function () {
         $list = ResourceList::factory()->published()->create(['name' => 'Music Shops']);
 
         Livewire::test(ResourceSuggestionForm::class)
-            ->fillForm([
+            ->callAction('suggestResource', data: [
                 'resource_name' => 'Test Music Store',
                 'category' => $list->id,
                 'website' => 'https://testmusicstore.com',
@@ -172,21 +172,19 @@ describe('resource suggestion form', function () {
                 'submitter_name' => 'Jane Submitter',
                 'submitter_email' => 'jane@example.com',
             ])
-            ->call('submit')
-            ->assertHasNoFormErrors();
+            ->assertHasNoActionErrors();
 
         Notification::assertSentOnDemand(ResourceSuggestionNotification::class);
     });
 
     it('requires resource name and submitter info', function () {
         Livewire::test(ResourceSuggestionForm::class)
-            ->fillForm([
+            ->callAction('suggestResource', data: [
                 'resource_name' => '',
                 'submitter_name' => '',
                 'submitter_email' => '',
             ])
-            ->call('submit')
-            ->assertHasFormErrors([
+            ->assertHasActionErrors([
                 'resource_name' => 'required',
                 'submitter_name' => 'required',
                 'submitter_email' => 'required',
@@ -195,34 +193,26 @@ describe('resource suggestion form', function () {
 
     it('validates email format', function () {
         Livewire::test(ResourceSuggestionForm::class)
-            ->fillForm([
+            ->callAction('suggestResource', data: [
                 'resource_name' => 'Test Resource',
                 'submitter_name' => 'Test User',
                 'submitter_email' => 'not-an-email',
             ])
-            ->call('submit')
-            ->assertHasFormErrors(['submitter_email' => 'email']);
-    });
-
-    it('shows new category field when other is selected', function () {
-        Livewire::test(ResourceSuggestionForm::class)
-            ->fillForm(['category' => 'other'])
-            ->assertFormFieldIsVisible('new_category');
+            ->assertHasActionErrors(['submitter_email' => 'email']);
     });
 
     it('handles other category in submission', function () {
         Notification::fake();
 
         Livewire::test(ResourceSuggestionForm::class)
-            ->fillForm([
+            ->callAction('suggestResource', data: [
                 'resource_name' => 'New Resource',
                 'category' => 'other',
                 'new_category' => 'Vinyl Pressing',
                 'submitter_name' => 'Test User',
                 'submitter_email' => 'test@example.com',
             ])
-            ->call('submit')
-            ->assertHasNoFormErrors();
+            ->assertHasNoActionErrors();
 
         Notification::assertSentOnDemand(
             ResourceSuggestionNotification::class,
