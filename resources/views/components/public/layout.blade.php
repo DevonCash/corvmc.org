@@ -76,7 +76,6 @@
             ['label' => 'Events', 'route' => 'events.index', 'pattern' => 'events.*', 'icon' => 'tabler-calendar'],
             ['label' => 'Directory', 'route' => 'directory', 'pattern' => 'directory', 'icon' => 'tabler-users'],
             ['label' => 'Programs', 'route' => 'programs', 'pattern' => 'programs', 'icon' => 'tabler-apps'],
-            ['label' => 'Contact', 'route' => 'contact', 'pattern' => 'contact', 'icon' => 'tabler-mail'],
         ];
     @endphp
 
