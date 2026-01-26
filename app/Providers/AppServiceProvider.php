@@ -78,6 +78,9 @@ class AppServiceProvider extends ServiceProvider
             // Moderation models
             'report' => \CorvMC\Moderation\Models\Report::class,
             'revision' => \CorvMC\Moderation\Models\Revision::class,
+
+            // Sponsorship models
+            'sponsor' => \CorvMC\Sponsorship\Models\Sponsor::class,
         ]);
 
         // Register event listeners for cross-module integration

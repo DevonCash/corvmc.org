@@ -252,9 +252,9 @@ describe('Moderation Workflow: Revision Approval', function () {
 });
 
 describe('Moderation Workflow: Auto-Approval', function () {
-    it('auto-approves revision for users with manage events permission', function () {
+    it('auto-approves revision for users with production manager role', function () {
         $submitter = User::factory()->create();
-        $submitter->givePermissionTo('manage events');
+        $submitter->assignRole('production manager');
 
         $profile = User::withoutEvents(function () use ($submitter) {
             return MemberProfile::create([

@@ -31,8 +31,8 @@ describe('Band Model: Visibility', function () {
             'visibility' => Visibility::Public,
         ]);
 
-        // Guest user (null)
-        expect($band->isVisible(null))->toBeTrue();
+        // Guest user (null) - use Gate::forUser with null
+        expect(\Illuminate\Support\Facades\Gate::forUser(null)->allows('view', $band))->toBeTrue();
     });
 
     it('makes private bands visible only to members and owner', function () {
@@ -52,16 +52,16 @@ describe('Band Model: Visibility', function () {
         $band->refresh();
 
         // Owner can see
-        expect($band->isVisible($owner))->toBeTrue();
+        expect($owner->can('view', $band))->toBeTrue();
 
         // Active member can see
-        expect($band->isVisible($member))->toBeTrue();
+        expect($member->can('view', $band))->toBeTrue();
 
         // Outsider cannot see
-        expect($band->isVisible($outsider))->toBeFalse();
+        expect($outsider->can('view', $band))->toBeFalse();
 
         // Guest cannot see
-        expect($band->isVisible(null))->toBeFalse();
+        expect(\Illuminate\Support\Facades\Gate::forUser(null)->allows('view', $band))->toBeFalse();
     });
 
     it('makes members-only bands visible to logged in users', function () {
@@ -75,10 +75,10 @@ describe('Band Model: Visibility', function () {
         ]);
 
         // Logged in user can see (all logged-in users are considered members)
-        expect($band->isVisible($loggedInUser))->toBeTrue();
+        expect($loggedInUser->can('view', $band))->toBeTrue();
 
         // Guest cannot see
-        expect($band->isVisible(null))->toBeFalse();
+        expect(\Illuminate\Support\Facades\Gate::forUser(null)->allows('view', $band))->toBeFalse();
     });
 });
 

@@ -18,7 +18,7 @@ class PublishEvent
     public function handle(Event $event): void
     {
         // Check authorization
-        if (! User::me()?->can('update', $event)) {
+        if (! User::me()?->can('publish', $event)) {
             throw new \Illuminate\Auth\Access\AuthorizationException('You are not authorized to publish this event.');
         }
 

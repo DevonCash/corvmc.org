@@ -173,21 +173,7 @@ class MyBandsWidget extends BaseWidget
             return false;
         }
 
-        // Owner can always edit
-        if ($band->owner_id === $user->id) {
-            return true;
-        }
-
-        // Check permissions
-        if ($user->can('update bands')) {
-            return true;
-        }
-
-        // Band admins can edit (already eager loaded)
-        $membership = $band->members->first();
-
-        /** @phpstan-ignore property.notFound */
-        return $membership?->pivot->role === 'admin';
+        return $user->can('update', $band);
     }
 
     protected function canManageBand(Band $band): bool
@@ -198,21 +184,7 @@ class MyBandsWidget extends BaseWidget
             return false;
         }
 
-        // Owner can manage
-        if ($band->owner_id === $user->id) {
-            return true;
-        }
-
-        // Check permissions
-        if ($user->can('manage band members')) {
-            return true;
-        }
-
-        // Band admins can manage (already eager loaded)
-        $membership = $band->members->first();
-
-        /** @phpstan-ignore property.notFound */
-        return $membership?->pivot->role === 'admin';
+        return $user->can('manageMembers', $band);
     }
 
     protected function getPrimaryLinkUrl(Band $band): ?string

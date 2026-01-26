@@ -166,6 +166,14 @@ class EquipmentLoan extends Model
     }
 
     /**
+     * Check if the given user is the borrower of this loan.
+     */
+    public function isBorrower(User $user): bool
+    {
+        return $this->borrower_id === $user->id;
+    }
+
+    /**
      * Check if loan is currently active (not yet returned/cancelled/lost).
      */
     public function getIsActiveAttribute(): bool

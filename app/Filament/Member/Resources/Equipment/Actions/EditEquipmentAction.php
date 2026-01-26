@@ -206,6 +206,6 @@ class EditEquipmentAction
                     ->title('Equipment Updated')
                     ->body('Equipment information has been successfully updated.')
             )
-            ->visible(fn ($record) => ! $record->is_checked_out || Auth::user()->can('manage equipment'));
+            ->visible(fn ($record) => ! $record->is_checked_out || Auth::user()->can('update', $record));
     }
 }

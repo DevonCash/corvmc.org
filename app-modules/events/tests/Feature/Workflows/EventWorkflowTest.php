@@ -48,7 +48,7 @@ beforeEach(function () {
 describe('Event Workflow: Create Event', function () {
     it('creates an event at CMC venue', function () {
         $organizer = User::factory()->create();
-        $organizer->givePermissionTo('manage events');
+        $organizer->assignRole('production manager');
 
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
         $endDatetime = $startDatetime->copy()->addHours(3);
@@ -107,7 +107,7 @@ describe('Event Workflow: Create Event', function () {
 describe('Event Workflow: Publish Event', function () {
     it('publishes an event and sets published_at timestamp', function () {
         $organizer = User::factory()->create();
-        $organizer->givePermissionTo('manage events');
+        $organizer->assignRole('production manager');
         Auth::setUser($organizer);
 
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);

@@ -15,6 +15,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use CorvMC\Equipment\Models\Equipment as EquipmentModel;
 use Illuminate\Support\Facades\Auth;
 
 class EquipmentTable
@@ -117,7 +118,7 @@ class EquipmentTable
                 TextColumn::make('location')
                     ->toggleable()
                     ->placeholder('Not specified')
-                    ->visible(fn ($record) => Auth::user()->can('manage equipment')),
+                    ->visible(fn (EquipmentModel $record) => Auth::user()->can('update', $record)),
             ])
             ->filters([
                 SelectFilter::make('type')

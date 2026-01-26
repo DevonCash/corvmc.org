@@ -315,14 +315,6 @@ class Event extends ContentModel implements Recurrable
     }
 
     /**
-     * Check if a user can manage this event (is organizer or has permission).
-     */
-    public function canBeManaged(User $user): bool
-    {
-        return $this->isOrganizedBy($user) || $user->can('manage events');
-    }
-
-    /**
      * Check if this event has a specific performer.
      */
     public function hasPerformer(Band $band): bool

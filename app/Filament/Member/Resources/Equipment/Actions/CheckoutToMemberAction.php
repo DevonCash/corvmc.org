@@ -6,6 +6,7 @@ use App\Filament\Shared\Components\MemberSelector;
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Equipment\Actions\CheckoutToMember;
+use CorvMC\Equipment\Models\EquipmentLoan;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -28,7 +29,7 @@ class CheckoutToMemberAction
             ->schema([
                 MemberSelector::make('borrower_id')
                     ->default(Auth::id())
-                    ->visible(fn () => User::me()?->can('manage equipment loans'))
+                    ->visible(fn () => User::me()?->can('manage', EquipmentLoan::class))
                     ->required(),
 
                 DateTimePicker::make('due_at')

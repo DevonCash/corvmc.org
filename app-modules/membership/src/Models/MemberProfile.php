@@ -195,6 +195,11 @@ class MemberProfile extends ContentModel
         return $this->belongsTo(User::class);
     }
 
+    public function isOwnedByUser(User $user): bool
+    {
+        return $this->user_id === $user->id;
+    }
+
     public function isComplete(): bool
     {
         // Check if profile has key information filled out

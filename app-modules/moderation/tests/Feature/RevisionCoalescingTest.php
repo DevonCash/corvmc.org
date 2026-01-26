@@ -200,7 +200,7 @@ test('different users create separate revisions', function () {
 
 test('approved revision does not coalesce with new changes', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('manage events');
+    $user->assignRole('production manager');
 
     $content = TestRevisionableContent::factory()->create(['user_id' => $user->id, 'body' => 'Original']);
 

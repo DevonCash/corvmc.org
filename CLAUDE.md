@@ -307,40 +307,25 @@ return $query->public();
 
 ## Module Architecture
 
-The application uses `internachi/modular` for domain organization.
+The application uses `internachi/modular` for domain organization with two distinct layers. See [docs/module-architecture.md](docs/module-architecture.md) for full details.
 
-### Modules (`app-modules/`)
+**Module layer** (`app-modules/`): Self-contained domains owning their models, actions, and business logic. Modules: Events, SpaceManagement, Finance, Bands, Equipment, Moderation, MemberProfiles, Support.
 
-| Module | Description |
-|--------|-------------|
-| **SpaceManagement** | Reservations, scheduling, conflict detection |
-| **Finance** | Pricing, charges, credits, Stripe integration |
-| **Events** | Event management, publishing, performers |
-| **Equipment** | Equipment loans, damage reports |
-| **Moderation** | Reports, revisions, content moderation |
-| **Bands** | Band profiles, member management |
-| **MemberProfiles** | Member directory, public profiles |
-| **Support** | Shared traits (`HasTimePeriod`, `HasRecurringSeries`) |
+**Integration layer** (`app/`): Coordinates between modules. Contains policies, listeners, observers, and integration models that bridge modules.
 
-### Integration Layer (`app/`)
+**Key principles:**
+- Modules communicate via domain events and interfaces, not direct references
+- Side effects (cache, notifications) handled by listeners in integration layer
+- Models expose helpers (`isOrganizedBy()`) but no authorization logic
 
-The main `app/` directory serves as the integration layer for cross-module coordination:
+## Authorization & Policies
 
-- **Listeners**: Cross-module event handlers (e.g., `CheckEventSpaceConflicts`)
-- **Observers**: Model observers for cache invalidation
-- **Integration Models**: `EventReservation` bridges Events ↔ SpaceManagement
+Policies live in `app/Policies/` and use role-based authorization. See [docs/authorization.md](docs/authorization.md) for full details.
 
-### Cross-Module Communication
+**Core principles:**
+- Integration layer owns authorization (policies in `app/Policies/`)
+- Modules own domain knowledge (models expose `isOrganizedBy()`, `isOwnedBy()`)
+- Use roles + context, not permission strings (`hasRole()` + model helpers)
+- Domain verbs, not just CRUD (`publish`, `cancel`, `reschedule`)
 
-- **Events**: Modules dispatch domain events (`ReservationCreated`, etc.)
-- **Interfaces**: `Chargeable`, `ConflictCheckerInterface`, `Reportable`
-- **Service Container**: Interface bindings in module ServiceProviders
-
-### Module Dependencies
-
-```
-Events → SpaceManagement (via ConflictCheckerInterface)
-SpaceManagement → Finance (via Chargeable interface)
-Equipment → Support (via HasTimePeriod trait)
-All modules → Support (shared traits and models)
-```
+**Manager roles:** `production manager` (Events), `practice space manager` (Reservations)

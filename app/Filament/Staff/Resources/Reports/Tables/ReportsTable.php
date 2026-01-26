@@ -89,7 +89,7 @@ class ReportsTable
             ->recordActions([
                 ViewAction::make()
                     ->url(
-                        fn (Report $record): string => route('filament.member.resources.reports.view', $record)
+                        fn (Report $record): string => route('filament.staff.resources.reports.view', $record)
                     ),
 
             ])

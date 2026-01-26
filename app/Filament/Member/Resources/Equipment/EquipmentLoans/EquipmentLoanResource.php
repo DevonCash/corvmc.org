@@ -44,22 +44,22 @@ class EquipmentLoanResource extends Resource
 
     public static function canCreate(): bool
     {
-        return User::me()?->can('create equipment loans') ?? false;
+        return User::me()?->can('create', EquipmentLoan::class) ?? false;
     }
 
     public static function canEdit($record): bool
     {
-        return User::me()?->can('edit equipment loans') ?? false;
+        return User::me()?->can('update', $record) ?? false;
     }
 
     public static function canDelete($record): bool
     {
-        return User::me()?->can('delete equipment loans') ?? false;
+        return User::me()?->can('delete', $record) ?? false;
     }
 
     public static function canView($record): bool
     {
-        return User::me()?->can('view equipment loans') ?? true;
+        return User::me()?->can('view', $record) ?? true;
     }
 
     public static function form(Schema $schema): Schema

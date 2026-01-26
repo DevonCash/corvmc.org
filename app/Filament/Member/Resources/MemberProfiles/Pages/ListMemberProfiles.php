@@ -164,14 +164,14 @@ class ListMemberProfiles extends Page
 
                         return $settings->getAvailableFlags();
                     })
-                    ->columnSpan(fn () => User::me()?->can('view private member profiles') ? 2 : 3)
+                    ->columnSpan(fn () => User::me()?->can('manage', MemberProfile::class) ? 2 : 3)
                     ->columns(function () {
-                        return User::me()?->can('view private member profiles') ? 2 : 4;
+                        return User::me()?->can('manage', MemberProfile::class) ? 2 : 4;
                     }),
 
                 Select::make('visibility')
                     ->label('Visibility 🛡️')
-                    ->visible(fn () => User::me()?->can('view private member profiles'))
+                    ->visible(fn () => User::me()?->can('manage', MemberProfile::class))
                     ->live()
                     ->options([
                         'public' => 'Public',

@@ -191,6 +191,30 @@ class Band extends ContentModel
         return $this->memberships()->for($user)->first();
     }
 
+    public function isOwner(User $user): bool
+    {
+        return $this->owner_id === $user->id;
+    }
+
+    public function isAdmin(User $user): bool
+    {
+        if ($this->isOwner($user)) {
+            return true;
+        }
+
+        return $this->membership($user)?->role === 'admin';
+    }
+
+    public function isMember(User $user): bool
+    {
+        // Owners are always members
+        if ($this->isOwner($user)) {
+            return true;
+        }
+
+        return $this->membership($user)?->status === 'active';
+    }
+
     public function activeMembers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->memberships()->active();
@@ -336,31 +360,16 @@ class Band extends ContentModel
 
     /**
      * Check if the band profile is visible to the given user.
-     * Override trait method to include band member logic.
+     *
+     * @deprecated Use $user->can('view', $band) via BandPolicy instead
      */
     public function isVisible(?User $user = null): bool
     {
         if (! $user) {
-            // Only public profiles are visible to guests
             return $this->visibility?->isPublic() ?? false;
         }
 
-        // Band members and owner can always see the profile
-        if ($this->owner_id === $user->id || $this->members->contains($user)) {
-            return true;
-        }
-
-        // Staff can see all profiles if they have permission
-        if ($user->can('view private band profiles') || $user->can('view private member profiles')) {
-            return true;
-        }
-
-        // Check visibility settings
-        return match ($this->visibility) {
-            Visibility::Public => true,
-            Visibility::Members => true, // All logged-in users are considered members
-            Visibility::Private => false,
-        };
+        return $user->can('view', $this);
     }
 
     /**
