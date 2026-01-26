@@ -48,7 +48,6 @@ class AppServiceProvider extends ServiceProvider
             'user' => \App\Models\User::class,
             'staff_profile' => \App\Models\StaffProfile::class,
             'invitation' => \App\Models\Invitation::class,
-            'promo_code' => \App\Models\PromoCode::class,
 
             // Band module models
             'band' => \CorvMC\Bands\Models\Band::class,
