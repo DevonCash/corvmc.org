@@ -73,7 +73,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read int|null $pending_reports_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Revision> $pendingRevisions
  * @property-read int|null $pending_revisions_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Band> $performers
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \CorvMC\Bands\Models\Band> $performers
  * @property-read int|null $performers_count
  * @property-read \App\Models\RecurringSeries|null $recurringSeries
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $reports
@@ -632,7 +632,7 @@ class Event extends ContentModel implements Recurrable
             'instance_date' => $date->toDateString(),
             'start_datetime' => $startDateTime,
             'end_datetime' => $endDateTime,
-            'status' => EventStatus::Approved,
+            'status' => EventStatus::Scheduled,
             'published_at' => now(),
         ]);
     }
@@ -665,7 +665,7 @@ class Event extends ContentModel implements Recurrable
     {
         $futureInstances = static::where('recurring_series_id', $series->id)
             ->where('start_datetime', '>', now())
-            ->where('status', EventStatus::Approved)
+            ->where('status', EventStatus::Scheduled)
             ->get();
 
         foreach ($futureInstances as $event) {

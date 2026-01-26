@@ -4,6 +4,8 @@ namespace App\Filament\Staff\Resources\ActivityLog;
 
 use App\Filament\Staff\Resources\ActivityLog\Tables\ActivityLogTable;
 use App\Models\User;
+use CorvMC\Bands\Models\Band;
+use CorvMC\Membership\Models\MemberProfile;
 use Filament\Resources\Resource;
 use Spatie\Activitylog\Models\Activity;
 
@@ -77,13 +79,13 @@ class ActivityLogResource extends Resource
             // Filter to only show activities the user is authorized to see
             $query->where(function ($subQuery) use ($currentUser) {
                 $subQuery->whereHasMorph('subject', [
-                    \App\Models\MemberProfile::class,
+                    MemberProfile::class,
                 ], function ($q) use ($currentUser) {
                     // Only show member profile activities if profile is visible
                     $q->whereIn('visibility', $currentUser ? ['public', 'members'] : ['public']);
                 })
                     ->orWhereHasMorph('subject', [
-                        \App\Models\Band::class,
+                        Band::class,
                     ], function ($q) use ($currentUser) {
                         // Apply band visibility rules
                         if ($currentUser) {

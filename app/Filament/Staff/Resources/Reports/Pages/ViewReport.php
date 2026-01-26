@@ -6,6 +6,7 @@ use App\Filament\Staff\Resources\Reports\Actions\DismissReportAction;
 use App\Filament\Staff\Resources\Reports\Actions\EscalateReportAction;
 use App\Filament\Staff\Resources\Reports\Actions\UpholdReportAction;
 use App\Filament\Staff\Resources\Reports\ReportResource;
+use App\Models\User;
 use CorvMC\Moderation\Models\Report;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
@@ -13,7 +14,6 @@ use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Auth;
 
 class ViewReport extends ViewRecord
 {
@@ -68,8 +68,8 @@ class ViewReport extends ViewRecord
                                     ->formatStateUsing(function ($state) {
                                         return match ($state) {
                                             'CorvMC\Events\Models\Event' => 'Production',
-                                            'App\Models\MemberProfile' => 'Member Profile',
-                                            'App\Models\Band' => 'Band Profile',
+                                            'CorvMC\Membership\Models\MemberProfile' => 'Member Profile',
+                                            'CorvMC\Bands\Models\Band' => 'Band Profile',
                                             default => $state
                                         };
                                     })
@@ -82,7 +82,7 @@ class ViewReport extends ViewRecord
 
                         ViewEntry::make('content_preview')
                             ->label('Content Preview')
-                            ->view('filament.resources.reports.content-preview'),
+                            ->view('moderation::filament.reports.content-preview'),
                     ]),
 
                 Section::make('Reporter Information')
@@ -94,7 +94,7 @@ class ViewReport extends ViewRecord
 
                                 TextEntry::make('reportedBy.email')
                                     ->label('Reporter Email')
-                                    ->visible(fn () => Auth::user()->hasRole('admin')),
+                                    ->visible(fn () => User::me()->hasRole('admin')),
                             ]),
                     ]),
 
@@ -122,7 +122,7 @@ class ViewReport extends ViewRecord
                 Section::make('Activity Log')
                     ->schema([
                         ViewEntry::make('activity_log')
-                            ->view('filament.resources.reports.activity-log'),
+                            ->view('moderation::filament.reports.activity-log'),
                     ])
                     ->collapsible()
                     ->collapsed(),
@@ -142,8 +142,8 @@ class ViewReport extends ViewRecord
     {
         return match (get_class($reportable)) {
             'CorvMC\Events\Models\Event' => route('events.show', $reportable),
-            'App\Models\MemberProfile' => route('filament.member.resources.directory.view', $reportable),
-            'App\Models\Band' => route('filament.member.resources.bands.view', $reportable),
+            'CorvMC\Membership\Models\MemberProfile' => route('filament.member.resources.directory.view', $reportable),
+            'CorvMC\Bands\Models\Band' => route('filament.member.resources.bands.view', $reportable),
             default => '#',
         };
     }

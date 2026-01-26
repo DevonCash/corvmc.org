@@ -16,7 +16,7 @@ class BandDashboard extends Page
 {
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-home';
 
-    protected string $view = 'filament.band.pages.band-dashboard';
+    protected string $view = 'bands::filament.pages.band-dashboard';
 
     protected static ?string $navigationLabel = 'Dashboard';
 

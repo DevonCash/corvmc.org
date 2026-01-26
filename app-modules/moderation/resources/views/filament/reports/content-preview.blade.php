@@ -15,21 +15,21 @@
                         @case('App\Models\MemberProfile')
                             Member Profile: {{ $reportable->user->name }}
                             @break
-                        @case('App\Models\Band')
+                        @case('CorvMC\Bands\Models\Band')
                             Band Profile: {{ $reportable->name }}
                             @break
                         @default
                             {{ class_basename($reportable) }}: {{ $reportable->title ?? $reportable->name ?? '#' . $reportable->id }}
                     @endswitch
                 </h4>
-                
-                <a href="{{ $this->getContentUrl($reportable) }}" 
-                   target="_blank" 
+
+                <a href="{{ $this->getContentUrl($reportable) }}"
+                   target="_blank"
                    class="text-sm text-primary-600 hover:text-primary-500">
                     View Full Content →
                 </a>
             </div>
-            
+
             @switch(get_class($reportable))
                 @case('App\Models\Production')
                     <div class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
@@ -44,7 +44,7 @@
                         @endif
                     </div>
                     @break
-                    
+
                 @case('App\Models\MemberProfile')
                     <div class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
                         @if($reportable->bio)
@@ -58,8 +58,8 @@
                         @endif
                     </div>
                     @break
-                    
-                @case('App\Models\Band')
+
+                @case('CorvMC\Bands\Models\Band')
                     <div class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
                         @if($reportable->bio)
                             <p><strong>Bio:</strong> {{ Str::limit($reportable->bio, 200) }}</p>

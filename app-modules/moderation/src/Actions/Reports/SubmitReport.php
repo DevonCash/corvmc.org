@@ -83,8 +83,8 @@ class SubmitReport
     {
         match (get_class($reportable)) {
             'CorvMC\Events\Models\Event' => logger()->info("Production {$reportable->id} reached report threshold"),
-            'App\Models\MemberProfile' => logger()->info("Member profile {$reportable->id} reached report threshold"),
-            'App\Models\Band' => logger()->info("Band {$reportable->id} reached report threshold"),
+            'CorvMC\Membership\Models\MemberProfile' => logger()->info("Member profile {$reportable->id} reached report threshold"),
+            'CorvMC\Bands\Models\Band' => logger()->info("Band {$reportable->id} reached report threshold"),
             default => null,
         };
     }

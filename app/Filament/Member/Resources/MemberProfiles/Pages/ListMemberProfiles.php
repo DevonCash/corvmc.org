@@ -26,7 +26,7 @@ class ListMemberProfiles extends Page
 
     protected static string $resource = MemberProfileResource::class;
 
-    protected string $view = 'filament.resources.member-profiles.pages.list-member-profiles';
+    protected string $view = 'membership::filament.pages.list-member-profiles';
 
     protected static ?string $title = 'Members';
 

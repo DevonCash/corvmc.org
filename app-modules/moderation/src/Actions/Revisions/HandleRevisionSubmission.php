@@ -2,6 +2,7 @@
 
 namespace CorvMC\Moderation\Actions\Revisions;
 
+use CorvMC\Bands\Models\Band;
 use CorvMC\Moderation\Models\Revision;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -125,7 +126,7 @@ class HandleRevisionSubmission
         $trustPoints = $submitter->trust_points[get_class($model)] ?? 0;
 
         // For Band models, check ownership
-        if ($model instanceof \App\Models\Band && $model->owner_id !== $submitter->id) {
+        if ($model instanceof Band && $model->owner_id !== $submitter->id) {
             return false; // Only owners can auto-approve band changes
         }
 

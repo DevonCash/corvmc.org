@@ -2,6 +2,7 @@
 
 namespace App\Filament\Member\Widgets;
 
+use CorvMC\Bands\Models\Band;
 use CorvMC\Events\Models\Event;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
@@ -28,7 +29,7 @@ class UpcomingEventsWidget extends Widget
         });
     }
 
-    protected function canViewBand(\App\Models\Band $band): bool
+    protected function canViewBand(Band $band): bool
     {
         $currentUser = Auth::user();
 

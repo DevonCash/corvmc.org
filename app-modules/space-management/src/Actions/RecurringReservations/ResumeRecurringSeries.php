@@ -3,7 +3,7 @@
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
 use CorvMC\Support\Enums\RecurringSeriesStatus;
-use App\Filament\Actions\Action;
+use App\Filament\Shared\Actions\Action\Action;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class ResumeRecurringSeries

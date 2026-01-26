@@ -2,6 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Reports\Tables;
 
+use CorvMC\Moderation\Actions\Reports\BulkResolveReports;
 use CorvMC\Moderation\Models\Report;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
@@ -74,8 +75,8 @@ class ReportsTable
                     ->label('Content Type')
                     ->options([
                         'CorvMC\Events\Models\Event' => 'Production',
-                        'App\Models\MemberProfile' => 'Member Profile',
-                        'App\Models\Band' => 'Band Profile',
+                        'CorvMC\Membership\Models\MemberProfile' => 'Member Profile',
+                        'CorvMC\Bands\Models\Band' => 'Band Profile',
                     ]),
 
                 SelectFilter::make('reason')
@@ -105,7 +106,7 @@ class ReportsTable
                             ->rows(3),
                     ])
                     ->action(function ($records, array $data): void {
-                        $count = \App\Actions\Reports\BulkResolveReports::run(
+                        $count = BulkResolveReports::run(
                             $records->pluck('id')->toArray(),
                             Auth::user(),
                             'upheld',
@@ -130,7 +131,7 @@ class ReportsTable
                             ->rows(3),
                     ])
                     ->action(function ($records, array $data): void {
-                        $count = \App\Actions\Reports\BulkResolveReports::run(
+                        $count = BulkResolveReports::run(
                             $records->pluck('id')->toArray(),
                             Auth::user(),
                             'dismissed',

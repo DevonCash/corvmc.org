@@ -61,7 +61,7 @@ class PublicEquipmentController extends Controller
             ->sort()
             ->values();
 
-        return view('public.equipment.index', compact(
+        return view('equipment::public.index', compact(
             'equipment',
             'statistics',
             'equipmentTypes'
@@ -94,7 +94,7 @@ class PublicEquipmentController extends Controller
             ->limit(4)
             ->get();
 
-        return view('public.equipment.show', compact(
+        return view('equipment::public.show', compact(
             'equipment',
             'relatedEquipment'
         ));

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
 
 class RecurringSeriesTableWidget extends BaseWidget
 {
-    protected string $view = 'filament.resources.reservations.widgets.recurring-series-table-widget';
+    protected string $view = 'space-management::filament.widgets.recurring-series-table-widget';
 
     protected static ?int $sort = 2;
 

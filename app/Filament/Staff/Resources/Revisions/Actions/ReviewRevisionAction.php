@@ -32,7 +32,7 @@ class ReviewRevisionAction
             ->schema([
                 ViewField::make('review_decision')
                     ->label('')
-                    ->view('filament.resources.revisions.review-decision')
+                    ->view('moderation::filament.revisions.review-decision')
                     ->viewData(fn (Revision $record): array => [
                         'revision' => $record,
                     ])
@@ -40,7 +40,7 @@ class ReviewRevisionAction
 
                 ViewField::make('changes_diff')
                     ->label('Proposed Changes')
-                    ->view('filament.resources.revisions.diff-viewer')
+                    ->view('moderation::filament.revisions.diff-viewer')
                     ->viewData(fn (Revision $record): array => [
                         'changes' => $record->getChanges(),
                         'modelType' => $record->getModelTypeName(),

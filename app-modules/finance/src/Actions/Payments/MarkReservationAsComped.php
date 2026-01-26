@@ -2,7 +2,7 @@
 
 namespace CorvMC\Finance\Actions\Payments;
 
-use App\Filament\Actions\Action;
+use App\Filament\Shared\Actions\Action;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Collection;

@@ -91,14 +91,14 @@ class ReportResolvedNotification extends Notification implements ShouldQueue
             return $reportable->title ?? 'Untitled Production';
         }
 
-        if ($reportable instanceof \App\Models\MemberProfile) {
+        if ($reportable instanceof \CorvMC\Membership\Models\MemberProfile) {
             /** @var \App\Models\User $user */
             $user = $reportable->user;
 
             return $user->name;
         }
 
-        if ($reportable instanceof \App\Models\Band) {
+        if ($reportable instanceof \CorvMC\Bands\Models\Band) {
             return $reportable->name ?? 'Untitled Band';
         }
 

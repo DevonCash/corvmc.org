@@ -20,7 +20,7 @@ class MyMembership extends Page implements HasActions, HasSchemas
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-star';
 
-    protected string $view = 'filament.pages.my-membership';
+    protected string $view = 'membership::filament.pages.my-membership';
 
     protected static string|\UnitEnum|null $navigationGroup = 'My Account';
 

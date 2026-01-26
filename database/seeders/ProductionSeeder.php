@@ -110,10 +110,6 @@ class ProductionSeeder extends Seeder
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
             'status' => 'confirmed',
-            'payment_status' => 'n/a',
-            'cost' => 0, // Events don't pay for space
-            'hours_used' => $reservedAt->diffInMinutes($reservedUntil) / 60,
-            'free_hours_used' => 0,
             'is_recurring' => false,
             'notes' => 'Space reservation for event: '.$event->title,
         ]);

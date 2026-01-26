@@ -3,7 +3,7 @@
 namespace CorvMC\Finance\Actions\Payments;
 
 use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
-use App\Filament\Actions\Action;
+use App\Filament\Shared\Actions\Action;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Filament\Forms\Components\Select;

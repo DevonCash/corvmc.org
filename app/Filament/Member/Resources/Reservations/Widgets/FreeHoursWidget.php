@@ -10,7 +10,7 @@ use Filament\Widgets\Widget;
 
 class FreeHoursWidget extends Widget
 {
-    protected string $view = 'filament.resources.reservations.widgets.free-hours-widget';
+    protected string $view = 'space-management::filament.widgets.free-hours-widget';
 
     protected static ?int $sort = 1;
 

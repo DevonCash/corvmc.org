@@ -20,7 +20,7 @@ class ViewMemberProfile extends Page
 
     protected static string $resource = MemberProfileResource::class;
 
-    protected string $view = 'filament.resources.member-profiles.pages.view-member-profile';
+    protected string $view = 'membership::filament.pages.view-member-profile';
 
     public function getTitle(): string|\Illuminate\Contracts\Support\Htmlable
     {

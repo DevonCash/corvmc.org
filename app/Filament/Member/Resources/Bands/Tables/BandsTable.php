@@ -2,6 +2,7 @@
 
 namespace App\Filament\Member\Resources\Bands\Tables;
 
+use App\Models\User;
 use CorvMC\Bands\Models\Band;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -49,7 +50,7 @@ class BandsTable
 
                 TextColumn::make('activity')
                     ->label('Activity')
-                    ->getStateUsing(fn ($record) => 'Active '.$record->updated_at->diffForHumans())
+                    ->getStateUsing(fn($record) => 'Active ' . $record->updated_at->diffForHumans())
                     ->color('gray')
                     ->size('sm'),
             ])
@@ -74,7 +75,7 @@ class BandsTable
                 SelectFilter::make('hometown')
                     ->label('Location')
                     ->options(function () {
-                        return \App\Models\Band::whereNotNull('hometown')
+                        return Band::whereNotNull('hometown')
                             ->distinct()
                             ->pluck('hometown', 'hometown')
                             ->sort()
@@ -104,8 +105,8 @@ class BandsTable
                     ->label('Manage')
                     ->icon('heroicon-o-arrow-right-circle')
                     ->color('primary')
-                    ->url(fn (Band $record): string => route('filament.band.pages.band-dashboard', ['tenant' => $record->slug]))
-                    ->visible(fn (Band $record): bool => auth()->user()?->canAccessTenant($record) ?? false),
+                    ->url(fn(Band $record): string => route('filament.band.pages.band-dashboard', ['tenant' => $record->slug]))
+                    ->visible(fn(Band $record): bool => User::me()?->canAccessTenant($record) ?? false),
                 ViewAction::make(),
                 EditAction::make(),
             ])

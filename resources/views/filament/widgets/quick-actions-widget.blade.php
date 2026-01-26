@@ -32,18 +32,18 @@
             </div>
             {{-- Action Buttons --}}
             <div class="flex-wrap sm:flex-nowrap flex flex-row md:flex-col gap-2">
-                <a href="{{ \App\Filament\Pages\MyProfile::getUrl() }}"
+                <a href="{{ \App\Filament\Member\Pages\MyProfile::getUrl() }}"
                     class="grow flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <x-tabler-user class="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     <span class="text-sm text-gray-700 dark:text-gray-300">Profile</span>
                 </a>
-                <a href="{{ \App\Filament\Pages\MyMembership::getUrl() }}"
+                <a href="{{ \App\Filament\Member\Pages\MyMembership::getUrl() }}"
                     class="grow flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <x-tabler-star class="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     <span class="text-sm text-gray-700 dark:text-gray-300">Membership</span>
                 </a>
 
-                <a href="{{ \App\Filament\Pages\MyAccount::getUrl() }}"
+                <a href="{{ \App\Filament\Member\Pages\MyAccount::getUrl() }}"
                     class="grow flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <x-tabler-settings class="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     <span class="text-sm text-gray-700 dark:text-gray-300">Settings</span>

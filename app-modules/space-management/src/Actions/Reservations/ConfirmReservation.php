@@ -4,7 +4,7 @@ namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Events\ReservationConfirmed;
-use App\Filament\Actions\Action;
+use App\Filament\Shared\Actions\Action;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;

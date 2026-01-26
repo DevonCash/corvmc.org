@@ -250,7 +250,7 @@ class ReservationForm
 
             ViewField::make('reservation_summary')
                 ->label('Reservation Summary')
-                ->view('filament.components.reservation-summary')
+                ->view('space-management::filament.components.reservation-summary')
                 ->columnSpanFull(),
         ];
     }

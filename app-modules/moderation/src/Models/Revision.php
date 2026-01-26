@@ -266,8 +266,8 @@ class Revision extends Model
     public function getModelTypeName(): string
     {
         return match ($this->revisionable_type) {
-            'App\Models\MemberProfile' => 'Member Profile',
-            'App\Models\Band' => 'Band',
+            'CorvMC\Membership\Models\MemberProfile' => 'Member Profile',
+            'CorvMC\Bands\Models\Band' => 'Band',
             'CorvMC\Events\Models\Event' => 'Event',
             default => class_basename($this->revisionable_type)
         };

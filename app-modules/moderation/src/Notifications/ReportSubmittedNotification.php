@@ -2,6 +2,8 @@
 
 namespace CorvMC\Moderation\Notifications;
 
+use CorvMC\Bands\Models\Band;
+use CorvMC\Membership\Models\MemberProfile;
 use CorvMC\Moderation\Models\Report;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -82,14 +84,14 @@ class ReportSubmittedNotification extends Notification implements ShouldQueue
             return $reportable->title ?? 'Untitled Production';
         }
 
-        if ($reportable instanceof \App\Models\MemberProfile) {
+        if ($reportable instanceof MemberProfile) {
             /** @var \App\Models\User $user */
             $user = $reportable->user;
 
             return $user->name;
         }
 
-        if ($reportable instanceof \App\Models\Band) {
+        if ($reportable instanceof Band) {
             return $reportable->name ?? 'Untitled Band';
         }
 

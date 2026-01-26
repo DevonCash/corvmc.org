@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 use App\Models\User;
-
+use CorvMC\Bands\Models\Band;
 use CorvMC\Moderation\Contracts\Reportable;
 
 class AwardSuccessfulContent
@@ -62,7 +62,7 @@ class AwardSuccessfulContent
             return $content->status === 'completed';
         }
 
-        if ($content instanceof \App\Models\MemberProfile || $content instanceof \App\Models\Band) {
+        if ($content instanceof \CorvMC\Membership\Models\MemberProfile || $content instanceof Band) {
             return true;
         }
 

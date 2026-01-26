@@ -13,7 +13,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * @property \App\Models\Band $record
+ * @property \CorvMC\Bands\Models\Band $record
  */
 class ViewBand extends Page
 {
@@ -21,7 +21,7 @@ class ViewBand extends Page
 
     protected static string $resource = BandResource::class;
 
-    protected string $view = 'filament.resources.band-profiles.pages.view-band-profile';
+    protected string $view = 'bands::filament.pages.view-band-profile';
 
     public function getTitle(): string|\Illuminate\Contracts\Support\Htmlable
     {

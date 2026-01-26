@@ -8,7 +8,7 @@ use Filament\Widgets\Widget;
 
 class SpaceUsageWidget extends Widget
 {
-    protected string $view = 'filament.resources.space-management.widgets.space-usage-widget';
+    protected string $view = 'space-management::filament.widgets.space-usage-widget';
 
     protected static bool $isLazy = false;
 

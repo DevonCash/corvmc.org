@@ -62,13 +62,13 @@ Route::get('/about', function () {
 })->name('about');
 
 Route::get('/events', function () {
-    return view('public.events.index');
+    return view('events::public.index');
 })->name('events.index');
 
 Route::get('/events/{event}', function (Event $event) {
     abort_if($event->published_at > now() || $event->published_at === null, 404);
 
-    return view('public.events.show', compact('event'));
+    return view('events::public.show', compact('event'));
 })->where('event', '[0-9]+')->name('events.show');
 
 Route::get('/show-tonight', function () {
@@ -94,7 +94,7 @@ Route::get('/members', [\App\Http\Controllers\PublicMemberController::class, 'in
 Route::get('/members/{memberProfile}', [\App\Http\Controllers\PublicMemberController::class, 'show'])->where('memberProfile', '[0-9]+')->name('members.show');
 
 Route::get('/bands', function () {
-    return view('public.bands.index');
+    return view('bands::public.index');
 })->name('bands.index');
 
 Route::get('/bands/{band}', function (Band $band) {
@@ -102,7 +102,7 @@ Route::get('/bands/{band}', function (Band $band) {
 
     $band->load(['members', 'tags', 'media']);
 
-    return view('public.bands.show', compact('band'));
+    return view('bands::public.show', compact('band'));
 })->where('band', '[a-z0-9\-]+')->name('bands.show');
 
 Route::get('/programs', function () {

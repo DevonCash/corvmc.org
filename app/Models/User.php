@@ -4,15 +4,18 @@ namespace App\Models;
 
 use CorvMC\Bands\Models\Band;
 use CorvMC\Bands\Models\BandMember;
+use CorvMC\Events\Models\Event;
 use CorvMC\Finance\Concerns\HasCredits;
 use CorvMC\Membership\Models\MemberProfile;
 use CorvMC\Membership\Concerns\HasMembershipStatus;
 use CorvMC\Sponsorship\Models\Sponsor;
 use CorvMC\Membership\Data\UserSettingsData;
 use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Models\CreditTransaction;
 use CorvMC\Membership\Notifications\EmailVerificationNotification;
-use CorvMC\Membership\Notifications\PasswordResetNotification;
 use CorvMC\Moderation\Concerns\HasTrust;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasTenants;
@@ -51,9 +54,9 @@ use Spatie\Permission\Traits\HasRoles;
  * @property \Spatie\LaravelData\Contracts\BaseData|\Spatie\LaravelData\Contracts\TransformableData $settings
  * @property-read Collection<int, \Spatie\Activitylog\Models\Activity> $activities
  * @property-read int|null $activities_count
- * @property-read Collection<int, \App\Models\BandMember> $bandMemberships
+ * @property-read Collection<int, \CorvMC\Bands\Models\BandMember> $bandMemberships
  * @property-read int|null $band_memberships_count
- * @property-read Collection<int, \App\Models\Band> $bands
+ * @property-read Collection<int, \CorvMC\Bands\Models\Band> $bands
  * @property-read int|null $bands_count
  * @property-read Collection<int, \App\Models\CreditTransaction> $creditTransactions
  * @property-read int|null $credit_transactions_count
@@ -65,7 +68,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read string|null $staff_profile_image_url
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
- * @property-read Collection<int, \App\Models\Band> $ownedBands
+ * @property-read Collection<int, \CorvMC\Bands\Models\Band> $ownedBands
  * @property-read int|null $owned_bands_count
  * @property-read Collection<int, \Spatie\Permission\Models\Permission> $permissions
  * @property-read int|null $permissions_count
@@ -315,7 +318,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
         }
 
         // Sum all negative credit transactions (deductions) this month
-        $usedBlocks = \App\Models\CreditTransaction::where('user_id', $this->id)
+        $usedBlocks = CreditTransaction::where('user_id', $this->id)
             ->where('credit_type', CreditType::FreeHours)
             ->where('amount', '<', 0)
             ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
@@ -381,7 +384,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
     // {
     //     $this->notify(new PasswordResetNotification($token));
     // }
-    
+
     // Temporarily using stock Filament notification to debug signature issue
 
     public function sendEmailVerificationNotification()

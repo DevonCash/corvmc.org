@@ -36,7 +36,7 @@
             <div class="grid gap-6"
                 style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); max-width: calc(4 * (280px + 1.5rem) - 1.5rem);">
                 @forelse ($this->getMembers() as $member)
-                    <x-member-card :member="$member" :link="route('filament.member.resources.directory.view', $member)" />
+                    <x-membership::member-card :member="$member" :link="route('filament.member.resources.directory.view', $member)" />
                 @empty
                     <div class="col-span-full text-center py-12 space-y-2">
                         <x-tabler-user-question class="mx-auto h-12 w-12 text-gray-400" />

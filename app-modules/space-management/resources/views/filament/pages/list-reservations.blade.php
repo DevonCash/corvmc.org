@@ -12,7 +12,7 @@
     </div>
 
     {{-- Free Hours Widget --}}
-    @livewire(\App\Filament\Resources\Reservations\Widgets\FreeHoursWidget::class)
+    @livewire(\App\Filament\Member\Resources\Reservations\Widgets\FreeHoursWidget::class)
 
     {{-- Tabs --}}
     {{ $this->content }}

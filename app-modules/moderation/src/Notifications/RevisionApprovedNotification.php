@@ -88,8 +88,8 @@ class RevisionApprovedNotification extends Notification implements ShouldQueue
         $modelId = $this->revision->revisionable_id;
 
         return match ($modelType) {
-            'App\Models\MemberProfile' => url("/member/member-profiles/{$modelId}"),
-            'App\Models\Band' => url("/member/bands/{$modelId}"),
+            'CorvMC\Membership\Models\MemberProfile' => url("/member/member-profiles/{$modelId}"),
+            'CorvMC\Bands\Models\Band' => url("/member/bands/{$modelId}"),
             'CorvMC\Events\Models\Event' => route('events.show', $modelId),
             default => url('/member')
         };

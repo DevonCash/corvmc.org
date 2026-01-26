@@ -100,8 +100,8 @@ class RevisionsTable
                 SelectFilter::make('revisionable_type')
                     ->label('Model Type')
                     ->options([
-                        'App\Models\MemberProfile' => 'Member Profile',
-                        'App\Models\Band' => 'Band',
+                        'CorvMC\Membership\Models\MemberProfile' => 'Member Profile',
+                        'CorvMC\Bands\Models\Band' => 'Band',
                         'CorvMC\Events\Models\Event' => 'Event',
                     ]),
 

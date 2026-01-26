@@ -88,6 +88,6 @@ class InvitationAcceptForm extends Component implements HasForms
 
     public function render()
     {
-        return view('livewire.invitation-accept-form');
+        return view('bands::livewire.invitation-accept-form');
     }
 }

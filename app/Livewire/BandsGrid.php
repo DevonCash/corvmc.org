@@ -18,7 +18,7 @@ class BandsGrid extends SearchableGrid
 
     protected function getCardComponent(): string
     {
-        return 'band-card';
+        return 'bands::band-card';
     }
 
     protected function getTitle(): string

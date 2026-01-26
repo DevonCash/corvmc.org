@@ -2,7 +2,7 @@
 
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
-use App\Filament\Actions\Action;
+use App\Filament\Shared\Actions\Action\Action;
 use CorvMC\Support\Enums\RecurringSeriesStatus;
 use CorvMC\Support\Models\RecurringSeries;
 use Lorisleiva\Actions\Concerns\AsAction;

@@ -29,7 +29,7 @@ class EventsGrid extends SearchableGrid
 
     protected function getCardComponent(): string
     {
-        return 'event-card';
+        return 'events::event-card';
     }
 
     protected function getTitle(): string

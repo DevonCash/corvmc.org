@@ -112,8 +112,8 @@ class Report extends Model
         return match ($type) {
             'CorvMC\Events\Models\Event' => array_merge($baseReasons, ['misleading_info']),
             'App\Models\Production' => array_merge($baseReasons, ['misleading_info']), // Legacy support
-            'App\Models\MemberProfile' => array_merge($baseReasons, ['fake_profile']),
-            'App\Models\Band' => array_merge($baseReasons, ['copyright', 'misleading_info']),
+            'CorvMC\Membership\Models\MemberProfile' => array_merge($baseReasons, ['fake_profile']),
+            'CorvMC\Bands\Models\Band' => array_merge($baseReasons, ['copyright', 'misleading_info']),
             default => $baseReasons,
         };
     }

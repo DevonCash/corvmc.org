@@ -3,6 +3,8 @@
 namespace App\Filament\Shared\Components;
 
 use App\Models\User;
+use CorvMC\Bands\Models\Band;
+use CorvMC\Membership\Models\MemberProfile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Spatie\Activitylog\Models\Activity;
@@ -39,7 +41,7 @@ class ActivitySidebar
                 if ($context['record_id']) {
                     // If record_id is a slug, find the actual band ID
                     if (is_string($context['record_id']) && ! is_numeric($context['record_id'])) {
-                        $band = \App\Models\Band::where('slug', $context['record_id'])->first();
+                        $band = Band::where('slug', $context['record_id'])->first();
                         $bandId = $band ? $band->id : null;
                     } else {
                         $bandId = $context['record_id'];
@@ -55,7 +57,7 @@ class ActivitySidebar
             case 'member':
                 if ($context['record_id']) {
                     // Get the member profile and user ID outside the query to avoid N+1
-                    $memberProfile = \App\Models\MemberProfile::find($context['record_id']);
+                    $memberProfile = MemberProfile::find($context['record_id']);
 
                     $query->where(function ($q) use ($context, $memberProfile) {
                         // Direct member profile activities
@@ -244,7 +246,7 @@ class ActivitySidebar
 
     protected static function formatReservationDescription(Activity $activity, string $causerName, string $action): string
     {
-        $currentUser = Auth::user();
+        $currentUser = User::me();
         $reservation = $activity->subject;
 
         if (

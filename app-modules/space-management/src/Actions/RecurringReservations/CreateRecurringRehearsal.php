@@ -2,8 +2,8 @@
 
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
-use App\Filament\Actions\Action;
-use App\Filament\Resources\RecurringReservations\Schemas\RecurringReservationForm;
+use App\Filament\Shared\Actions\Action;
+use App\Filament\Staff\Resources\RecurringReservations\Schemas\RecurringReservationForm;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\Support\Actions\GenerateRecurringInstances;
 use CorvMC\Support\Enums\RecurringSeriesStatus;

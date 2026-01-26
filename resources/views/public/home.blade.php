@@ -64,7 +64,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto items-center justify-center">
                     @foreach ($upcomingEvents as $event)
-                        <x-event-card :item="$event" />
+                        <x-events::event-card :item="$event" />
                     @endforeach
                 </div>
 

@@ -19,7 +19,7 @@ class ListReservations extends ListRecords
 
     protected static ?string $title = 'Reserve Practice Space';
 
-    protected string $view = 'filament.resources.reservations.pages.list-reservations';
+    protected string $view = 'space-management::filament.pages.list-reservations';
 
     public function getBreadcrumbs(): array
     {

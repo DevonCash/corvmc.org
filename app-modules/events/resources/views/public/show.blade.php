@@ -113,7 +113,7 @@
                      @if($event->performers->count() == 4) sm:grid-cols-2 gap-6
                      @else sm:grid-cols-2 md:grid-cols-3 gap-6 @endif">
                 @foreach ($event->performers as $performer)
-                    <x-performer-card :performer="$performer" />
+                    <x-events::performer-card :performer="$performer" />
                 @endforeach
             </div>
         @endif

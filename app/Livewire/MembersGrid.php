@@ -31,7 +31,7 @@ class MembersGrid extends SearchableGrid
 
     protected function getCardComponent(): string
     {
-        return 'member-card';
+        return 'membership::member-card';
     }
 
     protected function getTitle(): string

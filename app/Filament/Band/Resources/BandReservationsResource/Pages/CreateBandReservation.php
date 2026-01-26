@@ -162,7 +162,7 @@ class CreateBandReservation extends CreateRecord
 
             ViewField::make('reservation_summary')
                 ->label('Reservation Summary')
-                ->view('filament.band.components.band-reservation-summary')
+                ->view('bands::filament.components.band-reservation-summary')
                 ->columnSpanFull(),
         ];
     }
