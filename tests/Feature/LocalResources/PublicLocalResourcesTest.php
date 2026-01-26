@@ -1,7 +1,11 @@
 <?php
 
+use App\Livewire\ResourceSuggestionForm;
 use App\Models\LocalResource;
 use App\Models\ResourceList;
+use App\Notifications\ResourceSuggestionNotification;
+use Illuminate\Support\Facades\Notification;
+use Livewire\Livewire;
 
 describe('public local resources page', function () {
     it('displays the local resources page', function () {
@@ -140,5 +144,91 @@ describe('public local resources page', function () {
             ->assertOk()
             ->assertSee('href="#music-shops"', false)
             ->assertSee('href="#recording-studios"', false);
+    });
+
+    it('displays the resource suggestion form', function () {
+        $this->get(route('local-resources'))
+            ->assertOk()
+            ->assertSee('Suggest a Resource')
+            ->assertSeeLivewire(ResourceSuggestionForm::class);
+    });
+});
+
+describe('resource suggestion form', function () {
+    it('submits a resource suggestion and sends notification', function () {
+        Notification::fake();
+
+        $list = ResourceList::factory()->published()->create(['name' => 'Music Shops']);
+
+        Livewire::test(ResourceSuggestionForm::class)
+            ->fillForm([
+                'resource_name' => 'Test Music Store',
+                'category' => $list->id,
+                'website' => 'https://testmusicstore.com',
+                'description' => 'A great place for guitars',
+                'contact_name' => 'John Owner',
+                'contact_phone' => '541-555-1234',
+                'address' => '123 Main St, Corvallis, OR',
+                'submitter_name' => 'Jane Submitter',
+                'submitter_email' => 'jane@example.com',
+            ])
+            ->call('submit')
+            ->assertHasNoFormErrors();
+
+        Notification::assertSentOnDemand(ResourceSuggestionNotification::class);
+    });
+
+    it('requires resource name and submitter info', function () {
+        Livewire::test(ResourceSuggestionForm::class)
+            ->fillForm([
+                'resource_name' => '',
+                'submitter_name' => '',
+                'submitter_email' => '',
+            ])
+            ->call('submit')
+            ->assertHasFormErrors([
+                'resource_name' => 'required',
+                'submitter_name' => 'required',
+                'submitter_email' => 'required',
+            ]);
+    });
+
+    it('validates email format', function () {
+        Livewire::test(ResourceSuggestionForm::class)
+            ->fillForm([
+                'resource_name' => 'Test Resource',
+                'submitter_name' => 'Test User',
+                'submitter_email' => 'not-an-email',
+            ])
+            ->call('submit')
+            ->assertHasFormErrors(['submitter_email' => 'email']);
+    });
+
+    it('shows new category field when other is selected', function () {
+        Livewire::test(ResourceSuggestionForm::class)
+            ->fillForm(['category' => 'other'])
+            ->assertFormFieldIsVisible('new_category');
+    });
+
+    it('handles other category in submission', function () {
+        Notification::fake();
+
+        Livewire::test(ResourceSuggestionForm::class)
+            ->fillForm([
+                'resource_name' => 'New Resource',
+                'category' => 'other',
+                'new_category' => 'Vinyl Pressing',
+                'submitter_name' => 'Test User',
+                'submitter_email' => 'test@example.com',
+            ])
+            ->call('submit')
+            ->assertHasNoFormErrors();
+
+        Notification::assertSentOnDemand(
+            ResourceSuggestionNotification::class,
+            function ($notification) {
+                return $notification->submissionData['category_name'] === 'Vinyl Pressing';
+            }
+        );
     });
 });
