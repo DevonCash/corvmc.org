@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\CreditType;
+use CorvMC\Finance\Enums\CreditType;
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Finance\Enums\ChargeStatus;

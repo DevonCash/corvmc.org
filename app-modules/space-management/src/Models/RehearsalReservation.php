@@ -3,9 +3,14 @@
 namespace CorvMC\SpaceManagement\Models;
 
 use App\Models\User;
+use Carbon\Carbon;
 use CorvMC\Finance\Concerns\HasCharges;
 use CorvMC\Finance\Contracts\Chargeable;
+use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use CorvMC\SpaceManagement\Database\Factories\RehearsalReservationFactory;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\Support\Contracts\Recurrable;
+use CorvMC\Support\Models\RecurringSeries;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -35,7 +40,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  *
  * @mixin \Eloquent
  */
-class RehearsalReservation extends Reservation implements Chargeable
+class RehearsalReservation extends Reservation implements Chargeable, Recurrable
 {
     use HasCharges, HasFactory;
 
@@ -106,5 +111,90 @@ class RehearsalReservation extends Reservation implements Chargeable
 
         // Fallback to the user relationship
         return $this->user ?? throw new \RuntimeException('No billable user found for reservation');
+    }
+
+    // =========================================================================
+    // Recurrable Interface Implementation
+    // =========================================================================
+
+    /**
+     * Create a reservation instance from a recurring series.
+     *
+     * @throws \InvalidArgumentException If the reservation cannot be created (e.g., conflict)
+     */
+    public static function createFromRecurringSeries(RecurringSeries $series, Carbon $date): static
+    {
+        $startDateTime = $date->copy()->setTimeFromTimeString($series->start_time->format('H:i:s'));
+        $endDateTime = $date->copy()->setTimeFromTimeString($series->end_time->format('H:i:s'));
+
+        /** @var static */
+        return CreateReservation::run(
+            $series->user,
+            $startDateTime,
+            $endDateTime,
+            [
+                'recurring_series_id' => $series->id,
+                'instance_date' => $date->toDateString(),
+                'is_recurring' => true,
+                'recurrence_pattern' => ['source' => 'recurring_series'],
+                'status' => ReservationStatus::Reserved,
+            ]
+        );
+    }
+
+    /**
+     * Create a cancelled placeholder to track a skipped instance.
+     */
+    public static function createCancelledPlaceholder(RecurringSeries $series, Carbon $date): void
+    {
+        $startDateTime = $date->copy()->setTimeFromTimeString($series->start_time->format('H:i:s'));
+        $endDateTime = $date->copy()->setTimeFromTimeString($series->end_time->format('H:i:s'));
+
+        Reservation::create([
+            'user_id' => $series->user_id,
+            'type' => static::class,
+            'recurring_series_id' => $series->id,
+            'instance_date' => $date->toDateString(),
+            'reserved_at' => $startDateTime,
+            'reserved_until' => $endDateTime,
+            'status' => ReservationStatus::Cancelled,
+            'cancellation_reason' => 'Scheduling conflict',
+            'is_recurring' => true,
+            'cost' => 0,
+        ]);
+    }
+
+    /**
+     * Check if an instance already exists for this date in the series.
+     */
+    public static function instanceExistsForDate(RecurringSeries $series, Carbon $date): bool
+    {
+        return Reservation::where('recurring_series_id', $series->id)
+            ->where('instance_date', $date->toDateString())
+            ->exists();
+    }
+
+    /**
+     * Cancel all future instances for a series.
+     */
+    public static function cancelFutureInstances(RecurringSeries $series, ?string $reason = null): int
+    {
+        $futureInstances = Reservation::where('recurring_series_id', $series->id)
+            ->where('reserved_at', '>', now())
+            ->whereIn('status', [
+                ReservationStatus::Scheduled->value,
+                ReservationStatus::Reserved->value,
+                ReservationStatus::Confirmed->value,
+            ])
+            ->get();
+
+        foreach ($futureInstances as $reservation) {
+            $reservation->update([
+                'status' => ReservationStatus::Cancelled,
+                'cancellation_reason' => $reason ?? 'Recurring series cancelled',
+            ]);
+        }
+
+        return $futureInstances->count();
     }
 }

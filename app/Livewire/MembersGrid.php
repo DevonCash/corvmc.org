@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\MemberProfile;
+use CorvMC\Membership\Models\MemberProfile;
 
 class MembersGrid extends SearchableGrid
 {

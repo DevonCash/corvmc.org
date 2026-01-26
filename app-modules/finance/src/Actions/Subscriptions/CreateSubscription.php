@@ -2,7 +2,7 @@
 
 namespace CorvMC\Finance\Actions\Subscriptions;
 
-use App\Exceptions\SubscriptionPriceNotFoundException;
+use CorvMC\Finance\Exceptions\SubscriptionPriceNotFoundException;
 use App\Models\User;
 use Brick\Money\Money;
 use Laravel\Cashier\Cashier;

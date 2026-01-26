@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 
 class BandsGrid extends SearchableGrid
 {

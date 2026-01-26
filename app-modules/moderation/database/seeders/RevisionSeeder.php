@@ -2,9 +2,9 @@
 
 namespace CorvMC\Moderation\Database\Seeders;
 
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use CorvMC\Events\Models\Event;
-use App\Models\MemberProfile;
+use CorvMC\Membership\Models\MemberProfile;
 use CorvMC\Moderation\Models\Revision;
 use App\Models\User;
 use Illuminate\Database\Seeder;

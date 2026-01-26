@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Bands\Pages;
 use CorvMC\Membership\Actions\Bands\CreateBand;
 use App\Filament\Resources\Bands\BandResource;
 use App\Filament\Resources\Bands\Widgets\PendingBandInvitationsWidget;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use App\Models\User;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;

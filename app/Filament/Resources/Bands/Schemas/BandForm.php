@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Bands\Schemas;
 
-use App\Enums\Visibility;
+use CorvMC\Moderation\Enums\Visibility;
 use App\Filament\Components\EmbedControl;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\RichEditor;

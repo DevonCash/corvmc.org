@@ -29,7 +29,7 @@ use Spatie\Tags\HasTags;
  * @property int|null $owner_id
  * @property int|null $organizer_id
  * @property int|null $creator_id
- * @property \App\Enums\Visibility|null $visibility
+ * @property \CorvMC\Moderation\Enums\Visibility|null $visibility
  */
 abstract class ContentModel extends Model implements HasMedia, ReportableContract
 {
@@ -55,7 +55,7 @@ abstract class ContentModel extends Model implements HasMedia, ReportableContrac
     protected function casts(): array
     {
         return [
-            'visibility' => \App\Enums\Visibility::class,
+            'visibility' => \CorvMC\Moderation\Enums\Visibility::class,
         ];
     }
 
@@ -137,7 +137,7 @@ abstract class ContentModel extends Model implements HasMedia, ReportableContrac
      */
     protected function isPrivateContent(): bool
     {
-        return $this->visibility === \App\Enums\Visibility::Private;
+        return $this->visibility === \CorvMC\Moderation\Enums\Visibility::Private;
     }
 
     /**

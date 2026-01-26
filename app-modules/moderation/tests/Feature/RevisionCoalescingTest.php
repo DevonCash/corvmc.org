@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\MemberProfile;
+use CorvMC\Membership\Models\MemberProfile;
 use CorvMC\Moderation\Models\Revision;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

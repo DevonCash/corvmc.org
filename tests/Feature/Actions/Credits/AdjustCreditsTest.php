@@ -1,7 +1,7 @@
 <?php
 
 use CorvMC\Finance\Actions\Credits\AdjustCredits;
-use App\Enums\CreditType;
+use CorvMC\Finance\Enums\CreditType;
 use App\Models\User;
 
 it('adds free hours credits to a user', function () {

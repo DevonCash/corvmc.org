@@ -23,7 +23,7 @@ class RecurringReservationsTable
 
                 TextColumn::make('recurrence_rule')
                     ->label('Pattern')
-                    ->formatStateUsing(fn ($state) => \App\Actions\RecurringReservations\FormatRRuleForHumans::run($state))
+                    ->formatStateUsing(fn ($state) => \CorvMC\SpaceManagement\Actions\RecurringReservations\FormatRRuleForHumans::run($state))
                     ->wrap(),
 
                 TextColumn::make('start_time')
@@ -85,7 +85,7 @@ class RecurringReservationsTable
                     ->color('danger')
                     ->requiresConfirmation()
                     ->visible(fn ($record) => $record->status === 'active')
-                    ->action(fn ($record) => \App\Actions\RecurringReservations\CancelRecurringSeries::run($record)),
+                    ->action(fn ($record) => \CorvMC\Support\Actions\CancelRecurringSeries::run($record)),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

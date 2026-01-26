@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\RecurringReservations\Pages;
 
 use App\Filament\Resources\RecurringReservations\RecurringReservationResource;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateRecurringReservation extends CreateRecord
@@ -12,7 +13,10 @@ class CreateRecurringReservation extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Build RRULE from form inputs
-        $data['recurrence_rule'] = \App\Actions\RecurringReservations\BuildRRule::run($data);
+        $data['recurrence_rule'] = \CorvMC\SpaceManagement\Actions\RecurringReservations\BuildRRule::run($data);
+
+        // Set recurable_type to Reservation for this resource
+        $data['recurable_type'] = Reservation::class;
 
         // Remove temporary form fields
         unset($data['frequency'], $data['interval'], $data['by_day']);
@@ -23,6 +27,6 @@ class CreateRecurringReservation extends CreateRecord
     protected function afterCreate(): void
     {
         // Generate initial instances after creating series
-        \App\Actions\RecurringReservations\GenerateRecurringInstances::run($this->record);
+        \CorvMC\Support\Actions\GenerateRecurringInstances::run($this->record);
     }
 }

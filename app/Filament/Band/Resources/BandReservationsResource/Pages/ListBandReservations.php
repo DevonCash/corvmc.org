@@ -3,7 +3,7 @@
 namespace App\Filament\Band\Resources\BandReservationsResource\Pages;
 
 use App\Filament\Band\Resources\BandReservationsResource;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\ListRecords;

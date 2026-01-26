@@ -1,7 +1,7 @@
 <?php
 
 use CorvMC\Events\Models\Event;
-use App\Models\Venue;
+use CorvMC\Events\Models\Venue;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 

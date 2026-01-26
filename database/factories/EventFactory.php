@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use CorvMC\Events\Enums\EventStatus;
-use CorvMC\Events\Enums\Visibility;
+use CorvMC\Moderation\Enums\Visibility;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
 use Illuminate\Database\Eloquent\Factories\Factory;

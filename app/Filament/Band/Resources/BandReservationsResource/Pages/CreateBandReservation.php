@@ -9,7 +9,7 @@ use CorvMC\SpaceManagement\Actions\Reservations\GetValidEndTimesForDate;
 use CorvMC\SpaceManagement\Actions\Reservations\ValidateReservation;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use App\Filament\Band\Resources\BandReservationsResource;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Carbon\Carbon;
 use Filament\Facades\Filament;

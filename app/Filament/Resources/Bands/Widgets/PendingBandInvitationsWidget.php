@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Bands\Widgets;
 
 use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
 use CorvMC\Membership\Actions\Bands\DeclineBandInvitation;
-use App\Models\BandMember;
+use CorvMC\Bands\Models\BandMember;
 use App\Models\User;
 use Filament\Tables;
 use Filament\Tables\Table;

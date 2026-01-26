@@ -2,15 +2,15 @@
 
 namespace Database\Factories;
 
-use App\Data\ContactData;
-use App\Enums\Visibility;
-use App\Models\MemberProfile;
+use CorvMC\Membership\Data\ContactData;
+use CorvMC\Moderation\Enums\Visibility;
+use CorvMC\Membership\Models\MemberProfile;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\MemberProfile>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\CorvMC\Membership\Models\MemberProfile>
  */
 class MemberProfileFactory extends Factory
 {

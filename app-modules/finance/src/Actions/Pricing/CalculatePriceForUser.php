@@ -2,7 +2,7 @@
 
 namespace CorvMC\Finance\Actions\Pricing;
 
-use App\Enums\CreditType;
+use CorvMC\Finance\Enums\CreditType;
 use App\Models\User;
 use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\Finance\Data\PriceCalculationData;

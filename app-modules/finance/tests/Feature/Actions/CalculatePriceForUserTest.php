@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\CreditType;
+use CorvMC\Finance\Enums\CreditType;
 use App\Models\User;
 use CorvMC\Finance\Actions\Pricing\CalculatePriceForUser;
 use CorvMC\Finance\Contracts\Chargeable;

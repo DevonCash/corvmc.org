@@ -3,7 +3,7 @@
 namespace App\Filament\Band\Resources\BandMembersResource\Pages;
 
 use App\Filament\Band\Resources\BandMembersResource;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;

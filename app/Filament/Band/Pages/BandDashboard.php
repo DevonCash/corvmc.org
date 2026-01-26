@@ -5,7 +5,7 @@ namespace App\Filament\Band\Pages;
 use App\Filament\Band\Resources\BandMembersResource;
 use App\Filament\Band\Resources\BandReservationsResource;
 use App\Filament\Pages\Tenancy\EditBandProfile;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use CorvMC\SpaceManagement\Models\Reservation;
 use BackedEnum;
 use Filament\Facades\Filament;

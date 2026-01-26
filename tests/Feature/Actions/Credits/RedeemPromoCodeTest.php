@@ -1,7 +1,7 @@
 <?php
 
 use App\Actions\Credits\RedeemPromoCode;
-use App\Enums\CreditType;
+use CorvMC\Finance\Enums\CreditType;
 use App\Exceptions\PromoCodeAlreadyRedeemedException;
 use App\Exceptions\PromoCodeMaxUsesException;
 use App\Models\PromoCode;

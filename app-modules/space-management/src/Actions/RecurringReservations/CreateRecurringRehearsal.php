@@ -4,13 +4,10 @@ namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
 use App\Filament\Actions\Action;
 use App\Filament\Resources\RecurringReservations\Schemas\RecurringReservationForm;
-use CorvMC\Events\Models\Event;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\Support\Actions\GenerateRecurringInstances;
 use CorvMC\Support\Enums\RecurringSeriesStatus;
 use CorvMC\Support\Models\RecurringSeries;
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use CorvMC\SpaceManagement\Models\Reservation;
-use App\Models\User;
-use Carbon\Carbon;
 use Lorisleiva\Actions\Concerns\AsAction;
 use RRule\RRule;
 
@@ -19,17 +16,12 @@ class CreateRecurringRehearsal
     use AsAction;
 
     /**
-     * Create a new recurring series.
+     * Create a new recurring rehearsal series.
      *
-     * @param  string  $recurableType  The model class this series creates (Reservation::class or Event::class)
-     *
-     * @throws \InvalidArgumentException If user is not a sustaining member (for reservations)
+     * @throws \InvalidArgumentException If user is not a sustaining member
      */
-    public function handle(
-        array $data,
-
-    ): RecurringSeries {
-
+    public function handle(array $data): RecurringSeries
+    {
         $series = RecurringSeries::create([
             'user_id' => $data['user_id'],
             'recurable_type' => RehearsalReservation::class,

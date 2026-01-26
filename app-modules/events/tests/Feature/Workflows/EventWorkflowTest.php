@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Events\Actions\AddEventPerformer;

@@ -8,7 +8,7 @@ use App\Filament\Resources\Bands\Pages\ViewBand;
 use App\Filament\Resources\Bands\RelationManagers\MembersRelationManager;
 use App\Filament\Resources\Bands\Schemas\BandForm;
 use App\Filament\Resources\Bands\Tables\BandsTable;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use App\Models\User;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

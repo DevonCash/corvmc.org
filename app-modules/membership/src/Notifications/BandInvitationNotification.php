@@ -2,7 +2,7 @@
 
 namespace CorvMC\Membership\Notifications;
 
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 

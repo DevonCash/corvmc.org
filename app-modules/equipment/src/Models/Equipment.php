@@ -2,7 +2,7 @@
 
 namespace CorvMC\Equipment\Models;
 
-use App\Data\ContactData;
+use CorvMC\Membership\Data\ContactData;
 use App\Models\User;
 use CorvMC\Equipment\States\Equipment\EquipmentState;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

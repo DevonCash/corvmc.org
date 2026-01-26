@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
-use App\Enums\CreditType;
+use CorvMC\Finance\Enums\CreditType;
 use App\Filament\Resources\Users\UserResource;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;

@@ -1,8 +1,8 @@
 <?php
 
-use App\Enums\Visibility;
-use App\Models\Band;
-use App\Models\MemberProfile;
+use CorvMC\Moderation\Enums\Visibility;
+use CorvMC\Bands\Models\Band;
+use CorvMC\Membership\Models\MemberProfile;
 use App\Models\User;
 use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
 use CorvMC\Membership\Actions\Bands\AddBandMember;
@@ -136,7 +136,7 @@ describe('Membership Workflow: Band Invitations', function () {
 
         // Try to add again
         expect(fn () => AddBandMember::run($band, $member))
-            ->toThrow(\App\Exceptions\BandException::class);
+            ->toThrow(\CorvMC\Bands\Exceptions\BandException::class);
     });
 });
 

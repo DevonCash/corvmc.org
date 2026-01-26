@@ -4,7 +4,7 @@ namespace App\Filament\Band\Pages;
 
 use CorvMC\Membership\Actions\Bands\UpdateBand;
 use App\Filament\Resources\Bands\Schemas\BandForm;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use Filament\Facades\Filament;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;

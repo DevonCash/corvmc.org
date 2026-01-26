@@ -1,8 +1,8 @@
 <?php
 
 use CorvMC\Finance\Actions\Credits\ProcessPendingAllocations;
-use App\Enums\CreditType;
-use App\Models\CreditAllocation;
+use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Models\CreditAllocation;
 use App\Models\User;
 
 it('processes pending monthly allocations', function () {

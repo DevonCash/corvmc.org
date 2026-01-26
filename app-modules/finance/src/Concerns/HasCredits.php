@@ -2,7 +2,7 @@
 
 namespace CorvMC\Finance\Concerns;
 
-use App\Enums\CreditType;
+use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Models\CreditTransaction;
 use CorvMC\Finance\Models\UserCredit;
 use Carbon\Carbon;
@@ -61,7 +61,7 @@ trait HasCredits
      * @param  string  $source  What caused this credit deduction
      * @param  int|null  $sourceId  ID of the source entity
      *
-     * @throws \App\Exceptions\InsufficientCreditsException
+     * @throws \CorvMC\Finance\Exceptions\InsufficientCreditsException
      */
     public function deductCredit(
         int $amount,

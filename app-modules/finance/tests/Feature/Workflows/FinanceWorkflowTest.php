@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\CreditType;
+use CorvMC\Finance\Enums\CreditType;
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Finance\Actions\Credits\AdjustCredits;
@@ -8,7 +8,7 @@ use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
 use CorvMC\Finance\Actions\Payments\CalculateFeeCoverage;
 use CorvMC\Finance\Actions\Payments\CalculateTotalWithFeeCoverage;
 use CorvMC\Finance\Enums\ChargeStatus;
-use App\Actions\Payments\MarkReservationAsPaid;
+use CorvMC\Finance\Actions\Payments\MarkReservationAsPaid;
 use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use Illuminate\Support\Facades\Notification;
 use Brick\Money\Money;

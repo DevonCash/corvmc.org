@@ -4,7 +4,7 @@ namespace App\Filament\Resources\MemberProfiles\Pages;
 
 use App\Actions\Invitations\InviteUser;
 use App\Filament\Resources\MemberProfiles\MemberProfileResource;
-use App\Models\MemberProfile;
+use CorvMC\Membership\Models\MemberProfile;
 use App\Models\User;
 use App\Settings\MemberDirectorySettings;
 use Filament\Actions\EditAction;

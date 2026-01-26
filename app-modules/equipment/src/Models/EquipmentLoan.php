@@ -278,22 +278,12 @@ class EquipmentLoan extends Model
     }
 
     /**
-     * Get the reservation period for this loan.
-     *
-     * @deprecated Use createPeriod() instead
-     */
-    public function getReservationPeriod(): Period
-    {
-        return $this->createPeriod();
-    }
-
-    /**
      * Check if this loan's reservation period overlaps with another period.
      * Adjacent periods (touching at boundaries) are NOT considered overlapping.
      */
     public function overlapsWithPeriod(Period $period): bool
     {
-        $thisPeriod = $this->getReservationPeriod();
+        $thisPeriod = $this->createPeriod();
 
         // If periods overlap but only touch at boundaries, allow it
         if ($thisPeriod->overlapsWith($period)) {

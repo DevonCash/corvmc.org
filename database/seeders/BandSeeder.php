@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 

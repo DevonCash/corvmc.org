@@ -2,8 +2,8 @@
 
 namespace CorvMC\Membership\Actions\Bands;
 
-use App\Exceptions\BandException;
-use App\Models\Band;
+use CorvMC\Bands\Exceptions\BandException;
+use CorvMC\Bands\Models\Band;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;

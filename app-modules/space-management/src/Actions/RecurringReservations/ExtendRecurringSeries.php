@@ -2,8 +2,9 @@
 
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
-use App\Models\RecurringReservation;
 use Carbon\Carbon;
+use CorvMC\Support\Actions\GenerateRecurringInstances;
+use CorvMC\Support\Models\RecurringSeries;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class ExtendRecurringSeries
@@ -13,7 +14,7 @@ class ExtendRecurringSeries
     /**
      * Extend series end date and generate new instances.
      */
-    public function handle(RecurringReservation $series, Carbon $newEndDate): void
+    public function handle(RecurringSeries $series, Carbon $newEndDate): void
     {
         $series->update(['series_end_date' => $newEndDate]);
 

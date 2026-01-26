@@ -2,7 +2,7 @@
 
 namespace CorvMC\Finance\Actions\Credits;
 
-use App\Enums\CreditType;
+use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Models\CreditTransaction;
 use App\Models\User;
 use CorvMC\Finance\Models\UserCredit;

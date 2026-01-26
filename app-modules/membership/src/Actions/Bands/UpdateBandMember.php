@@ -3,8 +3,8 @@
 namespace CorvMC\Membership\Actions\Bands;
 
 use App\Actions\Invitations\ResendInvitation;
-use App\Models\Band;
-use App\Models\BandMember;
+use CorvMC\Bands\Models\Band;
+use CorvMC\Bands\Models\BandMember;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;

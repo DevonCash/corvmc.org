@@ -4,7 +4,7 @@ namespace App\Actions\Notifications;
 
 use App\Exceptions\Services\NotificationSchedulingException;
 use App\Models\User;
-use App\Notifications\MembershipReminderNotification;
+use CorvMC\Finance\Notifications\MembershipReminderNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;

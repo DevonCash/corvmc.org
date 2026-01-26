@@ -5,7 +5,7 @@ namespace App\Actions\Notifications;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
-use App\Notifications\ReservationReminderNotification;
+use CorvMC\SpaceManagement\Notifications\ReservationReminderNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;

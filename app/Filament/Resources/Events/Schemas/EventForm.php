@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Events\Schemas;
 
-use App\Models\Venue;
+use CorvMC\Events\Models\Venue;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DateTimePicker;

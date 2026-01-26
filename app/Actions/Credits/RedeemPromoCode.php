@@ -2,10 +2,10 @@
 
 namespace App\Actions\Credits;
 
-use App\Enums\CreditType;
+use CorvMC\Finance\Enums\CreditType;
 use App\Exceptions\PromoCodeAlreadyRedeemedException;
 use App\Exceptions\PromoCodeMaxUsesException;
-use App\Models\CreditTransaction;
+use CorvMC\Finance\Models\CreditTransaction;
 use App\Models\PromoCode;
 use App\Models\PromoCodeRedemption;
 use App\Models\User;

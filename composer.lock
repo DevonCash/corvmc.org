@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6f89ab34741e701af558a6ae6f17b5cf",
+    "content-hash": "5a75af51a6a523882a5862302603f8c2",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -1496,6 +1496,39 @@
                 }
             ],
             "time": "2024-05-06T16:37:16+00:00"
+        },
+        {
+            "name": "corvmc/bands",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/bands",
+                "reference": "fd16653ea03cfdadabdcb4791e9ec51857578ae7"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "CorvMC\\Bands\\Providers\\BandsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CorvMC\\Bands\\": "src/",
+                    "CorvMC\\Bands\\Tests\\": "tests/",
+                    "CorvMC\\Bands\\Database\\Factories\\": "database/factories/",
+                    "CorvMC\\Bands\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Band management module for CorvMC",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "corvmc/equipment",

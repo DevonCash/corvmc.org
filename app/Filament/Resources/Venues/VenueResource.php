@@ -7,7 +7,7 @@ use App\Filament\Resources\Venues\Pages\EditVenue;
 use App\Filament\Resources\Venues\Pages\ListVenues;
 use App\Filament\Resources\Venues\Schemas\VenueForm;
 use App\Filament\Resources\Venues\Tables\VenuesTable;
-use App\Models\Venue;
+use CorvMC\Events\Models\Venue;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;

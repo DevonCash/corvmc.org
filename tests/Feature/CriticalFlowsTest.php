@@ -15,10 +15,10 @@ use CorvMC\Membership\Actions\Bands\AddBandMember;
 use CorvMC\Membership\Actions\Bands\CreateBand;
 use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
 use CorvMC\Events\Actions\CreateEvent;
-use App\Enums\CreditType;
-use App\Models\Band;
+use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Bands\Models\Band;
 use App\Models\User;
-use App\Models\Venue;
+use CorvMC\Events\Models\Venue;
 use CorvMC\Events\Exceptions\SchedulingConflictException;
 use CorvMC\Events\Models\Event;
 use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
@@ -392,7 +392,7 @@ describe('Flow 3: Create Band and Invite Member', function () {
 
         // Act & Assert: Second invitation should fail
         expect(fn () => AddBandMember::run($band, $member, ['role' => 'member']))
-            ->toThrow(\App\Exceptions\BandException::class);
+            ->toThrow(\CorvMC\Bands\Exceptions\BandException::class);
     });
 });
 

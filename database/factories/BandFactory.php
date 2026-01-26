@@ -2,12 +2,12 @@
 
 namespace Database\Factories;
 
-use App\Enums\Visibility;
-use App\Models\Band;
+use CorvMC\Moderation\Enums\Visibility;
+use CorvMC\Bands\Models\Band;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Band>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\CorvMC\Bands\Models\Band>
  */
 class BandFactory extends Factory
 {

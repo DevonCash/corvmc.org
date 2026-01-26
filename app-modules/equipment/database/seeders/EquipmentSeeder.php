@@ -2,7 +2,7 @@
 
 namespace CorvMC\Equipment\Database\Seeders;
 
-use App\Data\ContactData;
+use CorvMC\Membership\Data\ContactData;
 use App\Models\User;
 use CorvMC\Equipment\Models\Equipment;
 use CorvMC\Equipment\Models\EquipmentLoan;

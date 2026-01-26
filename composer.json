@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.2",
         "bezhansalleh/filament-panel-switch": "dev-main",
+        "corvmc/bands": "*",
         "corvmc/equipment": "*",
         "corvmc/events": "*",
         "corvmc/finance": "*",

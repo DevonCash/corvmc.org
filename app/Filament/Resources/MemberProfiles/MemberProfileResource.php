@@ -7,7 +7,7 @@ use App\Filament\Resources\MemberProfiles\Pages\ListMemberProfiles;
 use App\Filament\Resources\MemberProfiles\Pages\ViewMemberProfile;
 use App\Filament\Resources\MemberProfiles\Schemas\MemberProfileForm;
 use App\Filament\Resources\MemberProfiles\Tables\MemberProfilesTable;
-use App\Models\MemberProfile;
+use CorvMC\Membership\Models\MemberProfile;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

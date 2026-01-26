@@ -3,7 +3,7 @@
 namespace App\Filament\Widgets;
 
 use CorvMC\Membership\Actions\Bands\CreateBand;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use Filament\Actions\Action;
 use Filament\Tables;
 use Filament\Tables\Table;

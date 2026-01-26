@@ -3,7 +3,7 @@
 namespace App\Actions\Invitations;
 
 use App\Models\Invitation;
-use App\Notifications\UserInvitationNotification;
+use CorvMC\Membership\Notifications\UserInvitationNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;

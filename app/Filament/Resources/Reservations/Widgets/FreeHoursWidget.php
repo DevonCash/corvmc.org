@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Reservations\Widgets;
 
-use App\Enums\CreditType;
-use App\Models\CreditTransaction;
+use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Models\CreditTransaction;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Filament\Widgets\Widget;

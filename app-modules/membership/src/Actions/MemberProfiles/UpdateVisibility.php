@@ -2,8 +2,8 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use App\Enums\Visibility;
-use App\Models\MemberProfile;
+use CorvMC\Moderation\Enums\Visibility;
+use CorvMC\Membership\Models\MemberProfile;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class UpdateVisibility

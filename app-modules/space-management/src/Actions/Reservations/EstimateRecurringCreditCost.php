@@ -3,8 +3,8 @@
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours;
-use App\Enums\CreditType;
-use App\Models\CreditTransaction;
+use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Models\CreditTransaction;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;

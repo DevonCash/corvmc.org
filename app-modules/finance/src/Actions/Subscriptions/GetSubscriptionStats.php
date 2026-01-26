@@ -2,7 +2,7 @@
 
 namespace CorvMC\Finance\Actions\Subscriptions;
 
-use App\Data\Subscription\SubscriptionStatsData;
+use CorvMC\Finance\Data\SubscriptionStatsData;
 use CorvMC\Finance\Models\Subscription;
 use App\Models\User;
 use Brick\Money\Money;

@@ -3,7 +3,7 @@
 use App\Actions\Notifications\SendMembershipReminders;
 use App\Actions\Notifications\SendReservationConfirmationReminders;
 use App\Actions\Notifications\SendReservationReminders;
-use App\Actions\RecurringReservations\GenerateFutureRecurringInstances;
+use CorvMC\SpaceManagement\Actions\RecurringReservations\GenerateFutureRecurringInstances;
 use CorvMC\SpaceManagement\Actions\Reservations\AutoCancelUnconfirmedReservations;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;

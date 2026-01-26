@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\MemberProfiles\Schemas;
 
-use App\Enums\Visibility;
+use CorvMC\Moderation\Enums\Visibility;
 use App\Filament\Components\EmbedControl;
-use App\Models\MemberProfile;
+use CorvMC\Membership\Models\MemberProfile;
 use App\Settings\MemberDirectorySettings;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Repeater;
@@ -46,7 +46,7 @@ class MemberProfileForm
                             TextInput::make('hometown')
                                 ->label('Hometown')
                                 ->columnSpan(1)
-                                ->datalist(fn () => MemberProfile::withoutGlobalScope(\App\Models\Scopes\MemberVisibilityScope::class)->distinct()->pluck('hometown')->concat(['Corvallis', 'Albany', 'Philomath', 'Monroe', 'Lebanon', 'Sweet Home', 'Eugene', 'Springfield', 'Portland', 'Salem'])),
+                                ->datalist(fn () => MemberProfile::withoutGlobalScope(\CorvMC\Moderation\Models\Scopes\MemberVisibilityScope::class)->distinct()->pluck('hometown')->concat(['Corvallis', 'Albany', 'Philomath', 'Monroe', 'Lebanon', 'Sweet Home', 'Eugene', 'Springfield', 'Portland', 'Salem'])),
                         ])->columns(4)->columnSpanFull(),
                         Grid::make(2)
                             ->columnSpanFull()

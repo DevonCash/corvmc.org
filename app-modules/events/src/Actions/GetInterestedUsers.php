@@ -2,7 +2,7 @@
 
 namespace CorvMC\Events\Actions;
 
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use CorvMC\Events\Models\Event;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;

@@ -2,15 +2,17 @@
 
 namespace Database\Factories;
 
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\BandMember>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\CorvMC\Bands\Models\BandMember>
  */
 class BandMemberFactory extends Factory
 {
+    protected $model = \CorvMC\Bands\Models\BandMember::class;
+
     /**
      * Define the model's default state.
      *

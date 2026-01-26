@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Venue;
+use CorvMC\Events\Models\Venue;
 use Illuminate\Database\Seeder;
 
 class VenueSeeder extends Seeder

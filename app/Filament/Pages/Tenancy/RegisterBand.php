@@ -3,7 +3,7 @@
 namespace App\Filament\Pages\Tenancy;
 
 use CorvMC\Membership\Actions\Bands\CreateBand;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Tenancy\RegisterTenant;

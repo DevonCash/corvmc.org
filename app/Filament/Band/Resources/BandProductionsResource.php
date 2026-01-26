@@ -3,7 +3,7 @@
 namespace App\Filament\Band\Resources;
 
 use App\Filament\Band\Resources\BandProductionsResource\Pages;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use CorvMC\Events\Models\Event;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;

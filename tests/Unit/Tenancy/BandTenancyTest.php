@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Band;
-use App\Models\BandMember;
+use CorvMC\Bands\Models\Band;
+use CorvMC\Bands\Models\BandMember;
 use App\Models\User;
 use Filament\Facades\Filament;
 

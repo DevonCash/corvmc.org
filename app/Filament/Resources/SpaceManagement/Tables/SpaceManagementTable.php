@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\SpaceManagement\Tables;
 
-use App\Actions\Payments\MarkReservationAsComped;
-use App\Actions\Payments\MarkReservationAsPaid;
+use CorvMC\Finance\Actions\Payments\MarkReservationAsComped;
+use CorvMC\Finance\Actions\Payments\MarkReservationAsPaid;
 use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
 use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;

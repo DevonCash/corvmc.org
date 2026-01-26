@@ -2,7 +2,7 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use App\Models\MemberProfile;
+use CorvMC\Membership\Models\MemberProfile;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 

@@ -1,9 +1,9 @@
 <?php
 
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use CorvMC\Events\Models\Event;
-use App\Models\MemberProfile;
+use CorvMC\Membership\Models\MemberProfile;
 use CorvMC\Sponsorship\Models\Sponsor;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -141,8 +141,8 @@ Route::get('/about/bylaws', function () {
 })->name('bylaws');
 
 // Equipment Library routes (public gear catalog)
-Route::get('/equipment', [\App\Http\Controllers\PublicEquipmentController::class, 'index'])->name('equipment.index');
-Route::get('/equipment/{equipment}', [\App\Http\Controllers\PublicEquipmentController::class, 'show'])->where('equipment', '[0-9]+')->name('equipment.show');
+Route::get('/equipment', [\CorvMC\Equipment\Http\Controllers\PublicEquipmentController::class, 'index'])->name('equipment.index');
+Route::get('/equipment/{equipment}', [\CorvMC\Equipment\Http\Controllers\PublicEquipmentController::class, 'show'])->where('equipment', '[0-9]+')->name('equipment.show');
 
 Route::get('/privacy-policy', function () {
     return view('public.privacy-policy');

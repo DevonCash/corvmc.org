@@ -6,7 +6,7 @@ use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
 use CorvMC\SpaceManagement\Actions\Reservations\DetermineReservationStatus;
 use CorvMC\SpaceManagement\Actions\Reservations\GetAvailableTimeSlotsForDate;
 use CorvMC\SpaceManagement\Actions\Reservations\GetValidEndTimesForDate;
-use App\Data\ContactData;
+use CorvMC\Membership\Data\ContactData;
 use Carbon\Carbon;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;

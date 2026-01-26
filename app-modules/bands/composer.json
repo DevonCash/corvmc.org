@@ -1,0 +1,24 @@
+{
+	"name": "corvmc/bands",
+	"description": "Band management module for CorvMC",
+	"type": "library",
+	"version": "1.0",
+	"license": "proprietary",
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"CorvMC\\Bands\\": "src/",
+			"CorvMC\\Bands\\Tests\\": "tests/",
+			"CorvMC\\Bands\\Database\\Factories\\": "database/factories/",
+			"CorvMC\\Bands\\Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"laravel": {
+			"providers": [
+				"CorvMC\\Bands\\Providers\\BandsServiceProvider"
+			]
+		}
+	}
+}

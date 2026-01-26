@@ -2,7 +2,7 @@
 
 namespace CorvMC\Moderation\Concerns;
 
-use App\Enums\Visibility;
+use CorvMC\Moderation\Enums\Visibility;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 

@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
-use App\Concerns\HasCredits;
+use CorvMC\Bands\Models\Band;
+use CorvMC\Bands\Models\BandMember;
+use CorvMC\Finance\Concerns\HasCredits;
+use CorvMC\Membership\Models\MemberProfile;
 use CorvMC\Membership\Concerns\HasMembershipStatus;
 use CorvMC\Sponsorship\Models\Sponsor;
 use CorvMC\Membership\Data\UserSettingsData;
-use App\Enums\CreditType;
-use App\Notifications\EmailVerificationNotification;
-use App\Notifications\PasswordResetNotification;
+use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Membership\Notifications\EmailVerificationNotification;
+use CorvMC\Membership\Notifications\PasswordResetNotification;
 use CorvMC\Moderation\Concerns\HasTrust;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;

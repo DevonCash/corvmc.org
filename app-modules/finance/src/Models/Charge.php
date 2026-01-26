@@ -109,7 +109,7 @@ class Charge extends Model
     ): self {
         return self::create([
             'user_id' => $chargeable->getBillableUser()->getKey(),
-            'chargeable_type' => get_class($chargeable),
+            'chargeable_type' => $chargeable->getMorphClass(),
             'chargeable_id' => $chargeable->getKey(),
             'amount' => Money::ofMinor($amount, 'USD'),
             'credits_applied' => $creditsApplied,

@@ -2,8 +2,8 @@
 
 namespace CorvMC\Membership\Data;
 
-use App\Data\Casts\PhoneNumberCast;
-use App\Enums\Visibility;
+use CorvMC\Membership\Data\Casts\PhoneNumberCast;
+use CorvMC\Moderation\Enums\Visibility;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Data;
 

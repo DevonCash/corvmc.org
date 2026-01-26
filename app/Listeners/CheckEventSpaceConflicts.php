@@ -2,7 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Models\Venue;
+use CorvMC\Events\Models\Venue;
 use CorvMC\Events\Events\EventScheduling;
 use CorvMC\Events\Exceptions\SchedulingConflictException;
 use CorvMC\SpaceManagement\Contracts\ConflictCheckerInterface;

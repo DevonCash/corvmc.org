@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use CorvMC\Events\Models\Event;
 use App\Models\EventReservation;
 use App\Models\User;

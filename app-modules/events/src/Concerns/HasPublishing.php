@@ -2,7 +2,7 @@
 
 namespace CorvMC\Events\Concerns;
 
-use App\Enums\PublicationStatus;
+use CorvMC\Events\Enums\PublicationStatus;
 use Illuminate\Database\Eloquent\Builder;
 
 trait HasPublishing

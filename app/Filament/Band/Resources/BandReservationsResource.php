@@ -6,7 +6,7 @@ use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
 use App\Filament\Band\Resources\BandReservationsResource\Pages;
 use App\Filament\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Resources\Reservations\Tables\Columns\ReservationColumns;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;

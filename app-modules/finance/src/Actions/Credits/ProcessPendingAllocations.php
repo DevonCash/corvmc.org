@@ -65,7 +65,7 @@ class ProcessPendingAllocations
             AllocateMonthlyCredits::run(
                 $allocation->user,
                 $allocation->amount,
-                \App\Enums\CreditType::from($allocation->credit_type)
+                \CorvMC\Finance\Enums\CreditType::from($allocation->credit_type)
             );
 
             // Update next allocation date

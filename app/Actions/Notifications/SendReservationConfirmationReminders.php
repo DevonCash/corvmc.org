@@ -3,7 +3,7 @@
 namespace App\Actions\Notifications;
 
 use CorvMC\SpaceManagement\Models\Reservation;
-use App\Notifications\ReservationConfirmationNotification;
+use CorvMC\SpaceManagement\Notifications\ReservationConfirmationNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;

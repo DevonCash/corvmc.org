@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use App\Listeners\CheckEventSpaceConflicts;
 use App\Livewire\Synthesizers\MoneySynthesizer;
-use App\Models\Subscription;
+use CorvMC\Finance\Models\Subscription;
 use App\Models\User;
 use App\Observers\ReservationObserver;
 use App\Observers\TagObserver;
@@ -20,6 +20,7 @@ use CorvMC\SpaceManagement\Events\ReservationConfirmed;
 use CorvMC\SpaceManagement\Events\ReservationCreated;
 use CorvMC\SpaceManagement\Events\ReservationUpdated;
 use Filament\Support\Facades\FilamentTimezone;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
@@ -40,6 +41,46 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Configure morph map to decouple polymorphic type strings from class names
+        // This allows models to be moved between namespaces without database migrations
+        Relation::enforceMorphMap([
+            // Core models
+            'user' => \App\Models\User::class,
+            'staff_profile' => \App\Models\StaffProfile::class,
+            'invitation' => \App\Models\Invitation::class,
+            'promo_code' => \App\Models\PromoCode::class,
+
+            // Band module models
+            'band' => \CorvMC\Bands\Models\Band::class,
+            'band_member' => \CorvMC\Bands\Models\BandMember::class,
+
+            // Membership module models
+            'member_profile' => \CorvMC\Membership\Models\MemberProfile::class,
+
+            // Event module models
+            'event' => \CorvMC\Events\Models\Event::class,
+            'venue' => \CorvMC\Events\Models\Venue::class,
+            'event_reservation' => \App\Models\EventReservation::class,
+
+            // Space management models
+            'reservation' => \CorvMC\SpaceManagement\Models\Reservation::class,
+            'rehearsal_reservation' => \CorvMC\SpaceManagement\Models\RehearsalReservation::class,
+            'recurring_series' => \CorvMC\Support\Models\RecurringSeries::class,
+
+            // Equipment models
+            'equipment' => \CorvMC\Equipment\Models\Equipment::class,
+            'equipment_loan' => \CorvMC\Equipment\Models\EquipmentLoan::class,
+            'equipment_damage_report' => \CorvMC\Equipment\Models\EquipmentDamageReport::class,
+
+            // Finance models
+            'charge' => \CorvMC\Finance\Models\Charge::class,
+            'subscription' => \CorvMC\Finance\Models\Subscription::class,
+
+            // Moderation models
+            'report' => \CorvMC\Moderation\Models\Report::class,
+            'revision' => \CorvMC\Moderation\Models\Revision::class,
+        ]);
+
         // Register event listeners for cross-module integration
         Event::listen(EventScheduling::class, CheckEventSpaceConflicts::class);
 

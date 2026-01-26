@@ -2,8 +2,9 @@
 
 namespace CorvMC\Finance\Models;
 
-use App\Enums\CreditType;
-use App\Exceptions\InsufficientCreditsException;
+use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Exceptions\InsufficientCreditsException;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

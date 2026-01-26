@@ -2,15 +2,19 @@
 
 namespace CorvMC\Equipment\Providers;
 
+use CorvMC\Equipment\Models\Equipment;
+use CorvMC\Equipment\Policies\EquipmentPolicy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class EquipmentServiceProvider extends ServiceProvider
 {
-	public function register(): void
-	{
-	}
-	
-	public function boot(): void
-	{
-	}
+    public function register(): void
+    {
+    }
+
+    public function boot(): void
+    {
+        Gate::policy(Equipment::class, EquipmentPolicy::class);
+    }
 }

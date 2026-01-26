@@ -2,7 +2,7 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use App\Models\MemberProfile;
+use CorvMC\Membership\Models\MemberProfile;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -23,7 +23,7 @@ class SearchProfiles
         int $limit = 50,
         int $offset = 0
     ): Collection {
-        $profilesQuery = MemberProfile::withoutGlobalScope(\App\Models\Scopes\MemberVisibilityScope::class);
+        $profilesQuery = MemberProfile::withoutGlobalScope(\CorvMC\Moderation\Models\Scopes\MemberVisibilityScope::class);
 
         // Apply visibility filter based on viewing user
         if (! $viewingUser) {

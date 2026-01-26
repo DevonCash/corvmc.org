@@ -2,7 +2,7 @@
 
 namespace CorvMC\Finance\Listeners;
 
-use App\Enums\CreditType;
+use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Actions\Pricing\CalculatePriceForUser;
 use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\Finance\Enums\ChargeStatus;

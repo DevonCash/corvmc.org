@@ -304,3 +304,43 @@ return $query->public();
 - Use `getKey()` instead of `->id` for interface types
 - Prefer interfaces over generic `Model` types
 - Use `method_exists()` checks for trait methods on generic types
+
+## Module Architecture
+
+The application uses `internachi/modular` for domain organization.
+
+### Modules (`app-modules/`)
+
+| Module | Description |
+|--------|-------------|
+| **SpaceManagement** | Reservations, scheduling, conflict detection |
+| **Finance** | Pricing, charges, credits, Stripe integration |
+| **Events** | Event management, publishing, performers |
+| **Equipment** | Equipment loans, damage reports |
+| **Moderation** | Reports, revisions, content moderation |
+| **Bands** | Band profiles, member management |
+| **MemberProfiles** | Member directory, public profiles |
+| **Support** | Shared traits (`HasTimePeriod`, `HasRecurringSeries`) |
+
+### Integration Layer (`app/`)
+
+The main `app/` directory serves as the integration layer for cross-module coordination:
+
+- **Listeners**: Cross-module event handlers (e.g., `CheckEventSpaceConflicts`)
+- **Observers**: Model observers for cache invalidation
+- **Integration Models**: `EventReservation` bridges Events ↔ SpaceManagement
+
+### Cross-Module Communication
+
+- **Events**: Modules dispatch domain events (`ReservationCreated`, etc.)
+- **Interfaces**: `Chargeable`, `ConflictCheckerInterface`, `Reportable`
+- **Service Container**: Interface bindings in module ServiceProviders
+
+### Module Dependencies
+
+```
+Events → SpaceManagement (via ConflictCheckerInterface)
+SpaceManagement → Finance (via Chargeable interface)
+Equipment → Support (via HasTimePeriod trait)
+All modules → Support (shared traits and models)
+```

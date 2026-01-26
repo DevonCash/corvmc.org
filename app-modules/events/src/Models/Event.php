@@ -2,17 +2,21 @@
 
 namespace CorvMC\Events\Models;
 
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use App\Models\EventReservation;
 use App\Models\User;
+use Carbon\Carbon;
+use CorvMC\Events\Actions\CreateEvent;
 use CorvMC\Events\Concerns\HasPoster;
 use CorvMC\Events\Concerns\HasPublishing;
 use CorvMC\Events\Data\LocationData;
 use CorvMC\Events\Enums\EventStatus;
-use CorvMC\Events\Enums\Visibility;
+use CorvMC\Moderation\Enums\Visibility;
 use CorvMC\Moderation\Models\ContentModel;
 use CorvMC\Support\Concerns\HasRecurringSeries;
 use CorvMC\Support\Concerns\HasTimePeriod;
+use CorvMC\Support\Contracts\Recurrable;
+use CorvMC\Support\Models\RecurringSeries;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -137,7 +141,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *
  * @mixin \Eloquent
  */
-class Event extends ContentModel
+class Event extends ContentModel implements Recurrable
 {
     use HasFactory, HasPoster, HasPublishing, HasRecurringSeries, HasTimePeriod, SoftDeletes;
 
@@ -605,5 +609,71 @@ class Event extends ContentModel
     protected function getEndTimeField(): string
     {
         return 'end_datetime';
+    }
+
+    // =========================================================================
+    // Recurrable Interface Implementation
+    // =========================================================================
+
+    /**
+     * Create an event instance from a recurring series.
+     *
+     * @throws \InvalidArgumentException If the event cannot be created (e.g., conflict)
+     */
+    public static function createFromRecurringSeries(RecurringSeries $series, Carbon $date): static
+    {
+        $startDateTime = $date->copy()->setTimeFromTimeString($series->start_time->format('H:i:s'));
+        $endDateTime = $date->copy()->setTimeFromTimeString($series->end_time->format('H:i:s'));
+
+        /** @var static */
+        return CreateEvent::run([
+            'organizer_id' => $series->user_id,
+            'recurring_series_id' => $series->id,
+            'instance_date' => $date->toDateString(),
+            'start_datetime' => $startDateTime,
+            'end_datetime' => $endDateTime,
+            'status' => EventStatus::Approved,
+            'published_at' => now(),
+        ]);
+    }
+
+    /**
+     * Create a cancelled placeholder to track a skipped instance.
+     *
+     * Events don't use cancelled placeholders the same way reservations do.
+     * If an event can't be created due to a conflict, we simply skip it.
+     */
+    public static function createCancelledPlaceholder(RecurringSeries $series, Carbon $date): void
+    {
+        // Events don't use cancelled placeholders - simply skip conflicting dates
+    }
+
+    /**
+     * Check if an instance already exists for this date in the series.
+     */
+    public static function instanceExistsForDate(RecurringSeries $series, Carbon $date): bool
+    {
+        return static::where('recurring_series_id', $series->id)
+            ->where('instance_date', $date->toDateString())
+            ->exists();
+    }
+
+    /**
+     * Cancel all future instances for a series.
+     */
+    public static function cancelFutureInstances(RecurringSeries $series, ?string $reason = null): int
+    {
+        $futureInstances = static::where('recurring_series_id', $series->id)
+            ->where('start_datetime', '>', now())
+            ->where('status', EventStatus::Approved)
+            ->get();
+
+        foreach ($futureInstances as $event) {
+            $event->update([
+                'status' => EventStatus::Cancelled,
+            ]);
+        }
+
+        return $futureInstances->count();
     }
 }

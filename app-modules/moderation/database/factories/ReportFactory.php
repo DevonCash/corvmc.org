@@ -2,9 +2,9 @@
 
 namespace CorvMC\Moderation\Database\Factories;
 
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use CorvMC\Events\Models\Event;
-use App\Models\MemberProfile;
+use CorvMC\Membership\Models\MemberProfile;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

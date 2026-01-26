@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Bands\Tables;
 
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;

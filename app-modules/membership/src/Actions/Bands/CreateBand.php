@@ -3,7 +3,7 @@
 namespace CorvMC\Membership\Actions\Bands;
 
 use App\Filament\Resources\Bands\BandResource;
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;

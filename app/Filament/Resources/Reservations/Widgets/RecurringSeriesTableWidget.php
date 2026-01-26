@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Reservations\Widgets;
 
-use App\Actions\RecurringReservations\CreateRecurringRehearsal;
+use CorvMC\SpaceManagement\Actions\RecurringReservations\CreateRecurringRehearsal;
 use CorvMC\Support\Models\RecurringSeries;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
@@ -52,7 +52,7 @@ class RecurringSeriesTableWidget extends BaseWidget
 
                 TextColumn::make('recurrence_rule')
                     ->label('Pattern')
-                    ->formatStateUsing(fn($state) => \App\Actions\RecurringReservations\FormatRRuleForHumans::run($state))
+                    ->formatStateUsing(fn($state) => \CorvMC\SpaceManagement\Actions\RecurringReservations\FormatRRuleForHumans::run($state))
                     ->wrap(),
 
                 TextColumn::make('start_time')
@@ -113,7 +113,7 @@ class RecurringSeriesTableWidget extends BaseWidget
                     ->requiresConfirmation()
                     ->visible(fn($record) => $record->status === 'active')
                     ->authorize('delete')
-                    ->action(fn($record) => \App\Actions\RecurringReservations\CancelRecurringSeries::run($record)),
+                    ->action(fn($record) => \CorvMC\Support\Actions\CancelRecurringSeries::run($record)),
             ])
             ->defaultSort('series_start_date', 'desc')
             ->paginated([10, 25, 50]);

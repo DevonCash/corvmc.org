@@ -1,8 +1,8 @@
 <?php
 
 use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
-use App\Enums\CreditType;
-use App\Models\CreditTransaction;
+use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Models\CreditTransaction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 

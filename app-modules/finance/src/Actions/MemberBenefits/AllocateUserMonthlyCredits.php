@@ -3,7 +3,7 @@
 namespace CorvMC\Finance\Actions\MemberBenefits;
 
 use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
-use App\Enums\CreditType;
+use CorvMC\Finance\Enums\CreditType;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Lorisleiva\Actions\Concerns\AsAction;
