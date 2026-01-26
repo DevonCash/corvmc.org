@@ -50,10 +50,6 @@ class EventObserver
      */
     private function clearEventCaches(Event $event): void
     {
-        // Clear upcoming events caches
-        Cache::forget('upcoming_events');
-        // Clear all user-specific upcoming events caches (wildcard not supported, so we'll clear on next load)
-
         // Clear conflict detection cache for the event date
         if ($event->start_datetime) {
             $start_datetime = \Illuminate\Support\Carbon::parse($event->start_datetime);

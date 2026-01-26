@@ -133,26 +133,6 @@ describe('Event Cache Invalidation', function () {
         $this->organizer->assignRole('member');
     });
 
-    it('clears upcoming_events cache when event is created', function () {
-        // Arrange: Set up cache
-        Cache::put('upcoming_events', 'cached_value', 3600);
-
-        // Act: Create event
-        $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
-
-        CreateEvent::run([
-            'title' => 'Test Concert',
-            'description' => 'A test event',
-            'start_datetime' => $startTime,
-            'end_datetime' => $startTime->copy()->addHours(3),
-            'venue_id' => $this->cmcVenue->id,
-            'organizer_id' => $this->organizer->id,
-        ]);
-
-        // Assert: Cache was cleared
-        expect(Cache::has('upcoming_events'))->toBeFalse();
-    });
-
     it('clears conflict cache for event date', function () {
         // Arrange: Set up cache for the event date
         $eventDate = Carbon::now()->addDays(10);
@@ -240,16 +220,14 @@ describe('Event Cache Invalidation', function () {
             'organizer_id' => $this->organizer->id,
         ]);
 
-        // Set up caches
-        Cache::put('upcoming_events', 'cached_value', 3600);
+        // Set up cache
         Cache::put("events.conflicts.{$eventDate->format('Y-m-d')}", 'cached_value', 3600);
 
         // Act: Delete event
         $event->delete();
 
-        // Assert: Caches were cleared
-        expect(Cache::has('upcoming_events'))->toBeFalse()
-            ->and(Cache::has("events.conflicts.{$eventDate->format('Y-m-d')}"))->toBeFalse();
+        // Assert: Cache was cleared
+        expect(Cache::has("events.conflicts.{$eventDate->format('Y-m-d')}"))->toBeFalse();
     });
 });
 
@@ -269,15 +247,15 @@ describe('User Cache Invalidation', function () {
         $user = User::factory()->create();
         $user->assignRole('member');
 
-        Cache::put("user.{$user->id}.is_sustaining", true, 3600);
         Cache::put("user_stats.{$user->id}", ['stat' => 'value'], 3600);
+        Cache::put("user_activity.{$user->id}", ['activity' => 'data'], 3600);
 
         // Act: Update user
         $user->update(['name' => 'Updated Name']);
 
         // Assert: User-specific caches were cleared
-        expect(Cache::has("user.{$user->id}.is_sustaining"))->toBeFalse()
-            ->and(Cache::has("user_stats.{$user->id}"))->toBeFalse();
+        expect(Cache::has("user_stats.{$user->id}"))->toBeFalse()
+            ->and(Cache::has("user_activity.{$user->id}"))->toBeFalse();
     });
 
     it('clears sustaining member caches when role changes', function () {
@@ -301,16 +279,16 @@ describe('User Cache Invalidation', function () {
         $user = User::factory()->create();
         $userId = $user->id;
 
-        Cache::put("user.{$userId}.is_sustaining", true, 3600);
         Cache::put("user_stats.{$userId}", ['stat' => 'value'], 3600);
+        Cache::put("user_activity.{$userId}", ['activity' => 'data'], 3600);
         Cache::put('sustaining_members', ['list' => 'of members'], 3600);
 
         // Act: Delete user
         $user->delete();
 
         // Assert: All caches were cleared
-        expect(Cache::has("user.{$userId}.is_sustaining"))->toBeFalse()
-            ->and(Cache::has("user_stats.{$userId}"))->toBeFalse()
+        expect(Cache::has("user_stats.{$userId}"))->toBeFalse()
+            ->and(Cache::has("user_activity.{$userId}"))->toBeFalse()
             ->and(Cache::has('sustaining_members'))->toBeFalse();
     });
 });
