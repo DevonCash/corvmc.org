@@ -7,7 +7,6 @@ use CorvMC\SpaceManagement\Events\ReservationConfirmed;
 use App\Filament\Shared\Actions\Action;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
-use App\Models\User;
 use CorvMC\SpaceManagement\Notifications\ReservationConfirmedNotification;
 use Filament\Forms\Components\Toggle;
 use Illuminate\Support\Facades\{DB, Log};
@@ -17,7 +16,10 @@ class ConfirmReservation
 {
     use AsAction;
 
-    public static function allowed(RehearsalReservation $reservation, User $user): bool
+    /**
+     * Check if a reservation can be confirmed based on business rules.
+     */
+    public static function canConfirm(RehearsalReservation $reservation): bool
     {
         // Must be in a confirmable status
         if (!in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
@@ -29,13 +31,7 @@ class ConfirmReservation
             return false;
         }
 
-        // User can confirm their own reservation OR have manage permission
-        // Check both user_id (direct owner) and reservable_id (polymorphic owner)
-        $isOwnReservation = (int) $reservation->user_id === (int) $user->getKey()
-            || (int) $reservation->reservable_id === (int) $user->getKey();
-        $canManage = $user->can('manage reservations');
-
-        return $isOwnReservation || $canManage;
+        return true;
     }
 
     /**
@@ -49,7 +45,7 @@ class ConfirmReservation
      */
     public function handle(RehearsalReservation $reservation, bool $notify_user = true): RehearsalReservation
     {
-        if (! self::allowed($reservation, $reservation->getResponsibleUser())) {
+        if (! self::canConfirm($reservation)) {
             return $reservation;
         }
 
@@ -93,7 +89,8 @@ class ConfirmReservation
             ->label('Confirm')
             ->icon('tabler-check')
             ->color('success')
-            ->visible(fn(Reservation $record) => self::allowed($record, User::me()))
+            ->visible(fn (Reservation $record) => self::canConfirm($record))
+            ->authorize('confirm')
             ->schema([
                 Toggle::make('notify_user')
                     ->label('Notify User')

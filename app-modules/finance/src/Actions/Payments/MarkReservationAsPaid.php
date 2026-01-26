@@ -33,7 +33,7 @@ class MarkReservationAsPaid
             ->label('Mark Paid')
             ->icon('tabler-cash')
             ->color('success')
-            ->authorize('manage reservations')
+            ->authorize('manage')
             ->visible(fn (RehearsalReservation $record) => $record->needsPayment())
             ->schema([
                 Select::make('payment_method')
@@ -72,7 +72,7 @@ class MarkReservationAsPaid
             ->label('Mark as Paid')
             ->icon('tabler-cash')
             ->color('success')
-            ->authorize('manage reservations')
+            ->authorize('manage')
             ->schema([
                 Select::make('payment_method')
                     ->label('Payment Method')

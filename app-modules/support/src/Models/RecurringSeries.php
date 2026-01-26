@@ -69,6 +69,11 @@ class RecurringSeries extends Model
 
     protected $table = 'recurring_series';
 
+    public function isOwnedBy(User $user): bool
+    {
+        return $this->user_id === $user->id;
+    }
+
     protected $fillable = [
         'user_id',
         'recurable_type',

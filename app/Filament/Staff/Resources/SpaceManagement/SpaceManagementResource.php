@@ -5,6 +5,7 @@ namespace App\Filament\Staff\Resources\SpaceManagement;
 use App\Filament\Staff\Resources\SpaceManagement\Pages\ListSpaceUsage;
 use App\Filament\Staff\Resources\SpaceManagement\Schemas\SpaceManagementForm;
 use App\Filament\Staff\Resources\SpaceManagement\Tables\SpaceManagementTable;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use BackedEnum;
@@ -29,11 +30,11 @@ class SpaceManagementResource extends Resource
     protected static ?int $navigationSort = 1;
 
     /**
-     * Only show to users who can manage practice space
+     * Only show to users who can manage rehearsal reservations
      */
     public static function canAccess(): bool
     {
-        return User::me()->can('manage practice space');
+        return User::me()?->can('manage', RehearsalReservation::class) ?? false;
     }
 
     public static function form(Schema $schema): Schema

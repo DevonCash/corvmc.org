@@ -72,7 +72,7 @@ class CancelReservation
             ->visible(
                 fn (?Reservation $record) => $record?->status->isActive() && $record->reserved_until > now()
             )
-            ->authorize('update')
+            ->authorize('cancel')
             ->requiresConfirmation()
             ->action(function (?Reservation $record) {
                 static::run($record);
@@ -89,7 +89,7 @@ class CancelReservation
             ->label('Cancel Reservations')
             ->icon('tabler-calendar-x')
             ->color('danger')
-            ->authorize('manage reservations')
+            ->authorize('manage')
             ->requiresConfirmation()
             ->action(function (Collection $records) {
                 foreach ($records as $record) {

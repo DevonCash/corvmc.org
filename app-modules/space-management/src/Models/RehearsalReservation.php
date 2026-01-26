@@ -44,6 +44,11 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
 {
     use HasCharges, HasFactory;
 
+    public function isOwnedBy(User $user): bool
+    {
+        return $this->getResponsibleUser()?->is($user) ?? false;
+    }
+
     /**
      * Check if this reservation requires payment.
      *

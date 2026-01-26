@@ -23,7 +23,7 @@ class MarkReservationAsComped
             ->label('Comp')
             ->icon('tabler-gift')
             ->color('info')
-            ->authorize('manage reservations')
+            ->authorize('manage')
             ->visible(fn (RehearsalReservation $record) => $record->needsPayment())
             ->schema([
                 Textarea::make('comp_reason')
@@ -51,7 +51,7 @@ class MarkReservationAsComped
             ->label('Comp Reservations')
             ->icon('tabler-gift')
             ->color('info')
-            ->authorize('manage reservations')
+            ->authorize('manage')
             ->schema([
                 Textarea::make('comp_reason')
                     ->label('Comp Reason')
