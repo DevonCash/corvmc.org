@@ -75,6 +75,7 @@
             ['label' => 'About Us', 'route' => 'about', 'pattern' => 'about', 'icon' => 'tabler-info-circle'],
             ['label' => 'Events', 'route' => 'events.index', 'pattern' => 'events.*', 'icon' => 'tabler-calendar'],
             ['label' => 'Directory', 'route' => 'directory', 'pattern' => 'directory', 'icon' => 'tabler-users'],
+            ['label' => 'Resources', 'route' => 'local-resources', 'pattern' => 'local-resources', 'icon' => 'tabler-list'],
             ['label' => 'Programs', 'route' => 'programs', 'pattern' => 'programs', 'icon' => 'tabler-apps'],
         ];
     @endphp
