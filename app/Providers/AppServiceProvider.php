@@ -81,6 +81,10 @@ class AppServiceProvider extends ServiceProvider
 
             // Sponsorship models
             'sponsor' => \CorvMC\Sponsorship\Models\Sponsor::class,
+
+            // Local Resources models
+            'resource_list' => \App\Models\ResourceList::class,
+            'local_resource' => \App\Models\LocalResource::class,
         ]);
 
         // Register event listeners for cross-module integration

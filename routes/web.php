@@ -140,6 +140,15 @@ Route::get('/about/bylaws', function () {
     return view('public.bylaws', compact('bylaws'));
 })->name('bylaws');
 
+Route::get('/local-resources', function () {
+    $lists = \App\Models\ResourceList::published()
+        ->with(['publishedResources'])
+        ->ordered()
+        ->get();
+
+    return view('public.local-resources', compact('lists'));
+})->name('local-resources');
+
 // Equipment Library routes (public gear catalog)
 Route::get('/equipment', [\CorvMC\Equipment\Http\Controllers\PublicEquipmentController::class, 'index'])->name('equipment.index');
 Route::get('/equipment/{equipment}', [\CorvMC\Equipment\Http\Controllers\PublicEquipmentController::class, 'show'])->where('equipment', '[0-9]+')->name('equipment.show');
