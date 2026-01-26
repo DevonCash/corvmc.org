@@ -23,20 +23,18 @@
         ">
             <!-- Tab Buttons -->
             <div class="flex justify-center mb-8">
-                <div role="tablist" class="tabs tabs-boxed tabs-lg bg-base-200">
+                <div class="inline-flex rounded-lg bg-base-200 p-1 gap-1">
                     <button
-                        role="tab"
-                        class="tab gap-2"
-                        :class="{ 'tab-active': tab === 'musicians' }"
+                        class="btn gap-2"
+                        :class="tab === 'musicians' ? 'btn-primary' : 'btn-ghost'"
                         @click="tab = 'musicians'"
                     >
                         <x-tabler-users class="w-5 h-5" />
                         Musicians
                     </button>
                     <button
-                        role="tab"
-                        class="tab gap-2"
-                        :class="{ 'tab-active': tab === 'bands' }"
+                        class="btn gap-2"
+                        :class="tab === 'bands' ? 'btn-primary' : 'btn-ghost'"
                         @click="tab = 'bands'"
                     >
                         <x-tabler-microphone-2 class="w-5 h-5" />
