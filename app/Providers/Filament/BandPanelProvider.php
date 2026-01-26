@@ -2,11 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Band\Pages\BandDashboard;
-use App\Filament\Band\Pages\EditBandProfile;
-use App\Filament\Band\Resources\BandMembersResource;
-use App\Filament\Band\Resources\BandProductionsResource;
-use App\Filament\Band\Resources\BandReservationsResource;
 use App\Filament\Band\Pages\Tenancy\RegisterBand;
 use CorvMC\Bands\Http\Middleware\EnsureActiveBandMembership;
 use CorvMC\Bands\Models\Band;
@@ -108,15 +103,9 @@ class BandPanelProvider extends PanelProvider
             ->darkModeBrandLogo(asset('images/cmc-compact-logo-dark.svg'))
             ->brandLogoHeight('3rem')
             ->icons(config('filament-icons', []))
-            ->resources([
-                BandMembersResource::class,
-                BandReservationsResource::class,
-                // BandProductionsResource::class,
-            ])
-            ->pages([
-                BandDashboard::class,
-                EditBandProfile::class,
-            ])
+            ->discoverResources(in: app_path('Filament/Band/Resources'), for: 'App\\Filament\\Band\\Resources')
+            ->discoverPages(in: app_path('Filament/Band/Pages'), for: 'App\\Filament\\Band\\Pages')
+            ->discoverWidgets(in: app_path('Filament/Band/Widgets'), for: 'App\\Filament\\Band\\Widgets')
             ->databaseNotifications()
             ->middleware([
                 EncryptCookies::class,

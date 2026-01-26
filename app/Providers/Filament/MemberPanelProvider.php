@@ -2,7 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Member\Widgets\QuickActionsWidget;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
@@ -107,28 +106,14 @@ class MemberPanelProvider extends PanelProvider
             ->darkModeBrandLogo(asset('images/cmc-compact-logo-dark.svg'))
             ->brandLogoHeight('3rem')
             ->icons(config('filament-icons', []))
-            ->resources([
-                \App\Filament\Member\Resources\MemberProfiles\MemberProfileResource::class,
-                \App\Filament\Member\Resources\Bands\BandResource::class,
-                \App\Filament\Member\Resources\Reservations\ReservationResource::class,
-                \App\Filament\Member\Resources\Equipment\EquipmentResource::class,
-                \App\Filament\Member\Resources\Equipment\EquipmentLoans\EquipmentLoanResource::class,
-            ])
-            ->pages([
-                \App\Filament\Member\Pages\MemberDashboard::class,
-                \App\Filament\Member\Pages\MyProfile::class,
-                \App\Filament\Member\Pages\MyAccount::class,
-                \App\Filament\Member\Pages\MyMembership::class,
-                \App\Filament\Member\Pages\AcceptBandInvitationPage::class,
-            ])
+            ->discoverResources(in: app_path('Filament/Member/Resources'), for: 'App\\Filament\\Member\\Resources')
+            ->discoverPages(in: app_path('Filament/Member/Pages'), for: 'App\\Filament\\Member\\Pages')
+            ->discoverWidgets(in: app_path('Filament/Member/Widgets'), for: 'App\\Filament\\Member\\Widgets')
             ->navigationGroups([
                 'My Bands',
                 'My Account'
             ])
             ->databaseNotifications()
-            ->widgets([
-                QuickActionsWidget::class,
-            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
