@@ -12,8 +12,8 @@
                     <a href="/member/register" class="btn btn-primary btn-lg btn-wide">
                         Join Our Community!
                     </a>
-                    <a href="{{ route('programs') }}" class="btn btn-outline btn-primary btn-wide">
-                        Explore Programs
+                    <a href="{{ route('about') }}" class="btn btn-outline btn-primary btn-wide">
+                        Learn More About Us
                     </a>
                 </div>
             </div>
