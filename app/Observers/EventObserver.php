@@ -40,6 +40,9 @@ class EventObserver
     public function deleted(Event $event): void
     {
         $this->clearEventCaches($event);
+
+        // Delete the space reservation if it exists
+        $event->spaceReservation?->delete();
     }
 
     /**
