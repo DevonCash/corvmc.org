@@ -9,7 +9,7 @@ class RecurringSeriesPolicy
 {
     public function manage(User $user): bool
     {
-        return $user->hasRole('staff');
+        return $user->hasRole('practice space manager');
     }
 
     public function viewAny(User $user): bool

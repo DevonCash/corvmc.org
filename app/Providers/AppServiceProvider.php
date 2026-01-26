@@ -117,6 +117,16 @@ class AppServiceProvider extends ServiceProvider
         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
         $loader->alias('GitHubService', \App\Facades\GitHubService::class);
 
+        // Enable policy auto-discovery for module models
+        // Converts CorvMC\{Module}\Models\{Model} -> App\Policies\{Model}Policy
+        Gate::guessPolicyNamesUsing(function (string $modelClass): ?string {
+            // Extract just the class name (e.g., "RehearsalReservation" from "CorvMC\SpaceManagement\Models\RehearsalReservation")
+            $modelName = class_basename($modelClass);
+            $policyClass = "App\\Policies\\{$modelName}Policy";
+
+            return class_exists($policyClass) ? $policyClass : null;
+        });
+
         // Automatically grant all abilities to admin users
         Gate::after(function ($user, $ability) {
             return $user->hasRole('admin');
