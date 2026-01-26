@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Filament\Staff\Resources\SpaceManagement\Widgets;
+
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Models\Reservation;
+use Filament\Widgets\Widget;
+
+class SpaceUsageWidget extends Widget
+{
+    protected string $view = 'filament.resources.space-management.widgets.space-usage-widget';
+
+    protected static bool $isLazy = false;
+
+    protected int|string|array $columnSpan = 'full';
+
+    public function getNextSpaceUsage(): ?Reservation
+    {
+        // Get next reservation of any type
+        return Reservation::with('reservable')
+            ->where('reserved_at', '>', now())
+            ->where('status', '!=', ReservationStatus::Cancelled->value)
+            ->orderBy('reserved_at', 'asc')
+            ->first();
+    }
+
+    public function getTodaysSpaceUsage(): \Illuminate\Support\Collection
+    {
+        return Reservation::with('reservable')
+            ->whereDate('reserved_at', today())
+            ->where('status', '!=', ReservationStatus::Cancelled->value)
+            ->orderBy('reserved_at', 'asc')
+            ->get();
+    }
+
+    public function getViewData(): array
+    {
+        $next = $this->getNextSpaceUsage();
+        $today = $this->getTodaysSpaceUsage();
+
+        $todayRehearsals = $today->where('type_class', \CorvMC\SpaceManagement\Models\RehearsalReservation::class);
+        $todayProductions = $today->where('type_class', \App\Models\EventReservation::class);
+
+        return [
+            'nextItem' => $next,
+            'nextType' => $next ? $next->getReservationTypeLabel() : null,
+            'todaysUsage' => $today,
+            'todaysCount' => $today->count(),
+            'hoursToday' => $today->sum('duration'),
+            'revenueToday' => $todayRehearsals
+                ->filter(fn ($r) => $r->isPaid())
+                ->sum(fn ($r) => $r->charge?->net_amount?->getMinorAmount()->toInt() ?? 0) / 100,
+            'rehearsalCount' => $todayRehearsals->count(),
+            'productionCount' => $todayProductions->count(),
+        ];
+    }
+}

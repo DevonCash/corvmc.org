@@ -2,7 +2,7 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Widgets\QuickActionsWidget;
+use App\Filament\Member\Widgets\QuickActionsWidget;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
@@ -30,7 +30,7 @@ class MemberPanelProvider extends PanelProvider
             ->path('member')
             ->userMenu(false)
             ->login()
-            ->registration(\App\Filament\Pages\Auth\Register::class)
+            ->registration(\App\Filament\Member\Pages\Auth\Register::class)
             ->passwordReset()
             ->emailVerification()
             ->font('Lexend')
@@ -108,18 +108,18 @@ class MemberPanelProvider extends PanelProvider
             ->brandLogoHeight('3rem')
             ->icons(config('filament-icons', []))
             ->resources([
-                \App\Filament\Resources\MemberProfiles\MemberProfileResource::class,
-                \App\Filament\Resources\Bands\BandResource::class,
-                \App\Filament\Resources\Reservations\ReservationResource::class,
-                \App\Filament\Resources\Equipment\EquipmentResource::class,
-                \App\Filament\Resources\Equipment\EquipmentLoans\EquipmentLoanResource::class,
+                \App\Filament\Member\Resources\MemberProfiles\MemberProfileResource::class,
+                \App\Filament\Member\Resources\Bands\BandResource::class,
+                \App\Filament\Member\Resources\Reservations\ReservationResource::class,
+                \App\Filament\Member\Resources\Equipment\EquipmentResource::class,
+                \App\Filament\Member\Resources\Equipment\EquipmentLoans\EquipmentLoanResource::class,
             ])
             ->pages([
-                \App\Filament\Pages\MemberDashboard::class,
-                \App\Filament\Pages\MyProfile::class,
-                \App\Filament\Pages\MyAccount::class,
-                \App\Filament\Pages\MyMembership::class,
-                \App\Filament\Pages\AcceptBandInvitationPage::class,
+                \App\Filament\Member\Pages\MemberDashboard::class,
+                \App\Filament\Member\Pages\MyProfile::class,
+                \App\Filament\Member\Pages\MyAccount::class,
+                \App\Filament\Member\Pages\MyMembership::class,
+                \App\Filament\Member\Pages\AcceptBandInvitationPage::class,
             ])
             ->navigationGroups([
                 'My Bands',

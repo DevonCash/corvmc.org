@@ -7,7 +7,7 @@ use App\Filament\Band\Pages\EditBandProfile;
 use App\Filament\Band\Resources\BandMembersResource;
 use App\Filament\Band\Resources\BandProductionsResource;
 use App\Filament\Band\Resources\BandReservationsResource;
-use App\Filament\Pages\Tenancy\RegisterBand;
+use App\Filament\Band\Pages\Tenancy\RegisterBand;
 use CorvMC\Bands\Http\Middleware\EnsureActiveBandMembership;
 use CorvMC\Bands\Models\Band;
 use Filament\Http\Middleware\Authenticate;

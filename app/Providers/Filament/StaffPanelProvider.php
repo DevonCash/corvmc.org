@@ -2,7 +2,7 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Resources\Events\EventResource;
+use App\Filament\Staff\Resources\Events\EventResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -51,21 +51,21 @@ class StaffPanelProvider extends PanelProvider
             ->brandLogoHeight('3rem')
             ->icons(config('filament-icons', []))
             ->resources([
-                \App\Filament\Resources\Users\UserResource::class,
-                \App\Filament\Resources\ActivityLog\ActivityLogResource::class,
-                \App\Filament\Resources\Reports\ReportResource::class,
-                \App\Filament\Resources\Revisions\RevisionResource::class,
-                \App\Filament\Resources\Sponsors\SponsorResource::class,
-                \App\Filament\Resources\SpaceManagement\SpaceManagementResource::class,
-                \App\Filament\Resources\RecurringReservations\RecurringReservationResource::class,
-                \App\Filament\Resources\Bylaws\BylawsResource::class,
-                \App\Filament\Resources\Equipment\EquipmentDamageReports\EquipmentDamageReportResource::class,
-                \App\Filament\Resources\Venues\VenueResource::class,
+                \App\Filament\Staff\Resources\Users\UserResource::class,
+                \App\Filament\Staff\Resources\ActivityLog\ActivityLogResource::class,
+                \App\Filament\Staff\Resources\Reports\ReportResource::class,
+                \App\Filament\Staff\Resources\Revisions\RevisionResource::class,
+                \App\Filament\Staff\Resources\Sponsors\SponsorResource::class,
+                \App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource::class,
+                \App\Filament\Staff\Resources\RecurringReservations\RecurringReservationResource::class,
+                \App\Filament\Staff\Resources\Bylaws\BylawsResource::class,
+                \App\Filament\Staff\Resources\EquipmentDamageReports\EquipmentDamageReportResource::class,
+                \App\Filament\Staff\Resources\Venues\VenueResource::class,
                 EventResource::class,
             ])
             ->pages([
                 Dashboard::class,
-                \App\Filament\Pages\ManageOrganizationSettings::class,
+                \App\Filament\Staff\Pages\ManageOrganizationSettings::class,
             ])
             ->databaseNotifications()
             ->middleware([
