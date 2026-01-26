@@ -170,7 +170,7 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
     public static function instanceExistsForDate(RecurringSeries $series, Carbon $date): bool
     {
         return Reservation::where('recurring_series_id', $series->id)
-            ->where('instance_date', $date->toDateString())
+            ->whereDate('instance_date', $date->toDateString())
             ->exists();
     }
 

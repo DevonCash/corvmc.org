@@ -654,7 +654,7 @@ class Event extends ContentModel implements Recurrable
     public static function instanceExistsForDate(RecurringSeries $series, Carbon $date): bool
     {
         return static::where('recurring_series_id', $series->id)
-            ->where('instance_date', $date->toDateString())
+            ->whereDate('instance_date', $date->toDateString())
             ->exists();
     }
 

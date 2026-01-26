@@ -3,10 +3,14 @@
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Equipment\Actions\CheckoutToMember;
+use CorvMC\Equipment\Actions\GetStatistics;
+use CorvMC\Equipment\Actions\MarkOverdue;
+use CorvMC\Equipment\Actions\MarkReturnedToOwner;
 use CorvMC\Equipment\Actions\ProcessReturn;
 use CorvMC\Equipment\Models\Equipment;
 use CorvMC\Equipment\Models\EquipmentLoan;
 use CorvMC\Equipment\States\EquipmentLoan\CheckedOut;
+use CorvMC\Equipment\States\EquipmentLoan\Overdue;
 use CorvMC\Equipment\States\EquipmentLoan\Returned;
 use Illuminate\Support\Facades\Notification;
 
@@ -192,5 +196,91 @@ describe('Equipment Workflow: Availability Check', function () {
 
         expect($loan2)->toBeInstanceOf(EquipmentLoan::class);
         expect($loan2->borrower_id)->toBe($borrower2->id);
+    });
+});
+
+describe('Equipment Workflow: Overdue Loans', function () {
+    it('marks loan as overdue when past due date', function () {
+        $borrower = User::factory()->create();
+        $equipment = Equipment::factory()->available()->create([
+            'loanable' => true,
+        ]);
+
+        // Create a loan
+        $loan = CheckoutToMember::run(
+            equipment: $equipment,
+            borrower: $borrower,
+            dueDate: Carbon::now()->addDays(7)
+        );
+
+        expect($loan->state)->toBeInstanceOf(CheckedOut::class);
+
+        // Mark as overdue
+        MarkOverdue::run($loan);
+
+        $loan->refresh();
+        expect($loan->state)->toBeInstanceOf(Overdue::class);
+
+        // Equipment should still be checked out
+        expect($equipment->fresh()->status)->toBe('checked_out');
+    });
+});
+
+describe('Equipment Workflow: Statistics', function () {
+    it('returns correct counts for all equipment categories', function () {
+        // Create equipment with explicit states to avoid random acquisition_type
+        Equipment::factory()->count(2)->available()->donated()->create(['loanable' => true]);
+        Equipment::factory()->count(2)->create(['status' => 'maintenance', 'loanable' => true, 'acquisition_type' => 'purchased']);
+        Equipment::factory()->loanedToCmc()->create(['status' => 'available', 'loanable' => true]);
+
+        // Create a checked out equipment
+        $borrower = User::factory()->create();
+        $checkedOutEquipment = Equipment::factory()->available()->create([
+            'loanable' => true,
+            'acquisition_type' => 'purchased',
+        ]);
+        CheckoutToMember::run(
+            equipment: $checkedOutEquipment,
+            borrower: $borrower,
+            dueDate: Carbon::now()->addDays(7)
+        );
+
+        $stats = GetStatistics::run();
+
+        expect($stats)->toBeArray();
+        expect($stats)->toHaveKey('total_equipment');
+        expect($stats)->toHaveKey('available_equipment');
+        expect($stats)->toHaveKey('checked_out_equipment');
+        expect($stats)->toHaveKey('maintenance_equipment');
+        expect($stats)->toHaveKey('active_loans');
+        expect($stats)->toHaveKey('overdue_loans');
+        expect($stats)->toHaveKey('donated_equipment');
+        expect($stats)->toHaveKey('loaned_to_cmc');
+
+        // Verify counts
+        expect($stats['total_equipment'])->toBe(6);
+        expect($stats['maintenance_equipment'])->toBe(2);
+        expect($stats['checked_out_equipment'])->toBe(1);
+        expect($stats['active_loans'])->toBe(1);
+        expect($stats['overdue_loans'])->toBe(0);
+        expect($stats['donated_equipment'])->toBe(2);
+        expect($stats['loaned_to_cmc'])->toBe(1);
+    });
+});
+
+describe('Equipment Workflow: Return to Owner', function () {
+    it('marks equipment as returned to owner', function () {
+        $equipment = Equipment::factory()->create([
+            'status' => 'available',
+            'ownership_status' => 'on_loan',
+            'acquisition_type' => 'loaned_to_cmc',
+            'loanable' => true,
+        ]);
+
+        MarkReturnedToOwner::run($equipment);
+
+        $equipment->refresh();
+        expect($equipment->ownership_status)->toBe('returned_to_owner');
+        expect($equipment->status)->toBe('retired');
     });
 });

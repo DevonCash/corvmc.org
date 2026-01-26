@@ -3,6 +3,7 @@
 namespace CorvMC\Events\Actions;
 
 use CorvMC\Bands\Models\Band;
+use CorvMC\Events\Enums\EventStatus;
 use CorvMC\Events\Models\Event;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -23,7 +24,7 @@ class DuplicateEvent
         $newEvent->start_datetime = $newStartTime;
         $newEvent->end_datetime = $newEndTime;
         $newEvent->doors_datetime = $newDoorsTime;
-        $newEvent->status = 'approved';
+        $newEvent->status = EventStatus::Scheduled;
         $newEvent->published_at = null;
         $newEvent->save();
 

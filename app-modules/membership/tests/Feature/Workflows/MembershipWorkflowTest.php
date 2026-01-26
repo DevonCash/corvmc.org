@@ -1,14 +1,26 @@
 <?php
 
-use CorvMC\Moderation\Enums\Visibility;
-use CorvMC\Bands\Models\Band;
-use CorvMC\Membership\Models\MemberProfile;
+use App\Models\StaffProfile;
 use App\Models\User;
+use CorvMC\Bands\Models\Band;
 use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
 use CorvMC\Membership\Actions\Bands\AddBandMember;
 use CorvMC\Membership\Actions\Bands\CreateBand;
+use CorvMC\Membership\Actions\MemberProfiles\CreateMemberProfile;
+use CorvMC\Membership\Actions\MemberProfiles\DeleteMemberProfile;
+use CorvMC\Membership\Actions\MemberProfiles\SearchProfiles;
+use CorvMC\Membership\Actions\MemberProfiles\SetFlags;
 use CorvMC\Membership\Actions\MemberProfiles\UpdateGenres;
 use CorvMC\Membership\Actions\MemberProfiles\UpdateMemberProfile;
+use CorvMC\Membership\Actions\MemberProfiles\UpdateVisibility;
+use CorvMC\Membership\Actions\StaffProfiles\CreateStaffProfile;
+use CorvMC\Membership\Actions\StaffProfiles\DeleteStaffProfile;
+use CorvMC\Membership\Actions\StaffProfiles\LinkToUser;
+use CorvMC\Membership\Actions\StaffProfiles\ReorderStaffProfiles;
+use CorvMC\Membership\Actions\Users\CreateUser;
+use CorvMC\Membership\Actions\Users\UpdateUser;
+use CorvMC\Membership\Models\MemberProfile;
+use CorvMC\Moderation\Enums\Visibility;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 
@@ -250,5 +262,195 @@ describe('Membership Workflow: Profile Visibility', function () {
         expect($publicProfile->visibility)->toBe(Visibility::Public);
         expect($membersProfile->visibility)->toBe(Visibility::Members);
         expect($privateProfile->visibility)->toBe(Visibility::Private);
+    });
+});
+
+describe('Membership Workflow: User Management', function () {
+    it('creates a user with password and email verification', function () {
+        $user = CreateUser::run([
+            'name' => 'New User',
+            'email' => 'newuser@example.com',
+            'password' => 'secure-password-123',
+        ]);
+
+        expect($user)->toBeInstanceOf(User::class);
+        expect($user->name)->toBe('New User');
+        expect($user->email)->toBe('newuser@example.com');
+        expect($user->email_verified_at)->not->toBeNull();
+    });
+
+    it('throws exception when creating user without password', function () {
+        expect(fn () => CreateUser::run([
+            'name' => 'No Password User',
+            'email' => 'nopassword@example.com',
+        ]))->toThrow(\InvalidArgumentException::class, 'Password is required');
+    });
+
+    it('updates user information', function () {
+        $user = User::factory()->create([
+            'name' => 'Original Name',
+            'email' => 'original@example.com',
+        ]);
+
+        $updatedUser = UpdateUser::run($user, [
+            'name' => 'Updated Name',
+        ]);
+
+        expect($updatedUser->name)->toBe('Updated Name');
+        expect($updatedUser->email)->toBe('original@example.com');
+    });
+});
+
+describe('Membership Workflow: Member Profile Extended', function () {
+    it('creates a member profile with skills and genres', function () {
+        $user = User::factory()->create();
+
+        // Delete auto-created profile to test manual creation
+        MemberProfile::where('user_id', $user->id)->delete();
+
+        $profile = CreateMemberProfile::run([
+            'user_id' => $user->id,
+            'bio' => 'A musician from Portland',
+            'hometown' => 'Portland, OR',
+            'skills' => ['Guitar', 'Vocals', 'Songwriting'],
+            'genres' => ['Rock', 'Folk'],
+        ]);
+
+        expect($profile)->toBeInstanceOf(MemberProfile::class);
+        expect($profile->bio)->toBe('A musician from Portland');
+        expect($profile->tagsWithType('skill')->count())->toBe(3);
+        expect($profile->tagsWithType('genre')->count())->toBe(2);
+    });
+
+    it('deletes a member profile with all associated data', function () {
+        $user = User::factory()->create();
+
+        $profile = User::withoutEvents(function () use ($user) {
+            return MemberProfile::create([
+                'user_id' => $user->id,
+                'bio' => 'Test bio',
+            ]);
+        });
+
+        UpdateGenres::run($profile, ['Rock', 'Jazz']);
+        expect($profile->fresh()->tags->count())->toBe(2);
+
+        $profileId = $profile->id;
+
+        DeleteMemberProfile::run($profile);
+
+        expect(MemberProfile::find($profileId))->toBeNull();
+    });
+
+    it('updates profile visibility', function () {
+        $user = User::factory()->create();
+
+        $profile = User::withoutEvents(function () use ($user) {
+            return MemberProfile::create([
+                'user_id' => $user->id,
+                'visibility' => Visibility::Public,
+            ]);
+        });
+
+        expect($profile->visibility)->toBe(Visibility::Public);
+
+        UpdateVisibility::run($profile, Visibility::Private);
+
+        expect($profile->fresh()->visibility)->toBe(Visibility::Private);
+    });
+
+    it('sets profile flags', function () {
+        $user = User::factory()->create();
+
+        $profile = User::withoutEvents(function () use ($user) {
+            return MemberProfile::create([
+                'user_id' => $user->id,
+            ]);
+        });
+
+        SetFlags::run($profile, ['is_teacher', 'is_professional']);
+
+        expect($profile->fresh()->hasFlag('is_teacher'))->toBeTrue();
+        expect($profile->fresh()->hasFlag('is_professional'))->toBeTrue();
+    });
+
+    it('searches profiles by visibility', function () {
+        // Create public profile
+        $publicUser = User::factory()->create(['name' => 'Public User']);
+        User::withoutEvents(function () use ($publicUser) {
+            MemberProfile::create([
+                'user_id' => $publicUser->id,
+                'visibility' => Visibility::Public,
+            ]);
+        });
+
+        // Create private profile
+        $privateUser = User::factory()->create(['name' => 'Private User']);
+        User::withoutEvents(function () use ($privateUser) {
+            MemberProfile::create([
+                'user_id' => $privateUser->id,
+                'visibility' => Visibility::Private,
+            ]);
+        });
+
+        // Guest search (should only find public)
+        $guestResults = SearchProfiles::run(null, null, null, null, null);
+        expect($guestResults->pluck('user_id')->toArray())->toContain($publicUser->id);
+        expect($guestResults->pluck('user_id')->toArray())->not->toContain($privateUser->id);
+    });
+});
+
+describe('Membership Workflow: Staff Profiles', function () {
+    it('creates a staff profile via action', function () {
+        $user = User::factory()->create();
+
+        $staffProfile = CreateStaffProfile::run([
+            'name' => 'John Staff',
+            'title' => 'Community Manager',
+            'bio' => 'Managing the community',
+            'user_id' => $user->id,
+            'type' => 'staff',
+        ]);
+
+        expect($staffProfile)->toBeInstanceOf(StaffProfile::class);
+        expect($staffProfile->name)->toBe('John Staff');
+        expect($staffProfile->title)->toBe('Community Manager');
+    });
+
+    it('links a staff profile to a different user', function () {
+        $originalUser = User::factory()->create();
+        $newUser = User::factory()->create();
+
+        $staffProfile = StaffProfile::factory()->create([
+            'user_id' => $originalUser->id,
+        ]);
+
+        expect($staffProfile->user_id)->toBe($originalUser->id);
+
+        LinkToUser::run($staffProfile, $newUser);
+
+        expect($staffProfile->fresh()->user_id)->toBe($newUser->id);
+    });
+
+    it('reorders staff profiles', function () {
+        $profile1 = StaffProfile::factory()->create(['sort_order' => 1]);
+        $profile2 = StaffProfile::factory()->create(['sort_order' => 2]);
+        $profile3 = StaffProfile::factory()->create(['sort_order' => 3]);
+
+        // Reorder: third should be first, first should be third
+        ReorderStaffProfiles::run([$profile3->id, $profile2->id, $profile1->id]);
+
+        expect($profile3->fresh()->sort_order)->toBe(1);
+        expect($profile2->fresh()->sort_order)->toBe(2);
+        expect($profile1->fresh()->sort_order)->toBe(3);
+    });
+
+    it('deletes a staff profile', function () {
+        $staffProfile = StaffProfile::factory()->create();
+        $profileId = $staffProfile->id;
+
+        DeleteStaffProfile::run($staffProfile);
+
+        expect(StaffProfile::find($profileId))->toBeNull();
     });
 });

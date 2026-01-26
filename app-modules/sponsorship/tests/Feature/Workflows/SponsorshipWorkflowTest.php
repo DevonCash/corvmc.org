@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use CorvMC\Sponsorship\Actions\AssignSponsoredMembership;
+use CorvMC\Sponsorship\Actions\GetSponsorAvailableSlots;
 use CorvMC\Sponsorship\Actions\RevokeSponsoredMembership;
 use CorvMC\Sponsorship\Models\Sponsor;
 use Illuminate\Support\Facades\Notification;
@@ -150,5 +151,56 @@ describe('Sponsorship Workflow: Slot Availability', function () {
         }
         expect($sponsor->availableSlots())->toBe(6);
         expect($sponsor->usedSlots())->toBe(4);
+    });
+});
+
+describe('Sponsorship Workflow: Available Slots Query', function () {
+    it('returns correct available slots for sponsor via action', function () {
+        $sponsor = Sponsor::factory()->melody()->active()->create();
+        $users = User::factory()->count(3)->create();
+
+        // Assign some users
+        foreach ($users as $user) {
+            AssignSponsoredMembership::run($sponsor, $user);
+        }
+
+        $result = GetSponsorAvailableSlots::run($sponsor);
+
+        expect($result)->toBeArray();
+        expect($result)->toHaveKeys(['total', 'used', 'available', 'has_available']);
+        expect($result['total'])->toBe(10); // Melody tier has 10 slots
+        expect($result['used'])->toBe(3);
+        expect($result['available'])->toBe(7);
+        expect($result['has_available'])->toBeTrue();
+    });
+
+    it('returns zero available when sponsor has no slots left', function () {
+        $sponsor = Sponsor::factory()->harmony()->active()->create();
+        // Harmony tier has 5 slots
+        $users = User::factory()->count(5)->create();
+
+        // Fill all slots
+        foreach ($users as $user) {
+            AssignSponsoredMembership::run($sponsor, $user);
+        }
+
+        $result = GetSponsorAvailableSlots::run($sponsor);
+
+        expect($result['total'])->toBe(5);
+        expect($result['used'])->toBe(5);
+        expect($result['available'])->toBe(0);
+        expect($result['has_available'])->toBeFalse();
+    });
+
+    it('returns full availability for new sponsor', function () {
+        $sponsor = Sponsor::factory()->rhythm()->active()->create();
+        // Rhythm tier has 20 slots
+
+        $result = GetSponsorAvailableSlots::run($sponsor);
+
+        expect($result['total'])->toBe(20);
+        expect($result['used'])->toBe(0);
+        expect($result['available'])->toBe(20);
+        expect($result['has_available'])->toBeTrue();
     });
 });
