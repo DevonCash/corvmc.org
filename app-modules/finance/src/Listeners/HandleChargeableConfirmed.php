@@ -28,8 +28,8 @@ class HandleChargeableConfirmed
         $chargeable = $event->chargeable;
         $previousStatus = $event->previousStatus ?? null;
 
-        // Find the charge for this chargeable
-        $charge = Charge::where('chargeable_type', get_class($chargeable))
+        // Find the charge for this chargeable (use morph class for polymorphic lookup)
+        $charge = Charge::where('chargeable_type', $chargeable->getMorphClass())
             ->where('chargeable_id', $chargeable->getKey())
             ->first();
 

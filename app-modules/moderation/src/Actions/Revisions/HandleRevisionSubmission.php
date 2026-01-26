@@ -62,8 +62,8 @@ class HandleRevisionSubmission
         $submitter = $revision->submittedBy;
 
         // Load model without global scopes (e.g., visibility) to ensure we can always check
-        $modelClass = $revision->revisionable_type;
-        $model = $modelClass::withoutGlobalScopes()->find($revision->revisionable_id);
+        // Use the revisionable relationship which properly resolves morph aliases
+        $model = $revision->revisionable()->withoutGlobalScopes()->first();
 
         // Check if model exists (could be soft-deleted or missing)
         if (! $model) {

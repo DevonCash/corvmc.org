@@ -124,7 +124,7 @@ trait Revisionable
         }
 
         $revision = Revision::create([
-            'revisionable_type' => static::class,
+            'revisionable_type' => $this->getMorphClass(),
             'revisionable_id' => $this->getKey(),
             'original_data' => $this->getOriginal(),
             'proposed_changes' => $changes,
