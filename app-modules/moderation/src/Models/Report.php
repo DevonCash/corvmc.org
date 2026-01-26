@@ -142,6 +142,14 @@ class Report extends Model
         return $this->status === 'pending';
     }
 
+    /**
+     * Check if the report was submitted by the given user.
+     */
+    public function isReportedBy(User $user): bool
+    {
+        return $this->reported_by_id === $user->id;
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

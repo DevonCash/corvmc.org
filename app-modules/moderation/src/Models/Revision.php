@@ -139,6 +139,14 @@ class Revision extends Model
     }
 
     /**
+     * Check if the revision was submitted by the given user.
+     */
+    public function isSubmittedBy(User $user): bool
+    {
+        return $this->submitted_by_id === $user->id;
+    }
+
+    /**
      * Check if this revision has been approved.
      */
     public function isApproved(): bool
