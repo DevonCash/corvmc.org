@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\URL;
 
 class BandProductionsResource extends Resource
 {
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $model = Event::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-ticket';

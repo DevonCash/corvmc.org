@@ -20,6 +20,8 @@ use Filament\Tables\Table;
 
 class BandReservationsResource extends Resource
 {
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $tenantOwnershipRelationshipName = 'reservable';
 
     protected static ?string $model = Reservation::class;
