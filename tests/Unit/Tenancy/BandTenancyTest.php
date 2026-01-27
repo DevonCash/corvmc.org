@@ -78,7 +78,7 @@ it('user cannot access band tenant they are not member of', function () {
     expect($user->canAccessTenant($band))->toBeFalse();
 });
 
-it('user cannot access band tenant with only invited status', function () {
+it('user can access band tenant with invited status for acceptance page', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();
     // Create band with different owner
@@ -89,7 +89,8 @@ it('user cannot access band tenant with only invited status', function () {
         'status' => 'invited',
     ]);
 
-    expect($user->canAccessTenant($band))->toBeFalse();
+    // Invited users can access the tenant (but middleware restricts to acceptance page only)
+    expect($user->canAccessTenant($band))->toBeTrue();
 });
 
 it('tenants are returned ordered by name', function () {

@@ -20,13 +20,21 @@ class EnsureActiveBandMembership
             return redirect()->route('filament.member.pages.member-dashboard');
         }
 
-        // Verify user still has active membership
+        // Verify user has active membership (not just invited)
         $user = auth()->user();
-        if (! $user || ! $user->canAccessTenant($tenant)) {
+        if (! $user) {
+            return redirect()->route('filament.member.pages.member-dashboard');
+        }
+
+        // Check for active membership (owner or active member)
+        $isActiveMember = $tenant->owner_id === $user->id
+            || $tenant->activeMembers()->where('user_id', $user->id)->exists();
+
+        if (! $isActiveMember) {
             // Check if user has a pending invitation to this band
             $hasInvitation = $tenant->memberships()
                 ->invited()
-                ->where('user_id', $user?->id)
+                ->where('user_id', $user->id)
                 ->exists();
 
             if ($hasInvitation) {

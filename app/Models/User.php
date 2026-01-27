@@ -184,10 +184,26 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
 
     public function canAccessTenant(\Illuminate\Database\Eloquent\Model $tenant): bool
     {
-        // Use existing BandPolicy logic
-        return $tenant instanceof Band
-            && ($tenant->owner_id === $this->id
-                || $tenant->activeMembers()->where('user_id', $this->id)->exists());
+        if (! $tenant instanceof Band) {
+            return false;
+        }
+
+        // Owner always has access
+        if ($tenant->owner_id === $this->id) {
+            return true;
+        }
+
+        // Active members have full access
+        if ($tenant->activeMembers()->where('user_id', $this->id)->exists()) {
+            return true;
+        }
+
+        // Invited users have limited access (middleware restricts to acceptance page only)
+        if ($tenant->memberships()->invited()->where('user_id', $this->id)->exists()) {
+            return true;
+        }
+
+        return false;
     }
 
     public function getFilamentAvatarUrl(): ?string
