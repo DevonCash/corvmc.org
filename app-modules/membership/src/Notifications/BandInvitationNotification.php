@@ -61,6 +61,14 @@ class BandInvitationNotification extends Notification
             'title' => 'Band Invitation',
             'body' => "You've been invited to join {$this->band->name}".($this->position ? " as {$this->position}" : ''),
             'icon' => 'tabler-microphone-2',
+            'actions' => [
+                [
+                    'name' => 'view',
+                    'label' => 'View Invitation',
+                    'url' => "/band/{$this->band->slug}/accept-invitation",
+                    'color' => 'primary',
+                ],
+            ],
             'band_id' => $this->band->id,
             'band_name' => $this->band->name,
             'role' => $this->role,

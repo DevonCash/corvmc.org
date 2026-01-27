@@ -19,6 +19,15 @@ class ListMemberProfiles extends Page
 {
     protected static ?string $breadcrumb = '';
 
+    public function getSubNavigation(): array
+    {
+        if (filled($cluster = static::getCluster())) {
+            return $this->generateNavigationItems($cluster::getClusteredComponents());
+        }
+
+        return [];
+    }
+
     public function hasResourceBreadcrumbs(): bool
     {
         return false;

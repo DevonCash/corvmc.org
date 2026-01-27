@@ -37,8 +37,8 @@ class ViewMemberProfile extends Page
     public function getBreadCrumbs(): array
     {
         return [
-            route('filament.member.resources.directory.index') => 'Member Directory',
-            route('filament.member.resources.directory.view', ['record' => $this->record->id]) => $this->record->user->name ?? 'Member',
+            route('filament.member.directory.resources.members.index') => 'Member Directory',
+            route('filament.member.directory.resources.members.view', ['record' => $this->record->id]) => $this->record->user->name ?? 'Member',
         ];
     }
 

@@ -142,8 +142,8 @@ class ViewReport extends ViewRecord
     {
         return match (get_class($reportable)) {
             'CorvMC\Events\Models\Event' => route('events.show', $reportable),
-            'CorvMC\Membership\Models\MemberProfile' => route('filament.member.resources.directory.view', $reportable),
-            'CorvMC\Bands\Models\Band' => route('filament.member.resources.bands.view', $reportable),
+            'CorvMC\Membership\Models\MemberProfile' => route('filament.member.directory.resources.members.view', $reportable),
+            'CorvMC\Bands\Models\Band' => route('filament.member.directory.resources.bands.view', $reportable),
             default => '#',
         };
     }

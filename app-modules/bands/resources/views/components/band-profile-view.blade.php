@@ -24,90 +24,93 @@
                 </section>
             @endif
 
-            {{-- Musical Influences --}}
-            @php $influences = $record->tagsWithType('influence')->pluck('name'); @endphp
-            @if ($influences->count() > 0)
+            {{-- Genres --}}
+            @php $genres = $record->tagsWithType('genre')->pluck('name'); @endphp
+            @if ($genres->count() > 0)
                 <section>
-                    <h2
-                        class="text-lg font-bold text-base-content mb-4 uppercase tracking-wide border-b border-base-300 pb-2">
-                        Influences
+                    <h2 class="text-lg font-bold text-base-content mb-4 uppercase tracking-wide border-b border-base-300 pb-2">
+                        Genres
                     </h2>
-                    <div class="flex flex-wrap gap-1">
-                        @foreach ($influences as $influence)
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($genres as $genre)
                             @if ($showEditButton)
-                                <a href="{{ route('filament.member.resources.bands.index', ['tableFilters' => ['influences' => ['values' => [$influence]]]]) }}"
-                                    target="_blank" class="badge badge-accent badge-sm hover:badge-accent/80">
-                                    {{ $influence }}
+                                <a href="{{ route('filament.member.directory.resources.bands.index', ['tableFilters' => ['genres' => ['values' => [$genre]]]]) }}"
+                                    target="_blank" class="badge badge-outline badge-secondary badge-sm hover:badge-secondary">
+                                    {{ $genre }}
                                 </a>
                             @else
-                                <span class="badge badge-accent badge-sm">{{ $influence }}</span>
+                                <span class="badge badge-outline badge-secondary badge-sm">{{ $genre }}</span>
                             @endif
                         @endforeach
                     </div>
                 </section>
             @endif
 
-            {{-- Band Members --}}
-            @if ($record->activeMembers()->count() > 0)
+            {{-- Influences --}}
+            @php $influences = $record->tagsWithType('influence')->pluck('name'); @endphp
+            @if ($influences->count() > 0)
                 <section>
-                    <h2
-                        class="text-lg font-bold text-base-content mb-6 uppercase tracking-wide border-b border-base-300 pb-2">
-                        Members
+                    <h2 class="text-lg font-bold text-base-content mb-4 uppercase tracking-wide border-b border-base-300 pb-2">
+                        Influences
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        @foreach ($record->activeMembers as $memberRecord)
-                            @php
-                                $displayName = $memberRecord->display_name;
-                                // Check if member has a CMC account and profile
-                                $hasProfile = false;
-                                if ($memberRecord->user && $memberRecord->user->profile) {
-                                    try {
-                                        $hasProfile = $memberRecord->user->profile->isVisible(auth()->user());
-                                    } catch (Exception $e) {
-                                        // If isVisible method doesn't exist or fails, check basic visibility
-        $hasProfile =
-            $memberRecord->user->profile->visibility === 'public' ||
-            ($memberRecord->user->profile->visibility === 'members' && auth()->check());
-                                    }
-                                }
-                            @endphp
-                            <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                                <div class="min-w-0 flex-1">
-                                    @if ($hasProfile)
-                                        <a href="{{ $showEditButton ? route('filament.member.resources.directory.view', ['record' => $memberRecord->user->profile->id]) : route('members.show', $memberRecord->user->profile) }}"
-                                            class="font-medium text-primary hover:text-primary-focus truncate block">
-                                            {{ $displayName }}
-                                        </a>
-                                    @elseif($memberRecord->is_cmc_member)
-                                        <span class="font-medium text-base-content truncate block"
-                                            title="CMC Member (profile not visible)">{{ $displayName }}</span>
-                                    @else
-                                        <span
-                                            class="font-medium text-base-content truncate block">{{ $displayName }}</span>
-                                    @endif
-                                    @if ($memberRecord->position)
-                                        <p class="text-xs text-base-content/60 truncate">{{ $memberRecord->position }}
-                                        </p>
-                                    @endif
-                                </div>
-                                @if ($memberRecord->is_cmc_member)
-                                    <div class="flex-shrink-0 m-2 opacity-30 ">
-                                        <x-logo class="size-6" :soundLines="false" />
-                                    </div>
-                                @endif
-                            </div>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($influences as $influence)
+                            @if ($showEditButton)
+                                <a href="{{ route('filament.member.directory.resources.bands.index', ['tableFilters' => ['influences' => ['values' => [$influence]]]]) }}"
+                                    target="_blank" class="badge badge-outline badge-accent badge-sm hover:badge-accent">
+                                    {{ $influence }}
+                                </a>
+                            @else
+                                <span class="badge badge-outline badge-accent badge-sm">{{ $influence }}</span>
+                            @endif
                         @endforeach
                     </div>
                 </section>
             @endif
 
-            <x-profile-recordings :embeds="$record->embeds" :canEdit="$showEditButton && auth()->check() && auth()->user()->can('update', $record)" :editRoute="route('filament.member.resources.bands.edit', ['record' => $record])" type="band" />
+            <x-profile-recordings :record="$record" :editRoute="route('filament.member.directory.resources.bands.edit', ['record' => $record])" type="band" />
         </div>
 
         {{-- Program Sidebar - Band Info & Credits --}}
         <div class="bg-base-200 px-6 py-6 space-y-6 border-l border-base-300">
 
             <x-profile-contact :profile="$record" />
+
+            {{-- Band Members --}}
+            @if ($record->activeMembers()->count() > 0)
+                <div>
+                    <h3
+                        class="font-bold text-base-content mb-3 uppercase tracking-wide text-sm border-b border-base-300 pb-1">
+                        Members
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        @foreach ($record->activeMembers as $memberRecord)
+                            @php
+                                $profile = $memberRecord->user->profile;
+                                $hasVisibleProfile = $profile?->isVisible(auth()->user());
+                            @endphp
+                            <div>
+                                @if ($hasVisibleProfile && $showEditButton)
+                                    <a href="{{ route('filament.member.directory.resources.members.view', ['record' => $profile->id]) }}"
+                                        class="font-medium text-primary hover:text-primary-focus">
+                                        {{ $memberRecord->user->name }}
+                                    </a>
+                                @elseif ($hasVisibleProfile)
+                                    <a href="{{ route('members.show', $profile) }}"
+                                        class="font-medium text-primary hover:text-primary-focus">
+                                        {{ $memberRecord->user->name }}
+                                    </a>
+                                @else
+                                    <span class="font-medium text-base-content">{{ $memberRecord->user->name }}</span>
+                                @endif
+                                @if ($memberRecord->position)
+                                    <div class="text-xs text-base-content/60 italic">{{ $memberRecord->position }}</div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             {{-- Band Links --}}
             @if ($record->links && count($record->links) > 0)

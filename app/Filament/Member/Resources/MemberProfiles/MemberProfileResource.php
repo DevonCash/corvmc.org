@@ -2,6 +2,7 @@
 
 namespace App\Filament\Member\Resources\MemberProfiles;
 
+use App\Filament\Member\Clusters\DirectoryCluster;
 use App\Filament\Member\Resources\MemberProfiles\Pages\EditMemberProfile;
 use App\Filament\Member\Resources\MemberProfiles\Pages\ListMemberProfiles;
 use App\Filament\Member\Resources\MemberProfiles\Pages\ViewMemberProfile;
@@ -15,17 +16,19 @@ use Filament\Tables\Table;
 
 class MemberProfileResource extends Resource
 {
-    protected static ?string $slug = 'directory';
+    protected static ?string $cluster = DirectoryCluster::class;
+
+    protected static ?string $slug = 'members';
 
     protected static ?string $model = MemberProfile::class;
 
     protected static ?string $label = 'Member Profile';
 
-    protected static ?string $pluralLabel = 'Member Directory';
+    protected static ?string $pluralLabel = 'Members';
 
-    protected static ?string $navigationLabel = 'Member Directory';
+    protected static ?string $navigationLabel = 'Members';
 
-    protected static string|BackedEnum|null $navigationIcon = 'tabler-users';
+    protected static string|BackedEnum|null $navigationIcon = 'tabler-user';
 
     protected static ?string $recordTitleAttribute = 'user.name';
 

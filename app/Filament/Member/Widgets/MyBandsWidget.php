@@ -98,20 +98,20 @@ class MyBandsWidget extends BaseWidget
                 Action::make('view')
                     ->label('View')
                     ->icon('tabler-eye')
-                    ->url(fn (Band $record) => route('filament.member.resources.bands.view', $record))
+                    ->url(fn (Band $record) => route('filament.member.directory.resources.bands.view', $record))
                     ->openUrlInNewTab(),
 
                 Action::make('edit')
                     ->label('Edit')
                     ->icon('tabler-edit')
-                    ->url(fn (Band $record) => route('filament.member.resources.bands.edit', $record))
+                    ->url(fn (Band $record) => route('filament.member.directory.resources.bands.edit', $record))
                     ->visible(fn (Band $record) => $this->canEditBand($record))
                     ->openUrlInNewTab(),
 
                 Action::make('manage_members')
                     ->label('Members')
                     ->icon('tabler-users-plus')
-                    ->url(fn (Band $record) => route('filament.member.resources.bands.edit', $record).'#members')
+                    ->url(fn (Band $record) => route('filament.member.directory.resources.bands.edit', $record).'#members')
                     ->visible(fn (Band $record) => $this->canManageBand($record) && $record->pending_invitations > 0)
                     ->openUrlInNewTab(),
 
@@ -126,7 +126,7 @@ class MyBandsWidget extends BaseWidget
                 Action::make('view_all')
                     ->label('See All')
                     ->icon('tabler-settings')
-                    ->url(route('filament.member.resources.bands.index')),
+                    ->url(route('filament.member.directory.resources.bands.index')),
             ])
             ->emptyStateHeading('No bands yet')
             ->emptyStateDescription('You haven\'t joined or created any bands.')

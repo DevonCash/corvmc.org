@@ -127,8 +127,8 @@ class ActivityLogTable
                         }
 
                         return match ($record->subject_type) {
-                            'App\\Models\\MemberProfile' => route('filament.member.resources.directory.view', $record->subject),
-                            'App\\Models\\Band' => route('filament.member.resources.bands.view', $record->subject),
+                            'App\\Models\\MemberProfile' => route('filament.member.directory.resources.members.view', $record->subject),
+                            'App\\Models\\Band' => route('filament.member.directory.resources.bands.view', $record->subject),
                             'App\\Models\\Production' => route('filament.member.resources.productions.edit', $record->subject),
                             'App\\Models\\Reservation' => route('filament.member.resources.reservations.index'),
                             default => null,

@@ -20,7 +20,7 @@
                 </p>
             </div>
             @if(auth()->user()?->can('create bands'))
-                <a href="{{ route('filament.member.resources.bands.create') }}"
+                <a href="{{ route('filament.member.directory.resources.bands.create') }}"
                    class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white hover:bg-primary-500 dark:bg-primary-500 dark:hover:bg-primary-400"
                    title="Create Band">
                     <x-tabler-plus class="h-4 w-4" />
@@ -203,7 +203,7 @@
                         You're not in any bands yet
                     </p>
                     @if(auth()->user()?->can('create bands'))
-                        <a href="{{ route('filament.member.resources.bands.create') }}"
+                        <a href="{{ route('filament.member.directory.resources.bands.create') }}"
                            class="mt-2 inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
                             <x-tabler-plus class="h-4 w-4 mr-1" />
                             Create Your First Band
@@ -216,7 +216,7 @@
         @if($bands['total'] > 0)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div class="text-center">
-                    <a href="{{ route('filament.member.resources.bands.index') }}"
+                    <a href="{{ route('filament.member.directory.resources.bands.index') }}"
                        class="text-sm font-medium text-warning-600 hover:text-warning-500 dark:text-warning-400 dark:hover:text-warning-300">
                         Manage all bands
                     </a>

@@ -307,3 +307,36 @@ html, body {
 .fi-modal-header:has(+.fi-modal-footer) {
     margin-bottom: calc(var(--spacing) * -6 - 1px);
 }
+
+.badge {
+    height: unset;
+    font-weight: bold;
+    padding:  .3rem;
+    font-size: .8rem;
+}
+
+a.badge:hover {
+    opacity: .5;
+}
+
+/* Profile tag badges - ensure visible borders */
+.badge.badge-outline {
+    border-width: 2px;
+    border-style: solid;
+    background-color: transparent;
+}
+
+.badge.badge-outline.badge-primary {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.badge.badge-outline.badge-secondary {
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+}
+
+.badge.badge-outline.badge-accent {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}

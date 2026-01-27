@@ -45,8 +45,8 @@ class ViewBand extends Page
     public function getBreadCrumbs(): array
     {
         return [
-            route('filament.member.resources.bands.index') => 'Band Profiles',
-            route('filament.member.resources.bands.view', ['record' => $this->record]) => $this->record->name,
+            route('filament.member.directory.resources.bands.index') => 'Band Profiles',
+            route('filament.member.directory.resources.bands.view', ['record' => $this->record]) => $this->record->name,
         ];
     }
 

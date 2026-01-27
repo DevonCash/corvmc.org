@@ -91,7 +91,7 @@ class UserSummaryWidget extends Widget
     {
         return [
             'reservations' => route('filament.member.resources.reservations.index'),
-            'bands' => route('filament.member.resources.bands.index'),
+            'bands' => route('filament.member.directory.resources.bands.index'),
         ];
     }
 }

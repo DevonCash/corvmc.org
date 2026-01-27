@@ -24,84 +24,72 @@
                 </section>
             @endif
 
-            {{-- Musical Repertoire --}}
-            @if (count($record->skills) > 0 || count($record->genres) > 0 || count($record->influences) > 0)
+            {{-- Skills --}}
+            @if (count($record->skills) > 0)
                 <section>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {{-- Instruments & Skills --}}
-                        @if (count($record->skills) > 0)
-                            <div>
-                                <h3 class="font-semibold text-base-content/90 mb-3 flex items-center">
-                                    <x-tabler-tools class="w-4 h-4 mr-2" />
-                                    Instruments / Skills
-                                </h3>
-                                <div class="space-y-1 text-sm text-base-content/70">
-                                    @foreach ($record->skills as $skill)
-                                        @if ($showEditButton)
-                                            <a href="{{ route('filament.member.resources.directory.index', ['tableFilters' => ['skills' => ['values' => [$skill]]]]) }}"
-                                                target="_blank" class="block hover:text-primary hover:underline">
-                                                • {{ $skill }}
-                                            </a>
-                                        @else
-                                            <div>• {{ $skill }}</div>
-                                        @endif
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
-
-                        {{-- Genres --}}
-                        @if (count($record->genres) > 0)
-                            <div>
-                                <h3 class="font-semibold text-base-content/90 mb-3 flex items-center">
-                                    <x-tabler-music class="w-4 h-4 mr-2" />
-                                    Genres
-                                </h3>
-                                <div class="flex flex-wrap gap-1">
-                                    @foreach ($record->genres as $genre)
-                                        @if ($showEditButton)
-                                            <a href="{{ route('filament.member.resources.directory.index', ['tableFilters' => ['genres' => ['values' => [$genre]]]]) }}"
-                                                target="_blank"
-                                                class="badge badge-outline badge-sm hover:badge-primary">
-                                                {{ $genre }}
-                                            </a>
-                                        @else
-                                            <span class="badge badge-outline badge-sm">{{ $genre }}</span>
-                                        @endif
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
+                    <h2 class="text-lg font-bold text-base-content mb-4 uppercase tracking-wide border-b border-base-300 pb-2">
+                        Instruments / Skills
+                    </h2>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($record->skills as $skill)
+                            @if ($showEditButton)
+                                <a href="{{ route('filament.member.directory.resources.members.index', ['tableFilters' => ['skills' => ['values' => [$skill]]]]) }}"
+                                    target="_blank" class="badge badge-outline badge-primary badge-sm hover:badge-primary">
+                                    {{ $skill }}
+                                </a>
+                            @else
+                                <span class="badge badge-outline badge-primary badge-sm">{{ $skill }}</span>
+                            @endif
+                        @endforeach
                     </div>
+                </section>
+            @endif
 
-                    {{-- Influences in full width --}}
-                    @if (count($record->influences) > 0)
-                        <div class="mt-6">
-                            <h3 class="font-semibold text-base-content/90 mb-3 flex items-center">
-                                <x-tabler-star class="w-4 h-4 mr-2" />
-                                Influences
-                            </h3>
-                            <div class="flex flex-wrap gap-1">
-                                @foreach ($record->influences as $influence)
-                                    @if ($showEditButton)
-                                        <a href="{{ route('filament.member.resources.directory.index', ['tableFilters' => ['influences' => ['values' => [$influence]]]]) }}"
-                                            target="_blank" class="badge badge-accent badge-sm hover:badge-accent/80">
-                                            {{ $influence }}
-                                        </a>
-                                    @else
-                                        <span class="badge badge-accent badge-sm">{{ $influence }}</span>
-                                    @endif
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
+            {{-- Genres --}}
+            @if (count($record->genres) > 0)
+                <section>
+                    <h2 class="text-lg font-bold text-base-content mb-4 uppercase tracking-wide border-b border-base-300 pb-2">
+                        Genres
+                    </h2>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($record->genres as $genre)
+                            @if ($showEditButton)
+                                <a href="{{ route('filament.member.directory.resources.members.index', ['tableFilters' => ['genres' => ['values' => [$genre]]]]) }}"
+                                    target="_blank" class="badge badge-outline badge-secondary badge-sm hover:badge-secondary">
+                                    {{ $genre }}
+                                </a>
+                            @else
+                                <span class="badge badge-outline badge-secondary badge-sm">{{ $genre }}</span>
+                            @endif
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+
+            {{-- Influences --}}
+            @if (count($record->influences) > 0)
+                <section>
+                    <h2 class="text-lg font-bold text-base-content mb-4 uppercase tracking-wide border-b border-base-300 pb-2">
+                        Influences
+                    </h2>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($record->influences as $influence)
+                            @if ($showEditButton)
+                                <a href="{{ route('filament.member.directory.resources.members.index', ['tableFilters' => ['influences' => ['values' => [$influence]]]]) }}"
+                                    target="_blank" class="badge badge-outline badge-accent badge-sm hover:badge-accent">
+                                    {{ $influence }}
+                                </a>
+                            @else
+                                <span class="badge badge-outline badge-accent badge-sm">{{ $influence }}</span>
+                            @endif
+                        @endforeach
+                    </div>
                 </section>
             @endif
 
             <x-profile-recordings
-                :embeds="$record->embeds"
-                :canEdit="$showEditButton && auth()->check() && auth()->user()->can('update', $record)"
-                :editRoute="route('filament.member.resources.directory.edit', ['record' => $record->id])"
+                :record="$record"
+                :editRoute="route('filament.member.directory.resources.members.edit', ['record' => $record->id])"
                 type="member" />
         </div>
 
@@ -127,7 +115,7 @@
                             @endphp
                             <div>
                                 @if ($isVisible && $showEditButton)
-                                    <a href="{{ route('filament.member.resources.bands.view', ['record' => $band]) }}"
+                                    <a href="{{ route('filament.member.directory.resources.bands.view', ['record' => $band]) }}"
                                         class="font-medium text-primary hover:text-primary-focus">
                                         {{ $band->name }}
                                     </a>

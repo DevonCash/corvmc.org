@@ -2,6 +2,7 @@
 
 namespace App\Filament\Member\Resources\Bands;
 
+use App\Filament\Member\Clusters\DirectoryCluster;
 use App\Filament\Member\Resources\Bands\Pages\EditBand;
 use App\Filament\Member\Resources\Bands\Pages\ListBands;
 use App\Filament\Member\Resources\Bands\Pages\ViewBand;
@@ -16,13 +17,15 @@ use Filament\Tables\Table;
 
 class BandResource extends Resource
 {
+    protected static ?string $cluster = DirectoryCluster::class;
+
     protected static ?string $model = Band::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'tabler-microphone-2';
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationLabel = 'Band Directory';
+    protected static ?string $navigationLabel = 'Bands';
 
     protected static ?string $pluralModelLabel = 'Bands';
 

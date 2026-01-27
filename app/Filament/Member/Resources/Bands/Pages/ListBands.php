@@ -29,23 +29,6 @@ class ListBands extends ListRecords
         ];
     }
 
-    public function getTabs(): array
-    {
-        return [
-            'all_bands' => Tab::make('All Bands')
-                ->modifyQueryUsing(fn (Builder $query) => $query->with(['media', 'tags', 'owner', 'members'])),
-            'my_bands' => Tab::make('My Bands')
-                ->modifyQueryUsing(
-                    fn (Builder $query) => $query->with(['media', 'tags', 'owner', 'members'])->where(function (Builder $query) {
-                        $query->where('owner_id', User::me()->id)
-                            ->orWhereHas('members', function (Builder $query) {
-                                $query->where('user_id', User::me()->id)
-                                    ->where('status', 'active');
-                            });
-                    })
-                ),
-        ];
-    }
 
     protected function getPendingInvitationsCount(): int
     {

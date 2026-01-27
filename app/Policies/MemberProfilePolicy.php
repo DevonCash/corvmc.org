@@ -36,7 +36,7 @@ class MemberProfilePolicy
         }
 
         // Owner can always view their own profile
-        if ($memberProfile->isOwnedByUser($user)) {
+        if ($memberProfile->isOwnedBy($user)) {
             return true;
         }
 
@@ -56,12 +56,12 @@ class MemberProfilePolicy
 
     public function update(User $user, MemberProfile $memberProfile): bool
     {
-        return $this->manage($user) || $memberProfile->isOwnedByUser($user);
+        return $this->manage($user) || $memberProfile->isOwnedBy($user);
     }
 
     public function delete(User $user, MemberProfile $memberProfile): bool
     {
-        return $this->manage($user) || $memberProfile->isOwnedByUser($user);
+        return $this->manage($user) || $memberProfile->isOwnedBy($user);
     }
 
     public function restore(User $user, MemberProfile $memberProfile): bool
@@ -89,7 +89,7 @@ class MemberProfilePolicy
         }
 
         // Owner can always view their own contact info
-        if ($memberProfile->isOwnedByUser($user)) {
+        if ($memberProfile->isOwnedBy($user)) {
             return true;
         }
 

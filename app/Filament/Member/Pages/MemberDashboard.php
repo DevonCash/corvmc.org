@@ -67,14 +67,14 @@ class MemberDashboard extends Page
                 'description' => $user->bands->count() === 0 ? 'Start or join a musical group' : 'Edit band profiles and members',
                 'icon' => 'tabler-users',
                 'color' => 'info',
-                'url' => route('filament.member.resources.bands.index'),
+                'url' => route('filament.member.directory.resources.bands.index'),
             ],
             [
                 'label' => 'Members',
                 'description' => 'Connect with other musicians',
                 'icon' => 'tabler-users-group',
                 'color' => 'gray',
-                'url' => route('filament.member.resources.directory.index'),
+                'url' => route('filament.member.directory.resources.members.index'),
             ],
             [
                 'label' => 'My Membership',

@@ -304,12 +304,12 @@ class ActivitySidebar
 
         try {
             return match ($activity->subject_type) {
-                'App\\Models\\Band' => route('filament.member.resources.bands.view', ['record' => $activity->subject]),
-                'App\\Models\\MemberProfile' => route('filament.member.resources.directory.view', ['record' => $activity->subject_id]),
+                'App\\Models\\Band' => route('filament.member.directory.resources.bands.view', ['record' => $activity->subject]),
+                'App\\Models\\MemberProfile' => route('filament.member.directory.resources.members.view', ['record' => $activity->subject_id]),
                 'App\\Models\\Production' => route('filament.member.resources.productions.view', ['record' => $activity->subject_id]),
                 'App\\Models\\Reservation' => route('filament.member.resources.reservations.index'),
                 'App\\Models\\User' => (isset($activity->subject->profile) && $activity->subject->profile?->id) ?
-                    route('filament.member.resources.directory.view', ['record' => $activity->subject->profile->id]) : null,
+                    route('filament.member.directory.resources.members.view', ['record' => $activity->subject->profile->id]) : null,
                 default => null,
             };
         } catch (\Exception $e) {
