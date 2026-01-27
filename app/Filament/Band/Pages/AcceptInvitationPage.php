@@ -91,6 +91,7 @@ class AcceptInvitationPage extends Page implements HasActions, HasSchemas
     public function acceptAction(): Action
     {
         return AcceptBandInvitation::filamentAction()
+            ->name('accept')
             ->record($this->membership)
             ->after(function () {
                 $this->redirect("/band/{$this->band->slug}");
@@ -100,6 +101,7 @@ class AcceptInvitationPage extends Page implements HasActions, HasSchemas
     public function declineAction(): Action
     {
         return DeclineBandInvitation::filamentAction()
+            ->name('decline')
             ->record($this->membership)
             ->after(function () {
                 $this->redirect(route('filament.member.pages.member-dashboard'));
