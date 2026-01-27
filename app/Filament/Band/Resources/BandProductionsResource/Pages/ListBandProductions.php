@@ -3,8 +3,6 @@
 namespace App\Filament\Band\Resources\BandProductionsResource\Pages;
 
 use App\Filament\Band\Resources\BandProductionsResource;
-use CorvMC\Bands\Models\Band;
-use Filament\Facades\Filament;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,15 +16,6 @@ class ListBandProductions extends ListRecords
     public function getBreadcrumbs(): array
     {
         return [];
-    }
-
-    protected function getTableQuery(): Builder
-    {
-        /** @var Band $band */
-        $band = Filament::getTenant();
-
-        return parent::getTableQuery()
-            ->forBand($band->id);
     }
 
     public function getTabs(): array

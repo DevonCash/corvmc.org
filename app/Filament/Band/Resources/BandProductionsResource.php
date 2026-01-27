@@ -29,6 +29,8 @@ class BandProductionsResource extends Resource
 
     protected static ?int $navigationSort = 30;
 
+    protected static ?string $tenantOwnershipRelationshipName = 'performers';
+
     public static function table(Table $table): Table
     {
         return $table
