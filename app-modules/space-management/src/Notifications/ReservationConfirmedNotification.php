@@ -61,6 +61,7 @@ class ReservationConfirmedNotification extends Notification implements ShouldQue
     {
         return [
             'format' => 'filament',
+            'duration' => 'persistent',
             'title' => 'Reservation Confirmed',
             'body' => 'Your practice space reservation for '.$this->reservation->reserved_at->format('M j, Y g:i A').' has been confirmed.',
             'icon' => 'tabler-clock-check',

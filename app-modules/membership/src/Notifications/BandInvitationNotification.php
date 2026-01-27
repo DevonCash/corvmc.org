@@ -57,6 +57,7 @@ class BandInvitationNotification extends Notification
     {
         return [
             'format' => 'filament',
+            'duration' => 'persistent',
             'title' => 'Band Invitation',
             'body' => "You've been invited to join {$this->band->name}".($this->position ? " as {$this->position}" : ''),
             'icon' => 'tabler-microphone-2',

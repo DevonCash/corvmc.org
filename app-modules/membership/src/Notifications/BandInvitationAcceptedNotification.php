@@ -47,6 +47,7 @@ class BandInvitationAcceptedNotification extends Notification
     {
         return [
             'format' => 'filament',
+            'duration' => 'persistent',
             'title' => 'New Band Member',
             'body' => "{$this->newMember->name} has joined {$this->band->name}",
             'icon' => 'tabler-user-plus',

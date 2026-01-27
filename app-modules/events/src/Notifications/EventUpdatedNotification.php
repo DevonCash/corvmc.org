@@ -89,6 +89,7 @@ class EventUpdatedNotification extends Notification
     {
         return [
             'format' => 'filament',
+            'duration' => 'persistent',
             'title' => $this->getNotificationTitle(),
             'body' => $this->getUpdateMessage(),
             'icon' => $this->getIcon(),

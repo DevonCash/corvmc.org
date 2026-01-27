@@ -63,6 +63,7 @@ class ReservationReminderNotification extends Notification implements ShouldQueu
     {
         return [
             'format' => 'filament',
+            'duration' => 'persistent',
             'title' => 'Practice Space Reminder',
             'body' => 'Your practice space reservation is tomorrow at '.$this->reservation->reserved_at->format('g:i A').'.',
             'icon' => 'tabler-clock',

@@ -109,6 +109,7 @@ class MemberPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Member/Resources'), for: 'App\\Filament\\Member\\Resources')
             ->discoverPages(in: app_path('Filament/Member/Pages'), for: 'App\\Filament\\Member\\Pages')
             ->discoverWidgets(in: app_path('Filament/Member/Widgets'), for: 'App\\Filament\\Member\\Widgets')
+            ->discoverClusters(in: app_path('Filament/Member/Clusters'), for: 'App\\Filament\\Member\\Clusters')
             ->navigationGroups([
                 'My Bands',
                 'My Account'
@@ -190,7 +191,6 @@ class MemberPanelProvider extends PanelProvider
                         ->url("/member/band-invitation/{$band->slug}")
                         ->icon('tabler-users')
                         ->badge('Invited')
-                        ->badgeColor('warning')
                         ->group('My Bands')
                         ->sort($sort++),
                 ]);

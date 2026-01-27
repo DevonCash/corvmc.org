@@ -52,6 +52,7 @@ class ReservationAutoCancelledNotification extends Notification implements Shoul
     {
         return [
             'format' => 'filament',
+            'duration' => 'persistent',
             'title' => 'Reservation Auto-Cancelled',
             'body' => 'Your recurring reservation for '.$this->reservation->reserved_at->format('M j, Y g:i A').' was auto-cancelled. Please confirm future reservations within 3 days.',
             'icon' => 'tabler-calendar-cancel',
