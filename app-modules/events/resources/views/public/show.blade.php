@@ -120,17 +120,6 @@
 
 
 
-        @if ($event->age_restriction)
-            <div class="list-row">
-                <x-unicon name="tabler:id" class="size-6 text-primary" />
-                <div>
-                    <div class="font-semibold">Age Restriction</div>
-                    <div class="text-sm opacity-70">{{ $event->age_restriction }}
-                    </div>
-                </div>
-            </div>
-        @endif
-
         <!-- Related Events -->
         @php
             $relatedEvents = \CorvMC\Events\Models\Event::publishedUpcoming()

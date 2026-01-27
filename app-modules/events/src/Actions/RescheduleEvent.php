@@ -2,6 +2,7 @@
 
 namespace CorvMC\Events\Actions;
 
+use CorvMC\Events\Enums\EventStatus;
 use CorvMC\Events\Models\Event;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -11,17 +12,31 @@ class RescheduleEvent
     use AsAction;
 
     /**
-     * Reschedule an event to a new date/time by creating a new event listing.
+     * Reschedule an event to a new date/time, or postpone it (TBA).
+     *
+     * When $newEventData contains a start_datetime, a new event is created and
+     * the original is linked to it. When no start_datetime is provided (TBA mode),
+     * the original event is simply marked as Postponed.
      *
      * @param  Event  $originalEvent  The event to reschedule
-     * @param  array  $newEventData  Data for the new event (must include start_time)
+     * @param  array  $newEventData  Data for the new event (optional start_datetime for TBA)
      * @param  string|null  $reason  Optional reason for rescheduling
-     * @return Event The newly created event
+     * @return Event The newly created event (if rescheduled) or the updated original (if TBA)
      */
-    public function handle(Event $originalEvent, array $newEventData, ?string $reason = null): Event
+    public function handle(Event $originalEvent, array $newEventData = [], ?string $reason = null): Event
     {
         return DB::transaction(function () use ($originalEvent, $newEventData, $reason) {
-            // Create the new event with updated time
+            // TBA mode: no new date provided, just mark as postponed
+            if (empty($newEventData['start_datetime'])) {
+                $originalEvent->update([
+                    'status' => EventStatus::Postponed,
+                    'reschedule_reason' => $reason,
+                ]);
+
+                return $originalEvent->fresh();
+            }
+
+            // Full reschedule: create new event with updated time
             $newEventData = array_merge(
                 $originalEvent->only([
                     'title',

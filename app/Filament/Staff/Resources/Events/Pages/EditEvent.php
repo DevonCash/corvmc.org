@@ -2,9 +2,12 @@
 
 namespace App\Filament\Staff\Resources\Events\Pages;
 
+use App\Filament\Staff\Resources\Events\Actions\CancelEventAction;
+use App\Filament\Staff\Resources\Events\Actions\PublishEventAction;
+use App\Filament\Staff\Resources\Events\Actions\RescheduleEventAction;
+use App\Filament\Staff\Resources\Events\EventResource;
 use CorvMC\Events\Actions\DeleteEvent as DeleteEventAction;
 use CorvMC\Events\Actions\UpdateEvent as UpdateEventAction;
-use App\Filament\Staff\Resources\Events\EventResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -30,6 +33,9 @@ class EditEvent extends EditRecord
     {
         return [
             ViewAction::make(),
+            PublishEventAction::make(),
+            RescheduleEventAction::make(),
+            CancelEventAction::make(),
             DeleteAction::make(),
             ForceDeleteAction::make(),
             RestoreAction::make(),

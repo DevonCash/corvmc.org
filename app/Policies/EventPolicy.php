@@ -4,26 +4,53 @@ namespace App\Policies;
 
 use App\Models\User;
 use CorvMC\Events\Models\Event;
+use CorvMC\Moderation\Enums\Visibility;
 
 class EventPolicy
 {
-    public function manage(User $user): bool
+    public function manage(User $user, ?Event $event = null): bool
     {
-        return $user->hasRole('production manager');
+        if ($user->hasRole('production manager')) {
+            return true;
+        }
+
+        return $event && $event->isOrganizedBy($user);
     }
 
-    public function viewAny(User $user): bool
+    public function viewAny(?User $user): bool
     {
         return true;
     }
 
-    public function view(User $user, Event $event): bool
+    public function view(?User $user, Event $event): bool
     {
-        if ($event->isPublished()) {
+        // Unpublished events: only managers or organizer
+        if (! $event->isPublished()) {
+            return $user && $this->manage($user, $event);
+        }
+
+        // Public events visible to everyone (including guests)
+        if ($event->visibility === Visibility::Public) {
             return true;
         }
 
-        return $this->manage($user) || $event->isOrganizedBy($user);
+        // All other visibility levels require authentication
+        if (! $user) {
+            return false;
+        }
+
+        // Managers or organizer can view all visibility levels
+        if ($this->manage($user, $event)) {
+            return true;
+        }
+
+        // Members visibility = any logged-in user
+        if ($event->visibility === Visibility::Members) {
+            return true;
+        }
+
+        // Private = only organizer/manager (already checked above)
+        return false;
     }
 
     public function create(User $user): bool
@@ -33,17 +60,17 @@ class EventPolicy
 
     public function update(User $user, Event $event): bool
     {
-        return $this->manage($user) || $event->isOrganizedBy($user);
+        return $this->manage($user, $event);
     }
 
     public function delete(User $user, Event $event): bool
     {
-        return $this->manage($user) || $event->isOrganizedBy($user);
+        return $this->manage($user, $event);
     }
 
     public function restore(User $user, Event $event): bool
     {
-        return $this->manage($user) || $event->isOrganizedBy($user);
+        return $this->manage($user, $event);
     }
 
     public function forceDelete(User $user, Event $event): bool
@@ -59,12 +86,7 @@ class EventPolicy
 
     public function cancel(User $user, Event $event): bool
     {
-        return $this->manage($user) || $event->isOrganizedBy($user);
-    }
-
-    public function postpone(User $user, Event $event): bool
-    {
-        return $this->cancel($user, $event);
+        return $this->manage($user, $event);
     }
 
     public function reschedule(User $user, Event $event): bool

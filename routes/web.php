@@ -7,6 +7,7 @@ use CorvMC\Membership\Models\MemberProfile;
 use CorvMC\Sponsorship\Models\Sponsor;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 
 // Public website routes
@@ -66,7 +67,7 @@ Route::get('/events', function () {
 })->name('events.index');
 
 Route::get('/events/{event}', function (Event $event) {
-    abort_if($event->published_at > now() || $event->published_at === null, 404);
+    Gate::authorize('view', $event);
 
     return view('events::public.show', compact('event'));
 })->where('event', '[0-9]+')->name('events.show');
