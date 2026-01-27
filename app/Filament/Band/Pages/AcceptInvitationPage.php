@@ -111,6 +111,16 @@ class AcceptInvitationPage extends Page implements HasActions, HasSchemas
         return "Join {$this->band->name}";
     }
 
+    public function getLayout(): string
+    {
+        return 'filament-panels::components.layout.simple';
+    }
+
+    public function hasLogo(): bool
+    {
+        return true;
+    }
+
     public function getBandStats(): array
     {
         return [

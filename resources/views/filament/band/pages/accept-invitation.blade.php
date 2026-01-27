@@ -1,5 +1,5 @@
-<x-filament-panels::page>
-    <div class="space-y-6 max-w-3xl mx-auto">
+<x-filament-panels::page.simple>
+    <div class="space-y-6 w-full max-w-2xl mx-auto">
         {{-- Hero Section --}}
         <div class="text-center">
             <img
@@ -125,4 +125,4 @@
             {{ $this->acceptAction }}
         </div>
     </div>
-</x-filament-panels::page>
+</x-filament-panels::page.simple>
