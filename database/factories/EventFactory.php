@@ -136,6 +136,25 @@ class EventFactory extends Factory
     }
 
     /**
+     * Enable native ticketing for this event.
+     */
+    public function withNativeTicketing(?int $quantity = null, ?int $sold = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'ticketing_enabled' => true,
+            'ticket_quantity' => $quantity ?? $this->faker->randomElement([50, 75, 100, 150, 200]),
+            'tickets_sold' => $sold ?? 0,
+            'ticket_price_override' => $this->faker->boolean(30)
+                ? $this->faker->randomElement([500, 800, 1200, 1500, 2000])
+                : null,
+            // Clear external ticket URL when using native ticketing
+            'event_link' => null,
+            'ticket_url' => null,
+            'ticket_price' => null,
+        ]);
+    }
+
+    /**
      * Configure the model factory after creation.
      */
     public function configure(): static

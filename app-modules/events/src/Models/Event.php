@@ -5,6 +5,7 @@ namespace CorvMC\Events\Models;
 use CorvMC\Bands\Models\Band;
 use App\Models\EventReservation;
 use App\Models\User;
+use Brick\Money\Money;
 use Carbon\Carbon;
 use CorvMC\Events\Actions\CreateEvent;
 use CorvMC\Events\Concerns\HasPoster;
@@ -183,6 +184,10 @@ class Event extends ContentModel implements Recurrable
         'event_link',
         'ticket_url',
         'ticket_price',
+        'ticketing_enabled',
+        'ticket_quantity',
+        'ticket_price_override',
+        'tickets_sold',
         'published_at',
         'organizer_id',
         'status',
@@ -212,6 +217,10 @@ class Event extends ContentModel implements Recurrable
             'visibility' => Visibility::class,
             'auto_approved' => 'boolean',
             'distance_from_corvallis' => 'float',
+            'ticketing_enabled' => 'boolean',
+            'ticket_quantity' => 'integer',
+            'ticket_price_override' => 'integer',
+            'tickets_sold' => 'integer',
         ];
     }
 
@@ -264,6 +273,22 @@ class Event extends ContentModel implements Recurrable
     public function venue(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Venue::class);
+    }
+
+    /**
+     * Get the ticket orders for this event.
+     */
+    public function ticketOrders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TicketOrder::class);
+    }
+
+    /**
+     * Get all tickets for this event (through orders).
+     */
+    public function tickets(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(Ticket::class, TicketOrder::class);
     }
 
     /**
@@ -471,28 +496,129 @@ class Event extends ContentModel implements Recurrable
     }
 
     /**
-     * Check if tickets are available for this event.
+     * Check if tickets are available for this event (native or external).
      */
     public function hasTickets(): bool
     {
-        return ! empty($this->ticket_url) || ! empty($this->event_link);
+        return $this->ticketing_enabled
+            || ! empty($this->attributes['ticket_url'] ?? null)
+            || ! empty($this->event_link);
     }
 
     /**
-     * Get the primary ticket/event URL.
+     * Get the ticket URL - returns native ticketing route if enabled, otherwise external URL.
      */
-    public function getTicketUrlAttribute($value): ?string
+    public function getTicketUrlAttribute(): ?string
     {
-        if (empty($value)) {
-            return null;
+        // If there's an external ticket URL set, use it (with URL normalization)
+        $externalUrl = $this->attributes['ticket_url'] ?? null;
+        if (! empty($externalUrl)) {
+            if (! str_starts_with($externalUrl, 'http://') && ! str_starts_with($externalUrl, 'https://')) {
+                return 'https://'.$externalUrl;
+            }
+
+            return $externalUrl;
         }
 
-        if (! str_starts_with($value, 'http://') && ! str_starts_with($value, 'https://')) {
-            return 'https://'.$value;
+        // If native ticketing is enabled, return the ticket purchase route
+        if ($this->ticketing_enabled) {
+            return route('events.tickets', $this);
         }
 
-        return $value;
+        return null;
     }
+
+    /**
+     * Check if CMC native ticketing is enabled for this event.
+     */
+    public function hasNativeTicketing(): bool
+    {
+        return (bool) $this->ticketing_enabled;
+    }
+
+    /**
+     * Get the ticket price for this event.
+     *
+     * @param  User|null  $user  User to calculate price for (for member discount)
+     * @return Money Price in USD
+     */
+    public function getTicketPriceForUser(?User $user = null): Money
+    {
+        $basePrice = $this->ticket_price_override ?? config('ticketing.default_price', 1000);
+
+        // Apply sustaining member discount
+        if ($user && $user->isSustainingMember()) {
+            $discountPercent = config('ticketing.sustaining_member_discount', 50);
+            $basePrice = (int) round($basePrice * (1 - $discountPercent / 100));
+        }
+
+        return Money::ofMinor($basePrice, 'USD');
+    }
+
+    /**
+     * Get the base ticket price (without any discounts).
+     */
+    public function getBaseTicketPrice(): Money
+    {
+        $price = $this->ticket_price_override ?? config('ticketing.default_price', 1000);
+
+        return Money::ofMinor($price, 'USD');
+    }
+
+    /**
+     * Get the number of tickets remaining.
+     *
+     * @return int|null Remaining tickets, or null if unlimited
+     */
+    public function getTicketsRemaining(): ?int
+    {
+        if ($this->ticket_quantity === null) {
+            return null; // Unlimited
+        }
+
+        return max(0, $this->ticket_quantity - $this->tickets_sold);
+    }
+
+    /**
+     * Check if tickets are sold out.
+     */
+    public function isSoldOut(): bool
+    {
+        $remaining = $this->getTicketsRemaining();
+
+        return $remaining !== null && $remaining <= 0;
+    }
+
+    /**
+     * Check if a given quantity of tickets is available.
+     */
+    public function hasTicketsAvailable(int $quantity = 1): bool
+    {
+        $remaining = $this->getTicketsRemaining();
+
+        return $remaining === null || $remaining >= $quantity;
+    }
+
+    /**
+     * Increment the tickets sold count.
+     */
+    public function incrementTicketsSold(int $quantity = 1): self
+    {
+        $this->increment('tickets_sold', $quantity);
+
+        return $this;
+    }
+
+    /**
+     * Decrement the tickets sold count.
+     */
+    public function decrementTicketsSold(int $quantity = 1): self
+    {
+        $this->decrement('tickets_sold', $quantity);
+
+        return $this;
+    }
+
 
     /**
      * Get the event link URL.
@@ -541,7 +667,12 @@ class Event extends ContentModel implements Recurrable
             return 'Free';
         }
 
-        $price = $this->ticket_price ? '$'.number_format($this->ticket_price, 2) : 'Ticketed';
+        // For native ticketing, show the base ticket price
+        if ($this->ticketing_enabled) {
+            $price = '$'.number_format($this->getBaseTicketPrice()->getAmount()->toFloat(), 2);
+        } else {
+            $price = $this->ticket_price ? '$'.number_format($this->ticket_price, 2) : 'Ticketed';
+        }
 
         if ($this->isNotaflof()) {
             $price .= ' (NOTAFLOF)';
@@ -555,6 +686,11 @@ class Event extends ContentModel implements Recurrable
      */
     public function isFree(): bool
     {
+        // Native ticketing events are never free (have default or override price)
+        if ($this->ticketing_enabled) {
+            return false;
+        }
+
         return $this->ticket_price === null || $this->ticket_price == 0;
     }
 

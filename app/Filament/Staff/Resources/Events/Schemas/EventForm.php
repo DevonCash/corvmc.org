@@ -11,6 +11,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Schema;
@@ -116,6 +118,7 @@ class EventForm
             ->columns(3)
             ->columnSpanFull()
             ->schema([
+                // External ticketing (existing)
                 static::eventLinkField(),
                 Grid::make()
                     ->columns(1)
@@ -123,6 +126,53 @@ class EventForm
                         static::ticketPriceField(),
                         static::notaflofField(),
                     ]),
+
+                // Native CMC ticketing
+                static::nativeTicketingFieldset(),
+            ]);
+    }
+
+    protected static function nativeTicketingFieldset(): Fieldset
+    {
+        return Fieldset::make('CMC Ticketing')
+            ->columnSpanFull()
+            ->schema([
+                Toggle::make('ticketing_enabled')
+                    ->label('Enable CMC Ticketing')
+                    ->helperText('Use CMC\'s native ticketing system instead of external links')
+                    ->live()
+                    ->afterStateUpdated(function ($state, $set) {
+                        // Clear external ticket URL when enabling native ticketing
+                        if ($state) {
+                            $set('ticket_url', null);
+                        }
+                    }),
+
+                Grid::make(3)
+                    ->schema([
+                        TextInput::make('ticket_quantity')
+                            ->label('Tickets Available')
+                            ->numeric()
+                            ->minValue(1)
+                            ->placeholder('Unlimited')
+                            ->helperText('Leave blank for unlimited'),
+
+                        TextInput::make('ticket_price_override')
+                            ->label('Ticket Price Override')
+                            ->prefix('$')
+                            ->numeric()
+                            ->step(0.01)
+                            ->placeholder(number_format(config('ticketing.default_price', 1000) / 100, 2))
+                            ->helperText('Default: $'.number_format(config('ticketing.default_price', 1000) / 100, 2)),
+
+                        TextInput::make('tickets_sold')
+                            ->label('Tickets Sold')
+                            ->numeric()
+                            ->default(0)
+                            ->disabled()
+                            ->dehydrated(false),
+                    ])
+                    ->visible(fn ($get) => $get('ticketing_enabled')),
             ]);
     }
 

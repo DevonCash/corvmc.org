@@ -60,6 +60,8 @@ class AppServiceProvider extends ServiceProvider
             'event' => \CorvMC\Events\Models\Event::class,
             'venue' => \CorvMC\Events\Models\Venue::class,
             'event_reservation' => \App\Models\EventReservation::class,
+            'ticket_order' => \CorvMC\Events\Models\TicketOrder::class,
+            'ticket' => \CorvMC\Events\Models\Ticket::class,
 
             // Space management models
             'reservation' => \CorvMC\SpaceManagement\Models\Reservation::class,

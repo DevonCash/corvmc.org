@@ -13,10 +13,19 @@ class SponsorSeeder extends Seeder
      */
     public function run(): void
     {
+        // Skip logo downloads by default to save memory and time
+        // Set SEED_SPONSOR_LOGOS=true to download placeholder logos
+        $downloadLogos = env('SEED_SPONSOR_LOGOS', false);
+
         $logoCounter = 1;
 
-        // Helper to add logo from placeholder service
-        $addLogo = function ($sponsor) use (&$logoCounter) {
+        // Helper to add logo from placeholder service (only if enabled)
+        $addLogo = function ($sponsor) use (&$logoCounter, $downloadLogos) {
+            if (!$downloadLogos) {
+                $logoCounter++;
+                return;
+            }
+
             try {
                 // Using picsum.photos for placeholder images (300x300 squares)
                 $logoUrl = "https://picsum.photos/seed/sponsor{$logoCounter}/300/300";
@@ -24,6 +33,7 @@ class SponsorSeeder extends Seeder
                 $logoCounter++;
             } catch (\Exception $e) {
                 // Skip if logo download fails
+                $logoCounter++;
             }
         };
 

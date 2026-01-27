@@ -73,22 +73,23 @@ Route::get('/events/{event}', function (Event $event) {
 })->where('event', '[0-9]+')->name('events.show');
 
 Route::get('/show-tonight', function () {
-    // Find next published event happening today
-    $tonightShow = Event::publishedToday()->first();
+    // Find all published events happening today
+    $tonightShows = Event::publishedToday()->get();
 
-    // If no show tonight, get next upcoming published show
-    if (! $tonightShow) {
-        $tonightShow = Event::publishedUpcoming()->first();
+    // If exactly one show tonight, redirect to it
+    if ($tonightShows->count() === 1) {
+        return redirect()->route('events.show', $tonightShows->first());
     }
 
-    // If still no show found, redirect to events listing with message
-    if (! $tonightShow) {
+    // Multiple shows tonight
+    if ($tonightShows->count() > 1) {
         return redirect()->route('events.index')
-            ->with('info', 'No upcoming shows found. Check back soon for exciting events!');
+            ->with('info', 'Multiple shows tonight! Check out what\'s happening below.');
     }
 
-    // Redirect to the specific show page
-    return redirect()->route('events.show', $tonightShow);
+    // No shows tonight
+    return redirect()->route('events.index')
+        ->with('info', 'No shows tonight, but check out our upcoming events!');
 })->name('show-tonight');
 
 // Directory (combined musicians & bands)
@@ -176,6 +177,23 @@ Route::get('/invitation/accept/{token}', [\App\Http\Controllers\InvitationContro
 // Stripe webhook (no authentication needed - Stripe validates with signature)
 Route::post('/stripe/webhook', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook'])
     ->name('cashier.webhook');
+
+// Ticket purchase page (supports guest checkout, no auth required)
+Route::get('/events/{event}/tickets', function (Event $event) {
+    Gate::authorize('view', $event);
+
+    if (!$event->hasNativeTicketing()) {
+        abort(404);
+    }
+
+    return view('events::public.tickets', compact('event'));
+})->where('event', '[0-9]+')->name('events.tickets');
+
+// Ticket checkout routes (supports guest checkout, no auth required)
+Route::get('/tickets/checkout/success', [\App\Http\Controllers\TicketCheckoutController::class, 'success'])
+    ->name('tickets.checkout.success');
+Route::get('/tickets/checkout/cancel/{order:uuid}', [\App\Http\Controllers\TicketCheckoutController::class, 'cancel'])
+    ->name('tickets.checkout.cancel');
 
 // Checkout success/cancel handling (unified for all checkout types)
 Route::middleware(['auth'])->group(function () {

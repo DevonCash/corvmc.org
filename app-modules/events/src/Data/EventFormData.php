@@ -48,6 +48,12 @@ class EventFormData extends Data
         public string|Optional|null $event_type = new Optional,
         public int|Optional|null $distance_from_corvallis = new Optional,
 
+        // Native ticketing fields
+        public bool|Optional|null $ticketing_enabled = new Optional,
+        public int|Optional|null $ticket_quantity = new Optional,
+        public int|Optional|null $ticket_price_override = new Optional,
+        public int|Optional|null $tickets_sold = new Optional,
+
         // Relationship fields (handled separately by actions)
         public array|Optional $tags = new Optional,
         public bool|Optional|null $notaflof = new Optional,
@@ -196,6 +202,10 @@ class EventFormData extends Data
             'event_type',
             'distance_from_corvallis',
             'recurring_series_id',
+            'ticketing_enabled',
+            'ticket_quantity',
+            'ticket_price_override',
+            'tickets_sold',
         ];
 
         foreach ($directFields as $field) {

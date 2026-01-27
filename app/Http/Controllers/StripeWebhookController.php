@@ -28,6 +28,8 @@ class StripeWebhookController extends CashierWebhookController
                 return $this->handleReservationCheckout($session, $metadata);
             } elseif ($checkoutType === 'sliding_scale_membership') {
                 return $this->handleSubscriptionCheckout($session, $metadata);
+            } elseif ($checkoutType === 'ticket_order') {
+                return $this->handleTicketOrderCheckout($session, $metadata);
             } else {
                 // Unknown checkout type, skip
                 return $this->successMethod();
@@ -88,6 +90,37 @@ class StripeWebhookController extends CashierWebhookController
             Log::warning('Stripe webhook: Failed to process subscription checkout', [
                 'session_id' => $sessionId,
                 'user_id' => $userId,
+            ]);
+        }
+
+        return $this->successMethod();
+    }
+
+    /**
+     * Handle ticket order checkout completion webhook.
+     */
+    private function handleTicketOrderCheckout(array $session, array $metadata): SymfonyResponse
+    {
+        $sessionId = $session['id'];
+        $orderId = $metadata['ticket_order_id'] ?? null;
+
+        if (! $orderId) {
+            Log::warning('Stripe webhook: No ticket order ID in checkout metadata', [
+                'session_id' => $sessionId,
+            ]);
+
+            return $this->successMethod();
+        }
+
+        $success = \CorvMC\Events\Actions\Tickets\CompleteTicketOrder::run(
+            (int) $orderId,
+            $sessionId
+        );
+
+        if (! $success) {
+            Log::warning('Stripe webhook: Failed to process ticket order checkout', [
+                'session_id' => $sessionId,
+                'order_id' => $orderId,
             ]);
         }
 
