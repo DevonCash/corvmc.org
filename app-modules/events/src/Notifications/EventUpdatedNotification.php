@@ -88,6 +88,7 @@ class EventUpdatedNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return [
+            'format' => 'filament',
             'title' => $this->getNotificationTitle(),
             'body' => $this->getUpdateMessage(),
             'icon' => $this->getIcon(),

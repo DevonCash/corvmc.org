@@ -31,14 +31,22 @@ class BandInvitationNotification extends Notification
      */
     public function toMail(object $notifiable): \Illuminate\Notifications\Messages\MailMessage
     {
-        return (new \Illuminate\Notifications\Messages\MailMessage)
-            ->subject("You're invited to join {$this->band->name}!")
+        $roleLabel = $this->role === 'admin' ? 'an admin' : 'a member';
+        $acceptUrl = url("/band/{$this->band->slug}/accept-invitation");
+
+        $message = (new \Illuminate\Notifications\Messages\MailMessage)
+            ->subject("You're invited to join {$this->band->name} as {$roleLabel}!")
             ->greeting('Hello!')
-            ->line("You've been invited to join {$this->band->name}".($this->position ? " as {$this->position}" : '').'.')
-            ->line("Here's a bit about the band:")
-            ->line($this->band->bio ?: 'No bio available yet.')
-            ->action('View Band Profile', route('bands.show', $this->band))
-            ->line('You can accept or decline this invitation from your dashboard.')
+            ->line("You've been invited to join {$this->band->name} as {$roleLabel}".($this->position ? " ({$this->position})" : '').'.');
+
+        if ($this->band->bio) {
+            $message->line("Here's a bit about the band:")
+                ->line($this->band->bio);
+        }
+
+        return $message
+            ->action('Accept Invitation', $acceptUrl)
+            ->line('[View the public band profile]('.route('bands.show', $this->band).')')
             ->line('Welcome to the music community!');
     }
 
@@ -48,6 +56,7 @@ class BandInvitationNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return [
+            'format' => 'filament',
             'title' => 'Band Invitation',
             'body' => "You've been invited to join {$this->band->name}".($this->position ? " as {$this->position}" : ''),
             'icon' => 'tabler-microphone-2',

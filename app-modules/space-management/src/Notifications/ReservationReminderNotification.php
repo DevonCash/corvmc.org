@@ -62,6 +62,7 @@ class ReservationReminderNotification extends Notification implements ShouldQueu
     public function toDatabase(object $notifiable): array
     {
         return [
+            'format' => 'filament',
             'title' => 'Practice Space Reminder',
             'body' => 'Your practice space reservation is tomorrow at '.$this->reservation->reserved_at->format('g:i A').'.',
             'icon' => 'tabler-clock',

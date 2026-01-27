@@ -60,6 +60,7 @@ class ReservationConfirmedNotification extends Notification implements ShouldQue
     public function toDatabase(object $notifiable): array
     {
         return [
+            'format' => 'filament',
             'title' => 'Reservation Confirmed',
             'body' => 'Your practice space reservation for '.$this->reservation->reserved_at->format('M j, Y g:i A').' has been confirmed.',
             'icon' => 'tabler-clock-check',

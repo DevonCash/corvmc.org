@@ -46,6 +46,7 @@ class BandInvitationAcceptedNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return [
+            'format' => 'filament',
             'title' => 'New Band Member',
             'body' => "{$this->newMember->name} has joined {$this->band->name}",
             'icon' => 'tabler-user-plus',
