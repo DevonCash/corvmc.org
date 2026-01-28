@@ -348,9 +348,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
             return false;
         }
 
-        return ! self::query()
-            ->where('reservable_type', User::class)
-            ->where('reservable_id', $user->id)
+        return ! $user->rehearsals()
             ->where('id', '!=', $this->id)
             ->exists();
     }

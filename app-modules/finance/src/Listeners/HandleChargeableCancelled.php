@@ -50,8 +50,14 @@ class HandleChargeableCancelled
                 $this->refundCredits($user, $charge);
             }
 
-            // Update charge status
-            $charge->markAsRefunded('Cancelled');
+            // Update charge status based on whether payment was made
+            if ($charge->status->isPaid()) {
+                // Payment was made, so this is a refund
+                $charge->markAsRefunded('Cancelled');
+            } else {
+                // No payment was made, just mark as cancelled
+                $charge->markAsCancelled('Cancelled before payment');
+            }
         });
     }
 

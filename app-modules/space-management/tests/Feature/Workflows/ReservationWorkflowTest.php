@@ -202,4 +202,39 @@ describe('Reservation Workflow: Cancel Reservation', function () {
         // Slot should now be available
         expect(CheckTimeSlotAvailability::run($startTime, $endTime))->toBeTrue();
     });
+
+    it('marks charge as cancelled when cancelling an unpaid reservation', function () {
+        $user = User::factory()->create();
+        $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
+        $endTime = $startTime->copy()->addHours(2);
+
+        $reservation = CreateReservation::run($user, $startTime, $endTime);
+
+        // Verify charge is pending (unpaid)
+        expect($reservation->charge->status)->toBe(ChargeStatus::Pending);
+
+        CancelReservation::run($reservation);
+
+        // Charge should be marked as Cancelled, not Refunded
+        $reservation->refresh();
+        expect($reservation->charge->status)->toBe(ChargeStatus::Cancelled);
+    });
+
+    it('marks charge as refunded when cancelling a paid reservation', function () {
+        $user = User::factory()->create();
+        $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
+        $endTime = $startTime->copy()->addHours(2);
+
+        $reservation = CreateReservation::run($user, $startTime, $endTime);
+
+        // Mark the charge as paid
+        $reservation->charge->markAsPaid('cash');
+        expect($reservation->charge->status)->toBe(ChargeStatus::Paid);
+
+        CancelReservation::run($reservation);
+
+        // Charge should be marked as Refunded since payment was made
+        $reservation->refresh();
+        expect($reservation->charge->status)->toBe(ChargeStatus::Refunded);
+    });
 });

@@ -186,6 +186,19 @@ class Charge extends Model
     }
 
     /**
+     * Mark the charge as cancelled (never paid).
+     */
+    public function markAsCancelled(?string $notes = null): self
+    {
+        $this->update([
+            'status' => ChargeStatus::Cancelled,
+            'notes' => $notes,
+        ]);
+
+        return $this;
+    }
+
+    /**
      * Get total credits applied (sum of all credit types).
      */
     public function getTotalCreditsApplied(): int

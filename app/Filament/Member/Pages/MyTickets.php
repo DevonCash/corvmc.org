@@ -13,13 +13,13 @@ class MyTickets extends Page
 
     protected string $view = 'filament.pages.my-tickets';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'My Account';
+    // protected static string|\UnitEnum|null $navigationGroup = 'My Account';
 
     protected static ?int $navigationSort = 4;
 
-    protected static ?string $title = 'My Tickets';
+    protected static ?string $title = 'Tickets';
 
-    protected static ?string $slug = 'my-tickets';
+    protected static ?string $slug = 'tickets';
 
     public function getUpcomingOrders()
     {

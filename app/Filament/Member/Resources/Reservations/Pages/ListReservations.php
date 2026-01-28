@@ -6,6 +6,7 @@ use App\Filament\Member\Resources\Reservations\ReservationResource;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Member\Resources\Reservations\Widgets\RecurringSeriesTableWidget;
 use App\Models\User;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
@@ -52,9 +53,13 @@ class ListReservations extends ListRecords
             ->action(function (array $data) {
                 $user = User::find($data['user_id']);
 
-                // reserved_at and reserved_until are already Carbon instances from ReservationForm
-                $reservedAt = $data['reserved_at'];
-                $reservedUntil = $data['reserved_until'];
+                // Parse datetime strings to Carbon instances
+                $reservedAt = $data['reserved_at'] instanceof Carbon
+                    ? $data['reserved_at']
+                    : Carbon::parse($data['reserved_at']);
+                $reservedUntil = $data['reserved_until'] instanceof Carbon
+                    ? $data['reserved_until']
+                    : Carbon::parse($data['reserved_until']);
 
                 // Use CreateReservation action to properly create reservation with notifications
                 $reservation = \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run(

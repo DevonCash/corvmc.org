@@ -16,6 +16,12 @@ describe('manage', function () {
         expect($this->policy->manage($staff))->toBeTrue();
     });
 
+    it('allows admin to manage reservations', function () {
+        $admin = User::factory()->withRole('admin')->create();
+
+        expect($this->policy->manage($admin))->toBeTrue();
+    });
+
     it('denies regular members from managing reservations', function () {
         $member = User::factory()->create();
 

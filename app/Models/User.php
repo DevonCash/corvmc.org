@@ -140,10 +140,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
         'name',
         'pronouns',
         'email',
+        'phone',
         'email_verified_at',
         'password',
         'trust_points',
         'community_event_trust_points',
+        'settings',
     ];
 
     /**
@@ -326,6 +328,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
 
     /**
      * Get used free hours for the current month.
+     *
+     * Calculates NET usage by accounting for both charge deductions
+     * and refunds from cancellations.
      */
     public function getUsedFreeHoursThisMonth(): float
     {
@@ -333,15 +338,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
             return 0;
         }
 
-        // Sum all negative credit transactions (deductions) this month
-        $usedBlocks = CreditTransaction::where('user_id', $this->id)
+        // Sum charge-related transactions this month (deductions are negative, refunds are positive)
+        // Net result is negative if user has used more than refunded
+        $netBlocks = CreditTransaction::where('user_id', $this->id)
             ->where('credit_type', CreditType::FreeHours)
-            ->where('amount', '<', 0)
+            ->whereIn('source', ['charge_usage', 'charge_cancellation'])
             ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->sum('amount');
 
-        // Convert negative value to positive and blocks to hours
-        return Reservation::blocksToHours(abs($usedBlocks));
+        // Convert to positive hours (net usage)
+        return Reservation::blocksToHours(abs(min(0, $netBlocks)));
     }
 
     /**

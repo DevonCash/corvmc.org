@@ -12,6 +12,7 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
     case Paid = 'paid';
     case Comped = 'comped';
     case Refunded = 'refunded';
+    case Cancelled = 'cancelled';
 
     public function getLabel(): string
     {
@@ -20,6 +21,7 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
             self::Paid => 'Paid',
             self::Comped => 'Comped',
             self::Refunded => 'Refunded',
+            self::Cancelled => 'Cancelled',
         };
     }
 
@@ -30,6 +32,7 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
             self::Paid => 'tabler-coin',
             self::Comped => 'tabler-gift',
             self::Refunded => 'tabler-receipt-refund',
+            self::Cancelled => 'tabler-x',
         };
     }
 
@@ -40,6 +43,7 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
             self::Paid => 'success',
             self::Comped => 'info',
             self::Refunded => 'gray',
+            self::Cancelled => 'gray',
         };
     }
 
@@ -63,9 +67,14 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
         return $this === self::Refunded;
     }
 
+    public function isCancelled(): bool
+    {
+        return $this === self::Cancelled;
+    }
+
     public function isSettled(): bool
     {
-        return in_array($this, [self::Paid, self::Comped, self::Refunded], true);
+        return in_array($this, [self::Paid, self::Comped, self::Refunded, self::Cancelled], true);
     }
 
     public function requiresPayment(): bool

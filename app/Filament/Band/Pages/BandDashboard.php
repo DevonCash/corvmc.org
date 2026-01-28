@@ -3,10 +3,8 @@
 namespace App\Filament\Band\Pages;
 
 use App\Filament\Band\Resources\BandMembersResource;
-use App\Filament\Band\Resources\BandReservationsResource;
 use App\Filament\Band\Pages\EditBandProfile;
 use CorvMC\Bands\Models\Band;
-use CorvMC\SpaceManagement\Models\Reservation;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
@@ -50,35 +48,12 @@ class BandDashboard extends Page
         return [
             'active_members' => $band->activeMembers()->count(),
             'pending_invitations' => $band->pendingInvitations()->count(),
-            'upcoming_reservations' => $band->morphMany(Reservation::class, 'reservable')
-                ->where('reserved_at', '>', now())
-                ->count(),
         ];
-    }
-
-    public function getUpcomingReservations()
-    {
-        $band = $this->getBand();
-
-        return Reservation::query()
-            ->where('reservable_type', Band::class)
-            ->where('reservable_id', $band->id)
-            ->where('reserved_at', '>', now())
-            ->orderBy('reserved_at')
-            ->limit(5)
-            ->get();
     }
 
     public function getQuickActions(): array
     {
         return [
-            [
-                'label' => 'Book Practice Space',
-                'description' => 'Reserve a room for rehearsal',
-                'icon' => 'tabler-calendar-plus',
-                'color' => 'primary',
-                'url' => BandReservationsResource::getUrl('create'),
-            ],
             [
                 'label' => 'Manage Members',
                 'description' => 'Invite or manage band members',

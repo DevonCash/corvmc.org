@@ -40,7 +40,7 @@ class MemberDashboard extends Page
         }
 
         return $user->rehearsals()
-            ->where('reserved_at', '>', now())
+            ->upcoming()
             ->orderBy('reserved_at')
             ->limit(5)
             ->get();
@@ -81,7 +81,7 @@ class MemberDashboard extends Page
                 'description' => $user->isSustainingMember() ? 'Manage your membership' : 'Become a sustaining member',
                 'icon' => 'tabler-star',
                 'color' => 'warning',
-                'url' => \App\Filament\Member\Pages\MyMembership::getUrl(),
+                'url' => \App\Filament\Member\Pages\Account\Membership::getUrl(),
             ],
         ];
     }
@@ -133,8 +133,8 @@ class MemberDashboard extends Page
 
         return \Illuminate\Support\Facades\Cache::remember("user_stats.{$user->id}", 300, function () use ($user) {
             $stats = [
-                'upcoming_reservations' => $user->rehearsals
-                    ->where('reserved_at', '>', now())
+                'upcoming_reservations' => $user->rehearsals()
+                    ->upcoming()
                     ->count(),
                 'band_memberships' => $user->bands->count(),
                 'owned_bands' => $user->ownedBands->count(),

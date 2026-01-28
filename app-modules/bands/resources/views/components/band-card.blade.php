@@ -1,10 +1,11 @@
-@props(['item'])
+@props(['band' => null, 'item' => null, 'link' => null])
 
 @php
-    $band = $item;
+    $band = $band ?? $item;
+    $link ??= route('bands.show', $band);
 @endphp
 
-<a href="{{ route('bands.show', $band) }}" class="block group vinyl-card">
+<a href="{{ $link }}" class="block group vinyl-card">
     <div
         class="relative aspect-square max-w-sm mx-auto bg-black shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-[1.02] group-hover:-rotate-1 group-hover:-translate-x-2">
 

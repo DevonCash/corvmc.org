@@ -19,6 +19,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -33,14 +34,20 @@ class ReservationsTable
             ->query(fn (Builder $query) => User::me()->rehearsals())
             ->columns([
                 Stack::make([
+                    TextColumn::make('title')
+                        ->getStateUsing(fn () => 'Rehearsal Reservation')
+                        ->weight('bold')
+                        ->icon('tabler-metronome')
+                        ->size('lg'),
                     Split::make([
                         ReservationColumns::timeRange(),
                         Stack::make([
-                            ReservationColumns::statusDisplay()->grow(false),
+                            ReservationColumns::statusDisplay()->grow(false)
+                            ->extraAttributes(['style' => 'margin-top: -0.1rem; margin-bottom: -0.1rem;']),
                             ReservationColumns::costDisplay()->grow(false),
                         ])->alignment(Alignment::End)->space(2),
-                    ]),
-                ]),
+                    ])->extraAttributes(['style' => 'align-items:flex-start;']),
+                ])->space(2),
             ])
             ->contentGrid([
                 'default' => 1,

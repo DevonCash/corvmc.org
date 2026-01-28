@@ -27,8 +27,12 @@ class TodayReservationsWidget extends BaseWidget
                     ->whereDate('reserved_at', Carbon::today())
                     ->where('status', '!=', 'cancelled')
                     ->when(! $canViewAll, function ($query) use ($user) {
-                        return $query->where('reservable_type', User::class)
-                            ->where('reservable_id', $user->id);
+                        // Use the relationship via morphedByMany constraint
+                        return $query->where(function ($q) use ($user) {
+                            $q->whereHasMorph('reservable', [User::class], function ($query) use ($user) {
+                                $query->where('id', $user->id);
+                            });
+                        });
                     })
                     ->orderBy('reserved_at')
             )
@@ -58,8 +62,8 @@ class TodayReservationsWidget extends BaseWidget
                 TextColumn::make('reservable.name')
                     ->label('Reserved by')
                     ->formatStateUsing(function ($state, Reservation $record) use ($user, $canViewAll) {
-                        $isOwnReservation = $record->reservable_type === User::class &&
-                            $record->reservable_id === $user?->id;
+                        $isOwnReservation = $record->reservable instanceof User &&
+                            $record->reservable->is($user);
 
                         if ($canViewAll || $isOwnReservation) {
                             return $record->reservable?->name ?? 'Unknown';
@@ -68,14 +72,14 @@ class TodayReservationsWidget extends BaseWidget
                         return 'Reserved';
                     })
                     ->icon(function (Reservation $record) use ($user) {
-                        $isOwnReservation = $record->reservable_type === User::class &&
-                            $record->reservable_id === $user?->id;
+                        $isOwnReservation = $record->reservable instanceof User &&
+                            $record->reservable->is($user);
 
                         return $isOwnReservation ? 'tabler-user' : 'tabler-users';
                     })
                     ->iconColor(function (Reservation $record) use ($user) {
-                        $isOwnReservation = $record->reservable_type === User::class &&
-                            $record->reservable_id === $user?->id;
+                        $isOwnReservation = $record->reservable instanceof User &&
+                            $record->reservable->is($user);
 
                         return $isOwnReservation ? 'success' : 'gray';
                     }),
@@ -99,8 +103,8 @@ class TodayReservationsWidget extends BaseWidget
                 TextColumn::make('notes')
                     ->label('Activity')
                     ->formatStateUsing(function ($state, Reservation $record) use ($user, $canViewAll) {
-                        $isOwnReservation = $record->reservable_type === User::class &&
-                            $record->reservable_id === $user?->id;
+                        $isOwnReservation = $record->reservable instanceof User &&
+                            $record->reservable->is($user);
 
                         if ($canViewAll || $isOwnReservation) {
                             return $record->notes ?: 'Practice session';
@@ -110,8 +114,8 @@ class TodayReservationsWidget extends BaseWidget
                     })
                     ->limit(30)
                     ->tooltip(function ($state, Reservation $record) use ($user, $canViewAll) {
-                        $isOwnReservation = $record->reservable_type === User::class &&
-                            $record->reservable_id === $user?->id;
+                        $isOwnReservation = $record->reservable instanceof User &&
+                            $record->reservable->is($user);
 
                         if (($canViewAll || $isOwnReservation) && $record->notes) {
                             return $record->notes;

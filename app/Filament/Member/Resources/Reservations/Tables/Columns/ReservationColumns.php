@@ -83,17 +83,36 @@ class ReservationColumns
             ->sortable(['reserved_at', 'reserved_until']);
     }
 
-    public static function statusDisplay(): IconColumn
+    public static function statusDisplay(): TextColumn
     {
-        return IconColumn::make('status')
-            ->label('')
+        return TextColumn::make('status')
+            ->badge()
             ->grow(false)
-            ->width('1%');
+            ;
     }
 
     public static function costDisplay(): TextColumn
     {
-        return  TextColumn::make('charge.status');
+        return TextColumn::make('charge.net_amount')
+            ->formatStateUsing(function ($state, Reservation $record): string {
+                $charge = $record->charge;
+
+                // No charge or zero amount = free
+                if (! $charge || ! $charge->net_amount->isPositive()) {
+                    return 'Free';
+                }
+
+                $amount = $charge->net_amount->formatTo('en_US', true);
+
+                return match ($charge->status->value) {
+                    'pending' => "{$amount} due " . $record->reserved_at->format('n/j'),
+                    'paid' => "{$amount} paid " . ($charge->paid_at?->format('n/j') ?? ''),
+                    'comped' => 'Comped',
+                    'refunded' => "{$amount} refunded",
+                    'cancelled' => 'Charge Cancelled',
+                    default => $amount,
+                };
+            });
     }
 
     public static function createdAt(): TextColumn

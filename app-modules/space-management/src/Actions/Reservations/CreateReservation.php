@@ -10,6 +10,7 @@ use App\Models\User;
 use CorvMC\SpaceManagement\Notifications\ReservationCreatedNotification;
 use CorvMC\SpaceManagement\Notifications\ReservationCreatedTodayNotification;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -49,7 +50,7 @@ class CreateReservation
             // Create reservation (scheduling only - no pricing/credit logic)
             $reservation = RehearsalReservation::create([
                 'user_id' => $user->id,
-                'reservable_type' => User::class,
+                'reservable_type' => Relation::getMorphAlias(User::class),
                 'reservable_id' => $user->id,
                 'reserved_at' => $startTime,
                 'reserved_until' => $endTime,

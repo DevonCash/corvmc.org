@@ -18,22 +18,17 @@
 
         <div class="text-sm text-gray-600 dark:text-gray-400 text-right">
             @if ($this->isSustainingMember)
-                @if ($this->totalAllocatedHours > 0)
+                @if ($this->monthlyGrantHours > 0)
                     <div>
                         @if ($this->usedHours > 0)
-                            {{ number_format($this->usedHours, 1) }}/{{ number_format($this->totalAllocatedHours, 1) }} hours used this month
+                            {{ number_format($this->usedHours, 1) }}/{{ number_format($this->monthlyGrantHours, 1) }} hours used this month
                         @else
-                            {{ number_format($this->totalAllocatedHours, 1) }} hours available this month
+                            {{ number_format($this->monthlyGrantHours, 1) }} hours granted per month
                         @endif
                     </div>
-                    @if ($this->allocationDate)
-                        <div class="text-xs text-gray-500 dark:text-gray-500">
-                            Allocated {{ $this->allocationDate }}
-                        </div>
-                    @endif
                 @endif
             @else
-                <a href="{{ route('filament.member.pages.membership') }}" class="text-primary-600 hover:underline dark:text-primary-400">
+                <a href="{{ route('filament.member.pages.account.membership') }}" class="text-primary-600 hover:underline dark:text-primary-400">
                     Learn More
                 </a>
             @endif

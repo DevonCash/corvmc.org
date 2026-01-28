@@ -47,8 +47,12 @@ class ReservationResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         // Show count of current user's upcoming reservations
-        return RehearsalReservation::where('reservable_type', User::class)
-            ->where('reservable_id', Auth::id())
+        $user = User::me();
+        if (! $user) {
+            return null;
+        }
+
+        return $user->rehearsals()
             ->where('status', '!=', 'cancelled')
             ->where('reserved_at', '>', now())
             ->count() ?: null;

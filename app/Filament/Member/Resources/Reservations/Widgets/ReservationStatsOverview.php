@@ -2,8 +2,6 @@
 
 namespace App\Filament\Member\Resources\Reservations\Widgets;
 
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use App\Models\User;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -24,41 +22,35 @@ class ReservationStatsOverview extends BaseWidget
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth = Carbon::now()->endOfMonth();
 
-        // Today's reservations
-        $todayReservations = RehearsalReservation::where('reservable_type', User::class)
-            ->where('reservable_id', $user->id)
+        // Today's reservations - use relationship
+        $todayReservations = $user->rehearsals()
             ->whereDate('reserved_at', $today)
             ->where('status', '!=', 'cancelled')
             ->count();
 
-        $todayHours = RehearsalReservation::where('reservable_type', User::class)
-            ->where('reservable_id', $user->id)
+        $todayHours = $user->rehearsals()
             ->whereDate('reserved_at', $today)
             ->where('status', '!=', 'cancelled')
             ->sum('hours_used');
 
         // This week's reservations
-        $weekReservations = RehearsalReservation::where('reservable_type', User::class)
-            ->where('reservable_id', $user->id)
+        $weekReservations = $user->rehearsals()
             ->whereBetween('reserved_at', [$startOfWeek, $endOfWeek])
             ->where('status', '!=', 'cancelled')
             ->count();
 
-        $weekHours = RehearsalReservation::where('reservable_type', User::class)
-            ->where('reservable_id', $user->id)
+        $weekHours = $user->rehearsals()
             ->whereBetween('reserved_at', [$startOfWeek, $endOfWeek])
             ->where('status', '!=', 'cancelled')
             ->sum('hours_used');
 
         // This month's reservations
-        $monthReservations = RehearsalReservation::where('reservable_type', User::class)
-            ->where('reservable_id', $user->id)
+        $monthReservations = $user->rehearsals()
             ->whereBetween('reserved_at', [$startOfMonth, $endOfMonth])
             ->where('status', '!=', 'cancelled')
             ->count();
 
-        $monthHours = RehearsalReservation::where('reservable_type', User::class)
-            ->where('reservable_id', $user->id)
+        $monthHours = $user->rehearsals()
             ->whereBetween('reserved_at', [$startOfMonth, $endOfMonth])
             ->where('status', '!=', 'cancelled')
             ->sum('hours_used');
@@ -107,8 +99,7 @@ class ReservationStatsOverview extends BaseWidget
         $user = Auth::user();
 
         for ($hour = 9; $hour <= 21; $hour++) {
-            $hasReservation = RehearsalReservation::where('reservable_type', User::class)
-                ->where('reservable_id', $user->id)
+            $hasReservation = $user->rehearsals()
                 ->whereDate('reserved_at', Carbon::today())
                 ->whereTime('reserved_at', '<=', sprintf('%02d:59:59', $hour))
                 ->whereTime('reserved_until', '>', sprintf('%02d:00:00', $hour))

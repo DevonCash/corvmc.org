@@ -224,12 +224,22 @@ class BandSeeder extends Seeder
 
     private function attachMembers(Band $band, $users, int $memberCount): void
     {
-        // Always include the owner as a member
         $owner = $band->owner;
-        $band->members()->attach($owner->id, [
-            'role' => 'admin',
-            'position' => fake()->randomElement(['Lead Vocalist', 'Guitarist', 'Keyboardist', 'Drummer', 'Bassist']),
-        ]);
+
+        // Update owner's position if they're already a member (added by factory)
+        // or add them if not present
+        $existingMembership = $band->membership($owner);
+        if ($existingMembership) {
+            $existingMembership->update([
+                'position' => fake()->randomElement(['Lead Vocalist', 'Guitarist', 'Keyboardist', 'Drummer', 'Bassist']),
+            ]);
+        } else {
+            $band->members()->attach($owner->id, [
+                'role' => 'admin',
+                'status' => 'active',
+                'position' => fake()->randomElement(['Lead Vocalist', 'Guitarist', 'Keyboardist', 'Drummer', 'Bassist']),
+            ]);
+        }
 
         // Add additional members (subtract 1 since owner is already added)
         $additionalMembers = $users->except($owner->id)->random(min($memberCount - 1, $users->count() - 1));
