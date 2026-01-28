@@ -26,11 +26,20 @@ class FooterSettings extends Settings
 
     public function getSocialLinks(): array
     {
-        return $this->social_links ?? [
-            ['icon' => 'tabler:brand-x', 'url' => '#'],
-            ['icon' => 'tabler:brand-facebook', 'url' => '#'],
-            ['icon' => 'tabler:brand-pinterest', 'url' => '#'],
-            ['icon' => 'tabler:brand-instagram', 'url' => '#'],
+        $links = $this->social_links ?? [
+            ['icon' => 'tabler-brand-x', 'url' => '#'],
+            ['icon' => 'tabler-brand-facebook', 'url' => '#'],
+            ['icon' => 'tabler-brand-pinterest', 'url' => '#'],
+            ['icon' => 'tabler-brand-instagram', 'url' => '#'],
         ];
+
+        // Convert legacy tabler: format to tabler- format
+        return array_map(function ($link) {
+            if (isset($link['icon'])) {
+                $link['icon'] = str_replace('tabler:', 'tabler-', $link['icon']);
+            }
+
+            return $link;
+        }, $links);
     }
 }

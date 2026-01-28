@@ -1,12 +1,13 @@
 <?php
 
-use App\Enums\ReservationStatus;
-use App\Models\Band;
-use App\Models\Event;
-use App\Models\MemberProfile;
-use App\Models\Sponsor;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\Bands\Models\Band;
+use CorvMC\Events\Models\Event;
+use CorvMC\Membership\Models\MemberProfile;
+use CorvMC\Sponsorship\Models\Sponsor;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 
 // Public website routes
@@ -22,7 +23,7 @@ Route::get('/', function () {
         'monthly_events' => Event::publishedUpcoming()
             ->whereBetween('start_datetime', [now()->startOfMonth(), now()->endOfMonth()])
             ->count(),
-        'practice_hours' => \App\Models\Reservation::status(ReservationStatus::Confirmed)
+        'practice_hours' => \CorvMC\SpaceManagement\Models\Reservation::status(ReservationStatus::Confirmed)
             ->whereBetween('reserved_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->get()
             ->sum(function ($reservation) {
@@ -62,47 +63,58 @@ Route::get('/about', function () {
 })->name('about');
 
 Route::get('/events', function () {
-    return view('public.events.index');
+    return view('events::public.index');
 })->name('events.index');
 
 Route::get('/events/{event}', function (Event $event) {
-    abort_if($event->published_at > now() || $event->published_at === null, 404);
+    Gate::authorize('view', $event);
 
-    return view('public.events.show', compact('event'));
+    return view('events::public.show', compact('event'));
 })->where('event', '[0-9]+')->name('events.show');
 
 Route::get('/show-tonight', function () {
-    // Find next published event happening today
-    $tonightShow = Event::publishedToday()->first();
+    // Find all published events happening today
+    $tonightShows = Event::publishedToday()->get();
 
-    // If no show tonight, get next upcoming published show
-    if (! $tonightShow) {
-        $tonightShow = Event::publishedUpcoming()->first();
+    // If exactly one show tonight, redirect to it
+    if ($tonightShows->count() === 1) {
+        return redirect()->route('events.show', $tonightShows->first());
     }
 
-    // If still no show found, redirect to events listing with message
-    if (! $tonightShow) {
+    // Multiple shows tonight
+    if ($tonightShows->count() > 1) {
         return redirect()->route('events.index')
-            ->with('info', 'No upcoming shows found. Check back soon for exciting events!');
+            ->with('info', 'Multiple shows tonight! Check out what\'s happening below.');
     }
 
-    // Redirect to the specific show page
-    return redirect()->route('events.show', $tonightShow);
+    // No shows tonight
+    return redirect()->route('events.index')
+        ->with('info', 'No shows tonight, but check out our upcoming events!');
 })->name('show-tonight');
 
-Route::get('/members', [\App\Http\Controllers\PublicMemberController::class, 'index'])->name('members.index');
-Route::get('/members/{memberProfile}', [\App\Http\Controllers\PublicMemberController::class, 'show'])->where('memberProfile', '[0-9]+')->name('members.show');
+// Directory (combined musicians & bands)
+Route::get('/directory', function () {
+    return view('public.directory');
+})->name('directory');
+
+// Redirect old URLs to directory with appropriate tab
+Route::get('/members', function () {
+    return redirect()->route('directory', ['tab' => 'musicians']);
+})->name('members.index');
 
 Route::get('/bands', function () {
-    return view('public.bands.index');
+    return redirect()->route('directory', ['tab' => 'bands']);
 })->name('bands.index');
+
+// Individual profile pages still work
+Route::get('/members/{memberProfile}', [\App\Http\Controllers\PublicMemberController::class, 'show'])->where('memberProfile', '[0-9]+')->name('members.show');
 
 Route::get('/bands/{band}', function (Band $band) {
     abort_unless($band->isVisible(Auth::user()), 404);
 
     $band->load(['members', 'tags', 'media']);
 
-    return view('public.bands.show', compact('band'));
+    return view('bands::public.show', compact('band'));
 })->where('band', '[a-z0-9\-]+')->name('bands.show');
 
 Route::get('/programs', function () {
@@ -140,9 +152,18 @@ Route::get('/about/bylaws', function () {
     return view('public.bylaws', compact('bylaws'));
 })->name('bylaws');
 
+Route::get('/local-resources', function () {
+    $lists = \App\Models\ResourceList::published()
+        ->with(['publishedResources'])
+        ->ordered()
+        ->get();
+
+    return view('public.local-resources', compact('lists'));
+})->name('local-resources');
+
 // Equipment Library routes (public gear catalog)
-Route::get('/equipment', [\App\Http\Controllers\PublicEquipmentController::class, 'index'])->name('equipment.index');
-Route::get('/equipment/{equipment}', [\App\Http\Controllers\PublicEquipmentController::class, 'show'])->where('equipment', '[0-9]+')->name('equipment.show');
+Route::get('/equipment', [\CorvMC\Equipment\Http\Controllers\PublicEquipmentController::class, 'index'])->name('equipment.index');
+Route::get('/equipment/{equipment}', [\CorvMC\Equipment\Http\Controllers\PublicEquipmentController::class, 'show'])->where('equipment', '[0-9]+')->name('equipment.show');
 
 Route::get('/privacy-policy', function () {
     return view('public.privacy-policy');
@@ -156,6 +177,23 @@ Route::get('/invitation/accept/{token}', [\App\Http\Controllers\InvitationContro
 // Stripe webhook (no authentication needed - Stripe validates with signature)
 Route::post('/stripe/webhook', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook'])
     ->name('cashier.webhook');
+
+// Ticket purchase page (supports guest checkout, no auth required)
+Route::get('/events/{event}/tickets', function (Event $event) {
+    Gate::authorize('view', $event);
+
+    if (!$event->hasNativeTicketing()) {
+        abort(404);
+    }
+
+    return view('events::public.tickets', compact('event'));
+})->where('event', '[0-9]+')->name('events.tickets');
+
+// Ticket checkout routes (supports guest checkout, no auth required)
+Route::get('/tickets/checkout/success', [\App\Http\Controllers\TicketCheckoutController::class, 'success'])
+    ->name('tickets.checkout.success');
+Route::get('/tickets/checkout/cancel/{order:uuid}', [\App\Http\Controllers\TicketCheckoutController::class, 'cancel'])
+    ->name('tickets.checkout.cancel');
 
 // Checkout success/cancel handling (unified for all checkout types)
 Route::middleware(['auth'])->group(function () {

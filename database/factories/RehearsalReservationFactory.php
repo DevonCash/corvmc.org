@@ -2,15 +2,13 @@
 
 namespace Database\Factories;
 
-use App\Actions\Reservations\CalculateReservationCost;
-use App\Enums\PaymentStatus;
-use App\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Reservation>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\CorvMC\SpaceManagement\Models\Reservation>
  */
 class RehearsalReservationFactory extends Factory
 {
@@ -38,17 +36,7 @@ class RehearsalReservationFactory extends Factory
 
                 return $start->diffInMinutes($end) / 60;
             },
-            'cost' => function (array $attributes) {
-                $hours = $attributes['hours_used'];
-
-                return $this->faker->boolean(30) ? 0 : $hours * CalculateReservationCost::HOURLY_RATE;
-            },
-            'payment_status' => function (array $attributes) {
-                return $attributes['cost'] == 0 ? PaymentStatus::NotApplicable : PaymentStatus::Unpaid;
-            },
-            'free_hours_used' => function (array $attributes) {
-                return $attributes['cost'] == 0 ? $attributes['hours_used'] : 0;
-            },
+            'free_hours_used' => 0,
             'is_recurring' => $this->faker->boolean(20),
             'recurrence_pattern' => function (array $attributes) {
                 return $attributes['is_recurring'] ? [
@@ -91,13 +79,13 @@ class RehearsalReservationFactory extends Factory
     }
 
     /**
-     * Indicate that the reservation is free.
+     * Indicate that the reservation uses free hours.
+     * Note: Actual cost/payment is tracked via the Charge model.
      */
     public function free(): static
     {
         return $this->state(fn (array $attributes) => [
-            'cost' => 0,
-            'payment_status' => PaymentStatus::NotApplicable,
+            'free_hours_used' => $attributes['hours_used'] ?? 2,
         ]);
     }
 
@@ -117,6 +105,7 @@ class RehearsalReservationFactory extends Factory
 
     /**
      * Create a reservation for a sustaining member.
+     * Note: Actual cost/payment is tracked via the Charge model.
      */
     public function forSustainingMember(): static
     {
@@ -128,8 +117,6 @@ class RehearsalReservationFactory extends Factory
             return [
                 'reservable_type' => User::class,
                 'reservable_id' => $user->id,
-                'cost' => 0, // Sustaining members often get free hours
-                'payment_status' => PaymentStatus::NotApplicable,
                 'free_hours_used' => $hours,
             ];
         });

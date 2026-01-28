@@ -1,0 +1,24 @@
+{
+	"name": "corvmc/moderation",
+	"description": "",
+	"type": "library",
+	"version": "1.0",
+	"license": "proprietary",
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"CorvMC\\Moderation\\": "src/",
+			"CorvMC\\Moderation\\Tests\\": "tests/",
+			"CorvMC\\Moderation\\Database\\Factories\\": "database/factories/",
+			"CorvMC\\Moderation\\Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"laravel": {
+			"providers": [
+				"CorvMC\\Moderation\\Providers\\ModerationServiceProvider"
+			]
+		}
+	}
+}

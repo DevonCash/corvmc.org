@@ -38,7 +38,7 @@ abstract class SearchableGrid extends Component
 
     protected function getEmptyIcon(): string
     {
-        return 'tabler:search';
+        return 'tabler-search';
     }
 
     protected function getEmptyTitle(): string

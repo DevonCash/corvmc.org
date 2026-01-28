@@ -2,16 +2,18 @@
 
 namespace Database\Factories;
 
-use App\Enums\EventStatus;
-use App\Enums\Visibility;
-use App\Models\Venue;
+use CorvMC\Events\Enums\EventStatus;
+use CorvMC\Moderation\Enums\Visibility;
+use CorvMC\Events\Models\Event;
+use CorvMC\Events\Models\Venue;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Event>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\CorvMC\Events\Models\Event>
  */
 class EventFactory extends Factory
 {
+    protected $model = Event::class;
     /**
      * Define the model's default state.
      *
@@ -134,11 +136,30 @@ class EventFactory extends Factory
     }
 
     /**
+     * Enable native ticketing for this event.
+     */
+    public function withNativeTicketing(?int $quantity = null, ?int $sold = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'ticketing_enabled' => true,
+            'ticket_quantity' => $quantity ?? $this->faker->randomElement([50, 75, 100, 150, 200]),
+            'tickets_sold' => $sold ?? 0,
+            'ticket_price_override' => $this->faker->boolean(30)
+                ? $this->faker->randomElement([500, 800, 1200, 1500, 2000])
+                : null,
+            // Clear external ticket URL when using native ticketing
+            'event_link' => null,
+            'ticket_url' => null,
+            'ticket_price' => null,
+        ]);
+    }
+
+    /**
      * Configure the model factory after creation.
      */
     public function configure(): static
     {
-        return $this->afterCreating(function (\App\Models\Event $event) {
+        return $this->afterCreating(function (Event $event) {
             if ($event->hasTickets() && $this->faker->boolean(40)) {
                 $event->setNotaflof(true);
             }

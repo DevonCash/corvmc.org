@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Concerns\HasTimePeriod;
+use CorvMC\SpaceManagement\Models\Reservation;
+use CorvMC\Support\Concerns\HasTimePeriod;
 use Database\Factories\ReservationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -15,8 +16,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $deleted_at
- * @property \App\Enums\ReservationStatus $status
- * @property \App\Enums\PaymentStatus $payment_status
+ * @property \CorvMC\SpaceManagement\Enums\ReservationStatus $status
+ * @property \CorvMC\Finance\Enums\PaymentStatus $payment_status
  * @property string|null $payment_method
  * @property \Illuminate\Support\Carbon|null $paid_at
  * @property string|null $payment_notes
@@ -43,7 +44,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property-read float $setup_time
  * @property-read string $status_display
  * @property-read string $time_range
- * @property-read \App\Models\RecurringSeries|null $recurringSeries
+ * @property-read \CorvMC\Support\Models\RecurringSeries|null $recurringSeries
  * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent|null $reservable
  * @property-read \App\Models\User|null $user
  *

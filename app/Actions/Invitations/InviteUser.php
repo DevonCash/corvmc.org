@@ -4,7 +4,7 @@ namespace App\Actions\Invitations;
 
 use App\Models\Invitation;
 use App\Models\User;
-use App\Notifications\UserInvitationNotification;
+use CorvMC\Membership\Notifications\UserInvitationNotification;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;

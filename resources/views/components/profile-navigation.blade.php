@@ -5,11 +5,11 @@
         @php 
             $backRoutes = match($type) {
                 'band' => [
-                    'filament' => route('filament.member.resources.bands.index'),
+                    'filament' => route('filament.member.directory.resources.bands.index'),
                     'public' => route('bands.index')
                 ],
                 'member' => [
-                    'filament' => route('filament.member.resources.directory.index'), 
+                    'filament' => route('filament.member.directory.resources.members.index'), 
                     'public' => route('members.index')
                 ]
             };
@@ -45,8 +45,8 @@
         @if ($canEdit)
             @php
                 $editRoutes = match($type) {
-                    'band' => route('filament.member.resources.bands.edit', ['record' => $record]),
-                    'member' => route('filament.member.resources.directory.edit', ['record' => $record->id])
+                    'band' => route('filament.member.directory.resources.bands.edit', ['record' => $record]),
+                    'member' => route('filament.member.directory.resources.members.edit', ['record' => $record->id])
                 };
             @endphp
             <a href="{{ $editRoutes }}" class="btn btn-primary btn-sm uppercase tracking-wide">

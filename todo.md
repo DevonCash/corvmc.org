@@ -13,4 +13,3 @@ Tasks to work on in this project.
 - [x] Event creation workflow
 
     Validate the event creation workflow. Create a new event, schedule it to be published, allow for cancellations, rescheduling, etc.
-

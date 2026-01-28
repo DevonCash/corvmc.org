@@ -2,7 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Resources\Events\EventResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -50,22 +49,11 @@ class StaffPanelProvider extends PanelProvider
             ->darkModeBrandLogo(asset('images/cmc-compact-logo-dark.svg'))
             ->brandLogoHeight('3rem')
             ->icons(config('filament-icons', []))
-            ->resources([
-                \App\Filament\Resources\Users\UserResource::class,
-                \App\Filament\Resources\ActivityLog\ActivityLogResource::class,
-                \App\Filament\Resources\Reports\ReportResource::class,
-                \App\Filament\Resources\Revisions\RevisionResource::class,
-                \App\Filament\Resources\Sponsors\SponsorResource::class,
-                \App\Filament\Resources\SpaceManagement\SpaceManagementResource::class,
-                \App\Filament\Resources\RecurringReservations\RecurringReservationResource::class,
-                \App\Filament\Resources\Bylaws\BylawsResource::class,
-                \App\Filament\Resources\Equipment\EquipmentDamageReports\EquipmentDamageReportResource::class,
-                \App\Filament\Resources\Venues\VenueResource::class,
-                EventResource::class,
-            ])
+            ->discoverResources(in: app_path('Filament/Staff/Resources'), for: 'App\\Filament\\Staff\\Resources')
+            ->discoverPages(in: app_path('Filament/Staff/Pages'), for: 'App\\Filament\\Staff\\Pages')
+            ->discoverWidgets(in: app_path('Filament/Staff/Widgets'), for: 'App\\Filament\\Staff\\Widgets')
             ->pages([
                 Dashboard::class,
-                \App\Filament\Pages\ManageOrganizationSettings::class,
             ])
             ->databaseNotifications()
             ->middleware([

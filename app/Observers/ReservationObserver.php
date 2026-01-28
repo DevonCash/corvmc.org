@@ -2,7 +2,7 @@
 
 namespace App\Observers;
 
-use App\Models\Reservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Illuminate\Support\Facades\Cache;
 
 class ReservationObserver
@@ -49,11 +49,9 @@ class ReservationObserver
         $date = $reservedAt->format('Y-m-d');
         Cache::forget("reservations.conflicts.{$date}");
 
-        // Clear user-specific caches (for RehearsalReservation)
+        // Clear user dashboard caches
         $responsibleUser = $reservation->getResponsibleUser();
         if ($responsibleUser) {
-            $month = $reservedAt->format('Y-m');
-            Cache::forget("user.{$responsibleUser->id}.free_hours.{$month}");
             Cache::forget("user_stats.{$responsibleUser->id}");
             Cache::forget("user_activity.{$responsibleUser->id}");
         }

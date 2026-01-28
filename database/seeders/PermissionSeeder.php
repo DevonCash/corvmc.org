@@ -164,6 +164,13 @@ class PermissionSeeder extends Seeder
             'view band members',
         ]);
 
+        // Equipment Manager - Equipment lending library management
+        $equipmentManager = Role::firstOrCreate(['name' => 'equipment manager']);
+        $equipmentManager->syncPermissions([
+            'view users',
+            'view bands',
+        ]);
+
         // Directory Moderator - Member and band profile oversight
         $directoryModerator = Role::firstOrCreate(['name' => 'directory moderator']);
         $directoryModerator->syncPermissions([

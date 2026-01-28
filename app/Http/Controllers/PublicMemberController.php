@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MemberProfile;
+use CorvMC\Membership\Models\MemberProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,7 +10,7 @@ class PublicMemberController extends Controller
 {
     public function index(Request $request)
     {
-        return view('public.members.index');
+        return view('membership::public.index');
     }
 
     public function show(MemberProfile $memberProfile)
@@ -19,6 +19,6 @@ class PublicMemberController extends Controller
 
         $memberProfile->load(['user', 'tags', 'user.bands', 'media']);
 
-        return view('public.members.show', compact('memberProfile'));
+        return view('membership::public.show', compact('memberProfile'));
     }
 }

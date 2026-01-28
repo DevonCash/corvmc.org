@@ -2,80 +2,91 @@
 
 namespace App\Policies;
 
-use App\Models\Sponsor;
 use App\Models\User;
+use CorvMC\Sponsorship\Models\Sponsor;
 
 class SponsorPolicy
 {
     /**
-     * Determine whether the user can view any sponsors.
+     * Determine if the user can manage sponsors (admin only).
+     */
+    public function manage(User $user): bool
+    {
+        return $user->hasRole('admin');
+    }
+
+    /**
+     * Determine if the user can view any sponsors.
+     * Sponsors page is public.
      */
     public function viewAny(?User $user): bool
     {
-        return $user && $user->can('view sponsors');
+        return true;
     }
 
     /**
-     * Determine whether the user can view the sponsor.
+     * Determine if the user can view the sponsor.
+     * Individual sponsors are publicly viewable.
      */
-    public function view(User $user, Sponsor $sponsor): bool
+    public function view(?User $user, Sponsor $sponsor): bool
     {
-        return $user->can('view sponsors');
+        return true;
     }
 
     /**
-     * Determine whether the user can create sponsors.
+     * Determine if the user can create sponsors.
      */
     public function create(User $user): bool
     {
-        return $user->can('create sponsors');
+        return $this->manage($user);
     }
 
     /**
-     * Determine whether the user can update the sponsor.
+     * Determine if the user can update the sponsor.
      */
     public function update(User $user, Sponsor $sponsor): bool
     {
-        return $user->can('update sponsors');
+        return $this->manage($user);
     }
 
     /**
-     * Determine whether the user can delete the sponsor.
+     * Determine if the user can delete the sponsor.
      */
     public function delete(User $user, Sponsor $sponsor): bool
     {
-        return $user->can('delete sponsors');
+        return $this->manage($user);
     }
 
     /**
-     * Determine whether the user can restore the sponsor.
+     * Determine if the user can restore the sponsor.
      */
     public function restore(User $user, Sponsor $sponsor): bool
     {
-        return $user->can('restore sponsors');
+        return $this->manage($user);
     }
 
     /**
-     * Determine whether the user can permanently delete the sponsor.
+     * Determine if the user can permanently delete the sponsor.
+     * Force deletion is never allowed.
      */
     public function forceDelete(User $user, Sponsor $sponsor): bool
     {
-        return $user->can('force delete sponsors');
+        return false;
     }
 
     /**
-     * Determine whether the user can attach a sponsored member to the sponsor.
+     * Determine if the user can attach a user to the sponsor.
      */
     public function attachUser(User $user, Sponsor $sponsor): bool
     {
-        return $user->can('update sponsors');
+        return $this->manage($user);
     }
 
     /**
-     * Determine whether the user can detach a sponsored member from the sponsor.
+     * Determine if the user can detach a user from the sponsor.
      */
     public function detachUser(User $user, Sponsor $sponsor): bool
     {
-        return $user->can('update sponsors');
+        return $this->manage($user);
     }
 }

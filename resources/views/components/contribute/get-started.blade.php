@@ -7,15 +7,15 @@
     </p>
     <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <a href="{{ route('volunteer') }}" class="btn btn-primary btn-lg">
-            <x-unicon name="tabler:heart-handshake" class="size-5 mr-2" />
+            <x-icon name="tabler-heart-handshake" class="size-5 mr-2" />
             Start Volunteering
         </a>
         <a href="{{ route('support') }}" class="btn btn-secondary btn-lg">
-            <x-unicon name="tabler:heart" class="size-5 mr-2" />
+            <x-icon name="tabler-heart" class="size-5 mr-2" />
             Make a Donation
         </a>
         <a href="{{ route('contact') }}?topic=general" class="btn btn-outline btn-accent btn-lg">
-            <x-unicon name="tabler:mail" class="size-5 mr-2" />
+            <x-icon name="tabler-mail" class="size-5 mr-2" />
             Contact Us
         </a>
     </div>

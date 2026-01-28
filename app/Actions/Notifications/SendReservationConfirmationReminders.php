@@ -2,8 +2,8 @@
 
 namespace App\Actions\Notifications;
 
-use App\Models\Reservation;
-use App\Notifications\ReservationConfirmationNotification;
+use CorvMC\SpaceManagement\Models\Reservation;
+use CorvMC\SpaceManagement\Notifications\ReservationConfirmationNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -22,7 +22,7 @@ class SendReservationConfirmationReminders
 
         $pendingReservations = Reservation::query()
             ->with('reservable')
-            ->status(\App\Enums\ReservationStatus::Scheduled)
+            ->status(\CorvMC\SpaceManagement\Enums\ReservationStatus::Scheduled)
             ->where('created_at', '<=', $cutoffDate)
             ->where('reserved_at', '>', Carbon::now()) // Only future reservations
             ->get();

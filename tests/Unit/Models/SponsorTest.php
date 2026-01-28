@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Sponsor;
+use CorvMC\Sponsorship\Models\Sponsor;
 use App\Models\User;
 
 it('has a sponsoredMembers relationship', function () {

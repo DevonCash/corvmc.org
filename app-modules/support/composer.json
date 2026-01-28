@@ -1,0 +1,24 @@
+{
+	"name": "corvmc/support",
+	"description": "Library components and cross-cutting utilities for CorvMC modules",
+	"type": "library",
+	"version": "1.0",
+	"license": "proprietary",
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"CorvMC\\Support\\": "src/",
+			"CorvMC\\Support\\Tests\\": "tests/",
+			"CorvMC\\Support\\Database\\Factories\\": "database/factories/",
+			"CorvMC\\Support\\Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"laravel": {
+			"providers": [
+				"CorvMC\\Support\\Providers\\SupportServiceProvider"
+			]
+		}
+	}
+}

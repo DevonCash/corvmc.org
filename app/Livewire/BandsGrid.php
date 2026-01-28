@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\Band;
+use CorvMC\Bands\Models\Band;
 
 class BandsGrid extends SearchableGrid
 {
@@ -18,7 +18,7 @@ class BandsGrid extends SearchableGrid
 
     protected function getCardComponent(): string
     {
-        return 'band-card';
+        return 'bands::band-card';
     }
 
     protected function getTitle(): string
@@ -33,7 +33,7 @@ class BandsGrid extends SearchableGrid
 
     protected function getEmptyIcon(): string
     {
-        return 'tabler:guitar-pick';
+        return 'tabler-guitar-pick';
     }
 
     protected function getEmptyTitle(): string

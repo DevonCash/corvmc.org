@@ -2,7 +2,7 @@
     <!-- Flash Messages -->
     @if (session('info'))
         <div class="alert alert-info max-w-4xl mx-auto mb-8">
-            <x-unicon name="tabler:info-circle" class="size-6" />
+            <x-icon name="tabler-info-circle" class="size-6" />
             <span>{{ session('info') }}</span>
         </div>
     @endif
@@ -23,23 +23,23 @@
                     @if (get_class($this) === 'App\Livewire\EventsGrid')
                         <button wire:click="$set('scope', 'upcoming')"
                             class="tab {{ $scope === 'upcoming' ? 'tab-active' : '' }}">
-                            <x-unicon name="tabler:calendar-event" class="size-4 mr-2" />
+                            <x-icon name="tabler-calendar-event" class="size-4 mr-2" />
                             Upcoming
                         </button>
                         <button wire:click="$set('scope', 'past')"
                             class="tab {{ $scope === 'past' ? 'tab-active' : '' }}">
-                            <x-unicon name="tabler:history" class="size-4 mr-2" />
+                            <x-icon name="tabler-history" class="size-4 mr-2" />
                             Past Events
                         </button>
                     @elseif (get_class($this) === 'App\Livewire\MembersGrid')
                         <button wire:click="$set('scope', 'all')"
                             class="tab {{ $scope === 'all' ? 'tab-active' : '' }}">
-                            <x-unicon name="tabler:users" class="size-4 mr-2" />
+                            <x-icon name="tabler-users" class="size-4 mr-2" />
                             All Members
                         </button>
                         <button wire:click="$set('scope', 'teachers')"
                             class="tab {{ $scope === 'teachers' ? 'tab-active' : '' }}">
-                            <x-unicon name="tabler:school" class="size-4 mr-2" />
+                            <x-icon name="tabler-school" class="size-4 mr-2" />
                             Teachers
                         </button>
                     @endif
@@ -52,7 +52,7 @@
             <!-- Main Search -->
             <div class="flex-1">
                 <div class="relative">
-                    <x-unicon name="tabler:search"
+                    <x-icon name="tabler-search"
                         class="absolute left-3 top-1/2 transform -translate-y-1/2 size-5 text-base-content/50" />
                     <input type="text" wire:model.live.debounce.300ms="search" placeholder="{{ $searchPlaceholder }}"
                         class="input input-bordered w-full pl-10" />
@@ -110,7 +110,7 @@
         @empty
             <div class="col-span-full text-center py-16">
                 <div class="text-6xl mb-4">
-                    <x-unicon name="{{ $emptyIcon }}" class="size-16 mx-auto" />
+                    <x-icon name="{{ $emptyIcon  }}" class="size-16 mx-auto" />
                 </div>
                 <h3 class="text-2xl font-bold mb-4">{{ $emptyTitle }}</h3>
                 <p class="text-lg opacity-70">{{ $emptyMessage }}</p>

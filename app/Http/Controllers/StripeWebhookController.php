@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\Subscriptions\UpdateUserMembershipStatus;
-use App\Models\Reservation;
+use CorvMC\Finance\Actions\Subscriptions\UpdateUserMembershipStatus;
+use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Http\Controllers\WebhookController as CashierWebhookController;
@@ -28,6 +28,8 @@ class StripeWebhookController extends CashierWebhookController
                 return $this->handleReservationCheckout($session, $metadata);
             } elseif ($checkoutType === 'sliding_scale_membership') {
                 return $this->handleSubscriptionCheckout($session, $metadata);
+            } elseif ($checkoutType === 'ticket_order') {
+                return $this->handleTicketOrderCheckout($session, $metadata);
             } else {
                 // Unknown checkout type, skip
                 return $this->successMethod();
@@ -50,7 +52,7 @@ class StripeWebhookController extends CashierWebhookController
         $sessionId = $session['id'];
         $reservationId = $metadata['reservation_id'] ?? null;
 
-        $success = \App\Actions\Reservations\ProcessReservationCheckout::run(
+        $success = \CorvMC\SpaceManagement\Actions\Reservations\ProcessReservationCheckout::run(
             $reservationId,
             $sessionId
         );
@@ -78,7 +80,7 @@ class StripeWebhookController extends CashierWebhookController
         $sessionId = $session['id'];
         $userId = $metadata['user_id'] ?? null;
 
-        $success = \App\Actions\Subscriptions\ProcessSubscriptionCheckout::run(
+        $success = \CorvMC\Finance\Actions\Subscriptions\ProcessSubscriptionCheckout::run(
             $userId,
             $sessionId,
             $metadata
@@ -88,6 +90,37 @@ class StripeWebhookController extends CashierWebhookController
             Log::warning('Stripe webhook: Failed to process subscription checkout', [
                 'session_id' => $sessionId,
                 'user_id' => $userId,
+            ]);
+        }
+
+        return $this->successMethod();
+    }
+
+    /**
+     * Handle ticket order checkout completion webhook.
+     */
+    private function handleTicketOrderCheckout(array $session, array $metadata): SymfonyResponse
+    {
+        $sessionId = $session['id'];
+        $orderId = $metadata['ticket_order_id'] ?? null;
+
+        if (! $orderId) {
+            Log::warning('Stripe webhook: No ticket order ID in checkout metadata', [
+                'session_id' => $sessionId,
+            ]);
+
+            return $this->successMethod();
+        }
+
+        $success = \CorvMC\Events\Actions\Tickets\CompleteTicketOrder::run(
+            (int) $orderId,
+            $sessionId
+        );
+
+        if (! $success) {
+            Log::warning('Stripe webhook: Failed to process ticket order checkout', [
+                'session_id' => $sessionId,
+                'order_id' => $orderId,
             ]);
         }
 
@@ -125,7 +158,7 @@ class StripeWebhookController extends CashierWebhookController
             }
 
             // Handle failed payment
-            \App\Actions\Reservations\HandleFailedPayment::run($reservation);
+            \CorvMC\SpaceManagement\Actions\Reservations\HandleFailedPayment::run($reservation);
 
             Log::info('Stripe webhook: Processed payment failure', [
                 'reservation_id' => $reservationId,
@@ -161,7 +194,7 @@ class StripeWebhookController extends CashierWebhookController
                 UpdateUserMembershipStatus::run($user);
 
                 // Allocate monthly credits now that subscription exists and role is assigned
-                \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
+                \CorvMC\Finance\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
 
                 Log::info('Stripe webhook: Updated membership status and allocated credits after subscription creation', [
                     'user_id' => $user->id,
@@ -265,7 +298,7 @@ class StripeWebhookController extends CashierWebhookController
                 // Allocate monthly credits if they're a sustaining member
                 // This is idempotent - won't double-allocate in same month
                 if ($user->hasRole('sustaining member')) {
-                    \App\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
+                    \CorvMC\Finance\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
 
                     Log::info('Stripe webhook: Allocated monthly credits after invoice payment', [
                         'user_id' => $user->id,

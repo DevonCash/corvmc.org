@@ -4,7 +4,7 @@ namespace App\Actions\Notifications;
 
 use App\Exceptions\Services\NotificationSchedulingException;
 use App\Models\User;
-use App\Notifications\MembershipReminderNotification;
+use CorvMC\Finance\Notifications\MembershipReminderNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -47,7 +47,7 @@ class SendMembershipReminders
             ];
 
             foreach ($inactiveUsers as $user) {
-                /** @var \App\Models\Reservation|null $lastReservation */
+                /** @var \CorvMC\SpaceManagement\Models\Reservation|null $lastReservation */
                 $lastReservation = $user->reservations()->latest()->first();
                 $userData = [
                     'id' => $user->id,

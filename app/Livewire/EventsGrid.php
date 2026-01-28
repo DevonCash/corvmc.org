@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\Event;
+use CorvMC\Events\Models\Event;
 
 class EventsGrid extends SearchableGrid
 {
@@ -29,7 +29,7 @@ class EventsGrid extends SearchableGrid
 
     protected function getCardComponent(): string
     {
-        return 'event-card';
+        return 'events::event-card';
     }
 
     protected function getTitle(): string
@@ -47,7 +47,7 @@ class EventsGrid extends SearchableGrid
 
     protected function getEmptyIcon(): string
     {
-        return 'tabler:masks-theater';
+        return 'tabler-masks-theater';
     }
 
     protected function getEmptyTitle(): string

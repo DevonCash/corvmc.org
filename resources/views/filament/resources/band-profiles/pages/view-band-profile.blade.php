@@ -1,1 +1,0 @@
-<x-band-profile-view :record="$record" :show-edit-button="true" />

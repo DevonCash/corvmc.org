@@ -1,0 +1,24 @@
+{
+	"name": "corvmc/membership",
+	"description": "",
+	"type": "library",
+	"version": "1.0",
+	"license": "proprietary",
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"CorvMC\\Membership\\": "src/",
+			"CorvMC\\Membership\\Tests\\": "tests/",
+			"CorvMC\\Membership\\Database\\Factories\\": "database/factories/",
+			"CorvMC\\Membership\\Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"laravel": {
+			"providers": [
+				"CorvMC\\Membership\\Providers\\MembershipServiceProvider"
+			]
+		}
+	}
+}

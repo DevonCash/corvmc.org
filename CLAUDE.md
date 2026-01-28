@@ -304,3 +304,28 @@ return $query->public();
 - Use `getKey()` instead of `->id` for interface types
 - Prefer interfaces over generic `Model` types
 - Use `method_exists()` checks for trait methods on generic types
+
+## Module Architecture
+
+The application uses `internachi/modular` for domain organization with two distinct layers. See [docs/module-architecture.md](docs/module-architecture.md) for full details.
+
+**Module layer** (`app-modules/`): Self-contained domains owning their models, actions, and business logic. Modules: Events, SpaceManagement, Finance, Bands, Equipment, Moderation, MemberProfiles, Support.
+
+**Integration layer** (`app/`): Coordinates between modules. Contains policies, listeners, observers, and integration models that bridge modules.
+
+**Key principles:**
+- Modules communicate via domain events and interfaces, not direct references
+- Side effects (cache, notifications) handled by listeners in integration layer
+- Models expose helpers (`isOrganizedBy()`) but no authorization logic
+
+## Authorization & Policies
+
+Policies live in `app/Policies/` and use role-based authorization. See [docs/authorization.md](docs/authorization.md) for full details.
+
+**Core principles:**
+- Integration layer owns authorization (policies in `app/Policies/`)
+- Modules own domain knowledge (models expose `isOrganizedBy()`, `isOwnedBy()`)
+- Use roles + context, not permission strings (`hasRole()` + model helpers)
+- Domain verbs, not just CRUD (`publish`, `cancel`, `reschedule`)
+
+**Manager roles:** `production manager` (Events), `practice space manager` (Reservations)

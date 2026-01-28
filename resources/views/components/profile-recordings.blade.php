@@ -1,12 +1,12 @@
-@props(['embeds', 'canEdit' => false, 'editRoute', 'type' => 'member'])
+@props(['record', 'editRoute', 'type' => 'member'])
 
-@if ($embeds && count($embeds) > 0)
+@if ($record->embeds && count($record->embeds) > 0)
     <section>
         <h2 class="text-lg font-bold text-base-content mb-6 uppercase tracking-wide border-b border-base-300 pb-2">
             Recordings
         </h2>
         <div class="space-y-6">
-            @foreach ($embeds as $embed)
+            @foreach ($record->embeds as $embed)
                 @php
                     $embedUrl = $embed['url'] ?? $embed;
                 @endphp
@@ -14,7 +14,7 @@
             @endforeach
         </div>
     </section>
-@elseif($canEdit)
+@elseif($record->isOwnedBy(auth()->user()))
     <section>
         <h2 class="text-lg font-bold text-base-content mb-6 uppercase tracking-wide border-b border-base-300 pb-2">
             Recordings
@@ -23,11 +23,7 @@
             <x-tabler-music class="w-12 h-12 text-base-content/40 mx-auto mb-3" />
             <h3 class="font-semibold text-base-content mb-2">Share Your Music</h3>
             <p class="text-base-content/70 text-sm mb-4">
-                @if ($type === 'band')
-                    Add Bandcamp, SoundCloud, YouTube, or other embeds to showcase your work
-                @else
-                    Add featured recordings to showcase your musical work
-                @endif
+                Add Bandcamp, SoundCloud, YouTube, or other embeds to showcase your work
             </p>
             <a href="{{ $editRoute }}" class="btn btn-primary btn-sm uppercase tracking-wide">
                 <x-tabler-plus class="w-4 h-4 mr-2" />

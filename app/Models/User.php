@@ -2,15 +2,24 @@
 
 namespace App\Models;
 
-use App\Concerns\HasCredits;
-use App\Concerns\HasMembershipStatus;
-use App\Concerns\HasTrust;
-use App\Data\UserSettingsData;
-use App\Enums\CreditType;
-use App\Notifications\EmailVerificationNotification;
-use App\Notifications\PasswordResetNotification;
+use CorvMC\Bands\Models\Band;
+use CorvMC\Bands\Models\BandMember;
+use CorvMC\Events\Models\Event;
+use CorvMC\Finance\Concerns\HasCredits;
+use CorvMC\Membership\Models\MemberProfile;
+use CorvMC\Membership\Concerns\HasMembershipStatus;
+use CorvMC\Sponsorship\Models\Sponsor;
+use CorvMC\Membership\Data\UserSettingsData;
+use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Models\CreditTransaction;
+use CorvMC\Membership\Notifications\EmailVerificationNotification;
+use CorvMC\Moderation\Concerns\HasTrust;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
+use Filament\Models\Contracts\HasTenants;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -45,33 +54,33 @@ use Spatie\Permission\Traits\HasRoles;
  * @property \Spatie\LaravelData\Contracts\BaseData|\Spatie\LaravelData\Contracts\TransformableData $settings
  * @property-read Collection<int, \Spatie\Activitylog\Models\Activity> $activities
  * @property-read int|null $activities_count
- * @property-read Collection<int, \App\Models\BandMember> $bandMemberships
+ * @property-read Collection<int, \CorvMC\Bands\Models\BandMember> $bandMemberships
  * @property-read int|null $band_memberships_count
- * @property-read Collection<int, \App\Models\Band> $bands
+ * @property-read Collection<int, \CorvMC\Bands\Models\Band> $bands
  * @property-read int|null $bands_count
  * @property-read Collection<int, \App\Models\CreditTransaction> $creditTransactions
  * @property-read int|null $credit_transactions_count
  * @property-read Collection<int, \App\Models\UserCredit> $credits
  * @property-read int|null $credits_count
- * @property-read Collection<int, \App\Models\Event> $events
+ * @property-read Collection<int, \CorvMC\Events\Models\Event> $events
  * @property-read int|null $events_count
  * @property-read \App\Models\MemberProfile|null $profile
  * @property-read string|null $staff_profile_image_url
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
- * @property-read Collection<int, \App\Models\Band> $ownedBands
+ * @property-read Collection<int, \CorvMC\Bands\Models\Band> $ownedBands
  * @property-read int|null $owned_bands_count
  * @property-read Collection<int, \Spatie\Permission\Models\Permission> $permissions
  * @property-read int|null $permissions_count
- * @property-read Collection<int, \App\Models\Event> $productions
+ * @property-read Collection<int, \CorvMC\Events\Models\Event> $productions
  * @property-read int|null $productions_count
- * @property-read Collection<int, \App\Models\RehearsalReservation> $rehearsals
+ * @property-read Collection<int, \CorvMC\SpaceManagement\Models\RehearsalReservation> $rehearsals
  * @property-read int|null $rehearsals_count
- * @property-read Collection<int, \App\Models\Reservation> $reservations
+ * @property-read Collection<int, \CorvMC\SpaceManagement\Models\Reservation> $reservations
  * @property-read int|null $reservations_count
  * @property-read Collection<int, \Spatie\Permission\Models\Role> $roles
  * @property-read int|null $roles_count
- * @property-read Collection<int, \App\Models\Sponsor> $sponsors
+ * @property-read Collection<int, \CorvMC\Sponsorship\Models\Sponsor> $sponsors
  * @property-read int|null $sponsors_count
  * @property-read \App\Models\StaffProfile|null $staffProfile
  * @property-read Collection<int, \App\Models\Subscription> $subscriptions
@@ -117,7 +126,7 @@ use Spatie\Permission\Traits\HasRoles;
  *
  * @mixin \Eloquent
  */
-class User extends Authenticatable implements FilamentUser, HasAvatar
+class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenants
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use Billable, HasCredits, HasFactory, HasMembershipStatus, HasRoles, HasTrust, Impersonate, LogsActivity, Notifiable, SoftDeletes;
@@ -157,6 +166,44 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
         // Member panel is accessible to all authenticated users
         return true;
+    }
+
+    public function getTenants(Panel $panel): Collection
+    {
+        // Only provide tenants for band panel
+        if ($panel->getId() !== 'band') {
+            return new Collection();
+        }
+
+        // Return all bands where user is active member or owner
+        return $this->bands()
+            ->wherePivot('status', 'active')
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function canAccessTenant(\Illuminate\Database\Eloquent\Model $tenant): bool
+    {
+        if (! $tenant instanceof Band) {
+            return false;
+        }
+
+        // Owner always has access
+        if ($tenant->owner_id === $this->id) {
+            return true;
+        }
+
+        // Active members have full access
+        if ($tenant->activeMembers()->where('user_id', $this->id)->exists()) {
+            return true;
+        }
+
+        // Invited users have limited access (middleware restricts to acceptance page only)
+        if ($tenant->memberships()->invited()->where('user_id', $this->id)->exists()) {
+            return true;
+        }
+
+        return false;
     }
 
     public function getFilamentAvatarUrl(): ?string
@@ -287,7 +334,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         }
 
         // Sum all negative credit transactions (deductions) this month
-        $usedBlocks = \App\Models\CreditTransaction::where('user_id', $this->id)
+        $usedBlocks = CreditTransaction::where('user_id', $this->id)
             ->where('credit_type', CreditType::FreeHours)
             ->where('amount', '<', 0)
             ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
@@ -353,7 +400,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     // {
     //     $this->notify(new PasswordResetNotification($token));
     // }
-    
+
     // Temporarily using stock Filament notification to debug signature issue
 
     public function sendEmailVerificationNotification()

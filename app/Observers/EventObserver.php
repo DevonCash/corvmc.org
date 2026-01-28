@@ -2,7 +2,8 @@
 
 namespace App\Observers;
 
-use App\Models\Event;
+use App\Actions\Events\SyncEventSpaceReservation;
+use CorvMC\Events\Models\Event;
 use Illuminate\Support\Facades\Cache;
 
 class EventObserver
@@ -13,6 +14,7 @@ class EventObserver
     public function created(Event $event): void
     {
         $this->clearEventCaches($event);
+        $this->syncSpaceReservationIfNeeded($event);
     }
 
     /**
@@ -21,6 +23,7 @@ class EventObserver
     public function updated(Event $event): void
     {
         $this->clearEventCaches($event);
+        $this->syncSpaceReservationIfNeeded($event);
 
         // If event date changed, clear both old and new date caches
         if ($event->isDirty('start_datetime')) {
@@ -37,6 +40,9 @@ class EventObserver
     public function deleted(Event $event): void
     {
         $this->clearEventCaches($event);
+
+        // Delete the space reservation if it exists
+        $event->spaceReservation?->delete();
     }
 
     /**
@@ -44,10 +50,6 @@ class EventObserver
      */
     private function clearEventCaches(Event $event): void
     {
-        // Clear upcoming events caches
-        Cache::forget('upcoming_events');
-        // Clear all user-specific upcoming events caches (wildcard not supported, so we'll clear on next load)
-
         // Clear conflict detection cache for the event date
         if ($event->start_datetime) {
             $start_datetime = \Illuminate\Support\Carbon::parse($event->start_datetime);
@@ -58,6 +60,16 @@ class EventObserver
         // Clear organizer's user stats if they have an organizer
         if ($event->organizer_id) {
             Cache::forget("user_stats.{$event->organizer_id}");
+        }
+    }
+
+    /**
+     * Sync space reservation for events at CMC venue.
+     */
+    private function syncSpaceReservationIfNeeded(Event $event): void
+    {
+        if ($event->usesPracticeSpace()) {
+            SyncEventSpaceReservation::run($event);
         }
     }
 }

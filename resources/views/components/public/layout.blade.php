@@ -68,16 +68,15 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
+        @filamentStyles
     </head>
 
     @php
         $links = [
-            ['label' => 'About Us', 'route' => 'about', 'pattern' => 'about', 'icon' => 'tabler-info-circle'],
             ['label' => 'Events', 'route' => 'events.index', 'pattern' => 'events.*', 'icon' => 'tabler-calendar'],
-            ['label' => 'Members', 'route' => 'members.index', 'pattern' => 'members.*', 'icon' => 'tabler-users'],
-            ['label' => 'Bands', 'route' => 'bands.index', 'pattern' => 'bands.*', 'icon' => 'tabler-microphone-2'],
+            ['label' => 'Directory', 'route' => 'directory', 'pattern' => 'directory', 'icon' => 'tabler-users'],
+            ['label' => 'Resources', 'route' => 'local-resources', 'pattern' => 'local-resources', 'icon' => 'tabler-list'],
             ['label' => 'Programs', 'route' => 'programs', 'pattern' => 'programs', 'icon' => 'tabler-apps'],
-            ['label' => 'Contact', 'route' => 'contact', 'pattern' => 'contact', 'icon' => 'tabler-mail'],
         ];
     @endphp
 
@@ -96,7 +95,7 @@
                         <div class="flex items-center justify-between">
                             <!-- Mobile menu button -->
                             <label for="mobile-drawer" class="btn btn-ghost btn-square drawer-button">
-                                <x-unicon name="tabler:menu-2" class="size-6" />
+                                <x-icon name="tabler-menu-2" class="size-6" />
                             </label>
 
                             <!-- Center: Small Logo + Title -->
@@ -267,7 +266,7 @@
                 <div class="grid grid-flow-col gap-4">
                     @foreach ($socialLinks as $social)
                         <a href="{{ $social['url'] }}" class="text-2xl hover:text-primary">
-                            <x-unicon name="{{ $social['icon'] }}" class="w-6 h-6" />
+                            <x-icon name="{{ $social['icon']  }}" class="w-6 h-6" />
                         </a>
                     @endforeach
                 </div>

@@ -2,7 +2,7 @@
 
 namespace App\Rules;
 
-use App\Actions\SpamPrevention\CheckEmailAgainstStopForumSpam;
+use CorvMC\Moderation\Actions\SpamPrevention\CheckEmailAgainstStopForumSpam;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Facades\Log;

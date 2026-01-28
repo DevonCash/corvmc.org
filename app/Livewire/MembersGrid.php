@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\MemberProfile;
+use CorvMC\Membership\Models\MemberProfile;
 
 class MembersGrid extends SearchableGrid
 {
@@ -31,7 +31,7 @@ class MembersGrid extends SearchableGrid
 
     protected function getCardComponent(): string
     {
-        return 'member-card';
+        return 'membership::member-card';
     }
 
     protected function getTitle(): string
@@ -52,7 +52,7 @@ class MembersGrid extends SearchableGrid
 
     protected function getEmptyIcon(): string
     {
-        return 'tabler:music';
+        return 'tabler-music';
     }
 
     protected function getEmptyTitle(): string

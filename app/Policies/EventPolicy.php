@@ -2,133 +2,100 @@
 
 namespace App\Policies;
 
-use App\Models\Event;
 use App\Models\User;
+use CorvMC\Events\Models\Event;
+use CorvMC\Moderation\Enums\Visibility;
 
 class EventPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): ?bool
+    public function manage(User $user, ?Event $event = null): bool
     {
-        if ($user->can('view events')) {
+        if ($user->hasRole('production manager')) {
             return true;
         }
 
-        return null;
+        return $event && $event->isOrganizedBy($user);
     }
 
-    public function manage(User $user, Event $event): ?bool
+    public function viewAny(?User $user): bool
     {
-        // Staff with 'manage events' permission can manage any staff event
-        if ($user->can('manage events')) {
-            return true;
-        }
-
-        // Community event organizers can manage their own events
-        if ($event->organizer_id && $user->id === $event->organizer_id) {
-            return true;
-        }
-
-        return null;
+        return true;
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Event $event): ?bool
+    public function view(?User $user, Event $event): bool
     {
-        // Published events are visible to everyone
-        if ($event->isPublished()) {
+        // Unpublished events: only managers or organizer
+        if (! $event->isPublished()) {
+            return $user && $this->manage($user, $event);
+        }
+
+        // Public events visible to everyone (including guests)
+        if ($event->visibility === Visibility::Public) {
             return true;
         }
 
-        // Staff can view all events
-        if ($user->can('manage events')) {
+        // All other visibility levels require authentication
+        if (! $user) {
+            return false;
+        }
+
+        // Managers or organizer can view all visibility levels
+        if ($this->manage($user, $event)) {
             return true;
         }
 
-        // Community event organizers can view their own events
-        if ($event->organizer_id && $user->id === $event->organizer_id) {
+        // Members visibility = any logged-in user
+        if ($event->visibility === Visibility::Members) {
             return true;
         }
 
-        return null;
+        // Private = only organizer/manager (already checked above)
+        return false;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): ?bool
+    public function create(User $user): bool
     {
-        // Only staff with 'manage events' permission can create events for now
-        if ($user->can('manage events')) {
-            return true;
-        }
-
-        return null;
+        return $this->manage($user);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Event $event): ?bool
+    public function update(User $user, Event $event): bool
     {
-        // Staff with 'manage events' permission can update any event
-        if ($user->can('manage events')) {
-            return true;
-        }
-
-        // Community event organizers can update their own events
-        if ($event->organizer_id && $user->id === $event->organizer_id) {
-            return true;
-        }
-
-        return null;
+        return $this->manage($user, $event);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Event $event): ?bool
+    public function delete(User $user, Event $event): bool
     {
-        // Staff with 'manage events' permission can delete any event
-        if ($user->can('manage events')) {
-            return true;
-        }
-
-        // Community event organizers can delete their own events
-        if ($event->organizer_id && $user->id === $event->organizer_id) {
-            return true;
-        }
-
-        return null;
+        return $this->manage($user, $event);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Event $event): ?bool
+    public function restore(User $user, Event $event): bool
     {
-        // Staff with 'manage events' permission can restore any event
-        if ($user->can('manage events')) {
-            return true;
-        }
-
-        // Community event organizers can restore their own events
-        if ($event->organizer_id && $user->id === $event->organizer_id) {
-            return true;
-        }
-
-        return null;
+        return $this->manage($user, $event);
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Event $event): bool
     {
         return false;
+    }
+
+    // Domain-specific methods
+    public function publish(User $user, Event $event): bool
+    {
+        return $this->update($user, $event) && $event->canPublish();
+    }
+
+    public function cancel(User $user, Event $event): bool
+    {
+        return $this->manage($user, $event);
+    }
+
+    public function reschedule(User $user, Event $event): bool
+    {
+        return $this->cancel($user, $event);
+    }
+
+    public function managePerformers(User $user, Event $event): bool
+    {
+        return $this->update($user, $event);
     }
 }

@@ -2,7 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Enums\Visibility;
+use CorvMC\Membership\Models\MemberProfile;
+use CorvMC\Moderation\Enums\Visibility;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
@@ -92,7 +93,7 @@ class UserFactory extends Factory
     {
         return $this->afterCreating(function ($user) {
             // Create profile manually since we disabled events during creation
-            \App\Models\MemberProfile::create(['user_id' => $user->id]);
+            MemberProfile::create(['user_id' => $user->id]);
         });
     }
 
@@ -126,7 +127,7 @@ class UserFactory extends Factory
             $user = $factory->create();
 
             // Ensure no profile exists by deleting any that might have been created
-            \App\Models\MemberProfile::where('user_id', $user->id)->delete();
+            MemberProfile::where('user_id', $user->id)->delete();
 
             return $user;
         });
@@ -146,7 +147,7 @@ class UserFactory extends Factory
             $user = $factory->create();
 
             // Manually create profile since events are disabled
-            $profile = \App\Models\MemberProfile::create(['user_id' => $user->id]);
+            $profile = MemberProfile::create(['user_id' => $user->id]);
 
             // Update profile with provided attributes
             if (! empty($profileAttributes)) {
@@ -192,7 +193,7 @@ class UserFactory extends Factory
                     ['name' => 'CMC Website', 'url' => 'https://corvallismusic.org'],
                     ['name' => 'Instagram', 'url' => 'https://instagram.com/corvallismusic'],
                 ],
-                'contact' => new \App\Data\ContactData(
+                'contact' => new \CorvMC\Membership\Data\ContactData(
                     visibility: Visibility::Public,
                     email: 'admin@corvallismusic.org',
                     phone: '(541) 555-0100',
@@ -236,7 +237,7 @@ class UserFactory extends Factory
                     ['name' => 'Instagram', 'url' => 'https://instagram.com/sarahjmusic'],
                     ['name' => 'Website', 'url' => 'https://sarahjohnsonmusic.com'],
                 ],
-                'contact' => new \App\Data\ContactData(
+                'contact' => new \CorvMC\Membership\Data\ContactData(
                     visibility: Visibility::Public,
                     email: 'booking@sarahjohnsonmusic.com',
                     phone: '(503) 555-0123',
@@ -272,7 +273,7 @@ class UserFactory extends Factory
                 'bio' => '<p>Just starting my musical journey! Learning guitar and always looking for people to play with.</p>',
                 'hometown' => 'Corvallis, OR',
                 'links' => [],
-                'contact' => new \App\Data\ContactData(
+                'contact' => new \CorvMC\Membership\Data\ContactData(
                     visibility: Visibility::Members,
                     email: 'alex@example.com',
                 ),
@@ -308,7 +309,7 @@ class UserFactory extends Factory
                     ['name' => 'SoundCloud', 'url' => 'https://soundcloud.com/jordanmartinez'],
                     ['name' => 'Bandcamp', 'url' => 'https://jordanmartinez.bandcamp.com'],
                 ],
-                'contact' => new \App\Data\ContactData(
+                'contact' => new \CorvMC\Membership\Data\ContactData(
                     visibility: Visibility::Members,
                     email: 'studio@jordanmartinez.com',
                     phone: '(541) 555-0456',
@@ -342,7 +343,7 @@ class UserFactory extends Factory
             [
                 'bio' => '<p>Drummer looking to connect with local musicians for jam sessions.</p>',
                 'links' => [],
-                'contact' => new \App\Data\ContactData(
+                'contact' => new \CorvMC\Membership\Data\ContactData(
                     visibility: Visibility::Private,
                     email: 'morgan@example.com',
                 ),
@@ -379,7 +380,7 @@ class UserFactory extends Factory
                     ['name' => 'Website', 'url' => 'https://riverthompsonmusic.com'],
                     ['name' => 'Spotify', 'url' => 'https://open.spotify.com/artist/riverthompson'],
                 ],
-                'contact' => new \App\Data\ContactData(
+                'contact' => new \CorvMC\Membership\Data\ContactData(
                     visibility: Visibility::Public,
                     email: 'contact@riverthompsonmusic.com',
                     phone: '(503) 555-0789',

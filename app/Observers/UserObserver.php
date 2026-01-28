@@ -36,20 +36,12 @@ class UserObserver
      */
     private function clearUserCaches(User $user): void
     {
-        // Clear user-specific caches
-        Cache::forget("user.{$user->id}.is_sustaining");
-        Cache::forget("user.{$user->id}.free_hours.".now()->format('Y-m'));
+        // Clear user-specific dashboard caches
         Cache::forget("user_stats.{$user->id}");
         Cache::forget("user_activity.{$user->id}");
 
         // Clear caches that include this user in aggregations
         Cache::forget('sustaining_members');
         Cache::forget('subscription_stats');
-
-        // Clear upcoming events cache if user is a manager or has edit permissions
-        if ($user->can('update productions')) {
-            Cache::forget('upcoming_events');
-            Cache::forget("upcoming_events.user_{$user->id}");
-        }
     }
 }

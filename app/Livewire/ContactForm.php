@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Notifications\ContactFormSubmissionNotification;
+use CorvMC\Membership\Notifications\ContactFormSubmissionNotification;
 use App\Settings\OrganizationSettings;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;

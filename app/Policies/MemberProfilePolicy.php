@@ -2,102 +2,108 @@
 
 namespace App\Policies;
 
-use App\Models\MemberProfile;
 use App\Models\User;
+use CorvMC\Membership\Models\MemberProfile;
+use CorvMC\Moderation\Enums\Visibility;
 
 class MemberProfilePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+    public function manage(User $user): bool
+    {
+        return $user->hasRole('directory moderator');
+    }
+
     public function viewAny(User $user): bool
     {
         return true;
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, MemberProfile $memberProfile): ?bool
+    public function view(?User $user, MemberProfile $memberProfile): bool
     {
-        if ($memberProfile->isVisible($user)) {
+        // Public profiles visible to everyone (including guests)
+        if ($memberProfile->visibility === Visibility::Public) {
             return true;
         }
 
-        return null;
-    }
+        // All other visibility levels require authentication
+        if (! $user) {
+            return false;
+        }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        // Members can create their own profile (handled in registration)
-        return true;
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, MemberProfile $memberProfile): ?bool
-    {
-
-        if ($user->is($memberProfile->user) || $user->can('update member profiles')) {
+        // Managers can view all profiles
+        if ($this->manage($user)) {
             return true;
         }
 
-        return null;
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, MemberProfile $memberProfile): ?bool
-    {
-        // Users can delete their own profile or admins can delete
-        if ($user->is($memberProfile->user) || $user->can('delete member profiles')) {
+        // Owner can always view their own profile
+        if ($memberProfile->isOwnedBy($user)) {
             return true;
         }
 
-        return null;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, MemberProfile $memberProfile): ?bool
-    {
-        // Users can restore their own profile or admins can restore
-        if ($user->is($memberProfile->user) || $user->can('restore member profiles')) {
+        // Members visibility = any logged-in CMC member
+        if ($memberProfile->visibility === Visibility::Members) {
             return true;
         }
 
-        return null;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, MemberProfile $memberProfile): ?bool
-    {
+        // Private = only owner (already checked above)
         return false;
     }
 
-    public function viewContact(User $user, MemberProfile $memberProfile): ?bool
+    public function create(User $user): bool
     {
-        // Users can view their own contact info
-        if ($user->is($memberProfile->user)) {
+        return true; // All authenticated users can create their profile
+    }
+
+    public function update(User $user, MemberProfile $memberProfile): bool
+    {
+        return $this->manage($user) || $memberProfile->isOwnedBy($user);
+    }
+
+    public function delete(User $user, MemberProfile $memberProfile): bool
+    {
+        return $this->manage($user) || $memberProfile->isOwnedBy($user);
+    }
+
+    public function restore(User $user, MemberProfile $memberProfile): bool
+    {
+        return $this->delete($user, $memberProfile);
+    }
+
+    public function forceDelete(User $user, MemberProfile $memberProfile): bool
+    {
+        return false; // Never allowed
+    }
+
+    public function viewContact(?User $user, MemberProfile $memberProfile): bool
+    {
+        $visibility = $memberProfile->contact?->visibility;
+
+        // No contact info or public - anyone can view
+        if (! $visibility || $visibility === Visibility::Public) {
             return true;
         }
 
-        if ($memberProfile->contact->visibility === \App\Enums\Visibility::Public) {
+        // Guest users can only see public contacts
+        if (! $user) {
+            return false;
+        }
+
+        // Owner can always view their own contact info
+        if ($memberProfile->isOwnedBy($user)) {
             return true;
         }
 
-        if ($memberProfile->contact->visibility === \App\Enums\Visibility::Members && $user) {
+        // Managers can view all contact info
+        if ($this->manage($user)) {
             return true;
         }
 
-        return null;
+        // Members visibility = any logged-in CMC member
+        if ($visibility === Visibility::Members) {
+            return true;
+        }
+
+        // Private = only owner or manager (already checked above)
+        return false;
     }
 }
