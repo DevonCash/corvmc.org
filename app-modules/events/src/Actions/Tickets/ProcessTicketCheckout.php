@@ -11,15 +11,28 @@ class ProcessTicketCheckout
     use AsAction;
 
     /**
+     * Stripe's minimum checkout amount in cents.
+     */
+    private const STRIPE_MINIMUM_CENTS = 50;
+
+    /**
      * Create a Stripe checkout session for a ticket order.
+     * For free orders (below Stripe's $0.50 minimum), completes the order directly.
      *
      * @param  TicketOrder  $order  The order to process
-     * @return \Laravel\Cashier\Checkout The Cashier checkout object
+     * @return object Object with 'url' property for redirect
      *
      * @throws \Exception If checkout cannot be created
      */
     public function handle(TicketOrder $order)
     {
+        $totalCents = $order->total->getMinorAmount()->toInt();
+
+        // Handle free or below-minimum orders without Stripe
+        if ($totalCents < self::STRIPE_MINIMUM_CENTS) {
+            return $this->completeFreeOrder($order);
+        }
+
         // Get the billable user (or create a temporary one for guests)
         $user = $order->user;
 
@@ -34,6 +47,21 @@ class ProcessTicketCheckout
 
         // Guest checkout - use Stripe's guest mode
         return $this->createGuestCheckout($order);
+    }
+
+    /**
+     * Complete a free order without Stripe checkout.
+     */
+    private function completeFreeOrder(TicketOrder $order): object
+    {
+        // Complete the order directly
+        CompleteTicketOrder::run($order->id, 'free');
+
+        // Send confirmation notification
+        CompleteTicketOrder::make()->afterCommit($order->fresh());
+
+        // Return redirect URL to free order success page
+        return (object) ['url' => route('tickets.checkout.free-success', ['order' => $order->uuid])];
     }
 
     /**

@@ -151,11 +151,42 @@ describe('Ticketing: Create Order', function () {
 
         $basePrice = config('ticketing.default_price', 1000);
         $discountPercent = config('ticketing.sustaining_member_discount', 50);
-        $discountedPrice = (int) round($basePrice * (1 - $discountPercent / 100));
-        $discountAmount = ($basePrice - $discountedPrice) * 2;
+        $discountPerTicket = (int) round($basePrice * $discountPercent / 100);
+        $discountAmount = $discountPerTicket * 2;
+        $expectedTotal = ($basePrice * 2) - $discountAmount;
 
-        expect($order->unit_price->getMinorAmount()->toInt())->toBe($discountedPrice);
+        // Unit price should be the base price (discount applied separately)
+        expect($order->unit_price->getMinorAmount()->toInt())->toBe($basePrice);
         expect($order->discount->getMinorAmount()->toInt())->toBe($discountAmount);
+        // Total should be subtotal minus discount (not double-discounted)
+        expect($order->total->getMinorAmount()->toInt())->toBe($expectedTotal);
+    });
+
+    it('does not double-apply sustaining member discount', function () {
+        // Regression test: discount should only be applied once, not in both
+        // unit_price calculation AND as a separate discount
+        $user = User::factory()->create();
+        $user->assignRole('sustaining member');
+
+        $order = CreateTicketOrder::run(
+            event: $this->event,
+            quantity: 1,
+            user: $user
+        );
+
+        $basePrice = config('ticketing.default_price', 1000);
+        $discountPercent = config('ticketing.sustaining_member_discount', 50);
+        $discountAmount = (int) round($basePrice * $discountPercent / 100);
+        $expectedTotal = $basePrice - $discountAmount;
+
+        // With 50% discount on $10.00 base price:
+        // - subtotal: $10.00
+        // - discount: $5.00
+        // - total: $5.00 (NOT $0.00 from double-discount)
+        expect($order->subtotal->getMinorAmount()->toInt())->toBe($basePrice);
+        expect($order->discount->getMinorAmount()->toInt())->toBe($discountAmount);
+        expect($order->total->getMinorAmount()->toInt())->toBe($expectedTotal);
+        expect($order->total->getMinorAmount()->toInt())->toBeGreaterThan(0);
     });
 
     it('throws exception when ticketing not enabled', function () {

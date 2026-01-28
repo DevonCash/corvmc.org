@@ -92,6 +92,24 @@ class TicketCheckoutController extends Controller
     }
 
     /**
+     * Handle free ticket order success (no Stripe checkout needed).
+     */
+    public function freeSuccess(Request $request, TicketOrder $order)
+    {
+        if (!$order->isCompleted()) {
+            return redirect()->route('events.show', $order->event)
+                ->with('error', 'Order not found or not completed.');
+        }
+
+        return view('tickets.success', [
+            'order' => $order,
+            'event' => $order->event,
+            'isGuest' => !auth()->check(),
+            'isNewUser' => false,
+        ]);
+    }
+
+    /**
      * Handle cancelled ticket checkout.
      */
     public function cancel(Request $request, TicketOrder $order)

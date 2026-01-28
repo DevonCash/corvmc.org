@@ -192,6 +192,8 @@ Route::get('/events/{event}/tickets', function (Event $event) {
 // Ticket checkout routes (supports guest checkout, no auth required)
 Route::get('/tickets/checkout/success', [\App\Http\Controllers\TicketCheckoutController::class, 'success'])
     ->name('tickets.checkout.success');
+Route::get('/tickets/checkout/free-success/{order:uuid}', [\App\Http\Controllers\TicketCheckoutController::class, 'freeSuccess'])
+    ->name('tickets.checkout.free-success');
 Route::get('/tickets/checkout/cancel/{order:uuid}', [\App\Http\Controllers\TicketCheckoutController::class, 'cancel'])
     ->name('tickets.checkout.cancel');
 

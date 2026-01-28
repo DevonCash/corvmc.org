@@ -80,11 +80,11 @@
                 <div class="mt-2 space-y-1 text-sm">
                     <div class="flex justify-between">
                         <span>{{ $quantity }} x Ticket</span>
-                        <span>${{ number_format(($this->getUnitPrice() * $quantity) / 100, 2) }}</span>
+                        <span>${{ number_format(($this->getBasePrice() * $quantity) / 100, 2) }}</span>
                     </div>
                     @if($this->hasDiscount())
                         <div class="flex justify-between text-success">
-                            <span>Member Discount</span>
+                            <span>Member Discount ({{ $this->getDiscountPercent() }}%)</span>
                             <span>-${{ number_format((($this->getBasePrice() - $this->getUnitPrice()) * $quantity) / 100, 2) }}</span>
                         </div>
                     @endif

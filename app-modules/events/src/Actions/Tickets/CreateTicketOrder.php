@@ -98,16 +98,11 @@ class CreateTicketOrder
 
     /**
      * Calculate unit price for a user.
+     * Returns the base price - discounts are applied separately via calculateDiscount().
      */
     private function calculateUnitPrice(Event $event, ?User $user): Money
     {
         $basePrice = $event->ticket_price_override ?? config('ticketing.default_price', 1000);
-
-        // Apply sustaining member discount
-        if ($user && $user->isSustainingMember()) {
-            $discountPercent = config('ticketing.sustaining_member_discount', 50);
-            $basePrice = (int) round($basePrice * (1 - $discountPercent / 100));
-        }
 
         return Money::ofMinor($basePrice, 'USD');
     }
