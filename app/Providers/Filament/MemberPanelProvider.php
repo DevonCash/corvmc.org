@@ -12,6 +12,7 @@ use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Support\HtmlString;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -174,11 +175,14 @@ class MemberPanelProvider extends PanelProvider
             // Add individual band navigation items
             $sort = 1;
             foreach ($activeBands as $band) {
+                $avatarHtml = new HtmlString(
+                    '<img src="'.e($band->avatar_thumb_url).'" alt="'.e($band->name).'" class="size-6 rounded-full object-cover" />'
+                );
 
                 Filament::registerNavigationItems([
                     NavigationItem::make($band->name)
                         ->url("/band/{$band->slug}")
-                        ->icon('tabler-users')
+                        ->icon($avatarHtml)
                         ->group('My Bands')
                         ->sort($sort++),
                 ]);
@@ -186,10 +190,14 @@ class MemberPanelProvider extends PanelProvider
 
             // Add invited band navigation items with badges
             foreach ($invitedBands as $band) {
+                $avatarHtml = new HtmlString(
+                    '<img src="'.e($band->avatar_thumb_url).'" alt="'.e($band->name).'" class="size-6 rounded-full object-cover" />'
+                );
+
                 Filament::registerNavigationItems([
                     NavigationItem::make($band->name)
                         ->url("/member/band-invitation/{$band->slug}")
-                        ->icon('tabler-users')
+                        ->icon($avatarHtml)
                         ->badge('Invited')
                         ->group('My Bands')
                         ->sort($sort++),

@@ -81,7 +81,7 @@ class MemberDashboard extends Page
                 'description' => $user->isSustainingMember() ? 'Manage your membership' : 'Become a sustaining member',
                 'icon' => 'tabler-star',
                 'color' => 'warning',
-                'url' => \App\Filament\Member\Pages\Account\Membership::getUrl(),
+                'url' => \App\Filament\Member\Pages\MyMembership::getUrl(),
             ],
         ];
     }

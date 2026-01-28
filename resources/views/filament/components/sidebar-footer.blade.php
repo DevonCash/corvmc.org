@@ -1,16 +1,14 @@
-<div class="fi-sidebar-footer border-t border-gray-200 dark:border-gray-700 mt-auto">
-
+<div class="fi-sidebar-footer mt-auto">
     {{-- Back to Personal Dashboard --}}
     @if (filament()->getCurrentPanel()->getId() !== 'member')
-        <a href="{{ route('filament.member.pages.member-dashboard') }}"
-            class="btn btn-outline btn-primary">
-            <x-heroicon-o-arrow-left-circle class="h-5 w-5" />
+        <x-filament::button outlined tag='a' href="{{ route('filament.member.pages.member-dashboard') }}">
+            <x-tabler-arrow-left class="h-5 w-5" />
             <span>Back to Member Dashboard</span>
-        </a>
+        </x-filament::button>
     @endif
-
+    <hr class='border-gray-200 dark:border-gray-700' />
     <a href="{{ route('filament.member.pages.account') }}"
-        class="flex items-center space-x-3 p-4 group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-lg -mx-2 border border-transparent hover:border-gray-200 dark:hover:border-gray-600">
+        class="flex items-center gap-3 p-4 group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-lg -mx-2 border border-transparent hover:border-gray-200 dark:hover:border-gray-600">
         <!-- User Avatar -->
         <div class="flex-shrink-0">
             @if (auth()->user()->getFilamentAvatarUrl())
@@ -42,4 +40,5 @@
                 class="size-5 text-gray-400 dark:text-gray-500 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" />
         </div>
     </a>
+
 </div>
