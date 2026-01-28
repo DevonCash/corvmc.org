@@ -2,7 +2,7 @@
     <!-- Flash Messages -->
     @if(session('info'))
     <div class="alert alert-info max-w-4xl mx-auto mb-8">
-        <x-unicon name="tabler:info-circle" class="size-6"/>
+        <x-icon name="tabler-info-circle" class="size-6"/>
         <span>{{ session('info') }}</span>
     </div>
     @endif
@@ -56,7 +56,7 @@
 
             <div class="flex justify-between items-center mt-4">
                 <button wire:click="resetFilters" class="btn btn-outline">
-                    <x-unicon name="tabler:refresh" class="size-4"/>
+                    <x-icon name="tabler-refresh" class="size-4"/>
                     Reset Filters
                 </button>
                 <span class="text-sm opacity-70">
@@ -103,7 +103,7 @@
         @empty
             <div class="col-span-full text-center py-16">
                 <div class="text-6xl mb-4">
-                    <x-unicon name="{{ $emptyIcon }}" class="size-16" />
+                    <x-icon name="{{ $emptyIcon  }}" class="size-16" />
                 </div>
                 <h3 class="text-2xl font-bold mb-4">{{ $emptyTitle }}</h3>
                 <p class="text-lg opacity-70">{{ $emptyMessage }}</p>

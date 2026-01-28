@@ -2,7 +2,7 @@
 <div class="bg-primary/10 rounded-lg p-8 text-center mb-16">
     <div class="max-w-2xl mx-auto">
         <div class="flex items-center justify-center gap-3 mb-4">
-            <x-unicon name="tabler:question-mark" class="size-8 text-primary" />
+            <x-icon name="tabler-question-mark" class="size-8 text-primary" />
             <h3 class="text-2xl font-bold">Have Something We Need?</h3>
         </div>
         <p class="text-lg mb-6">
@@ -10,11 +10,11 @@
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="{{ route('contact') }}?topic=donation" class="btn btn-primary btn-lg">
-                <x-unicon name="tabler:mail" class="size-5 mr-2" />
+                <x-icon name="tabler-mail" class="size-5 mr-2" />
                 Contact Us
             </a>
             <a href="mailto:donations@corvallismusiccollective.org" class="btn btn-outline btn-primary btn-lg">
-                <x-unicon name="tabler:send" class="size-5 mr-2" />
+                <x-icon name="tabler-send" class="size-5 mr-2" />
                 Email Directly
             </a>
         </div>

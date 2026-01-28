@@ -26,7 +26,7 @@
             <div class="stats stats-vertical lg:stats-horizontal shadow w-full">
                 <div class="stat">
                     <div class="stat-figure text-primary">
-                        <x-unicon name="tabler:users" class="size-8"/>
+                        <x-icon name="tabler-users" class="size-8"/>
                     </div>
                     <div class="stat-title">Active Members</div>
                     <div class="stat-value text-primary">{{ number_format($stats['active_members']) }}{{ $stats['active_members'] > 0 ? '+' : '' }}</div>
@@ -35,7 +35,7 @@
 
                 <div class="stat">
                     <div class="stat-figure text-secondary">
-                        <x-unicon name="tabler:music" class="size-8"/>
+                        <x-icon name="tabler-music" class="size-8"/>
                     </div>
                     <div class="stat-title">This Month's Events</div>
                     <div class="stat-value text-secondary">{{ $stats['monthly_events'] }}</div>
@@ -44,7 +44,7 @@
 
                 <div class="stat">
                     <div class="stat-figure text-accent">
-                        <x-unicon name="tabler:clock" class="size-8"/>
+                        <x-icon name="tabler-clock" class="size-8"/>
                     </div>
                     <div class="stat-title">Practice Hours</div>
                     <div class="stat-value text-accent">{{ number_format($stats['practice_hours']) }}{{ $stats['practice_hours'] > 0 ? '+' : '' }}</div>

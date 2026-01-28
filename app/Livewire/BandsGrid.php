@@ -33,7 +33,7 @@ class BandsGrid extends SearchableGrid
 
     protected function getEmptyIcon(): string
     {
-        return 'tabler:guitar-pick';
+        return 'tabler-guitar-pick';
     }
 
     protected function getEmptyTitle(): string

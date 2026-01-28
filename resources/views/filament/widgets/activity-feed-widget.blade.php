@@ -35,10 +35,7 @@
                                 : ($activity['color'] === 'danger'
                                     ? 'bg-red-100 dark:bg-red-900/20'
                                     : 'bg-gray-100 dark:bg-gray-700')) }}">
-                        @php
-                            $iconComponent = str_replace('tabler:', 'tabler-', $activity['icon']);
-                        @endphp
-                        <x-dynamic-component :component="$iconComponent"
+                        <x-dynamic-component :component="$activity['icon']"
                             class="h-4 w-4 {{ $activity['color'] === 'success'
                                 ? 'text-green-600 dark:text-green-400'
                                 : ($activity['color'] === 'info'

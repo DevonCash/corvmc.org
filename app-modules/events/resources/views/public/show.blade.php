@@ -15,7 +15,7 @@
             @else
                 <div class="bg-secondary/20 rounded-lg  flex items-center justify-center h-full w-full">
                     <div class="text-center opacity-30">
-                        <x-unicon name="tabler:music" class="size-32 mx-auto mb-6" />
+                        <x-icon name="tabler-music" class="size-32 mx-auto mb-6" />
                         <p class="text-2xl font-bold">{{ $event->title }}</p>
                     </div>
                 </div>
@@ -25,22 +25,22 @@
             <div class="hidden sm:flex lg:hidden flex-col gap-4 justify-center absolute left-full p-4">
                 <a href="https://facebook.com/sharer/sharer.php?u={{ urlencode(request()->url()) }}" target="_blank"
                     class="btn btn-outline btn-circle btn-lg">
-                    <x-unicon name="tabler:brand-facebook" class="size-6" />
+                    <x-icon name="tabler-brand-facebook" class="size-6" />
                 </a>
                 <a href="https://twitter.com/intent/tweet?url={{ urlencode(request()->url()) }}&text={{ urlencode($event->title) }}"
                     target="_blank" class="btn btn-outline btn-circle btn-lg">
-                    <x-unicon name="tabler:brand-x" class="size-6" />
+                    <x-icon name="tabler-brand-x" class="size-6" />
                 </a>
                 <button onclick="navigator.share({title: '{{ $event->title }}', url: '{{ request()->url() }}'})"
                     class="btn btn-outline btn-circle btn-lg">
-                    <x-unicon name="tabler:share" class="size-6" />
+                    <x-icon name="tabler-share" class="size-6" />
                 </button>
             </div>
             @if ($event->ticket_url)
                 <div class="border-t border-base-300 order-last pt-4">
                     <a href="{{ $event->ticket_url }}" @if (!$event->hasNativeTicketing()) target="_blank" @endif
                         class="btn btn-primary btn-lg w-full transform hover:scale-105 transition-all duration-300">
-                        <x-unicon name="tabler:ticket" class="size-6" />
+                        <x-icon name="tabler-ticket" class="size-6" />
                         Get Tickets
                     </a>
                 </div>
@@ -52,7 +52,7 @@
                 <!-- Event Info Grid -->
                 <div class="flex flex-col grow grid-cols-3 sm:grid lg:flex gap-4 whitespace-nowrap p-4">
                     <div class="flex flex-wrap gap-2 items-center justify-center">
-                        <x-unicon name="tabler:calendar" class="size-8 text-primary" />
+                        <x-icon name="tabler-calendar" class="size-8 text-primary" />
                         <div class='grow'>
                             <div class="font-semibold text-xl">
                                 {{ $event->start_datetime->format('M j, Y') }}</div>
@@ -62,7 +62,7 @@
                     </div>
 
                     <div class="flex flex-wrap gap-2 items-center justify-center">
-                        <x-unicon name="tabler:clock" class="size-8 text-primary " />
+                        <x-icon name="tabler-clock" class="size-8 text-primary " />
                         <div class='grow'>
                             <div class="font-semibold text-xl">
                                 {{ $event->start_datetime->format('g:i A') }}</div>
@@ -74,7 +74,7 @@
                     </div>
 
                     <div class="flex flex-wrap gap-2 items-center justify-center">
-                        <x-unicon name="tabler:ticket" class="size-8 text-primary flex-shrink-0" />
+                        <x-icon name="tabler-ticket" class="size-8 text-primary flex-shrink-0" />
                         <div class='grow'>
                             <div class="font-semibold text-xl text-primary">
                                 {{ $event->ticket_price_display }}
@@ -134,7 +134,7 @@
                                     <div
                                         class="h-64 w-40 bg-secondary/20 rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300 flex items-center justify-center">
                                         <div class="text-center opacity-50">
-                                            <x-unicon name="tabler:music" class="size-16 mx-auto mb-2" />
+                                            <x-icon name="tabler-music" class="size-16 mx-auto mb-2" />
                                             <p class="text-sm font-bold px-2 text-center">{{ $relatedEvent->title }}
                                             </p>
                                         </div>

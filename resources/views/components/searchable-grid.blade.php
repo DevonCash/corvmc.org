@@ -5,7 +5,7 @@
     'filters' => [],
     'items',
     'totalCount' => null,
-    'emptyIcon' => 'tabler:search',
+    'emptyIcon' => 'tabler-search',
     'emptyTitle' => 'No results found',
     'emptyMessage' => 'Try adjusting your search criteria.',
     'cardComponent' => null,
@@ -16,7 +16,7 @@
     <!-- Flash Messages -->
     @if(session('info'))
     <div class="alert alert-info max-w-4xl mx-auto mb-8">
-        <x-unicon name="tabler:info-circle" class="size-6"/>
+        <x-icon name="tabler-info-circle" class="size-6"/>
         <span>{{ session('info') }}</span>
     </div>
     @endif
@@ -159,14 +159,14 @@
                 <span class="filter-label">{{ $filterLabel }}</span>
                 <span class="filter-value">{{ $displayValue }}</span>
                 <a href="{{ $removeUrl }}" class="filter-remove">
-                    <x-unicon name="tabler:x" class="size-3" />
+                    <x-icon name="tabler-x" class="size-3" />
                 </a>
             </div>
         @endforeach
         
         <!-- Clear All Filters Button -->
         <a href="{{ request()->url() }}" class="btn btn-outline btn-xs">
-            <x-unicon name="tabler:x" class="size-3" />
+            <x-icon name="tabler-x" class="size-3" />
             Clear All
         </a>
     </div>
@@ -186,7 +186,7 @@
             @endif
         @empty
             <div class="col-span-full text-center py-16">
-                <div class="text-6xl mb-4"><x-unicon name="{{ $emptyIcon }}" class="size-16" /></div>
+                <div class="text-6xl mb-4"><x-icon name="{{ $emptyIcon  }}" class="size-16" /></div>
                 <h3 class="text-2xl font-bold mb-4">{{ $emptyTitle }}</h3>
                 <p class="text-lg opacity-70">{{ $emptyMessage }}</p>
             </div>

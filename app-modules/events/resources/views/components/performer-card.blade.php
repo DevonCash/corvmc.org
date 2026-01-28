@@ -31,7 +31,7 @@
                     <a href="{{ $link['url'] }}"
                        @if($link['external']) target="_blank" @endif
                        class="btn btn-sm btn-outline btn-primary">
-                        <x-unicon name="{{ $link['icon'] }}" class="size-4" />
+                        <x-icon name="{{ $link['icon']  }}" class="size-4" />
                         {{ $link['text'] }}
                     </a>
                 </div>

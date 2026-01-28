@@ -8,7 +8,7 @@
         <div class="card bg-base-100 shadow-lg">
             <div class="card-body">
                 <div class="flex items-center gap-3 mb-4">
-                    <x-unicon name="tabler:briefcase" class="size-8 text-primary" />
+                    <x-icon name="tabler-briefcase" class="size-8 text-primary" />
                     <h3 class="card-title">Professional Services</h3>
                 </div>
                 <ul class="space-y-2 text-sm">
@@ -25,7 +25,7 @@
         <div class="card bg-base-100 shadow-lg">
             <div class="card-body">
                 <div class="flex items-center gap-3 mb-4">
-                    <x-unicon name="tabler:package" class="size-8 text-secondary" />
+                    <x-icon name="tabler-package" class="size-8 text-secondary" />
                     <h3 class="card-title">Materials & Supplies</h3>
                 </div>
                 <ul class="space-y-2 text-sm">
@@ -41,7 +41,7 @@
         <div class="card bg-base-100 shadow-lg">
             <div class="card-body">
                 <div class="flex items-center gap-3 mb-4">
-                    <x-unicon name="tabler:clock" class="size-8 text-accent" />
+                    <x-icon name="tabler-clock" class="size-8 text-accent" />
                     <h3 class="card-title">Time & Skills</h3>
                 </div>
                 <ul class="space-y-2 text-sm">

@@ -14,7 +14,7 @@
     <div class="container mx-auto px-4 py-16">
         @if (session('success'))
             <div class="alert alert-success max-w-2xl mx-auto mb-8">
-                <x-unicon name="tabler:check-circle" class="size-6" />
+                <x-icon name="tabler-check-circle" class="size-6" />
                 <span>{{ session('success') }}</span>
             </div>
         @endif

@@ -55,8 +55,7 @@
         "staudenmeir/laravel-adjacency-list": "^1.25",
         "stechstudio/filament-impersonate": "^4.0",
         "symfony/http-client": "^7.3",
-        "symfony/postmark-mailer": "^7.3",
-        "unicon-rocks/unicon-laravel": "^0.4.2"
+        "symfony/postmark-mailer": "^7.3"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.6",

@@ -336,7 +336,7 @@ class Band extends ContentModel
             return [
                 'url' => route('bands.show', $this),
                 'text' => 'View Profile',
-                'icon' => 'tabler:user',
+                'icon' => 'tabler-user',
                 'external' => false,
             ];
         }
@@ -349,7 +349,7 @@ class Band extends ContentModel
                 return [
                     'url' => $firstLink,
                     'text' => 'Visit Website',
-                    'icon' => 'tabler:external-link',
+                    'icon' => 'tabler-external-link',
                     'external' => true,
                 ];
             }

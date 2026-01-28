@@ -126,10 +126,10 @@ class ActivityFeedWidget extends Widget
     {
         return match ($activity->description) {
             'User account created' => 'tabler-user-plus',
-            'User account updated' => 'tabler:user-edit',
-            'Production created' => 'tabler:calendar-plus',
+            'User account updated' => 'tabler-user-edit',
+            'Production created' => 'tabler-calendar-plus',
             'Production updated' => 'tabler-calendar-up',
-            'Production deleted' => 'tabler:calendar-minus',
+            'Production deleted' => 'tabler-calendar-minus',
             'Band profile created' => 'tabler-users-plus',
             'Band profile updated' => 'tabler-users',
             'Band profile deleted' => 'tabler-users-minus',

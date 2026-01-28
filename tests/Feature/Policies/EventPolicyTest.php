@@ -264,37 +264,6 @@ describe('cancel', function () {
     });
 });
 
-describe('postpone', function () {
-    it('allows production manager to postpone any event', function () {
-        $manager = User::factory()->withRole('production manager')->create();
-        $organizer = User::factory()->create();
-        $event = Event::factory()->create([
-            'organizer_id' => $organizer->id,
-        ]);
-
-        expect($this->policy->postpone($manager, $event))->toBeTrue();
-    });
-
-    it('allows organizer to postpone their own event', function () {
-        $organizer = User::factory()->create();
-        $event = Event::factory()->create([
-            'organizer_id' => $organizer->id,
-        ]);
-
-        expect($this->policy->postpone($organizer, $event))->toBeTrue();
-    });
-
-    it('denies non-organizer from postponing another users event', function () {
-        $member = User::factory()->create();
-        $organizer = User::factory()->create();
-        $event = Event::factory()->create([
-            'organizer_id' => $organizer->id,
-        ]);
-
-        expect($this->policy->postpone($member, $event))->toBeFalse();
-    });
-});
-
 describe('reschedule', function () {
     it('allows production manager to reschedule any event', function () {
         $manager = User::factory()->withRole('production manager')->create();

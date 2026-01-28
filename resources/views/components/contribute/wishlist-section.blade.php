@@ -7,12 +7,12 @@
     <!-- High Priority Immediate Needs -->
     <div class="mb-12">
         <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
-            <x-unicon name="tabler:flame" class="size-7 text-error" />
+            <x-icon name="tabler-flame" class="size-7 text-error" />
             Premises Improvements
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <x-contribute.wishlist-item
-                icon="tabler:window"
+                icon="tabler-window"
                 title="Professional Window Signage"
                 price="$200-600"
                 description="Vinyl lettering/graphics for storefront visibility"
@@ -21,7 +21,7 @@
             />
 
             <x-contribute.wishlist-item
-                icon="tabler:key"
+                icon="tabler-key"
                 title="Keyless Entry System"
                 price="$150-500"
                 description="Code-controlled, remote programming preferred"
@@ -30,7 +30,7 @@
             />
 
             <x-contribute.wishlist-item
-                icon="tabler:video"
+                icon="tabler-video"
                 title="Security Camera System"
                 price="$300-800"
                 description="Indoor/outdoor coverage with remote monitoring"
@@ -39,7 +39,7 @@
             />
 
             <x-contribute.wishlist-item
-                icon="tabler:device-mobile"
+                icon="tabler-device-mobile"
                 title="Used iPhone with NFC"
                 price="$200-400"
                 description="For tap-to-pay via Zeffy (huge operational upgrade!)"
@@ -48,7 +48,7 @@
             />
 
             <x-contribute.wishlist-item
-                icon="tabler:bulb"
+                icon="tabler-bulb"
                 title="Modern LED Stage Lighting"
                 price="$300-800"
                 description="Smart/home automation compatible"
@@ -57,7 +57,7 @@
             />
 
             <x-contribute.wishlist-item
-                icon="tabler:printer"
+                icon="tabler-printer"
                 title="Epson EcoTank Printer"
                 price="$300-400"
                 description="ET-3850 for high-volume poster printing"
@@ -70,12 +70,12 @@
     <!-- Audio Equipment -->
     <div class="mb-12">
         <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
-            <x-unicon name="tabler:music" class="size-7 text-primary" />
+            <x-icon name="tabler-music" class="size-7 text-primary" />
             Sound & Audio Equipment
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <x-contribute.wishlist-item
-                icon="tabler:device-audio-tape"
+                icon="tabler-device-audio-tape"
                 title="Digital Mixer"
                 price="$400-800"
                 description="Replace loaned MR18 - Behringer XR18 or Midas MR18"
@@ -83,7 +83,7 @@
             />
 
             <x-contribute.wishlist-item
-                icon="tabler:microphone"
+                icon="tabler-microphone"
                 title="Basic Microphones"
                 price="$50-100"
                 description="SM57/58 style mics, used condition OK"
@@ -91,7 +91,7 @@
             />
 
             <x-contribute.wishlist-item
-                icon="tabler:vinyl"
+                icon="tabler-vinyl"
                 title="Used Turntable"
                 price="$100-300"
                 description="Direct drive preferred for obsolete media library"
@@ -103,12 +103,12 @@
     <!-- Facility & Infrastructure -->
     <div>
         <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
-            <x-unicon name="tabler:building" class="size-7 text-warning" />
+            <x-icon name="tabler-building" class="size-7 text-warning" />
             Facility Improvements
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <x-contribute.wishlist-item
-                icon="tabler:paint"
+                icon="tabler-paint"
                 title="Stage Paint & Supplies"
                 price="$50-100"
                 description="Black or dark gray paint for stage area"
@@ -116,7 +116,7 @@
             />
 
             <x-contribute.wishlist-item
-                icon="tabler:armchair"
+                icon="tabler-armchair"
                 title="Counter Height Stools"
                 price="$100-400"
                 description="2-4 stools for retail/merchandise area"
@@ -124,7 +124,7 @@
             />
 
             <x-contribute.wishlist-item
-                icon="tabler:tools"
+                icon="tabler-tools"
                 title="Workshop Setup"
                 price="$200-600"
                 description="Workbench, tool organization, soldering station"

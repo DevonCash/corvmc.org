@@ -159,27 +159,27 @@
                                                 title="{{ ucfirst($link['platform']) }}">
                                                 @switch($link['platform'])
                                                     @case('website')
-                                                        <x-unicon name="tabler:world" class="w-4 h-4" />
+                                                        <x-icon name="tabler-world" class="w-4 h-4" />
                                                     @break
 
                                                     @case('linkedin')
-                                                        <x-unicon name="tabler:brand-linkedin" class="w-4 h-4" />
+                                                        <x-icon name="tabler-brand-linkedin" class="w-4 h-4" />
                                                     @break
 
                                                     @case('twitter')
-                                                        <x-unicon name="tabler:brand-x" class="w-4 h-4" />
+                                                        <x-icon name="tabler-brand-x" class="w-4 h-4" />
                                                     @break
 
                                                     @case('facebook')
-                                                        <x-unicon name="tabler:brand-facebook" class="w-4 h-4" />
+                                                        <x-icon name="tabler-brand-facebook" class="w-4 h-4" />
                                                     @break
 
                                                     @case('instagram')
-                                                        <x-unicon name="tabler:brand-instagram" class="w-4 h-4" />
+                                                        <x-icon name="tabler-brand-instagram" class="w-4 h-4" />
                                                     @break
 
                                                     @case('github')
-                                                        <x-unicon name="tabler:brand-github" class="w-4 h-4" />
+                                                        <x-icon name="tabler-brand-github" class="w-4 h-4" />
                                                     @break
                                                 @endswitch
                                             </a>
@@ -236,27 +236,27 @@
                                                                 title="{{ ucfirst($link['platform']) }}">
                                                                 @switch($link['platform'])
                                                                     @case('website')
-                                                                        <x-unicon name="tabler:world" class="w-3 h-3" />
+                                                                        <x-icon name="tabler-world" class="w-3 h-3" />
                                                                     @break
 
                                                                     @case('linkedin')
-                                                                        <x-unicon name="tabler:brand-linkedin" class="w-3 h-3" />
+                                                                        <x-icon name="tabler-brand-linkedin" class="w-3 h-3" />
                                                                     @break
 
                                                                     @case('twitter')
-                                                                        <x-unicon name="tabler:brand-x" class="w-3 h-3" />
+                                                                        <x-icon name="tabler-brand-x" class="w-3 h-3" />
                                                                     @break
 
                                                                     @case('facebook')
-                                                                        <x-unicon name="tabler:brand-facebook" class="w-3 h-3" />
+                                                                        <x-icon name="tabler-brand-facebook" class="w-3 h-3" />
                                                                     @break
 
                                                                     @case('instagram')
-                                                                        <x-unicon name="tabler:brand-instagram" class="w-3 h-3" />
+                                                                        <x-icon name="tabler-brand-instagram" class="w-3 h-3" />
                                                                     @break
 
                                                                     @case('github')
-                                                                        <x-unicon name="tabler:brand-github" class="w-3 h-3" />
+                                                                        <x-icon name="tabler-brand-github" class="w-3 h-3" />
                                                                     @break
                                                                 @endswitch
                                                             </a>

@@ -95,7 +95,7 @@
                         <div class="flex items-center justify-between">
                             <!-- Mobile menu button -->
                             <label for="mobile-drawer" class="btn btn-ghost btn-square drawer-button">
-                                <x-unicon name="tabler:menu-2" class="size-6" />
+                                <x-icon name="tabler-menu-2" class="size-6" />
                             </label>
 
                             <!-- Center: Small Logo + Title -->
@@ -266,7 +266,7 @@
                 <div class="grid grid-flow-col gap-4">
                     @foreach ($socialLinks as $social)
                         <a href="{{ $social['url'] }}" class="text-2xl hover:text-primary">
-                            <x-unicon name="{{ $social['icon'] }}" class="w-6 h-6" />
+                            <x-icon name="{{ $social['icon']  }}" class="w-6 h-6" />
                         </a>
                     @endforeach
                 </div>

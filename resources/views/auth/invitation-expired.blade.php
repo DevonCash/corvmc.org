@@ -12,7 +12,7 @@
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
                     <div class="text-error mb-4">
-                        <x-unicon name="tabler:clock-x" class="w-16 h-16 mx-auto" />
+                        <x-icon name="tabler-clock-x" class="w-16 h-16 mx-auto" />
                     </div>
                     
                     <h2 class="card-title justify-center text-lg mb-4">Sorry, this invitation has expired</h2>
@@ -24,11 +24,11 @@
 
                     <div class="card-actions justify-center">
                         <a href="{{ route('contact') }}?topic=membership" class="btn btn-primary">
-                            <x-unicon name="tabler:mail" class="w-5 h-5" />
+                            <x-icon name="tabler-mail" class="w-5 h-5" />
                             Contact Us
                         </a>
                         <a href="{{ route('home') }}" class="btn btn-ghost">
-                            <x-unicon name="tabler:home" class="w-5 h-5" />
+                            <x-icon name="tabler-home" class="w-5 h-5" />
                             Go Home
                         </a>
                     </div>

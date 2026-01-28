@@ -29,19 +29,19 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="flex items-center gap-3">
-                        <div class="text-2xl"><x-unicon name="tabler:heart-handshake" class="size-6" /></div>
+                        <div class="text-2xl"><x-icon name="tabler-heart-handshake" class="size-6" /></div>
                         <span>Build lasting friendships</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="text-2xl"><x-unicon name="tabler:music" class="size-6" /></div>
+                        <div class="text-2xl"><x-icon name="tabler-music" class="size-6" /></div>
                         <span>Support local music</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="text-2xl"><x-unicon name="tabler:book" class="size-6" /></div>
+                        <div class="text-2xl"><x-icon name="tabler-book" class="size-6" /></div>
                         <span>Learn new skills</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="text-2xl"><x-unicon name="tabler:star-filled" class="size-6" /></div>
+                        <div class="text-2xl"><x-icon name="tabler-star-filled" class="size-6" /></div>
                         <span>Make a real impact</span>
                     </div>
                 </div>
@@ -72,7 +72,7 @@
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="text-3xl"><x-unicon name="tabler:microphone" class="size-8" /></div>
+                            <div class="text-3xl"><x-icon name="tabler-microphone" class="size-8" /></div>
                             <h3 class="card-title">Event Support</h3>
                         </div>
                         <p class="mb-4">Help with setup, sound, crowd management, and breakdown for our concerts and
@@ -92,7 +92,7 @@
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="text-3xl"><x-unicon name="tabler:device-mobile" class="size-8" /></div>
+                            <div class="text-3xl"><x-icon name="tabler-device-mobile" class="size-8" /></div>
                             <h3 class="card-title">Social Media</h3>
                         </div>
                         <p class="mb-4">Create content, manage posts, and help spread the word about CMC events and
@@ -112,7 +112,7 @@
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="text-3xl"><x-unicon name="tabler:tool" class="size-8" /></div>
+                            <div class="text-3xl"><x-icon name="tabler-tool" class="size-8" /></div>
                             <h3 class="card-title">Facility Care</h3>
                         </div>
                         <p class="mb-4">Help maintain our practice rooms, equipment, and common areas to keep
@@ -132,7 +132,7 @@
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="text-3xl"><x-unicon name="tabler:pencil" class="size-8" /></div>
+                            <div class="text-3xl"><x-icon name="tabler-pencil" class="size-8" /></div>
                             <h3 class="card-title">Grant Writing</h3>
                         </div>
                         <p class="mb-4">Research and write grant applications to secure funding for our programs and
@@ -152,7 +152,7 @@
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="text-3xl"><x-unicon name="tabler:camera" class="size-8" /></div>
+                            <div class="text-3xl"><x-icon name="tabler-camera" class="size-8" /></div>
                             <h3 class="card-title">Media Creation</h3>
                         </div>
                         <p class="mb-4">Document our events, create promotional materials, and capture the energy of
@@ -172,7 +172,7 @@
                 <div class="card bg-base-100 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="text-3xl"><x-unicon name="tabler:briefcase" class="size-8" /></div>
+                            <div class="text-3xl"><x-icon name="tabler-briefcase" class="size-8" /></div>
                             <h3 class="card-title">Administrative</h3>
                         </div>
                         <p class="mb-4">Support with data entry, member communications, event coordination, and
@@ -198,7 +198,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="card bg-base-200">
                     <div class="card-body">
-                        <h3 class="card-title"><x-unicon name="tabler:building" class="size-5 mr-2" />Studio
+                        <h3 class="card-title"><x-icon name="tabler-building" class="size-5 mr-2" />Studio
                             Development</h3>
                         <p>Help us assemble used equipment and furnishings for our new studio space.</p>
                     </div>
@@ -206,7 +206,7 @@
 
                 <div class="card bg-base-200">
                     <div class="card-body">
-                        <h3 class="card-title"><x-unicon name="tabler:confetti" class="size-5 mr-2" />Organize an
+                        <h3 class="card-title"><x-icon name="tabler-confetti" class="size-5 mr-2" />Organize an
                             Event</h3>
                         <p>Help us plan and execute shows! Assemble your dream lineup and make it happen.</p>
                     </div>

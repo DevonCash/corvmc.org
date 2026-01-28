@@ -58,7 +58,7 @@
                         @endif
                         @if ($member->hometown)
                             <p class="text-xs text-base-content/70 flex items-center gap-1">
-                                <x-unicon name="tabler:map-pin" class="size-3" />
+                                <x-icon name="tabler-map-pin" class="size-3" />
                                 <span class="truncate">{{ $member->hometown }}</span>
                             </p>
                         @endif
@@ -96,7 +96,7 @@
 
         <!-- Hover Effect Indicator -->
         <div class="absolute top-9 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <x-unicon name="tabler:external-link" class="size-4 text-base-content/40" />
+            <x-icon name="tabler-external-link" class="size-4 text-base-content/40" />
         </div>
     </div>
 </div>

@@ -39,7 +39,7 @@
                     <!-- Placeholder Image -->
                     <div class="bg-base-200 rounded-2xl h-96 flex items-center justify-center">
                         <div class="text-center">
-                            <x-unicon name="tabler:music" class="size-24 text-base-content/30 mx-auto mb-4" />
+                            <x-icon name="tabler-music" class="size-24 text-base-content/30 mx-auto mb-4" />
                             <p class="text-base-content/50">No photos available</p>
                         </div>
                     </div>
@@ -54,12 +54,12 @@
                         <div class="badge badge-outline">{{ ucfirst($equipment->type) }}</div>
                         @if($equipment->is_available)
                             <div class="badge badge-success gap-1">
-                                <x-unicon name="tabler:check" class="size-3" />
+                                <x-icon name="tabler-check" class="size-3" />
                                 Available
                             </div>
                         @else
                             <div class="badge badge-warning gap-1">
-                                <x-unicon name="tabler:clock" class="size-3" />
+                                <x-icon name="tabler-clock" class="size-3" />
                                 In Use
                             </div>
                         @endif
@@ -113,7 +113,7 @@
                 <!-- Current Status -->
                 @if(!$equipment->is_available && $equipment->currentLoan)
                     <div class="alert alert-warning">
-                        <x-unicon name="tabler:info-circle" class="size-5" />
+                        <x-icon name="tabler-info-circle" class="size-5" />
                         <div>
                             <p><strong>Currently checked out</strong></p>
                             <p class="text-sm">Expected return: {{ $equipment->currentLoan->due_at->format('l, F j, Y') }}</p>
@@ -138,25 +138,25 @@
                         @if($equipment->is_available)
                             <a href="{{ route('contact') }}?topic=gear&equipment={{ $equipment->id }}" 
                                class="btn btn-primary btn-lg w-full">
-                                <x-unicon name="tabler:calendar-plus" class="size-5" />
+                                <x-icon name="tabler-calendar-plus" class="size-5" />
                                 Request to Borrow
                             </a>
                         @else
                             <button class="btn btn-disabled btn-lg w-full">
-                                <x-unicon name="tabler:clock" class="size-5" />
+                                <x-icon name="tabler-clock" class="size-5" />
                                 Currently Unavailable
                             </button>
                         @endif
                     @else
                         <a href="{{ route('contact') }}?topic=gear&equipment={{ $equipment->id }}" 
                            class="btn btn-primary btn-lg w-full">
-                            <x-unicon name="tabler:info-circle" class="size-5" />
+                            <x-icon name="tabler-info-circle" class="size-5" />
                             Contact About This Item
                         </a>
                     @endif
                     
                     <a href="{{ route('equipment.index') }}" class="btn btn-outline w-full">
-                        <x-unicon name="tabler:arrow-left" class="size-5" />
+                        <x-icon name="tabler-arrow-left" class="size-5" />
                         Back to Equipment Library
                     </a>
                 </div>
@@ -165,7 +165,7 @@
                 @if($equipment->isDonated() && $equipment->provider)
                     <div class="bg-success/10 border border-success/20 rounded-lg p-4">
                         <div class="flex items-center gap-2 mb-2">
-                            <x-unicon name="tabler:heart" class="size-5 text-success" />
+                            <x-icon name="tabler-heart" class="size-5 text-success" />
                             <h3 class="font-semibold text-success">Generously Donated</h3>
                         </div>
                         <p class="text-sm">
@@ -183,7 +183,7 @@
             @if($equipment->loans->count() > 0)
                 <div class="bg-base-100 rounded-xl shadow-lg p-6">
                     <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
-                        <x-unicon name="tabler:history" class="size-6" />
+                        <x-icon name="tabler-history" class="size-6" />
                         Recent Activity
                     </h2>
                     
@@ -217,7 +217,7 @@
             <!-- Equipment Specifications -->
             <div class="bg-base-100 rounded-xl shadow-lg p-6">
                 <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
-                    <x-unicon name="tabler:info-circle" class="size-6" />
+                    <x-icon name="tabler-info-circle" class="size-6" />
                     Specifications
                 </h2>
                 
@@ -276,7 +276,7 @@
                                          class="rounded-xl h-32 w-full object-cover" />
                                 @else
                                     <div class="bg-base-200 rounded-xl h-32 w-full flex items-center justify-center">
-                                        <x-unicon name="tabler:music" class="size-8 text-base-content/30" />
+                                        <x-icon name="tabler-music" class="size-8 text-base-content/30" />
                                     </div>
                                 @endif
                             </figure>

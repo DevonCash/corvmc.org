@@ -52,7 +52,7 @@ class MembersGrid extends SearchableGrid
 
     protected function getEmptyIcon(): string
     {
-        return 'tabler:music';
+        return 'tabler-music';
     }
 
     protected function getEmptyTitle(): string

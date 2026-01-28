@@ -47,7 +47,7 @@ class EventsGrid extends SearchableGrid
 
     protected function getEmptyIcon(): string
     {
-        return 'tabler:masks-theater';
+        return 'tabler-masks-theater';
     }
 
     protected function getEmptyTitle(): string

@@ -234,14 +234,14 @@ class ManageOrganizationSettings extends Page implements HasForms
                                     ->label('Icon')
                                     ->required()
                                     ->options([
-                                        'tabler:brand-x' => 'X (Twitter)',
-                                        'tabler:brand-facebook' => 'Facebook',
-                                        'tabler:brand-instagram' => 'Instagram',
-                                        'tabler:brand-pinterest' => 'Pinterest',
-                                        'tabler:brand-youtube' => 'YouTube',
-                                        'tabler:brand-linkedin' => 'LinkedIn',
-                                        'tabler:brand-tiktok' => 'TikTok',
-                                        'tabler:brand-discord' => 'Discord',
+                                        'tabler-brand-x' => 'X (Twitter)',
+                                        'tabler-brand-facebook' => 'Facebook',
+                                        'tabler-brand-instagram' => 'Instagram',
+                                        'tabler-brand-pinterest' => 'Pinterest',
+                                        'tabler-brand-youtube' => 'YouTube',
+                                        'tabler-brand-linkedin' => 'LinkedIn',
+                                        'tabler-brand-tiktok' => 'TikTok',
+                                        'tabler-brand-discord' => 'Discord',
                                     ]),
                                 Forms\Components\TextInput::make('url')
                                     ->label('URL')

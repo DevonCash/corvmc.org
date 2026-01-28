@@ -189,7 +189,7 @@
                                        target="{{ $band['primary_link']['external'] ? '_blank' : '_self' }}"
                                        title="{{ $band['primary_link']['text'] }}"
                                        class="inline-flex items-center justify-center w-6 h-6 text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-200">
-                                        <x-dynamic-component :component="str_replace('tabler:', 'tabler-', $band['primary_link']['icon'])" class="h-3 w-3" />
+                                        <x-dynamic-component :component="$band['primary_link']['icon']" class="h-3 w-3" />
                                     </a>
                                 @endif
                             </div>
@@ -198,7 +198,7 @@
                 </div>
             @empty
                 <div class="text-center py-8">
-                    <x-unicon name="tabler:users-off" class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" />
+                    <x-icon name="tabler-users-off" class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" />
                     <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                         You're not in any bands yet
                     </p>

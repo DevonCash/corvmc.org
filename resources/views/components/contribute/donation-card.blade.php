@@ -1,7 +1,7 @@
 <div class="card bg-secondary text-secondary-content shadow-xl">
     <div class="card-body">
         <div class="flex items-center gap-4 mb-4">
-            <x-unicon name="tabler:heart" class="size-12" />
+            <x-icon name="tabler-heart" class="size-12" />
             <h2 class="card-title text-3xl">Make a Donation</h2>
         </div>
         <p class="text-lg mb-6">

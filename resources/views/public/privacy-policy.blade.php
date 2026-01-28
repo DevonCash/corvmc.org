@@ -11,7 +11,7 @@
             <div class="prose prose-lg max-w-none">
                 <div class="alert alert-info mb-8">
                     <div class="flex items-start gap-3">
-                        <x-unicon name="tabler:info-circle" class="w-6 h-6 mt-1 flex-shrink-0" />
+                        <x-icon name="tabler-info-circle" class="w-6 h-6 mt-1 flex-shrink-0" />
                         <div>
                             <h3 class="font-semibold text-lg mb-2">🚧 Under Development</h3>
                             <p class="mb-0">This privacy policy is currently being developed. Please check back soon for our complete privacy policy.</p>
@@ -46,7 +46,7 @@
 
                 <div class="alert alert-warning mt-8">
                     <div class="flex items-start gap-3">
-                        <x-unicon name="tabler:clock" class="w-6 h-6 mt-1 flex-shrink-0" />
+                        <x-icon name="tabler-clock" class="w-6 h-6 mt-1 flex-shrink-0" />
                         <div>
                             <h4 class="font-semibold mb-2">Development Note</h4>
                             <p class="mb-0">This privacy policy needs to be completed before the site goes live. Consider consulting with a lawyer familiar with nonprofit privacy requirements.</p>

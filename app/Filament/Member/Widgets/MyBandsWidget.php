@@ -198,7 +198,7 @@ class MyBandsWidget extends BaseWidget
     {
         $primaryLink = $band->primaryLink();
 
-        return str_replace('tabler:', 'tabler-', $primaryLink['icon'] ?? 'tabler-external-link');
+        return $primaryLink['icon'] ?? 'tabler-external-link';
     }
 
     public static function canView(): bool

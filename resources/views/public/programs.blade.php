@@ -157,7 +157,7 @@
                     <div class="card-body">
                         <div class="flex items-center gap-3 mb-4">
                             <div class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center">
-                                <x-unicon name="tabler:music" class="size-6 text-white" />
+                                <x-icon name="tabler-music" class="size-6 text-white" />
                             </div>
                             <h3 class="card-title text-2xl">Real Book Club</h3>
                         </div>
@@ -188,7 +188,7 @@
                         </div>
 
                         <div class="alert alert-warning">
-                            <x-unicon name="tabler:info-circle" class="size-4" />
+                            <x-icon name="tabler-info-circle" class="size-4" />
                             <span class="text-sm">Bring your instrument and a Real Book (or we'll share!)</span>
                         </div>
                     </div>
@@ -199,7 +199,7 @@
                     <div class="card bg-base-100 shadow-lg">
                         <div class="card-body">
                             <div class="flex items-center gap-3 mb-3">
-                                <x-unicon name="tabler:users" class="size-6 text-primary" />
+                                <x-icon name="tabler-users" class="size-6 text-primary" />
                                 <h4 class="card-title">Songwriter Circle</h4>
                             </div>
                             <p class="text-sm mb-3">
@@ -213,7 +213,7 @@
                     <div class="card bg-base-100 shadow-lg">
                         <div class="card-body">
                             <div class="flex items-center gap-3 mb-3">
-                                <x-unicon name="tabler:microphone" class="size-6 text-secondary" />
+                                <x-icon name="tabler-microphone" class="size-6 text-secondary" />
                                 <h4 class="card-title">Monthly Meetup</h4>
                             </div>
                             <p class="text-sm mb-3">
@@ -227,7 +227,7 @@
                     <div class="card bg-base-100 shadow-lg">
                         <div class="card-body">
                             <div class="flex items-center gap-3 mb-3">
-                                <x-unicon name="tabler:headphones" class="size-6 text-accent" />
+                                <x-icon name="tabler-headphones" class="size-6 text-accent" />
                                 <h4 class="card-title">Production Meetup</h4>
                             </div>
                             <p class="text-sm mb-3">
@@ -336,7 +336,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="card bg-base-100">
                     <div class="card-body text-center">
-                        <x-unicon name="tabler:number-1" class="size-8 mx-auto" />
+                        <x-icon name="tabler-number-1" class="size-8 mx-auto" />
                         <h3 class="font-bold">Join CMC</h3>
                         <p class="text-sm">Become a member to access all programs</p>
                     </div>
@@ -344,7 +344,7 @@
 
                 <div class="card bg-base-100">
                     <div class="card-body text-center">
-                        <x-unicon name="tabler:number-2" class="size-8 mx-auto" />
+                        <x-icon name="tabler-number-2" class="size-8 mx-auto" />
                         <h3 class="font-bold">Choose Your Path</h3>
                         <p class="text-sm">Practice, perform, or join our clubs</p>
                     </div>
@@ -352,7 +352,7 @@
 
                 <div class="card bg-base-100">
                     <div class="card-body text-center">
-                        <x-unicon name="tabler:number-3" class="size-8 mx-auto" />
+                        <x-icon name="tabler-number-3" class="size-8 mx-auto" />
                         <h3 class="font-bold">Make Music</h3>
                         <p class="text-sm">Connect and create with the community</p>
                     </div>

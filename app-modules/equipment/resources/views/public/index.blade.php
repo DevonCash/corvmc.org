@@ -76,7 +76,7 @@
                 <!-- Filter Button -->
                 <div class="form-control">
                     <button type="submit" class="btn btn-primary">
-                        <x-unicon name="tabler:search" class="size-4" />
+                        <x-icon name="tabler-search" class="size-4" />
                         Filter
                     </button>
                 </div>
@@ -105,7 +105,7 @@
                                      class="rounded-xl h-48 w-full object-cover" />
                             @else
                                 <div class="bg-base-200 rounded-xl h-48 w-full flex items-center justify-center">
-                                    <x-unicon name="tabler:music" class="size-16 text-base-content/30" />
+                                    <x-icon name="tabler-music" class="size-16 text-base-content/30" />
                                 </div>
                             @endif
                         </figure>
@@ -130,12 +130,12 @@
                             <div class="flex items-center gap-2 mt-2">
                                 @if($item->is_available)
                                     <div class="badge badge-success gap-1">
-                                        <x-unicon name="tabler:check" class="size-3" />
+                                        <x-icon name="tabler-check" class="size-3" />
                                         Available
                                     </div>
                                 @else
                                     <div class="badge badge-warning gap-1">
-                                        <x-unicon name="tabler:clock" class="size-3" />
+                                        <x-icon name="tabler-clock" class="size-3" />
                                         In Use
                                     </div>
                                     @if($item->currentLoan)
@@ -178,7 +178,7 @@
         @else
             <!-- No Equipment Found -->
             <div class="text-center py-16">
-                <x-unicon name="tabler:search-off" class="size-16 mx-auto text-base-content/30 mb-4" />
+                <x-icon name="tabler-search-off" class="size-16 mx-auto text-base-content/30 mb-4" />
                 <h3 class="text-2xl font-bold mb-2">No Equipment Found</h3>
                 <p class="text-base-content/70 mb-4">
                     Try adjusting your search criteria or clearing the filters.
@@ -212,7 +212,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div class="text-center">
                         <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                            <x-unicon name="tabler:user-check" class="size-8 text-primary-content" />
+                            <x-icon name="tabler-user-check" class="size-8 text-primary-content" />
                         </div>
                         <h3 class="text-xl font-bold mb-2">1. Be a Member</h3>
                         <p class="text-base-content/70">
@@ -222,7 +222,7 @@
 
                     <div class="text-center">
                         <div class="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                            <x-unicon name="tabler:message" class="size-8 text-secondary-content" />
+                            <x-icon name="tabler-message" class="size-8 text-secondary-content" />
                         </div>
                         <h3 class="text-xl font-bold mb-2">2. Contact Us</h3>
                         <p class="text-base-content/70">
@@ -232,7 +232,7 @@
 
                     <div class="text-center">
                         <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                            <x-unicon name="tabler:calendar" class="size-8 text-accent-content" />
+                            <x-icon name="tabler-calendar" class="size-8 text-accent-content" />
                         </div>
                         <h3 class="text-xl font-bold mb-2">3. Schedule Pickup</h3>
                         <p class="text-base-content/70">
@@ -243,7 +243,7 @@
             @else
                 <div class="text-center max-w-2xl mx-auto">
                     <div class="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <x-unicon name="tabler:info-circle" class="size-10 text-primary" />
+                        <x-icon name="tabler-info-circle" class="size-10 text-primary" />
                     </div>
                     <p class="text-lg text-base-content/80 mb-4">
                         This equipment catalog showcases instruments and gear available through CMC.

@@ -40,7 +40,7 @@
             @else
                 <!-- Default album cover design -->
                 <div class="w-full h-full bg-base-300 flex items-center justify-center">
-                    <x-unicon name="tabler:guitar-pick" class="size-24 text-base-content/20" />
+                    <x-icon name="tabler-guitar-pick" class="size-24 text-base-content/20" />
                 </div>
                 <div class="absolute inset-0 bg-black/30"></div>
             @endif
@@ -68,7 +68,7 @@
 
                 @if ($band->hometown)
                     <div class="flex items-center gap-1">
-                        <x-unicon name="tabler:map-pin" class="size-3" />
+                        <x-icon name="tabler-map-pin" class="size-3" />
                         <span>{{ $band->hometown }}</span>
                     </div>
                 @endif
