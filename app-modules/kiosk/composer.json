@@ -1,0 +1,24 @@
+{
+	"name": "corvmc/kiosk",
+	"description": "Kiosk API module for point-of-sale and check-in functionality",
+	"type": "library",
+	"version": "1.0",
+	"license": "proprietary",
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"CorvMC\\Kiosk\\": "src/",
+			"CorvMC\\Kiosk\\Tests\\": "tests/",
+			"CorvMC\\Kiosk\\Database\\Factories\\": "database/factories/",
+			"CorvMC\\Kiosk\\Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"laravel": {
+			"providers": [
+				"CorvMC\\Kiosk\\Providers\\KioskServiceProvider"
+			]
+		}
+	}
+}

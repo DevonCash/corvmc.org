@@ -32,6 +32,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Cashier\Billable;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
@@ -129,7 +130,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenants
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use Billable, HasCredits, HasFactory, HasMembershipStatus, HasRoles, HasTrust, Impersonate, LogsActivity, Notifiable, SoftDeletes;
+    use Billable, HasApiTokens, HasCredits, HasFactory, HasMembershipStatus, HasRoles, HasTrust, Impersonate, LogsActivity, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

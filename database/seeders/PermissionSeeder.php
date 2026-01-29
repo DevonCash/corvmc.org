@@ -212,6 +212,15 @@ class PermissionSeeder extends Seeder
             'manage band contact info',
         ]);
 
+        // Staff - General staff access for kiosk and staff panel
+        $staff = Role::firstOrCreate(['name' => 'staff']);
+        $staff->syncPermissions([
+            'view users',
+            'view bands',
+            'view productions',
+            'view reservations',
+        ]);
+
         // Sustaining Member - Enhanced features for paying members
         $sustainingMember = Role::firstOrCreate(['name' => 'sustaining member']);
         $sustainingMember->syncPermissions([
