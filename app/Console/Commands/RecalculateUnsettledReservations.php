@@ -111,10 +111,14 @@ class RecalculateUnsettledReservations extends Command
      */
     protected function processReservation(RehearsalReservation $reservation, bool $isDryRun, bool $recalculateCredits): array
     {
-        $user = $reservation->getBillableUser();
+        try {
+            $user = $reservation->getBillableUser();
+        } catch (\Throwable $e) {
+            $reserverName = $reservation->reservable?->name ?? 'Unknown';
+            $date = $reservation->reserved_at?->format('M j, Y g:ia') ?? 'Unknown date';
+            $this->warn("- {$reserverName} ({$date}): Skipped - {$e->getMessage()}");
 
-        if (! $user) {
-            return ['changed' => false, 'error' => 'No billable user found'];
+            return ['changed' => false, 'error' => $e->getMessage()];
         }
 
         try {
