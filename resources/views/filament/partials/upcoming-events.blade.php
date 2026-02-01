@@ -124,7 +124,7 @@
                 No events are currently scheduled in the community
             </p>
             @if(auth()->user()?->can('create events'))
-                <a href="{{ route('filament.staff.resources.events.create') }}"
+                <a href="{{ route('filament.staff.resources.events.index') }}"
                    class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">
                     <x-tabler-plus class="w-4 h-4" />
                     Create Event
