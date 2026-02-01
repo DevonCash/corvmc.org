@@ -112,61 +112,24 @@ class StaffDashboard extends Page
     }
 
     /**
-     * Get membership health data using GetSubscriptionStats action.
+     * Get combined monthly revenue data (subscriptions + charges).
      */
-    public function getMembershipHealthData(): array
+    public function getMonthlyRevenueData(): array
     {
+        // Get subscription stats
         $stats = GetSubscriptionStats::run();
 
-        // Estimate Stripe fees: 2.9% + $0.30 per transaction
+        // Estimate Stripe fees for subscriptions: 2.9% + $0.30 per transaction
         $subscriptionCount = $stats->active_subscriptions_count;
         $mrrTotalCents = $stats->mrr_total->getMinorAmount()->toInt();
+        $subscriptionFeesCents = ($subscriptionCount * 30) + (int) round($mrrTotalCents * 0.029);
 
-        // Per-transaction fee ($0.30 × number of subscriptions)
-        $fixedFeesCents = $subscriptionCount * 30;
-        // Percentage fee (2.9% of total)
-        $percentageFeesCents = (int) round($mrrTotalCents * 0.029);
-        $totalFeesCents = $fixedFeesCents + $percentageFeesCents;
-
-        $feeCost = \Brick\Money\Money::ofMinor($totalFeesCents, 'USD');
-        $netRevenue = $stats->mrr_total->minus($feeCost);
-
-        return [
-            'sustaining_members' => $stats->sustaining_members,
-            'subscription_net_change' => $stats->subscription_net_change_last_month,
-            'mrr_total' => $stats->mrr_total->formatTo('en_US'),
-            'mrr_base' => $netRevenue->formatTo('en_US'),
-            'fee_cost' => $feeCost->formatTo('en_US'),
-            'average_mrr' => $stats->average_mrr->formatTo('en_US'),
-            'median_contribution' => $stats->median_contribution->formatTo('en_US'),
-            'new_members_this_month' => $stats->new_members_this_month,
-            'active_subscriptions' => $stats->active_subscriptions_count,
-        ];
-    }
-
-    /**
-     * Get this month's charges summary.
-     */
-    public function getMonthlyChargesData(): array
-    {
+        // Get this month's charges
         $startOfMonth = now()->startOfMonth();
         $endOfMonth = now()->endOfMonth();
-
-        // Get all charges created this month
         $charges = Charge::whereBetween('created_at', [$startOfMonth, $endOfMonth])->get();
 
-        // Calculate totals by status
-        $byStatus = [];
-        foreach (ChargeStatus::cases() as $status) {
-            $statusCharges = $charges->where('status', $status);
-            $byStatus[$status->value] = [
-                'count' => $statusCharges->count(),
-                'gross' => $statusCharges->sum(fn ($c) => $c->amount->getMinorAmount()->toInt()),
-                'net' => $statusCharges->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt()),
-            ];
-        }
-
-        // Calculate totals by payment method (for paid charges only)
+        // Charges by payment method
         $paidCharges = $charges->where('status', ChargeStatus::Paid);
         $byPaymentMethod = $paidCharges->groupBy('payment_method')->map(function ($group, $method) {
             return [
@@ -174,28 +137,52 @@ class StaffDashboard extends Page
                 'count' => $group->count(),
                 'total' => $group->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt()),
             ];
-        })->values()->toArray();
+        });
 
-        // Overall totals
-        $totalGross = $charges->sum(fn ($c) => $c->amount->getMinorAmount()->toInt());
-        $totalNet = $charges->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt());
-        $totalPaid = $paidCharges->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt());
-        $totalPending = $charges->where('status', ChargeStatus::Pending)
+        // Charge totals
+        $chargesPaidCents = $paidCharges->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt());
+        $chargesPendingCents = $charges->where('status', ChargeStatus::Pending)
             ->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt());
-        $totalCreditsApplied = $totalGross - $totalNet;
+        $chargesGrossCents = $charges->sum(fn ($c) => $c->amount->getMinorAmount()->toInt());
+        $creditsAppliedCents = $chargesGrossCents - $charges->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt());
+
+        // Stripe charges (for fee calculation)
+        $stripeChargesCents = $byPaymentMethod->get('stripe')['total'] ?? 0;
+        $stripeChargesCount = $byPaymentMethod->get('stripe')['count'] ?? 0;
+        $chargesFeesCents = ($stripeChargesCount * 30) + (int) round($stripeChargesCents * 0.029);
+
+        // Cash collected (no fees)
+        $cashCollectedCents = $byPaymentMethod->get('cash')['total'] ?? 0;
+
+        // Combined totals
+        $totalGrossRevenueCents = $mrrTotalCents + $chargesPaidCents;
+        $totalFeesCents = $subscriptionFeesCents + $chargesFeesCents;
+        $totalNetRevenueCents = $totalGrossRevenueCents - $totalFeesCents;
 
         return [
-            'total_charges' => $charges->count(),
-            'total_gross' => Money::ofMinor($totalGross, 'USD')->formatTo('en_US'),
-            'total_net' => Money::ofMinor($totalNet, 'USD')->formatTo('en_US'),
-            'total_paid' => Money::ofMinor($totalPaid, 'USD')->formatTo('en_US'),
-            'total_pending' => Money::ofMinor($totalPending, 'USD')->formatTo('en_US'),
-            'total_credits_applied' => Money::ofMinor($totalCreditsApplied, 'USD')->formatTo('en_US'),
-            'paid_count' => $paidCharges->count(),
-            'pending_count' => $charges->where('status', ChargeStatus::Pending)->count(),
-            'comped_count' => $charges->where('status', ChargeStatus::Comped)->count(),
-            'by_payment_method' => $byPaymentMethod,
-            'by_status' => $byStatus,
+            // Membership stats
+            'sustaining_members' => $stats->sustaining_members,
+            'subscription_net_change' => $stats->subscription_net_change_last_month,
+            'active_subscriptions' => $subscriptionCount,
+            'new_members_this_month' => $stats->new_members_this_month,
+            'average_contribution' => $stats->average_mrr->formatTo('en_US'),
+            'median_contribution' => $stats->median_contribution->formatTo('en_US'),
+
+            // Revenue breakdown
+            'subscriptions_total' => Money::ofMinor($mrrTotalCents, 'USD')->formatTo('en_US'),
+            'charges_collected' => Money::ofMinor($chargesPaidCents, 'USD')->formatTo('en_US'),
+            'charges_pending' => Money::ofMinor($chargesPendingCents, 'USD')->formatTo('en_US'),
+            'charges_pending_count' => $charges->where('status', ChargeStatus::Pending)->count(),
+            'credits_applied' => Money::ofMinor($creditsAppliedCents, 'USD')->formatTo('en_US'),
+            'cash_collected' => Money::ofMinor($cashCollectedCents, 'USD')->formatTo('en_US'),
+
+            // Totals
+            'total_gross' => Money::ofMinor($totalGrossRevenueCents, 'USD')->formatTo('en_US'),
+            'total_fees' => Money::ofMinor($totalFeesCents, 'USD')->formatTo('en_US'),
+            'total_net' => Money::ofMinor($totalNetRevenueCents, 'USD')->formatTo('en_US'),
+
+            // For detailed breakdown
+            'by_payment_method' => $byPaymentMethod->values()->toArray(),
         ];
     }
 
