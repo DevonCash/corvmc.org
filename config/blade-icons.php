@@ -164,7 +164,7 @@ return [
         |
         */
 
-        'disabled' => app()->runningUnitTests() || app()->runningInConsole(),
+        'disabled' => false,
 
         /*
         |----------------------------------------------------------------------
