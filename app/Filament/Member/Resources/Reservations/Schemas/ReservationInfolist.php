@@ -45,20 +45,20 @@ class ReservationInfolist
                     ->columns(3)
                     ->schema([
                         Flex::make([
-                            TextEntry::make('charge.net_amount')
-                                ->label('Total Cost')
-                                ->state(fn(?Model $record) => ($record->charge?->net_amount?->getMinorAmount()->toFloat() ?? 0.0) / 100.0)
-                                ->money('USD'),
                             TextEntry::make('charge.status')
-                                ->label('Status')
+                                ->label('Total Cost')
                                 ->badge()
-                                ->placeholder('No charge')
+                                ->beforeContent(fn(?Model $record): ?string => $record->charge?->net_amount->formatTo('en_US'))
+                                ->placeholder('No charge'),
+                            TextEntry::make('breakdown')
+                                ->state(function (?Model $record): ?string {
+                                    if (! $record instanceof RehearsalReservation) {
+                                        return null;
+                                    }
+
+                                    return '(' . $record->hours_used . ' hrs - ' . $record->free_hours_used . ' free hrs) × $15';
+                                })
                         ])->columnSpanFull(),
-                        TextEntry::make('hours_used')->suffix(' hrs'),
-                        TextEntry::make('free_hours_used')
-                            ->label('Free Hours')
-                            ->suffix(' hrs'),
-                        TextEntry::make('price')->state('$15'),
                     ])
                     ->extraAttributes(['style' => 'padding: calc(var(--spacing) * 4);'])
                     ->visible(fn(?Model $record): bool => $record instanceof RehearsalReservation),
@@ -103,9 +103,10 @@ class ReservationInfolist
                             ->url(fn(?Model $record): ?string => UserResource::getUrl('edit', [
                                 'record' => $record?->reservable->getKey(),
                             ]))
-                            ->visible(fn(?Model $record): bool =>
+                            ->visible(
+                                fn(?Model $record): bool =>
                                 $record?->reservable instanceof User &&
-                                in_array(UserResource::class, Filament::getCurrentPanel()->getResources())
+                                    in_array(UserResource::class, Filament::getCurrentPanel()->getResources())
                             )
                             ->openUrlInNewTab(true)
                             ->icon('heroicon-o-arrow-top-right-on-square'),
