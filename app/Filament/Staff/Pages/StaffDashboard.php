@@ -133,12 +133,30 @@ class StaffDashboard extends Page
      */
     public function getRecentActivities(): \Illuminate\Support\Collection
     {
-        return Activity::with(['subject', 'causer'])
+        // Filter out activities with subject types that no longer exist
+        return Activity::with(['causer'])
+            ->whereNotNull('subject_type')
+            ->where(function ($query) {
+                $query->where('subject_type', 'like', 'CorvMC\\%')
+                    ->orWhere('subject_type', 'like', 'App\\Models\\User%')
+                    ->orWhere('subject_type', 'like', 'App\\Models\\Band%')
+                    ->orWhere('subject_type', 'like', 'App\\Models\\MemberProfile%');
+            })
             ->latest()
-            ->limit(15)
+            ->limit(30)
             ->get()
-            ->filter(fn ($activity) => $activity->subject !== null)
             ->map(function (Activity $activity) {
+                // Safely load subject - skip if class doesn't exist
+                try {
+                    $activity->load('subject');
+                } catch (\Throwable) {
+                    return null;
+                }
+
+                if ($activity->subject === null) {
+                    return null;
+                }
+
                 return [
                     'id' => $activity->id,
                     'description' => $this->formatActivityDescription($activity),
@@ -147,7 +165,9 @@ class StaffDashboard extends Page
                     'icon' => $this->getActivityIcon($activity),
                     'color' => $this->getActivityColor($activity),
                 ];
-            });
+            })
+            ->filter()
+            ->take(15);
     }
 
     protected function formatActivityDescription(Activity $activity): string
