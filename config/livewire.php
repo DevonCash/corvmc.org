@@ -64,7 +64,7 @@ return [
     */
 
     'temporary_file_upload' => [
-        'disk' => 'r2', // Use R2 for temporary uploads
+        'disk' => 'r2-temp', // Use R2 with throw=>false so fallback works
         'rules' => ['required', 'file', 'max:12288'],
         'directory' => 'livewire-tmp', // Separate directory for temp files
         'middleware' => null,
