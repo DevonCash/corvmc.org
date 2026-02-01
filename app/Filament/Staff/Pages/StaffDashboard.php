@@ -3,9 +3,12 @@
 namespace App\Filament\Staff\Pages;
 
 use BackedEnum;
+use Brick\Money\Money;
 use CorvMC\Equipment\Models\EquipmentLoan;
 use CorvMC\Events\Models\Event;
 use CorvMC\Finance\Actions\Subscriptions\GetSubscriptionStats;
+use CorvMC\Finance\Enums\ChargeStatus;
+use CorvMC\Finance\Models\Charge;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\SpaceClosure;
 use Filament\Pages\Page;
@@ -138,6 +141,61 @@ class StaffDashboard extends Page
             'median_contribution' => $stats->median_contribution->formatTo('en_US'),
             'new_members_this_month' => $stats->new_members_this_month,
             'active_subscriptions' => $stats->active_subscriptions_count,
+        ];
+    }
+
+    /**
+     * Get this month's charges summary.
+     */
+    public function getMonthlyChargesData(): array
+    {
+        $startOfMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
+
+        // Get all charges created this month
+        $charges = Charge::whereBetween('created_at', [$startOfMonth, $endOfMonth])->get();
+
+        // Calculate totals by status
+        $byStatus = [];
+        foreach (ChargeStatus::cases() as $status) {
+            $statusCharges = $charges->where('status', $status);
+            $byStatus[$status->value] = [
+                'count' => $statusCharges->count(),
+                'gross' => $statusCharges->sum(fn ($c) => $c->amount->getMinorAmount()->toInt()),
+                'net' => $statusCharges->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt()),
+            ];
+        }
+
+        // Calculate totals by payment method (for paid charges only)
+        $paidCharges = $charges->where('status', ChargeStatus::Paid);
+        $byPaymentMethod = $paidCharges->groupBy('payment_method')->map(function ($group, $method) {
+            return [
+                'method' => $method ?: 'unknown',
+                'count' => $group->count(),
+                'total' => $group->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt()),
+            ];
+        })->values()->toArray();
+
+        // Overall totals
+        $totalGross = $charges->sum(fn ($c) => $c->amount->getMinorAmount()->toInt());
+        $totalNet = $charges->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt());
+        $totalPaid = $paidCharges->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt());
+        $totalPending = $charges->where('status', ChargeStatus::Pending)
+            ->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt());
+        $totalCreditsApplied = $totalGross - $totalNet;
+
+        return [
+            'total_charges' => $charges->count(),
+            'total_gross' => Money::ofMinor($totalGross, 'USD')->formatTo('en_US'),
+            'total_net' => Money::ofMinor($totalNet, 'USD')->formatTo('en_US'),
+            'total_paid' => Money::ofMinor($totalPaid, 'USD')->formatTo('en_US'),
+            'total_pending' => Money::ofMinor($totalPending, 'USD')->formatTo('en_US'),
+            'total_credits_applied' => Money::ofMinor($totalCreditsApplied, 'USD')->formatTo('en_US'),
+            'paid_count' => $paidCharges->count(),
+            'pending_count' => $charges->where('status', ChargeStatus::Pending)->count(),
+            'comped_count' => $charges->where('status', ChargeStatus::Comped)->count(),
+            'by_payment_method' => $byPaymentMethod,
+            'by_status' => $byStatus,
         ];
     }
 
