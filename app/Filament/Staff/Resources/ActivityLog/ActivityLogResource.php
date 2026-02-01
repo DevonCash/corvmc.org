@@ -69,9 +69,30 @@ class ActivityLogResource extends Resource
         return User::me()?->can('delete activity log') ?? false;
     }
 
+    /**
+     * Valid subject types that still exist in the codebase.
+     * Filter out legacy/removed model classes to prevent errors.
+     */
+    protected static array $validSubjectTypes = [
+        User::class,
+        MemberProfile::class,
+        Band::class,
+        \CorvMC\Events\Models\Event::class,
+        \CorvMC\SpaceManagement\Models\Reservation::class,
+        \CorvMC\SpaceManagement\Models\RehearsalReservation::class,
+        \CorvMC\Equipment\Models\Equipment::class,
+        \CorvMC\Equipment\Models\EquipmentLoan::class,
+    ];
+
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $query = parent::getEloquentQuery()->with(['causer', 'subject']);
+        // Filter to valid subject types first, then eager load
+        $query = parent::getEloquentQuery()
+            ->with(['causer', 'subject'])
+            ->where(function ($q) {
+                $q->whereNull('subject_type')
+                    ->orWhereIn('subject_type', static::$validSubjectTypes);
+            });
 
         $currentUser = User::me();
 
