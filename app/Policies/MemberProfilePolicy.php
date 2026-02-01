@@ -13,7 +13,7 @@ class MemberProfilePolicy
         return $user->hasRole('directory moderator');
     }
 
-    public function viewAny(User $user): bool
+    public function viewAny(?User $user): bool
     {
         return true;
     }
@@ -26,7 +26,7 @@ class MemberProfilePolicy
         }
 
         // All other visibility levels require authentication
-        if (! $user) {
+        if (!$user) {
             return false;
         }
 
@@ -56,12 +56,18 @@ class MemberProfilePolicy
 
     public function update(User $user, MemberProfile $memberProfile): bool
     {
-        return $this->manage($user) || $memberProfile->isOwnedBy($user);
+        if( $user && $memberProfile->isOwnedBy($user)) {
+            return true;
+        }
+        return $this->manage($user);
     }
 
     public function delete(User $user, MemberProfile $memberProfile): bool
     {
-        return $this->manage($user) || $memberProfile->isOwnedBy($user);
+        if ($user && $user->isOwnedBy($user)) {
+            return true;
+        }
+        return $this->manage($user);
     }
 
     public function restore(User $user, MemberProfile $memberProfile): bool
