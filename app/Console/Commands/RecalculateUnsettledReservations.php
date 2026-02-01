@@ -40,19 +40,22 @@ class RecalculateUnsettledReservations extends Command
         }
 
         $query = RehearsalReservation::query()
-            ->with(['charge', 'reservable'])
-            ->whereHas('charge');
+            ->with(['charge', 'reservable']);
 
         if (! $includeAll) {
-            $query->whereHas('charge', function ($q) {
-                $q->where('status', ChargeStatus::Pending);
+            // Include reservations without charges OR with pending charges
+            $query->where(function ($q) {
+                $q->whereDoesntHave('charge')
+                    ->orWhereHas('charge', function ($chargeQuery) {
+                        $chargeQuery->where('status', ChargeStatus::Pending);
+                    });
             });
         }
 
         $reservations = $query->get();
 
         if ($reservations->isEmpty()) {
-            $this->info('No reservations found to recalculate.');
+            $this->info('No reservations found to process.');
 
             return 0;
         }
@@ -62,6 +65,7 @@ class RecalculateUnsettledReservations extends Command
 
         $results = [
             'processed' => 0,
+            'created' => 0,
             'changed' => 0,
             'unchanged' => 0,
             'errors' => 0,
@@ -75,6 +79,9 @@ class RecalculateUnsettledReservations extends Command
             if ($result['error']) {
                 $results['errors']++;
                 $this->error("  Error: {$result['error']}");
+            } elseif ($result['created'] ?? false) {
+                $results['created']++;
+                $results['details'][] = $result;
             } elseif ($result['changed']) {
                 $results['changed']++;
                 $results['details'][] = $result;
@@ -86,6 +93,7 @@ class RecalculateUnsettledReservations extends Command
         $this->newLine();
         $this->info('Summary:');
         $this->line("  Processed: {$results['processed']}");
+        $this->line("  Created: {$results['created']}");
         $this->line("  Changed: {$results['changed']}");
         $this->line("  Unchanged: {$results['unchanged']}");
         $this->line("  Errors: {$results['errors']}");
@@ -99,17 +107,10 @@ class RecalculateUnsettledReservations extends Command
     }
 
     /**
-     * @return array{changed: bool, error: string|null, old_amount?: int, new_amount?: int, old_net?: int, new_net?: int}
+     * @return array{changed: bool, created?: bool, error: string|null, old_amount?: int, new_amount?: int, old_net?: int, new_net?: int}
      */
     protected function processReservation(RehearsalReservation $reservation, bool $isDryRun, bool $recalculateCredits): array
     {
-        /** @var Charge|null $charge */
-        $charge = $reservation->charge;
-
-        if (! $charge) {
-            return ['changed' => false, 'error' => 'No charge found'];
-        }
-
         $user = $reservation->getBillableUser();
 
         if (! $user) {
@@ -121,6 +122,14 @@ class RecalculateUnsettledReservations extends Command
             $pricing = CalculatePriceForUser::run($reservation, $user);
         } catch (\Throwable $e) {
             return ['changed' => false, 'error' => $e->getMessage()];
+        }
+
+        /** @var Charge|null $charge */
+        $charge = $reservation->charge;
+
+        // If no charge exists, create one
+        if (! $charge) {
+            return $this->createChargeForReservation($reservation, $user, $pricing, $isDryRun);
         }
 
         // Convert Money objects to cents for comparison
@@ -228,6 +237,93 @@ class RecalculateUnsettledReservations extends Command
             'new_amount' => $newAmount,
             'old_net' => $oldNetAmount,
             'new_net' => $newNetAmount,
+        ];
+    }
+
+    /**
+     * Create a new charge for a reservation that doesn't have one.
+     *
+     * @return array{changed: bool, created: bool, error: string|null, new_amount?: int, new_net?: int}
+     */
+    protected function createChargeForReservation(
+        RehearsalReservation $reservation,
+        \App\Models\User $user,
+        \CorvMC\Finance\Data\PriceCalculationData $pricing,
+        bool $isDryRun
+    ): array {
+        $reserverName = $reservation->getResponsibleUser()?->name ?? 'Unknown';
+        $date = $reservation->reserved_at->format('M j, Y g:ia');
+
+        $this->line("- {$reserverName} ({$date}):");
+        $this->warn("    MISSING CHARGE - Creating new charge");
+        $this->line("    Amount: \${$this->formatCents($pricing->amount)}");
+        $this->line("    Net:    \${$this->formatCents($pricing->net_amount)}");
+
+        if (! empty($pricing->credits_applied)) {
+            $this->line("    Credits: " . json_encode($pricing->credits_applied));
+        }
+
+        if ($isDryRun) {
+            return [
+                'changed' => false,
+                'created' => true,
+                'error' => null,
+                'new_amount' => $pricing->amount,
+                'new_net' => $pricing->net_amount,
+            ];
+        }
+
+        DB::transaction(function () use ($reservation, $user, $pricing) {
+            // Create the charge
+            $charge = Charge::createForChargeable(
+                $reservation,
+                $pricing->amount,
+                $pricing->net_amount,
+                $pricing->credits_applied ?: null
+            );
+
+            // Mark as paid if fully covered by credits
+            if ($pricing->net_amount === 0) {
+                $charge->update([
+                    'status' => ChargeStatus::Paid,
+                    'payment_method' => 'credits',
+                    'paid_at' => now(),
+                ]);
+            }
+
+            // Update derived fields on reservation
+            if ($reservation->isFillable('free_hours_used')) {
+                $freeHoursBlocks = $pricing->credits_applied['free_hours'] ?? 0;
+                $minutesPerBlock = config('finance.credits.minutes_per_block', 30);
+                $reservation->updateQuietly([
+                    'free_hours_used' => ($freeHoursBlocks * $minutesPerBlock) / 60,
+                ]);
+            }
+
+            // Deduct credits from user
+            if (! empty($pricing->credits_applied)) {
+                foreach ($pricing->credits_applied as $creditTypeKey => $blocks) {
+                    if ($blocks > 0) {
+                        $creditType = CreditType::from($creditTypeKey);
+                        $user->deductCredit(
+                            $blocks,
+                            $creditType,
+                            'charge_created',
+                            $charge->id
+                        );
+                    }
+                }
+            }
+        });
+
+        $this->info('    Created successfully');
+
+        return [
+            'changed' => false,
+            'created' => true,
+            'error' => null,
+            'new_amount' => $pricing->amount,
+            'new_net' => $pricing->net_amount,
         ];
     }
 
