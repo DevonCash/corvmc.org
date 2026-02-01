@@ -6,7 +6,9 @@ use CorvMC\Finance\Data\SubscriptionStatsData;
 use CorvMC\Finance\Models\Subscription;
 use App\Models\User;
 use Brick\Money\Money;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetSubscriptionStats
@@ -52,12 +54,16 @@ class GetSubscriptionStats
 
             $subscriptionNetChange = $newSubscriptionsLastMonth - $cancelledSubscriptionsLastMonth;
 
-            // Calculate MRR metrics
-            $mrrBaseInCents = $activeSubscriptions->sum(fn ($subscription) => $subscription->base_amount?->getMinorAmount()->toInt() ?? 0);
-            $mrrTotalInCents = $activeSubscriptions->sum(fn ($subscription) => $subscription->total_amount?->getMinorAmount()->toInt() ?? 0);
+            // Get subscription amounts from Stripe
+            $subscriptionAmounts = $this->getSubscriptionAmountsFromStripe($activeSubscriptions);
 
-            $mrrBase = Money::ofMinor($mrrBaseInCents, 'USD');
+            // Calculate MRR metrics from Stripe data
+            $mrrTotalInCents = $subscriptionAmounts->sum('amount');
             $mrrTotal = Money::ofMinor($mrrTotalInCents, 'USD');
+
+            // Base MRR (before Stripe fees - estimate ~2.9% + 30¢)
+            $mrrBaseInCents = $subscriptionAmounts->sum('amount');
+            $mrrBase = Money::ofMinor($mrrBaseInCents, 'USD');
 
             // Calculate average MRR per active subscription
             $averageMrr = $activeSubscriptionsCount > 0
@@ -65,7 +71,7 @@ class GetSubscriptionStats
                 : Money::zero('USD');
 
             // Calculate median contribution
-            $medianContribution = $this->calculateMedianContribution($activeSubscriptions);
+            $medianContribution = $this->calculateMedianContribution($subscriptionAmounts);
 
             return new SubscriptionStatsData(
                 total_users: $totalUsers,
@@ -83,17 +89,58 @@ class GetSubscriptionStats
     }
 
     /**
+     * Get subscription amounts from Stripe.
+     *
+     * @return Collection<int, array{subscription_id: int, amount: int}>
+     */
+    private function getSubscriptionAmountsFromStripe(Collection $subscriptions): Collection
+    {
+        return $subscriptions->map(function (Subscription $subscription) {
+            try {
+                // Get the Stripe subscription object
+                $stripeSubscription = $subscription->asStripeSubscription();
+
+                if (! $stripeSubscription) {
+                    return null;
+                }
+
+                // Get the total amount from subscription items
+                // Amount is in cents for USD
+                $amount = 0;
+                foreach ($stripeSubscription->items->data as $item) {
+                    if ($item->price->recurring) {
+                        $amount += $item->price->unit_amount * ($item->quantity ?? 1);
+                    }
+                }
+
+                return [
+                    'subscription_id' => $subscription->id,
+                    'amount' => $amount,
+                ];
+            } catch (\Throwable $e) {
+                Log::warning('Failed to fetch Stripe subscription', [
+                    'subscription_id' => $subscription->id,
+                    'stripe_id' => $subscription->stripe_id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return null;
+            }
+        })->filter()->values();
+    }
+
+    /**
      * Calculate the median contribution amount.
      */
-    private function calculateMedianContribution($subscriptions): Money
+    private function calculateMedianContribution(Collection $subscriptionAmounts): Money
     {
-        if ($subscriptions->isEmpty()) {
+        if ($subscriptionAmounts->isEmpty()) {
             return Money::zero('USD');
         }
 
-        // Get all total amounts in cents
-        $amounts = $subscriptions
-            ->map(fn ($subscription) => $subscription->total_amount?->getMinorAmount()->toInt() ?? 0)
+        // Get all amounts in cents
+        $amounts = $subscriptionAmounts
+            ->pluck('amount')
             ->filter(fn ($amount) => $amount > 0)
             ->sort()
             ->values();

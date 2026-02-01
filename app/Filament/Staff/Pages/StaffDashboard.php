@@ -115,12 +115,25 @@ class StaffDashboard extends Page
     {
         $stats = GetSubscriptionStats::run();
 
+        // Estimate Stripe fees: 2.9% + $0.30 per transaction
+        $subscriptionCount = $stats->active_subscriptions_count;
+        $mrrTotalCents = $stats->mrr_total->getMinorAmount()->toInt();
+
+        // Per-transaction fee ($0.30 × number of subscriptions)
+        $fixedFeesCents = $subscriptionCount * 30;
+        // Percentage fee (2.9% of total)
+        $percentageFeesCents = (int) round($mrrTotalCents * 0.029);
+        $totalFeesCents = $fixedFeesCents + $percentageFeesCents;
+
+        $feeCost = \Brick\Money\Money::ofMinor($totalFeesCents, 'USD');
+        $netRevenue = $stats->mrr_total->minus($feeCost);
+
         return [
             'sustaining_members' => $stats->sustaining_members,
             'subscription_net_change' => $stats->subscription_net_change_last_month,
             'mrr_total' => $stats->mrr_total->formatTo('en_US'),
-            'mrr_base' => $stats->mrr_base->formatTo('en_US'),
-            'fee_cost' => $stats->mrr_total->minus($stats->mrr_base)->formatTo('en_US'),
+            'mrr_base' => $netRevenue->formatTo('en_US'),
+            'fee_cost' => $feeCost->formatTo('en_US'),
             'average_mrr' => $stats->average_mrr->formatTo('en_US'),
             'median_contribution' => $stats->median_contribution->formatTo('en_US'),
             'new_members_this_month' => $stats->new_members_this_month,

@@ -54,11 +54,11 @@
                         {{ $data['mrr_total'] }}
                     </span>
                     <span class="ml-1 text-sm text-red-500 dark:text-red-400">
-                        ({{ $data['fee_cost'] }} fees)
+                        (-{{ $data['fee_cost'] }} fees)
                     </span>
                 </div>
                 <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Base: {{ $data['mrr_base'] }}
+                    Net: {{ $data['mrr_base'] }}
                 </div>
             </div>
 
