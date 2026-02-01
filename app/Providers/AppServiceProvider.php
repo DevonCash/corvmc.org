@@ -7,6 +7,7 @@ use App\Livewire\Synthesizers\MoneySynthesizer;
 use CorvMC\Finance\Models\Subscription;
 use App\Models\User;
 use App\Observers\ReservationObserver;
+use App\Observers\SpaceClosureObserver;
 use App\Observers\TagObserver;
 use App\Observers\UserObserver;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
@@ -120,6 +121,7 @@ class AppServiceProvider extends ServiceProvider
         \CorvMC\SpaceManagement\Models\RehearsalReservation::observe(ReservationObserver::class);
         \App\Models\EventReservation::observe(ReservationObserver::class);
         \CorvMC\Events\Models\Event::observe(\App\Observers\EventObserver::class);
+        \CorvMC\SpaceManagement\Models\SpaceClosure::observe(SpaceClosureObserver::class);
         Tag::observe(TagObserver::class);
 
         // Register facade aliases

@@ -48,7 +48,7 @@ describe('view', function () {
         $staff = User::factory()->withRole('practice space manager')->create();
         $owner = User::factory()->create();
         $reservation = RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $owner->id,
         ]);
 
@@ -58,7 +58,7 @@ describe('view', function () {
     it('allows owner to view their own reservation', function () {
         $owner = User::factory()->create();
         $reservation = RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $owner->id,
         ]);
 
@@ -69,7 +69,7 @@ describe('view', function () {
         $owner = User::factory()->create();
         $otherUser = User::factory()->create();
         $reservation = RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $owner->id,
         ]);
 
@@ -90,7 +90,7 @@ describe('confirm', function () {
         $staff = User::factory()->withRole('practice space manager')->create();
         $owner = User::factory()->create();
         $reservation = RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $owner->id,
         ]);
 
@@ -100,7 +100,7 @@ describe('confirm', function () {
     it('allows owner to confirm their own reservation', function () {
         $owner = User::factory()->create();
         $reservation = RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $owner->id,
         ]);
 
@@ -111,7 +111,7 @@ describe('confirm', function () {
         $owner = User::factory()->create();
         $otherUser = User::factory()->create();
         $reservation = RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $owner->id,
         ]);
 
@@ -124,7 +124,7 @@ describe('cancel', function () {
         $staff = User::factory()->withRole('practice space manager')->create();
         $owner = User::factory()->create();
         $reservation = RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $owner->id,
         ]);
 
@@ -134,7 +134,7 @@ describe('cancel', function () {
     it('allows owner to cancel their own reservation', function () {
         $owner = User::factory()->create();
         $reservation = RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $owner->id,
         ]);
 
@@ -145,7 +145,7 @@ describe('cancel', function () {
         $owner = User::factory()->create();
         $otherUser = User::factory()->create();
         $reservation = RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $owner->id,
         ]);
 

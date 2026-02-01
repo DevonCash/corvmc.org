@@ -20,7 +20,7 @@ class RevisionFactory extends Factory
     public function definition(): array
     {
         return [
-            'revisionable_type' => MemberProfile::class,
+            'revisionable_type' => 'member_profile',
             'revisionable_id' => MemberProfile::factory(),
             'original_data' => ['bio' => 'Original bio'],
             'proposed_changes' => ['bio' => $this->faker->paragraph()],

@@ -42,6 +42,7 @@ class RescheduleEvent
                     'title',
                     'description',
                     'location',
+                    'venue_id',
                     'event_link',
                     'ticket_url',
                     'ticket_price',
@@ -49,7 +50,12 @@ class RescheduleEvent
                     'visibility',
                     'event_type',
                     'distance_from_corvallis',
+                    'ticketing_enabled',
+                    'ticket_quantity',
+                    'ticket_price_override',
                 ]),
+                // Preserve time offsets from original event for doors/end if not explicitly set
+                $this->preserveTimeOffsets($originalEvent, $newEventData),
                 $newEventData
             );
 
@@ -73,13 +79,48 @@ class RescheduleEvent
                 $originalEvent->getFirstMedia('poster')?->copy($newEvent, 'poster');
             }
 
-            // Mark original event as rescheduled (sets status to Postponed, links to new event)
-            $originalEvent->reschedule($newEvent, $reason);
+            // Link original event to new one
+            // Keep cancelled events as cancelled; mark others as postponed
+            $newStatus = $originalEvent->status === EventStatus::Cancelled
+                ? EventStatus::Cancelled
+                : EventStatus::Postponed;
+
+            $originalEvent->update([
+                'status' => $newStatus,
+                'rescheduled_to_id' => $newEvent->id,
+                'reschedule_reason' => $reason,
+            ]);
 
             // Unpublish original event to prevent confusion
             $originalEvent->unpublish();
 
             return $newEvent;
         });
+    }
+
+    /**
+     * Preserve time offsets from the original event for doors and end times.
+     *
+     * If the original event had doors open 30 minutes before start, the new event
+     * will also have doors open 30 minutes before its new start time.
+     */
+    private function preserveTimeOffsets(Event $originalEvent, array $newEventData): array
+    {
+        $preserved = [];
+        $newStart = $newEventData['start_datetime'];
+
+        // Preserve doors time offset if original had doors_datetime
+        if ($originalEvent->doors_datetime && ! isset($newEventData['doors_datetime'])) {
+            $doorsOffset = $originalEvent->start_datetime->diffInMinutes($originalEvent->doors_datetime, false);
+            $preserved['doors_datetime'] = $newStart->copy()->addMinutes($doorsOffset);
+        }
+
+        // Preserve end time offset if original had end_datetime and new doesn't
+        if ($originalEvent->end_datetime && ! isset($newEventData['end_datetime'])) {
+            $endOffset = $originalEvent->start_datetime->diffInMinutes($originalEvent->end_datetime);
+            $preserved['end_datetime'] = $newStart->copy()->addMinutes($endOffset);
+        }
+
+        return $preserved;
     }
 }

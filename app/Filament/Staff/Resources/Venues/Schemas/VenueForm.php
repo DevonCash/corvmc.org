@@ -46,6 +46,7 @@ class VenueForm
     protected static function addressField(): TextInput
     {
         return TextInput::make('address')
+            ->required()
             ->maxLength(255)
             ->columnSpanFull();
     }

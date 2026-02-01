@@ -4,9 +4,10 @@ namespace App\Filament\Staff\Resources\SpaceManagement\Pages;
 
 use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationForm;
+use App\Filament\Staff\Resources\SpaceClosures\SpaceClosureResource;
 use App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource;
 use App\Filament\Staff\Resources\SpaceManagement\Widgets\SpaceStatsWidget;
-use App\Filament\Staff\Resources\SpaceManagement\Widgets\SpaceUsageWidget;
+use App\Filament\Staff\Resources\SpaceManagement\Widgets\UpcomingClosuresWidget;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -24,6 +25,12 @@ class ListSpaceUsage extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('space_closures')
+                ->label('Space Closures')
+                ->icon('tabler-calendar-off')
+                ->color('gray')
+                ->url(SpaceClosureResource::getUrl('index')),
+
             Action::make('create_reservation')
                 ->label('Create Reservation')
                 ->icon('tabler-calendar-plus')
@@ -61,8 +68,8 @@ class ListSpaceUsage extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
+            UpcomingClosuresWidget::class,
             SpaceStatsWidget::class,
-            SpaceUsageWidget::class,
         ];
     }
 
@@ -72,12 +79,12 @@ class ListSpaceUsage extends ListRecords
             'upcoming' => Tab::make('Upcoming')
                 ->icon('tabler-calendar-clock')
                 ->badge(function () {
-                    return Reservation::where('reserved_at', '>=', now()->startOfDay())
+                    return Reservation::where('reserved_until', '>', now())
                         ->where('status', '!=', 'cancelled')
                         ->count();
                 })
                 ->modifyQueryUsing(fn (Builder $query) => $query
-                    ->where('reserved_at', '>=', now()->startOfDay())
+                    ->where('reserved_until', '>', now())
                     ->where('status', '!=', 'cancelled')
                     ->orderBy('reserved_at', 'asc')),
 

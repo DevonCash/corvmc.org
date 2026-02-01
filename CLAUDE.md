@@ -240,6 +240,8 @@ protected function casts(): array {
 
 Uses **Pest** with `RefreshDatabase` trait and in-memory SQLite. Tests in `tests/Feature/` and `tests/Unit/`.
 
+**Important:** Do not run the full test suite (`composer test`) until you are about to commit a feature. Run targeted tests during development instead.
+
 ## Public Routes
 
 `/` (homepage), `/events`, `/events/{production}`, `/show-tonight`, `/members`, `/members/{profile}`, `/bands`, `/bands/{band}`, `/equipment`, `/about`, `/contribute`, `/sponsors`
@@ -327,5 +329,10 @@ Policies live in `app/Policies/` and use role-based authorization. See [docs/aut
 - Modules own domain knowledge (models expose `isOrganizedBy()`, `isOwnedBy()`)
 - Use roles + context, not permission strings (`hasRole()` + model helpers)
 - Domain verbs, not just CRUD (`publish`, `cancel`, `reschedule`)
+
+**Admin bypass behavior:**
+- Admins automatically pass all policy checks via `Gate::after()` in `AppServiceProvider`
+- Return `null` (not `false`) to deny non-admins while allowing admin override
+- Return `false` only for actions that should be impossible even for admins (e.g., confirming an already-confirmed reservation)
 
 **Manager roles:** `production manager` (Events), `practice space manager` (Reservations)

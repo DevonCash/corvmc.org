@@ -66,6 +66,8 @@ class ManageOrganizationSettings extends Page implements HasForms
             'enable_google_calendar_sync' => $googleCalendarSettings->enable_google_calendar_sync,
             'google_calendar_id' => $googleCalendarSettings->google_calendar_id,
             'reservation_buffer_minutes' => $reservationSettings->buffer_minutes,
+            'default_event_setup_minutes' => $reservationSettings->default_event_setup_minutes,
+            'default_event_teardown_minutes' => $reservationSettings->default_event_teardown_minutes,
         ]);
     }
 
@@ -171,6 +173,24 @@ class ManageOrganizationSettings extends Page implements HasForms
                             ->minValue(0)
                             ->maxValue(60)
                             ->default(0)
+                            ->suffix('minutes'),
+
+                        Forms\Components\TextInput::make('default_event_setup_minutes')
+                            ->label('Default Event Setup Time')
+                            ->helperText('Default minutes before an event starts to block for setup')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(480)
+                            ->default(120)
+                            ->suffix('minutes'),
+
+                        Forms\Components\TextInput::make('default_event_teardown_minutes')
+                            ->label('Default Event Teardown Time')
+                            ->helperText('Default minutes after an event ends to block for teardown')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(480)
+                            ->default(60)
                             ->suffix('minutes'),
                     ]),
 
@@ -357,6 +377,8 @@ class ManageOrganizationSettings extends Page implements HasForms
         $googleCalendarSettings->google_calendar_id = $data['google_calendar_id'] ?? null;
 
         $reservationSettings->buffer_minutes = (int) ($data['reservation_buffer_minutes'] ?? 0);
+        $reservationSettings->default_event_setup_minutes = (int) ($data['default_event_setup_minutes'] ?? 120);
+        $reservationSettings->default_event_teardown_minutes = (int) ($data['default_event_teardown_minutes'] ?? 60);
 
         $settings->save();
         $footerSettings->save();

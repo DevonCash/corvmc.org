@@ -111,7 +111,7 @@ class RecurringSeries extends Model
      */
     public function instances(): HasMany
     {
-        if ($this->recurable_type === Reservation::class) {
+        if ($this->recurable_type === 'reservation' || $this->recurable_type === 'rehearsal_reservation') {
             return $this->hasMany(Reservation::class, 'recurring_series_id');
         }
 
@@ -133,7 +133,7 @@ class RecurringSeries extends Model
      */
     public function activeInstances(): HasMany
     {
-        if ($this->recurable_type === Reservation::class) {
+        if ($this->recurable_type === 'reservation' || $this->recurable_type === 'rehearsal_reservation') {
             return $this->instances()
                 ->whereIn('status', ['pending', 'confirmed']);
         }
@@ -147,7 +147,7 @@ class RecurringSeries extends Model
      */
     public function isReservationSeries(): bool
     {
-        return $this->recurable_type === Reservation::class;
+        return $this->recurable_type === 'reservation' || $this->recurable_type === 'rehearsal_reservation';
     }
 
     /**
@@ -155,7 +155,7 @@ class RecurringSeries extends Model
      */
     public function isEventSeries(): bool
     {
-        return $this->recurable_type === Event::class;
+        return $this->recurable_type === 'event';
     }
 
     /**

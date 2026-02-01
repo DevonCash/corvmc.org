@@ -62,7 +62,7 @@ class RevisionSeeder extends Seeder
                 }
 
                 $revision = Revision::create([
-                    'revisionable_type' => MemberProfile::class,
+                    'revisionable_type' => 'member_profile',
                     'revisionable_id' => $profile->id,
                     'original_data' => $originalData,
                     'proposed_changes' => $proposedChanges,
@@ -82,7 +82,7 @@ class RevisionSeeder extends Seeder
         // Create some auto-approved revisions (high trust users)
         foreach ($profiles->take(3) as $profile) {
             $revision = Revision::create([
-                'revisionable_type' => MemberProfile::class,
+                'revisionable_type' => 'member_profile',
                 'revisionable_id' => $profile->id,
                 'original_data' => ['bio' => 'Original bio text'],
                 'proposed_changes' => ['bio' => fake()->paragraph()],
@@ -106,7 +106,7 @@ class RevisionSeeder extends Seeder
             ]);
 
             $revision = Revision::create([
-                'revisionable_type' => Band::class,
+                'revisionable_type' => 'band',
                 'revisionable_id' => $band->id,
                 'original_data' => [
                     'bio' => 'Original band bio',
@@ -130,7 +130,7 @@ class RevisionSeeder extends Seeder
         // Create some rejected revisions with specific reasons
         if ($profiles->count() > 5) {
             $revision = Revision::create([
-                'revisionable_type' => MemberProfile::class,
+                'revisionable_type' => 'member_profile',
                 'revisionable_id' => $profiles->random()->id,
                 'original_data' => ['bio' => 'Original bio'],
                 'proposed_changes' => ['bio' => 'Promotional content with external links'],
@@ -149,7 +149,7 @@ class RevisionSeeder extends Seeder
         // Create a few event revisions (less common)
         foreach ($events->take(2) as $event) {
             $revision = Revision::create([
-                'revisionable_type' => Event::class,
+                'revisionable_type' => 'event',
                 'revisionable_id' => $event->id,
                 'original_data' => ['description' => 'Original event description'],
                 'proposed_changes' => ['description' => fake()->paragraph()],

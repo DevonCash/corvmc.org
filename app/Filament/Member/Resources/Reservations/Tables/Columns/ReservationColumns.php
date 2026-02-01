@@ -52,8 +52,7 @@ class ReservationColumns
                 }
 
                 return null;
-            })
-            ->searchable();
+            });
     }
 
     public static function timeRange(): TextColumn
@@ -69,7 +68,6 @@ class ReservationColumns
             ->icon(fn($record) => $record->is_recurring ? 'tabler-repeat' : null)
             ->iconPosition(IconPosition::After)
             ->tooltip(fn($record) => $record->is_recurring ? 'Recurring reservation' : null)
-            ->searchable()
             ->sortable(['reserved_at']);
     }
 
@@ -83,18 +81,21 @@ class ReservationColumns
             ->sortable(['reserved_at', 'reserved_until']);
     }
 
-    public static function statusDisplay(): TextColumn
+    public static function statusDisplay(): IconColumn
     {
-        return TextColumn::make('status')
-            ->badge()
+        return IconColumn::make('status')
+            ->label('')
+            ->tooltip(fn( $state ) => $state->getLabel())
             ->grow(false)
+            ->width(0)
             ;
     }
 
     public static function costDisplay(): TextColumn
     {
-        return TextColumn::make('charge.net_amount')
-            ->formatStateUsing(function ($state, Reservation $record): string {
+        return TextColumn::make('cost_display')
+            ->label('Cost')
+            ->state(function (Reservation $record): string {
                 $charge = $record->charge;
 
                 // No charge or zero amount = free

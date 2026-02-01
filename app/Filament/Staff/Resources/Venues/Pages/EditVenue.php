@@ -2,6 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Venues\Pages;
 
+use App\Filament\Staff\Resources\Events\EventResource;
 use App\Filament\Staff\Resources\Venues\VenueResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
@@ -9,6 +10,15 @@ use Filament\Resources\Pages\EditRecord;
 class EditVenue extends EditRecord
 {
     protected static string $resource = VenueResource::class;
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            EventResource::getUrl('index') => 'Events',
+            VenueResource::getUrl('index') => 'Venues',
+            $this->getRecordTitle(),
+        ];
+    }
 
     protected function getHeaderActions(): array
     {

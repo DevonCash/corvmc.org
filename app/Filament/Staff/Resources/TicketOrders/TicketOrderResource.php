@@ -2,6 +2,9 @@
 
 namespace App\Filament\Staff\Resources\TicketOrders;
 
+use App\Filament\Shared\Actions\Action;
+use App\Filament\Shared\Actions\ViewAction;
+use App\Filament\Staff\Resources\Events\EventResource;
 use App\Filament\Staff\Resources\TicketOrders\Pages\ListTicketOrders;
 use App\Filament\Staff\Resources\TicketOrders\Pages\ViewTicketOrder;
 use App\Models\User;
@@ -10,17 +13,15 @@ use CorvMC\Events\Actions\Tickets\RefundTicketOrder;
 use CorvMC\Events\Enums\TicketOrderStatus;
 use CorvMC\Events\Models\TicketOrder;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Resources\ParentResourceRegistration;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\RepeatableEntry;
 use Filament\Schemas\Schema;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use UnitEnum;
 
 class TicketOrderResource extends Resource
 {
@@ -28,15 +29,14 @@ class TicketOrderResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'tabler-ticket';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Events';
-
     protected static ?string $navigationLabel = 'Ticket Orders';
 
-    protected static ?int $navigationSort = 30;
+    protected static bool $shouldRegisterNavigation = false;
 
-    public static function shouldRegisterNavigation(): bool
+    public static function getParentResourceRegistration(): ?ParentResourceRegistration
     {
-        return User::me()?->can('manage events') ?? false;
+        return EventResource::asParent()
+            ->relationship('ticketOrders');
     }
 
     public static function canViewAny(): bool
@@ -77,15 +77,10 @@ class TicketOrderResource extends Resource
                     ->label('Order #')
                     ->sortable(),
 
-                TextColumn::make('event.title')
-                    ->label('Event')
-                    ->searchable()
-                    ->limit(30),
-
                 TextColumn::make('name')
                     ->label('Purchaser')
                     ->searchable()
-                    ->description(fn (TicketOrder $record) => $record->email),
+                    ->description(fn(TicketOrder $record) => $record->email),
 
                 TextColumn::make('quantity')
                     ->label('Qty')
@@ -98,7 +93,7 @@ class TicketOrderResource extends Resource
 
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn (TicketOrderStatus $state): string => $state->color()),
+                    ->color(fn(TicketOrderStatus $state): string => $state->color()),
 
                 TextColumn::make('payment_method')
                     ->label('Payment')
@@ -114,14 +109,8 @@ class TicketOrderResource extends Resource
             ->filters([
                 SelectFilter::make('status')
                     ->options(TicketOrderStatus::class),
-
-                SelectFilter::make('event_id')
-                    ->label('Event')
-                    ->relationship('event', 'title')
-                    ->searchable()
-                    ->preload(),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
 
                 Action::make('refund')
@@ -130,10 +119,11 @@ class TicketOrderResource extends Resource
                     ->color('danger')
                     ->requiresConfirmation()
                     ->modalHeading('Refund Order')
-                    ->modalDescription(fn (TicketOrder $record) =>
+                    ->modalDescription(
+                        fn(TicketOrder $record) =>
                         "Are you sure you want to refund {$record->quantity} ticket(s) for \${$record->total->getAmount()->toFloat()}? This action cannot be undone."
                     )
-                    ->visible(fn (TicketOrder $record) => $record->canRefund())
+                    ->visible(fn(TicketOrder $record) => $record->canRefund())
                     ->action(function (TicketOrder $record) {
                         RefundTicketOrder::run($record, 'Refunded by staff');
                     }),
@@ -157,7 +147,7 @@ class TicketOrderResource extends Resource
 
                                 TextEntry::make('status')
                                     ->badge()
-                                    ->color(fn (TicketOrderStatus $state): string => $state->color()),
+                                    ->color(fn(TicketOrderStatus $state): string => $state->color()),
                             ]),
 
                         Grid::make(2)
@@ -227,7 +217,7 @@ class TicketOrderResource extends Resource
                                 TextEntry::make('covers_fees')
                                     ->label('Covers Fees')
                                     ->badge()
-                                    ->color(fn (bool $state) => $state ? 'success' : 'gray'),
+                                    ->color(fn(bool $state) => $state ? 'success' : 'gray'),
 
                                 TextEntry::make('total')
                                     ->label('Total Charged')
@@ -249,7 +239,7 @@ class TicketOrderResource extends Resource
 
                                         TextEntry::make('status')
                                             ->badge()
-                                            ->color(fn ($state) => $state->color()),
+                                            ->color(fn($state) => $state->color()),
 
                                         TextEntry::make('attendee_name')
                                             ->label('Attendee')
@@ -285,7 +275,7 @@ class TicketOrderResource extends Resource
                                 TextEntry::make('is_door_sale')
                                     ->label('Door Sale')
                                     ->badge()
-                                    ->color(fn (bool $state) => $state ? 'warning' : 'gray'),
+                                    ->color(fn(bool $state) => $state ? 'warning' : 'gray'),
                             ]),
                     ]),
 

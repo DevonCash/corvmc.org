@@ -18,7 +18,7 @@ function createMockChargeable(User $user, float $hours): Chargeable&RehearsalRes
     $reservation = new RehearsalReservation([
         'reserved_at' => now()->addDay()->setHour(14),
         'reserved_until' => now()->addDay()->setHour(14)->addHours($hours),
-        'reservable_type' => User::class,
+        'reservable_type' => 'user',
         'reservable_id' => $user->id,
     ]);
     $reservation->setRelation('reservable', $user);

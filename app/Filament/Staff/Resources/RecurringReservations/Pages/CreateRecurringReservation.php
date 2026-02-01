@@ -16,7 +16,7 @@ class CreateRecurringReservation extends CreateRecord
         $data['recurrence_rule'] = \CorvMC\SpaceManagement\Actions\RecurringReservations\BuildRRule::run($data);
 
         // Set recurable_type to Reservation for this resource
-        $data['recurable_type'] = Reservation::class;
+        $data['recurable_type'] = 'reservation';
 
         // Remove temporary form fields
         unset($data['frequency'], $data['interval'], $data['by_day']);

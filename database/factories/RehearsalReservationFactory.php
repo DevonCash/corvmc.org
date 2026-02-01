@@ -25,7 +25,7 @@ class RehearsalReservationFactory extends Factory
 
         return [
             // Don't set 'type' here - let the model's $attributes or boot() method handle it
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => User::factory(),
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
@@ -115,7 +115,7 @@ class RehearsalReservationFactory extends Factory
             $hours = $attributes['hours_used'] ?? 2;
 
             return [
-                'reservable_type' => User::class,
+                'reservable_type' => 'user',
                 'reservable_id' => $user->id,
                 'free_hours_used' => $hours,
             ];

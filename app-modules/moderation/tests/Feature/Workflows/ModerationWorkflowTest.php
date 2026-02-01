@@ -199,7 +199,7 @@ describe('Moderation Workflow: Revision Approval', function () {
 
         // Create a pending revision
         $revision = Revision::create([
-            'revisionable_type' => MemberProfile::class,
+            'revisionable_type' => 'member_profile',
             'revisionable_id' => $profile->id,
             'original_data' => ['bio' => 'Original bio'],
             'proposed_changes' => ['bio' => 'Updated bio with more details'],
@@ -235,7 +235,7 @@ describe('Moderation Workflow: Revision Approval', function () {
 
         // Create an already approved revision
         $revision = Revision::create([
-            'revisionable_type' => MemberProfile::class,
+            'revisionable_type' => 'member_profile',
             'revisionable_id' => $profile->id,
             'original_data' => ['bio' => 'Test bio'],
             'proposed_changes' => ['bio' => 'New bio'],
@@ -264,7 +264,7 @@ describe('Moderation Workflow: Auto-Approval', function () {
         });
 
         $revision = Revision::create([
-            'revisionable_type' => MemberProfile::class,
+            'revisionable_type' => 'member_profile',
             'revisionable_id' => $profile->id,
             'original_data' => ['bio' => 'Original bio'],
             'proposed_changes' => ['bio' => 'Staff updated bio'],

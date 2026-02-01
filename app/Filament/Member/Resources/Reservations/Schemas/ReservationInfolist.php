@@ -49,7 +49,10 @@ class ReservationInfolist
                                 ->label('Total Cost')
                                 ->state(fn(?Model $record) => ($record->charge?->net_amount?->getMinorAmount()->toFloat() ?? 0.0) / 100.0)
                                 ->money('USD'),
-                            TextEntry::make('charge.status')->badge()
+                            TextEntry::make('charge.status')
+                                ->label('Status')
+                                ->badge()
+                                ->placeholder('No charge')
                         ])->columnSpanFull(),
                         TextEntry::make('hours_used')->suffix(' hrs'),
                         TextEntry::make('free_hours_used')
@@ -65,15 +68,34 @@ class ReservationInfolist
                             ->hiddenLabel()
                             ->imageSize(48)
                             ->grow(false)
-                            ->state(fn(?Model $record): ?string => $record?->reservable->getFilamentAvatarUrl()),
+                            ->state(function (?Model $record): ?string {
+                                $reservable = $record?->reservable;
+                                if ($reservable && method_exists($reservable, 'getFilamentAvatarUrl')) {
+                                    return $reservable->getFilamentAvatarUrl();
+                                }
+                                return null;
+                            }),
                         TextEntry::make('reservable.name')
                             ->listWithLineBreaks()
                             ->grow(true)
                             ->hiddenLabel()
-                            ->state(fn(?Model $record): array => [
-                                $record?->reservable->name,
-                                $record?->reservable->email,
-                            ]),
+                            ->state(function (?Model $record): array {
+                                $reservable = $record?->reservable;
+                                if ($reservable instanceof User) {
+                                    $lines = [
+                                        $reservable->name,
+                                        $reservable->email,
+                                    ];
+                                    if ($reservable->phone) {
+                                        $lines[] = $reservable->phone;
+                                    }
+                                    return $lines;
+                                }
+                                // For Events or other reservables
+                                return [
+                                    $record?->getDisplayTitle() ?? 'Unknown',
+                                ];
+                            }),
                         Action::make('view_reservable')
                             ->label('View Member')
                             ->iconButton()
@@ -81,7 +103,10 @@ class ReservationInfolist
                             ->url(fn(?Model $record): ?string => UserResource::getUrl('edit', [
                                 'record' => $record?->reservable->getKey(),
                             ]))
-                            ->visible(fn(): bool => in_array(UserResource::class, Filament::getCurrentPanel()->getResources()))
+                            ->visible(fn(?Model $record): bool =>
+                                $record?->reservable instanceof User &&
+                                in_array(UserResource::class, Filament::getCurrentPanel()->getResources())
+                            )
                             ->openUrlInNewTab(true)
                             ->icon('heroicon-o-arrow-top-right-on-square'),
                     ])

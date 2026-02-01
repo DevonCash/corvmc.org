@@ -27,7 +27,7 @@ class ReportFactory extends Factory
         $reason = fake()->randomElement($reasons);
 
         return [
-            'reportable_type' => Event::class,
+            'reportable_type' => 'event',
             'reportable_id' => $event->id,
             'reported_by_id' => User::factory()->create()->id,
             'reason' => $reason,
@@ -82,7 +82,7 @@ class ReportFactory extends Factory
             $event = Event::factory()->create();
 
             return [
-                'reportable_type' => Event::class,
+                'reportable_type' => 'event',
                 'reportable_id' => $event->id,
             ];
         });
@@ -94,7 +94,7 @@ class ReportFactory extends Factory
             $profile = MemberProfile::factory()->create();
 
             return [
-                'reportable_type' => MemberProfile::class,
+                'reportable_type' => 'member_profile',
                 'reportable_id' => $profile->id,
             ];
         });
@@ -106,7 +106,7 @@ class ReportFactory extends Factory
             $band = Band::factory()->create();
 
             return [
-                'reportable_type' => Band::class,
+                'reportable_type' => 'band',
                 'reportable_id' => $band->id,
             ];
         });

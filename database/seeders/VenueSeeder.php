@@ -83,6 +83,15 @@ class VenueSeeder extends Seeder
                 'state' => 'OR',
                 'zip' => '97330',
             ],
+            [
+                'name' => 'Majestic Theatre',
+                'address' => '115 SW 2nd St',
+                'city' => 'Corvallis',
+                'state' => 'OR',
+                'zip' => '97333',
+                'is_cmc' => false,
+                'notes' => 'Historic downtown theatre',
+            ],
         ];
 
         foreach ($externalVenues as $venueData) {

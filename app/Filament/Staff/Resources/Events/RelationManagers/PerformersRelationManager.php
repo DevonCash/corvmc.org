@@ -3,6 +3,7 @@
 namespace App\Filament\Staff\Resources\Events\RelationManagers;
 
 use App\Filament\Staff\Resources\Events\Actions\InviteBandOwnerAction;
+use CorvMC\Events\Models\Event;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\SpatieTagsInput;
@@ -15,6 +16,7 @@ use Filament\Tables\Columns\SpatieTagsColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 
 class PerformersRelationManager extends RelationManager
 {
@@ -22,7 +24,38 @@ class PerformersRelationManager extends RelationManager
 
     public function table(Table $table): Table
     {
+        /** @var Event $event */
+        $event = $this->getOwnerRecord();
+
         return $table
+            ->description(function () use ($event) {
+                if (! $event->start_datetime || ! $event->end_datetime) {
+                    return null;
+                }
+
+                $eventDurationMinutes = $event->start_datetime->diffInMinutes($event->end_datetime);
+                $totalSetLength = (int) ($event->performers()->sum('event_bands.set_length') ?? 0);
+                $performerCount = $event->performers()->count();
+
+                if ($totalSetLength > $eventDurationMinutes) {
+                    $overageMinutes = $totalSetLength - $eventDurationMinutes;
+
+                    return new HtmlString(
+                        '<span class="text-warning-600 dark:text-warning-400 font-medium">'.
+                        "Set lengths total {$totalSetLength} min, exceeding event duration ({$eventDurationMinutes} min) by {$overageMinutes} min".
+                        '</span>'
+                    );
+                }
+
+                if ($performerCount > 0 && $totalSetLength > 0) {
+                    $remainingMinutes = $eventDurationMinutes - $totalSetLength;
+                    $changeoverTime = (int) floor($remainingMinutes / $performerCount);
+
+                    return "{$totalSetLength} min of sets, ~{$changeoverTime} min changeover per band";
+                }
+
+                return null;
+            })
             ->reorderable('event_bands.order')
             ->defaultSort('event_bands.order')
             ->reorderRecordsTriggerAction(

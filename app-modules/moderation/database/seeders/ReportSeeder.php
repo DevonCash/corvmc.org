@@ -57,7 +57,7 @@ class ReportSeeder extends Seeder
                 $status = fake()->randomElement(['pending', 'upheld', 'dismissed']);
 
                 Report::create([
-                    'reportable_type' => Event::class,
+                    'reportable_type' => 'event',
                     'reportable_id' => $event->id,
                     'reported_by_id' => $user->id,
                     'reason' => fake()->randomElement(['inappropriate_content', 'spam', 'misleading_info', 'harassment']),
@@ -83,7 +83,7 @@ class ReportSeeder extends Seeder
             $usedCombinations[$key] = true;
 
             Report::create([
-                'reportable_type' => Band::class,
+                'reportable_type' => 'band',
                 'reportable_id' => $band->id,
                 'reported_by_id' => $user->id,
                 'reason' => fake()->randomElement(['inappropriate_content', 'copyright', 'misleading_info']),
@@ -106,7 +106,7 @@ class ReportSeeder extends Seeder
             $status = fake()->randomElement(['pending', 'upheld', 'dismissed']);
 
             Report::create([
-                'reportable_type' => MemberProfile::class,
+                'reportable_type' => 'member_profile',
                 'reportable_id' => $profile->id,
                 'reported_by_id' => $user->id,
                 'reason' => fake()->randomElement(['inappropriate_content', 'fake_profile', 'harassment']),
@@ -130,7 +130,7 @@ class ReportSeeder extends Seeder
                 $usedCombinations[$key] = true;
 
                 Report::create([
-                    'reportable_type' => Event::class,
+                    'reportable_type' => 'event',
                     'reportable_id' => $event->id,
                     'reported_by_id' => $user->id,
                     'reason' => 'harassment',

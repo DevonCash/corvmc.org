@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use App\Models\User;
+use Brick\Money\Money;
 use Carbon\Carbon;
+use CorvMC\Finance\Enums\ChargeStatus;
+use CorvMC\Finance\Models\Charge;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Illuminate\Database\Seeder;
 
 class ReservationSeeder extends Seeder
@@ -123,14 +126,16 @@ class ReservationSeeder extends Seeder
         }
 
         // Create the reservation
-        RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+        $reservation = RehearsalReservation::factory()->create([
+            'reservable_type' => 'user',
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
             'status' => $this->getRandomStatus(),
             'notes' => $this->getRandomNotes(),
         ]);
+
+        $this->createChargeForReservation($reservation, $user);
     }
 
     private function createRecurringReservations($users): void
@@ -156,8 +161,8 @@ class ReservationSeeder extends Seeder
                 $weeklyStart = $startTime->copy()->addWeeks($week);
                 $weeklyEnd = $endTime->copy()->addWeeks($week);
 
-                RehearsalReservation::factory()->create([
-                    'reservable_type' => User::class,
+                $reservation = RehearsalReservation::factory()->create([
+                    'reservable_type' => 'user',
                     'reservable_id' => $user->id,
                     'reserved_at' => $weeklyStart,
                     'reserved_until' => $weeklyEnd,
@@ -169,6 +174,8 @@ class ReservationSeeder extends Seeder
                     ],
                     'notes' => 'Weekly band practice session',
                 ]);
+
+                $this->createChargeForReservation($reservation, $user);
             }
         }
     }
@@ -230,14 +237,72 @@ class ReservationSeeder extends Seeder
             return;
         }
 
-        RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+        $reservation = RehearsalReservation::factory()->create([
+            'reservable_type' => 'user',
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
             'status' => 'confirmed', // Past reservations are typically confirmed
             'notes' => $this->getRandomNotes(),
         ]);
+
+        $this->createChargeForReservation($reservation, $user, true);
+    }
+
+    private function createChargeForReservation(RehearsalReservation $reservation, User $user, bool $isPast = false): void
+    {
+        $hourlyRate = 1500; // $15/hour in cents
+        // Use floatDiffInHours for accurate calculation, then round up
+        $duration = (int) ceil($reservation->reserved_at->floatDiffInHours($reservation->reserved_until));
+        $amount = $hourlyRate * $duration;
+
+        // Sustaining members get free hours
+        $isSustaining = $user->hasRole('sustaining member');
+        $freeHoursUsed = 0;
+        $netAmount = $amount;
+
+        if ($isSustaining && $duration <= 4) {
+            // Use free hours for sustaining members (up to 4 hours)
+            $freeHoursUsed = $duration;
+            $netAmount = 0;
+        }
+
+        $status = ChargeStatus::Pending;
+        $paidAt = null;
+        $paymentMethod = null;
+
+        // Past or confirmed reservations should have settled charges
+        if ($isPast || $reservation->status === 'confirmed') {
+            if ($netAmount === 0) {
+                $status = ChargeStatus::Paid;
+                $paymentMethod = 'credits';
+                $paidAt = $reservation->created_at;
+            } else {
+                // Randomly mark as paid or pending for variety
+                if (rand(0, 10) > 2) {
+                    $status = ChargeStatus::Paid;
+                    $paymentMethod = collect(['stripe', 'cash', 'manual'])->random();
+                    $paidAt = $reservation->created_at;
+                }
+            }
+        }
+
+        Charge::create([
+            'user_id' => $user->id,
+            'chargeable_type' => $reservation->getMorphClass(),
+            'chargeable_id' => $reservation->id,
+            'amount' => Money::ofMinor($amount, 'USD'),
+            'credits_applied' => $freeHoursUsed > 0 ? ['free_hours' => $freeHoursUsed * 2] : null,
+            'net_amount' => Money::ofMinor($netAmount, 'USD'),
+            'status' => $status,
+            'payment_method' => $paymentMethod,
+            'paid_at' => $paidAt,
+        ]);
+
+        // Update reservation's free_hours_used
+        if ($freeHoursUsed > 0) {
+            $reservation->updateQuietly(['free_hours_used' => $freeHoursUsed]);
+        }
     }
 
     private function getRandomStatus(): string

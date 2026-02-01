@@ -2,9 +2,14 @@
 
 namespace App\Filament\Staff\Resources\Events\Schemas;
 
+use App\Actions\Events\SyncEventSpaceReservation;
+use App\Settings\ReservationSettings;
+use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
+use App\Filament\Staff\Resources\Events\Actions\RescheduleEventAction;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -12,9 +17,9 @@ use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class EventForm
@@ -22,41 +27,30 @@ class EventForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
-            ->columns([
-                'sm' => 1,
-                'md' => 3,
-                'lg' => 3,
-            ])
+            ->columns(4)
+            ->extraAttributes(['class' => 'px-8'])
             ->components([
+                // Left side: Title, then Description
                 Group::make()
-                    ->columnSpan(1)
-                    ->schema([
-                        static::publishedAtField(),
-                        static::posterField(),
-                    ])->columnOrder(['sm' => 1, 'md' => 3]),
-                Grid::make([
-                    'sm' => 1,
-                    'md' => 1,
-                    'lg' => 3,
-                ])
-                    ->columnSpan([
-                        'sm' => 1,
-                        'md' => 2,
-                    ])
+                    ->columnSpan(3)
                     ->schema([
                         static::titleField(),
                         static::descriptionField(),
-                        static::timeFieldsGrid(),
-                        static::ticketingGrid(),
-                        static::venueField(),
                     ]),
+
+                // Right side: Poster
+                static::posterField()->columnSpan(1),
+
+                // Remaining fields span full width
+                static::timeFieldsGrid()->columnSpanFull(),
+                static::venueField()->columnSpanFull(),
+                static::ticketingGrid()->columnSpanFull(),
             ]);
     }
 
     protected static function titleField(): TextInput
     {
         return TextInput::make('title')
-            ->columnSpanFull()
             ->required();
     }
 
@@ -95,84 +89,90 @@ class EventForm
             ->native(true)
             ->seconds(false)
             ->columnSpan(2)
-            ->required();
+            ->required()
+            ->disabled(fn($livewire) => filled($livewire->record ?? null))
+            ->helperText(fn($livewire) => filled($livewire->record ?? null)
+                ? 'Use the Reschedule action to change the date/time'
+                : null);
     }
 
     protected static function doorsTimeField(): TimePicker
     {
-        return TimePicker::make('doors_datetime')
+        return TimePicker::make('doors_time')
             ->label('Doors Time')
             ->seconds(false);
     }
 
     protected static function endTimeField(): TimePicker
     {
-        return TimePicker::make('end_datetime')
+        return TimePicker::make('end_time')
             ->label('End Time')
-            ->seconds(false);
+            ->seconds(false)
+            ->disabled(fn($livewire) => filled($livewire->record ?? null) && $livewire->record->spaceReservation);
     }
 
-    protected static function ticketingGrid(): Grid
+    protected static function ticketingGrid(): Section
     {
-        return Grid::make([])
+        return Section::make('Tickets')
             ->columns(3)
             ->columnSpanFull()
+            ->compact()
+            ->afterHeader(
+                [
+                    Toggle::make('ticketing_enabled')
+                        ->label('CMC Ticketing')
+                        ->live()
+                        ->afterStateUpdated(function ($state, $set) {
+                            if ($state) {
+                                $set('event_link', null);
+                            }
+                        })
+                ]
+            )
             ->schema([
-                // External ticketing (existing)
-                static::eventLinkField(),
+                // External ticketing fields (visible when CMC ticketing is disabled)
+                static::eventLinkField()
+                    ->visible(fn($get) => ! $get('ticketing_enabled')),
                 Grid::make()
                     ->columns(1)
+                    ->visible(fn($get) => ! $get('ticketing_enabled'))
                     ->schema([
                         static::ticketPriceField(),
                         static::notaflofField(),
                     ]),
 
-                // Native CMC ticketing
+                // Native CMC ticketing fields (visible when CMC ticketing is enabled)
                 static::nativeTicketingFieldset(),
             ]);
     }
 
-    protected static function nativeTicketingFieldset(): Fieldset
+    protected static function nativeTicketingFieldset(): Grid
     {
-        return Fieldset::make('CMC Ticketing')
+        return Grid::make(3)
             ->columnSpanFull()
+            ->visible(fn($get) => $get('ticketing_enabled'))
             ->schema([
-                Toggle::make('ticketing_enabled')
-                    ->label('Enable CMC Ticketing')
-                    ->helperText('Use CMC\'s native ticketing system instead of external links')
-                    ->live()
-                    ->afterStateUpdated(function ($state, $set) {
-                        // Clear external ticket URL when enabling native ticketing
-                        if ($state) {
-                            $set('ticket_url', null);
-                        }
-                    }),
+                TextInput::make('ticket_quantity')
+                    ->label('Tickets Available')
+                    ->numeric()
+                    ->minValue(1)
+                    ->placeholder('Unlimited')
+                    ->helperText('Leave blank for unlimited'),
 
-                Grid::make(3)
-                    ->schema([
-                        TextInput::make('ticket_quantity')
-                            ->label('Tickets Available')
-                            ->numeric()
-                            ->minValue(1)
-                            ->placeholder('Unlimited')
-                            ->helperText('Leave blank for unlimited'),
+                TextInput::make('ticket_price_override')
+                    ->label('Ticket Price Override')
+                    ->prefix('$')
+                    ->numeric()
+                    ->step(0.01)
+                    ->placeholder(number_format(config('ticketing.default_price', 1000) / 100, 2))
+                    ->helperText('Default: $' . number_format(config('ticketing.default_price', 1000) / 100, 2)),
 
-                        TextInput::make('ticket_price_override')
-                            ->label('Ticket Price Override')
-                            ->prefix('$')
-                            ->numeric()
-                            ->step(0.01)
-                            ->placeholder(number_format(config('ticketing.default_price', 1000) / 100, 2))
-                            ->helperText('Default: $'.number_format(config('ticketing.default_price', 1000) / 100, 2)),
-
-                        TextInput::make('tickets_sold')
-                            ->label('Tickets Sold')
-                            ->numeric()
-                            ->default(0)
-                            ->disabled()
-                            ->dehydrated(false),
-                    ])
-                    ->visible(fn ($get) => $get('ticketing_enabled')),
+                TextInput::make('tickets_sold')
+                    ->label('Tickets Sold')
+                    ->numeric()
+                    ->default(0)
+                    ->disabled()
+                    ->dehydrated(false),
             ]);
     }
 
@@ -186,7 +186,7 @@ class EventForm
             ->afterStateUpdated(function (TextInput $component, $state) {
                 // Ensure the URL starts with http:// or https://
                 if ($state && ! preg_match('/^https?:\/\//', $state)) {
-                    $component->state('https://'.ltrim($state, '/'));
+                    $component->state('https://' . ltrim($state, '/'));
                 }
             })
             ->columnSpan([
@@ -219,16 +219,23 @@ class EventForm
 
     protected static function venueField(): Select
     {
+        $settings = app(ReservationSettings::class);
+
         return Select::make('venue_id')
             ->label('Venue')
             ->relationship('venue', 'name')
             ->searchable()
             ->preload()
             ->required()
-            ->default(fn () => Venue::cmc()->first()?->id)
-            ->getOptionLabelFromRecordUsing(fn (Venue $venue) => $venue->is_cmc
+            ->live()
+            ->default(fn() => Venue::cmc()->first()?->id)
+            ->disabled(fn($livewire) => filled($livewire->record ?? null))
+            ->helperText(fn($livewire) => filled($livewire->record ?? null)
+                ? 'Use the Reschedule action to change the venue'
+                : null)
+            ->getOptionLabelFromRecordUsing(fn(Venue $venue) => $venue->is_cmc
                 ? $venue->name
-                : $venue->name.' - '.$venue->city)
+                : $venue->name . ' - ' . $venue->city)
             ->createOptionForm([
                 TextInput::make('name')
                     ->required()
@@ -244,51 +251,123 @@ class EventForm
                 TextInput::make('zip')
                     ->maxLength(10),
             ])
-            ->columnSpanFull();
-    }
+            ->prefixAction(
+                Action::make('configureSpaceReservation')
+                    ->label('Configure Space Reservation')
+                    ->icon('tabler-clock-cog')
+                    ->visible(function (callable $get) {
+                        $venueId = $get('venue_id');
+                        if (! $venueId) {
+                            return false;
+                        }
 
-    protected static function publishedAtField(): DateTimePicker
-    {
-        return DateTimePicker::make('published_at')
-            ->label('Publish At')
-            ->seconds(false)
-            ->prefixIconColor(function ($state) {
-                if (! $state) {
-                    return 'gray';
-                }
-                $date = is_string($state) ? \Carbon\Carbon::parse($state) : $state;
+                        return Venue::find($venueId)?->is_cmc ?? false;
+                    })
+                    ->fillForm(function (callable $get, $livewire) {
+                        // If editing an existing event with a reservation, calculate from it
+                        if (isset($livewire->record) && $livewire->record instanceof Event) {
+                            $event = $livewire->record;
+                            if ($event->usesPracticeSpace() && $event->spaceReservation) {
+                                $reservation = $event->spaceReservation;
+                                $endTime = $event->end_datetime ?? $event->start_datetime->copy()->addHours(3);
 
-                return $date->isFuture() ? 'warning' : 'success';
-            })
-            ->prefixIcon(function ($state) {
-                if (! $state) {
-                    return 'tabler-circle-x';
-                }
-                $date = is_string($state) ? \Carbon\Carbon::parse($state) : $state;
+                                return [
+                                    'setup_minutes' => $event->start_datetime->diffInMinutes($reservation->reserved_at),
+                                    'teardown_minutes' => $reservation->reserved_until->diffInMinutes($endTime),
+                                ];
+                            }
+                        }
 
-                return $date->isFuture() ? 'tabler-clock' : 'tabler-circle-check';
-            })
-            ->suffixAction(
-                Action::make('setNow')
-                    ->label('Publish Now')
-                    ->icon('tabler-clock-down')
-                    ->action(function ($set, $livewire, $component) {
-                        $now = now();
-                        $formatted = $now->format('Y-m-d\TH:i');
-                        $set('published_at', $now);
-                        $component->state($formatted);
-                        $livewire->validateOnly('published_at');
+                        // Fall back to form state (for create page or events without reservations)
+                        return [
+                            'setup_minutes' => $get('setup_minutes'),
+                            'teardown_minutes' => $get('teardown_minutes'),
+                        ];
+                    })
+                    ->schema([
+                        TextInput::make('setup_minutes')
+                            ->label('Setup Time')
+                            ->helperText('Minutes before event start to block for setup')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(480)
+                            ->placeholder($settings->default_event_setup_minutes)
+                            ->suffix('minutes'),
+
+                        TextInput::make('teardown_minutes')
+                            ->label('Teardown Time')
+                            ->helperText('Minutes after event end to block for teardown')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(480)
+                            ->placeholder($settings->default_event_teardown_minutes)
+                            ->suffix('minutes'),
+
+                        Toggle::make('force_override')
+                            ->label('Override conflicts (admin only)')
+                            ->helperText('Force the reservation even if it conflicts with other bookings')
+                            ->visible(fn() => auth()->user()?->hasRole('admin'))
+                            ->default(false),
+                    ])
+                    ->action(function (array $data, callable $set, $livewire) {
+                        $setupMinutes = $data['setup_minutes'] !== '' && $data['setup_minutes'] !== null
+                            ? (int) $data['setup_minutes']
+                            : null;
+                        $teardownMinutes = $data['teardown_minutes'] !== '' && $data['teardown_minutes'] !== null
+                            ? (int) $data['teardown_minutes']
+                            : null;
+                        $forceOverride = $data['force_override'] ?? false;
+
+                        // If editing an existing event, directly sync the reservation
+                        if (isset($livewire->record) && $livewire->record instanceof Event) {
+                            $result = SyncEventSpaceReservation::run(
+                                $livewire->record,
+                                $setupMinutes,
+                                $teardownMinutes,
+                                $forceOverride
+                            );
+
+                            if (! $result['success']) {
+                                $conflicts = $result['conflicts'];
+                                $messages = [];
+
+                                foreach ($conflicts['reservations'] as $reservation) {
+                                    $time = $reservation->reserved_at->format('g:i A') . ' - ' . $reservation->reserved_until->format('g:i A');
+                                    $messages[] = "Reservation: {$time}";
+                                }
+
+                                foreach ($conflicts['productions'] as $production) {
+                                    $messages[] = "Production: {$production->title}";
+                                }
+
+                                foreach ($conflicts['closures'] as $closure) {
+                                    $messages[] = "Closure: {$closure->type->getLabel()}";
+                                }
+
+                                Notification::make()
+                                    ->title('Space reservation conflicts detected')
+                                    ->body(implode("\n", $messages))
+                                    ->danger()
+                                    ->persistent()
+                                    ->send();
+
+                                return;
+                            }
+
+                            Notification::make()
+                                ->title('Space reservation updated')
+                                ->success()
+                                ->send();
+
+                            return;
+                        }
+
+                        // On create page, just store values in form state for later
+                        $set('setup_minutes', $data['setup_minutes']);
+                        $set('teardown_minutes', $data['teardown_minutes']);
                     })
             )
-            ->hint(function ($state) {
-                if (! $state) {
-                    return 'Not scheduled';
-                }
-                $date = is_string($state) ? \Carbon\Carbon::parse($state) : $state;
-
-                return $date->isFuture() ? 'Publish in '.$date->shortAbsoluteDiffForHumans() : 'Published';
-            })
-            ->live();
+            ->columnSpanFull();
     }
 
     protected static function posterField(): SpatieMediaLibraryFileUpload
@@ -307,6 +386,7 @@ class EventForm
             ->imageCropAspectRatio('8.5:11') // Standard poster ratio
             ->imageResizeTargetWidth(850)
             ->imageResizeTargetHeight(1100)
-            ->helperText('Upload a poster in 8.5:11 aspect ratio (letter size). Max 4MB.');
+            ->helperText('Upload a poster in 8.5:11 aspect ratio (letter size). Max 4MB.')
+            ->extraAttributes(['class' => 'h-full [&_.filepond--root]:h-full [&_.filepond--drop-label]:h-full']);
     }
 }

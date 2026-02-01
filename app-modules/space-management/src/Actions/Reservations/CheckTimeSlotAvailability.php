@@ -10,7 +10,7 @@ class CheckTimeSlotAvailability
     use AsAction;
 
     /**
-     * Check if a time slot is available (no conflicts with reservations or productions).
+     * Check if a time slot is available (no conflicts with reservations, productions, or closures).
      */
     public function handle(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): bool
     {
@@ -21,6 +21,8 @@ class CheckTimeSlotAvailability
 
         $conflicts = GetAllConflicts::run($startTime, $endTime, $excludeReservationId);
 
-        return $conflicts['reservations']->isEmpty() && $conflicts['productions']->isEmpty();
+        return $conflicts['reservations']->isEmpty()
+            && $conflicts['productions']->isEmpty()
+            && $conflicts['closures']->isEmpty();
     }
 }

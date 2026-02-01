@@ -28,7 +28,7 @@
                     </div>
                 @endif
             @else
-                <a href="{{ route('filament.member.pages.account.membership') }}" class="text-primary-600 hover:underline dark:text-primary-400">
+                <a href="{{ route('filament.member.pages.membership') }}" class="text-primary-600 hover:underline dark:text-primary-400">
                     Learn More
                 </a>
             @endif

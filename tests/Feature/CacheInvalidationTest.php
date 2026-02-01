@@ -49,7 +49,7 @@ describe('Reservation Cache Invalidation', function () {
         $endTime = $startTime->copy()->addHours(2);
 
         RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $this->user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
@@ -66,7 +66,7 @@ describe('Reservation Cache Invalidation', function () {
         $endTime = $startTime->copy()->addHours(2);
 
         $reservation = RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $this->user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
@@ -88,7 +88,7 @@ describe('Reservation Cache Invalidation', function () {
         $newDate = Carbon::now()->addDays(7);
 
         $reservation = RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $this->user->id,
             'reserved_at' => $originalDate->copy()->setHour(14),
             'reserved_until' => $originalDate->copy()->setHour(16),

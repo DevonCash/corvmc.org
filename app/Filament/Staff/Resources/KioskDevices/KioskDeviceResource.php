@@ -18,6 +18,8 @@ class KioskDeviceResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'tabler-device-tablet';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?string $navigationLabel = 'Kiosk Devices';

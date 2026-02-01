@@ -56,6 +56,7 @@ return new class extends Migration
      * Tables and their morph type columns to update.
      */
     private array $tables = [
+        'reservations' => ['type', 'reservable_type'],
         'reports' => ['reportable_type'],
         'revisions' => ['revisionable_type'],
         'charges' => ['chargeable_type'],

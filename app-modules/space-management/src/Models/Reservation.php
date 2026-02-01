@@ -102,25 +102,30 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
 
         static::creating(function ($model) {
             if (empty($model->type)) {
-                $model->type = get_class($model);
+                $model->type = $model->getMorphClass();
             }
         });
 
         // Only add type scope for child classes, not the base Reservation class
         if (static::class !== self::class) {
             static::addGlobalScope('type', function (Builder $builder) {
-                $builder->where('type', static::class);
+                $builder->where('type', (new static)->getMorphClass());
             });
         }
     }
 
     /**
-     * Map legacy class names to current module classes.
-     * Used for backward compatibility with existing database records.
+     * Map type values to model classes.
+     * Handles both morph aliases and legacy class names.
      */
     protected static array $typeMap = [
+        // Morph aliases (current)
+        'rehearsal_reservation' => RehearsalReservation::class,
+        'event_reservation' => \App\Models\EventReservation::class,
+        // Legacy class names (for backward compatibility)
         'App\Models\RehearsalReservation' => RehearsalReservation::class,
         'App\Models\EventReservation' => \App\Models\EventReservation::class,
+        'CorvMC\SpaceManagement\Models\RehearsalReservation' => RehearsalReservation::class,
     ];
 
     /**
@@ -131,8 +136,8 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     {
         $attributes = (object) $attributes;
         // If we have a type attribute, instantiate that class instead
-        if (isset($attributes->type) && $attributes->type !== static::class) {
-            // Map legacy class names to current module classes
+        if (isset($attributes->type) && $attributes->type !== (new static)->getMorphClass()) {
+            // Map type to class (handles both morph aliases and legacy class names)
             $class = static::$typeMap[$attributes->type] ?? $attributes->type;
 
             if (class_exists($class)) {

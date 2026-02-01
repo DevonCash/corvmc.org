@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use CorvMC\Events\Enums\EventStatus;
 use CorvMC\Moderation\Enums\Visibility;
 use Spatie\LaravelData\Attributes\Validation\Nullable;
+use Spatie\LaravelData\Attributes\WithCast;
+use Spatie\LaravelData\Casts\DateTimeInterfaceCast;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 
@@ -37,8 +39,11 @@ class EventFormData extends Data
         public string|Optional|null $doors_time = new Optional,
 
         // Direct datetime fields (alternative to virtual fields)
+        #[WithCast(DateTimeInterfaceCast::class, format: ['Y-m-d H:i', 'Y-m-d\TH:i', 'Y-m-d\TH:i:s', 'Y-m-d\TH:i:sP'])]
         public Carbon|string|Optional|null $start_datetime = new Optional,
+        #[WithCast(DateTimeInterfaceCast::class, format: ['Y-m-d H:i', 'Y-m-d\TH:i', 'Y-m-d\TH:i:s', 'Y-m-d\TH:i:sP'])]
         public Carbon|string|Optional|null $end_datetime = new Optional,
+        #[WithCast(DateTimeInterfaceCast::class, format: ['Y-m-d H:i', 'Y-m-d\TH:i', 'Y-m-d\TH:i:s', 'Y-m-d\TH:i:sP'])]
         public Carbon|string|Optional|null $doors_datetime = new Optional,
 
         // Additional event fields
@@ -105,11 +110,12 @@ class EventFormData extends Data
             }
         }
 
-        // Virtual fields: event_date + end_time
-        if (! $this->event_date instanceof Optional && ! $this->end_time instanceof Optional) {
-            if ($this->event_date !== null && $this->end_time !== null) {
+        // Virtual field: end_time combined with event date
+        if (! $this->end_time instanceof Optional && $this->end_time !== null) {
+            $baseDate = $this->getEventDate();
+            if ($baseDate) {
                 return Carbon::parse(
-                    "{$this->event_date} {$this->end_time}",
+                    "{$baseDate} {$this->end_time}",
                     config('app.timezone')
                 );
             }

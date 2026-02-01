@@ -2,37 +2,50 @@
 
 namespace App\Filament\Staff\Resources\SpaceManagement\Tables;
 
+use App\Filament\Member\Resources\Reservations\Schemas\ReservationInfolist;
+use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
+use App\Filament\Shared\Actions\ViewAction;
 use CorvMC\Finance\Actions\Payments\MarkReservationAsComped;
 use CorvMC\Finance\Actions\Payments\MarkReservationAsPaid;
+use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
 use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
-use App\Filament\Shared\Actions\ViewAction;
-use App\Filament\Member\Resources\Reservations\Schemas\ReservationInfolist;
-use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
 use CorvMC\SpaceManagement\Models\Reservation;
+use CorvMC\SpaceManagement\Models\SpaceClosure;
 use Filament\Forms\Components\DatePicker;
-use Filament\Support\Enums\IconPosition;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
-use CorvMC\Finance\Enums\ChargeStatus;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 
 class SpaceManagementTable
 {
+    private static ?Collection $closures = null;
+
     public static function configure(Table $table): Table
     {
+        // Pre-load upcoming closures for row decoration
+        static::$closures = SpaceClosure::query()
+            ->where('ends_at', '>', now())
+            ->get();
+
         return $table
+            ->recordClasses(function (Reservation $record) {
+                if (static::overlapsWithClosure($record)) {
+                    return 'bg-danger-50 dark:bg-danger-950/20 border-l-4! border-l-danger-400 dark:border-l-danger-600';
+                }
+
+                return '';
+            })
             ->columns([
                 ReservationColumns::statusDisplay(),
                 ReservationColumns::responsibleUser(),
                 ReservationColumns::timeRange(),
-               ReservationColumns::costDisplay(),
+                ReservationColumns::costDisplay(),
                 ReservationColumns::createdAt(),
                 ReservationColumns::updatedAt(),
             ])
@@ -41,7 +54,22 @@ class SpaceManagementTable
                 Group::make('reserved_at')
                     ->titlePrefixedWithLabel(false)
                     ->getTitleFromRecordUsing(
-                        fn(Reservation $record): string => $record->reserved_at->format('M j, Y (l)')
+                        function (Reservation $record) {
+                            $reservedAt = $record->reserved_at;
+                            $now = now();
+                            $diffInDays = (int) $now->copy()->startOfDay()->diffInDays($reservedAt->copy()->startOfDay(), false);
+                            $sameWeek = $now->isSameWeek($reservedAt);
+                            $dateString = $reservedAt->format('M j Y');
+                            if (!$sameWeek) {
+                                return $dateString . ' (' . $reservedAt->format('l') . ')';
+                            } else if ($diffInDays === 0) {
+                                return $dateString . ' (today)';
+                            } elseif ($diffInDays === 1) {
+                                return $dateString . ' (tomorrow)';
+                            } else {
+                                return $dateString . ' (this ' . $reservedAt->format('l') . ')';
+                            }
+                        }
                     )
                     ->collapsible()
                     ->orderQueryUsing(
@@ -128,5 +156,17 @@ class SpaceManagementTable
             ])
             ->emptyStateHeading('No reservations found')
             ->emptyStateDescription('No reservations match your current filters.');
+    }
+
+    private static function overlapsWithClosure(Reservation $record): bool
+    {
+        if (static::$closures === null || static::$closures->isEmpty()) {
+            return false;
+        }
+
+        return static::$closures->contains(function (SpaceClosure $closure) use ($record) {
+            return $closure->ends_at > $record->reserved_at
+                && $closure->starts_at < $record->reserved_until;
+        });
     }
 }

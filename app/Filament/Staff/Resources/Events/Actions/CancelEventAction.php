@@ -13,20 +13,21 @@ class CancelEventAction
     public static function make(): Action
     {
         return Action::make('cancel')
-            ->label('Cancel Event')
+            ->label('Cancel')
             ->icon('tabler-calendar-x')
             ->color('danger')
-            ->visible(fn ($record) => $record->status !== EventStatus::Cancelled)
+            ->visible(fn ($record) => $record->status->isActive())
             ->authorize('cancel')
             ->schema([
                 Textarea::make('reason')
                     ->label('Cancellation Reason')
-                    ->placeholder('Why is this event being cancelled?')
+                    ->placeholder('Why is this being cancelled?')
                     ->helperText('This will be stored for reference but is not currently displayed publicly.'),
             ])
-            ->modalHeading('Cancel Event')
-            ->modalDescription('Are you sure you want to cancel this event? This action can be reversed by rescheduling.')
+            ->modalHeading('Cancel')
+            ->modalDescription('Are you sure you want to cancel this? This action can be reversed by rescheduling.')
             ->modalSubmitActionLabel('Cancel Event')
+            ->modalCancelActionLabel('Dismiss')
             ->action(function ($record, array $data) {
                 CancelEvent::run($record, $data['reason'] ?? null);
 

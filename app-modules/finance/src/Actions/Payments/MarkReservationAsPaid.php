@@ -6,6 +6,7 @@ use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
 use App\Filament\Shared\Actions\Action;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Collection;
@@ -34,7 +35,7 @@ class MarkReservationAsPaid
             ->icon('tabler-cash')
             ->color('success')
             ->authorize('manage')
-            ->visible(fn (RehearsalReservation $record) => $record->needsPayment())
+            ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation && $record->needsPayment())
             ->schema([
                 Select::make('payment_method')
                     ->label('Payment Method')
@@ -53,7 +54,11 @@ class MarkReservationAsPaid
                     ->placeholder('Optional notes about the payment...')
                     ->rows(2),
             ])
-            ->action(function (RehearsalReservation $record, array $data) {
+            ->action(function (Reservation $record, array $data) {
+                if (! $record instanceof RehearsalReservation) {
+                    return;
+                }
+
                 static::run($record, $data['payment_method'], $data['payment_notes'] ?? null);
 
                 \Filament\Notifications\Notification::make()

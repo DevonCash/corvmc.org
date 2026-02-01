@@ -86,7 +86,7 @@ describe('Support Workflow: Generate Recurring Instances', function () {
 
         $series = RecurringSeries::create([
             'user_id' => $user->id,
-            'recurable_type' => RehearsalReservation::class,
+            'recurable_type' => 'rehearsal_reservation',
             'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=TU',
             'start_time' => '19:00:00',
             'end_time' => '21:00:00',
@@ -117,7 +117,7 @@ describe('Support Workflow: Generate Recurring Instances', function () {
 
         $series = RecurringSeries::create([
             'user_id' => $user->id,
-            'recurable_type' => RehearsalReservation::class,
+            'recurable_type' => 'rehearsal_reservation',
             'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=TU',
             'start_time' => '19:00:00',
             'end_time' => '21:00:00',
@@ -151,7 +151,7 @@ describe('Support Workflow: Generate Recurring Instances', function () {
 
         $series = RecurringSeries::create([
             'user_id' => $user->id,
-            'recurable_type' => RehearsalReservation::class,
+            'recurable_type' => 'rehearsal_reservation',
             'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=TU',
             'start_time' => '19:00:00',
             'end_time' => '21:00:00',
@@ -185,7 +185,7 @@ describe('Support Workflow: Cancel Recurring Series', function () {
 
         $series = RecurringSeries::create([
             'user_id' => $user->id,
-            'recurable_type' => RehearsalReservation::class,
+            'recurable_type' => 'rehearsal_reservation',
             'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=WE',
             'start_time' => '18:00:00',
             'end_time' => '20:00:00',
@@ -211,7 +211,7 @@ describe('Support Workflow: Cancel Recurring Series', function () {
 
         $series = RecurringSeries::create([
             'user_id' => $user->id,
-            'recurable_type' => RehearsalReservation::class,
+            'recurable_type' => 'rehearsal_reservation',
             'recurrence_rule' => 'FREQ=DAILY',
             'start_time' => '10:00:00',
             'end_time' => '12:00:00',

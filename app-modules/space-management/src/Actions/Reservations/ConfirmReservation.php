@@ -19,8 +19,13 @@ class ConfirmReservation
     /**
      * Check if a reservation can be confirmed based on business rules.
      */
-    public static function canConfirm(RehearsalReservation $reservation): bool
+    public static function canConfirm(Reservation $reservation): bool
     {
+        // Only RehearsalReservations can be confirmed
+        if (! $reservation instanceof RehearsalReservation) {
+            return false;
+        }
+
         // Must be in a confirmable status
         if (!in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
             return false;
@@ -99,6 +104,10 @@ class ConfirmReservation
             ])
             ->requiresConfirmation()
             ->action(function (Reservation $record, array $data) {
+                if (! $record instanceof RehearsalReservation) {
+                    return;
+                }
+
                 static::run($record);
 
                 \Filament\Notifications\Notification::make()

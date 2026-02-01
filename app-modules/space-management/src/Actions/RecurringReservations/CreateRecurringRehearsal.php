@@ -24,7 +24,7 @@ class CreateRecurringRehearsal
     {
         $series = RecurringSeries::create([
             'user_id' => $data['user_id'],
-            'recurable_type' => RehearsalReservation::class,
+            'recurable_type' => 'rehearsal_reservation',
             'recurrence_rule' => new RRule([
                 'FREQ' => $data['frequency'],
                 'INTERVAL' => $data['interval'],

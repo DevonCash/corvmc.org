@@ -153,8 +153,8 @@ class ProductionSeeder extends Seeder
         $reservedUntil = $event->end_datetime->copy()->addHour();
 
         EventReservation::create([
-            'type' => EventReservation::class,
-            'reservable_type' => Event::class,
+            'type' => 'event_reservation',
+            'reservable_type' => 'event',
             'reservable_id' => $event->id,
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,

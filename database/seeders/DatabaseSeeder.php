@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             MemberProfileSeeder::class,
             BandSeeder::class,
+            VenueSeeder::class,
             ProductionSeeder::class,
             ReservationSeeder::class,
             StaffProfileSeeder::class,

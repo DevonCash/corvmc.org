@@ -18,7 +18,7 @@ it('updates payment status to paid for unpaid reservation', function () {
     $reservation = RehearsalReservation::factory()
         ->pending()
         ->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $user->id,
         ]);
 
@@ -51,7 +51,7 @@ it('is idempotent - skips if already paid', function () {
     $reservation = RehearsalReservation::factory()
         ->confirmed()
         ->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $user->id,
         ]);
 

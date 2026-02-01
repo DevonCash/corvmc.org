@@ -8,13 +8,16 @@ use CorvMC\Moderation\Enums\Visibility;
 
 class EventPolicy
 {
-    public function manage(User $user, ?Event $event = null): bool
+    public function manage(User $user, ?Event $event = null): ?bool
     {
         if ($user->hasRole('production manager')) {
             return true;
         }
 
-        return $event && $event->isOrganizedBy($user);
+        if ($event && $event->isOrganizedBy($user)) {
+            return true;
+        }
+        return null;
     }
 
     public function viewAny(?User $user): bool
@@ -22,7 +25,7 @@ class EventPolicy
         return true;
     }
 
-    public function view(?User $user, Event $event): bool
+    public function view(?User $user, Event $event): ?bool
     {
         // Unpublished events: only managers or organizer
         if (! $event->isPublished()) {
@@ -53,17 +56,17 @@ class EventPolicy
         return false;
     }
 
-    public function create(User $user): bool
+    public function create(User $user): ?bool
     {
         return $this->manage($user);
     }
 
-    public function update(User $user, Event $event): bool
+    public function update(User $user, Event $event): ?bool
     {
         return $this->manage($user, $event);
     }
 
-    public function delete(User $user, Event $event): bool
+    public function delete(User $user, Event $event): ?bool
     {
         return $this->manage($user, $event);
     }
@@ -79,22 +82,27 @@ class EventPolicy
     }
 
     // Domain-specific methods
-    public function publish(User $user, Event $event): bool
+    public function publish(User $user, Event $event): ?bool
     {
-        return $this->update($user, $event) && $event->canPublish();
+        // Event must be publishable (has title, etc.)
+        if (! $event->canPublish()) {
+            return false;
+        }
+
+        return $this->update($user, $event);
     }
 
-    public function cancel(User $user, Event $event): bool
+    public function cancel(User $user, Event $event): ?bool
     {
         return $this->manage($user, $event);
     }
 
-    public function reschedule(User $user, Event $event): bool
+    public function reschedule(User $user, Event $event): ?bool
     {
         return $this->cancel($user, $event);
     }
 
-    public function managePerformers(User $user, Event $event): bool
+    public function managePerformers(User $user, Event $event): ?bool
     {
         return $this->update($user, $event);
     }

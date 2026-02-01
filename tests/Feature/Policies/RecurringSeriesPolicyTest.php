@@ -15,7 +15,7 @@ function createRecurringSeries(User $user): RecurringSeries
 {
     return RecurringSeries::create([
         'user_id' => $user->id,
-        'recurable_type' => RehearsalReservation::class,
+        'recurable_type' => 'rehearsal_reservation',
         'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=TU',
         'start_time' => '19:00:00',
         'end_time' => '21:00:00',

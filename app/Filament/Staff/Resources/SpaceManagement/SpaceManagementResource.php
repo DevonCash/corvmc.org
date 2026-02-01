@@ -12,6 +12,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class SpaceManagementResource extends Resource
 {
@@ -47,6 +48,14 @@ class SpaceManagementResource extends Resource
         return SpaceManagementTable::configure($table);
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        // Note: Don't eager load 'charge' here - polymorphic eager loading from base
+        // Reservation model uses wrong morph class. Lazy loading works correctly
+        // since STI resolves the correct subclass before accessing the relationship.
+        return parent::getEloquentQuery()->with(['reservable']);
+    }
+
     public static function getRelations(): array
     {
         return [];
@@ -54,8 +63,9 @@ class SpaceManagementResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        // Show count of today's space usage (all reservation types)
+        // Show count of today's reservations that haven't ended yet
         $total = Reservation::whereDate('reserved_at', today())
+            ->where('reserved_until', '>', now())
             ->where('status', '!=', 'cancelled')
             ->count();
 

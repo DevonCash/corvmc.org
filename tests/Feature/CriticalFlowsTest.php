@@ -134,7 +134,7 @@ describe('Flow 1: Create Reservation with Credits', function () {
         $endTime = $startTime->copy()->addHours(2);
 
         RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $user1->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
@@ -221,7 +221,7 @@ describe('Flow 2: Create Event with Conflict Checking', function () {
         $endTime = $startTime->copy()->addHours(3);
 
         RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
@@ -248,7 +248,7 @@ describe('Flow 2: Create Event with Conflict Checking', function () {
         $endTime = $startTime->copy()->addHours(3);
 
         RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
@@ -278,7 +278,7 @@ describe('Flow 2: Create Event with Conflict Checking', function () {
         $endTime = $startTime->copy()->addHours(3);
 
         RehearsalReservation::factory()->create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
@@ -342,6 +342,7 @@ describe('Flow 2b: Event → Space Reservation Sync', function () {
         ]);
 
         // Assert: EventReservation was created
+        $event->refresh();
         expect($event->spaceReservation)->not->toBeNull()
             ->and($event->spaceReservation)->toBeInstanceOf(EventReservation::class);
     });
@@ -361,6 +362,7 @@ describe('Flow 2b: Event → Space Reservation Sync', function () {
         ]);
 
         // Assert: Reservation includes setup (2 hours before) and breakdown (1 hour after)
+        $event->refresh();
         $reservation = $event->spaceReservation;
         expect($reservation->reserved_at->hour)->toBe(17) // 2 hours before 19:00
             ->and($reservation->reserved_until->hour)->toBe(23); // 1 hour after 22:00
@@ -427,6 +429,7 @@ describe('Flow 2b: Event → Space Reservation Sync', function () {
             'organizer_id' => $this->organizer->id,
         ]);
 
+        $event->refresh();
         $reservationId = $event->spaceReservation->id;
         expect(EventReservation::find($reservationId))->not->toBeNull();
 

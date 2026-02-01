@@ -262,7 +262,7 @@ class CreateBandReservation extends CreateRecord
 
             $reservation = RehearsalReservation::create([
                 'user_id' => $user->id,
-                'reservable_type' => Band::class,
+                'reservable_type' => 'band',
                 'reservable_id' => $band->id,
                 'reserved_at' => $startTime,
                 'reserved_until' => $endTime,

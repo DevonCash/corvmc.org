@@ -1,4 +1,25 @@
 <x-public.layout :title="$event->title . ' | Corvallis Music Collective'">
+    @if ($isPreview ?? false)
+        <div class="bg-info text-info-content">
+            <div class="container mx-auto px-4 py-3">
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div class="flex items-center gap-3">
+                        <x-tabler-eye class="size-5 flex-shrink-0" />
+                        <div>
+                            <span class="font-semibold">Preview Mode</span>
+                            <span class="hidden sm:inline"> – This event is not yet published. Only you can see this page.</span>
+                            <span class="sm:hidden"> – Not yet published</span>
+                        </div>
+                    </div>
+                    <a href="/staff/events/{{ $event->id }}/edit" class="btn btn-sm btn-ghost">
+                        <x-tabler-edit class="size-4" />
+                        Edit
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Hero Section: Full Height Poster + Event Details -->
     <div class="flex flex-col items-center lg:grid grid-cols-2 gap-x-8 justify-center md:mx-auto p-8 max-w-screen"
         style="grid-template-columns: min(calc(90vh * 8.5/11), calc(100vw - var(--container-xs) - 12rem)) min-content; place-content: center;">

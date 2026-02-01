@@ -6,6 +6,7 @@ use CorvMC\Events\Models\Event;
 use CorvMC\Membership\Models\MemberProfile;
 use CorvMC\Sponsorship\Models\Sponsor;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -66,10 +67,15 @@ Route::get('/events', function () {
     return view('events::public.index');
 })->name('events.index');
 
-Route::get('/events/{event}', function (Event $event) {
-    Gate::authorize('view', $event);
+Route::get('/events/{event}', function (Event $event, Request $request) {
+    $isPreview = $request->hasValidSignature();
 
-    return view('events::public.show', compact('event'));
+    // Allow preview access via signed URL
+    if (! $isPreview) {
+        Gate::authorize('view', $event);
+    }
+
+    return view('events::public.show', compact('event', 'isPreview'));
 })->where('event', '[0-9]+')->name('events.show');
 
 Route::get('/show-tonight', function () {

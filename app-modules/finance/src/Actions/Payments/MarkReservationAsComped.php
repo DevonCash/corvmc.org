@@ -4,6 +4,7 @@ namespace CorvMC\Finance\Actions\Payments;
 
 use App\Filament\Shared\Actions\Action;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -24,7 +25,7 @@ class MarkReservationAsComped
             ->icon('tabler-gift')
             ->color('info')
             ->authorize('manage')
-            ->visible(fn (RehearsalReservation $record) => $record->needsPayment())
+            ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation && $record->needsPayment())
             ->schema([
                 Textarea::make('comp_reason')
                     ->label('Comp Reason')
@@ -32,7 +33,11 @@ class MarkReservationAsComped
                     ->required()
                     ->rows(2),
             ])
-            ->action(function (RehearsalReservation $record, array $data) {
+            ->action(function (Reservation $record, array $data) {
+                if (! $record instanceof RehearsalReservation) {
+                    return;
+                }
+
                 static::run($record, $data['comp_reason']);
 
                 \Filament\Notifications\Notification::make()
