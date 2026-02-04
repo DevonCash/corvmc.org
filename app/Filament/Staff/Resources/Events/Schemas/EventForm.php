@@ -381,11 +381,10 @@ class EventForm
             ->disk('r2')
             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
             ->maxSize(4096) // 4MB for posters
-            ->imageAspectRatio('8.5:11') // Standard poster ratio
             ->automaticallyResizeImagesMode('cover')
             ->automaticallyResizeImagesToWidth(850)
             ->automaticallyResizeImagesToHeight(1100)
-            ->helperText('Upload a poster in 8.5:11 aspect ratio (letter size). Max 4MB.')
+            ->helperText('Upload a poster image. Will be cropped to letter size (8.5×11). Max 4MB.')
             ->extraAttributes(['class' => 'h-full [&_.filepond--root]:h-full [&_.filepond--drop-label]:h-full']);
     }
 }
