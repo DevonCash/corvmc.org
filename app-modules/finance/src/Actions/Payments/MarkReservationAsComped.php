@@ -16,6 +16,17 @@ class MarkReservationAsComped
     public function handle(RehearsalReservation $reservation, ?string $notes = null): void
     {
         $reservation->charge?->markAsComped($notes);
+
+        $reason = $notes ?? 'No reason provided';
+
+        activity('reservation')
+            ->performedOn($reservation)
+            ->causedBy(auth()->user())
+            ->event('comped')
+            ->withProperties([
+                'reason' => $reason,
+            ])
+            ->log("Reservation comped: {$reason}");
     }
 
     public static function filamentAction(): Action

@@ -26,6 +26,18 @@ class MarkReservationAsPaid
 
         // Update charge record
         $reservation->charge?->markAsPaid($paymentMethod ?? 'manual', null, $notes);
+
+        $method = $paymentMethod ?? 'manual';
+
+        activity('reservation')
+            ->performedOn($reservation)
+            ->causedBy(auth()->user())
+            ->event('payment_recorded')
+            ->withProperties([
+                'payment_method' => $method,
+                'notes' => $notes,
+            ])
+            ->log("Payment recorded via {$method}");
     }
 
     public static function filamentAction(): Action

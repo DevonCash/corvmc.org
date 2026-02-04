@@ -48,7 +48,7 @@ class ActivitySidebar
                     }
 
                     if ($bandId) {
-                        $query->where('subject_type', 'App\\Models\\Band')
+                        $query->where('subject_type', 'band')
                             ->where('subject_id', $bandId);
                     }
                 }
@@ -61,13 +61,13 @@ class ActivitySidebar
 
                     $query->where(function ($q) use ($context, $memberProfile) {
                         // Direct member profile activities
-                        $q->where('subject_type', 'App\\Models\\MemberProfile')
+                        $q->where('subject_type', 'member_profile')
                             ->where('subject_id', $context['record_id']);
 
                         // User activities related to this member profile
                         if ($memberProfile && $memberProfile->user_id) {
                             $q->orWhere(function ($userQuery) use ($memberProfile) {
-                                $userQuery->where('subject_type', 'App\\Models\\User')
+                                $userQuery->where('subject_type', 'user')
                                     ->where('subject_id', $memberProfile->user_id);
                             });
                         }
@@ -76,15 +76,15 @@ class ActivitySidebar
                 break;
 
             case 'reservation':
-                $query->where('subject_type', 'App\\Models\\Reservation');
+                $query->whereIn('subject_type', ['reservation', 'rehearsal_reservation']);
                 break;
 
             case 'production':
                 if ($context['record_id']) {
-                    $query->where('subject_type', 'App\\Models\\Production')
+                    $query->where('subject_type', 'event')
                         ->where('subject_id', $context['record_id']);
                 } else {
-                    $query->where('subject_type', 'App\\Models\\Production');
+                    $query->where('subject_type', 'event');
                 }
                 break;
 
@@ -304,11 +304,11 @@ class ActivitySidebar
 
         try {
             return match ($activity->subject_type) {
-                'App\\Models\\Band' => route('filament.member.directory.resources.bands.view', ['record' => $activity->subject]),
-                'App\\Models\\MemberProfile' => route('filament.member.directory.resources.members.view', ['record' => $activity->subject_id]),
-                'App\\Models\\Production' => route('filament.member.resources.productions.view', ['record' => $activity->subject_id]),
-                'App\\Models\\Reservation' => route('filament.member.resources.reservations.index'),
-                'App\\Models\\User' => (isset($activity->subject->profile) && $activity->subject->profile?->id) ?
+                'band' => route('filament.member.directory.resources.bands.view', ['record' => $activity->subject]),
+                'member_profile' => route('filament.member.directory.resources.members.view', ['record' => $activity->subject_id]),
+                'event' => route('filament.member.resources.productions.view', ['record' => $activity->subject_id]),
+                'reservation', 'rehearsal_reservation' => route('filament.member.resources.reservations.index'),
+                'user' => (isset($activity->subject->profile) && $activity->subject->profile?->id) ?
                     route('filament.member.directory.resources.members.view', ['record' => $activity->subject->profile->id]) : null,
                 default => null,
             };

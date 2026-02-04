@@ -30,6 +30,16 @@ class HandleSuccessfulPayment
         // Update Charge record
         $reservation->charge?->markAsPaid('stripe', $sessionId, "Paid via Stripe checkout");
 
+        activity('reservation')
+            ->performedOn($reservation)
+            ->causedBy($user)
+            ->event('payment_recorded')
+            ->withProperties([
+                'payment_method' => 'stripe',
+                'session_id' => $sessionId,
+            ])
+            ->log('Payment completed via Stripe checkout');
+
         // Confirm the reservation
         $reservation->update([
             'status' => ReservationStatus::Confirmed,

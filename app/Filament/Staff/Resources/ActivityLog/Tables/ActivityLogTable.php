@@ -33,15 +33,15 @@ class ActivityLogTable
                 Tables\Columns\TextColumn::make('subject_type')
                     ->label('Subject Type')
                     ->formatStateUsing(
-                        fn (?string $state): string => $state ? class_basename($state) : 'System'
+                        fn (?string $state): string => $state ? str($state)->replace('_', ' ')->title()->toString() : 'System'
                     )
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
-                        'App\\Models\\User' => 'info',
-                        'App\\Models\\MemberProfile' => 'success',
-                        'App\\Models\\Band' => 'warning',
-                        'App\\Models\\Production' => 'primary',
-                        'App\\Models\\Reservation' => 'secondary',
+                        'user' => 'info',
+                        'member_profile' => 'success',
+                        'band' => 'warning',
+                        'event' => 'primary',
+                        'reservation', 'rehearsal_reservation' => 'secondary',
                         default => 'gray',
                     })
                     ->sortable(),
@@ -53,6 +53,11 @@ class ActivityLogTable
                         'created' => 'success',
                         'updated' => 'info',
                         'deleted' => 'danger',
+                        'confirmed' => 'success',
+                        'cancelled', 'auto_cancelled' => 'danger',
+                        'rescheduled' => 'warning',
+                        'payment_recorded' => 'success',
+                        'comped' => 'info',
                         default => 'gray',
                     })
                     ->sortable(),
@@ -79,11 +84,12 @@ class ActivityLogTable
                 Tables\Filters\SelectFilter::make('subject_type')
                     ->label('Content Type')
                     ->options([
-                        'App\\Models\\User' => 'Users',
-                        'App\\Models\\MemberProfile' => 'Member Profiles',
-                        'App\\Models\\Band' => 'Bands',
-                        'App\\Models\\Production' => 'Events',
-                        'App\\Models\\Reservation' => 'Reservations',
+                        'user' => 'Users',
+                        'member_profile' => 'Member Profiles',
+                        'band' => 'Bands',
+                        'event' => 'Events',
+                        'reservation' => 'Reservations',
+                        'rehearsal_reservation' => 'Rehearsal Reservations',
                     ])
                     ->multiple(),
 
@@ -93,6 +99,12 @@ class ActivityLogTable
                         'created' => 'Created',
                         'updated' => 'Updated',
                         'deleted' => 'Deleted',
+                        'confirmed' => 'Confirmed',
+                        'cancelled' => 'Cancelled',
+                        'rescheduled' => 'Rescheduled',
+                        'payment_recorded' => 'Payment Recorded',
+                        'comped' => 'Comped',
+                        'auto_cancelled' => 'Auto-Cancelled',
                     ])
                     ->multiple(),
 
@@ -127,10 +139,10 @@ class ActivityLogTable
                         }
 
                         return match ($record->subject_type) {
-                            'App\\Models\\MemberProfile' => route('filament.member.directory.resources.members.view', $record->subject),
-                            'App\\Models\\Band' => route('filament.member.directory.resources.bands.view', $record->subject),
-                            'App\\Models\\Production' => route('filament.member.resources.productions.edit', $record->subject),
-                            'App\\Models\\Reservation' => route('filament.member.resources.reservations.index'),
+                            'member_profile' => route('filament.member.directory.resources.members.view', $record->subject),
+                            'band' => route('filament.member.directory.resources.bands.view', $record->subject),
+                            'event' => route('filament.member.resources.productions.edit', $record->subject),
+                            'reservation', 'rehearsal_reservation' => route('filament.member.resources.reservations.index'),
                             default => null,
                         };
                     })
@@ -223,6 +235,22 @@ class ActivityLogTable
 
     protected static function getActivityIcon(Activity $activity): string
     {
+        // Check semantic event first, then fall back to description matching
+        if ($activity->event) {
+            $icon = match ($activity->event) {
+                'confirmed' => 'tabler-check',
+                'cancelled', 'auto_cancelled' => 'tabler-x',
+                'rescheduled' => 'tabler-calendar-repeat',
+                'payment_recorded' => 'tabler-cash',
+                'comped' => 'tabler-gift',
+                default => null,
+            };
+
+            if ($icon) {
+                return $icon;
+            }
+        }
+
         return match ($activity->description) {
             'User account created' => 'tabler-user-plus',
             'User account updated' => 'tabler-user-edit',
@@ -243,6 +271,21 @@ class ActivityLogTable
 
     protected static function getActivityColor(Activity $activity): string
     {
+        // Check semantic event first
+        if ($activity->event) {
+            $color = match ($activity->event) {
+                'confirmed', 'payment_recorded' => 'success',
+                'cancelled', 'auto_cancelled' => 'danger',
+                'rescheduled' => 'warning',
+                'comped' => 'info',
+                default => null,
+            };
+
+            if ($color) {
+                return $color;
+            }
+        }
+
         return match (true) {
             str_contains($activity->description, 'created') => 'success',
             str_contains($activity->description, 'updated') => 'info',

@@ -4,8 +4,6 @@ namespace App\Filament\Staff\Resources\ActivityLog;
 
 use App\Filament\Staff\Resources\ActivityLog\Tables\ActivityLogTable;
 use App\Models\User;
-use CorvMC\Bands\Models\Band;
-use CorvMC\Membership\Models\MemberProfile;
 use Filament\Resources\Resource;
 use Spatie\Activitylog\Models\Activity;
 
@@ -74,14 +72,14 @@ class ActivityLogResource extends Resource
      * Filter out legacy/removed model classes to prevent errors.
      */
     protected static array $validSubjectTypes = [
-        User::class,
-        MemberProfile::class,
-        Band::class,
-        \CorvMC\Events\Models\Event::class,
-        \CorvMC\SpaceManagement\Models\Reservation::class,
-        \CorvMC\SpaceManagement\Models\RehearsalReservation::class,
-        \CorvMC\Equipment\Models\Equipment::class,
-        \CorvMC\Equipment\Models\EquipmentLoan::class,
+        'user',
+        'member_profile',
+        'band',
+        'event',
+        'reservation',
+        'rehearsal_reservation',
+        'equipment',
+        'equipment_loan',
     ];
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder

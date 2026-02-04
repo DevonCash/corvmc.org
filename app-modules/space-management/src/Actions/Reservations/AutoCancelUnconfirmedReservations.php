@@ -39,6 +39,14 @@ class AutoCancelUnconfirmedReservations
                     'cancellation_reason' => 'Not confirmed within 3-day window',
                 ]);
 
+                activity('reservation')
+                    ->performedOn($reservation)
+                    ->event('auto_cancelled')
+                    ->withProperties([
+                        'original_status' => ReservationStatus::Reserved->value,
+                    ])
+                    ->log('Reservation auto-cancelled: not confirmed within 3-day window');
+
                 // Send notification to user
                 try {
                     $user->notify(new ReservationAutoCancelledNotification($reservation));

@@ -89,6 +89,14 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     {
         return LogOptions::defaults()
             ->logAll()
+            ->dontLogIfAttributesChangedOnly([
+                'status',
+                'reserved_at',
+                'reserved_until',
+                'hours_used',
+                'free_hours_used',
+                'cancellation_reason',
+            ])
             ->useLogName(static::getLabel())
             ->setDescriptionForEvent(fn (string $eventName) => "Reservation has been {$eventName}");
     }

@@ -76,6 +76,7 @@ class SpaceManagementResource extends Resource
     {
         return [
             'index' => ListSpaceUsage::route('/'),
+            'view' => Pages\ViewSpaceUsage::route('/{record}'),
         ];
     }
 
