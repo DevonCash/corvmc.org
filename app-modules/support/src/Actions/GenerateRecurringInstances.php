@@ -4,6 +4,7 @@ namespace CorvMC\Support\Actions;
 
 use CorvMC\Support\Contracts\Recurrable;
 use CorvMC\Support\Models\RecurringSeries;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -23,7 +24,7 @@ class GenerateRecurringInstances
      */
     public function handle(RecurringSeries $series): Collection
     {
-        $recurableType = $series->recurable_type;
+        $recurableType = Relation::getMorphedModel($series->recurable_type) ?? $series->recurable_type;
 
         if (! is_a($recurableType, Recurrable::class, true)) {
             throw new \RuntimeException(

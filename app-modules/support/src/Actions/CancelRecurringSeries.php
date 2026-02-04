@@ -4,6 +4,7 @@ namespace CorvMC\Support\Actions;
 
 use CorvMC\Support\Contracts\Recurrable;
 use CorvMC\Support\Models\RecurringSeries;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -22,7 +23,7 @@ class CancelRecurringSeries
      */
     public function handle(RecurringSeries $series, ?string $reason = null): void
     {
-        $recurableType = $series->recurable_type;
+        $recurableType = Relation::getMorphedModel($series->recurable_type) ?? $series->recurable_type;
 
         if (! is_a($recurableType, Recurrable::class, true)) {
             throw new \RuntimeException(

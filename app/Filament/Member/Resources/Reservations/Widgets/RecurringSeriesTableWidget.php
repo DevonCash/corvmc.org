@@ -4,8 +4,6 @@ namespace App\Filament\Member\Resources\Reservations\Widgets;
 
 use CorvMC\SpaceManagement\Actions\RecurringReservations\CreateRecurringRehearsal;
 use CorvMC\Support\Models\RecurringSeries;
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
@@ -34,7 +32,7 @@ class RecurringSeriesTableWidget extends BaseWidget
         return $table
             ->query(
                 RecurringSeries::query()
-                    ->where('recurable_type', RehearsalReservation::class)
+                    ->where('recurable_type', 'rehearsal_reservation')
                     ->where('user_id', Auth::id())
                     ->with(['user', 'instances'])
             )

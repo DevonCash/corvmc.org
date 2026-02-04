@@ -7,7 +7,6 @@ use App\Filament\Staff\Resources\RecurringReservations\Pages\EditRecurringReserv
 use App\Filament\Staff\Resources\RecurringReservations\Pages\ListRecurringReservations;
 use App\Filament\Staff\Resources\RecurringReservations\Schemas\RecurringReservationForm;
 use App\Filament\Staff\Resources\RecurringReservations\Tables\RecurringReservationsTable;
-use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\Support\Models\RecurringSeries;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -38,7 +37,7 @@ class RecurringReservationResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->where('recurable_type', Reservation::class);
+            ->where('recurable_type', 'rehearsal_reservation');
     }
 
     public static function form(Schema $schema): Schema
