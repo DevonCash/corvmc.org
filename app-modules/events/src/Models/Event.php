@@ -146,6 +146,16 @@ class Event extends ContentModel implements Recurrable
 {
     use HasFactory, HasPoster, HasPublishing, HasRecurringSeries, HasTimePeriod, SoftDeletes;
 
+    /**
+     * Default attribute values.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'ticketing_enabled' => false,
+        'tickets_sold' => 0,
+    ];
+
     protected static function newFactory(): EventFactory
     {
         return EventFactory::new();

@@ -60,7 +60,7 @@ class SyncEventSpaceReservation
         $reservation = $event->spaceReservation()->updateOrCreate(
             [],
             [
-                'type' => EventReservation::class,
+                'type' => (new EventReservation)->getMorphClass(),
                 'reserved_at' => $reservedAt,
                 'reserved_until' => $reservedUntil,
                 'status' => ReservationStatus::Confirmed,

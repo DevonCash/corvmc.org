@@ -64,7 +64,7 @@ class MemberProfilePolicy
 
     public function delete(User $user, MemberProfile $memberProfile): bool
     {
-        if ($user && $user->isOwnedBy($user)) {
+        if ($user && $memberProfile->isOwnedBy($user)) {
             return true;
         }
         return $this->manage($user);

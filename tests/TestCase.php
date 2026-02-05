@@ -4,6 +4,7 @@ namespace Tests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Spatie\LaravelSettings\Migrations\SettingsMigrator;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -13,8 +14,30 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        // Seed settings values required for tests
+        $this->seedSettings();
+
         // Ensure roles are created for testing
         $this->setupRoles();
+    }
+
+    /**
+     * Seed required settings values for tests.
+     */
+    protected function seedSettings(): void
+    {
+        $migrator = app(SettingsMigrator::class);
+
+        // Reservation settings
+        if (! $migrator->exists('reservation.buffer_minutes')) {
+            $migrator->add('reservation.buffer_minutes', 0);
+        }
+        if (! $migrator->exists('reservation.default_event_setup_minutes')) {
+            $migrator->add('reservation.default_event_setup_minutes', 120);
+        }
+        if (! $migrator->exists('reservation.default_event_teardown_minutes')) {
+            $migrator->add('reservation.default_event_teardown_minutes', 60);
+        }
     }
 
     /**

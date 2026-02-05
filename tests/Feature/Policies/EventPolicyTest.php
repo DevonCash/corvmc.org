@@ -19,13 +19,13 @@ describe('manage', function () {
     it('denies regular members from managing events', function () {
         $member = User::factory()->create();
 
-        expect($this->policy->manage($member))->toBeFalse();
+        expect($this->policy->manage($member))->toBeNull();
     });
 
     it('denies sustaining members from managing events', function () {
         $sustainingMember = User::factory()->sustainingMember()->create();
 
-        expect($this->policy->manage($sustainingMember))->toBeFalse();
+        expect($this->policy->manage($sustainingMember))->toBeNull();
     });
 });
 
@@ -92,7 +92,7 @@ describe('create', function () {
     it('denies regular members from creating events', function () {
         $member = User::factory()->create();
 
-        expect($this->policy->create($member))->toBeFalse();
+        expect($this->policy->create($member))->toBeNull();
     });
 });
 
@@ -123,7 +123,7 @@ describe('update', function () {
             'organizer_id' => $organizer->id,
         ]);
 
-        expect($this->policy->update($member, $event))->toBeFalse();
+        expect($this->policy->update($member, $event))->toBeNull();
     });
 });
 
@@ -154,7 +154,7 @@ describe('delete', function () {
             'organizer_id' => $organizer->id,
         ]);
 
-        expect($this->policy->delete($member, $event))->toBeFalse();
+        expect($this->policy->delete($member, $event))->toBeNull();
     });
 });
 
@@ -185,7 +185,7 @@ describe('restore', function () {
             'organizer_id' => $organizer->id,
         ]);
 
-        expect($this->policy->restore($member, $event))->toBeFalse();
+        expect($this->policy->restore($member, $event))->toBeNull();
     });
 });
 
@@ -229,7 +229,7 @@ describe('publish', function () {
             'title' => 'Concert Night',
         ]);
 
-        expect($this->policy->publish($member, $event))->toBeFalse();
+        expect($this->policy->publish($member, $event))->toBeNull();
     });
 });
 
@@ -260,7 +260,7 @@ describe('cancel', function () {
             'organizer_id' => $organizer->id,
         ]);
 
-        expect($this->policy->cancel($member, $event))->toBeFalse();
+        expect($this->policy->cancel($member, $event))->toBeNull();
     });
 });
 
@@ -291,7 +291,7 @@ describe('reschedule', function () {
             'organizer_id' => $organizer->id,
         ]);
 
-        expect($this->policy->reschedule($member, $event))->toBeFalse();
+        expect($this->policy->reschedule($member, $event))->toBeNull();
     });
 });
 
@@ -322,6 +322,6 @@ describe('managePerformers', function () {
             'organizer_id' => $organizer->id,
         ]);
 
-        expect($this->policy->managePerformers($member, $event))->toBeFalse();
+        expect($this->policy->managePerformers($member, $event))->toBeNull();
     });
 });

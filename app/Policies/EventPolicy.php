@@ -71,7 +71,7 @@ class EventPolicy
         return $this->manage($user, $event);
     }
 
-    public function restore(User $user, Event $event): bool
+    public function restore(User $user, Event $event): ?bool
     {
         return $this->manage($user, $event);
     }
