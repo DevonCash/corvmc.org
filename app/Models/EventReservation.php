@@ -92,9 +92,7 @@ class EventReservation extends Reservation
         return ReservationFactory::new()->setModelName(static::class);
     }
 
-    protected $attributes = [
-        'type' => self::class,
-    ];
+    // Note: type is set automatically by parent Reservation::creating callback using getMorphClass()
 
     /**
      * The event that owns this space reservation.

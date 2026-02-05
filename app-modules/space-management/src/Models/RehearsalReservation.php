@@ -157,7 +157,7 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
 
         Reservation::create([
             'user_id' => $series->user_id,
-            'type' => static::class,
+            'type' => (new static)->getMorphClass(),
             'recurring_series_id' => $series->id,
             'instance_date' => $date->toDateString(),
             'reserved_at' => $startDateTime,
