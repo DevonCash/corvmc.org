@@ -38,6 +38,14 @@ abstract class TestCase extends BaseTestCase
         if (! $migrator->exists('reservation.default_event_teardown_minutes')) {
             $migrator->add('reservation.default_event_teardown_minutes', 60);
         }
+
+        // Equipment settings
+        if (! $migrator->exists('equipment.enable_equipment_features')) {
+            $migrator->add('equipment.enable_equipment_features', false);
+        }
+        if (! $migrator->exists('equipment.enable_rental_features')) {
+            $migrator->add('equipment.enable_rental_features', false);
+        }
     }
 
     /**
