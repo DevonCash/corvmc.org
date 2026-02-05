@@ -4,9 +4,11 @@ namespace App\Filament\Staff\Resources\ActivityLog\Tables;
 
 use App\Models\User;
 use Filament\Actions;
+use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogTable
@@ -133,21 +135,9 @@ class ActivityLogTable
                 Actions\Action::make('view_subject')
                     ->label('View Subject')
                     ->icon('tabler-eye')
-                    ->url(function (Activity $record): ?string {
-                        if (! $record->subject) {
-                            return null;
-                        }
-
-                        return match ($record->subject_type) {
-                            'member_profile' => route('filament.member.directory.resources.members.view', $record->subject),
-                            'band' => route('filament.member.directory.resources.bands.view', $record->subject),
-                            'event' => route('filament.member.resources.productions.edit', $record->subject),
-                            'reservation', 'rehearsal_reservation' => route('filament.member.resources.reservations.index'),
-                            default => null,
-                        };
-                    })
+                    ->url(fn (Activity $record): ?string => self::getSubjectUrl($record))
                     ->openUrlInNewTab()
-                    ->visible(fn (Activity $record): bool => $record->subject !== null),
+                    ->visible(fn (Activity $record): bool => $record->subject !== null && self::getSubjectUrl($record) !== null),
 
                 Actions\DeleteAction::make()
                     ->visible(fn (): bool => User::me()?->can('delete activity log') ?? false),
@@ -166,71 +156,132 @@ class ActivityLogTable
 
     protected static function formatActivityDescription(Activity $activity): string
     {
-        $causerName = $activity->causer?->name ?? 'System';
+        $causer = $activity->causer;
+        $causerName = $causer instanceof User ? $causer->name : null;
+        $subjectName = self::getSubjectDisplayName($activity);
+        $subjectLabel = self::getSubjectTypeLabel($activity->subject_type);
+        $event = $activity->event ?? self::extractEventFromDescription($activity->description);
 
-        return match ($activity->description) {
-            'User account created' => "{$causerName} joined the community",
-            'User account updated' => "{$causerName} updated their account",
-            'Production created' => self::formatProductionDescription($activity, $causerName, 'created'),
-            'Production updated' => self::formatProductionDescription($activity, $causerName, 'updated'),
-            'Production deleted' => "{$causerName} removed an event",
-            'Band profile created' => self::formatBandDescription($activity, $causerName, 'created'),
-            'Band profile updated' => self::formatBandDescription($activity, $causerName, 'updated'),
-            'Band profile deleted' => "{$causerName} removed a band profile",
-            'Member profile created' => "{$causerName} completed their profile",
-            'Member profile updated' => "{$causerName} updated their profile",
-            'Practice space reservation created' => self::formatReservationDescription($activity, $causerName, 'booked'),
-            'Practice space reservation updated' => self::formatReservationDescription($activity, $causerName, 'updated'),
-            'Practice space reservation deleted' => self::formatReservationDescription($activity, $causerName, 'cancelled'),
-            default => $activity->description ?: "{$causerName} performed an action",
+        // Semantic events get special formatting
+        if ($event && in_array($event, ['confirmed', 'cancelled', 'auto_cancelled', 'rescheduled', 'payment_recorded', 'comped'])) {
+            return self::formatSemanticEvent($causerName, $subjectName, $subjectLabel, $event);
+        }
+
+        // Standard CRUD events
+        $identifier = $subjectName ? "{$subjectLabel} \"{$subjectName}\"" : "a {$subjectLabel}";
+
+        return match ($event) {
+            'created' => $causerName
+                ? "{$causerName} created {$identifier}"
+                : ucfirst($identifier) . ' was created',
+            'updated' => $causerName
+                ? "{$causerName} updated {$identifier}"
+                : ucfirst($identifier) . ' was updated',
+            'deleted' => $causerName
+                ? "{$causerName} deleted {$identifier}"
+                : ucfirst($identifier) . ' was deleted',
+            default => $activity->description ?: ($causerName ? "{$causerName} performed an action" : 'Action performed'),
         };
     }
 
-    protected static function formatProductionDescription(Activity $activity, string $causerName, string $action): string
+    protected static function formatSemanticEvent(?string $causerName, ?string $subjectName, string $subjectLabel, string $event): string
     {
-        $production = $activity->subject;
-        if ($production && isset($production->title)) {
-            return "{$causerName} {$action} event \"{$production->title}\"";
-        }
+        $identifier = $subjectName ? "\"{$subjectName}\"" : "a {$subjectLabel}";
 
-        return "{$causerName} {$action} an event";
+        return match ($event) {
+            'confirmed' => $causerName ? "{$causerName} confirmed {$identifier}" : ucfirst($identifier) . ' was confirmed',
+            'cancelled' => $causerName ? "{$causerName} cancelled {$identifier}" : ucfirst($identifier) . ' was cancelled',
+            'auto_cancelled' => ucfirst($identifier) . ' was auto-cancelled',
+            'rescheduled' => $causerName ? "{$causerName} rescheduled {$identifier}" : ucfirst($identifier) . ' was rescheduled',
+            'payment_recorded' => $causerName ? "{$causerName} recorded payment for {$identifier}" : "Payment recorded for {$identifier}",
+            'comped' => $causerName ? "{$causerName} comped {$identifier}" : ucfirst($identifier) . ' was comped',
+            default => $causerName ? "{$causerName} {$event} {$identifier}" : ucfirst($identifier) . " was {$event}",
+        };
     }
 
-    protected static function formatBandDescription(Activity $activity, string $causerName, string $action): string
+    /**
+     * Get a display name for the activity subject.
+     */
+    protected static function getSubjectDisplayName(Activity $activity): ?string
     {
-        $band = $activity->subject;
-        if ($band && isset($band->name)) {
-            $actionText = $action === 'created' ? 'created' : 'updated';
+        $subject = $activity->subject;
 
-            return "{$causerName} {$actionText} band \"{$band->name}\"";
+        if (! $subject) {
+            return null;
         }
 
-        return "{$causerName} {$action} a band profile";
+        // Try common name attributes in order of preference
+        foreach (['title', 'name'] as $attr) {
+            if (isset($subject->{$attr}) && $subject->{$attr}) {
+                return $subject->{$attr};
+            }
+        }
+
+        // Special cases for models without simple name attributes
+        return match ($activity->subject_type) {
+            'reservation', 'rehearsal_reservation' => self::getReservationDisplayName($subject),
+            'equipment_loan' => self::getEquipmentLoanDisplayName($subject),
+            default => null,
+        };
     }
 
-    protected static function formatReservationDescription(Activity $activity, string $causerName, string $action): string
+    protected static function getReservationDisplayName(mixed $reservation): ?string
     {
-        $currentUser = User::me();
-        $reservation = $activity->subject;
-
-        // Only show details for own reservations or if user has permission
-        if (
-            $currentUser && $reservation &&
-            (isset($reservation->user_id) && $reservation->user_id === $currentUser->id || $currentUser->can('view reservations'))
-        ) {
-
-            $actionText = match ($action) {
-                'booked' => 'booked the practice space',
-                'updated' => 'updated their reservation',
-                'cancelled' => 'cancelled a reservation',
-                default => "{$action} a reservation",
-            };
-
-            return "{$causerName} {$actionText}";
+        if (! isset($reservation->reserved_at)) {
+            return null;
         }
 
-        // Generic message for others
-        return 'Practice space activity';
+        $date = $reservation->reserved_at->format('M j');
+        $time = $reservation->reserved_at->format('g:ia');
+
+        return "{$date} at {$time}";
+    }
+
+    protected static function getEquipmentLoanDisplayName(mixed $loan): ?string
+    {
+        $equipment = $loan->equipment ?? null;
+
+        return $equipment?->name;
+    }
+
+    /**
+     * Get a human-readable label for a subject type.
+     */
+    protected static function getSubjectTypeLabel(?string $subjectType): string
+    {
+        return match ($subjectType) {
+            'user' => 'user',
+            'member_profile' => 'member profile',
+            'band' => 'band',
+            'event' => 'event',
+            'reservation', 'rehearsal_reservation' => 'reservation',
+            'equipment' => 'equipment',
+            'equipment_loan' => 'equipment loan',
+            'equipment_damage_report' => 'damage report',
+            default => $subjectType ? str($subjectType)->replace('_', ' ')->toString() : 'record',
+        };
+    }
+
+    /**
+     * Extract the event type from the description if not explicitly set.
+     */
+    protected static function extractEventFromDescription(?string $description): ?string
+    {
+        if (! $description) {
+            return null;
+        }
+
+        if (str_contains($description, 'created')) {
+            return 'created';
+        }
+        if (str_contains($description, 'updated')) {
+            return 'updated';
+        }
+        if (str_contains($description, 'deleted')) {
+            return 'deleted';
+        }
+
+        return null;
     }
 
     protected static function getActivityIcon(Activity $activity): string
@@ -292,5 +343,53 @@ class ActivityLogTable
             str_contains($activity->description, 'deleted') => 'danger',
             default => 'gray',
         };
+    }
+
+    /**
+     * Get the URL to view/edit the subject of an activity log entry.
+     *
+     * Uses Filament's panel-aware resource URL generation to find the appropriate
+     * resource across all panels without hardcoding resource classes.
+     */
+    protected static function getSubjectUrl(Activity $activity): ?string
+    {
+        if (! $activity->subject instanceof Model) {
+            return null;
+        }
+
+        return self::getModelUrl($activity->subject);
+    }
+
+    /**
+     * Find a resource URL for a model within the current Filament panel.
+     *
+     * Prefers 'view' page, falls back to 'edit', then 'index'.
+     */
+    protected static function getModelUrl(Model $model): ?string
+    {
+        $panel = Filament::getCurrentPanel();
+
+        if (! $panel) {
+            return null;
+        }
+
+        $resource = $panel->getModelResource($model);
+
+        if (! $resource) {
+            return null;
+        }
+
+        // Try view, then edit, then index
+        foreach (['view', 'edit', 'index'] as $page) {
+            if (array_key_exists($page, $resource::getPages())) {
+                try {
+                    return $panel->getResourceUrl($model, $page);
+                } catch (\Throwable) {
+                    continue;
+                }
+            }
+        }
+
+        return null;
     }
 }
