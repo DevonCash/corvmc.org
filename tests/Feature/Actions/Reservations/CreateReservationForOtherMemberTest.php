@@ -1,5 +1,7 @@
 <?php
 
+use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Models\UserCredit;
 use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
 use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
@@ -9,6 +11,15 @@ use Carbon\Carbon;
 beforeEach(function () {
     $this->seed(\Database\Seeders\PermissionSeeder::class);
 });
+
+function grantFreeHours(User $user, int $blocks = 8): void
+{
+    UserCredit::create([
+        'user_id' => $user->id,
+        'credit_type' => CreditType::FreeHours->value,
+        'balance' => $blocks,
+    ]);
+}
 
 it('creates a reservation attributed to the target member, not the manager', function () {
     $manager = User::factory()->withRole('practice space manager')->create();
@@ -30,6 +41,7 @@ it('creates a reservation attributed to the target member, not the manager', fun
 it('calculates cost based on the target member, not the authenticated user', function () {
     $manager = User::factory()->withRole('practice space manager')->create();
     $sustainingMember = User::factory()->sustainingMember()->create();
+    grantFreeHours($sustainingMember, 8); // 4 hours worth of credits
     $regularMember = User::factory()->create();
 
     $this->actingAs($manager);
@@ -53,6 +65,7 @@ it('calculates cost based on the target member, not the authenticated user', fun
 it('creates a reservation for a sustaining member with free hours applied', function () {
     $manager = User::factory()->withRole('practice space manager')->create();
     $sustainingMember = User::factory()->sustainingMember()->create();
+    grantFreeHours($sustainingMember, 8); // 4 hours worth of credits
 
     $this->actingAs($manager);
 
