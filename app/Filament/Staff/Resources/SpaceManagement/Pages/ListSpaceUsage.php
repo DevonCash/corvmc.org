@@ -35,7 +35,7 @@ class ListSpaceUsage extends ListRecords
                 ->label('Create Reservation')
                 ->icon('tabler-calendar-plus')
                 ->modalWidth('lg')
-                ->steps(ReservationForm::getSteps())
+                ->steps(ReservationForm::getStaffSteps())
                 ->action(function (array $data) {
                     $user = User::find($data['user_id']);
 

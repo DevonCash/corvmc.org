@@ -2,6 +2,7 @@
 
 namespace App\Filament\Member\Resources\Reservations\Schemas;
 
+use App\Models\User;
 use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
 use CorvMC\SpaceManagement\Actions\Reservations\DetermineReservationStatus;
 use CorvMC\SpaceManagement\Actions\Reservations\GetAvailableTimeSlotsForDate;
@@ -91,6 +92,50 @@ class ReservationForm
                 ->schema(static::confirmationStep()),
 
         ];
+    }
+
+    public static function getStaffSteps(): array
+    {
+        return [
+            // Step 1: Select Member
+            Wizard\Step::make('Member')
+                ->icon('tabler-user')
+                ->schema([
+                    Select::make('user_id')
+                        ->label('Member')
+                        ->searchable()
+                        ->required()
+                        ->getSearchResultsUsing(function (string $search) {
+                            return User::query()
+                                ->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->limit(50)
+                                ->pluck('name', 'id');
+                        })
+                        ->getOptionLabelUsing(fn ($value) => User::find($value)?->name),
+                ]),
+
+            // Step 2: Reservation Details (no hidden user_id — set in step 1)
+            Wizard\Step::make('Schedule')
+                ->icon('tabler-calendar-time')
+                ->schema(static::staffScheduleStep())
+                ->columns(2),
+
+            // Step 3: Confirmation
+            Wizard\Step::make('Confirm')
+                ->icon('tabler-circle-check')
+                ->schema(static::confirmationStep()),
+        ];
+    }
+
+    protected static function staffScheduleStep(): array
+    {
+        $step = static::reservationStep();
+
+        // Remove the hidden user_id field (it's set in the Member step)
+        return array_values(array_filter($step, function ($component) {
+            return ! ($component instanceof Hidden && $component->getName() === 'user_id');
+        }));
     }
 
     public static function contactStep(): array
@@ -302,7 +347,8 @@ class ReservationForm
 
     private static function calculateCost(Get $get, callable $set): void
     {
-        $user = Auth::user();
+        $userId = $get('user_id');
+        $user = $userId ? User::find($userId) : Auth::user();
         if (! $user) {
             $set('cost', 0);
             $set('free_hours_used', 0);
