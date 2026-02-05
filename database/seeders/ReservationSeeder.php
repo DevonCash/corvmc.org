@@ -8,6 +8,8 @@ use Carbon\Carbon;
 use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\Finance\Models\Charge;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\Support\Enums\RecurringSeriesStatus;
+use CorvMC\Support\Models\RecurringSeries;
 use Illuminate\Database\Seeder;
 
 class ReservationSeeder extends Seeder
@@ -149,33 +151,94 @@ class ReservationSeeder extends Seeder
             return;
         }
 
-        // Create 2-3 recurring reservations
-        for ($i = 0; $i < min(3, $sustainingMembers->count()); $i++) {
-            $user = $sustainingMembers->random();
+        $seriesConfigs = [
+            [
+                'day' => 'Tuesday',
+                'start_hour' => 19,
+                'duration' => 2,
+                'rule' => 'FREQ=WEEKLY;BYDAY=TU',
+                'end_date' => null, // Ongoing
+                'notes' => 'Weekly band practice - Tuesdays (ongoing)',
+                'status' => RecurringSeriesStatus::ACTIVE,
+            ],
+            [
+                'day' => 'Thursday',
+                'start_hour' => 18,
+                'duration' => 3,
+                'rule' => 'FREQ=WEEKLY;BYDAY=TH;COUNT=12',
+                'end_date' => fn ($start) => $start->copy()->addWeeks(12),
+                'notes' => 'Thursday evening rehearsal (12 weeks)',
+                'status' => RecurringSeriesStatus::ACTIVE,
+            ],
+            [
+                'day' => 'Saturday',
+                'start_hour' => 14,
+                'duration' => 2,
+                'rule' => 'FREQ=WEEKLY;BYDAY=SA',
+                'end_date' => null,
+                'notes' => 'Weekend jam session (paused)',
+                'status' => RecurringSeriesStatus::PAUSED,
+            ],
+        ];
 
-            // Every week for 4 weeks, same time slot
-            $startTime = Carbon::now()->next('Wednesday')->setTime(19, 0); // Wednesday 7 PM
-            $endTime = $startTime->copy()->addHours(2); // 2 hour sessions
+        foreach ($seriesConfigs as $index => $config) {
+            if ($index >= $sustainingMembers->count()) {
+                break;
+            }
 
-            for ($week = 0; $week < 4; $week++) {
-                $weeklyStart = $startTime->copy()->addWeeks($week);
-                $weeklyEnd = $endTime->copy()->addWeeks($week);
+            $user = $sustainingMembers->values()->get($index);
+            $seriesStartDate = Carbon::now()->next($config['day']);
 
-                $reservation = RehearsalReservation::factory()->create([
-                    'reservable_type' => 'user',
-                    'reservable_id' => $user->id,
-                    'reserved_at' => $weeklyStart,
-                    'reserved_until' => $weeklyEnd,
-                    'status' => 'confirmed',
-                    'is_recurring' => true,
-                    'recurrence_pattern' => [
-                        'weeks' => 4,
-                        'interval' => 1,
-                    ],
-                    'notes' => 'Weekly band practice session',
-                ]);
+            // Create the recurring series record
+            $endDate = is_callable($config['end_date'])
+                ? $config['end_date']($seriesStartDate)
+                : $config['end_date'];
 
-                $this->createChargeForReservation($reservation, $user);
+            $series = RecurringSeries::create([
+                'user_id' => $user->id,
+                'recurable_type' => 'rehearsal_reservation',
+                'recurrence_rule' => $config['rule'],
+                'start_time' => sprintf('%02d:00:00', $config['start_hour']),
+                'end_time' => sprintf('%02d:00:00', $config['start_hour'] + $config['duration']),
+                'series_start_date' => $seriesStartDate,
+                'series_end_date' => $endDate,
+                'max_advance_days' => 14,
+                'status' => $config['status'],
+                'notes' => $config['notes'],
+            ]);
+
+            // Only generate instances for active series
+            if ($config['status'] === RecurringSeriesStatus::ACTIVE) {
+                // Create 4 weeks of instances
+                for ($week = 0; $week < 4; $week++) {
+                    $instanceDate = $seriesStartDate->copy()->addWeeks($week);
+                    $startTime = $instanceDate->copy()->setTime($config['start_hour'], 0);
+                    $endTime = $startTime->copy()->addHours($config['duration']);
+
+                    // Check for conflicts
+                    $conflicts = RehearsalReservation::where('reserved_until', '>', $startTime)
+                        ->where('reserved_at', '<', $endTime)
+                        ->where('status', '!=', 'cancelled')
+                        ->exists();
+
+                    if ($conflicts) {
+                        continue;
+                    }
+
+                    $reservation = RehearsalReservation::factory()->create([
+                        'reservable_type' => 'user',
+                        'reservable_id' => $user->id,
+                        'reserved_at' => $startTime,
+                        'reserved_until' => $endTime,
+                        'status' => 'confirmed',
+                        'is_recurring' => true,
+                        'recurring_series_id' => $series->id,
+                        'instance_date' => $instanceDate->toDateString(),
+                        'notes' => $config['notes'],
+                    ]);
+
+                    $this->createChargeForReservation($reservation, $user);
+                }
             }
         }
     }

@@ -154,10 +154,18 @@ describe('cancel', function () {
 });
 
 describe('scheduleRecurring', function () {
-    it('allows sustaining members to schedule recurring reservations', function () {
+    it('allows sustaining members to schedule recurring reservations for themselves', function () {
         $sustainingMember = User::factory()->sustainingMember()->create();
 
         expect($this->policy->scheduleRecurring($sustainingMember))->toBeTrue();
+        expect($this->policy->scheduleRecurring($sustainingMember, $sustainingMember))->toBeTrue();
+    });
+
+    it('denies sustaining members from scheduling recurring reservations for others', function () {
+        $sustainingMember = User::factory()->sustainingMember()->create();
+        $otherUser = User::factory()->create();
+
+        expect($this->policy->scheduleRecurring($sustainingMember, $otherUser))->toBeFalse();
     });
 
     it('denies regular members from scheduling recurring reservations', function () {
@@ -166,15 +174,11 @@ describe('scheduleRecurring', function () {
         expect($this->policy->scheduleRecurring($member))->toBeFalse();
     });
 
-    it('denies practice space manager without sustaining member role from scheduling recurring reservations', function () {
+    it('allows practice space managers to schedule recurring reservations for anyone', function () {
         $manager = User::factory()->withRole('practice space manager')->create();
+        $otherUser = User::factory()->create();
 
-        expect($this->policy->scheduleRecurring($manager))->toBeFalse();
-    });
-
-    it('allows practice space managers who are also sustaining members to schedule recurring reservations', function () {
-        $managerAndSustaining = User::factory()->withRole('practice space manager')->sustainingMember()->create();
-
-        expect($this->policy->scheduleRecurring($managerAndSustaining))->toBeTrue();
+        expect($this->policy->scheduleRecurring($manager))->toBeTrue();
+        expect($this->policy->scheduleRecurring($manager, $otherUser))->toBeTrue();
     });
 });

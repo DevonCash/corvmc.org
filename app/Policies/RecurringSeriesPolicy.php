@@ -25,14 +25,18 @@ class RecurringSeriesPolicy
     /**
      * Delegates to the recurrable type's policy.
      * E.g., for RehearsalReservation, checks RehearsalReservationPolicy::scheduleRecurring()
+     *
+     * @param User $user The authenticated user
+     * @param string|null $recurrableType The morph alias or class of the recurrable type
+     * @param User|null $forUser The user the series is being created for (null = self)
      */
-    public function create(User $user, ?string $recurrableType = null): bool
+    public function create(User $user, ?string $recurrableType = null, ?User $forUser = null): bool
     {
         if (!$recurrableType) {
             return false;
         }
 
-        return $user->can('scheduleRecurring', $recurrableType);
+        return $user->can('scheduleRecurring', [$recurrableType, $forUser]);
     }
 
     public function cancel(User $user, RecurringSeries $series): bool

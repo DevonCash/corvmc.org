@@ -3,6 +3,7 @@
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\Actions\RecurringReservations\GenerateFutureRecurringInstances;
+use CorvMC\SpaceManagement\Actions\RecurringReservations\ValidateRecurringPattern;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
@@ -245,5 +246,152 @@ describe('GenerateFutureRecurringInstances', function () {
 
         $instanceCount = Reservation::where('recurring_series_id', $series->id)->count();
         expect($instanceCount)->toBe(0);
+    });
+});
+
+describe('ValidateRecurringPattern', function () {
+    it('returns no warnings when there are no conflicts', function () {
+        $nextMonday = now()->next('Monday')->startOfDay();
+
+        $result = ValidateRecurringPattern::run(
+            'FREQ=WEEKLY;BYDAY=MO',
+            $nextMonday,
+            $nextMonday->copy()->addWeeks(4),
+            '10:00:00',
+            '12:00:00'
+        );
+
+        expect($result['warnings'])->toBeEmpty();
+        expect($result['errors'])->toBeEmpty();
+    });
+
+    it('detects conflicts with existing reservations', function () {
+        $user = User::factory()->create();
+        $nextTuesday = now()->next('Tuesday')->startOfDay();
+
+        // Create an existing reservation on the first Tuesday
+        RehearsalReservation::create([
+            'user_id' => $user->id,
+            'reservable_type' => 'user',
+            'reservable_id' => $user->id,
+            'reserved_at' => $nextTuesday->copy()->setTime(14, 0),
+            'reserved_until' => $nextTuesday->copy()->setTime(16, 0),
+            'hours_used' => 2,
+            'status' => ReservationStatus::Confirmed,
+        ]);
+
+        $result = ValidateRecurringPattern::run(
+            'FREQ=WEEKLY;BYDAY=TU',
+            $nextTuesday,
+            $nextTuesday->copy()->addWeeks(4),
+            '14:00:00',
+            '16:00:00'
+        );
+
+        expect($result['warnings'])->not->toBeEmpty();
+        expect($result['warnings']->first()['type'])->toBe('existing');
+    });
+
+    it('detects conflicts with other recurring series', function () {
+        $user = User::factory()->sustainingMember()->create();
+        $nextTuesday = now()->next('Tuesday')->startOfDay();
+
+        // Create an existing recurring series on Tuesdays
+        createTestSeries($user, [
+            'series_start_date' => $nextTuesday,
+            'series_end_date' => $nextTuesday->copy()->addMonths(2),
+            'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=TU',
+            'start_time' => '14:00:00',
+            'end_time' => '16:00:00',
+        ]);
+
+        // Try to create another series at the same time
+        $result = ValidateRecurringPattern::run(
+            'FREQ=WEEKLY;BYDAY=TU',
+            $nextTuesday,
+            $nextTuesday->copy()->addWeeks(4),
+            '14:00:00',
+            '16:00:00'
+        );
+
+        expect($result['warnings'])->not->toBeEmpty();
+        expect($result['warnings']->first()['type'])->toBe('recurring');
+    });
+
+    it('detects partial time overlaps with recurring series', function () {
+        $user = User::factory()->sustainingMember()->create();
+        $nextTuesday = now()->next('Tuesday')->startOfDay();
+
+        // Create an existing recurring series 2-4 PM
+        createTestSeries($user, [
+            'series_start_date' => $nextTuesday,
+            'series_end_date' => $nextTuesday->copy()->addMonths(2),
+            'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=TU',
+            'start_time' => '14:00:00',
+            'end_time' => '16:00:00',
+        ]);
+
+        // Try to create a series 3-5 PM (overlaps by 1 hour)
+        $result = ValidateRecurringPattern::run(
+            'FREQ=WEEKLY;BYDAY=TU',
+            $nextTuesday,
+            $nextTuesday->copy()->addWeeks(4),
+            '15:00:00',
+            '17:00:00'
+        );
+
+        expect($result['warnings'])->not->toBeEmpty();
+        expect($result['warnings']->first()['type'])->toBe('recurring');
+    });
+
+    it('does not flag non-overlapping times on same day', function () {
+        $user = User::factory()->sustainingMember()->create();
+        $nextTuesday = now()->next('Tuesday')->startOfDay();
+
+        // Create an existing recurring series 2-4 PM
+        createTestSeries($user, [
+            'series_start_date' => $nextTuesday,
+            'series_end_date' => $nextTuesday->copy()->addMonths(2),
+            'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=TU',
+            'start_time' => '14:00:00',
+            'end_time' => '16:00:00',
+        ]);
+
+        // Try to create a series 10 AM - 12 PM (no overlap)
+        $result = ValidateRecurringPattern::run(
+            'FREQ=WEEKLY;BYDAY=TU',
+            $nextTuesday,
+            $nextTuesday->copy()->addWeeks(4),
+            '10:00:00',
+            '12:00:00'
+        );
+
+        expect($result['warnings'])->toBeEmpty();
+    });
+
+    it('excludes the current series when editing', function () {
+        $user = User::factory()->sustainingMember()->create();
+        $nextTuesday = now()->next('Tuesday')->startOfDay();
+
+        // Create an existing recurring series
+        $series = createTestSeries($user, [
+            'series_start_date' => $nextTuesday,
+            'series_end_date' => $nextTuesday->copy()->addMonths(2),
+            'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=TU',
+            'start_time' => '14:00:00',
+            'end_time' => '16:00:00',
+        ]);
+
+        // Validate with the same pattern, excluding the series itself
+        $result = ValidateRecurringPattern::run(
+            'FREQ=WEEKLY;BYDAY=TU',
+            $nextTuesday,
+            $nextTuesday->copy()->addWeeks(4),
+            '14:00:00',
+            '16:00:00',
+            excludeSeriesId: $series->id
+        );
+
+        expect($result['warnings'])->toBeEmpty();
     });
 });

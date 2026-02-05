@@ -2,6 +2,7 @@
 
 namespace App\Filament\Staff\Resources\RecurringReservations\Tables;
 
+use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -28,7 +29,18 @@ class RecurringReservationsTable
 
                 TextColumn::make('start_time')
                     ->label('Time')
-                    ->formatStateUsing(fn ($record) => $record->start_time->format('g:i A').' - '.$record->end_time->format('g:i A')),
+                    ->formatStateUsing(fn ($record) => $record->start_time->format('g:i A').' - '.$record->end_time->format('g:i A'))
+                    ->description(function ($record) {
+                        $nextInstance = Reservation::where('recurring_series_id', $record->id)
+                            ->where('instance_date', '>=', now()->toDateString())
+                            ->whereIn('status', ['pending', 'confirmed'])
+                            ->orderBy('instance_date')
+                            ->first();
+
+                        return $nextInstance
+                            ? 'Next: '.$nextInstance->instance_date->format('M j, Y')
+                            : null;
+                    }),
 
                 TextColumn::make('series_start_date')
                     ->label('Start Date')
@@ -52,13 +64,7 @@ class RecurringReservationsTable
 
                 TextColumn::make('instances_count')
                     ->label('Instances')
-                    ->counts('instances')
-                    ->suffix(' total'),
-
-                TextColumn::make('active_instances_count')
-                    ->label('Active')
-                    ->counts('activeInstances')
-                    ->suffix(' active'),
+                    ->state(fn ($record) => Reservation::where('recurring_series_id', $record->id)->count()),
             ])
             ->filters([
                 SelectFilter::make('status')

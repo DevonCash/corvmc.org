@@ -3,6 +3,8 @@
 namespace App\Filament\Staff\Resources\RecurringReservations\Schemas;
 
 use Carbon\Carbon;
+use CorvMC\SpaceManagement\Actions\RecurringReservations\BuildRRule;
+use CorvMC\SpaceManagement\Actions\RecurringReservations\ValidateRecurringPattern;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -10,6 +12,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Decorations\Alert;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
@@ -158,6 +161,21 @@ class RecurringReservationForm
 
                                 return "Every {$interval} months";
                             }),
+
+                        Alert::make('conflict_warnings')
+                            ->warning()
+                            ->visible(fn (Get $get) => self::getConflictWarnings($get)->isNotEmpty())
+                            ->heading('Scheduling Conflicts Detected')
+                            ->body(function (Get $get) {
+                                $warnings = self::getConflictWarnings($get);
+                                if ($warnings->isEmpty()) {
+                                    return '';
+                                }
+
+                                $lines = $warnings->map(fn ($w) => "• {$w['date']} ({$w['time']}): {$w['conflicts']}");
+
+                                return $lines->join("\n");
+                            }),
                     ])
                     ->visible(fn (Get $get) => $get('frequency') !== null),
             ]);
@@ -178,6 +196,50 @@ class RecurringReservationForm
             Log::error($e);
 
             return null;
+        }
+    }
+
+    protected static function getConflictWarnings(Get $get): \Illuminate\Support\Collection
+    {
+        $frequency = $get('frequency');
+        $byDay = $get('by_day') ?? [];
+        $startDate = $get('series_start_date');
+        $startTime = $get('start_time');
+        $endTime = $get('end_time');
+
+        // Need all required fields to check conflicts
+        if (! $frequency || ! $startDate || ! $startTime || ! $endTime) {
+            return collect();
+        }
+
+        if ($frequency === 'WEEKLY' && empty($byDay)) {
+            return collect();
+        }
+
+        try {
+            $rrule = BuildRRule::run([
+                'frequency' => $frequency,
+                'interval' => $get('interval') ?? 1,
+                'by_day' => $byDay,
+            ]);
+
+            $seriesStartDate = Carbon::parse($startDate);
+            $seriesEndDate = $get('series_end_date') ? Carbon::parse($get('series_end_date')) : null;
+
+            $result = ValidateRecurringPattern::run(
+                $rrule,
+                $seriesStartDate,
+                $seriesEndDate,
+                $startTime,
+                $endTime,
+                checkOccurrences: 8
+            );
+
+            return $result['warnings'];
+        } catch (\Exception $e) {
+            Log::error('Recurring pattern validation error', ['error' => $e->getMessage()]);
+
+            return collect();
         }
     }
 }

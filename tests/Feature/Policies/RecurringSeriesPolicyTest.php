@@ -97,6 +97,20 @@ describe('create', function () {
 
         expect($this->policy->create($member, RehearsalReservation::class))->toBeFalse();
     });
+
+    it('allows practice space managers to create recurring series for any user', function () {
+        $manager = User::factory()->withRole('practice space manager')->create();
+        $member = User::factory()->create();
+
+        expect($this->policy->create($manager, RehearsalReservation::class, $member))->toBeTrue();
+    });
+
+    it('denies sustaining members from creating recurring series for other users', function () {
+        $sustainingMember = User::factory()->sustainingMember()->create();
+        $otherUser = User::factory()->create();
+
+        expect($this->policy->create($sustainingMember, RehearsalReservation::class, $otherUser))->toBeFalse();
+    });
 });
 
 describe('cancel', function () {

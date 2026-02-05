@@ -4,6 +4,7 @@ namespace App\Filament\Staff\Resources\SpaceManagement\Pages;
 
 use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationForm;
+use App\Filament\Staff\Resources\RecurringReservations\RecurringReservationResource;
 use App\Filament\Staff\Resources\SpaceClosures\SpaceClosureResource;
 use App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource;
 use App\Filament\Staff\Resources\SpaceManagement\Widgets\SpaceStatsWidget;
@@ -30,6 +31,12 @@ class ListSpaceUsage extends ListRecords
                 ->icon('tabler-calendar-off')
                 ->color('gray')
                 ->url(SpaceClosureResource::getUrl('index')),
+
+            Action::make('recurring_reservations')
+                ->label('Recurring Rehearsals')
+                ->icon('tabler-calendar-repeat')
+                ->color('gray')
+                ->url(RecurringReservationResource::getUrl('index')),
 
             Action::make('create_reservation')
                 ->label('Create Reservation')

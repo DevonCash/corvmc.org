@@ -17,11 +17,15 @@ class RecurringReservationResource extends Resource
 {
     protected static ?string $model = RecurringSeries::class;
 
-    protected static \BackedEnum|string|null $navigationIcon = 'tabler-clock-repeat';
+    protected static ?string $modelLabel = 'Recurring Rehearsal';
+
+    protected static ?string $pluralModelLabel = 'Recurring Rehearsals';
+
+    protected static \BackedEnum|string|null $navigationIcon = 'tabler-calendar-repeat';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Reservations';
 
-    protected static ?string $navigationLabel = 'Recurring Reservations';
+    protected static ?string $navigationLabel = 'Recurring Rehearsals';
 
     protected static ?int $navigationSort = 2;
 
@@ -31,7 +35,9 @@ class RecurringReservationResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasRole('admin') ?? false;
+        $user = auth()->user();
+
+        return $user?->hasRole('admin') || $user?->hasRole('practice space manager');
     }
 
     public static function getEloquentQuery(): Builder

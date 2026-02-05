@@ -40,9 +40,22 @@ class RehearsalReservationPolicy
     /**
      * Can this user schedule recurring rehearsal reservations?
      * Called by RecurringSeriesPolicy::create() via delegation.
+     *
+     * @param User $user The authenticated user
+     * @param User|null $forUser The user the series is being created for (null = self)
      */
-    public function scheduleRecurring(User $user): bool
+    public function scheduleRecurring(User $user, ?User $forUser = null): bool
     {
-        return $user->hasRole('sustaining member');
+        // Practice space managers can create for anyone
+        if ($user->hasRole('practice space manager')) {
+            return true;
+        }
+
+        // Sustaining members can only create for themselves
+        if ($user->hasRole('sustaining member')) {
+            return $forUser === null || $forUser->is($user);
+        }
+
+        return false;
     }
 }
