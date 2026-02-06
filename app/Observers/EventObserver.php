@@ -4,7 +4,9 @@ namespace App\Observers;
 
 use App\Actions\Events\SyncEventSpaceReservation;
 use Carbon\Carbon;
+use CorvMC\Events\Enums\EventStatus;
 use CorvMC\Events\Models\Event;
+use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use Illuminate\Support\Facades\Cache;
 
 class EventObserver
@@ -24,7 +26,18 @@ class EventObserver
     public function updated(Event $event): void
     {
         $this->clearEventCaches($event);
-        $this->shiftSpaceReservationIfNeeded($event);
+
+        // Handle status changes that affect space reservation
+        if ($event->wasChanged('status')) {
+            $this->syncReservationStatusWithEvent($event);
+
+            // If times also changed during reactivation, recalculate the reservation
+            if ($event->status->isActive() && ($event->wasChanged('start_datetime') || $event->wasChanged('end_datetime'))) {
+                SyncEventSpaceReservation::run($event, null, null, force: true);
+            }
+        } else {
+            $this->shiftSpaceReservationIfNeeded($event);
+        }
 
         // If event date changed, clear both old and new date caches
         if ($event->isDirty('start_datetime')) {
@@ -44,6 +57,20 @@ class EventObserver
 
         // Delete the space reservation if it exists
         $event->spaceReservation?->delete();
+    }
+
+    /**
+     * Handle the Event "restored" event (after soft delete restoration).
+     */
+    public function restored(Event $event): void
+    {
+        $this->clearEventCaches($event);
+
+        // Recreate the space reservation if this is an active CMC event
+        // (reservations don't use soft deletes, so the original was hard-deleted)
+        if ($event->usesPracticeSpace() && $event->status->isActive()) {
+            SyncEventSpaceReservation::run($event, null, null, force: true);
+        }
     }
 
     /**
@@ -74,6 +101,54 @@ class EventObserver
         if ($event->usesPracticeSpace()) {
             // Force through since observer has no UI context for conflict warnings
             SyncEventSpaceReservation::run($event, null, null, force: true);
+        }
+    }
+
+    /**
+     * Sync reservation status when event status changes.
+     *
+     * - Cancelled/Postponed → Cancel reservation
+     * - Scheduled/AtCapacity (from inactive) → Restore or create reservation
+     */
+    private function syncReservationStatusWithEvent(Event $event): void
+    {
+        if (! $event->usesPracticeSpace()) {
+            return;
+        }
+
+        $reservation = $event->spaceReservation;
+
+        // Get the original status value (handles both enum instances and strings)
+        $originalStatus = $event->getOriginal('status');
+        $originalStatusValue = $originalStatus instanceof EventStatus
+            ? $originalStatus->value
+            : $originalStatus;
+
+        $wasInactive = in_array($originalStatusValue, ['cancelled', 'postponed']);
+        $isNowInactive = in_array($event->status->value, ['cancelled', 'postponed']);
+
+        if ($isNowInactive) {
+            // Event became inactive - cancel reservation
+            if ($reservation) {
+                $reason = $event->status === EventStatus::Cancelled
+                    ? 'Event was cancelled'
+                    : 'Event was postponed';
+
+                $reservation->update([
+                    'status' => ReservationStatus::Cancelled,
+                    'cancellation_reason' => $reason,
+                ]);
+            }
+        } elseif ($wasInactive && $event->status->isActive()) {
+            // Event was reactivated - restore or create reservation
+            if ($reservation && $reservation->status === ReservationStatus::Cancelled) {
+                $reservation->update([
+                    'status' => ReservationStatus::Confirmed,
+                    'cancellation_reason' => null,
+                ]);
+            } elseif (! $reservation) {
+                SyncEventSpaceReservation::run($event, null, null, force: true);
+            }
         }
     }
 
@@ -113,9 +188,18 @@ class EventObserver
         }
 
         if ($endChanged) {
-            $oldEnd = Carbon::parse($event->getOriginal('end_datetime'));
+            $oldEnd = $event->getOriginal('end_datetime');
             $newEnd = $event->end_datetime;
-            $endDelta = $oldEnd->diffInMinutes($newEnd, false);
+
+            // If either old or new end is null, recalculate via SyncEventSpaceReservation
+            // instead of trying to compute a delta
+            if (! $oldEnd || ! $newEnd) {
+                SyncEventSpaceReservation::run($event, null, null, force: true);
+
+                return;
+            }
+
+            $endDelta = Carbon::parse($oldEnd)->diffInMinutes($newEnd, false);
             $reservation->reserved_until = $reservation->reserved_until->addMinutes($endDelta);
         }
 

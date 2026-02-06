@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use CorvMC\Bands\Models\Band;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
-use App\Models\EventReservation;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -126,10 +125,8 @@ class ProductionSeeder extends Seeder
                 $event->attachTag($genre, 'genre');
             }
 
-            // Create EventReservation if event is at CMC
-            if (! $event->location->is_external) {
-                $this->createEventReservation($event);
-            }
+            // EventReservation is created automatically by EventObserver::created()
+            // for events at CMC venues - no need to create manually
         }
 
         // Count events with native ticketing
@@ -140,28 +137,6 @@ class ProductionSeeder extends Seeder
         $this->command->info("Created {$allEvents->count()} events with performers and genres.");
         $this->command->info("  - {$ticketingEventCount} events with native ticketing");
         $this->command->info("  - {$ticketOrderCount} ticket orders, {$ticketCount} tickets");
-    }
-
-    /**
-     * Create a space reservation for an event at CMC.
-     * Includes setup time (1 hour before) and breakdown time (1 hour after).
-     */
-    private function createEventReservation(Event $event): void
-    {
-        // Add 1 hour setup before event start and 1 hour breakdown after event end
-        $reservedAt = $event->start_datetime->copy()->subHour();
-        $reservedUntil = $event->end_datetime->copy()->addHour();
-
-        EventReservation::create([
-            'type' => 'event_reservation',
-            'reservable_type' => 'event',
-            'reservable_id' => $event->id,
-            'reserved_at' => $reservedAt,
-            'reserved_until' => $reservedUntil,
-            'status' => 'confirmed',
-            'is_recurring' => false,
-            'notes' => 'Space reservation for event: '.$event->title,
-        ]);
     }
 
     /**

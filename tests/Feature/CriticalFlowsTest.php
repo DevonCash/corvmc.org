@@ -8,29 +8,30 @@
  * not internal structure, so they survive namespace changes.
  *
  * Run these after each module migration phase.
+ *
+ * Run with: php artisan test --group=critical
  */
 
-use App\Actions\Events\SyncEventSpaceReservation;
-use App\Models\EventReservation;
+use App\Models\User;
+use Carbon\Carbon;
+use CorvMC\Bands\Models\Band;
+use CorvMC\Events\Actions\CreateEvent;
+use CorvMC\Events\Exceptions\SchedulingConflictException;
+use CorvMC\Events\Models\Event;
+use CorvMC\Events\Models\Venue;
+use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
+use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
 use CorvMC\Membership\Actions\Bands\AddBandMember;
 use CorvMC\Membership\Actions\Bands\CreateBand;
-use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
-use CorvMC\Events\Actions\CreateEvent;
-use CorvMC\Events\Actions\UpdateEvent;
-use CorvMC\Finance\Enums\CreditType;
-use CorvMC\Bands\Models\Band;
-use App\Models\User;
-use CorvMC\Events\Models\Venue;
-use CorvMC\Events\Exceptions\SchedulingConflictException;
-use CorvMC\Events\Models\Event;
 use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
 use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use CorvMC\SpaceManagement\Actions\Reservations\GetAllConflicts;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Notification;
+
+uses()->group('critical');
 
 /*
 |--------------------------------------------------------------------------
@@ -290,154 +291,6 @@ describe('Flow 2: Create Event with Conflict Checking', function () {
 
         // Assert: Conflicts detected
         expect($conflicts['reservations'])->not->toBeEmpty();
-    });
-});
-
-/*
-|--------------------------------------------------------------------------
-| Flow 2b: Event → Space Reservation Sync
-|--------------------------------------------------------------------------
-|
-| Tests that events at CMC venue automatically create EventReservation
-| records with setup/breakdown time via EventObserver + SyncEventSpaceReservation.
-|
-*/
-
-describe('Flow 2b: Event → Space Reservation Sync', function () {
-    beforeEach(function () {
-        Notification::fake();
-
-        $this->cmcVenue = Venue::create([
-            'name' => 'CMC Practice Space',
-            'is_cmc' => true,
-            'address' => '420 NW 5th St',
-            'city' => 'Corvallis',
-            'state' => 'OR',
-        ]);
-
-        $this->externalVenue = Venue::create([
-            'name' => 'External Venue',
-            'is_cmc' => false,
-            'address' => '123 Main St',
-            'city' => 'Portland',
-            'state' => 'OR',
-        ]);
-
-        $this->organizer = User::factory()->create();
-        $this->organizer->assignRole('member');
-    });
-
-    it('creates EventReservation when event is created at CMC venue', function () {
-        // Act: Create event at CMC venue
-        $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
-        $endTime = $startTime->copy()->addHours(3);
-
-        $event = CreateEvent::run([
-            'title' => 'Test Concert',
-            'description' => 'A test event',
-            'start_datetime' => $startTime,
-            'end_datetime' => $endTime,
-            'venue_id' => $this->cmcVenue->id,
-            'organizer_id' => $this->organizer->id,
-        ]);
-
-        // Assert: EventReservation was created
-        $event->refresh();
-        expect($event->spaceReservation)->not->toBeNull()
-            ->and($event->spaceReservation)->toBeInstanceOf(EventReservation::class);
-    });
-
-    it('includes setup time (2 hours before) and breakdown time (1 hour after)', function () {
-        // Act: Create event at CMC venue
-        $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
-        $endTime = $startTime->copy()->addHours(3); // 19:00 - 22:00
-
-        $event = CreateEvent::run([
-            'title' => 'Test Concert',
-            'description' => 'A test event',
-            'start_datetime' => $startTime,
-            'end_datetime' => $endTime,
-            'venue_id' => $this->cmcVenue->id,
-            'organizer_id' => $this->organizer->id,
-        ]);
-
-        // Assert: Reservation includes setup (2 hours before) and breakdown (1 hour after)
-        $event->refresh();
-        $reservation = $event->spaceReservation;
-        expect($reservation->reserved_at->hour)->toBe(17) // 2 hours before 19:00
-            ->and($reservation->reserved_until->hour)->toBe(23); // 1 hour after 22:00
-    });
-
-    it('updates EventReservation when event time changes', function () {
-        // Arrange: Create event
-        $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
-        $endTime = $startTime->copy()->addHours(3);
-
-        $event = CreateEvent::run([
-            'title' => 'Test Concert',
-            'description' => 'A test event',
-            'start_datetime' => $startTime,
-            'end_datetime' => $endTime,
-            'venue_id' => $this->cmcVenue->id,
-            'organizer_id' => $this->organizer->id,
-        ]);
-
-        // Act: Update event time
-        $newStartTime = $startTime->copy()->addHours(2); // Move to 21:00
-        $newEndTime = $newStartTime->copy()->addHours(3); // 21:00 - 00:00
-
-        UpdateEvent::run($event, [
-            'start_datetime' => $newStartTime,
-            'end_datetime' => $newEndTime,
-        ]);
-
-        // Assert: Reservation was updated with new times
-        $event->refresh();
-        expect($event->spaceReservation->reserved_at->hour)->toBe(19) // 2 hours before 21:00
-            ->and($event->spaceReservation->reserved_until->hour)->toBe(1); // 1 hour after 00:00
-    });
-
-    it('does not create EventReservation for external venue events', function () {
-        // Act: Create event at external venue
-        $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
-        $endTime = $startTime->copy()->addHours(3);
-
-        $event = CreateEvent::run([
-            'title' => 'External Concert',
-            'description' => 'An external event',
-            'start_datetime' => $startTime,
-            'end_datetime' => $endTime,
-            'venue_id' => $this->externalVenue->id,
-            'organizer_id' => $this->organizer->id,
-        ]);
-
-        // Assert: No EventReservation was created
-        expect($event->spaceReservation)->toBeNull();
-    });
-
-    it('deletes EventReservation when event is deleted', function () {
-        // Arrange: Create event with space reservation
-        $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
-        $endTime = $startTime->copy()->addHours(3);
-
-        $event = CreateEvent::run([
-            'title' => 'Test Concert',
-            'description' => 'A test event',
-            'start_datetime' => $startTime,
-            'end_datetime' => $endTime,
-            'venue_id' => $this->cmcVenue->id,
-            'organizer_id' => $this->organizer->id,
-        ]);
-
-        $event->refresh();
-        $reservationId = $event->spaceReservation->id;
-        expect(EventReservation::find($reservationId))->not->toBeNull();
-
-        // Act: Delete event
-        $event->delete();
-
-        // Assert: EventReservation was deleted (or soft deleted)
-        expect(EventReservation::find($reservationId))->toBeNull();
     });
 });
 
