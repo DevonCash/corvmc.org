@@ -117,6 +117,10 @@
             "@php artisan config:clear --ansi",
             "XDEBUG_MODE=coverage php artisan test --coverage --parallel"
         ],
+        "test:smoke": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --group=smoke --parallel"
+        ],
         "phpmd": [
             "phpmd app ansi phpmd.xml"
         ],

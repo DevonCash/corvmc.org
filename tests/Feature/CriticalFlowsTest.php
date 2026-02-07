@@ -31,7 +31,7 @@ use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Illuminate\Support\Facades\Notification;
 
-uses()->group('critical');
+uses()->group('critical', 'smoke');
 
 /*
 |--------------------------------------------------------------------------
