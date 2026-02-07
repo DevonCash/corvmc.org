@@ -647,10 +647,19 @@ class Event extends ContentModel implements Recurrable
     }
 
     /**
-     * Check if this event is NOTAFLOF.
+     * Check if this event is NOTAFLOF (No One Turned Away For Lack of Funds).
+     *
+     * All non-free CMC events using native ticketing are automatically NOTAFLOF.
+     * External ticketed events can opt-in via the notaflof flag.
      */
     public function isNotaflof(): bool
     {
+        // Native ticketing = CMC event = always NOTAFLOF
+        if ($this->ticketing_enabled) {
+            return true;
+        }
+
+        // External events can opt-in via flag
         return $this->hasFlag('notaflof');
     }
 

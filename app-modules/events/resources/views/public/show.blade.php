@@ -28,19 +28,17 @@
             class="max-h-[75vh] h-auto  sm:h-[80vh] w-full sm:w-auto aspect-[8.5/11] col-span-2 md:col-span-1 relative lg:ml-auto">
 
 
-            @if ($event->poster_url)
-                <div class="bg-white p-6 rounded-lg  transform transition-transform duration-500 h-full mx-auto">
-                    <img src="{{ $event->poster_url }}" alt="{{ $event->title }}"
-                        class="w-full h-full object-cover rounded">
-                </div>
-            @else
-                <div class="bg-secondary/20 rounded-lg  flex items-center justify-center h-full w-full">
-                    <div class="text-center opacity-30">
-                        <x-icon name="tabler-music" class="size-32 mx-auto mb-6" />
-                        <p class="text-2xl font-bold">{{ $event->title }}</p>
+            <div class="bg-white p-6 rounded-lg transform transition-transform duration-500 h-full mx-auto">
+                <x-events::poster :event="$event" class="w-full h-full object-cover rounded">
+                    {{-- Fallback when no poster --}}
+                    <div class="bg-secondary/20 rounded-lg flex items-center justify-center h-full w-full">
+                        <div class="text-center opacity-30">
+                            <x-icon name="tabler-music" class="size-32 mx-auto mb-6" />
+                            <p class="text-2xl font-bold">{{ $event->title }}</p>
+                        </div>
                     </div>
-                </div>
-            @endif
+                </x-events::poster>
+            </div>
         </div>
         <div class='grow flex flex-col gap-6 p-8 min-w-sm lg:border-l-2'>
             <div class="hidden sm:flex lg:hidden flex-col gap-4 justify-center absolute left-full p-4">
@@ -148,19 +146,18 @@
                         <a href="{{ route('events.show', $relatedEvent) }}"
                             class="block hover:scale-105 transition-all">
                             <div class="relative group">
-                                @if ($relatedEvent->poster_url)
-                                    <img src="{{ $relatedEvent->poster_url }}" alt="{{ $relatedEvent->title }}"
-                                        class="h-64 w-auto aspect-[8.5/11] object-cover rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                                @else
-                                    <div
-                                        class="h-64 w-40 bg-secondary/20 rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300 flex items-center justify-center">
+                                <x-events::poster
+                                    :event="$relatedEvent"
+                                    size="medium"
+                                    class="h-64 w-auto aspect-[8.5/11] object-cover rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300"
+                                >
+                                    <div class="h-64 w-40 bg-secondary/20 rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300 flex items-center justify-center">
                                         <div class="text-center opacity-50">
                                             <x-icon name="tabler-music" class="size-16 mx-auto mb-2" />
-                                            <p class="text-sm font-bold px-2 text-center">{{ $relatedEvent->title }}
-                                            </p>
+                                            <p class="text-sm font-bold px-2 text-center">{{ $relatedEvent->title }}</p>
                                         </div>
                                     </div>
-                                @endif
+                                </x-events::poster>
                                 <div class="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-3 rounded-b-lg">
                                     <h3 class="font-bold text-sm truncate">{{ $relatedEvent->title }}</h3>
                                     <p class="text-xs opacity-90">{{ $relatedEvent->start_datetime->format('M j, Y') }}

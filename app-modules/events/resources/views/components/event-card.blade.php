@@ -7,9 +7,7 @@
 <a href="{{ route('events.show', $event) }}" class='@container max-w-sm border-5 border-base-200 shadow-sm transition-transform duration-300 hover:rotate-3 hover:z-10 flex flex-col'
     style="transform: rotateZ({{ rand(-1, 1) }}deg); transform-origin: top center;">
     <figure class='bg-accent aspect-[8.5/11] relative flex items-center justify-center '>
-        @if ($event->poster_url)
-            <img src="{{ $event->poster_url }}" alt="{{ $event->title }}" class="w-full h-full object-cover">
-        @endif
+        <x-events::poster :event="$event" size="medium" class="w-full h-full object-cover" />
     </figure>
 
     <div class="p-3 flex items-center gap-4 bg-base-200 @max-xs:flex-col grow">

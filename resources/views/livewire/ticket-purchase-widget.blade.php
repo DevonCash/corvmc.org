@@ -39,6 +39,19 @@
         </dialog>
     @endauth
 
+    {{-- NOTAFLOF Notice --}}
+    <div class="mb-6 rounded-lg bg-success/10 border border-success/30 p-4">
+        <div class="flex gap-3">
+            <x-tabler-heart-handshake class="size-6 text-success flex-shrink-0" />
+            <div>
+                <p class="font-semibold text-success">No One Turned Away For Lack of Funds</p>
+                <p class="text-sm text-base-content/70 mt-1">
+                    Can't afford a ticket? Email us at <a href="mailto:info@corvallismusic.org" class="link">info@corvallismusic.org</a> and we'll work something out.
+                </p>
+            </div>
+        </div>
+    </div>
+
     {{-- Pricing Display --}}
     <div class="mb-6">
         <div class="flex items-center justify-between">

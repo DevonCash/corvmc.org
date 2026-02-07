@@ -90,6 +90,15 @@ describe('Ticketing: Event Configuration', function () {
         expect($this->event->isSoldOut())->toBeFalse();
         expect($this->event->hasTicketsAvailable(1000))->toBeTrue();
     });
+
+    it('is automatically NOTAFLOF for native ticketing events', function () {
+        // Native ticketing events are always NOTAFLOF
+        expect($this->event->ticketing_enabled)->toBeTrue();
+        expect($this->event->isNotaflof())->toBeTrue();
+
+        // Price display should include NOTAFLOF indicator
+        expect($this->event->ticket_price_display)->toContain('NOTAFLOF');
+    });
 });
 
 describe('Ticketing: Create Order', function () {
