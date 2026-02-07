@@ -190,10 +190,12 @@ describe('Ticketing: Create Order', function () {
     });
 
     it('throws exception when ticketing not enabled', function () {
+        // Use a different time slot to avoid conflict with the event from beforeEach
+        $startTime = Carbon::now()->addDays(14)->setHour(19)->setMinute(0)->setSecond(0);
         $event = CreateEvent::run([
             'title' => 'No Tickets Event',
-            'start_datetime' => Carbon::now()->addDays(7),
-            'end_datetime' => Carbon::now()->addDays(7)->addHours(3),
+            'start_datetime' => $startTime,
+            'end_datetime' => $startTime->copy()->addHours(3),
             'venue_id' => $this->cmcVenue->id,
             'ticketing_enabled' => false,
         ]);

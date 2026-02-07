@@ -19,8 +19,10 @@ class GetConflictingProductions
      * Get event reservations that conflict with a time slot.
      * Note: This checks EventReservation models which are automatically created for events.
      * Expands the requested period by the configured buffer time on both ends.
+     *
+     * @param  int|null  $excludeReservationId  Reservation ID to exclude from conflicts (e.g., when updating an existing event's reservation)
      */
-    public function handle(Carbon $startTime, Carbon $endTime): Collection
+    public function handle(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): Collection
     {
         $bufferMinutes = app(ReservationSettings::class)->buffer_minutes;
         $bufferedStart = $startTime->copy()->subMinutes($bufferMinutes);
@@ -41,8 +43,12 @@ class GetConflictingProductions
                 ->get();
         });
 
-        // Filter cached results for the specific time range (with buffer)
-        $filteredEventReservations = $dayEventReservations->filter(function (EventReservation $reservation) use ($bufferedStart, $bufferedEnd) {
+        // Filter cached results for the specific time range (with buffer) and exclusion
+        $filteredEventReservations = $dayEventReservations->filter(function (EventReservation $reservation) use ($bufferedStart, $bufferedEnd, $excludeReservationId) {
+            if ($excludeReservationId && $reservation->id === $excludeReservationId) {
+                return false;
+            }
+
             return $reservation->reserved_until > $bufferedStart && $reservation->reserved_at < $bufferedEnd;
         });
 

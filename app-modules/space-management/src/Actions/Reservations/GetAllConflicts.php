@@ -16,7 +16,7 @@ class GetAllConflicts
     {
         return [
             'reservations' => GetConflictingReservations::run($startTime, $endTime, $excludeReservationId),
-            'productions' => GetConflictingProductions::run($startTime, $endTime),
+            'productions' => GetConflictingProductions::run($startTime, $endTime, $excludeReservationId),
             'closures' => GetConflictingClosures::run($startTime, $endTime),
         ];
     }

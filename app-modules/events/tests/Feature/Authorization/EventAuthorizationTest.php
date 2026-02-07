@@ -134,9 +134,23 @@ describe('Event Visibility: Production Manager Access', function () {
         $manager = User::factory()->create();
         $manager->assignRole('production manager');
 
-        $publicEvent = ($this->createEvent)(['visibility' => Visibility::Public]);
-        $membersEvent = ($this->createEvent)(['visibility' => Visibility::Members]);
-        $privateEvent = ($this->createEvent)(['visibility' => Visibility::Private]);
+        // Create events at different times to avoid space reservation conflicts
+        $baseTime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
+        $publicEvent = ($this->createEvent)([
+            'visibility' => Visibility::Public,
+            'start_datetime' => $baseTime,
+            'end_datetime' => $baseTime->copy()->addHours(3),
+        ]);
+        $membersEvent = ($this->createEvent)([
+            'visibility' => Visibility::Members,
+            'start_datetime' => $baseTime->copy()->addDays(1),
+            'end_datetime' => $baseTime->copy()->addDays(1)->addHours(3),
+        ]);
+        $privateEvent = ($this->createEvent)([
+            'visibility' => Visibility::Private,
+            'start_datetime' => $baseTime->copy()->addDays(2),
+            'end_datetime' => $baseTime->copy()->addDays(2)->addHours(3),
+        ]);
 
         expect(Gate::forUser($manager)->allows('view', $publicEvent))->toBeTrue();
         expect(Gate::forUser($manager)->allows('view', $membersEvent))->toBeTrue();

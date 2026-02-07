@@ -162,6 +162,9 @@ class EventObserver
             return;
         }
 
+        // Clear the relation cache to get fresh data (the relation may have been
+        // cached as null before the reservation was created in the 'created' observer)
+        $event->unsetRelation('spaceReservation');
         $reservation = $event->spaceReservation;
 
         // If no reservation exists, create one with defaults
@@ -172,8 +175,15 @@ class EventObserver
         }
 
         // Check if event times changed
-        $startChanged = $event->isDirty('start_datetime');
-        $endChanged = $event->isDirty('end_datetime');
+        $startChanged = $event->wasChanged('start_datetime');
+        $endChanged = $event->wasChanged('end_datetime');
+
+        \Log::debug('Time change check', [
+            'startChanged' => $startChanged,
+            'endChanged' => $endChanged,
+            'original_start' => $event->getOriginal('start_datetime'),
+            'new_start' => $event->start_datetime,
+        ]);
 
         if (! $startChanged && ! $endChanged) {
             return;
