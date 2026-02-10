@@ -87,18 +87,12 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
 
     public function getActivitylogOptions(): LogOptions
     {
+        // Disable automatic trait logging — all reservation activity is logged
+        // by LogReservationActivity via domain events, which provides richer
+        // context (e.g., "Reservation cancelled: reason" vs "Reservation has been updated").
         return LogOptions::defaults()
-            ->logAll()
-            ->dontLogIfAttributesChangedOnly([
-                'status',
-                'reserved_at',
-                'reserved_until',
-                'hours_used',
-                'free_hours_used',
-                'cancellation_reason',
-            ])
-            ->useLogName(static::getLabel())
-            ->setDescriptionForEvent(fn (string $eventName) => "Reservation has been {$eventName}");
+            ->logOnly([])
+            ->dontSubmitEmptyLogs();
     }
 
     /**

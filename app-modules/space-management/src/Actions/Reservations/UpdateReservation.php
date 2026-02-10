@@ -35,7 +35,7 @@ class UpdateReservation
 
         // Only validate for rehearsal reservations
         if ($reservation instanceof RehearsalReservation) {
-            $errors = ValidateReservation::run($reservation->user, $startTime, $endTime, $reservation->id);
+            $errors = ValidateReservation::run($reservation->getResponsibleUser(), $startTime, $endTime, $reservation->id);
 
             if (! empty($errors)) {
                 throw new \InvalidArgumentException('Validation failed: '.implode(' ', $errors));

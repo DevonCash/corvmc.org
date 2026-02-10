@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Listeners\CheckEventSpaceConflicts;
-use App\Listeners\LogReservationActivity;
 use App\Livewire\Synthesizers\MoneySynthesizer;
 use CorvMC\Finance\Models\Subscription;
 use App\Models\User;
@@ -101,10 +100,8 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(ReservationConfirmed::class, HandleChargeableConfirmed::class);
 
         // SpaceManagement → Activity logging (reservation lifecycle)
-        Event::listen(ReservationCreated::class, [LogReservationActivity::class, 'handleCreated']);
-        Event::listen(ReservationConfirmed::class, [LogReservationActivity::class, 'handleConfirmed']);
-        Event::listen(ReservationCancelled::class, [LogReservationActivity::class, 'handleCancelled']);
-        Event::listen(ReservationUpdated::class, [LogReservationActivity::class, 'handleUpdated']);
+        // LogReservationActivity is auto-discovered by Laravel's event discovery.
+        // Do NOT manually register — that causes duplicate log entries.
 
         FilamentTimezone::set(config('app.timezone'));
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {

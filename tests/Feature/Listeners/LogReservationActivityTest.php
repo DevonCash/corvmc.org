@@ -176,6 +176,89 @@ it('logs activity when a reservation is comped', function () {
         ->and($activity->properties['reason'])->toBe('Community event volunteer');
 });
 
+// Regression tests: ensure exactly one log entry per action through the full pipeline
+describe('No duplicate audit logs', function () {
+    it('creates exactly one log entry when creating a reservation', function () {
+        $user = User::factory()->create();
+        $startTime = \Carbon\Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
+        $endTime = $startTime->copy()->addHours(2);
+
+        \Illuminate\Support\Facades\Notification::fake();
+        Activity::query()->delete();
+
+        \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run($user, $startTime, $endTime);
+
+        $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
+
+expect($logs)->toHaveCount(1)
+            ->and($logs->first()->log_name)->toBe('reservation')
+            ->and($logs->first()->event)->toBe('created');
+    });
+
+    it('creates exactly one log entry when cancelling a reservation', function () {
+        $user = User::factory()->create();
+        $startTime = \Carbon\Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
+        $endTime = $startTime->copy()->addHours(2);
+
+        \Illuminate\Support\Facades\Notification::fake();
+        $reservation = \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run($user, $startTime, $endTime);
+
+        Activity::query()->delete();
+
+        \CorvMC\SpaceManagement\Actions\Reservations\CancelReservation::run($reservation, 'Test reason');
+
+        $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
+
+        expect($logs)->toHaveCount(1)
+            ->and($logs->first()->log_name)->toBe('reservation')
+            ->and($logs->first()->event)->toBe('cancelled');
+    });
+
+    it('creates exactly one log entry when updating a reservation', function () {
+        $user = User::factory()->create();
+        $startTime = \Carbon\Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
+        $endTime = $startTime->copy()->addHours(2);
+
+        \Illuminate\Support\Facades\Notification::fake();
+        $reservation = \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run($user, $startTime, $endTime);
+        $reservation = $reservation->fresh();
+
+        Activity::query()->delete();
+
+        $newStart = $startTime->copy()->addHours(1);
+        $newEnd = $endTime->copy()->addHours(1);
+        \CorvMC\SpaceManagement\Actions\Reservations\UpdateReservation::run($reservation, $newStart, $newEnd);
+
+        $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
+
+        expect($logs)->toHaveCount(1)
+            ->and($logs->first()->log_name)->toBe('reservation')
+            ->and($logs->first()->event)->toBe('rescheduled');
+    });
+
+    it('creates exactly one log entry when confirming a reservation', function () {
+        $user = User::factory()->create();
+        $startTime = \Carbon\Carbon::now()->addDays(4)->setHour(14)->setMinute(0)->setSecond(0);
+        $endTime = $startTime->copy()->addHours(2);
+
+        \Illuminate\Support\Facades\Notification::fake();
+        $reservation = \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run($user, $startTime, $endTime);
+        expect($reservation->status)->toBe(ReservationStatus::Scheduled);
+
+        Activity::query()->delete();
+
+        // Move time forward so confirmation is allowed
+        $this->travel(2)->days();
+        \CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation::run($reservation);
+
+        $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
+
+        expect($logs)->toHaveCount(1)
+            ->and($logs->first()->log_name)->toBe('reservation')
+            ->and($logs->first()->event)->toBe('confirmed');
+    });
+});
+
 it('logs activity when a reservation is auto-cancelled', function () {
     $user = User::factory()->create();
     RehearsalReservation::factory()->create([
