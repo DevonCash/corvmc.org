@@ -49,10 +49,17 @@
                             @endif
                         </div>
 
-                        {{-- Duration --}}
-                        <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 flex-shrink-0">
-                            <x-tabler-hourglass class="w-3 h-3" />
-                            <span>{{ $reservation->hours_used }}h</span>
+                        {{-- Duration & Recurring indicator --}}
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            @if($reservation->recurring_series_id)
+                                <div class="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400" title="Recurring reservation">
+                                    <x-tabler-repeat class="w-3 h-3" />
+                                </div>
+                            @endif
+                            <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+                                <x-tabler-hourglass class="w-3 h-3" />
+                                <span>{{ $reservation->hours_used }}h</span>
+                            </div>
                         </div>
                     </div>
                 </div>

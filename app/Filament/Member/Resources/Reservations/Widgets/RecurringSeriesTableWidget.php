@@ -3,6 +3,7 @@
 namespace App\Filament\Member\Resources\Reservations\Widgets;
 
 use CorvMC\SpaceManagement\Actions\RecurringReservations\CreateRecurringRehearsal;
+use CorvMC\Support\Enums\RecurringSeriesStatus;
 use CorvMC\Support\Models\RecurringSeries;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -109,8 +110,8 @@ class RecurringSeriesTableWidget extends BaseWidget
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->visible(fn($record) => $record->status === 'active')
-                    ->authorize('delete')
+                    ->visible(fn($record) => $record->status === RecurringSeriesStatus::ACTIVE)
+                    ->authorize('cancel')
                     ->action(fn($record) => \CorvMC\Support\Actions\CancelRecurringSeries::run($record)),
             ])
             ->defaultSort('series_start_date', 'desc')

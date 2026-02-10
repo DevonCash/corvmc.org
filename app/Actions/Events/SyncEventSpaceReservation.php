@@ -40,8 +40,21 @@ class SyncEventSpaceReservation
         $reservedUntil = $event->end_datetime?->copy()->addMinutes($teardownMinutes)
             ?? $event->start_datetime->copy()->addHours(3);
 
+        // If reservation already exists with same times, no sync needed
+        $existingReservation = $event->spaceReservation;
+        if ($existingReservation
+            && $existingReservation->reserved_at->equalTo($reservedAt)
+            && $existingReservation->reserved_until->equalTo($reservedUntil)
+        ) {
+            return [
+                'success' => true,
+                'conflicts' => ['reservations' => collect(), 'productions' => collect(), 'closures' => collect()],
+                'reservation' => $existingReservation,
+            ];
+        }
+
         // Check for conflicts (excluding this event's own reservation if it exists)
-        $excludeId = $event->spaceReservation?->id;
+        $excludeId = $existingReservation?->id;
         $conflicts = GetAllConflicts::run($reservedAt, $reservedUntil, $excludeId);
 
         $hasConflicts = $conflicts['reservations']->isNotEmpty()

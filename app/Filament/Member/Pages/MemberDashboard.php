@@ -39,11 +39,30 @@ class MemberDashboard extends Page
             return collect();
         }
 
-        return $user->rehearsals()
+        // Fetch upcoming reservations, ordered by date
+        $reservations = $user->rehearsals()
             ->upcoming()
             ->orderBy('reserved_at')
-            ->limit(5)
+            ->limit(50) // Fetch enough to have 5 after filtering
             ->get();
+
+        // For recurring reservations, only keep the next instance per series
+        $seenSeries = [];
+        $filtered = $reservations->filter(function ($reservation) use (&$seenSeries) {
+            if (! $reservation->recurring_series_id) {
+                return true; // Non-recurring, always include
+            }
+
+            if (isset($seenSeries[$reservation->recurring_series_id])) {
+                return false; // Already have next instance for this series
+            }
+
+            $seenSeries[$reservation->recurring_series_id] = true;
+
+            return true;
+        });
+
+        return $filtered->take(5);
     }
 
     public function getQuickActions(): array
