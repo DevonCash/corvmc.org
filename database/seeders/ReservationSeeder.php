@@ -337,7 +337,7 @@ class ReservationSeeder extends Seeder
         // Past or confirmed reservations should have settled charges
         if ($isPast || $reservation->status === 'confirmed') {
             if ($netAmount === 0) {
-                $status = ChargeStatus::Paid;
+                $status = ChargeStatus::CoveredByCredits;
                 $paymentMethod = 'credits';
                 $paidAt = $reservation->created_at;
             } else {

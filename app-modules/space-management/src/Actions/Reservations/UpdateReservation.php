@@ -26,7 +26,9 @@ class UpdateReservation
         // Check the Charge model for payment status
         if ($reservation instanceof RehearsalReservation) {
             $chargeStatus = $reservation->charge?->status;
-            if ($chargeStatus && $chargeStatus->isSettled() && $chargeStatus !== ChargeStatus::Paid) {
+            if ($chargeStatus && $chargeStatus->isSettled()
+                && $chargeStatus !== ChargeStatus::Paid
+                && $chargeStatus !== ChargeStatus::CoveredByCredits) {
                 throw new \InvalidArgumentException('Cannot update comped or refunded reservations. Please cancel and create a new reservation, or update via admin panel.');
             }
         }

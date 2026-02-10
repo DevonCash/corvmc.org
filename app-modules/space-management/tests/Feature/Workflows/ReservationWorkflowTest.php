@@ -48,7 +48,7 @@ describe('Reservation Workflow: Create Single Reservation', function () {
 
         expect($reservation->charge->net_amount->getMinorAmount()->toInt())->toBe(0);
         expect((float) $reservation->free_hours_used)->toBe(2.0);
-        expect($reservation->getChargeStatus())->toBe(ChargeStatus::Paid); // Free hours = auto-paid
+        expect($reservation->getChargeStatus())->toBe(ChargeStatus::CoveredByCredits); // Free hours = covered by credits
 
         // Credits should be deducted (4 blocks for 2 hours)
         $newBalance = $user->fresh()->getCreditBalance(CreditType::FreeHours);
@@ -218,6 +218,31 @@ describe('Reservation Workflow: Cancel Reservation', function () {
         // Charge should be marked as Cancelled, not Refunded
         $reservation->refresh();
         expect($reservation->charge->status)->toBe(ChargeStatus::Cancelled);
+    });
+
+    it('marks charge as cancelled (not refunded) when cancelling a credit-covered reservation', function () {
+        $user = User::factory()->sustainingMember()->create();
+        $user->addCredit(8, CreditType::FreeHours, 'test_allocation', null, 'Test allocation');
+
+        $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
+        $endTime = $startTime->copy()->addHours(2);
+
+        $reservation = CreateReservation::run($user, $startTime, $endTime);
+
+        // Verify charge is CoveredByCredits (not Paid)
+        expect($reservation->charge->status)->toBe(ChargeStatus::CoveredByCredits);
+
+        $balanceBeforeCancel = $user->fresh()->getCreditBalance(CreditType::FreeHours);
+
+        CancelReservation::run($reservation);
+
+        // Charge should be Cancelled, NOT Refunded (no money was exchanged)
+        $reservation->refresh();
+        expect($reservation->charge->status)->toBe(ChargeStatus::Cancelled);
+
+        // Credits should still be restored
+        $balanceAfterCancel = $user->fresh()->getCreditBalance(CreditType::FreeHours);
+        expect($balanceAfterCancel)->toBe($balanceBeforeCancel + 4);
     });
 
     it('marks charge as refunded when cancelling a paid reservation', function () {

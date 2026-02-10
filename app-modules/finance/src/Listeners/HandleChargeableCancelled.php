@@ -51,7 +51,10 @@ class HandleChargeableCancelled
             }
 
             // Update charge status based on whether payment was made
-            if ($charge->status->isPaid()) {
+            if ($charge->status->isCoveredByCredits()) {
+                // No money exchanged, just credits - cancel rather than "refund"
+                $charge->markAsCancelled('Cancelled (credits restored)');
+            } elseif ($charge->status->isPaid()) {
                 // Payment was made, so this is a refund
                 $charge->markAsRefunded('Cancelled');
             } else {

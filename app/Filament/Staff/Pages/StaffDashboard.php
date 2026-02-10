@@ -63,7 +63,7 @@ class StaffDashboard extends Page
                     'end_time' => $reservation->reserved_until->format('g:i A'),
                     'duration' => $reservation->hours_used,
                     'status' => $reservation->status,
-                    'is_paid' => $reservation->charge?->status->isPaid() ?? true,
+                    'is_paid' => $reservation->charge?->status?->isSettled() ?? true,
                     'amount' => $reservation->charge?->net_amount?->formatTo('en_US'),
                 ];
             });

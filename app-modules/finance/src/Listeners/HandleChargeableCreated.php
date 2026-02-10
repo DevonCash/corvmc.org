@@ -51,12 +51,8 @@ class HandleChargeableCreated
 
             // Determine initial status
             if ($pricing->net_amount === 0) {
-                // Fully covered by credits - mark as paid (no payment needed)
-                $charge->update([
-                    'status' => ChargeStatus::Paid,
-                    'payment_method' => 'credits',
-                    'paid_at' => now(),
-                ]);
+                // Fully covered by credits - no monetary payment needed
+                $charge->markAsCoveredByCredits();
             }
 
             // Update derived fields on reservation (cost, free_hours_used)

@@ -210,12 +210,8 @@ class RecalculateUnsettledReservations extends Command
             ]);
 
             if ($newNetAmount === 0 && $charge->status->isPending()) {
-                $charge->update([
-                    'status' => ChargeStatus::Paid,
-                    'payment_method' => 'credits',
-                    'paid_at' => now(),
-                ]);
-            } elseif ($newNetAmount > 0 && $charge->status->isPaid() && $charge->payment_method === 'credits') {
+                $charge->markAsCoveredByCredits();
+            } elseif ($newNetAmount > 0 && $charge->status->isCoveredByCredits()) {
                 $charge->update([
                     'status' => ChargeStatus::Pending,
                     'payment_method' => null,
@@ -286,13 +282,9 @@ class RecalculateUnsettledReservations extends Command
                 $pricing->credits_applied ?: null
             );
 
-            // Mark as paid if fully covered by credits
+            // Mark as covered by credits if fully covered
             if ($pricing->net_amount === 0) {
-                $charge->update([
-                    'status' => ChargeStatus::Paid,
-                    'payment_method' => 'credits',
-                    'paid_at' => now(),
-                ]);
+                $charge->markAsCoveredByCredits();
             }
 
             // Update derived fields on reservation

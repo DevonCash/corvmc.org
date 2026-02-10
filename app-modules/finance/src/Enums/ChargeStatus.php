@@ -10,6 +10,7 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
 {
     case Pending = 'pending';
     case Paid = 'paid';
+    case CoveredByCredits = 'covered_by_credits';
     case Comped = 'comped';
     case Refunded = 'refunded';
     case Cancelled = 'cancelled';
@@ -19,6 +20,7 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::Pending => 'Pending',
             self::Paid => 'Paid',
+            self::CoveredByCredits => 'Covered by Credits',
             self::Comped => 'Comped',
             self::Refunded => 'Refunded',
             self::Cancelled => 'Cancelled',
@@ -30,6 +32,7 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::Pending => 'tabler-clock-dollar',
             self::Paid => 'tabler-coin',
+            self::CoveredByCredits => 'tabler-coin-off',
             self::Comped => 'tabler-gift',
             self::Refunded => 'tabler-receipt-refund',
             self::Cancelled => 'tabler-x',
@@ -41,6 +44,7 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::Pending => 'warning',
             self::Paid => 'success',
+            self::CoveredByCredits => 'info',
             self::Comped => 'info',
             self::Refunded => 'gray',
             self::Cancelled => 'gray',
@@ -55,6 +59,11 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
     public function isPaid(): bool
     {
         return $this === self::Paid;
+    }
+
+    public function isCoveredByCredits(): bool
+    {
+        return $this === self::CoveredByCredits;
     }
 
     public function isComped(): bool
@@ -74,7 +83,7 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
 
     public function isSettled(): bool
     {
-        return in_array($this, [self::Paid, self::Comped, self::Refunded, self::Cancelled], true);
+        return in_array($this, [self::Paid, self::CoveredByCredits, self::Comped, self::Refunded, self::Cancelled], true);
     }
 
     public function requiresPayment(): bool

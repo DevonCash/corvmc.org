@@ -22,7 +22,7 @@ class MemberReservationEditForm
                         ->label('Date')
                         ->required()
                         ->live()
-                        ->disabled(fn ($record) => $record->isPaid())
+                        ->disabled(fn ($record) => $record->charge?->status?->isPaid() ?? false)
                         ->columnSpan(2)
                         ->default(fn ($record) => $record?->reserved_at?->toDateString())
                         ->minDate(now()->toDateString()),

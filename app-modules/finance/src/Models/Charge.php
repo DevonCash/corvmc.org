@@ -159,6 +159,21 @@ class Charge extends Model
     }
 
     /**
+     * Mark the charge as covered by credits (no monetary payment needed).
+     */
+    public function markAsCoveredByCredits(?string $notes = null): self
+    {
+        $this->update([
+            'status' => ChargeStatus::CoveredByCredits,
+            'payment_method' => 'credits',
+            'paid_at' => now(),
+            'notes' => $notes,
+        ]);
+
+        return $this;
+    }
+
+    /**
      * Mark the charge as comped (free).
      */
     public function markAsComped(?string $notes = null): self

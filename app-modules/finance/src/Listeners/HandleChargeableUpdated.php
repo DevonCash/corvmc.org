@@ -66,12 +66,8 @@ class HandleChargeableUpdated
 
             // Update status if fully covered by credits
             if ($pricing->net_amount === 0 && $charge->status->isPending()) {
-                $charge->update([
-                    'status' => ChargeStatus::Paid,
-                    'payment_method' => 'credits',
-                    'paid_at' => now(),
-                ]);
-            } elseif ($pricing->net_amount > 0 && $charge->status->isPaid() && $charge->payment_method === 'credits') {
+                $charge->markAsCoveredByCredits();
+            } elseif ($pricing->net_amount > 0 && $charge->status->isCoveredByCredits()) {
                 // Was fully covered by credits but now requires payment
                 $charge->update([
                     'status' => ChargeStatus::Pending,
