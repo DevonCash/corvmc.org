@@ -15,6 +15,8 @@ use CorvMC\Events\Enums\EventStatus;
 use CorvMC\Moderation\Enums\Visibility;
 use CorvMC\Moderation\Models\ContentModel;
 use CorvMC\Support\Concerns\HasRecurringSeries;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use CorvMC\Support\Concerns\HasTimePeriod;
 use CorvMC\Support\Contracts\Recurrable;
 use CorvMC\Support\Models\RecurringSeries;
@@ -144,7 +146,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class Event extends ContentModel implements Recurrable
 {
-    use HasFactory, HasPoster, HasPublishing, HasRecurringSeries, HasTimePeriod, SoftDeletes;
+    use HasFactory, HasPoster, HasPublishing, HasRecurringSeries, HasTimePeriod, LogsActivity, SoftDeletes;
 
     /**
      * Default attribute values.
@@ -178,10 +180,13 @@ class Event extends ContentModel implements Recurrable
 
     protected static string $creatorForeignKey = 'organizer_id';
 
-    // Activity logging configuration
-    protected static array $loggedFields = ['title', 'description', 'start_datetime', 'end_datetime', 'status', 'visibility'];
-
-    protected static string $logTitle = 'Event';
+    // TODO: Replace LogsActivity trait with domain event-based logging (requires Event domain events + LogEventActivity listener)
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([])
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = [
         'title',

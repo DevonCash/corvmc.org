@@ -485,13 +485,12 @@ class EquipmentLoan extends Model
         })->active();
     }
 
+    // TODO: Replace LogsActivity trait with domain event-based logging once EquipmentLoan Actions are created
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['state', 'due_at', 'returned_at', 'condition_in'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn (string $eventName) => "Equipment loan {$eventName}");
+            ->logOnly([])
+            ->dontSubmitEmptyLogs();
     }
 
     /**

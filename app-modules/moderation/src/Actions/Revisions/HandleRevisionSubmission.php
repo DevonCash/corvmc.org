@@ -3,6 +3,7 @@
 namespace CorvMC\Moderation\Actions\Revisions;
 
 use CorvMC\Bands\Models\Band;
+use CorvMC\Moderation\Events\RevisionSubmitted as RevisionSubmittedEvent;
 use CorvMC\Moderation\Models\Revision;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -33,6 +34,8 @@ class HandleRevisionSubmission
             'submitted_by' => $revision->submitted_by_id,
             'changes_count' => count($revision->proposed_changes),
         ]);
+
+        RevisionSubmittedEvent::dispatch($revision);
 
         // Check if this revision can be auto-approved based on trust
         if ($this->shouldAutoApprove($revision)) {

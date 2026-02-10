@@ -8,6 +8,7 @@ use Lorisleiva\Actions\Concerns\AsAction;
 
 use App\Models\User;
 
+use CorvMC\Moderation\Events\RevisionApproved as RevisionApprovedEvent;
 use CorvMC\Moderation\Models\Revision;
 use CorvMC\Moderation\Notifications\RevisionApprovedNotification;
 
@@ -47,6 +48,8 @@ class ApproveRevision
 
             return true;
         });
+
+        RevisionApprovedEvent::dispatch($revision, $reviewer);
 
         // Send notification outside transaction
         try {

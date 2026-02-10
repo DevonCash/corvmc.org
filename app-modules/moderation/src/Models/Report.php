@@ -153,33 +153,7 @@ class Report extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['reason', 'status', 'resolved_by_id', 'resolution_notes'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(function (string $eventName) {
-                return match ($eventName) {
-                    'created' => 'Report submitted',
-                    'updated' => $this->getStatusChangeDescription(),
-                    'deleted' => 'Report removed',
-                    default => "Report {$eventName}",
-                };
-            });
-    }
-
-    private function getStatusChangeDescription(): string
-    {
-        if ($this->isDirty('status')) {
-            $from = $this->getOriginal('status');
-            $to = $this->status;
-
-            return match ([$from, $to]) {
-                ['pending', 'upheld'] => 'Report upheld by moderator',
-                ['pending', 'dismissed'] => 'Report dismissed by moderator',
-                ['pending', 'escalated'] => 'Report escalated for review',
-                default => 'Report status updated',
-            };
-        }
-
-        return 'Report updated';
+            ->logOnly([])
+            ->dontSubmitEmptyLogs();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
+use CorvMC\Membership\Events\MemberProfileCreated as MemberProfileCreatedEvent;
 use CorvMC\Membership\Models\MemberProfile;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -15,7 +16,7 @@ class CreateMemberProfile
      */
     public function handle(array $data): MemberProfile
     {
-        return DB::transaction(function () use ($data) {
+        $profile = DB::transaction(function () use ($data) {
             $profile = MemberProfile::create($data);
 
             // Handle tags if provided
@@ -45,5 +46,9 @@ class CreateMemberProfile
 
             return $profile;
         });
+
+        MemberProfileCreatedEvent::dispatch($profile);
+
+        return $profile;
     }
 }

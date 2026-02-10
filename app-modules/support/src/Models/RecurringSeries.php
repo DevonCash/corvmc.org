@@ -158,14 +158,10 @@ class RecurringSeries extends Model
         return $this->recurable_type === 'event';
     }
 
-    /**
-     * Activity log configuration
-     */
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['status', 'series_end_date', 'recurrence_rule', 'recurable_type'])
-            ->logOnlyDirty()
+            ->logOnly([])
             ->dontSubmitEmptyLogs();
     }
 }

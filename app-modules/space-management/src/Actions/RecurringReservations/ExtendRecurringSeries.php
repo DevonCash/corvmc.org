@@ -4,6 +4,7 @@ namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
 use Carbon\Carbon;
 use CorvMC\Support\Actions\GenerateRecurringInstances;
+use CorvMC\Support\Events\RecurringSeriesExtended;
 use CorvMC\Support\Models\RecurringSeries;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -16,9 +17,13 @@ class ExtendRecurringSeries
      */
     public function handle(RecurringSeries $series, Carbon $newEndDate): void
     {
+        $previousEndDate = $series->series_end_date->copy();
+
         $series->update(['series_end_date' => $newEndDate]);
 
         // Generate new instances
         GenerateRecurringInstances::run($series);
+
+        RecurringSeriesExtended::dispatch($series, $previousEndDate);
     }
 }

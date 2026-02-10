@@ -8,8 +8,6 @@ use CorvMC\Moderation\Concerns\Revisionable;
 use CorvMC\Moderation\Contracts\Reportable as ReportableContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -33,7 +31,7 @@ use Spatie\Tags\HasTags;
  */
 abstract class ContentModel extends Model implements HasMedia, ReportableContract
 {
-    use HasFactory, HasFlags, HasTags, HasVisibility, InteractsWithMedia, LogsActivity, Reportable, Revisionable;
+    use HasFactory, HasFlags, HasTags, HasVisibility, InteractsWithMedia, Reportable, Revisionable;
 
     // Default report configuration - can be overridden in subclasses
     protected static int $reportThreshold = 4;
@@ -90,62 +88,4 @@ abstract class ContentModel extends Model implements HasMedia, ReportableContrac
             ->performOnCollections('avatar');
     }
 
-    /**
-     * The fields that should be logged for this content type.
-     */
-    protected static array $loggedFields = [];
-
-    /**
-     * The content title for activity log descriptions.
-     */
-    protected static string $logTitle = 'Content';
-
-    /**
-     * Standard activity logging configuration for content models.
-     */
-    public function getActivitylogOptions(): LogOptions
-    {
-        $fields = $this->getLoggedFields();
-
-        return LogOptions::defaults()
-            ->logOnly($fields)
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn (string $eventName) => "{$this->getLogTitle()} {$eventName}")
-            ->dontLogIfAttributesChangedOnly(['updated_at'])
-            ->logExcept($this->isPrivateContent() ? $this->getPrivateContentFields() : []);
-    }
-
-    /**
-     * Get the fields that should be logged for this content type.
-     */
-    public function getLoggedFields(): array
-    {
-        return static::$loggedFields;
-    }
-
-    /**
-     * Get the content title for activity log descriptions.
-     */
-    public function getLogTitle(): string
-    {
-        return static::$logTitle;
-    }
-
-    /**
-     * Check if this content is private and should have restricted logging.
-     */
-    protected function isPrivateContent(): bool
-    {
-        return $this->visibility === \CorvMC\Moderation\Enums\Visibility::Private;
-    }
-
-    /**
-     * Get fields that should not be logged when content is private.
-     * Override in subclasses to customize privacy handling.
-     */
-    protected function getPrivateContentFields(): array
-    {
-        return ['bio', 'description', 'content'];
-    }
 }

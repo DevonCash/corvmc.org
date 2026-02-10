@@ -427,13 +427,12 @@ class Equipment extends Model implements HasMedia
         return $this->children->filter(fn ($component) => $component->is_checked_out);
     }
 
+    // TODO: Replace LogsActivity trait with domain event-based logging once Equipment CRUD Actions are created
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'status', 'condition', 'location', 'ownership_status'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn (string $eventName) => "Equipment {$eventName}");
+            ->logOnly([])
+            ->dontSubmitEmptyLogs();
     }
 
     /**

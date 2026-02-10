@@ -322,13 +322,12 @@ class EquipmentDamageReport extends Model implements HasMedia
         return $query->where('equipment_id', $equipment->id);
     }
 
+    // TODO: Replace LogsActivity trait with domain event-based logging once EquipmentDamageReport lifecycle Actions are created
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['status', 'assigned_to_id', 'priority', 'severity', 'actual_cost'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn (string $eventName) => "Damage report {$eventName}");
+            ->logOnly([])
+            ->dontSubmitEmptyLogs();
     }
 
     /**

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+use CorvMC\Moderation\Events\RevisionAutoApproved as RevisionAutoApprovedEvent;
 use CorvMC\Moderation\Models\Revision;
 use CorvMC\Moderation\Notifications\RevisionApprovedNotification;
 
@@ -47,6 +48,8 @@ class AutoApproveRevision
 
             return true;
         });
+
+        RevisionAutoApprovedEvent::dispatch($revision);
 
         // Send notification outside transaction
         try {

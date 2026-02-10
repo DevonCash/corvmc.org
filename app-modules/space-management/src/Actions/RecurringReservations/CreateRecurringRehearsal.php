@@ -7,6 +7,7 @@ use App\Filament\Staff\Resources\RecurringReservations\Schemas\RecurringReservat
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\Support\Actions\GenerateRecurringInstances;
 use CorvMC\Support\Enums\RecurringSeriesStatus;
+use CorvMC\Support\Events\RecurringSeriesCreated;
 use CorvMC\Support\Models\RecurringSeries;
 use Lorisleiva\Actions\Concerns\AsAction;
 use RRule\RRule;
@@ -41,6 +42,8 @@ class CreateRecurringRehearsal
 
         // Generate initial instances
         GenerateRecurringInstances::run($series);
+
+        RecurringSeriesCreated::dispatch($series);
 
         return $series->fresh();
     }

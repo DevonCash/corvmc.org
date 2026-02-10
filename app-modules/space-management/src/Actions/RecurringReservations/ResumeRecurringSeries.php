@@ -3,6 +3,7 @@
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
 use CorvMC\Support\Enums\RecurringSeriesStatus;
+use CorvMC\Support\Events\RecurringSeriesResumed;
 use App\Filament\Shared\Actions\Action\Action;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -11,10 +12,9 @@ class ResumeRecurringSeries
     use AsAction;
     public function handle($recurringSeries)
     {
-        // Update the recurring series with the provided data
         $recurringSeries->update(['status' => RecurringSeriesStatus::ACTIVE]);
 
-        // Additional logic can be added here if needed
+        RecurringSeriesResumed::dispatch($recurringSeries);
 
         return $recurringSeries;
     }

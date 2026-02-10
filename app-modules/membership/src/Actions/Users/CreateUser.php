@@ -3,6 +3,7 @@
 namespace CorvMC\Membership\Actions\Users;
 
 use App\Models\User;
+use CorvMC\Membership\Events\UserCreated as UserCreatedEvent;
 use CorvMC\Membership\Notifications\UserCreatedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -48,6 +49,8 @@ class CreateUser
 
             return $user;
         });
+
+        UserCreatedEvent::dispatch($user);
 
         // Send creation notification outside transaction
         try {

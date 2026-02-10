@@ -397,10 +397,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'email', 'staff_title', 'staff_type', 'show_on_about_page'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn (string $eventName) => "User account {$eventName}");
+            ->logOnly([])
+            ->dontSubmitEmptyLogs();
     }
 
     // public function sendPasswordResetNotification($token)

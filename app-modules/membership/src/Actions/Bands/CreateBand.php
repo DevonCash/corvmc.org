@@ -3,6 +3,7 @@
 namespace CorvMC\Membership\Actions\Bands;
 
 use App\Filament\Resources\Bands\BandResource;
+use CorvMC\Bands\Events\BandCreated as BandCreatedEvent;
 use CorvMC\Bands\Models\Band;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -20,7 +21,7 @@ class CreateBand
      */
     public function handle(array $data): Band
     {
-        return DB::transaction(function () use ($data) {
+        $band = DB::transaction(function () use ($data) {
             if (! User::me()?->can('create', Band::class)) {
                 throw new UnauthorizedException('User does not have permission to create bands.');
             }
@@ -45,6 +46,10 @@ class CreateBand
 
             return $band;
         });
+
+        BandCreatedEvent::dispatch($band);
+
+        return $band;
     }
 
     public static function filamentAction(): Action

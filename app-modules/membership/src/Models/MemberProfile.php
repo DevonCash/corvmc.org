@@ -96,11 +96,6 @@ class MemberProfile extends ContentModel
 
     protected static string $reportableTypeName = 'Member Profile';
 
-    // Activity logging configuration
-    protected static array $loggedFields = ['bio', 'hometown', 'visibility', 'pronouns'];
-
-    protected static string $logTitle = 'Member profile';
-
     /**
      * Auto-approval mode for member profiles - personal content
      */

@@ -357,41 +357,10 @@ class Revision extends Model
         return $query->where('created_at', '<', now()->subDays($days));
     }
 
-    /**
-     * Activity log configuration.
-     */
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['status', 'reviewed_by_id', 'review_reason'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(function (string $eventName) {
-                return match ($eventName) {
-                    'created' => 'Revision submitted for review',
-                    'updated' => $this->getStatusChangeDescription(),
-                    'deleted' => 'Revision removed',
-                    default => "Revision {$eventName}",
-                };
-            });
-    }
-
-    /**
-     * Get description for status changes.
-     */
-    private function getStatusChangeDescription(): string
-    {
-        if ($this->isDirty('status')) {
-            $from = $this->getOriginal('status');
-            $to = $this->status;
-
-            return match ([$from, $to]) {
-                ['pending', 'approved'] => 'Revision approved',
-                ['pending', 'rejected'] => 'Revision rejected',
-                default => 'Revision status updated',
-            };
-        }
-
-        return 'Revision updated';
+            ->logOnly([])
+            ->dontSubmitEmptyLogs();
     }
 }

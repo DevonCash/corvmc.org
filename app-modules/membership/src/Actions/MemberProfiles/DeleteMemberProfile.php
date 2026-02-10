@@ -2,6 +2,7 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
+use CorvMC\Membership\Events\MemberProfileDeleted as MemberProfileDeletedEvent;
 use CorvMC\Membership\Models\MemberProfile;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -15,7 +16,7 @@ class DeleteMemberProfile
      */
     public function handle(MemberProfile $profile): bool
     {
-        return DB::transaction(function () use ($profile) {
+        $result = DB::transaction(function () use ($profile) {
             // Clear all media
             $profile->clearMediaCollection('avatar');
 
@@ -24,5 +25,11 @@ class DeleteMemberProfile
 
             return $profile->delete();
         });
+
+        if ($result) {
+            MemberProfileDeletedEvent::dispatch($profile);
+        }
+
+        return $result;
     }
 }

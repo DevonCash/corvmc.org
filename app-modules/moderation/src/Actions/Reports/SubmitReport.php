@@ -9,6 +9,7 @@ use App\Models\User;
 
 use CorvMC\Moderation\Models\Report;
 use CorvMC\Moderation\Contracts\Reportable as ReportableContract;
+use CorvMC\Moderation\Events\ReportSubmitted as ReportSubmittedEvent;
 use CorvMC\Moderation\Notifications\ReportSubmittedNotification;
 
 class SubmitReport
@@ -51,6 +52,8 @@ class SubmitReport
             'custom_reason' => $customReason,
             'status' => 'pending',
         ]);
+
+        ReportSubmittedEvent::dispatch($report);
 
         // Check threshold and handle accordingly
         if ($reportable->hasReachedReportThreshold()) {

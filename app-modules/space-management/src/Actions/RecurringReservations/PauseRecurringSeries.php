@@ -4,6 +4,7 @@ namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
 use App\Filament\Shared\Actions\Action\Action;
 use CorvMC\Support\Enums\RecurringSeriesStatus;
+use CorvMC\Support\Events\RecurringSeriesPaused;
 use CorvMC\Support\Models\RecurringSeries;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -13,6 +14,8 @@ class PauseRecurringSeries
     public function handle($recurringSeries)
     {
         $recurringSeries->update(['status' => RecurringSeriesStatus::PAUSED]);
+
+        RecurringSeriesPaused::dispatch($recurringSeries);
 
         return $recurringSeries;
     }

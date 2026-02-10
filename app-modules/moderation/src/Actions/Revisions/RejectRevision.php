@@ -2,6 +2,7 @@
 
 namespace CorvMC\Moderation\Actions\Revisions;
 
+use CorvMC\Moderation\Events\RevisionRejected as RevisionRejectedEvent;
 use CorvMC\Moderation\Models\Revision;
 use App\Models\User;
 use CorvMC\Moderation\Actions\Trust\PenalizeViolation;
@@ -43,6 +44,8 @@ class RejectRevision
 
             return true;
         });
+
+        RevisionRejectedEvent::dispatch($revision, $reviewer, $reason);
 
         // Send notification outside transaction
         try {

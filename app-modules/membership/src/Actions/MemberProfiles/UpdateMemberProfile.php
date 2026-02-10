@@ -2,6 +2,7 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
+use CorvMC\Membership\Events\MemberProfileUpdated as MemberProfileUpdatedEvent;
 use CorvMC\Membership\Models\MemberProfile;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -13,9 +14,13 @@ class UpdateMemberProfile
     /**
      * Update a member profile.
      */
+    private const LOGGED_FIELDS = ['bio', 'hometown', 'visibility'];
+
     public function handle(MemberProfile $profile, array $data): MemberProfile
     {
-        return DB::transaction(function () use ($profile, $data) {
+        $originalData = $profile->toArray();
+
+        $profile = DB::transaction(function () use ($profile, $data) {
             $profile->update($data);
 
             // Handle tag updates
@@ -40,5 +45,18 @@ class UpdateMemberProfile
 
             return $profile->fresh();
         });
+
+        $changedFields = array_keys(array_filter(
+            array_intersect_key($profile->toArray(), array_flip(self::LOGGED_FIELDS)),
+            fn ($value, $key) => ($originalData[$key] ?? null) !== $value,
+            ARRAY_FILTER_USE_BOTH,
+        ));
+
+        if (! empty($changedFields)) {
+            $oldValues = array_intersect_key($originalData, array_flip($changedFields));
+            MemberProfileUpdatedEvent::dispatch($profile, $changedFields, $oldValues);
+        }
+
+        return $profile;
     }
 }

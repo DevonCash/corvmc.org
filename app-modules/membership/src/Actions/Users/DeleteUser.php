@@ -3,6 +3,7 @@
 namespace CorvMC\Membership\Actions\Users;
 
 use App\Models\User;
+use CorvMC\Membership\Events\UserDeleted as UserDeletedEvent;
 use CorvMC\Membership\Notifications\UserDeactivatedNotification;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -27,6 +28,8 @@ class DeleteUser
         });
 
         if ($result) {
+            UserDeletedEvent::dispatch($user);
+
             // Send deactivation notification outside transaction
             try {
                 $user->notify(new UserDeactivatedNotification);

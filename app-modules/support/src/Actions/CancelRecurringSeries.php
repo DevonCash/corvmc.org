@@ -3,6 +3,7 @@
 namespace CorvMC\Support\Actions;
 
 use CorvMC\Support\Contracts\Recurrable;
+use CorvMC\Support\Events\RecurringSeriesCancelled;
 use CorvMC\Support\Models\RecurringSeries;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
@@ -38,5 +39,7 @@ class CancelRecurringSeries
             // Cancel all future instances
             $recurableType::cancelFutureInstances($series, $reason);
         });
+
+        RecurringSeriesCancelled::dispatch($series);
     }
 }
