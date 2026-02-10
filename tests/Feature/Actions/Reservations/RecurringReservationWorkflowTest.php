@@ -131,8 +131,8 @@ describe('GenerateRecurringInstances', function () {
 
         $created = GenerateRecurringInstances::run($series);
 
-        // All instances should be within 14 days of now
-        $maxDate = now()->addDays(14);
+        // All instances should be on dates within 14 days of now
+        $maxDate = now()->addDays(14)->endOfDay();
         $created->each(function ($reservation) use ($maxDate) {
             expect($reservation->reserved_at->lte($maxDate))->toBeTrue();
         });
