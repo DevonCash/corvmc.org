@@ -59,9 +59,6 @@ class ResourceSuggestionNotification extends Notification implements ShouldQueue
         }
 
         $mail->line('---')
-            ->line('**Submitted by:** '.$this->submissionData['submitter_name'])
-            ->line('**Email:** '.$this->submissionData['submitter_email'])
-            ->action('Reply to Submitter', 'mailto:'.$this->submissionData['submitter_email'])
             ->line('Review this suggestion and add it to the Local Resources page if appropriate.');
 
         return $mail;

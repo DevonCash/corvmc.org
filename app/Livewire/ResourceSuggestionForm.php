@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\LocalResource;
 use App\Models\ResourceList;
 use App\Notifications\ResourceSuggestionNotification;
 use App\Settings\OrganizationSettings;
@@ -13,6 +14,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use l3aro\FilamentTurnstile\Forms\Turnstile;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -53,6 +55,7 @@ class ResourceSuggestionForm extends Component implements HasActions, HasForms
                             Select::make('category')
                                 ->label('Category')
                                 ->options($categories + ['other' => 'Other / New Category'])
+                                ->required()
                                 ->placeholder('Select a category...')
                                 ->live(),
 
@@ -95,35 +98,29 @@ class ResourceSuggestionForm extends Component implements HasActions, HasForms
                             ->placeholder('Street address, city'),
                     ]),
 
-                Section::make('Your Information')
-                    ->schema([
-                        Grid::make(2)->schema([
-                            TextInput::make('submitter_name')
-                                ->label('Your Name')
-                                ->required()
-                                ->maxLength(255),
-
-                            TextInput::make('submitter_email')
-                                ->label('Your Email')
-                                ->email()
-                                ->required()
-                                ->maxLength(255)
-                                ->helperText('We may contact you if we have questions'),
-                        ]),
-                    ]),
+                Turnstile::make('captcha'),
             ])
             ->action(function (array $data): void {
-                // Resolve category name
+                // Resolve category
                 if ($data['category'] === 'other') {
-                    $data['category_name'] = $data['new_category'] ?? 'New Category';
-                } elseif ($data['category']) {
-                    $data['category_name'] = ResourceList::find($data['category'])?->name ?? 'Unknown';
+                    $categoryName = $data['new_category'] ?? 'New Category';
+                    $resourceList = ResourceList::create(['name' => $categoryName]);
+                    $data['category_name'] = $categoryName;
                 } else {
-                    $data['category_name'] = 'Not specified';
+                    $resourceList = ResourceList::find($data['category']);
+                    $data['category_name'] = $resourceList?->name ?? 'Unknown';
                 }
 
-                // Log the submission
-                logger('Resource suggestion submitted', $data);
+                // Create unpublished resource
+                LocalResource::create([
+                    'resource_list_id' => $resourceList->id,
+                    'name' => $data['resource_name'],
+                    'description' => $data['description'] ?? null,
+                    'contact_name' => $data['contact_name'] ?? null,
+                    'contact_phone' => $data['contact_phone'] ?? null,
+                    'website' => $data['website'] ?? null,
+                    'address' => $data['address'] ?? null,
+                ]);
 
                 // Send email notification to organization
                 $staffEmail = app(OrganizationSettings::class)->email;

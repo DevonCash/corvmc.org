@@ -29,6 +29,7 @@
         "google/apiclient": "^2.18",
         "internachi/modular": "^2.3",
         "knplabs/github-api": "^3.16",
+        "l3aro/filament-turnstile": "^1.0",
         "laravel/cashier": "^15.7",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.3",

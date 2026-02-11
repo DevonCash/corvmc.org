@@ -4,6 +4,7 @@ use App\Livewire\ResourceSuggestionForm;
 use App\Models\LocalResource;
 use App\Models\ResourceList;
 use App\Notifications\ResourceSuggestionNotification;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
@@ -157,6 +158,7 @@ describe('public local resources page', function () {
 describe('resource suggestion form', function () {
     it('submits a resource suggestion and sends notification', function () {
         Notification::fake();
+        Http::fake(['*turnstile*' => Http::response(['success' => true])]);
 
         $list = ResourceList::factory()->published()->create(['name' => 'Music Shops']);
 
@@ -169,48 +171,45 @@ describe('resource suggestion form', function () {
                 'contact_name' => 'John Owner',
                 'contact_phone' => '541-555-1234',
                 'address' => '123 Main St, Corvallis, OR',
-                'submitter_name' => 'Jane Submitter',
-                'submitter_email' => 'jane@example.com',
+                'captcha' => 'test-token',
             ])
             ->assertHasNoActionErrors();
 
         Notification::assertSentOnDemand(ResourceSuggestionNotification::class);
+
+        $resource = LocalResource::where('name', 'Test Music Store')->first();
+        expect($resource)
+            ->not->toBeNull()
+            ->resource_list_id->toBe($list->id)
+            ->website->toBe('https://testmusicstore.com')
+            ->description->toBe('A great place for guitars')
+            ->contact_name->toBe('John Owner')
+            ->published_at->toBeNull();
     });
 
-    it('requires resource name and submitter info', function () {
+    it('requires resource name', function () {
+        Http::fake(['*turnstile*' => Http::response(['success' => true])]);
+
         Livewire::test(ResourceSuggestionForm::class)
             ->callAction('suggestResource', data: [
                 'resource_name' => '',
-                'submitter_name' => '',
-                'submitter_email' => '',
+                'captcha' => 'test-token',
             ])
             ->assertHasActionErrors([
                 'resource_name' => 'required',
-                'submitter_name' => 'required',
-                'submitter_email' => 'required',
             ]);
-    });
-
-    it('validates email format', function () {
-        Livewire::test(ResourceSuggestionForm::class)
-            ->callAction('suggestResource', data: [
-                'resource_name' => 'Test Resource',
-                'submitter_name' => 'Test User',
-                'submitter_email' => 'not-an-email',
-            ])
-            ->assertHasActionErrors(['submitter_email' => 'email']);
     });
 
     it('handles other category in submission', function () {
         Notification::fake();
+        Http::fake(['*turnstile*' => Http::response(['success' => true])]);
 
         Livewire::test(ResourceSuggestionForm::class)
             ->callAction('suggestResource', data: [
                 'resource_name' => 'New Resource',
                 'category' => 'other',
                 'new_category' => 'Vinyl Pressing',
-                'submitter_name' => 'Test User',
-                'submitter_email' => 'test@example.com',
+                'captcha' => 'test-token',
             ])
             ->assertHasNoActionErrors();
 
@@ -220,5 +219,14 @@ describe('resource suggestion form', function () {
                 return $notification->submissionData['category_name'] === 'Vinyl Pressing';
             }
         );
+
+        $resource = LocalResource::where('name', 'New Resource')->first();
+        expect($resource)->not->toBeNull();
+
+        $newList = ResourceList::where('name', 'Vinyl Pressing')->first();
+        expect($newList)
+            ->not->toBeNull()
+            ->published_at->toBeNull();
+        expect($resource->resource_list_id)->toBe($newList->id);
     });
 });
