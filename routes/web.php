@@ -124,7 +124,22 @@ Route::get('/bands/{band}', function (Band $band) {
 })->where('band', '[a-z0-9\-]+')->name('bands.show');
 
 Route::get('/programs', function () {
-    return view('public.programs');
+    $page = \App\Models\SitePage::where('slug', 'programs')->firstOrFail();
+
+    // Group consecutive same-bg sections for merged visual wrappers
+    $groups = [];
+    foreach ($page->blocks as $block) {
+        $bg = $block['data']['background_color'] ?? 'none';
+        $last = end($groups);
+
+        if ($last && $last['bg'] === $bg && ! ($block['data']['full_bleed'] ?? false)) {
+            $groups[array_key_last($groups)]['sections'][] = $block;
+        } else {
+            $groups[] = ['bg' => $bg, 'sections' => [$block]];
+        }
+    }
+
+    return view('public.programs', compact('page', 'groups'));
 })->name('programs');
 
 Route::get('/contribute', function () {
