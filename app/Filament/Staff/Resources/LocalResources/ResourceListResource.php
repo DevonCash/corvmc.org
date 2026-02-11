@@ -5,10 +5,9 @@ namespace App\Filament\Staff\Resources\LocalResources;
 use App\Filament\Staff\Resources\LocalResources\Pages\CreateResourceList;
 use App\Filament\Staff\Resources\LocalResources\Pages\EditResourceList;
 use App\Filament\Staff\Resources\LocalResources\Pages\ListResourceLists;
-use App\Filament\Staff\Resources\LocalResources\RelationManagers\ResourcesRelationManager;
 use App\Filament\Staff\Resources\LocalResources\Schemas\ResourceListForm;
 use App\Filament\Staff\Resources\LocalResources\Tables\ResourceListsTable;
-use App\Models\ResourceList;
+use App\Models\LocalResource;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -19,7 +18,7 @@ use UnitEnum;
 
 class ResourceListResource extends Resource
 {
-    protected static ?string $model = ResourceList::class;
+    protected static ?string $model = LocalResource::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'tabler-list';
 
@@ -29,9 +28,9 @@ class ResourceListResource extends Resource
 
     protected static ?string $navigationLabel = 'Local Resources';
 
-    protected static ?string $modelLabel = 'Resource List';
+    protected static ?string $modelLabel = 'Resource';
 
-    protected static ?string $pluralModelLabel = 'Resource Lists';
+    protected static ?string $pluralModelLabel = 'Resources';
 
     public static function form(Schema $schema): Schema
     {
@@ -45,9 +44,7 @@ class ResourceListResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            ResourcesRelationManager::class,
-        ];
+        return [];
     }
 
     public static function getPages(): array
