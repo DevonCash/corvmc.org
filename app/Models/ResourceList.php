@@ -15,7 +15,6 @@ use Spatie\Sluggable\SlugOptions;
  * @property string $name
  * @property string $slug
  * @property string|null $description
- * @property \Illuminate\Support\Carbon|null $published_at
  * @property int $display_order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -27,7 +26,6 @@ use Spatie\Sluggable\SlugOptions;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResourceList newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResourceList onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResourceList ordered()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ResourceList published()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResourceList query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResourceList withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResourceList withoutTrashed()
@@ -43,16 +41,8 @@ class ResourceList extends Model
         'name',
         'slug',
         'description',
-        'published_at',
         'display_order',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'published_at' => 'datetime',
-        ];
-    }
 
     public function getSlugOptions(): SlugOptions
     {
@@ -71,19 +61,9 @@ class ResourceList extends Model
         return $this->resources()->published()->ordered();
     }
 
-    public function scopePublished(Builder $query): Builder
-    {
-        return $query->whereNotNull('published_at')
-            ->where('published_at', '<=', now());
-    }
-
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('display_order')->orderBy('name');
     }
 
-    public function isPublished(): bool
-    {
-        return $this->published_at !== null && $this->published_at->isPast();
-    }
 }

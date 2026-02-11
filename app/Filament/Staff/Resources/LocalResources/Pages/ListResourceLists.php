@@ -6,7 +6,6 @@ use App\Filament\Staff\Resources\LocalResources\ResourceListResource;
 use App\Models\ResourceList;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\ListRecords;
@@ -43,10 +42,6 @@ class ListResourceLists extends ListRecords
 
                 MarkdownEditor::make('description')
                     ->label('Description'),
-
-                DateTimePicker::make('published_at')
-                    ->label('Publish Date')
-                    ->helperText('Leave empty to save as draft'),
             ])
             ->action(function (array $data, array $arguments): void {
                 ResourceList::find($arguments['id'])?->update($data);

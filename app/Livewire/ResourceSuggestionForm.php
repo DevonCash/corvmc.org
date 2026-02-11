@@ -28,8 +28,7 @@ class ResourceSuggestionForm extends Component implements HasActions, HasForms
 
     public function suggestResourceAction(): Action
     {
-        $categories = ResourceList::published()
-            ->ordered()
+        $categories = ResourceList::ordered()
             ->pluck('name', 'id')
             ->toArray();
 
@@ -42,8 +41,9 @@ class ResourceSuggestionForm extends Component implements HasActions, HasForms
             ->modalDescription('Know a great local business or service? Help us build this directory by sharing your recommendation.')
             ->modalSubmitActionLabel('Submit Suggestion')
             ->modalWidth('xl')
-            ->form([
+            ->schema([
                 Section::make('Resource Information')
+                    ->contained(false)
                     ->schema([
                         TextInput::make('resource_name')
                             ->label('Resource/Business Name')
@@ -80,6 +80,7 @@ class ResourceSuggestionForm extends Component implements HasActions, HasForms
                     ]),
 
                 Section::make('Contact Information')
+                    ->contained(false)
                     ->schema([
                         Grid::make(2)->schema([
                             TextInput::make('contact_name')
@@ -98,7 +99,8 @@ class ResourceSuggestionForm extends Component implements HasActions, HasForms
                             ->placeholder('Street address, city'),
                     ]),
 
-                Turnstile::make('captcha'),
+                Turnstile::make('captcha')
+                    ->alignCenter(),
             ])
             ->action(function (array $data): void {
                 // Resolve category

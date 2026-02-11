@@ -159,7 +159,8 @@ Route::get('/about/bylaws', function () {
 })->name('bylaws');
 
 Route::get('/local-resources', function () {
-    $lists = \App\Models\ResourceList::published()
+    $lists = \App\Models\ResourceList::query()
+        ->whereHas('publishedResources')
         ->with(['publishedResources'])
         ->ordered()
         ->get();

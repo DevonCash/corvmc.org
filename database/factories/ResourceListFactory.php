@@ -35,22 +35,7 @@ class ResourceListFactory extends Factory
         return [
             'name' => fake()->randomElement($categories),
             'description' => fake()->optional(0.8)->paragraph(),
-            'published_at' => fake()->optional(0.8)->dateTimeBetween('-1 year', 'now'),
             'display_order' => fake()->numberBetween(0, 100),
         ];
-    }
-
-    public function published(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'published_at' => now(),
-        ]);
-    }
-
-    public function draft(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'published_at' => null,
-        ]);
     }
 }

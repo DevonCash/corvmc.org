@@ -15,28 +15,19 @@ describe('public local resources page', function () {
             ->assertSee('Local Resources');
     });
 
-    it('shows published resource lists', function () {
-        $publishedList = ResourceList::factory()->published()->create([
+    it('shows resource lists with published resources', function () {
+        $list = ResourceList::factory()->create([
             'name' => 'Music Shops',
         ]);
+        LocalResource::factory()->published()->forList($list)->create();
 
         $this->get(route('local-resources'))
             ->assertOk()
             ->assertSee('Music Shops');
     });
 
-    it('hides draft resource lists', function () {
-        $draftList = ResourceList::factory()->draft()->create([
-            'name' => 'Draft Music Category',
-        ]);
-
-        $this->get(route('local-resources'))
-            ->assertOk()
-            ->assertDontSee('Draft Music Category');
-    });
-
-    it('shows published resources within published lists', function () {
-        $list = ResourceList::factory()->published()->create([
+    it('shows published resources within lists', function () {
+        $list = ResourceList::factory()->create([
             'name' => 'Recording Studios',
         ]);
 
@@ -50,8 +41,8 @@ describe('public local resources page', function () {
             ->assertSee('Sound Wave Studios');
     });
 
-    it('hides draft resources within published lists', function () {
-        $list = ResourceList::factory()->published()->create([
+    it('hides categories with only draft resources', function () {
+        $list = ResourceList::factory()->create([
             'name' => 'Music Teachers',
         ]);
 
@@ -61,12 +52,12 @@ describe('public local resources page', function () {
 
         $this->get(route('local-resources'))
             ->assertOk()
-            ->assertSee('Music Teachers')
+            ->assertDontSee('Music Teachers')
             ->assertDontSee('Draft Teacher Resource');
     });
 
     it('displays resource contact information', function () {
-        $list = ResourceList::factory()->published()->create();
+        $list = ResourceList::factory()->create();
 
         $resource = LocalResource::factory()->published()->forList($list)->create([
             'name' => 'Test Music Shop',
@@ -87,15 +78,17 @@ describe('public local resources page', function () {
     });
 
     it('orders lists by display_order', function () {
-        $secondList = ResourceList::factory()->published()->create([
+        $secondList = ResourceList::factory()->create([
             'name' => 'Second Category',
             'display_order' => 2,
         ]);
+        LocalResource::factory()->published()->forList($secondList)->create();
 
-        $firstList = ResourceList::factory()->published()->create([
+        $firstList = ResourceList::factory()->create([
             'name' => 'First Category',
             'display_order' => 1,
         ]);
+        LocalResource::factory()->published()->forList($firstList)->create();
 
         $response = $this->get(route('local-resources'));
         $response->assertOk();
@@ -109,7 +102,7 @@ describe('public local resources page', function () {
     });
 
     it('orders resources by sort_order within a list', function () {
-        $list = ResourceList::factory()->published()->create();
+        $list = ResourceList::factory()->create();
 
         $secondResource = LocalResource::factory()->published()->forList($list)->create([
             'name' => 'Second Resource',
@@ -138,8 +131,11 @@ describe('public local resources page', function () {
     });
 
     it('shows quick navigation when multiple lists exist', function () {
-        ResourceList::factory()->published()->create(['name' => 'Music Shops', 'slug' => 'music-shops']);
-        ResourceList::factory()->published()->create(['name' => 'Recording Studios', 'slug' => 'recording-studios']);
+        $musicShops = ResourceList::factory()->create(['name' => 'Music Shops', 'slug' => 'music-shops']);
+        LocalResource::factory()->published()->forList($musicShops)->create();
+
+        $studios = ResourceList::factory()->create(['name' => 'Recording Studios', 'slug' => 'recording-studios']);
+        LocalResource::factory()->published()->forList($studios)->create();
 
         $this->get(route('local-resources'))
             ->assertOk()
@@ -160,7 +156,7 @@ describe('resource suggestion form', function () {
         Notification::fake();
         Http::fake(['*turnstile*' => Http::response(['success' => true])]);
 
-        $list = ResourceList::factory()->published()->create(['name' => 'Music Shops']);
+        $list = ResourceList::factory()->create(['name' => 'Music Shops']);
 
         Livewire::test(ResourceSuggestionForm::class)
             ->callAction('suggestResource', data: [
@@ -224,9 +220,7 @@ describe('resource suggestion form', function () {
         expect($resource)->not->toBeNull();
 
         $newList = ResourceList::where('name', 'Vinyl Pressing')->first();
-        expect($newList)
-            ->not->toBeNull()
-            ->published_at->toBeNull();
+        expect($newList)->not->toBeNull();
         expect($resource->resource_list_id)->toBe($newList->id);
     });
 });
