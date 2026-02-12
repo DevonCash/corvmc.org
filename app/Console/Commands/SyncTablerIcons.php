@@ -131,6 +131,7 @@ class SyncTablerIcons extends Command
         $icons = [];
         $pattern = '/tabler-([a-z0-9]+(?:-[a-z0-9]+)*)/';
 
+        // Scan source files
         foreach (self::SCAN_DIRS as $dir) {
             $path = base_path($dir);
             if (! File::isDirectory($path)) {
@@ -152,9 +153,37 @@ class SyncTablerIcons extends Command
             }
         }
 
+        // Scan database JSON columns for dynamically-referenced icons
+        $this->scanDatabaseIcons($icons, $pattern);
+
         $iconNames = array_keys($icons);
         sort($iconNames);
 
         return $iconNames;
+    }
+
+    /**
+     * @param  array<string, bool>  $icons
+     */
+    private function scanDatabaseIcons(array &$icons, string $pattern): void
+    {
+        $tables = [
+            'site_pages' => 'blocks',
+        ];
+
+        foreach ($tables as $table => $column) {
+            try {
+                $rows = \Illuminate\Support\Facades\DB::table($table)->pluck($column);
+                foreach ($rows as $json) {
+                    if ($json && preg_match_all($pattern, $json, $matches)) {
+                        foreach ($matches[1] as $icon) {
+                            $icons[$icon] = true;
+                        }
+                    }
+                }
+            } catch (\Exception) {
+                // Table may not exist yet (e.g. fresh install before migrations)
+            }
+        }
     }
 }
