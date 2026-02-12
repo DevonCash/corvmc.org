@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 // Public website routes
 Route::get('/', function () {
@@ -126,16 +127,44 @@ Route::get('/bands/{band}', function (Band $band) {
 Route::get('/programs', function () {
     $page = \App\Models\SitePage::where('slug', 'programs')->firstOrFail();
 
-    // Group consecutive same-bg sections for merged visual wrappers
-    $groups = [];
+    if ($page->content) {
+        $html = Str::markdown($page->content, extensions: [
+            new \App\CommonMark\DirectiveExtension(),
+            new \Zenstruck\CommonMark\Extension\GitHub\AdmonitionExtension(),
+        ]);
+
+        return view('public.site-page', compact('page', 'html'));
+    }
+
+    // Block-based rendering fallback
+    $sections = [];
+    $current = null;
     foreach ($page->blocks as $block) {
-        $bg = $block['data']['background_color'] ?? 'none';
+        if ($block['type'] === 'section_start') {
+            if ($current) {
+                $sections[] = $current;
+            }
+            $current = ['data' => $block['data'], 'items' => []];
+        } else {
+            if (! $current) {
+                $current = ['data' => ['background_color' => 'none', 'columns' => 2], 'items' => []];
+            }
+            $current['items'][] = $block;
+        }
+    }
+    if ($current) {
+        $sections[] = $current;
+    }
+
+    $groups = [];
+    foreach ($sections as $section) {
+        $bg = $section['data']['background_color'] ?? 'none';
         $last = end($groups);
 
-        if ($last && $last['bg'] === $bg && ! ($block['data']['full_bleed'] ?? false)) {
-            $groups[array_key_last($groups)]['sections'][] = $block;
+        if ($last && $last['bg'] === $bg && ! ($section['data']['full_bleed'] ?? false)) {
+            $groups[array_key_last($groups)]['sections'][] = $section;
         } else {
-            $groups[] = ['bg' => $bg, 'sections' => [$block]];
+            $groups[] = ['bg' => $bg, 'sections' => [$section]];
         }
     }
 

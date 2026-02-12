@@ -1,4 +1,6 @@
-@props(['icon' => null, 'title', 'description' => null])
+@props(['icon' => null, 'title' => null, 'description' => null, 'label' => ''])
+
+@php $title = $title ?: $label; @endphp
 
 <div class="card bg-base-100">
     <div class="card-body text-center">

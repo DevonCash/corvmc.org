@@ -1,17 +1,14 @@
-@props(['label', 'url', 'style' => 'primary'])
+@props(['label' => '', 'url', 'color' => 'primary', 'variant' => 'solid'])
 
 @php
-    $btnClasses = match($style) {
-        'primary' => 'btn-primary',
+    $btnColor = match($color) {
+        'secondary' => 'btn-secondary',
         'info' => 'btn-info',
         'success' => 'btn-success',
         'warning' => 'btn-warning',
-        'outline-primary' => 'btn-outline btn-primary',
-        'outline-secondary' => 'btn-outline btn-secondary',
-        'outline-info' => 'btn-outline btn-info',
-        'outline-success' => 'btn-outline btn-success',
         default => 'btn-primary',
     };
+    $btnVariant = $variant === 'outline' ? 'btn-outline' : '';
 @endphp
 
-<a href="{{ $url }}" class="btn {{ $btnClasses }} btn-lg">{{ $label }}</a>
+<a href="{{ $url }}" class="btn {{ $btnColor }} {{ $btnVariant }} btn-lg">{{ $label }}</a>

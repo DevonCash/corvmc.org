@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $title
  * @property string $slug
  * @property array $blocks
+ * @property string|null $content
  * @property int|null $updated_by
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -25,6 +26,7 @@ class SitePage extends Model
         'title',
         'slug',
         'blocks',
+        'content',
         'updated_by',
     ];
 

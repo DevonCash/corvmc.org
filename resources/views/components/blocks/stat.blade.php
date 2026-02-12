@@ -1,4 +1,4 @@
-@props(['label', 'value', 'subtitle' => null, 'color' => 'base'])
+@props(['label' => '', 'value', 'subtitle' => null, 'color' => 'base'])
 
 @php
     $cardClasses = match($color) {

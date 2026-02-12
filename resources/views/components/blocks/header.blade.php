@@ -1,4 +1,6 @@
-@props(['heading', 'description' => null, 'icon' => null])
+@props(['heading' => null, 'description' => null, 'icon' => null, 'label' => ''])
+
+@php $heading = $heading ?: $label; @endphp
 
 <div class="text-center mb-12">
     @if($icon)
