@@ -24,6 +24,7 @@
         </x-filament::section>
 
         <!-- Bands Grid -->
+        @php($bands = $this->getBands())
         <div class="relative">
             <!-- Loading Spinner -->
             <div wire:loading.delay.long class="absolute inset-0 bg-white/75 flex items-center justify-center z-10">
@@ -35,7 +36,7 @@
 
             <div class="grid gap-6"
                 style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); max-width: calc(4 * (280px + 1.5rem) - 1.5rem);">
-                @forelse ($this->getBands() as $band)
+                @forelse ($bands as $band)
                     <x-bands::band-card :band="$band" :link="route('filament.member.directory.resources.bands.view', $band)" />
                 @empty
                     <div class="col-span-full text-center py-12 space-y-2">
@@ -49,9 +50,9 @@
                 @endforelse
             </div>
 
-            @if ($this->getBands()->hasPages())
+            @if ($bands->hasPages())
                 <div class="mt-6">
-                    {{ $this->getBands()->links() }}
+                    {{ $bands->links() }}
                 </div>
             @endif
         </div>

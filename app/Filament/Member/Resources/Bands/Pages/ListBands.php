@@ -66,7 +66,7 @@ class ListBands extends Page
 
     public function getBands()
     {
-        $query = Band::with(['tags', 'activeMembers'])
+        $query = Band::with(['tags', 'activeMembers', 'media'])
             ->visibleTo(User::me());
 
         // Apply search
