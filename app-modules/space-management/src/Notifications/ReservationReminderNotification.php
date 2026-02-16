@@ -70,7 +70,7 @@ class ReservationReminderNotification extends Notification implements ShouldQueu
             'reservation_id' => $this->reservation->id,
             'reserved_at' => $this->reservation->reserved_at,
             'duration' => $this->reservation->duration,
-            'cost' => $this->reservation->cost->getMinorAmount()->toInt(),
+            'cost' => $this->reservation->charge?->net_amount?->getMinorAmount()->toInt() ?? 0,
         ];
     }
 
@@ -83,7 +83,7 @@ class ReservationReminderNotification extends Notification implements ShouldQueu
             'reservation_id' => $this->reservation->id,
             'reserved_at' => $this->reservation->reserved_at,
             'duration' => $this->reservation->duration,
-            'cost' => $this->reservation->cost->getMinorAmount()->toInt(),
+            'cost' => $this->reservation->charge?->net_amount?->getMinorAmount()->toInt() ?? 0,
         ];
     }
 }
