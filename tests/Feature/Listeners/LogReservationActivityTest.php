@@ -195,6 +195,27 @@ expect($logs)->toHaveCount(1)
             ->and($logs->first()->event)->toBe('created');
     });
 
+    it('creates exactly one log entry when auto-confirming a near-term reservation', function () {
+        $user = User::factory()->create();
+        // Within 3 days triggers auto-confirmation
+        $startTime = \Carbon\Carbon::now()->addDays(1)->setHour(14)->setMinute(0)->setSecond(0);
+        $endTime = $startTime->copy()->addHours(2);
+
+        \Illuminate\Support\Facades\Notification::fake();
+        Activity::query()->delete();
+
+        $reservation = \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run($user, $startTime, $endTime);
+
+        $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())
+            ->orderBy('id')
+            ->get();
+
+        // Auto-confirmed reservations should produce one log entry, not two
+        expect($logs)->toHaveCount(1)
+            ->and($logs[0]->event)->toBe('created')
+            ->and($reservation->status)->toBe(ReservationStatus::Confirmed);
+    });
+
     it('creates exactly one log entry when cancelling a reservation', function () {
         $user = User::factory()->create();
         $startTime = \Carbon\Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);

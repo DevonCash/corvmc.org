@@ -17,8 +17,7 @@ use CorvMC\Finance\Models\Charge;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\Models\Activity;
 
 /**
  * Base class for all reservation types using Single Table Inheritance.
@@ -63,7 +62,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  */
 class Reservation extends Model implements HasColor, HasIcon, HasLabel
 {
-    use HasRecurringSeries, HasTimePeriod, LogsActivity;
+    use HasRecurringSeries, HasTimePeriod;
 
     protected $table = 'reservations';
 
@@ -85,14 +84,15 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         ];
     }
 
-    public function getActivitylogOptions(): LogOptions
+    /**
+     * Get the activity log entries for this reservation.
+     *
+     * Activity is logged via domain events (LogReservationActivity listener),
+     * not via the LogsActivity trait.
+     */
+    public function activities()
     {
-        // Disable automatic trait logging — all reservation activity is logged
-        // by LogReservationActivity via domain events, which provides richer
-        // context (e.g., "Reservation cancelled: reason" vs "Reservation has been updated").
-        return LogOptions::defaults()
-            ->logOnly([])
-            ->dontSubmitEmptyLogs();
+        return $this->morphMany(Activity::class, 'subject');
     }
 
     /**
