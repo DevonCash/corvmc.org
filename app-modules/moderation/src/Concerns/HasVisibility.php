@@ -49,8 +49,12 @@ trait HasVisibility
      * Check if the content is owned by the given user.
      * Override this method in models to define ownership logic.
      */
-    protected function isOwnedBy(User $user): bool
+    protected function isOwnedBy(?User $user): bool
     {
+        if ($user === null) {
+            return false;
+        }
+
         // Default ownership check - override in models
         if (isset($this->user_id)) {
             return $this->user_id === $user->id;

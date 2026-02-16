@@ -370,8 +370,12 @@ class Band extends ContentModel
     /**
      * Override trait method to define band ownership logic.
      */
-    function isOwnedBy(User $user): bool
+    function isOwnedBy(?User $user): bool
     {
+        if ($user === null) {
+            return false;
+        }
+
         return $this->owner_id === $user->id || $this->members->contains($user);
     }
 

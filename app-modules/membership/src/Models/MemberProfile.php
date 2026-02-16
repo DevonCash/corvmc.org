@@ -190,8 +190,12 @@ class MemberProfile extends ContentModel
         return $this->belongsTo(User::class);
     }
 
-    public function isOwnedBy(User $user): bool
+    public function isOwnedBy(?User $user): bool
     {
+        if ($user === null) {
+            return false;
+        }
+
         return $this->user_id === $user->id;
     }
 
