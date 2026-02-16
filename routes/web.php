@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
+use Spatie\Sheets\Facades\Sheets;
 
 // Public website routes
 Route::get('/', function () {
@@ -125,50 +125,13 @@ Route::get('/bands/{band}', function (Band $band) {
 })->where('band', '[a-z0-9\-]+')->name('bands.show');
 
 Route::get('/programs', function () {
-    $page = \App\Models\SitePage::where('slug', 'programs')->firstOrFail();
+    $page = Sheets::collection('pages')->get('programs');
 
-    if ($page->content) {
-        $html = Str::markdown($page->content, extensions: [
-            new \App\CommonMark\DirectiveExtension(),
-            new \Zenstruck\CommonMark\Extension\GitHub\AdmonitionExtension(),
-        ]);
+    abort_unless($page, 404);
 
-        return view('public.site-page', compact('page', 'html'));
-    }
+    $html = $page->contents;
 
-    // Block-based rendering fallback
-    $sections = [];
-    $current = null;
-    foreach ($page->blocks as $block) {
-        if ($block['type'] === 'section_start') {
-            if ($current) {
-                $sections[] = $current;
-            }
-            $current = ['data' => $block['data'], 'items' => []];
-        } else {
-            if (! $current) {
-                $current = ['data' => ['background_color' => 'none', 'columns' => 2], 'items' => []];
-            }
-            $current['items'][] = $block;
-        }
-    }
-    if ($current) {
-        $sections[] = $current;
-    }
-
-    $groups = [];
-    foreach ($sections as $section) {
-        $bg = $section['data']['background_color'] ?? 'none';
-        $last = end($groups);
-
-        if ($last && $last['bg'] === $bg && ! ($section['data']['full_bleed'] ?? false)) {
-            $groups[array_key_last($groups)]['sections'][] = $section;
-        } else {
-            $groups[] = ['bg' => $bg, 'sections' => [$section]];
-        }
-    }
-
-    return view('public.programs', compact('page', 'groups'));
+    return view('public.site-page', compact('page', 'html'));
 })->name('programs');
 
 Route::get('/contribute', function () {

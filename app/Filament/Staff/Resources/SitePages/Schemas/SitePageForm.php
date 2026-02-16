@@ -7,7 +7,6 @@ use App\Filament\Staff\Resources\SitePages\Blocks\SitePageBlockType;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
@@ -26,12 +25,6 @@ class SitePageForm
                     ->maxLength(255)
                     ->disabled()
                     ->dehydrated(),
-
-                Textarea::make('content')
-                    ->label('Markdown Content')
-                    ->helperText('Write page content using markdown with directive syntax. Leave empty to use the block builder below.')
-                    ->rows(20)
-                    ->columnSpanFull(),
 
                 Builder::make('blocks')
                     ->blocks(SitePageBlockType::blocks())

@@ -12,6 +12,6 @@
     };
 @endphp
 
-<section class="mb-20 {{ $bgClasses }} {{ $bg !== 'none' ? 'p-8 lg:p-12' : '' }}">
+<section class="{{ $bgClasses }} {{ $bg !== 'none' ? 'px-8 py-12 lg:px-12 lg:py-16' : '' }}">
     {{ $slot }}
 </section>

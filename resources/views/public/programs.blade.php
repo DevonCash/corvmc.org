@@ -8,7 +8,7 @@
                     :columns="$data['columns'] ?? 2"
                     :fullBleed="$data['full_bleed'] ?? false"
                 >
-                    @foreach($data['items'] ?? [] as $item)
+                    @foreach($section['items'] ?? [] as $item)
                         @php
                             $itemData = $item['data'] ?? [];
                             $colSpan = $itemData['col_span'] ?? (in_array($item['type'], ['header', 'button']) ? 'full' : 'auto');
@@ -21,17 +21,18 @@
                         @endphp
 
                         @if($item['type'] === 'button')
-                            @if($loop->first || ($data['items'][$loop->index - 1]['type'] ?? '') !== 'button')
+                            @if($loop->first || ($section['items'][$loop->index - 1]['type'] ?? '') !== 'button')
                                 <div class="col-span-full text-center flex gap-4 justify-center">
                             @endif
 
                             <x-blocks.button
                                 :label="$itemData['label']"
                                 :url="$itemData['url']"
-                                :style="$itemData['style'] ?? 'primary'"
+                                :color="$itemData['color'] ?? 'primary'"
+                                :variant="$itemData['variant'] ?? 'solid'"
                             />
 
-                            @if($loop->last || ($data['items'][$loop->index + 1]['type'] ?? '') !== 'button')
+                            @if($loop->last || ($section['items'][$loop->index + 1]['type'] ?? '') !== 'button')
                                 </div>
                             @endif
                         @else
@@ -46,12 +47,7 @@
                                         @break
 
                                     @case('prose')
-                                        <x-blocks.prose
-                                            :content="$itemData['content']"
-                                            :alertIcon="$itemData['alert_icon'] ?? null"
-                                            :alertText="$itemData['alert_text'] ?? null"
-                                            :alertStyle="$itemData['alert_style'] ?? 'info'"
-                                        />
+                                        <x-blocks.prose :content="$itemData['content']" />
                                         @break
 
                                     @case('card')
@@ -59,26 +55,8 @@
                                             :icon="$itemData['icon'] ?? null"
                                             :heading="$itemData['heading']"
                                             :body="$itemData['body'] ?? null"
-                                            :features="$itemData['features'] ?? []"
                                             :color="$itemData['color'] ?? 'base'"
                                         />
-                                        @break
-
-                                    @case('detailed_card')
-                                        <x-blocks.detailed-card
-                                            :name="$itemData['name']"
-                                            :icon="$itemData['icon'] ?? null"
-                                            :iconColor="$itemData['icon_color'] ?? 'bg-amber-500'"
-                                            :description="$itemData['description'] ?? null"
-                                            :details="$itemData['details'] ?? []"
-                                            :activitiesLabel="$itemData['activities_label'] ?? null"
-                                            :activities="$itemData['activities'] ?? []"
-                                            :tip="$itemData['tip'] ?? null"
-                                        />
-                                        @break
-
-                                    @case('card_stack')
-                                        <x-blocks.card-stack :cards="$itemData['cards'] ?? []" />
                                         @break
 
                                     @case('alert')

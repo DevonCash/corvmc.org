@@ -14,6 +14,9 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../content/**/*.md';
+/* Classes from markdown directive .class attributes that Tailwind can't extract */
+@source inline("float-right");
 @source '../views/filament/**/*.blade.php';
 
 @theme {
@@ -31,6 +34,17 @@
     z-index: 40;
     box-shadow: -4px 0 6px -1px rgb(0 0 0 / 0.1),
         -2px 0 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Grid column spans via CSS custom properties — set by ::col[1/2 lg:2/3] directives */
+.grid-col {
+    grid-column: span var(--col-span, 12);
+}
+@media (min-width: 1024px) {
+    .grid-col { grid-column: span var(--lg-span, var(--col-span, 12)); }
+}
+@media (min-width: 1280px) {
+    .grid-col { grid-column: span var(--xl-span, var(--lg-span, var(--col-span, 12))); }
 }
 
 /* Horizontal Scroll Styles */
@@ -242,29 +256,6 @@ html, body {
 
 .fi-sidebar-item:not(.fi-active) .fi-sidebar-item-icon {
     color: var(--color-secondary);
-}
-
-/* Reorder repeater items: [reorder] [input] [remove] */
-.fi-fo-repeater-item {
-    display: flex !important;
-    align-items: center !important;
-}
-
-.fi-fo-repeater-item > .fi-fo-repeater-item-actions {
-    order: -1 !important;
-    margin-right: 0.75rem !important;
-    margin-left: 0 !important;
-}
-
-.fi-fo-repeater-item > .fi-fo-repeater-item-content {
-    order: 0 !important;
-    flex: 1 !important;
-}
-
-.fi-fo-repeater-item > .fi-fo-repeater-item-actions:last-child {
-    order: 1 !important;
-    margin-right: 0 !important;
-    margin-left: 0.75rem !important;
 }
 
 /* Add tri-color stripe to Filament navbar */

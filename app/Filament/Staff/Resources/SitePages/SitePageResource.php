@@ -54,7 +54,7 @@ class SitePageResource extends Resource
                     ->since(),
             ])
             ->actions([
-                \Filament\Tables\Actions\EditAction::make(),
+                \Filament\Actions\EditAction::make(),
             ]);
     }
 

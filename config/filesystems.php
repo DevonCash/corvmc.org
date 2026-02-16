@@ -89,6 +89,11 @@ return [
             'report' => false,
         ],
 
+        'pages' => [
+            'driver' => 'local',
+            'root' => resource_path('content/pages'),
+        ],
+
         'media' => [
             'driver' => 'local',
             'root' => public_path('media'),

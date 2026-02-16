@@ -35,6 +35,10 @@ class DirectiveRenderer implements NodeRendererInterface
             default => '',
         };
 
+        // Extract class from attrs — it gets injected into the outermost element after rendering
+        $class = $attrs['class'] ?? '';
+        unset($attrs['class']);
+
         if ($node instanceof ContainerDirective) {
             $attrs['content'] = new HtmlString($childRenderer->renderNodes($node->children()));
         }
@@ -47,9 +51,34 @@ class DirectiveRenderer implements NodeRendererInterface
                 ? $childRenderer->renderNodes($node->children())
                 : ($attrs['label'] ?? '');
 
-            return '<div class="directive-' . e($name) . '">' . $inner . '</div>';
+            return '<div class="directive-' . e($name) . ' ' . e($class) . '">' . $inner . '</div>';
         }
 
-        return view($viewName, $attrs)->render();
+        $html = view($viewName, $attrs)->render();
+
+        if ($class !== '') {
+            $html = $this->injectClass($html, $class);
+        }
+
+        return $html;
+    }
+
+    /**
+     * Inject classes into the first HTML element's class attribute,
+     * or add a class attribute if none exists.
+     */
+    private function injectClass(string $html, string $class): string
+    {
+        $escapedClass = e($class);
+
+        // Append to existing class attribute on the first element
+        $result = preg_replace('/class="([^"]*)"/', 'class="$1 ' . $escapedClass . '"', $html, 1, $count);
+
+        if ($count > 0) {
+            return $result;
+        }
+
+        // No class attribute found — add one to the first opening tag
+        return preg_replace('/^(\s*<[\w-]+)/', '$1 class="' . $escapedClass . '"', $html, 1);
     }
 }

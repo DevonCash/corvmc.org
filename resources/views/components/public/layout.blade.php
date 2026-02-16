@@ -256,7 +256,7 @@
             $socialLinks = $footerSettings->getSocialLinks();
         @endphp
         <footer
-            class="footer footer-center bg-base-200 text-base-content p-10 flex justify-between flex-wrap items-center mt-8">
+            class="footer footer-center bg-base-200 text-base-content p-10 flex justify-between flex-wrap items-center">
             <div class="grid grid-flow-col gap-4 mx-auto">
                 @foreach ($footerLinks as $link)
                     <a href="{{ $link['url'] }}" class="link link-hover">{{ $link['label'] }}</a>

@@ -10,6 +10,7 @@ use App\CommonMark\Parser\ContainerDirectiveStartParser;
 use App\CommonMark\Parser\InlineDirectiveParser;
 use App\CommonMark\Parser\LeafDirectiveStartParser;
 use App\CommonMark\Processor\GridItemProcessor;
+use App\CommonMark\Processor\SectionProcessor;
 use App\CommonMark\Renderer\DirectiveRenderer;
 use App\CommonMark\Renderer\GridItemRenderer;
 use League\CommonMark\Environment\EnvironmentBuilderInterface;
@@ -26,6 +27,7 @@ class DirectiveExtension implements ExtensionInterface
 
         $environment->addInlineParser(new InlineDirectiveParser(), 100);
 
+        $environment->addEventListener(DocumentParsedEvent::class, new SectionProcessor());
         $environment->addEventListener(DocumentParsedEvent::class, new GridItemProcessor());
 
         $renderer = new DirectiveRenderer();

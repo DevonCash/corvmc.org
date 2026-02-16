@@ -55,10 +55,12 @@
         "spatie/laravel-sluggable": "^3.7",
         "spatie/laravel-tags": "^4.10",
         "spatie/period": "^2.4",
+        "spatie/sheets": "^1.12",
         "staudenmeir/laravel-adjacency-list": "^1.25",
         "stechstudio/filament-impersonate": "^4.0",
         "symfony/http-client": "^7.3",
-        "symfony/postmark-mailer": "^7.3"
+        "symfony/postmark-mailer": "^7.3",
+        "zenstruck/commonmark-extensions": "1.x-dev"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.6",
