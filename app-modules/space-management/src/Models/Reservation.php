@@ -344,11 +344,25 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         $query->where('status', $status);
     }
 
+    protected ?bool $preloadedIsFirstReservation = null;
+
+    /**
+     * Set the precomputed "first reservation" flag to avoid N+1 queries.
+     */
+    public function setIsFirstReservation(bool $value): void
+    {
+        $this->preloadedIsFirstReservation = $value;
+    }
+
     /**
      * Check if this is the first reservation for the responsible user.
      */
     public function isFirstReservationForUser(): bool
     {
+        if ($this->preloadedIsFirstReservation !== null) {
+            return $this->preloadedIsFirstReservation;
+        }
+
         $user = $this->getResponsibleUser();
 
         if (! $user) {

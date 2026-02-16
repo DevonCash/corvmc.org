@@ -5,6 +5,7 @@ namespace App\Filament\Staff\Resources\SpaceManagement;
 use App\Filament\Staff\Resources\SpaceManagement\Pages\ListSpaceUsage;
 use App\Filament\Staff\Resources\SpaceManagement\Schemas\SpaceManagementForm;
 use App\Filament\Staff\Resources\SpaceManagement\Tables\SpaceManagementTable;
+use CorvMC\Finance\Models\Charge;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
@@ -13,6 +14,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SpaceManagementResource extends Resource
 {
@@ -50,10 +53,55 @@ class SpaceManagementResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        // Note: Don't eager load 'charge' here - polymorphic eager loading from base
-        // Reservation model uses wrong morph class. Lazy loading works correctly
-        // since STI resolves the correct subclass before accessing the relationship.
-        return parent::getEloquentQuery()->with(['reservable']);
+        return parent::getEloquentQuery()
+            ->with(['reservable'])
+            ->afterQuery(function (Collection $models) {
+                if ($models->isEmpty()) {
+                    return $models;
+                }
+
+                // Bulk-load charges to avoid N+1 queries.
+                // Standard ->with(['charge']) doesn't work because the base Reservation
+                // morph class ('reservation') doesn't match the actual chargeable_type
+                // ('rehearsal_reservation') stored on charges due to STI.
+                $charges = Charge::whereIn('chargeable_id', $models->pluck('id'))
+                    ->whereIn('chargeable_type', ['rehearsal_reservation', 'event_reservation'])
+                    ->get()
+                    ->keyBy('chargeable_id');
+
+                // Pre-compute "first reservation" flags to avoid N+1 EXISTS queries
+                // from isFirstReservationForUser() called in the responsibleUser column.
+                $userReservableIds = $models
+                    ->where('reservable_type', 'user')
+                    ->pluck('reservable_id')
+                    ->unique()
+                    ->values();
+
+                $usersWithMultipleRehearsals = collect();
+                if ($userReservableIds->isNotEmpty()) {
+                    $usersWithMultipleRehearsals = DB::table('reservations')
+                        ->select('reservable_id')
+                        ->where('reservable_type', 'user')
+                        ->where('type', 'rehearsal_reservation')
+                        ->whereIn('reservable_id', $userReservableIds)
+                        ->groupBy('reservable_id')
+                        ->havingRaw('COUNT(*) > 1')
+                        ->pluck('reservable_id')
+                        ->flip();
+                }
+
+                foreach ($models as $model) {
+                    $model->setRelation('charge', $charges->get($model->id));
+
+                    if ($model->reservable_type === 'user') {
+                        $model->setIsFirstReservation(
+                            ! $usersWithMultipleRehearsals->has($model->reservable_id)
+                        );
+                    }
+                }
+
+                return $models;
+            });
     }
 
     public static function getRelations(): array
