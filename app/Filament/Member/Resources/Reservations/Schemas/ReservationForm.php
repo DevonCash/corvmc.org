@@ -7,7 +7,6 @@ use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
 use CorvMC\SpaceManagement\Actions\Reservations\DetermineReservationStatus;
 use CorvMC\SpaceManagement\Actions\Reservations\GetAvailableTimeSlotsForDate;
 use CorvMC\SpaceManagement\Actions\Reservations\GetValidEndTimesForDate;
-use CorvMC\Membership\Data\ContactData;
 use Carbon\Carbon;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
@@ -74,9 +73,8 @@ class ReservationForm
                 ->schema(static::contactStep())
                 ->afterValidation(function (Get $get) {
                     $phone = $get('contact_phone');
-                    $smsOk = $get('sms_ok');
-                    if ($phone || $smsOk !== null) {
-                        static::saveContactInfo($phone, (bool) $smsOk);
+                    if ($phone) {
+                        static::saveContactInfo($phone);
                     }
                 }),
 
@@ -141,8 +139,7 @@ class ReservationForm
     public static function contactStep(): array
     {
         $user = Auth::user();
-        $contact = $user?->profile?->contact;
-        $existingPhone = $contact?->phone;
+        $existingPhone = $user?->phone ?? $user?->profile?->contact?->phone;
         // Remove '+1' prefix if present
         if ($existingPhone && str_starts_with($existingPhone, '+1')) {
             $existingPhone = substr($existingPhone, 2);
@@ -163,23 +160,20 @@ class ReservationForm
 
             Checkbox::make('sms_ok')
                 ->label('This number can receive text messages')
-                ->default($contact?->sms_ok ?? false)
+                ->default($user?->profile?->contact?->sms_ok ?? false)
                 ->dehydrated(false),
         ];
     }
 
-    protected static function saveContactInfo(?string $phone, bool $smsOk): void
+    protected static function saveContactInfo(string $phone): void
     {
         $user = Auth::user();
-        if ($user?->profile) {
-            $contact = $user->profile->contact ?? new ContactData;
-            if ($phone) {
-                $contact->phone = $phone;
-            }
-            $contact->sms_ok = $smsOk;
-            $user->profile->contact = $contact;
-            $user->profile->save();
+        if (! $user) {
+            return;
         }
+
+        $user->phone = $phone;
+        $user->save();
     }
 
     public static function reservationStep(): array

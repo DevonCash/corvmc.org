@@ -82,20 +82,22 @@ class ReservationInfolist
                             ->state(function (?Model $record): array {
                                 $reservable = $record?->reservable;
                                 if ($reservable instanceof User) {
-                                    $lines = [
+                                    return [
                                         $reservable->name,
                                         $reservable->email,
                                     ];
-                                    if ($reservable->phone) {
-                                        $lines[] = $reservable->phone;
-                                    }
-                                    return $lines;
                                 }
                                 // For Events or other reservables
                                 return [
                                     $record?->getDisplayTitle() ?? 'Unknown',
                                 ];
                             }),
+                        TextEntry::make('reservable.phone')
+                            ->hiddenLabel()
+                            ->icon('tabler-phone')
+                            ->iconColor('gray')
+                            ->copyable()
+                            ->visible(fn (?Model $record): bool => $record?->reservable instanceof User && $record->reservable->phone),
                         Action::make('view_reservable')
                             ->label('View Member')
                             ->iconButton()
