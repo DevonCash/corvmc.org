@@ -7,14 +7,11 @@ use App\Settings\ReservationSettings;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
-use Lorisleiva\Actions\Concerns\AsAction;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
 
 class GetConflictingProductions
 {
-    use AsAction;
-
     /**
      * Get event reservations that conflict with a time slot.
      * Note: This checks EventReservation models which are automatically created for events.

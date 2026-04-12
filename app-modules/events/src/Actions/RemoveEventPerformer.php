@@ -3,7 +3,6 @@
 namespace CorvMC\Events\Actions;
 
 use CorvMC\Events\Services\EventService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use EventService::removePerformer() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class RemoveEventPerformer
 {
-    use AsAction;
-
     /**
      * @deprecated Use EventService::removePerformer() instead
      */

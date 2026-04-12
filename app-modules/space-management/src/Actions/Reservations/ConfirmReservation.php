@@ -6,7 +6,6 @@ use App\Filament\Actions\Reservations\ReservationConfirmAction;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Services\ReservationService;
 use Filament\Actions\Action;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use ReservationService::confirm() instead
@@ -16,8 +15,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class ConfirmReservation
 {
-    use AsAction;
-
     /**
      * @deprecated Use ReservationService::checkConfirmationReadiness() instead
      */

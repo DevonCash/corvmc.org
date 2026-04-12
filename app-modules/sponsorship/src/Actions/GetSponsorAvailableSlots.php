@@ -4,7 +4,6 @@ namespace CorvMC\Sponsorship\Actions;
 
 use CorvMC\Sponsorship\Models\Sponsor;
 use CorvMC\Sponsorship\Services\SponsorshipService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * Get sponsor's slot allocation details.
@@ -15,8 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class GetSponsorAvailableSlots
 {
-    use AsAction;
-
     /**
      * Get sponsor's slot allocation details.
      *

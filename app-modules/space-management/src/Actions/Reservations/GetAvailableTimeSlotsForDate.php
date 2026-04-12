@@ -5,7 +5,6 @@ namespace CorvMC\SpaceManagement\Actions\Reservations;
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\Services\ConflictData;
 use CorvMC\SpaceManagement\Services\ReservationService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use ReservationService::getAvailableTimeSlotsForDate() instead
@@ -15,8 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class GetAvailableTimeSlotsForDate
 {
-    use AsAction;
-
     /**
      * @deprecated Use ReservationService::getAvailableTimeSlotsForDate() instead
      */

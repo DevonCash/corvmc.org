@@ -4,7 +4,6 @@ namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\Services\ReservationService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use ReservationService::getAllTimeSlots() instead
@@ -14,8 +13,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class GetAllTimeSlots
 {
-    use AsAction;
-
     public const MINUTES_PER_BLOCK = 30; // 30-minute intervals
 
     /**

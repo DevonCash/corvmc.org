@@ -4,7 +4,6 @@ namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\Services\ReservationService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use ReservationService::determineReservationStatus() instead
@@ -14,8 +13,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class DetermineReservationStatus
 {
-    use AsAction;
-
     /**
      * @deprecated Use ReservationService::determineReservationStatus() instead
      */

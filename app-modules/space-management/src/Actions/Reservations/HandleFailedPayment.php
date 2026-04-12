@@ -3,12 +3,9 @@
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class HandleFailedPayment
 {
-    use AsAction;
-
     /**
      * Handle failed or cancelled payment.
      *

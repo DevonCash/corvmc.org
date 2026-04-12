@@ -12,12 +12,9 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class CreateReservation
 {
-    use AsAction;
-
     /**
      * Create a new reservation.
      *

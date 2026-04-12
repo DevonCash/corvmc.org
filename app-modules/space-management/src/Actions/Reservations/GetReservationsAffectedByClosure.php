@@ -6,12 +6,9 @@ use Carbon\Carbon;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Illuminate\Database\Eloquent\Collection;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetReservationsAffectedByClosure
 {
-    use AsAction;
-
     /**
      * Get all active reservations that overlap with a closure period.
      *

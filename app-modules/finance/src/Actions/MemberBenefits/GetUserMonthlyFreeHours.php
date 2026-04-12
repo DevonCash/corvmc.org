@@ -4,7 +4,6 @@ namespace CorvMC\Finance\Actions\MemberBenefits;
 
 use App\Models\User;
 use CorvMC\Finance\Services\MemberBenefitService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use MemberBenefitService::getUserMonthlyFreeHours() instead
@@ -13,8 +12,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class GetUserMonthlyFreeHours
 {
-    use AsAction;
-
     public const FREE_HOURS_PER_MONTH = 4; // Default fallback
 
     /**

@@ -3,7 +3,6 @@
 namespace CorvMC\Membership\Actions\StaffProfiles;
 
 use CorvMC\Membership\Services\StaffProfileService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use StaffProfileService::unlinkFromUser() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class UnlinkFromUser
 {
-    use AsAction;
-
     /**
      * @deprecated Use StaffProfileService::unlinkFromUser() instead
      */

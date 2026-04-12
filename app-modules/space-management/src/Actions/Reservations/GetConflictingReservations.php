@@ -8,14 +8,11 @@ use App\Settings\ReservationSettings;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
-use Lorisleiva\Actions\Concerns\AsAction;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
 
 class GetConflictingReservations
 {
-    use AsAction;
-
     /**
      * Get potentially conflicting reservations for a time slot.
      * Uses a broader database query then filters with Period for precision.

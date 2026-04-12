@@ -3,7 +3,6 @@
 namespace CorvMC\Moderation\Actions\SpamPrevention;
 
 use CorvMC\Moderation\Services\SpamPreventionService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use SpamPreventionService::scanUsersForSpam() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class ScanUsersForSpam
 {
-    use AsAction;
-
     /**
      * @deprecated Use SpamPreventionService::scanUsersForSpam() instead
      */

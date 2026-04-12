@@ -3,7 +3,6 @@
 namespace CorvMC\Membership\Actions\Users;
 
 use CorvMC\Membership\Services\UserManagementService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use UserManagementService::forceDelete() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class ForceDeleteUser
 {
-    use AsAction;
-
     /**
      * @deprecated Use UserManagementService::forceDelete() instead
      */

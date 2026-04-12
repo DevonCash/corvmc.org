@@ -4,7 +4,6 @@ namespace CorvMC\Events\Actions;
 
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Services\EventService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * Create a new event.
@@ -15,8 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class CreateEvent
 {
-    use AsAction;
-
     /**
      * Create a new event.
      * 

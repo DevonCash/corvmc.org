@@ -4,7 +4,6 @@ namespace CorvMC\Support\Actions;
 
 use CorvMC\Support\Models\RecurringSeries;
 use CorvMC\Support\Services\RecurringService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * Cancel a recurring series and all its future instances.
@@ -15,8 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class CancelRecurringSeries
 {
-    use AsAction;
-
     /**
      * Cancel entire recurring series and all future instances.
      * 

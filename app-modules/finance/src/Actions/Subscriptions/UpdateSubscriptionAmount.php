@@ -6,7 +6,6 @@ use App\Models\User;
 use Brick\Money\Money;
 use CorvMC\Finance\Services\SubscriptionService;
 use Laravel\Cashier\Checkout;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use SubscriptionService::updateSubscriptionAmount() instead
@@ -15,8 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class UpdateSubscriptionAmount
 {
-    use AsAction;
-
     /**
      * @deprecated Use SubscriptionService::updateSubscriptionAmount() instead
      */

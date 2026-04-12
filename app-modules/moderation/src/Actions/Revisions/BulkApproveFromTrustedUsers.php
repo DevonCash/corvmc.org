@@ -3,7 +3,6 @@
 namespace CorvMC\Moderation\Actions\Revisions;
 
 use CorvMC\Moderation\Services\RevisionService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use RevisionService::bulkApproveFromTrustedUsers() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class BulkApproveFromTrustedUsers
 {
-    use AsAction;
-
     /**
      * @deprecated Use RevisionService::bulkApproveFromTrustedUsers() instead
      */

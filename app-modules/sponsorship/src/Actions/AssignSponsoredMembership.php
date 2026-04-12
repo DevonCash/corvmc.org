@@ -5,7 +5,6 @@ namespace CorvMC\Sponsorship\Actions;
 use App\Models\User;
 use CorvMC\Sponsorship\Models\Sponsor;
 use CorvMC\Sponsorship\Services\SponsorshipService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * Assign a sponsored membership to a user.
@@ -16,8 +15,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class AssignSponsoredMembership
 {
-    use AsAction;
-
     /**
      * Assign a sponsored membership to a user.
      *

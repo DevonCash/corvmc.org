@@ -4,7 +4,6 @@ namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use App\Models\User;
 use CorvMC\SpaceManagement\Services\ReservationService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use ReservationService::getUserStats() instead
@@ -14,8 +13,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class GetUserStats
 {
-    use AsAction;
-
     /**
      * @deprecated Use ReservationService::getUserStats() instead
      */

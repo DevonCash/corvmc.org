@@ -5,7 +5,6 @@ namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 use App\Filament\Shared\Actions\Action\Action;
 use CorvMC\SpaceManagement\Services\RecurringReservationService;
 use CorvMC\Support\Models\RecurringSeries;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use RecurringReservationService::updateRecurringSeries() instead.
@@ -16,8 +15,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class UpdateRecurringSeries
 {
-    use AsAction;
-
     public function handle(RecurringSeries $recurringSeries, array $data): RecurringSeries
     {
         return app(RecurringReservationService::class)->updateRecurringSeries($recurringSeries, $data);

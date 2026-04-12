@@ -6,7 +6,6 @@ use App\Models\User;
 use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Services\CreditService;
 use Filament\Schemas\Components\Grid;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use CreditService::adjustCredits() instead
@@ -15,8 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class AdjustCredits
 {
-    use AsAction;
-
     /**
      * @deprecated Use CreditService::adjustCredits() instead
      */

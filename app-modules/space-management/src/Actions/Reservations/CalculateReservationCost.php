@@ -5,7 +5,6 @@ namespace CorvMC\SpaceManagement\Actions\Reservations;
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\Services\ReservationService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use ReservationService::calculateReservationCost() instead
@@ -15,8 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class CalculateReservationCost
 {
-    use AsAction;
-
     public const HOURLY_RATE = 15.00;
 
     /**

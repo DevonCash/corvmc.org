@@ -9,7 +9,6 @@ use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Services\ReservationService;
 use App\Models\User;
 use Carbon\Carbon;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use ReservationService::estimateRecurringCreditCost() instead
@@ -19,8 +18,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class EstimateRecurringCreditCost
 {
-    use AsAction;
-
     /**
      * @deprecated Use ReservationService::estimateRecurringCreditCost() instead
      */

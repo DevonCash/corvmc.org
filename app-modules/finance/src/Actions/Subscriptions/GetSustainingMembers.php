@@ -4,7 +4,6 @@ namespace CorvMC\Finance\Actions\Subscriptions;
 
 use CorvMC\Finance\Services\SubscriptionService;
 use Illuminate\Database\Eloquent\Collection;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use SubscriptionService::getSustainingMembers() instead
@@ -13,8 +12,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class GetSustainingMembers
 {
-    use AsAction;
-
     /**
      * @deprecated Use SubscriptionService::getSustainingMembers() instead
      */

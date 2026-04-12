@@ -5,12 +5,9 @@ namespace CorvMC\SpaceManagement\Actions\Reservations;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Notifications\ReservationConfirmedNotification;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class HandleSuccessfulPayment
 {
-    use AsAction;
-
     /**
      * Handle successful payment and update reservation.
      *

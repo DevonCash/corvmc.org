@@ -6,7 +6,6 @@ use App\Filament\Shared\Actions\Action;
 use App\Filament\Staff\Resources\RecurringReservations\Schemas\RecurringReservationForm;
 use CorvMC\SpaceManagement\Services\RecurringReservationService;
 use CorvMC\Support\Models\RecurringSeries;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use RecurringReservationService::createRecurringRehearsal() instead
@@ -15,8 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class CreateRecurringRehearsal
 {
-    use AsAction;
-
     /**
      * @deprecated Use RecurringReservationService::createRecurringRehearsal() instead
      */

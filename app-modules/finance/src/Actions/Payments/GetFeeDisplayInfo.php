@@ -4,7 +4,6 @@ namespace CorvMC\Finance\Actions\Payments;
 
 use Brick\Money\Money;
 use CorvMC\Finance\Services\FeeService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use FeeService::getFeeDisplayInfo() instead
@@ -13,8 +12,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class GetFeeDisplayInfo
 {
-    use AsAction;
-
     /**
      * @deprecated Use FeeService::getFeeDisplayInfo() instead
      */

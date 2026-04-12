@@ -4,12 +4,9 @@ namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use CorvMC\SpaceManagement\Models\Reservation;
 use Illuminate\Support\Facades\Log;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class ProcessReservationCheckout
 {
-    use AsAction;
-
     /**
      * Process a successful reservation checkout.
      *

@@ -3,7 +3,6 @@
 namespace CorvMC\Moderation\Actions\Trust;
 
 use CorvMC\Moderation\Services\TrustService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use TrustService::getUsersByTrustLevel() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class GetUsersByTrustLevel
 {
-    use AsAction;
-
     /**
      * @deprecated Use TrustService::getUsersByTrustLevel() instead
      */

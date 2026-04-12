@@ -4,7 +4,6 @@ namespace CorvMC\Finance\Actions\Payments;
 
 use CorvMC\Finance\Services\FeeService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use FeeService::markReservationAsRefunded() instead
@@ -13,8 +12,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class MarkReservationAsRefunded
 {
-    use AsAction;
-
     /**
      * @deprecated Use FeeService::markReservationAsRefunded() instead
      */

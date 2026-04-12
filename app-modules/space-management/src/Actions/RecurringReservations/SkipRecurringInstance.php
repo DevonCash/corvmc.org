@@ -5,7 +5,6 @@ namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\Services\RecurringReservationService;
 use CorvMC\Support\Models\RecurringSeries;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use RecurringReservationService::skipRecurringInstance() instead.
@@ -16,8 +15,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class SkipRecurringInstance
 {
-    use AsAction;
-
     /**
      * Skip a single instance without cancelling series.
      */

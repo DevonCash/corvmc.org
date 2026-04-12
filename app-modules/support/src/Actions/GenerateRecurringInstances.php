@@ -5,7 +5,6 @@ namespace CorvMC\Support\Actions;
 use CorvMC\Support\Models\RecurringSeries;
 use CorvMC\Support\Services\RecurringService;
 use Illuminate\Support\Collection;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * Generate instances (Reservations, Events, etc.) for a recurring series.
@@ -16,8 +15,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class GenerateRecurringInstances
 {
-    use AsAction;
-
     /**
      * Generate instances for a recurring series.
      * Only generates up to max_advance_days into the future.

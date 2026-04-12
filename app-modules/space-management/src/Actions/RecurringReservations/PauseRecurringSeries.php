@@ -6,7 +6,6 @@ use App\Filament\Shared\Actions\Action\Action;
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\Services\RecurringReservationService;
 use CorvMC\Support\Models\RecurringSeries;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use RecurringReservationService::pauseRecurringSeries() instead.
@@ -17,7 +16,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class PauseRecurringSeries
 {
-    use AsAction;
     
     public function handle(RecurringSeries $recurringSeries, ?Carbon $pauseUntil = null): RecurringSeries
     {

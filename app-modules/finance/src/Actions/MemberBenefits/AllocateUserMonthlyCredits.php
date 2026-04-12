@@ -4,7 +4,6 @@ namespace CorvMC\Finance\Actions\MemberBenefits;
 
 use App\Models\User;
 use CorvMC\Finance\Services\MemberBenefitService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use MemberBenefitService::allocateUserMonthlyCredits() instead
@@ -13,8 +12,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class AllocateUserMonthlyCredits
 {
-    use AsAction;
-
     /**
      * @deprecated Use MemberBenefitService::allocateUserMonthlyCredits() instead
      */

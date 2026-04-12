@@ -12,7 +12,6 @@ use CorvMC\SpaceManagement\Services\ReservationService;
 use Filament\Tables\Columns\Concerns\HasRecord;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use ReservationService::cancel() instead
@@ -22,7 +21,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class CancelReservation
 {
-    use AsAction;
     use HasRecord;
 
     /**

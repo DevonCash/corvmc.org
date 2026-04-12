@@ -3,12 +3,9 @@
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use Carbon\Carbon;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class CheckTimeSlotAvailability
 {
-    use AsAction;
-
     /**
      * Check if a time slot is available (no conflicts with reservations, productions, or closures).
      */

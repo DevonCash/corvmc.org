@@ -3,7 +3,6 @@
 namespace CorvMC\Events\Actions\Tickets;
 
 use CorvMC\Events\Services\TicketService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use TicketService::processCheckout() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class ProcessTicketCheckout
 {
-    use AsAction;
-
     /**
      * @deprecated Use TicketService::processCheckout() instead
      */

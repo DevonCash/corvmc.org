@@ -5,7 +5,6 @@ namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 use CorvMC\SpaceManagement\Services\RecurringReservationService;
 use CorvMC\Support\Models\RecurringSeries;
 use Illuminate\Support\Collection;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use RecurringReservationService::getUpcomingRecurringInstances() instead.
@@ -16,8 +15,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class GetUpcomingRecurringInstances
 {
-    use AsAction;
-
     /**
      * Get upcoming instances for a series.
      */

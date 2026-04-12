@@ -4,7 +4,6 @@ namespace CorvMC\Finance\Actions\Payments;
 
 use Brick\Money\Money;
 use CorvMC\Finance\Services\FeeService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use FeeService::calculateProcessingFee() instead
@@ -13,8 +12,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class CalculateProcessingFee
 {
-    use AsAction;
-
     /**
      * Stripe processing fee: 2.9% + $0.30 for cards
      */

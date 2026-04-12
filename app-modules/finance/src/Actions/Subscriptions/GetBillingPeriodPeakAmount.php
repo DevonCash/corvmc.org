@@ -4,7 +4,6 @@ namespace CorvMC\Finance\Actions\Subscriptions;
 
 use CorvMC\Finance\Services\SubscriptionService;
 use Laravel\Cashier\Subscription;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use SubscriptionService::getBillingPeriodPeakAmount() instead
@@ -13,8 +12,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class GetBillingPeriodPeakAmount
 {
-    use AsAction;
-
     /**
      * @deprecated Use SubscriptionService::getBillingPeriodPeakAmount() instead
      */

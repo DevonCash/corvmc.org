@@ -8,7 +8,6 @@ use CorvMC\Equipment\Data\CheckoutData;
 use CorvMC\Equipment\Models\Equipment;
 use CorvMC\Equipment\Models\EquipmentLoan;
 use CorvMC\Equipment\Services\EquipmentService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use EquipmentService::checkout() instead
@@ -18,8 +17,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class CheckoutToMember
 {
-    use AsAction;
-
     /**
      * Checkout equipment to a member (immediate checkout).
      * 

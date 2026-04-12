@@ -5,7 +5,6 @@ namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 use CorvMC\SpaceManagement\Services\RecurringReservationService;
 use CorvMC\Support\Enums\RecurringSeriesStatus;
 use CorvMC\Support\Models\RecurringSeries;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use RecurringReservationService::generateFutureRecurringInstances() instead.
@@ -16,8 +15,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class GenerateFutureRecurringInstances
 {
-    use AsAction;
-
     /**
      * Generate future instances for all active reservation series.
      */

@@ -3,7 +3,6 @@
 namespace CorvMC\Moderation\Actions\Reports;
 
 use CorvMC\Moderation\Services\ReportService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use ReportService::submitReport() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class SubmitReport
 {
-    use AsAction;
-
     /**
      * @deprecated Use ReportService::submitReport() instead
      */

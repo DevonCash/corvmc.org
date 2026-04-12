@@ -3,7 +3,6 @@
 namespace CorvMC\Finance\Actions\MemberBenefits;
 
 use CorvMC\Finance\Services\MemberBenefitService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use MemberBenefitService::calculateFreeHours() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class CalculateFreeHours
 {
-    use AsAction;
-
     public const HOURS_PER_DOLLAR_AMOUNT = 1; // Number of hours granted
 
     public const DOLLAR_AMOUNT_FOR_HOURS = 5; // Per this dollar amount

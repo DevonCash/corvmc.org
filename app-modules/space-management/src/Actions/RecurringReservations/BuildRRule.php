@@ -3,7 +3,6 @@
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
 use CorvMC\SpaceManagement\Services\RecurringReservationService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use RecurringReservationService::buildRRule() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class BuildRRule
 {
-    use AsAction;
-
     /**
      * @deprecated Use RecurringReservationService::buildRRule() instead
      */

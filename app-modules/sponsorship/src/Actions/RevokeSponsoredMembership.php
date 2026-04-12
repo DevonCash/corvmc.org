@@ -5,7 +5,6 @@ namespace CorvMC\Sponsorship\Actions;
 use App\Models\User;
 use CorvMC\Sponsorship\Models\Sponsor;
 use CorvMC\Sponsorship\Services\SponsorshipService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * Revoke a sponsored membership from a user.
@@ -16,8 +15,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class RevokeSponsoredMembership
 {
-    use AsAction;
-
     /**
      * Revoke a sponsored membership from a user.
      *

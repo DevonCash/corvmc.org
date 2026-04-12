@@ -8,12 +8,9 @@ use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class UpdateReservation
 {
-    use AsAction;
-
     /**
      * Update an existing reservation.
      *

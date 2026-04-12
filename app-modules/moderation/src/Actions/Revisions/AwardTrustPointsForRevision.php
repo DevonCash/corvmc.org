@@ -3,7 +3,6 @@
 namespace CorvMC\Moderation\Actions\Revisions;
 
 use CorvMC\Moderation\Services\TrustService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use TrustService::awardPoints() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class AwardTrustPointsForRevision
 {
-    use AsAction;
-
     /**
      * @deprecated Use TrustService::awardPoints() instead
      */

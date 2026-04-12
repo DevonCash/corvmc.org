@@ -6,7 +6,6 @@ use App\Filament\Actions\Payment\ChargeableMarkCompedAction;
 use CorvMC\Finance\Data\CompData;
 use CorvMC\Finance\Services\PaymentService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use PaymentService::recordComp() instead
@@ -16,8 +15,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class MarkReservationAsComped
 {
-    use AsAction;
-
     /**
      * @deprecated Use PaymentService::recordComp() instead
      */

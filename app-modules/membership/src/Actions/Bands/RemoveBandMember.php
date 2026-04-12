@@ -3,7 +3,6 @@
 namespace CorvMC\Membership\Actions\Bands;
 
 use CorvMC\Membership\Services\BandService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use BandService::removeMember() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class RemoveBandMember
 {
-    use AsAction;
-
     /**
      * @deprecated Use BandService::removeMember() instead
      */

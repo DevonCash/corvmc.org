@@ -5,7 +5,6 @@ namespace CorvMC\Finance\Actions\Subscriptions;
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Finance\Services\SubscriptionService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use SubscriptionService::cancelSubscription() instead
@@ -14,8 +13,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class CancelSubscription
 {
-    use AsAction;
-
     /**
      * @deprecated Use SubscriptionService::cancelSubscription() instead
      */

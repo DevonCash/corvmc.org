@@ -6,7 +6,6 @@ use App\Models\User;
 use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\Finance\Data\PriceCalculationData;
 use CorvMC\Finance\Services\PricingService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use PricingService::calculatePriceForUser() instead
@@ -15,8 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class CalculatePriceForUser
 {
-    use AsAction;
-
     /**
      * @deprecated Use PricingService::calculatePriceForUser() instead
      */

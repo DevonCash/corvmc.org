@@ -3,7 +3,6 @@
 namespace CorvMC\Finance\Actions\Subscriptions;
 
 use CorvMC\Finance\Services\SubscriptionService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use SubscriptionService::processSubscriptionCheckout() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class ProcessSubscriptionCheckout
 {
-    use AsAction;
-
     /**
      * @deprecated Use SubscriptionService::processSubscriptionCheckout() instead
      */

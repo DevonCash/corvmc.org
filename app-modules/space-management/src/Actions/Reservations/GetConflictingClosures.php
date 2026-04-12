@@ -7,14 +7,11 @@ use Carbon\Carbon;
 use CorvMC\SpaceManagement\Models\SpaceClosure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
-use Lorisleiva\Actions\Concerns\AsAction;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
 
 class GetConflictingClosures
 {
-    use AsAction;
-
     /**
      * Get space closures that conflict with a time slot.
      * Uses a broader database query then filters with Period for precision.

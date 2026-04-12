@@ -3,7 +3,6 @@
 namespace CorvMC\Moderation\Actions\Revisions;
 
 use CorvMC\Moderation\Services\RevisionService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use RevisionService::queueForReview() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class QueueRevisionForReview
 {
-    use AsAction;
-
     /**
      * @deprecated Use RevisionService::queueForReview() instead
      */

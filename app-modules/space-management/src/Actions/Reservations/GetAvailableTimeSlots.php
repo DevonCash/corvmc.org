@@ -5,7 +5,6 @@ namespace CorvMC\SpaceManagement\Actions\Reservations;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Services\ReservationService;
 use Carbon\Carbon;
-use Lorisleiva\Actions\Concerns\AsAction;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
 
@@ -17,8 +16,6 @@ use Spatie\Period\Precision;
  */
 class GetAvailableTimeSlots
 {
-    use AsAction;
-
     /**
      * @deprecated Use ReservationService::getAvailableTimeSlots() instead
      */

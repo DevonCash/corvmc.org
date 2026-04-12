@@ -3,12 +3,9 @@
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use Carbon\Carbon;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetValidEndTimesForDate
 {
-    use AsAction;
-
     public const MINUTES_PER_BLOCK = 30;
 
     public const MAX_RESERVATION_DURATION = 8; // hours

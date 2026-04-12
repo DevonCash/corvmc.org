@@ -6,7 +6,6 @@ use App\Filament\Actions\Payment\ChargeableMarkPaidAction;
 use CorvMC\Finance\Data\PaymentData;
 use CorvMC\Finance\Services\PaymentService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use PaymentService::recordPayment() instead
@@ -16,8 +15,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class MarkReservationAsPaid
 {
-    use AsAction;
-
     /**
      * @deprecated Use PaymentService::recordPayment() instead
      */

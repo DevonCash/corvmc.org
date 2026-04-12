@@ -4,12 +4,9 @@ namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use App\Models\User;
 use Carbon\Carbon;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class ValidateReservation
 {
-    use AsAction;
-
     public const MIN_RESERVATION_DURATION = 1; // hours
 
     public const MAX_RESERVATION_DURATION = 8; // hours

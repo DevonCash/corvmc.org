@@ -3,7 +3,6 @@
 namespace CorvMC\Equipment\Actions;
 
 use CorvMC\Equipment\Services\EquipmentService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use EquipmentService::markOverdue() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class MarkOverdue
 {
-    use AsAction;
-
     /**
      * @deprecated Use EquipmentService::markOverdue() instead
      */

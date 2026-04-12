@@ -6,12 +6,9 @@ use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Notifications\ReservationAutoCancelledNotification;
 use Illuminate\Support\Collection;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class AutoCancelUnconfirmedReservations
 {
-    use AsAction;
-
     /**
      * Auto-cancel Reserved instances that are within 3 days and haven't been confirmed.
      *

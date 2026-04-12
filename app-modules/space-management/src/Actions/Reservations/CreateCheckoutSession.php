@@ -8,7 +8,6 @@ use CorvMC\SpaceManagement\Services\ReservationService;
 use App\Models\User;
 use Filament\Actions\Action;
 use Illuminate\Support\Facades\Auth;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use ReservationService::createCheckoutSession() instead
@@ -18,8 +17,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class CreateCheckoutSession
 {
-    use AsAction;
-
     /**
      * @deprecated Use ReservationService::createCheckoutSession() instead
      */

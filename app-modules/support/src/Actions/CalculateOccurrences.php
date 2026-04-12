@@ -4,7 +4,6 @@ namespace CorvMC\Support\Actions;
 
 use Carbon\Carbon;
 use CorvMC\Support\Services\RecurringService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * Calculate occurrence dates from an RRULE recurrence pattern.
@@ -15,8 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class CalculateOccurrences
 {
-    use AsAction;
-
     /**
      * Calculate occurrence dates from recurrence rule.
      *

@@ -3,7 +3,6 @@
 namespace CorvMC\Finance\Actions\Credits;
 
 use CorvMC\Finance\Services\CreditService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use CreditService::processPendingAllocations() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class ProcessPendingAllocations
 {
-    use AsAction;
-
     public string $commandSignature = 'credits:allocate {--dry-run : Preview allocations without executing}';
 
     public string $commandDescription = 'Process all pending credit allocations';

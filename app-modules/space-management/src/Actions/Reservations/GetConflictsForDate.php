@@ -8,14 +8,11 @@ use App\Settings\ReservationSettings;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use Lorisleiva\Actions\Concerns\AsAction;
 use Spatie\Period\Period;
 use Spatie\Period\Precision;
 
 class GetConflictsForDate
 {
-    use AsAction;
-
     /**
      * Get all reservations and productions for a date in a single batch.
      *

@@ -4,7 +4,6 @@ namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\Services\RecurringReservationService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use RecurringReservationService::validateRecurringPattern() instead.
@@ -15,8 +14,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class ValidateRecurringPattern
 {
-    use AsAction;
-
     /**
      * Validate a recurring pattern for conflicts.
      *

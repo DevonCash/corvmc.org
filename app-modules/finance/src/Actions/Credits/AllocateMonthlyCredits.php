@@ -5,7 +5,6 @@ namespace CorvMC\Finance\Actions\Credits;
 use App\Models\User;
 use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Services\CreditService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use CreditService::allocateMonthlyCredits() instead
@@ -14,8 +13,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class AllocateMonthlyCredits
 {
-    use AsAction;
-
     /**
      * @deprecated Use CreditService::allocateMonthlyCredits() instead
      */

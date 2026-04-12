@@ -6,12 +6,9 @@ use CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours;
 use CorvMC\SpaceManagement\Data\ReservationUsageData;
 use App\Models\User;
 use Carbon\Carbon;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 class GetUserUsageForMonth
 {
-    use AsAction;
-
     /**
      * Get user's reservation usage for a specific month.
      *

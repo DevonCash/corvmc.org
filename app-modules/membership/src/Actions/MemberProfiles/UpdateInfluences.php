@@ -3,7 +3,6 @@
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
 use CorvMC\Membership\Services\MemberProfileService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use MemberProfileService::updateInfluences() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class UpdateInfluences
 {
-    use AsAction;
-
     /**
      * @deprecated Use MemberProfileService::updateInfluences() instead
      */

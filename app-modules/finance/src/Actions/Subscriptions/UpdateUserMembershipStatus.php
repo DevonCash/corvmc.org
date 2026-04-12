@@ -4,7 +4,6 @@ namespace CorvMC\Finance\Actions\Subscriptions;
 
 use App\Models\User;
 use CorvMC\Finance\Services\SubscriptionService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use SubscriptionService::updateUserMembershipStatus() instead
@@ -13,8 +12,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class UpdateUserMembershipStatus
 {
-    use AsAction;
-
     /**
      * @deprecated Use SubscriptionService::updateUserMembershipStatus() instead
      */

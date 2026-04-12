@@ -3,7 +3,6 @@
 namespace CorvMC\Events\Actions;
 
 use CorvMC\Events\Services\EventService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use EventService::search() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class SearchEvents
 {
-    use AsAction;
-
     /**
      * @deprecated Use EventService::search() instead
      */

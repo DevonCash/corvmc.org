@@ -3,7 +3,6 @@
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
 use CorvMC\SpaceManagement\Services\RecurringReservationService;
-use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * @deprecated Use RecurringReservationService::formatRRuleForHumans() instead
@@ -12,8 +11,6 @@ use Lorisleiva\Actions\Concerns\AsAction;
  */
 class FormatRRuleForHumans
 {
-    use AsAction;
-
     /**
      * @deprecated Use RecurringReservationService::formatRRuleForHumans() instead
      */
