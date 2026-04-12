@@ -2,7 +2,7 @@
 
 namespace App\Filament\Member\Resources\Bands\Pages;
 
-use CorvMC\Membership\Actions\Bands\CreateBand;
+use App\Filament\Actions\Bands\CreateBandAction;
 use App\Filament\Member\Resources\Bands\BandResource;
 use App\Filament\Member\Resources\Bands\Widgets\PendingBandInvitationsWidget;
 use CorvMC\Bands\Models\Band;
@@ -60,7 +60,7 @@ class ListBands extends Page
     protected function getHeaderActions(): array
     {
         return [
-            CreateBand::filamentAction(),
+            CreateBandAction::make()
         ];
     }
 

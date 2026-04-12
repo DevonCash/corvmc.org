@@ -2,25 +2,23 @@
 
 namespace CorvMC\Membership\Actions\Users;
 
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\UserManagementService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use UserManagementService::forceDelete() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the UserManagementService directly.
+ */
 class ForceDeleteUser
 {
     use AsAction;
 
     /**
-     * Force delete a user permanently.
+     * @deprecated Use UserManagementService::forceDelete() instead
      */
-    public function handle(User $user): bool
+    public function handle(...$args)
     {
-        return DB::transaction(function () use ($user) {
-            // Clean up related data
-            $user->reservations()->forceDelete();
-            $user->profile?->delete();
-
-            return $user->forceDelete();
-        });
+        return app(UserManagementService::class)->forceDelete(...$args);
     }
 }

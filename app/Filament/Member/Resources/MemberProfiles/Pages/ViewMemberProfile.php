@@ -31,7 +31,7 @@ class ViewMemberProfile extends Page
     {
         $location = $this->record->hometown ? " • {$this->record->hometown}" : '';
 
-        return 'Member since '.$this->record->created_at->format('F Y').$location;
+        return 'Member since ' . $this->record->created_at->format('F Y') . $location;
     }
 
     public function getBreadCrumbs(): array
@@ -47,22 +47,18 @@ class ViewMemberProfile extends Page
         return [
             EditAction::make()
                 ->visible(
-                    fn () => User::me()->can('update', $this->record) ||
+                    fn() => User::me()->can('update', $this->record) ||
                         $this->record->user_id === User::me()->id
                 ),
             ReportContentAction::make()
-                ->visible(fn () => User::me()->id !== $this->record->user_id), // Don't show report button to profile owner
+                ->visible(fn() => User::me()->id !== $this->record->user_id), // Don't show report button to profile owner
         ];
     }
 
     public function mount(int|string $record): void
     {
-        $this->record = $this->resolveRecord($record);
-
-        // Check if user can view this profile
-        if (! $this->record->isVisible(Auth::user())) {
-            abort(403, 'You do not have permission to view this profile.');
-        }
+        $this->record = static::getResource()::resolveRecordRouteBinding($record);
+        $this->record->load(['flags', 'tags', 'media', 'user']);
     }
 
     public function getHeader(): ?View

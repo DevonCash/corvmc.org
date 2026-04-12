@@ -3,8 +3,14 @@
 namespace CorvMC\Finance\Actions\Payments;
 
 use Brick\Money\Money;
+use CorvMC\Finance\Services\FeeService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use FeeService::calculateProcessingFee() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the FeeService directly.
+ */
 class CalculateProcessingFee
 {
     use AsAction;
@@ -17,13 +23,10 @@ class CalculateProcessingFee
     const STRIPE_FIXED_FEE_CENTS = 30;
 
     /**
-     * Calculate the processing fee for a given Money amount.
+     * @deprecated Use FeeService::calculateProcessingFee() instead
      */
     public function handle(Money $baseAmount): Money
     {
-        $percentageFee = $baseAmount->multipliedBy(self::STRIPE_RATE, \Brick\Math\RoundingMode::HALF_UP);
-        $fixedFee = Money::ofMinor(self::STRIPE_FIXED_FEE_CENTS, 'USD');
-
-        return $percentageFee->plus($fixedFee);
+        return app(FeeService::class)->calculateProcessingFee($baseAmount);
     }
 }

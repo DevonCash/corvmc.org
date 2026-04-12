@@ -12,12 +12,15 @@ use Filament\Actions\Action;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use App\Filament\Infolists\Entries\MorphTypeEntry;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use App\Filament\Tables\Columns\MorphTypeColumn;
 
 class ChargeResource extends Resource
 {
@@ -80,35 +83,39 @@ class ChargeResource extends Resource
                     ->label('#')
                     ->sortable(),
 
-                TextColumn::make('user.name')
-                    ->label('User')
-                    ->searchable()
-                    ->description(fn (Charge $record) => $record->user?->email),
 
-                TextColumn::make('chargeable_type')
-                    ->label('Type')
-                    ->formatStateUsing(fn (string $state) => class_basename($state))
-                    ->badge()
-                    ->color('gray'),
+                IconColumn::make('status')
+                    ->label('')
+                    ->tooltip(fn($state) => $state->getLabel())
+                    ->grow(false)
+                    ->width(0),
 
-                TextColumn::make('amount')
-                    ->label('Gross')
-                    ->money('USD')
-                    ->sortable(),
 
                 TextColumn::make('net_amount')
                     ->label('Net')
-                    ->money('USD')
+                    ->formatStateUsing(fn($state) => $state->formatTo('en_US', true))
                     ->sortable(),
 
-                TextColumn::make('status')
-                    ->badge(),
+
+                TextColumn::make('user.name')
+                    ->label('User')
+                    ->searchable()
+                    ->description(fn(Charge $record) => $record->user?->email),
 
                 TextColumn::make('payment_method')
                     ->label('Method')
                     ->badge()
                     ->color('gray')
                     ->placeholder('—'),
+
+                MorphTypeColumn::make('chargeable')
+                    ->label('Type'),
+
+                TextColumn::make('amount')
+                    ->label('Gross')
+                    ->toggledHiddenByDefault(true)
+                    ->sortable(),
+
 
                 TextColumn::make('paid_at')
                     ->label('Paid')
@@ -143,9 +150,9 @@ class ChargeResource extends Resource
                     ->icon('tabler-coin')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->visible(fn (Charge $record) => $record->status->isPending())
+                    ->visible(fn(Charge $record) => $record->status->isPending())
                     ->action(function (Charge $record) {
-                        $record->markAsPaid('manual', null, 'Marked paid by staff');
+                        $record->markAsPaid('manual', null, null, 'Marked paid by staff');
                         Notification::make()->title('Charge marked as paid')->success()->send();
                     }),
 
@@ -154,7 +161,7 @@ class ChargeResource extends Resource
                     ->icon('tabler-gift')
                     ->color('info')
                     ->requiresConfirmation()
-                    ->visible(fn (Charge $record) => $record->status->isPending())
+                    ->visible(fn(Charge $record) => $record->status->isPending())
                     ->action(function (Charge $record) {
                         $record->markAsComped('Comped by staff');
                         Notification::make()->title('Charge comped')->success()->send();
@@ -165,7 +172,7 @@ class ChargeResource extends Resource
                     ->icon('tabler-receipt-refund')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->visible(fn (Charge $record) => $record->status->isPaid())
+                    ->visible(fn(Charge $record) => $record->status->isPaid())
                     ->action(function (Charge $record) {
                         $record->markAsRefunded('Refunded by staff');
                         Notification::make()->title('Charge refunded')->success()->send();
@@ -211,9 +218,8 @@ class ChargeResource extends Resource
                     ->schema([
                         Grid::make(2)
                             ->schema([
-                                TextEntry::make('chargeable_type')
-                                    ->label('Type')
-                                    ->formatStateUsing(fn (string $state) => class_basename($state)),
+                                MorphTypeEntry::make('chargeable')
+                                    ->label('Type'),
 
                                 TextEntry::make('chargeable_id')
                                     ->label('ID'),
@@ -225,8 +231,7 @@ class ChargeResource extends Resource
                         Grid::make(3)
                             ->schema([
                                 TextEntry::make('amount')
-                                    ->label('Gross Amount')
-                                    ->money('USD'),
+                                    ->label('Gross Amount'),
 
                                 TextEntry::make('credits_applied')
                                     ->label('Credits Applied')
@@ -235,13 +240,12 @@ class ChargeResource extends Resource
                                             return 'None';
                                         }
                                         return collect($state)
-                                            ->map(fn ($amount, $type) => "{$type}: {$amount}")
+                                            ->map(fn($amount, $type) => "{$type}: {$amount}")
                                             ->implode(', ');
                                     }),
 
                                 TextEntry::make('net_amount')
                                     ->label('Net Amount')
-                                    ->money('USD')
                                     ->weight('bold'),
                             ]),
                     ]),

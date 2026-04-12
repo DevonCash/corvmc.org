@@ -2,38 +2,23 @@
 
 namespace CorvMC\Membership\Actions\Bands;
 
-use CorvMC\Bands\Models\BandMember;
-use Filament\Actions\Action;
-use Filament\Notifications\Notification;
+use CorvMC\Membership\Services\BandService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use BandService::removeMember() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the BandService directly.
+ */
 class RemoveBandMember
 {
     use AsAction;
 
-    public function handle(BandMember $member)
+    /**
+     * @deprecated Use BandService::removeMember() instead
+     */
+    public function handle(...$args)
     {
-        // Implementation for removing a band member
-        $member->delete();
-    }
-
-    public static function filamentAction(): Action
-    {
-        return Action::make('remove_band_member')
-            ->icon('tabler-trash')
-            ->label('Remove')
-            ->color('danger')
-            ->requiresConfirmation()
-            ->modalHeading('Remove Band Member')
-            ->modalDescription('Are you sure you want to remove this member from the band?')
-            ->action(function (BandMember $member) {
-                static::run($member);
-
-                Notification::make()
-                    ->title('Band member removed')
-                    ->success()
-                    ->send();
-            })
-            ->authorize('delete');
+        return app(BandService::class)->removeMember(...$args);
     }
 }

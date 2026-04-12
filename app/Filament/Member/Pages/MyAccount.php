@@ -44,6 +44,7 @@ class MyAccount extends Page implements HasForms
         $this->form->fill([
             'name' => $user->name,
             'email' => $user->email,
+            'phone' => $user->phone,
             'pronouns' => $user->pronouns,
         ]);
     }
@@ -87,6 +88,11 @@ class MyAccount extends Page implements HasForms
                             ->email()
                             ->required()
                             ->maxLength(255),
+                        TextInput::make('phone')
+                            ->label('Phone number')
+                            ->tel()
+                            ->maxLength(255)
+                            ->copyable(),
                     ]),
 
                 Section::make('Change Password')
@@ -125,6 +131,7 @@ class MyAccount extends Page implements HasForms
         $user->update([
             'name' => $data['name'],
             'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
             'pronouns' => $data['pronouns'] ?? null,
         ]);
 
@@ -144,6 +151,7 @@ class MyAccount extends Page implements HasForms
         $this->form->fill([
             'name' => $user->name,
             'email' => $user->email,
+            'phone' => $user->phone,
             'pronouns' => $user->pronouns,
         ]);
     }

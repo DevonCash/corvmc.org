@@ -29,7 +29,21 @@ class RehearsalReservationPolicy
 
     public function confirm(User $user, RehearsalReservation $reservation): bool
     {
-        return $this->manage($user) || $reservation->isOwnedBy($user);
+        // Managers can always confirm
+        if ($this->manage($user)) {
+            return true;
+        }
+        
+        // Owners can confirm their own reservations within the time window
+        if ($reservation->isOwnedBy($user)) {
+            // Business rule: Can't confirm more than 5 days in advance
+            // This could also use ReservationService::checkConfirmationReadiness()
+            // but we'll keep it simple here
+            $daysUntilReservation = now()->diffInDays($reservation->reserved_at, false);
+            return $daysUntilReservation <= 5;
+        }
+        
+        return false;
     }
 
     public function cancel(User $user, RehearsalReservation $reservation): bool

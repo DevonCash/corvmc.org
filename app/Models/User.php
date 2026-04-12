@@ -14,6 +14,7 @@ use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Models\CreditTransaction;
 use CorvMC\Membership\Notifications\EmailVerificationNotification;
 use CorvMC\Moderation\Concerns\HasTrust;
+use CorvMC\Moderation\Enums\Visibility;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Models\Contracts\FilamentUser;
@@ -160,6 +161,13 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
         'settings',
     ];
 
+    protected static function booted()
+    {
+        static::created(function (User $user) {
+            $user->profile()->create(['visibility' => Visibility::Members]);
+        });
+    }
+
     public function canAccessPanel($panel): bool
     {
         // Staff panel requires staff or admin role
@@ -212,12 +220,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
     public function getFilamentAvatarUrl(): ?string
     {
         // Use the profile's media library avatar with thumbnail conversion
-        if ($this->profile && $this->profile->hasMedia('avatar')) {
-            return $this->profile->getFirstMediaUrl('avatar', 'thumb');
-        }
-
-        // Fall back to the full avatar URL if no thumbnail conversion exists
-        return $this->profile?->avatar_url;
+        return $this->profile->getFirstMediaUrl('avatar', 'thumb');
     }
 
     /**
@@ -236,33 +239,35 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
         ];
     }
 
+
+
     /**
      * Get the user's profile, creating one if it doesn't exist.
      */
-    public function getProfileAttribute()
-    {
-        // If relationship is already loaded, return it
-        if ($this->relationLoaded('profile')) {
-            return $this->getRelation('profile');
-        }
+    // public function getProfileAttribute()
+    // {
+    //     // If relationship is already loaded, return it
+    //     if ($this->relationLoaded('profile')) {
+    //         return $this->getRelation('profile');
+    //     }
 
-        // Load or create the profile with error handling for race conditions
-        try {
-            $profile = $this->profile()->firstOrCreate(['user_id' => $this->id]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Handle duplicate key violation (race condition)
-            if ($e->getCode() === '23505') {
-                $profile = $this->profile()->first();
-            } else {
-                throw $e;
-            }
-        }
+    //     // Load or create the profile with error handling for race conditions
+    //     try {
+    //         $profile = $this->profile()->firstOrCreate(['user_id' => $this->id]);
+    //     } catch (\Illuminate\Database\QueryException $e) {
+    //         // Handle duplicate key violation (race condition)
+    //         if ($e->getCode() === '23505') {
+    //             $profile = $this->profile()->first();
+    //         } else {
+    //             throw $e;
+    //         }
+    //     }
 
-        // Set the relationship so subsequent calls use the loaded instance
-        $this->setRelation('profile', $profile);
+    //     // Set the relationship so subsequent calls use the loaded instance
+    //     $this->setRelation('profile', $profile);
 
-        return $profile;
-    }
+    //     return $profile;
+    // }
 
     public function productions(): HasMany
     {
@@ -273,6 +278,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
     public function events(): HasMany
     {
         return $this->productions();
+    }
+
+    public function charges(): HasMany
+    {
+        return $this->hasMany(\CorvMC\Finance\Models\Charge::class);
     }
 
     public function bands(): BelongsToMany

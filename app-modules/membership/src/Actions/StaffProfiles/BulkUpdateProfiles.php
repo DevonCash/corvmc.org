@@ -2,22 +2,23 @@
 
 namespace CorvMC\Membership\Actions\StaffProfiles;
 
-use App\Models\StaffProfile;
+use CorvMC\Membership\Services\StaffProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use StaffProfileService::bulkUpdateProfiles() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the StaffProfileService directly.
+ */
 class BulkUpdateProfiles
 {
     use AsAction;
 
     /**
-     * Bulk update staff profiles.
+     * @deprecated Use StaffProfileService::bulkUpdateProfiles() instead
      */
-    public function handle(array $profileIds, array $data): int
+    public function handle(...$args)
     {
-        // TODO: Add proper authorization check
-        // if (!Auth::check() || !Auth::user()->can('bulkUpdate', StaffProfile::class)) {
-        //     throw new \Exception("Unauthorized to bulk update profiles");
-        // }
-        return StaffProfile::whereIn('id', $profileIds)->update($data);
+        return app(StaffProfileService::class)->bulkUpdateProfiles(...$args);
     }
 }

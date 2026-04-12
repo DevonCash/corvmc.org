@@ -3,8 +3,16 @@
 namespace CorvMC\Sponsorship\Actions;
 
 use CorvMC\Sponsorship\Models\Sponsor;
+use CorvMC\Sponsorship\Services\SponsorshipService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * Get sponsor's slot allocation details.
+ *
+ * @deprecated Use SponsorshipService::getAvailableSlots() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the SponsorshipService directly.
+ */
 class GetSponsorAvailableSlots
 {
     use AsAction;
@@ -12,19 +20,11 @@ class GetSponsorAvailableSlots
     /**
      * Get sponsor's slot allocation details.
      *
+     * @deprecated Use SponsorshipService::getAvailableSlots() instead
      * @return array{total: int, used: int, available: int, has_available: bool}
      */
     public function handle(Sponsor $sponsor): array
     {
-        $total = $sponsor->sponsored_memberships;
-        $used = $sponsor->usedSlots();
-        $available = $sponsor->availableSlots();
-
-        return [
-            'total' => $total,
-            'used' => $used,
-            'available' => $available,
-            'has_available' => $sponsor->hasAvailableSlots(),
-        ];
+        return app(SponsorshipService::class)->getAvailableSlots($sponsor);
     }
 }

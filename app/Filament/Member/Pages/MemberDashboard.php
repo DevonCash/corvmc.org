@@ -112,7 +112,7 @@ class MemberDashboard extends Page
 
         return \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () {
             return \CorvMC\Events\Models\Event::publishedUpcoming()
-                ->with(['performers', 'organizer', 'venue'])
+                ->with(['performers', 'organizer', 'venue', 'media'])
                 ->limit(8)
                 ->get();
         });

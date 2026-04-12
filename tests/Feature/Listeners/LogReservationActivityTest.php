@@ -138,13 +138,21 @@ it('logs activity when a reservation is marked as paid', function () {
         'reservable_id' => $user->id,
     ]);
 
+    // Create a charge for the reservation so payment can be recorded
+    \CorvMC\Finance\Models\Charge::createForChargeable(
+        $reservation,
+        1500, // $15.00
+        1500,
+        null
+    );
+
     Activity::query()->delete();
 
     $this->actingAs($manager);
     \CorvMC\Finance\Actions\Payments\MarkReservationAsPaid::run($reservation, 'cash', 'Paid at front desk');
 
     $activity = Activity::where('event', 'payment_recorded')
-        ->where('log_name', 'reservation')
+        ->where('log_name', 'payment')
         ->first();
 
     expect($activity)->not->toBeNull()
@@ -161,17 +169,25 @@ it('logs activity when a reservation is comped', function () {
         'reservable_id' => $user->id,
     ]);
 
+    // Create a charge for the reservation so it can be comped
+    \CorvMC\Finance\Models\Charge::createForChargeable(
+        $reservation,
+        1500, // $15.00
+        1500,
+        null
+    );
+
     Activity::query()->delete();
 
     $this->actingAs($manager);
     \CorvMC\Finance\Actions\Payments\MarkReservationAsComped::run($reservation, 'Community event volunteer');
 
-    $activity = Activity::where('event', 'comped')
-        ->where('log_name', 'reservation')
+    $activity = Activity::where('event', 'charge_comped')
+        ->where('log_name', 'payment')
         ->first();
 
     expect($activity)->not->toBeNull()
-        ->and($activity->description)->toBe('Reservation comped: Community event volunteer')
+        ->and($activity->description)->toBe('Charge comped: Community event volunteer')
         ->and($activity->causer_id)->toBe($manager->id)
         ->and($activity->properties['reason'])->toBe('Community event volunteer');
 });

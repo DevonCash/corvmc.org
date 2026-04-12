@@ -4,6 +4,7 @@ namespace App\Actions\Invitations;
 
 use App\Models\Invitation;
 use App\Models\User;
+use App\Services\InvitationService;
 use CorvMC\Membership\Notifications\UserInvitationNotification;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
@@ -14,26 +15,26 @@ use Illuminate\Support\Facades\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;
 use Spatie\Permission\Models\Role;
 
+/**
+ * @deprecated Use InvitationService::inviteUser() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the InvitationService directly.
+ */
 class InviteUser
 {
     use AsAction;
 
+    /**
+     * @deprecated Use InvitationService::inviteUser() instead
+     */
     public function handle(string $email, array $data = []): Invitation
     {
-        return DB::transaction(function () use ($email, $data) {
-            $invitation = GenerateInvitation::run($email, $data);
-
-            Notification::route('mail', $email)
-                ->notify(new UserInvitationNotification($invitation, $data));
-
-            $invitation->markAsSent();
-
-            return $invitation;
-        });
+        return app(InvitationService::class)->inviteUser($email, $data);
     }
 
     public static function filamentAction(): Action
     {
+        $roles = Role::all();
         return Action::make('invite_user')
             ->label('Invite')
             ->icon('tabler-user-plus')
@@ -50,8 +51,8 @@ class InviteUser
                 CheckboxList::make('roles')
                     ->visible(fn () => User::me()->hasRole('admin'))
                     ->label('Assign Roles')
-                    ->options(Role::all()->pluck('name', 'id'))
-                    ->descriptions(Role::all()->pluck('name', 'id')->map(fn ($name) => "Assign {$name} role"))
+                    ->options($roles->pluck('name', 'id'))
+                    ->descriptions($roles->pluck('name', 'id')->map(fn ($name) => "Assign {$name} role"))
                     ->columns(2),
             ])
             ->modalHeading('Invite New User')

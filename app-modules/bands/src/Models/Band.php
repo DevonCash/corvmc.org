@@ -109,6 +109,8 @@ class Band extends ContentModel
         return \Database\Factories\BandFactory::new();
     }
 
+    protected array $membershipCache = [];
+
     // Report configuration
     protected static int $reportThreshold = 4;
 
@@ -179,11 +181,7 @@ class Band extends ContentModel
 
     public function membership(?User $user): ?BandMember
     {
-        if (! $user) {
-            return null;
-        }
-
-        return $this->memberships()->for($user)->first();
+        return once(fn() => $user ? $this->memberships()->for($user)->first() : null);
     }
 
     public function isOwner(User $user): bool
@@ -246,7 +244,7 @@ class Band extends ContentModel
 
     public function getAvatarUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=400';
+        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=400';
     }
 
     /**
@@ -273,17 +271,17 @@ class Band extends ContentModel
 
     public function getAvatarThumbUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=150';
+        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=150';
     }
 
     public function getAvatarLargeUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=800';
+        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=800';
     }
 
     public function getAvatarOptimizedUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&size=1200';
+        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=1200';
     }
 
     /**

@@ -2,30 +2,25 @@
 
 namespace CorvMC\Finance\Actions\Subscriptions;
 
-use CorvMC\Finance\Exceptions\SubscriptionNotFoundException;
 use App\Models\User;
 use Carbon\Carbon;
+use CorvMC\Finance\Services\SubscriptionService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use SubscriptionService::cancelSubscription() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the SubscriptionService directly.
+ */
 class CancelSubscription
 {
     use AsAction;
 
     /**
-     * Cancel a user's subscription at period end.
-     *
-     * @throws SubscriptionNotFoundException
+     * @deprecated Use SubscriptionService::cancelSubscription() instead
      */
     public function handle(User $user): Carbon
     {
-        $subscription = $user->subscription('default');
-
-        if (! $subscription || ! $subscription->active()) {
-            throw new SubscriptionNotFoundException('No active membership subscription found');
-        }
-
-        $subscription->cancel();
-
-        return $subscription->ends_at;
+        return app(SubscriptionService::class)->cancelSubscription($user);
     }
 }

@@ -2,32 +2,23 @@
 
 namespace CorvMC\Events\Actions;
 
-use CorvMC\Events\Models\Event;
-use App\Models\User;
-use CorvMC\Events\Notifications\EventPublishedNotification;
-use Illuminate\Support\Facades\Notification;
+use CorvMC\Events\Services\EventService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use EventService::publish() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the EventService directly.
+ */
 class PublishEvent
 {
     use AsAction;
 
     /**
-     * Publish an event.
+     * @deprecated Use EventService::publish() instead
      */
-    public function handle(Event $event): void
+    public function handle(...$args)
     {
-        // Check authorization
-        if (! User::me()?->can('publish', $event)) {
-            throw new \Illuminate\Auth\Access\AuthorizationException('You are not authorized to publish this event.');
-        }
-
-        $event->publish();
-
-        // Notify performers and stakeholders
-        $users = GetInterestedUsers::run($event);
-        if ($users->isNotEmpty()) {
-            Notification::send($users, new EventPublishedNotification($event));
-        }
+        return app(EventService::class)->publish(...$args);
     }
 }

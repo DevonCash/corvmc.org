@@ -2,8 +2,14 @@
 
 namespace CorvMC\Finance\Actions\MemberBenefits;
 
+use CorvMC\Finance\Services\MemberBenefitService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use MemberBenefitService::calculateFreeHours() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the MemberBenefitService directly.
+ */
 class CalculateFreeHours
 {
     use AsAction;
@@ -13,13 +19,10 @@ class CalculateFreeHours
     public const DOLLAR_AMOUNT_FOR_HOURS = 5; // Per this dollar amount
 
     /**
-     * Calculate free hours based on contribution amount.
-     *
-     * Formula: 1 hour per $5 contributed
-     * Example: $25/month = 5 hours, $50/month = 10 hours
+     * @deprecated Use MemberBenefitService::calculateFreeHours() instead
      */
     public function handle(float $contributionAmount): int
     {
-        return intval(floor($contributionAmount / self::DOLLAR_AMOUNT_FOR_HOURS) * self::HOURS_PER_DOLLAR_AMOUNT);
+        return app(MemberBenefitService::class)->calculateFreeHours($contributionAmount);
     }
 }

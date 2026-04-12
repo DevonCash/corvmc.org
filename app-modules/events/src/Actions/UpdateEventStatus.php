@@ -2,32 +2,23 @@
 
 namespace CorvMC\Events\Actions;
 
-use CorvMC\Events\Enums\EventStatus;
-use CorvMC\Events\Models\Event;
+use CorvMC\Events\Services\EventService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use EventService::updateStatus() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the EventService directly.
+ */
 class UpdateEventStatus
 {
     use AsAction;
 
     /**
-     * Update an event's status.
-     *
-     * @param  Event  $event  The event to update
-     * @param  EventStatus  $status  The new status
-     * @return Event The updated event
+     * @deprecated Use EventService::updateStatus() instead
      */
-    public function handle(Event $event, EventStatus $status): Event
+    public function handle(...$args)
     {
-        $event->update([
-            'status' => $status,
-        ]);
-
-        // Future: Add notification logic based on status change
-        // - Notify when event goes to AtCapacity (sold out)
-        // - Notify when event becomes available again
-        // - Other status-specific notifications
-
-        return $event->fresh();
+        return app(EventService::class)->updateStatus(...$args);
     }
 }

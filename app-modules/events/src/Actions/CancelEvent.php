@@ -2,38 +2,23 @@
 
 namespace CorvMC\Events\Actions;
 
-use CorvMC\Events\Enums\EventStatus;
-use CorvMC\Events\Models\Event;
+use CorvMC\Events\Services\EventService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use EventService::cancel() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the EventService directly.
+ */
 class CancelEvent
 {
     use AsAction;
 
     /**
-     * Cancel an event.
-     *
-     * @param  Event  $event  The event to cancel
-     * @param  string|null  $reason  Optional cancellation reason
-     * @return Event The updated event
+     * @deprecated Use EventService::cancel() instead
      */
-    public function handle(Event $event, ?string $reason = null): Event
+    public function handle(...$args)
     {
-        $data = [
-            'status' => EventStatus::Cancelled,
-        ];
-
-        if ($reason !== null) {
-            $data['cancellation_reason'] = $reason;
-        }
-
-        $event->update($data);
-
-        // Future: Add notification logic here
-        // - Notify event organizer
-        // - Notify performers
-        // - Notify attendees (if we track them)
-
-        return $event->fresh();
+        return app(EventService::class)->cancel(...$args);
     }
 }

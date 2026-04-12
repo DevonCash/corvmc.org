@@ -2,7 +2,7 @@
 
 namespace App\Filament\Member\Resources\Equipment\Actions;
 
-use CorvMC\Equipment\Actions\ProcessReturn;
+use CorvMC\Equipment\Services\EquipmentService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -47,7 +47,7 @@ class ProcessReturnAction
                     throw new \Exception('No active loan found for this equipment.');
                 }
 
-                $loan = ProcessReturn::run(
+                $loan = app(EquipmentService::class)->processReturn(
                     loan: $currentLoan,
                     conditionIn: $data['condition_in'],
                     damageNotes: $data['damage_notes'] ?? null

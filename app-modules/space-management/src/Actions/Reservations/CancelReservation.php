@@ -8,56 +8,29 @@ use App\Filament\Shared\Actions\Action;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Notifications\ReservationCancelledNotification;
+use CorvMC\SpaceManagement\Services\ReservationService;
 use Filament\Tables\Columns\Concerns\HasRecord;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use ReservationService::cancel() instead
+ * 
+ * This action is maintained for backward compatibility.
+ * New code should use the ReservationService directly.
+ */
 class CancelReservation
 {
     use AsAction;
     use HasRecord;
 
     /**
-     * Cancel a reservation.
-     *
-     * NOTE: Credit refunds are handled by Finance module via
-     * ReservationCancelled event listener. This action only handles status changes.
+     * @deprecated Use ReservationService::cancel() instead
      */
     public function handle(Reservation $reservation, ?string $reason = null): Reservation
     {
-        if (! $reservation) {
-            throw new \InvalidArgumentException('Reservation not found.');
-        }
-
-        // Capture original status before cancelling
-        $originalStatus = $reservation->status;
-
-        $reservation->update([
-            'status' => ReservationStatus::Cancelled,
-            'cancellation_reason' => $reason,
-        ]);
-
-        // Fire event for Finance module to handle credit refunds
-        if ($reservation instanceof RehearsalReservation) {
-            ReservationCancelled::dispatch($reservation, $originalStatus);
-        }
-
-        // Send cancellation notification to responsible user
-        $user = $reservation->getResponsibleUser();
-        if ($user) {
-            try {
-                $user->notify(new ReservationCancelledNotification($reservation));
-            } catch (\Exception $e) {
-                Log::error('Failed to send reservation cancellation notification', [
-                    'reservation_id' => $reservation->id,
-                    'user_id' => $user->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        return $reservation;
+        return app(ReservationService::class)->cancel($reservation, $reason);
     }
 
     public static function filamentAction(): Action

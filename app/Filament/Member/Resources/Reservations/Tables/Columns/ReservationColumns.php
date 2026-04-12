@@ -95,6 +95,7 @@ class ReservationColumns
     {
         return TextColumn::make('cost_display')
             ->label('Cost')
+            ->url(fn(Reservation $record) => $record->charge ? route('filament.staff.resources.charges.view', $record->charge) : null)
             ->state(function (Reservation $record): string {
                 $charge = $record->charge;
 

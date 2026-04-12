@@ -4,6 +4,7 @@ namespace CorvMC\Membership\Models;
 
 use App\Models\User;
 use App\Settings\MemberDirectorySettings;
+use BackedEnum;
 use CorvMC\Membership\Data\ContactData;
 use CorvMC\Moderation\Enums\Visibility;
 use CorvMC\Moderation\Models\ContentModel;
@@ -157,7 +158,7 @@ class MemberProfile extends ContentModel
     {
         $url = $this->getFirstMediaUrl('avatar');
 
-        return $url ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user->name).'&size=200';
+        return $url ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=200';
     }
 
     public function getNameAttribute(): string
@@ -167,22 +168,22 @@ class MemberProfile extends ContentModel
 
     public function getAvatarUrlAttribute(): string
     {
-        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user->name).'&size=300';
+        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=300';
     }
 
     public function getAvatarThumbUrlAttribute(): string
     {
-        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user->name).'&size=100';
+        return $this->getFirstMediaUrl('avatar', 'thumb') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=100';
     }
 
     public function getAvatarLargeUrlAttribute(): string
     {
-        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user->name).'&size=600';
+        return $this->getFirstMediaUrl('avatar', 'large') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=600';
     }
 
     public function getAvatarOptimizedUrlAttribute(): string
     {
-        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user->name).'&size=1200';
+        return $this->getFirstMediaUrl('avatar', 'optimized') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user->name) . '&size=1200';
     }
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -285,4 +286,5 @@ class MemberProfile extends ContentModel
             $q->where('name', $flag);
         });
     }
+
 }

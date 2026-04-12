@@ -88,7 +88,6 @@ class TicketOrderResource extends Resource
 
                 TextColumn::make('total')
                     ->label('Total')
-                    ->money('USD')
                     ->sortable(),
 
                 TextColumn::make('status')
@@ -196,23 +195,19 @@ class TicketOrderResource extends Resource
                                     ->label('Quantity'),
 
                                 TextEntry::make('unit_price')
-                                    ->label('Unit Price')
-                                    ->money('USD'),
+                                    ->label('Unit Price'),
 
                                 TextEntry::make('subtotal')
-                                    ->label('Subtotal')
-                                    ->money('USD'),
+                                    ->label('Subtotal'),
 
                                 TextEntry::make('discount')
-                                    ->label('Discount')
-                                    ->money('USD'),
+                                    ->label('Discount'),
                             ]),
 
                         Grid::make(3)
                             ->schema([
                                 TextEntry::make('fees')
-                                    ->label('Processing Fees')
-                                    ->money('USD'),
+                                    ->label('Processing Fees'),
 
                                 TextEntry::make('covers_fees')
                                     ->label('Covers Fees')
@@ -221,7 +216,6 @@ class TicketOrderResource extends Resource
 
                                 TextEntry::make('total')
                                     ->label('Total Charged')
-                                    ->money('USD')
                                     ->weight('bold'),
                             ]),
                     ]),

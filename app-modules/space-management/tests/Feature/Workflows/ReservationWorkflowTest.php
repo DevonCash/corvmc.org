@@ -31,7 +31,7 @@ describe('Reservation Workflow: Create Single Reservation', function () {
         expect($reservation->reservable_id)->toBe($user->id);
         expect((float) $reservation->hours_used)->toBe(2.0);
         expect($reservation->status)->toBe(ReservationStatus::Scheduled);
-        expect($reservation->charge->net_amount->getMinorAmount()->toInt())->toBe(3000); // $15/hour * 2 hours = $30
+        expect($reservation->charge->net_amount->getMinorAmount())->toBe(3000); // $15/hour * 2 hours = $30
     });
 
     it('creates a free reservation for sustaining member using credits', function () {
@@ -46,7 +46,7 @@ describe('Reservation Workflow: Create Single Reservation', function () {
 
         $reservation = CreateReservation::run($user, $startTime, $endTime);
 
-        expect($reservation->charge->net_amount->getMinorAmount()->toInt())->toBe(0);
+        expect($reservation->charge->net_amount->getMinorAmount())->toBe(0);
         expect((float) $reservation->free_hours_used)->toBe(2.0);
         expect($reservation->getChargeStatus())->toBe(ChargeStatus::CoveredByCredits); // Free hours = covered by credits
 
@@ -253,7 +253,7 @@ describe('Reservation Workflow: Cancel Reservation', function () {
         $reservation = CreateReservation::run($user, $startTime, $endTime);
 
         // Mark the charge as paid
-        $reservation->charge->markAsPaid('cash');
+        $reservation->charge->markAsPaid('cash', null, null, 'Test payment');
         expect($reservation->charge->status)->toBe(ChargeStatus::Paid);
 
         CancelReservation::run($reservation);

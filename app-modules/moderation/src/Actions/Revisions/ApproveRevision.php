@@ -2,66 +2,23 @@
 
 namespace CorvMC\Moderation\Actions\Revisions;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use CorvMC\Moderation\Services\RevisionService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
-use App\Models\User;
-
-use CorvMC\Moderation\Events\RevisionApproved as RevisionApprovedEvent;
-use CorvMC\Moderation\Models\Revision;
-use CorvMC\Moderation\Notifications\RevisionApprovedNotification;
-
+/**
+ * @deprecated Use RevisionService::approve() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the RevisionService directly.
+ */
 class ApproveRevision
 {
     use AsAction;
 
     /**
-     * Approve a revision manually.
+     * @deprecated Use RevisionService::approve() instead
      */
-    public function handle(Revision $revision, User $reviewer, ?string $reason = null): bool
+    public function handle(...$args)
     {
-        if (! $revision->isPending()) {
-            throw new \InvalidArgumentException('Revision is not pending approval');
-        }
-
-        Log::info('Manually approving revision', [
-            'revision_id' => $revision->id,
-            'reviewed_by' => $reviewer->id,
-            'reason' => $reason,
-        ]);
-
-        $result = DB::transaction(function () use ($revision, $reviewer, $reason) {
-            // Update revision status
-            $revision->update([
-                'status' => Revision::STATUS_APPROVED,
-                'reviewed_by_id' => $reviewer->id,
-                'reviewed_at' => now(),
-                'review_reason' => $reason ?? 'Approved by moderator',
-            ]);
-
-            // Apply the changes to the model
-            ApplyRevision::run($revision);
-
-            // Award trust points
-            AwardTrustPointsForRevision::run($revision);
-
-            return true;
-        });
-
-        RevisionApprovedEvent::dispatch($revision, $reviewer);
-
-        // Send notification outside transaction
-        try {
-            $revision->submittedBy->notify(new RevisionApprovedNotification($revision));
-        } catch (\Exception $e) {
-            Log::error('Failed to send revision approved notification', [
-                'revision_id' => $revision->id,
-                'submitter_id' => $revision->submitted_by_id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        return $result;
+        return app(RevisionService::class)->approve(...$args);
     }
 }

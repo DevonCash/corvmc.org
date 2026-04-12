@@ -2,29 +2,23 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use CorvMC\Membership\Models\MemberProfile;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\MemberProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use MemberProfileService::setFlags() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the MemberProfileService directly.
+ */
 class SetFlags
 {
     use AsAction;
 
     /**
-     * Set profile flags.
+     * @deprecated Use MemberProfileService::setFlags() instead
      */
-    public function handle(MemberProfile $profile, array $flags): bool
+    public function handle(...$args)
     {
-        DB::transaction(function () use ($profile, $flags) {
-            // Remove all current flags
-            $profile->flags()->delete();
-
-            // Add new flags
-            foreach ($flags as $flag) {
-                $profile->flag($flag);
-            }
-        });
-
-        return true;
+        return app(MemberProfileService::class)->setFlags(...$args);
     }
 }

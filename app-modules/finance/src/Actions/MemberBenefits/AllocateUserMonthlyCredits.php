@@ -2,35 +2,24 @@
 
 namespace CorvMC\Finance\Actions\MemberBenefits;
 
-use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
-use CorvMC\Finance\Enums\CreditType;
-use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
+use CorvMC\Finance\Services\MemberBenefitService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use MemberBenefitService::allocateUserMonthlyCredits() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the MemberBenefitService directly.
+ */
 class AllocateUserMonthlyCredits
 {
     use AsAction;
 
     /**
-     * Allocate monthly credits to a sustaining member.
-     *
-     * This should be called when a user becomes a sustaining member
-     * or at the start of each billing period.
-     *
-     * @param  User  $user  The user to allocate credits to
-     * @param  int|null  $subscriptionAmountInCents  Optional subscription amount in cents (from verified payment metadata)
+     * @deprecated Use MemberBenefitService::allocateUserMonthlyCredits() instead
      */
     public function handle(User $user, ?int $subscriptionAmountInCents = null): void
     {
-        if (! $user->isSustainingMember()) {
-            return;
-        }
-
-        $hours = GetUserMonthlyFreeHours::run($user, $subscriptionAmountInCents);
-        $blocks = Reservation::hoursToBlocks($hours);
-
-        // Use AllocateMonthlyCredits to handle the allocation (handles reset logic)
-        AllocateMonthlyCredits::run($user, $blocks, CreditType::FreeHours);
+        app(MemberBenefitService::class)->allocateUserMonthlyCredits($user, $subscriptionAmountInCents);
     }
 }

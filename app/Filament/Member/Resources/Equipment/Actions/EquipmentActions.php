@@ -2,6 +2,9 @@
 
 namespace App\Filament\Member\Resources\Equipment\Actions;
 
+use App\Filament\Actions\Equipment\EquipmentCheckoutAction;
+use App\Filament\Actions\Equipment\EquipmentReturnAction;
+
 /**
  * Factory class for all Equipment-related Filament actions.
  *
@@ -15,12 +18,12 @@ class EquipmentActions
      */
     public static function checkoutToMember()
     {
-        return CheckoutToMemberAction::make();
+        return EquipmentCheckoutAction::make();
     }
 
     public static function processReturn()
     {
-        return ProcessReturnAction::make();
+        return EquipmentReturnAction::make();
     }
 
     public static function markOverdue()

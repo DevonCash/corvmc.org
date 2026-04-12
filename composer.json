@@ -10,7 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "bezhansalleh/filament-panel-switch": "dev-main",
+        "bezhansalleh/filament-panel-switch": "^3.0",
         "corvmc/bands": "*",
         "corvmc/equipment": "*",
         "corvmc/events": "*",
@@ -35,7 +35,6 @@
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^2.10.1",
         "league/flysystem-aws-s3-v3": "^3.29",
-        "lorisleiva/laravel-actions": "^2.9",
         "maatwebsite/excel": "^3.1",
         "mews/purifier": "^3.4",
         "monicahq/laravel-cloudflare": "^4.0",
@@ -66,6 +65,7 @@
         "barryvdh/laravel-ide-helper": "^3.6",
         "fakerphp/faker": "^1.23",
         "filament/upgrade": "^5.0",
+        "fruitcake/laravel-debugbar": "^4.2",
         "larastan/larastan": "^3.8",
         "laravel/boost": "^1.1",
         "laravel/pail": "^1.2.2",
@@ -154,10 +154,6 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/DevonCash/filament-panel-switch"
-        },
         {
             "type": "path",
             "url": "app-modules/*",

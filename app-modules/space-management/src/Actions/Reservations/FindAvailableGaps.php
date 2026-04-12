@@ -3,60 +3,28 @@
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use CorvMC\SpaceManagement\Models\Reservation;
+use CorvMC\SpaceManagement\Services\ReservationService;
 use Carbon\Carbon;
 use Lorisleiva\Actions\Concerns\AsAction;
 use Spatie\Period\Period;
 use Spatie\Period\PeriodCollection;
 use Spatie\Period\Precision;
 
+/**
+ * @deprecated Use ReservationService::findAvailableGaps() instead
+ * 
+ * This action is maintained for backward compatibility.
+ * New code should use the ReservationService directly.
+ */
 class FindAvailableGaps
 {
     use AsAction;
 
     /**
-     * Find gaps between reservations for a given date using Period operations.
-     * Note: Events automatically create reservations, so we only need to check reservations.
+     * @deprecated Use ReservationService::findAvailableGaps() instead
      */
     public function handle(Carbon $date, int $minimumDurationMinutes = 60): array
     {
-        $businessHoursStart = $date->copy()->setTime(9, 0);
-        $businessHoursEnd = $date->copy()->setTime(22, 0);
-        $businessPeriod = Period::make($businessHoursStart, $businessHoursEnd, Precision::MINUTE());
-
-        // Get all reservations for the day
-        $dayStart = $date->copy()->setTime(0, 0);
-        $dayEnd = $date->copy()->setTime(23, 59);
-
-        $reservations = Reservation::where('status', '!=', 'cancelled')
-            ->where('reserved_until', '>', $dayStart)
-            ->where('reserved_at', '<', $dayEnd)
-            ->orderBy('reserved_at')
-            ->get();
-
-        // Combine all occupied periods
-        $occupiedPeriods = collect();
-
-        // Add reservation periods
-        $reservations->each(function (Reservation $reservation) use ($occupiedPeriods) {
-            if (method_exists($reservation, 'getPeriod')) {
-                $period = $reservation->getPeriod();
-                if ($period) {
-                    $occupiedPeriods->push($period);
-                }
-            }
-        });
-
-        if ($occupiedPeriods->isEmpty()) {
-            return [$businessPeriod]; // Entire business day is available
-        }
-
-        // Use Period collection to find gaps
-        $periodCollection = new PeriodCollection(...$occupiedPeriods->toArray());
-        $gaps = $periodCollection->gaps();
-
-        return collect($gaps)
-            ->filter(fn (Period $gap) => $gap->length() >= $minimumDurationMinutes)
-            ->values()
-            ->toArray();
+        return app(ReservationService::class)->findAvailableGaps($date, $minimumDurationMinutes);
     }
 }

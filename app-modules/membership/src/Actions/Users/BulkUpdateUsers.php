@@ -2,31 +2,23 @@
 
 namespace CorvMC\Membership\Actions\Users;
 
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\UserManagementService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use UserManagementService::bulkUpdate() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the UserManagementService directly.
+ */
 class BulkUpdateUsers
 {
     use AsAction;
 
     /**
-     * Bulk update users.
+     * @deprecated Use UserManagementService::bulkUpdate() instead
      */
-    public function handle(array $userIds, array $data): int
+    public function handle(...$args)
     {
-        return DB::transaction(function () use ($userIds, $data) {
-            $updatedCount = 0;
-
-            foreach ($userIds as $userId) {
-                $user = User::find($userId);
-                if ($user) {
-                    UpdateUser::run($user, $data);
-                    $updatedCount++;
-                }
-            }
-
-            return $updatedCount;
-        });
+        return app(UserManagementService::class)->bulkUpdate(...$args);
     }
 }

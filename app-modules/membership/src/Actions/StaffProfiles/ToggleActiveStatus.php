@@ -2,20 +2,23 @@
 
 namespace CorvMC\Membership\Actions\StaffProfiles;
 
-use App\Models\StaffProfile;
+use CorvMC\Membership\Services\StaffProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use StaffProfileService::toggleActiveStatus() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the StaffProfileService directly.
+ */
 class ToggleActiveStatus
 {
     use AsAction;
 
     /**
-     * Toggle active status.
+     * @deprecated Use StaffProfileService::toggleActiveStatus() instead
      */
-    public function handle(StaffProfile $staffProfile): bool
+    public function handle(...$args)
     {
-        return $staffProfile->update([
-            'is_active' => ! $staffProfile->is_active,
-        ]);
+        return app(StaffProfileService::class)->toggleActiveStatus(...$args);
     }
 }

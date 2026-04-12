@@ -2,79 +2,23 @@
 
 namespace App\Actions\Notifications;
 
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
-use CorvMC\SpaceManagement\Models\Reservation;
-use App\Models\User;
-use CorvMC\SpaceManagement\Notifications\ReservationReminderNotification;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
+use App\Services\NotificationService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use NotificationService::sendReservationReminders() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the NotificationService directly.
+ */
 class SendReservationReminders
 {
     use AsAction;
 
     /**
-     * Send reservation reminders for upcoming reservations.
+     * @deprecated Use NotificationService::sendReservationReminders() instead
      */
     public function handle(bool $dryRun = false): array
     {
-        $tomorrow = Carbon::now()->addDay();
-        $startOfTomorrow = $tomorrow->copy()->startOfDay();
-        $endOfTomorrow = $tomorrow->copy()->endOfDay();
-
-        $reservations = Reservation::with('reservable')
-            ->status(ReservationStatus::Confirmed)
-            ->whereBetween('reserved_at', [$startOfTomorrow, $endOfTomorrow])
-            ->get();
-
-        $results = [
-            'total' => $reservations->count(),
-            'sent' => 0,
-            'failed' => 0,
-            'errors' => [],
-            'reservations' => [],
-        ];
-
-        foreach ($reservations as $reservation) {
-            $reservable = $reservation->reservable;
-            $reservationData = [
-                'id' => $reservation->id,
-                'user_name' => $reservable instanceof User ? $reservable->name : null,
-                'user_email' => $reservable instanceof User ? $reservable->email : null,
-                'time_range' => $reservation->time_range,
-                'status' => 'pending',
-            ];
-
-            if (! $dryRun && $reservable instanceof User) {
-                try {
-                    $reservable->notify(new ReservationReminderNotification($reservation));
-                    $reservationData['status'] = 'sent';
-                    $results['sent']++;
-
-                    Log::info('Reservation reminder sent', [
-                        'reservation_id' => $reservation->id,
-                        'user_email' => $reservable->email,
-                    ]);
-                } catch (\Exception $e) {
-                    $reservationData['status'] = 'failed';
-                    $reservationData['error'] = $e->getMessage();
-                    $results['failed']++;
-                    $results['errors'][] = "Reservation {$reservation->id}: {$e->getMessage()}";
-
-                    Log::error('Failed to send reservation reminder', [
-                        'reservation_id' => $reservation->id,
-                        'user_email' => $reservable->email,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            } else {
-                $reservationData['status'] = 'dry_run';
-            }
-
-            $results['reservations'][] = $reservationData;
-        }
-
-        return $results;
+        return app(NotificationService::class)->sendReservationReminders($dryRun);
     }
 }

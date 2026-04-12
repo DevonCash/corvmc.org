@@ -1,3 +1,7 @@
+@php
+    $members = $this->getMembers();
+@endphp
+
 <x-filament-panels::page>
     <div class="space-y-6">
         <!-- Search Bar -->
@@ -35,7 +39,7 @@
 
             <div class="grid gap-6"
                 style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); max-width: calc(4 * (280px + 1.5rem) - 1.5rem);">
-                @forelse ($this->getMembers() as $member)
+                @forelse ($members as $member)
                     <x-membership::member-card :member="$member" :link="route('filament.member.directory.resources.members.view', $member)" />
                 @empty
                     <div class="col-span-full text-center py-12 space-y-2">
@@ -50,9 +54,9 @@
                 @endforelse
             </div>
 
-            @if ($this->getMembers()->hasPages())
+            @if ($members->hasPages())
                 <div class="mt-6">
-                    {{ $this->getMembers()->links() }}
+                    {{ $members->links() }}
                 </div>
             @endif
         </div>

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Member\Resources\Equipment\Actions;
 
-use CorvMC\Equipment\Actions\MarkOverdue;
+use CorvMC\Equipment\Services\EquipmentService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 
@@ -25,7 +25,7 @@ class MarkOverdueAction
                     throw new \Exception('No active loan found for this equipment.');
                 }
 
-                MarkOverdue::run($currentLoan);
+                app(EquipmentService::class)->markOverdue($currentLoan);
 
                 Notification::make()
                     ->title('Loan Marked Overdue')

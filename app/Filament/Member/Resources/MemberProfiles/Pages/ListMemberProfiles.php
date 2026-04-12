@@ -68,7 +68,7 @@ class ListMemberProfiles extends Page
 
     public function getMembers()
     {
-        $query = MemberProfile::with(['user', 'tags'])
+        $query = MemberProfile::with(['user', 'tags', 'flags', 'media'])
             ->whereHas('user', function (Builder $query) {
                 $query->where('name', '!=', '');
             });

@@ -34,11 +34,20 @@ class ListReservations extends ListRecords
         ];
     }
 
+    public function table(Table $table): Table
+    {
+        return parent::table($table)
+            ->modifyQueryUsing(fn(Builder $query) => $query->with(['charge']))
+            ->emptyStateActions([
+                $this->getReserveSpaceAction(),
+            ]);
+    }
+
     public function getTabs(): array
     {
         return [
             'upcoming' => Tab::make()
-                ->modifyQueryUsing(fn (Builder $query) => $query->upcoming()),
+                ->modifyQueryUsing(fn(Builder $query) => $query->upcoming()),
             'all' => Tab::make(),
         ];
     }
@@ -88,13 +97,6 @@ class ListReservations extends ListRecords
         ];
     }
 
-    public function table(Table $table): Table
-    {
-        return parent::table($table)
-            ->emptyStateActions([
-                $this->getReserveSpaceAction(),
-            ]);
-    }
 
     public function getDefaultActiveTab(): string|int|null
     {

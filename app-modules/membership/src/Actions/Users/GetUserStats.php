@@ -2,26 +2,23 @@
 
 namespace CorvMC\Membership\Actions\Users;
 
-use App\Models\User;
+use CorvMC\Membership\Services\UserManagementService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use UserManagementService::getUserStats() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the UserManagementService directly.
+ */
 class GetUserStats
 {
     use AsAction;
 
     /**
-     * Get user statistics.
+     * @deprecated Use UserManagementService::getUserStats() instead
      */
-    public function handle(): array
+    public function handle(...$args)
     {
-        return [
-            'total_users' => User::count(),
-            'active_users' => User::whereNull('deleted_at')->count(),
-            'deactivated_users' => User::onlyTrashed()->count(),
-            'users_this_month' => User::where('created_at', '>=', now()->startOfMonth())->count(),
-            'sustaining_members' => User::whereHas('roles', function ($q) {
-                $q->where('name', 'sustaining member');
-            })->count(),
-        ];
+        return app(UserManagementService::class)->getUserStats(...$args);
     }
 }

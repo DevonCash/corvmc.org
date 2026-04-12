@@ -41,6 +41,12 @@ class UsersTable
                     ->searchable()
                     ->sortable(),
 
+                TextColumn::make('phone')
+                    ->label('Phone')
+                    ->searchable()
+                    ->copyable()
+                    ->toggleable(isToggledHiddenByDefault: false),
+
                 TextColumn::make('roles.name')
                     ->badge()
                     ->label('Roles')

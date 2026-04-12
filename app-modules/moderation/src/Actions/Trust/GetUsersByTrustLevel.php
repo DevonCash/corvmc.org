@@ -2,33 +2,23 @@
 
 namespace CorvMC\Moderation\Actions\Trust;
 
-use CorvMC\Moderation\Enums\TrustLevel;
-use App\Models\User;
-use CorvMC\Moderation\Models\UserTrustBalance;
-use Illuminate\Support\Collection;
+use CorvMC\Moderation\Services\TrustService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use TrustService::getUsersByTrustLevel() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the TrustService directly.
+ */
 class GetUsersByTrustLevel
 {
     use AsAction;
 
     /**
-     * Get users by trust level for queries/admin.
+     * @deprecated Use TrustService::getUsersByTrustLevel() instead
      */
-    public function handle(TrustLevel $level, string $contentType = 'global'): Collection
+    public function handle(...$args)
     {
-        $minPoints = $level->getThreshold();
-        $nextLevel = $level->getNextLevel();
-        $maxPoints = $nextLevel?->getThreshold() - 1;
-
-        $query = UserTrustBalance::where('content_type', $contentType)
-            ->where('balance', '>=', $minPoints);
-
-        if ($maxPoints !== null) {
-            $query->where('balance', '<=', $maxPoints);
-        }
-
-        return User::whereIn('id', $query->pluck('user_id'))
-            ->get();
+        return app(TrustService::class)->getUsersByTrustLevel(...$args);
     }
 }

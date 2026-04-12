@@ -2,27 +2,24 @@
 
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
+use CorvMC\SpaceManagement\Services\RecurringReservationService;
 use Lorisleiva\Actions\Concerns\AsAction;
-use RRule\RRule;
 
+/**
+ * @deprecated Use RecurringReservationService::formatRRuleForHumans() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the RecurringReservationService directly.
+ */
 class FormatRRuleForHumans
 {
     use AsAction;
 
     /**
-     * Format RRULE string into human-readable text.
-     *
-     * Returns the original rule string if parsing fails.
+     * @deprecated Use RecurringReservationService::formatRRuleForHumans() instead
      */
     // TODO: Turn this into a cast
     public function handle(string $ruleString): string
     {
-        try {
-            $rrule = new RRule($ruleString);
-
-            return $rrule->humanReadable();
-        } catch (\Exception $e) {
-            return $ruleString;
-        }
+        return app(RecurringReservationService::class)->formatRRuleForHumans($ruleString);
     }
 }

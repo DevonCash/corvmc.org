@@ -2,118 +2,46 @@
 
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
-use CorvMC\SpaceManagement\Events\ReservationConfirmed;
-use App\Filament\Shared\Actions\Action;
+use App\Filament\Actions\Reservations\ReservationConfirmAction;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use CorvMC\SpaceManagement\Models\Reservation;
-use CorvMC\SpaceManagement\Notifications\ReservationConfirmedNotification;
-use Filament\Forms\Components\Toggle;
-use Illuminate\Support\Facades\{DB, Log};
+use CorvMC\SpaceManagement\Services\ReservationService;
+use Filament\Actions\Action;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use ReservationService::confirm() instead
+ * 
+ * This action is maintained for backward compatibility.
+ * New code should use the ReservationService directly.
+ */
 class ConfirmReservation
 {
     use AsAction;
 
     /**
-     * Check if a reservation can be confirmed based on business rules.
+     * @deprecated Use ReservationService::checkConfirmationReadiness() instead
      */
-    public static function canConfirm(Reservation $reservation): bool
+    public static function canConfirm($reservation): bool
     {
-        // Only RehearsalReservations can be confirmed
-        if (! $reservation instanceof RehearsalReservation) {
-            return false;
-        }
-
-        // Must be in a confirmable status
-        if (!in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
-            return false;
-        }
-
-        // Can't confirm more than 5 days in advance (3 days before reservation)
-        if (!$reservation->reserved_at->subDays(5)->isNowOrPast()) {
-            return false;
-        }
-
-        return true;
+        $result = app(ReservationService::class)->checkConfirmationReadiness($reservation);
+        return $result['can_confirm'];
     }
 
     /**
-     * Confirm a scheduled or reserved reservation.
-     *
-     * For Scheduled reservations: Credits were already deducted at scheduling time.
-     * For Reserved reservations: Credits are deducted now via ReservationConfirmed event.
-     *
-     * NOTE: Credit deduction for Reserved status is handled by Finance module via
-     * ReservationConfirmed event listener.
+     * @deprecated Use ReservationService::confirm() instead
      */
     public function handle(RehearsalReservation $reservation, bool $notify_user = true): RehearsalReservation
     {
-        if (! self::canConfirm($reservation)) {
-            return $reservation;
-        }
-
-        $user = $reservation->getResponsibleUser();
-
-        // Capture previous status for event
-        $previousStatus = $reservation->status;
-
-        // Complete the database transaction first
-        $reservation = DB::transaction(function () use ($reservation, $previousStatus) {
-            // Update status to confirmed
-            $reservation->update([
-                'status' => ReservationStatus::Confirmed,
-            ]);
-
-            // Fire event for Finance module to deduct deferred credits (Reserved → Confirmed)
-            ReservationConfirmed::dispatch($reservation, $previousStatus);
-
-            return $reservation->fresh();
-        });
-
-        // Send notification outside transaction - don't let email failures affect the confirmation
-        try {
-            if ($notify_user) {
-                $user->notify(new ReservationConfirmedNotification($reservation));
-            }
-        } catch (\Exception $e) {
-            Log::error('Failed to send reservation confirmation email', [
-                'reservation_id' => $reservation->id,
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        return $reservation;
+        return app(ReservationService::class)->confirm($reservation, $notify_user);
     }
 
+    /**
+     * @deprecated Use ReservationConfirmAction::make() instead
+     * 
+     * Get the Filament action for confirming a reservation.
+     */
     public static function filamentAction(): Action
     {
-        return Action::make('confirm')
-            ->label('Confirm')
-            ->icon('tabler-check')
-            ->color('success')
-            ->visible(fn (Reservation $record) => self::canConfirm($record))
-            ->authorize('confirm')
-            ->schema([
-                Toggle::make('notify_user')
-                    ->label('Notify User')
-                    ->default(true)
-                    ->helperText('Send a confirmation email to the user.'),
-            ])
-            ->requiresConfirmation()
-            ->action(function (Reservation $record, array $data) {
-                if (! $record instanceof RehearsalReservation) {
-                    return;
-                }
-
-                static::run($record);
-
-                \Filament\Notifications\Notification::make()
-                    ->title('Reservation confirmed and user notified')
-                    ->success()
-                    ->send();
-            });
+        return ReservationConfirmAction::make();
     }
 }

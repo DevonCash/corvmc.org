@@ -3,27 +3,23 @@
 namespace CorvMC\Finance\Actions\Payments;
 
 use Brick\Money\Money;
+use CorvMC\Finance\Services\FeeService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use FeeService::getFeeDisplayInfo() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the FeeService directly.
+ */
 class GetFeeDisplayInfo
 {
     use AsAction;
 
     /**
-     * Get fee information for display purposes (helper text, tooltips, etc.)
+     * @deprecated Use FeeService::getFeeDisplayInfo() instead
      */
     public function handle(Money $baseAmount): array
     {
-        $totalWithCoverage = CalculateTotalWithFeeCoverage::run($baseAmount);
-        $actualFeeAmount = $totalWithCoverage->minus($baseAmount);
-
-        return [
-            'display_fee' => $actualFeeAmount->getAmount()->toFloat(),
-            'total_with_coverage' => $totalWithCoverage->getAmount()->toFloat(),
-            'message' => sprintf(
-                'Add $%.2f to cover processing fees (2.9%% + $0.30)',
-                $actualFeeAmount->getAmount()->toFloat()
-            ),
-        ];
+        return app(FeeService::class)->getFeeDisplayInfo($baseAmount);
     }
 }

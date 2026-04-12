@@ -3,25 +3,23 @@
 namespace CorvMC\Finance\Actions\Payments;
 
 use Brick\Money\Money;
+use CorvMC\Finance\Services\FeeService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use FeeService::calculateTotalWithFeeCoverage() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the FeeService directly.
+ */
 class CalculateTotalWithFeeCoverage
 {
     use AsAction;
 
     /**
-     * Calculate the total amount needed to cover both the base amount
-     * and the processing fees. This accounts for the fee applying to itself.
-     *
-     * Formula: Total = (Base + Fixed Fee) / (1 - Rate)
-     * This ensures that after Stripe takes their cut, we net the full base amount.
+     * @deprecated Use FeeService::calculateTotalWithFeeCoverage() instead
      */
     public function handle(Money $baseAmount): Money
     {
-        $fixedFee = Money::ofMinor(CalculateProcessingFee::STRIPE_FIXED_FEE_CENTS, 'USD');
-        $numerator = $baseAmount->plus($fixedFee);
-        $denominator = 1 - CalculateProcessingFee::STRIPE_RATE;
-
-        return $numerator->dividedBy($denominator, \Brick\Math\RoundingMode::HALF_UP);
+        return app(FeeService::class)->calculateTotalWithFeeCoverage($baseAmount);
     }
 }

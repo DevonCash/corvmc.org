@@ -28,14 +28,16 @@
             @php $genres = $record->tagsWithType('genre')->pluck('name'); @endphp
             @if ($genres->count() > 0)
                 <section>
-                    <h2 class="text-lg font-bold text-base-content mb-4 uppercase tracking-wide border-b border-base-300 pb-2">
+                    <h2
+                        class="text-lg font-bold text-base-content mb-4 uppercase tracking-wide border-b border-base-300 pb-2">
                         Genres
                     </h2>
                     <div class="flex flex-wrap gap-2">
                         @foreach ($genres as $genre)
                             @if ($showEditButton)
                                 <a href="{{ route('filament.member.directory.resources.bands.index', ['tableFilters' => ['genres' => ['values' => [$genre]]]]) }}"
-                                    target="_blank" class="badge badge-outline badge-secondary badge-sm hover:badge-secondary">
+                                    target="_blank"
+                                    class="badge badge-outline badge-secondary badge-sm hover:badge-secondary">
                                     {{ $genre }}
                                 </a>
                             @else
@@ -50,14 +52,16 @@
             @php $influences = $record->tagsWithType('influence')->pluck('name'); @endphp
             @if ($influences->count() > 0)
                 <section>
-                    <h2 class="text-lg font-bold text-base-content mb-4 uppercase tracking-wide border-b border-base-300 pb-2">
+                    <h2
+                        class="text-lg font-bold text-base-content mb-4 uppercase tracking-wide border-b border-base-300 pb-2">
                         Influences
                     </h2>
                     <div class="flex flex-wrap gap-2">
                         @foreach ($influences as $influence)
                             @if ($showEditButton)
                                 <a href="{{ route('filament.member.directory.resources.bands.index', ['tableFilters' => ['influences' => ['values' => [$influence]]]]) }}"
-                                    target="_blank" class="badge badge-outline badge-accent badge-sm hover:badge-accent">
+                                    target="_blank"
+                                    class="badge badge-outline badge-accent badge-sm hover:badge-accent">
                                     {{ $influence }}
                                 </a>
                             @else
@@ -77,14 +81,17 @@
             <x-profile-contact :profile="$record" />
 
             {{-- Band Members --}}
-            @if ($record->activeMembers()->count() > 0)
+            @php
+                $activeMembers = $record->activeMembers()->with('user.profile')->get();
+            @endphp
+            @if ($activeMembers->count() > 0)
                 <div>
                     <h3
                         class="font-bold text-base-content mb-3 uppercase tracking-wide text-sm border-b border-base-300 pb-1">
                         Members
                     </h3>
                     <div class="space-y-2 text-sm">
-                        @foreach ($record->activeMembers as $memberRecord)
+                        @foreach ($activeMembers as $memberRecord)
                             @php
                                 $profile = $memberRecord->user->profile;
                                 $hasVisibleProfile = $profile?->isVisible(auth()->user());
@@ -104,7 +111,8 @@
                                     <span class="font-medium text-base-content">{{ $memberRecord->user->name }}</span>
                                 @endif
                                 @if ($memberRecord->position)
-                                    <div class="text-xs text-base-content/60 italic">{{ $memberRecord->position }}</div>
+                                    <div class="text-xs text-base-content/60 italic">{{ $memberRecord->position }}
+                                    </div>
                                 @endif
                             </div>
                         @endforeach

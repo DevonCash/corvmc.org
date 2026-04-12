@@ -2,25 +2,23 @@
 
 namespace App\Actions\Invitations;
 
-use App\Models\Invitation;
-use Illuminate\Support\Facades\Auth;
+use App\Services\InvitationService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use InvitationService::generate() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the InvitationService directly.
+ */
 class GenerateInvitation
 {
     use AsAction;
 
     /**
-     * Generate a signed invitation token for a user.
+     * @deprecated Use InvitationService::generate() instead
      */
-    public function handle(string $email, array $data = []): Invitation
+    public function handle(...$args)
     {
-        return Invitation::create([
-            'inviter_id' => Auth::user()?->id,
-            'email' => $email,
-            'expires_at' => now()->addWeeks(1),
-            'message' => $data['message'] ?? 'Join me at Corvallis Music Collective!',
-            'data' => $data,
-        ]);
+        return app(InvitationService::class)->generate(...$args);
     }
 }

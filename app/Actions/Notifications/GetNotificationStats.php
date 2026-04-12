@@ -2,43 +2,23 @@
 
 namespace App\Actions\Notifications;
 
-use CorvMC\SpaceManagement\Models\Reservation;
-use App\Models\User;
-use Carbon\Carbon;
+use App\Services\NotificationService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use NotificationService::getStats() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the NotificationService directly.
+ */
 class GetNotificationStats
 {
     use AsAction;
 
     /**
-     * Get statistics about notification sending.
+     * @deprecated Use NotificationService::getStats() instead
      */
     public function handle(): array
     {
-        $tomorrow = Carbon::now()->addDay();
-
-        return [
-            'reservations_tomorrow' => Reservation::with('user')
-                ->where('status', 'confirmed')
-                ->whereBetween('reserved_at', [
-                    $tomorrow->copy()->startOfDay(),
-                    $tomorrow->copy()->endOfDay(),
-                ])
-                ->count(),
-            'pending_reservations' => Reservation::where('status', 'pending')
-                ->where('created_at', '<=', Carbon::now()->subDay())
-                ->where('reserved_at', '>', Carbon::now())
-                ->count(),
-            'inactive_users' => User::whereNotNull('email_verified_at')
-                ->whereDoesntHave('reservations', function ($query) {
-                    $query->where('created_at', '>', Carbon::now()->subDays(90));
-                })
-                ->get()
-                ->filter(function ($user) {
-                    return ! $user->isSustainingMember();
-                })
-                ->count(),
-        ];
+        return app(NotificationService::class)->getStats();
     }
 }

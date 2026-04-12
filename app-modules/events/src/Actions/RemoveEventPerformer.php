@@ -2,35 +2,23 @@
 
 namespace CorvMC\Events\Actions;
 
-use CorvMC\Bands\Models\Band;
-use CorvMC\Events\Models\Event;
+use CorvMC\Events\Services\EventService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use EventService::removePerformer() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the EventService directly.
+ */
 class RemoveEventPerformer
 {
     use AsAction;
 
     /**
-     * Remove a performer (band) from an event.
-     *
-     * @param  Event  $event  The event to remove the performer from
-     * @param  Band  $band  The band to remove
-     * @return bool True if performer was removed, false if not found
+     * @deprecated Use EventService::removePerformer() instead
      */
-    public function handle(Event $event, Band $band): bool
+    public function handle(...$args)
     {
-        // Check if the band is a performer
-        if (! $event->performers()->where('band_profile_id', $band->id)->exists()) {
-            return false;
-        }
-
-        // Detach the performer
-        $event->performers()->detach($band->id);
-
-        // Future: Add notification logic here
-        // - Notify band members that they were removed from an event
-        // - Notify event organizer
-
-        return true;
+        return app(EventService::class)->removePerformer(...$args);
     }
 }

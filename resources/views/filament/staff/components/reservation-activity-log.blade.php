@@ -1,5 +1,5 @@
 @php
-    $activities = $getState();
+    $activities = $getState() ?? collect();
     $eventColors = [
         'created' => 'bg-green-500',
         'confirmed' => 'bg-green-500',

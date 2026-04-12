@@ -2,10 +2,18 @@
 
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
-use CorvMC\Support\Actions\GenerateRecurringInstances;
+use CorvMC\SpaceManagement\Services\RecurringReservationService;
+use CorvMC\Support\Enums\RecurringSeriesStatus;
 use CorvMC\Support\Models\RecurringSeries;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use RecurringReservationService::generateFutureRecurringInstances() instead.
+ * This action will be removed in a future version.
+ * 
+ * The business logic has been moved to RecurringReservationService for better
+ * organization and testability. This action now delegates to the service.
+ */
 class GenerateFutureRecurringInstances
 {
     use AsAction;
@@ -15,7 +23,7 @@ class GenerateFutureRecurringInstances
      */
     public function handle(): void
     {
-        $activeSeries = RecurringSeries::where('status', 'active')
+        $activeSeries = RecurringSeries::where('status', RecurringSeriesStatus::ACTIVE)
             ->where('recurable_type', 'rehearsal_reservation')
             ->where(function ($q) {
                 $q->whereNull('series_end_date')
@@ -23,8 +31,10 @@ class GenerateFutureRecurringInstances
             })
             ->get();
 
+        $service = app(RecurringReservationService::class);
+        
         foreach ($activeSeries as $series) {
-            GenerateRecurringInstances::run($series);
+            $service->generateFutureRecurringInstances($series);
         }
     }
 }

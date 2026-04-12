@@ -2,6 +2,7 @@
 
 namespace CorvMC\Moderation\Models;
 
+use BackedEnum;
 use CorvMC\Moderation\Concerns\HasVisibility;
 use CorvMC\Moderation\Concerns\Reportable;
 use CorvMC\Moderation\Concerns\Revisionable;
@@ -88,4 +89,16 @@ abstract class ContentModel extends Model implements HasMedia, ReportableContrac
             ->performOnCollections('avatar');
     }
 
+
+    // Overload hasFlag to use loaded flags if available, otherwise fallback to parent method
+    public function hasFlag(BackedEnum|string $name): bool
+    {
+        if ($this->relationLoaded('flags')) {
+            return $this->flags->contains('name', $name);
+        }
+        return $this
+            ->flags()
+            ->where('name', $this->enumValue($name))
+            ->exists();
+    }
 }

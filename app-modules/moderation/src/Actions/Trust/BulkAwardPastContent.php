@@ -2,23 +2,23 @@
 
 namespace CorvMC\Moderation\Actions\Trust;
 
-use App\Models\User;
+use CorvMC\Moderation\Services\TrustService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use TrustService::bulkAwardPastContent() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the TrustService directly.
+ */
 class BulkAwardPastContent
 {
     use AsAction;
 
     /**
-     * Bulk award points for past successful content (migration/backfill).
+     * @deprecated Use TrustService::bulkAwardPastContent() instead
      */
-    public function handle(User $user, string $contentType = 'global'): int
+    public function handle(...$args)
     {
-        $totalPoints = 0;
-
-        // CommunityEvent was removed - now handled by Event model
-        // Add logic for other content types as needed
-
-        return $totalPoints;
+        return app(TrustService::class)->bulkAwardPastContent(...$args);
     }
 }

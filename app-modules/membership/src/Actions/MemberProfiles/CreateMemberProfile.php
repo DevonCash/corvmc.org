@@ -2,53 +2,23 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use CorvMC\Membership\Events\MemberProfileCreated as MemberProfileCreatedEvent;
-use CorvMC\Membership\Models\MemberProfile;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\MemberProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use MemberProfileService::create() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the MemberProfileService directly.
+ */
 class CreateMemberProfile
 {
     use AsAction;
 
     /**
-     * Create a new member profile.
+     * @deprecated Use MemberProfileService::create() instead
      */
-    public function handle(array $data): MemberProfile
+    public function handle(...$args)
     {
-        $profile = DB::transaction(function () use ($data) {
-            $profile = MemberProfile::create($data);
-
-            // Handle tags if provided
-            if (isset($data['skills'])) {
-                foreach ($data['skills'] as $skill) {
-                    $profile->attachTag($skill, 'skill');
-                }
-            }
-
-            if (isset($data['genres'])) {
-                foreach ($data['genres'] as $genre) {
-                    $profile->attachTag($genre, 'genre');
-                }
-            }
-
-            if (isset($data['influences'])) {
-                foreach ($data['influences'] as $influence) {
-                    $profile->attachTag($influence, 'influence');
-                }
-            }
-
-            // Handle media uploads if provided
-            if (isset($data['avatar'])) {
-                $profile->addMediaFromRequest('avatar')
-                    ->toMediaCollection('avatar');
-            }
-
-            return $profile;
-        });
-
-        MemberProfileCreatedEvent::dispatch($profile);
-
-        return $profile;
+        return app(MemberProfileService::class)->create(...$args);
     }
 }

@@ -2,28 +2,23 @@
 
 namespace CorvMC\Equipment\Actions;
 
-use CorvMC\Equipment\Models\Equipment;
-use CorvMC\Equipment\Models\EquipmentLoan;
+use CorvMC\Equipment\Services\EquipmentService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use EquipmentService::getStatistics() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the EquipmentService directly.
+ */
 class GetStatistics
 {
     use AsAction;
 
     /**
-     * Get equipment statistics.
+     * @deprecated Use EquipmentService::getStatistics() instead
      */
-    public function handle(): array
+    public function handle(...$args)
     {
-        return [
-            'total_equipment' => Equipment::count(),
-            'available_equipment' => Equipment::available()->count(),
-            'checked_out_equipment' => Equipment::where('status', 'checked_out')->count(),
-            'maintenance_equipment' => Equipment::where('status', 'maintenance')->count(),
-            'active_loans' => EquipmentLoan::active()->count(),
-            'overdue_loans' => EquipmentLoan::overdue()->count(),
-            'donated_equipment' => Equipment::donated()->count(),
-            'loaned_to_cmc' => Equipment::onLoanToCmc()->count(),
-        ];
+        return app(EquipmentService::class)->getStatistics(...$args);
     }
 }

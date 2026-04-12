@@ -2,22 +2,23 @@
 
 namespace CorvMC\Moderation\Actions\Reports;
 
-use CorvMC\Moderation\Models\Report;
+use CorvMC\Moderation\Services\ReportService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use ReportService::getReportsNeedingAttention() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the ReportService directly.
+ */
 class GetReportsNeedingAttention
 {
     use AsAction;
 
     /**
-     * Get reports requiring moderation attention.
+     * @deprecated Use ReportService::getReportsNeedingAttention() instead
      */
-    public function handle(): \Illuminate\Database\Eloquent\Collection
+    public function handle(...$args)
     {
-        return Report::with(['reportable', 'reportedBy'])
-            ->where('status', 'pending')
-            ->orWhere('status', 'escalated')
-            ->orderBy('created_at', 'asc')
-            ->get();
+        return app(ReportService::class)->getReportsNeedingAttention(...$args);
     }
 }

@@ -2,20 +2,23 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use CorvMC\Membership\Models\MemberProfile;
+use CorvMC\Membership\Services\MemberProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use MemberProfileService::updateGenres() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the MemberProfileService directly.
+ */
 class UpdateGenres
 {
     use AsAction;
 
     /**
-     * Update member profile genres.
+     * @deprecated Use MemberProfileService::updateGenres() instead
      */
-    public function handle(MemberProfile $profile, array $genres): bool
+    public function handle(...$args)
     {
-        $profile->syncTagsWithType($genres, 'genre');
-
-        return true;
+        return app(MemberProfileService::class)->updateGenres(...$args);
     }
 }

@@ -3,39 +3,33 @@
 namespace App\Actions\Invitations;
 
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use App\Services\InvitationService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use InvitationService::accept() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the InvitationService directly.
+ */
 class AcceptInvitation
 {
     use AsAction;
 
     /**
-     * Accept an invitation and create the user account.
+     * @deprecated Use InvitationService::accept() instead
      */
     public function handle(string $token, array $userData): ?User
     {
-        $invitation = FindInvitationByToken::run($token);
-
-        if (! $invitation || $invitation->isExpired() || $invitation->isUsed()) {
+        $invitation = app(InvitationService::class)->findByToken($token);
+        
+        if (!$invitation) {
             return null;
         }
 
-        return DB::transaction(function () use ($invitation, $userData) {
-
-            // Create the user
-            $user = User::create([
-                'name' => $userData['name'],
-                'email' => $invitation->email,
-                'password' => Hash::make($userData['password']),
-                'email_verified_at' => now(),
-            ]);
-
-            // Mark invitation as used
-            $invitation->markAsUsed();
-
-            return $user;
-        });
+        try {
+            return app(InvitationService::class)->accept($invitation, $userData);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }

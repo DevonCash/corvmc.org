@@ -2,42 +2,23 @@
 
 namespace CorvMC\Membership\Actions\Users;
 
-use App\Models\User;
+use CorvMC\Membership\Services\UserManagementService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use UserManagementService::getUsers() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the UserManagementService directly.
+ */
 class GetUsers
 {
     use AsAction;
 
     /**
-     * Get paginated users with filters.
+     * @deprecated Use UserManagementService::getUsers() instead
      */
-    public function handle(array $filters = [], int $perPage = 15): \Illuminate\Pagination\LengthAwarePaginator
+    public function handle(...$args)
     {
-        $query = User::with(['roles', 'profile']);
-
-        // Apply filters
-        if (! empty($filters['role'])) {
-            $query->whereHas('roles', function ($q) use ($filters) {
-                $q->where('name', $filters['role']);
-            });
-        }
-
-        if (! empty($filters['search'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->where('name', 'like', "%{$filters['search']}%")
-                    ->orWhere('email', 'like', "%{$filters['search']}%");
-            });
-        }
-
-        if (isset($filters['active'])) {
-            if ($filters['active']) {
-                $query->whereNull('deleted_at');
-            } else {
-                $query->onlyTrashed();
-            }
-        }
-
-        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        return app(UserManagementService::class)->getUsers(...$args);
     }
 }

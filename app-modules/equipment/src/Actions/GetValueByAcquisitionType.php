@@ -2,22 +2,23 @@
 
 namespace CorvMC\Equipment\Actions;
 
-use CorvMC\Equipment\Models\Equipment;
+use CorvMC\Equipment\Services\EquipmentService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use EquipmentService::getValueByAcquisitionType() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the EquipmentService directly.
+ */
 class GetValueByAcquisitionType
 {
     use AsAction;
 
     /**
-     * Calculate total value of equipment by acquisition type.
+     * @deprecated Use EquipmentService::getValueByAcquisitionType() instead
      */
-    public function handle(): array
+    public function handle(...$args)
     {
-        return Equipment::selectRaw('acquisition_type, SUM(estimated_value) as total_value')
-            ->whereNotNull('estimated_value')
-            ->groupBy('acquisition_type')
-            ->pluck('total_value', 'acquisition_type')
-            ->toArray();
+        return app(EquipmentService::class)->getValueByAcquisitionType(...$args);
     }
 }

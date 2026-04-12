@@ -183,13 +183,6 @@ Gear lending requires CMC membership and good standing
 ::section[Ready to Get Involved?]{.bg-primary/20 .px-8 .py-12 description="Join the Corvallis Music Collective to access all our programs and connect with a vibrant community of musicians."}
 ::col[1/3]{.text-center}
 
-:::card{.text-center}
-:icon[tabler-number-1]
-
-**Join CMC**
-
-Become a member to access all programs
-:::
 
 ::step[Join CMC]{icon=tabler-number-1 description="Become a member to access all programs"}
 

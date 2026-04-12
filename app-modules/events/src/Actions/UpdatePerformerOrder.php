@@ -2,32 +2,23 @@
 
 namespace CorvMC\Events\Actions;
 
-use CorvMC\Bands\Models\Band;
-use CorvMC\Events\Models\Event;
+use CorvMC\Events\Services\EventService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use EventService::updatePerformerOrder() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the EventService directly.
+ */
 class UpdatePerformerOrder
 {
     use AsAction;
 
     /**
-     * Update a performer's order in the event lineup.
-     *
-     * @param  Event  $event  The event
-     * @param  Band  $band  The band whose order to update
-     * @param  int  $order  The new order position
-     * @return bool True if order was updated, false if band not found
+     * @deprecated Use EventService::updatePerformerOrder() instead
      */
-    public function handle(Event $event, Band $band, int $order): bool
+    public function handle(...$args)
     {
-        // Check if the band is a performer
-        if (! $event->performers()->where('band_profile_id', $band->id)->exists()) {
-            return false;
-        }
-
-        // Update the order
-        $event->performers()->updateExistingPivot($band->id, ['order' => $order]);
-
-        return true;
+        return app(EventService::class)->updatePerformerOrder(...$args);
     }
 }

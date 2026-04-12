@@ -2,48 +2,23 @@
 
 namespace CorvMC\Events\Actions;
 
-use CorvMC\Bands\Models\Band;
-use CorvMC\Events\Enums\EventStatus;
-use CorvMC\Events\Models\Event;
+use CorvMC\Events\Services\EventService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use EventService::duplicate() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the EventService directly.
+ */
 class DuplicateEvent
 {
     use AsAction;
 
     /**
-     * Duplicate an event with new date/time.
+     * @deprecated Use EventService::duplicate() instead
      */
-    public function handle(
-        Event $originalEvent,
-        \DateTime $newStartTime,
-        ?\DateTime $newEndTime = null,
-        ?\DateTime $newDoorsTime = null
-    ): Event {
-        $newEvent = $originalEvent->replicate();
-        $newEvent->start_datetime = $newStartTime;
-        $newEvent->end_datetime = $newEndTime;
-        $newEvent->doors_datetime = $newDoorsTime;
-        $newEvent->status = EventStatus::Scheduled;
-        $newEvent->published_at = null;
-        $newEvent->save();
-
-        // Copy performers
-        foreach ($originalEvent->performers as $performer) {
-            if ($performer instanceof Band && isset($performer->pivot)) {
-                $pivot = $performer->pivot;
-                $newEvent->performers()->attach($performer->id, [
-                    'order' => $pivot?->order ?? null,
-                    'set_length' => $pivot?->set_length ?? null,
-                ]);
-            }
-        }
-
-        // Copy tags
-        foreach ($originalEvent->tags as $tag) {
-            $newEvent->attachTag($tag->name ?? '', $tag->type ?? null);
-        }
-
-        return $newEvent;
+    public function handle(...$args)
+    {
+        return app(EventService::class)->duplicate(...$args);
     }
 }

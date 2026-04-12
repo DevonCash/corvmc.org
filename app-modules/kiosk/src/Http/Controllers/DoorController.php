@@ -83,7 +83,7 @@ class DoorController extends Controller
                     'id' => $order->id,
                     'uuid' => $order->uuid,
                     'quantity' => $order->quantity,
-                    'total' => $order->total->getMinorAmount()->toInt(),
+                    'total' => $order->total->getMinorAmount(),
                     'payment_method' => $order->payment_method,
                 ],
                 'tickets' => $order->tickets->map(fn ($ticket) => [
@@ -209,7 +209,7 @@ class DoorController extends Controller
                     'id' => $order->id,
                     'uuid' => $order->uuid,
                     'quantity' => $order->quantity,
-                    'total' => $order->total->getMinorAmount()->toInt(),
+                    'total' => $order->total->getMinorAmount(),
                     'payment_method' => $order->payment_method,
                 ],
                 'tickets' => $order->tickets->map(fn ($ticket) => [
@@ -242,7 +242,7 @@ class DoorController extends Controller
                 'id' => $order->id,
                 'uuid' => $order->uuid,
                 'quantity' => $order->quantity,
-                'total' => $order->total->getMinorAmount()->toInt(),
+                'total' => $order->total->getMinorAmount(),
                 'payment_method' => $order->payment_method,
                 'name' => $order->getPurchaserName(),
                 'completed_at' => $order->completed_at?->toIso8601String(),

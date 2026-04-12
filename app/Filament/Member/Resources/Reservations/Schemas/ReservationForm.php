@@ -110,7 +110,7 @@ class ReservationForm
                                 ->limit(50)
                                 ->pluck('name', 'id');
                         })
-                        ->getOptionLabelUsing(fn ($value) => User::find($value)?->name),
+                        ->getOptionLabelUsing(fn($value) => User::find($value)?->name),
                 ]),
 
             // Step 2: Reservation Details (no hidden user_id — set in step 1)
@@ -128,12 +128,99 @@ class ReservationForm
 
     protected static function staffScheduleStep(): array
     {
-        $step = static::reservationStep();
+        return [
+            Section::make('Date & Time')
+                ->compact()
+                ->afterHeader([
+                    Icon::make(function ($get) {
+                        $date = $get('reservation_date');
+                        $startTime = $get('start_time');
+                        $endTime = $get('end_time');
+                        if (! $date) {
+                            return 'tabler-calendar';
+                        }
+                        if (! $startTime) {
+                            return 'tabler-clock-play';
+                        }
+                        if (! $endTime) {
+                            return 'tabler-clock-pause';
+                        }
 
-        // Remove the hidden user_id field (it's set in the Member step)
-        return array_values(array_filter($step, function ($component) {
-            return ! ($component instanceof Hidden && $component->getName() === 'user_id');
-        }));
+                        return 'tabler-circle-check';
+                    })
+                        ->color(fn(Get $get) => match (true) {
+                            ! $get('reservation_date') => 'gray',
+                            ! $get('start_time') => 'primary',
+                            ! $get('end_time') => 'primary',
+                            default => 'success',
+                        }),
+                ])
+                ->columns(2)
+                ->schema([
+                    DatePicker::make('reservation_date')
+                        ->label('Date')
+                        ->required()
+                        ->live()
+                        ->columnSpanFull()
+                        ->afterStateUpdated(function ($state, callable $set, Get $get) {
+                            // Clear time selections when date changes
+                            $set('start_time', null);
+                            $set('end_time', null);
+                            self::updateDateTimes($get, $set);
+                            self::calculateCost($get, $set);
+                        }),
+
+                    Select::make('start_time')
+                        ->label('Start Time')
+                        ->options(function (Get $get) {
+                            $date = $get('reservation_date');
+                            if (! $date) {
+                                return [];
+                            }
+
+                            return GetAvailableTimeSlotsForDate::run(Carbon::parse($date, config('app.timezone')));
+                        })
+                        ->disabled(fn(Get $get) => ! $get('reservation_date'))
+                        ->required()
+                        ->live(debounce: 300)
+                        ->afterStateUpdated(function ($state, callable $set, Get $get) {
+                            // Clear end time when start time changes
+                            $set('end_time', null);
+                            self::updateDateTimes($get, $set);
+                            self::calculateCost($get, $set);
+                        }),
+
+                    Select::make('end_time')
+                        ->label('End Time')
+                        ->options(function (Get $get) {
+                            $date = $get('reservation_date');
+                            $startTime = $get('start_time');
+                            if (! $date || ! $startTime) {
+                                return [];
+                            }
+
+                            return GetValidEndTimesForDate::run(Carbon::parse($date, config('app.timezone')), $startTime);
+                        })
+                        ->required()
+                        ->live(debounce: 300)
+                        ->afterStateUpdated(function ($state, callable $set, Get $get) {
+                            self::updateDateTimes($get, $set);
+                            self::calculateCost($get, $set);
+                        })
+                        ->disabled(fn(Get $get) => ! $get('start_time')),
+                ])->columnSpanFull(),
+
+            Textarea::make('notes')
+                ->label('Notes (Optional)')
+                ->placeholder('What will you be working on? Any special setup needed?')
+                ->rows(3)
+                ->columnSpanFull(),
+
+            // Hidden fields for the actual datetime values and status
+            Hidden::make('reserved_at'),
+            Hidden::make('reserved_until'),
+            Hidden::make('status'),
+        ];
     }
 
     public static function contactStep(): array
@@ -146,7 +233,7 @@ class ReservationForm
         }
 
         return [
-            
+
 
             TextInput::make('contact_phone')
                 ->default($existingPhone)
@@ -202,7 +289,7 @@ class ReservationForm
 
                         return 'tabler-circle-check';
                     })
-                        ->color(fn (Get $get) => match (true) {
+                        ->color(fn(Get $get) => match (true) {
                             ! $get('reservation_date') => 'gray',
                             ! $get('start_time') => 'primary',
                             ! $get('end_time') => 'primary',
@@ -235,7 +322,7 @@ class ReservationForm
 
                             return GetAvailableTimeSlotsForDate::run(Carbon::parse($date, config('app.timezone')));
                         })
-                        ->disabled(fn (Get $get) => ! $get('reservation_date'))
+                        ->disabled(fn(Get $get) => ! $get('reservation_date'))
                         ->required()
                         ->live(debounce: 300)
                         ->afterStateUpdated(function ($state, callable $set, Get $get) {
@@ -262,7 +349,7 @@ class ReservationForm
                             self::updateDateTimes($get, $set);
                             self::calculateCost($get, $set);
                         })
-                        ->disabled(fn (Get $get) => ! $get('start_time')),
+                        ->disabled(fn(Get $get) => ! $get('start_time')),
                 ])->columnSpanFull(),
 
             Textarea::make('notes')
@@ -301,12 +388,12 @@ class ReservationForm
         $endTime = $get('end_time');
 
         if ($date && $startTime) {
-            $datetime = Carbon::parse($date.' '.$startTime, config('app.timezone'));
+            $datetime = Carbon::parse($date . ' ' . $startTime, config('app.timezone'));
             $set('reserved_at', $datetime);
         }
 
         if ($date && $endTime) {
-            $datetime = Carbon::parse($date.' '.$endTime, config('app.timezone'));
+            $datetime = Carbon::parse($date . ' ' . $endTime, config('app.timezone'));
             $set('reserved_until', $datetime);
         }
 

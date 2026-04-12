@@ -2,42 +2,23 @@
 
 namespace CorvMC\Moderation\Actions\Revisions;
 
-use CorvMC\Moderation\Models\Revision;
-use App\Models\User;
-use Illuminate\Support\Facades\Log;
+use CorvMC\Moderation\Services\RevisionService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use RevisionService::bulkApproveFromTrustedUsers() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the RevisionService directly.
+ */
 class BulkApproveFromTrustedUsers
 {
     use AsAction;
 
     /**
-     * Bulk approve revisions from trusted users.
+     * @deprecated Use RevisionService::bulkApproveFromTrustedUsers() instead
      */
-    public function handle(User $reviewer): int
+    public function handle(...$args)
     {
-        $trustedRevisions = Revision::pending()
-            ->whereHas('submittedBy', function ($query) {
-                // Get revisions from users with fast-track approval
-                $query->whereRaw("JSON_EXTRACT(trust_points, '$.global') >= ?", [
-                    config('moderation.thresholds.trusted'),
-                ]);
-            })
-            ->get();
-
-        $approved = 0;
-        foreach ($trustedRevisions as $revision) {
-            try {
-                ApproveRevision::run($revision, $reviewer, 'Bulk approved - trusted user');
-                $approved++;
-            } catch (\Exception $e) {
-                Log::error('Failed to bulk approve revision', [
-                    'revision_id' => $revision->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        return $approved;
+        return app(RevisionService::class)->bulkApproveFromTrustedUsers(...$args);
     }
 }

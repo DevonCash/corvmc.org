@@ -2,49 +2,23 @@
 
 namespace CorvMC\Membership\Actions\Bands;
 
-use CorvMC\Bands\Exceptions\BandException;
-use CorvMC\Bands\Models\Band;
-use App\Models\User;
-use Filament\Actions\Action;
-use Filament\Notifications\Notification;
+use CorvMC\Membership\Services\BandService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use BandService::cancelInvitation() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the BandService directly.
+ */
 class CancelBandInvitation
 {
     use AsAction;
 
     /**
-     * Cancel a pending band invitation.
+     * @deprecated Use BandService::cancelInvitation() instead
      */
-    public function handle(Band $band, User $user): void
+    public function handle(...$args)
     {
-        $membership = $band->memberships()->invited()->where('user_id', $user->id)->first();
-
-        if (! $membership) {
-            throw BandException::userNotInvited();
-        }
-
-        $membership->delete();
-    }
-
-    public static function filamentAction(): Action
-    {
-        return Action::make('cancel_invitation')
-            ->label('Cancel')
-            ->color('danger')
-            ->icon('tabler-x')
-            ->requiresConfirmation()
-            ->modalHeading('Cancel Band Invitation')
-            ->modalDescription(fn ($record) => "Cancel the invitation for {$record->user->name}?")
-            ->authorize('cancel')
-            ->action(function ($record): void {
-                static::run($record->band, $record->user);
-
-                Notification::make()
-                    ->title('Invitation cancelled')
-                    ->body("Invitation for {$record->user->name} has been cancelled")
-                    ->success()
-                    ->send();
-            });
+        return app(BandService::class)->cancelInvitation(...$args);
     }
 }

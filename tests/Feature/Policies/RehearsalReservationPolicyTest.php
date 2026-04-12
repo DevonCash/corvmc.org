@@ -97,14 +97,26 @@ describe('confirm', function () {
         expect($this->policy->confirm($staff, $reservation))->toBeTrue();
     });
 
-    it('allows owner to confirm their own reservation', function () {
+    it('allows owner to confirm their own reservation within time window', function () {
         $owner = User::factory()->create();
         $reservation = RehearsalReservation::factory()->create([
             'reservable_type' => 'user',
             'reservable_id' => $owner->id,
+            'reserved_at' => now()->addDays(3), // Within 5-day window
         ]);
 
         expect($this->policy->confirm($owner, $reservation))->toBeTrue();
+    });
+
+    it('denies owner from confirming their own reservation too far in advance', function () {
+        $owner = User::factory()->create();
+        $reservation = RehearsalReservation::factory()->create([
+            'reservable_type' => 'user',
+            'reservable_id' => $owner->id,
+            'reserved_at' => now()->addDays(7), // Beyond 5-day window
+        ]);
+
+        expect($this->policy->confirm($owner, $reservation))->toBeFalse();
     });
 
     it('denies non-owner from confirming another users reservation', function () {

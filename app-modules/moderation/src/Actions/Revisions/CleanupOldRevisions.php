@@ -2,20 +2,23 @@
 
 namespace CorvMC\Moderation\Actions\Revisions;
 
-use CorvMC\Moderation\Models\Revision;
+use CorvMC\Moderation\Services\RevisionService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use RevisionService::cleanupOldRevisions() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the RevisionService directly.
+ */
 class CleanupOldRevisions
 {
     use AsAction;
 
     /**
-     * Clean up old rejected revisions.
+     * @deprecated Use RevisionService::cleanupOldRevisions() instead
      */
-    public function handle(int $daysOld = 90): int
+    public function handle(...$args)
     {
-        return Revision::where('status', Revision::STATUS_REJECTED)
-            ->where('created_at', '<', now()->subDays($daysOld))
-            ->delete();
+        return app(RevisionService::class)->cleanupOldRevisions(...$args);
     }
 }

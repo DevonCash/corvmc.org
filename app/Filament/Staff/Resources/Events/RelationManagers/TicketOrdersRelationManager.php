@@ -36,7 +36,6 @@ class TicketOrdersRelationManager extends RelationManager
 
                 TextColumn::make('total')
                     ->label('Total')
-                    ->money('USD')
                     ->sortable(),
 
                 TextColumn::make('status')

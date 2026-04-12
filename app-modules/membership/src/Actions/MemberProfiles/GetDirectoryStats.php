@@ -2,43 +2,23 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use CorvMC\Membership\Models\MemberProfile;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\MemberProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use MemberProfileService::getDirectoryStats() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the MemberProfileService directly.
+ */
 class GetDirectoryStats
 {
     use AsAction;
 
     /**
-     * Get member directory statistics.
+     * @deprecated Use MemberProfileService::getDirectoryStats() instead
      */
-    public function handle(): array
+    public function handle(...$args)
     {
-        return [
-            'total_members' => MemberProfile::count(),
-            'public_profiles' => MemberProfile::where('visibility', 'public')->count(),
-            'seeking_bands' => MemberProfile::withFlag('seeking_band')->count(),
-            'available_for_session' => MemberProfile::withFlag('available_for_session')->count(),
-            'top_skills' => $this->getTopTags('skill', 10),
-            'top_genres' => $this->getTopTags('genre', 10),
-        ];
-    }
-
-    /**
-     * Get most popular tags by type.
-     */
-    protected function getTopTags(string $type, int $limit = 10): array
-    {
-        return DB::table('taggables')
-            ->join('tags', 'tags.id', '=', 'taggables.tag_id')
-            ->where('taggables.taggable_type', MemberProfile::class)
-            ->where('tags.type', $type)
-            ->select('tags.name', DB::raw('COUNT(*) as count'))
-            ->groupBy('tags.name')
-            ->orderBy('count', 'desc')
-            ->limit($limit)
-            ->pluck('count', 'name')
-            ->toArray();
+        return app(MemberProfileService::class)->getDirectoryStats(...$args);
     }
 }

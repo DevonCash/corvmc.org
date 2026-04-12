@@ -2,19 +2,27 @@
 
 namespace CorvMC\Finance\Actions\Credits;
 
-use CorvMC\Finance\Enums\CreditType;
 use App\Models\User;
+use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Services\CreditService;
 use Filament\Schemas\Components\Grid;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use CreditService::adjustCredits() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the CreditService directly.
+ */
 class AdjustCredits
 {
     use AsAction;
 
+    /**
+     * @deprecated Use CreditService::adjustCredits() instead
+     */
     public function handle(User $user, int $amount, CreditType $creditType = CreditType::FreeHours): void
     {
-        // Implementation to add credits to the user
-        $user->addCredit($amount, $creditType, 'admin_adjustment');
+        app(CreditService::class)->adjustCredits($user, $amount, $creditType);
     }
 
     public static function filamentAction(): \Filament\Actions\Action

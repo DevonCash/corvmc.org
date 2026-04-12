@@ -2,12 +2,18 @@
 
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
-use CorvMC\Support\Models\RecurringSeries;
-use CorvMC\SpaceManagement\Models\Reservation;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use CorvMC\SpaceManagement\Services\RecurringReservationService;
+use CorvMC\Support\Models\RecurringSeries;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use RecurringReservationService::skipRecurringInstance() instead.
+ * This action will be removed in a future version.
+ * 
+ * The business logic has been moved to RecurringReservationService for better
+ * organization and testability. This action now delegates to the service.
+ */
 class SkipRecurringInstance
 {
     use AsAction;
@@ -15,33 +21,8 @@ class SkipRecurringInstance
     /**
      * Skip a single instance without cancelling series.
      */
-    public function handle(RecurringSeries $series, Carbon $date, ?string $reason = null): void
+    public function handle(RecurringSeries $series, Carbon $date): bool
     {
-        $reservation = Reservation::where('recurring_series_id', $series->id)
-            ->where('instance_date', $date->toDateString())
-            ->first();
-
-        DB::transaction(function () use ($reservation, $series, $date, $reason) {
-            if ($reservation) {
-                // Cancel existing reservation
-                $reservation->update([
-                    'status' => 'cancelled',
-                    'cancellation_reason' => $reason ?? 'Manually skipped',
-                ]);
-            } else {
-                // Create placeholder cancelled reservation to track manual skip
-                Reservation::create([
-                    'user_id' => $series->user_id,
-                    'recurring_series_id' => $series->id,
-                    'instance_date' => $date->toDateString(),
-                    'reserved_at' => $date->copy()->setTimeFromTimeString($series->start_time->format('H:i:s')),
-                    'reserved_until' => $date->copy()->setTimeFromTimeString($series->end_time->format('H:i:s')),
-                    'status' => 'cancelled',
-                    'cancellation_reason' => $reason ?? 'Manually skipped',
-                    'is_recurring' => true,
-                    'cost' => 0,
-                ]);
-            }
-        });
+        return app(RecurringReservationService::class)->skipRecurringInstance($series, $date);
     }
 }

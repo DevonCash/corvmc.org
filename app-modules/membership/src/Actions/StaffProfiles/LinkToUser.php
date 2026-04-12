@@ -2,19 +2,23 @@
 
 namespace CorvMC\Membership\Actions\StaffProfiles;
 
-use App\Models\StaffProfile;
-use App\Models\User;
+use CorvMC\Membership\Services\StaffProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use StaffProfileService::linkToUser() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the StaffProfileService directly.
+ */
 class LinkToUser
 {
     use AsAction;
 
     /**
-     * Link staff profile to user account.
+     * @deprecated Use StaffProfileService::linkToUser() instead
      */
-    public function handle(StaffProfile $staffProfile, User $user): bool
+    public function handle(...$args)
     {
-        return $staffProfile->update(['user_id' => $user->id]);
+        return app(StaffProfileService::class)->linkToUser(...$args);
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Band\Resources;
 
+use App\Filament\Actions\Bands\AddBandMemberAction;
+use App\Filament\Actions\Bands\SendBandMemberInvitationAction;
 use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
 use CorvMC\Membership\Actions\Bands\AddBandMember;
 use CorvMC\Membership\Actions\Bands\CancelBandInvitation;
@@ -75,15 +77,10 @@ class BandMembersResource extends Resource
                     ->sortable(),
             ])
             ->headerActions([
-                AddBandMember::filamentAction()
-                    ->record(fn () => Filament::getTenant()),
+                SendBandMemberInvitationAction::make(),
             ])
             ->recordActions([
-                AcceptBandInvitation::filamentAction(),
-                DeclineBandInvitation::filamentAction(),
-                UpdateBandMember::filamentAction(),
-                RemoveBandMember::filamentAction(),
-                CancelBandInvitation::filamentAction(),
+
             ])
             ->defaultSort('created_at', 'asc');
     }

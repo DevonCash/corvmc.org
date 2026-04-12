@@ -2,8 +2,7 @@
 
 namespace App\Filament\Member\Resources\Equipment\Actions;
 
-use CorvMC\Equipment\Actions\GetStatistics;
-use CorvMC\Equipment\Actions\GetValueByAcquisitionType;
+use CorvMC\Equipment\Services\EquipmentService;
 use CorvMC\Equipment\Models\Equipment;
 use Filament\Actions\Action;
 use Filament\Infolists\Components\TextEntry;
@@ -22,8 +21,9 @@ class ViewStatisticsAction
             ->modalWidth(width: '3xl')
             ->modalHeading('Equipment Library Statistics')
             ->schema(function (): Schema {
-                $stats = GetStatistics::run();
-                $valueByType = GetValueByAcquisitionType::run();
+                $service = app(EquipmentService::class);
+                $stats = $service->getStatistics();
+                $valueByType = $service->getValueByAcquisitionType();
                 $popular = Equipment::popular()->limit(5)->get();
 
                 return Schema::make()

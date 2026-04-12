@@ -2,49 +2,23 @@
 
 namespace CorvMC\Moderation\Actions\Trust;
 
-use App\Models\User;
-use Illuminate\Support\Facades\Log;
+use CorvMC\Moderation\Services\TrustService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use TrustService::penalizeViolation() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the TrustService directly.
+ */
 class PenalizeViolation
 {
     use AsAction;
 
     /**
-     * Penalize user for violation.
+     * @deprecated Use TrustService::penalizeViolation() instead
      */
-    public function handle(
-        User $user,
-        string $violationType,
-        string $contentType = 'global',
-        ?int $sourceId = null,
-        string $reason = '',
-        ?User $penalizedBy = null
-    ): void {
-        $points = match ($violationType) {
-            'spam' => config('moderation.points.spam_violation'),
-            'major' => config('moderation.points.major_violation'),
-            'minor' => config('moderation.points.minor_violation'),
-            default => config('moderation.points.minor_violation'),
-        };
-
-        AwardTrustPoints::run(
-            $user,
-            $points,
-            $contentType,
-            "{$violationType}_violation",
-            $sourceId,
-            "Violation: {$violationType} - {$reason}",
-            $penalizedBy
-        );
-
-        Log::warning('Trust points deducted for violation', [
-            'user_id' => $user->id,
-            'content_type' => $contentType,
-            'violation_type' => $violationType,
-            'points_deducted' => abs($points),
-            'reason' => $reason,
-            'new_total' => $user->getTrustBalance($contentType),
-        ]);
+    public function handle(...$args)
+    {
+        return app(TrustService::class)->penalizeViolation(...$args);
     }
 }

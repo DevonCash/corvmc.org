@@ -2,7 +2,7 @@
 
 namespace App\Filament\Member\Resources\Equipment\Tables;
 
-use App\Filament\Member\Resources\Equipment\Actions\CheckoutToMemberAction;
+use App\Filament\Actions\Equipment\EquipmentCheckoutAction;
 use CorvMC\Equipment\Models\Equipment;
 use App\Settings\EquipmentSettings;
 use Filament\Actions\BulkActionGroup;
@@ -171,7 +171,7 @@ class EquipmentTable
             ])
             ->recordActions([
                 ViewAction::make(),
-                CheckoutToMemberAction::make()
+                EquipmentCheckoutAction::make()
                     ->visible(fn ($record) => app(EquipmentSettings::class)->enable_rental_features && $record->isAvailable()),
             ])
             ->toolbarActions([

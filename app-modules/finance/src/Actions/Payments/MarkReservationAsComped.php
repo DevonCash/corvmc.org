@@ -2,89 +2,52 @@
 
 namespace CorvMC\Finance\Actions\Payments;
 
-use App\Filament\Shared\Actions\Action;
+use App\Filament\Actions\Payment\ChargeableMarkCompedAction;
+use CorvMC\Finance\Data\CompData;
+use CorvMC\Finance\Services\PaymentService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use CorvMC\SpaceManagement\Models\Reservation;
-use Filament\Forms\Components\Textarea;
-use Illuminate\Database\Eloquent\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use PaymentService::recordComp() instead
+ * 
+ * This action is maintained for backward compatibility.
+ * New code should use the PaymentService directly.
+ */
 class MarkReservationAsComped
 {
     use AsAction;
 
+    /**
+     * @deprecated Use PaymentService::recordComp() instead
+     */
     public function handle(RehearsalReservation $reservation, ?string $notes = null): void
     {
-        $reservation->charge?->markAsComped($notes);
+        // Create DTO from parameters
+        $compData = CompData::from([
+            'chargeable' => $reservation,
+            'reason' => $notes ?? 'No reason provided',
+            'authorizedBy' => auth()->user()?->name,
+            'notes' => $notes,
+        ]);
 
-        $reason = $notes ?? 'No reason provided';
-
-        activity('reservation')
-            ->performedOn($reservation)
-            ->causedBy(auth()->user())
-            ->event('comped')
-            ->withProperties([
-                'reason' => $reason,
-            ])
-            ->log("Reservation comped: {$reason}");
-    }
-
-    public static function filamentAction(): Action
-    {
-        return Action::make('mark_comped')
-            ->label('Comp')
-            ->icon('tabler-gift')
-            ->color('info')
-            ->authorize('manage')
-            ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation && $record->needsPayment())
-            ->schema([
-                Textarea::make('comp_reason')
-                    ->label('Comp Reason')
-                    ->placeholder('Why is this reservation being comped?')
-                    ->required()
-                    ->rows(2),
-            ])
-            ->action(function (Reservation $record, array $data) {
-                if (! $record instanceof RehearsalReservation) {
-                    return;
-                }
-
-                static::run($record, $data['comp_reason']);
-
-                \Filament\Notifications\Notification::make()
-                    ->title('Reservation comped')
-                    ->success()
-                    ->send();
-            });
+        // Delegate to service
+        app(PaymentService::class)->recordComp($compData);
     }
 
     /**
-     * @param  Collection<int, RehearsalReservation>  $records
+     * @deprecated Use ChargeableMarkCompedAction::make() instead
      */
-    public static function filamentBulkAction(): Action
+    public static function filamentAction(): \Filament\Actions\Action
     {
-        return Action::make('mark_comped_bulk')
-            ->label('Comp Reservations')
-            ->icon('tabler-gift')
-            ->color('info')
-            ->authorize('manage')
-            ->schema([
-                Textarea::make('comp_reason')
-                    ->label('Comp Reason')
-                    ->placeholder('Why are these reservations being comped?')
-                    ->required()
-                    ->rows(2),
-            ])
-            ->action(function (Collection $records, array $data) {
-                $count = 0;
-                foreach ($records as $record) {
-                    if ($record instanceof RehearsalReservation && $record->needsPayment()) {
-                        static::run($record, $data['comp_reason']);
-                        $count++;
-                    }
-                }
-            })
-            ->successNotificationTitle('Reservations comped')
-            ->successNotification(fn (Collection $records) => $records->filter(fn ($r) => $r instanceof RehearsalReservation && $r->needsPayment())->count().' reservations marked as comped');
+        return ChargeableMarkCompedAction::make();
+    }
+
+    /**
+     * @deprecated Use ChargeableMarkCompedAction::bulkAction() instead
+     */
+    public static function filamentBulkAction(): \Filament\Actions\Action
+    {
+        return ChargeableMarkCompedAction::bulkAction();
     }
 }

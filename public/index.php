@@ -2,7 +2,7 @@
 
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
-
+set_time_limit(0);
 define('LARAVEL_START', microtime(true));
 
 // Determine if the application is in maintenance mode...

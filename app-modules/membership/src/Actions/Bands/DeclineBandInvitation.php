@@ -2,50 +2,23 @@
 
 namespace CorvMC\Membership\Actions\Bands;
 
-use CorvMC\Bands\Exceptions\BandException;
-use CorvMC\Bands\Models\Band;
-use App\Models\User;
-use Filament\Actions\Action;
-use Filament\Notifications\Notification;
+use CorvMC\Membership\Services\BandService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use BandService::declineInvitation() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the BandService directly.
+ */
 class DeclineBandInvitation
 {
     use AsAction;
 
     /**
-     * Decline an invitation to join a band.
-     * Deletes the invitation record - band admins can re-invite if needed.
+     * @deprecated Use BandService::declineInvitation() instead
      */
-    public function handle(Band $band, User $user): void
+    public function handle(...$args)
     {
-        $membership = $band->memberships()->invited()->where('user_id', $user->id)->first();
-
-        if (! $membership) {
-            throw BandException::userNotInvited();
-        }
-
-        $membership->delete();
-    }
-
-    public static function filamentAction(): Action
-    {
-        return Action::make('decline_invitation')
-            ->label('Decline')
-            ->color('danger')
-            ->icon('tabler-x')
-            ->requiresConfirmation()
-            ->modalHeading('Decline Band Invitation')
-            ->modalDescription(fn ($record) => "Decline invitation to join {$record->band->name}?")
-            ->action(function ($record): void {
-                static::run($record->band, $record->user);
-
-                Notification::make()
-                    ->title('Invitation declined')
-                    ->body('You have declined the invitation')
-                    ->success()
-                    ->send();
-            })
-            ->authorize('decline');
+        return app(BandService::class)->declineInvitation(...$args);
     }
 }

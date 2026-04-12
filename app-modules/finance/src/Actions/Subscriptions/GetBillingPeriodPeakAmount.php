@@ -2,34 +2,24 @@
 
 namespace CorvMC\Finance\Actions\Subscriptions;
 
-use Laravel\Cashier\Cashier;
+use CorvMC\Finance\Services\SubscriptionService;
 use Laravel\Cashier\Subscription;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use SubscriptionService::getBillingPeriodPeakAmount() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the SubscriptionService directly.
+ */
 class GetBillingPeriodPeakAmount
 {
     use AsAction;
 
     /**
-     * Get the highest amount charged for this subscription in the current billing period.
+     * @deprecated Use SubscriptionService::getBillingPeriodPeakAmount() instead
      */
     public function handle(Subscription $subscription): float
     {
-        $stripeSubscription = Cashier::stripe()->subscriptions->retrieve($subscription->stripe_id);
-        $currentPeriodStart = $stripeSubscription->current_period_start;
-
-        // Get all invoices for this subscription since the current period started
-        $invoices = collect(Cashier::stripe()->invoices->all([
-            'subscription' => $subscription->stripe_id,
-            'created' => ['gte' => $currentPeriodStart],
-            'limit' => 100,
-        ])->data);
-
-        return $invoices
-            ->filter(fn ($invoice) => in_array($invoice->status, ['paid', 'open']))
-            ->flatMap(fn ($invoice) => $invoice->lines->data)
-            ->filter(fn ($line) => $line->subscription === $subscription->stripe_id)
-            ->map(fn ($line) => $line->amount)
-            ->sum() / 100;
+        return app(SubscriptionService::class)->getBillingPeriodPeakAmount($subscription);
     }
 }

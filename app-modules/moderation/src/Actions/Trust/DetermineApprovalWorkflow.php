@@ -2,25 +2,23 @@
 
 namespace CorvMC\Moderation\Actions\Trust;
 
-use App\Models\User;
+use CorvMC\Moderation\Services\TrustService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use TrustService::determineApprovalWorkflow() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the TrustService directly.
+ */
 class DetermineApprovalWorkflow
 {
     use AsAction;
 
     /**
-     * Determine approval workflow for content.
+     * @deprecated Use TrustService::determineApprovalWorkflow() instead
      */
-    public function handle(User $user, string $contentType = 'global'): array
+    public function handle(...$args)
     {
-        $trustLevel = $user->getTrustLevel($contentType);
-
-        return [
-            'requires_approval' => $trustLevel->requiresReview(),
-            'auto_publish' => $trustLevel->canAutoApprove(),
-            'review_priority' => $trustLevel->getReviewPriority(),
-            'estimated_review_time' => $trustLevel->getEstimatedReviewTime(),
-        ];
+        return app(TrustService::class)->determineApprovalWorkflow(...$args);
     }
 }

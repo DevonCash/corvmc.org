@@ -70,6 +70,12 @@ class UserForm
                                                     $record->sendPasswordResetNotification($token);
                                                 }),
                                         ])->verticalAlignment('end'),
+                                        TextInput::make('phone')
+                                            ->label('Phone number')
+                                            ->tel()
+                                            ->maxLength(255)
+                                            ->copyable()
+                                            ->hiddenOn('create'),
                                     ]),
                                 MembershipForm::configure(Grid::make(1))
                                     ->visible(fn ($record) => $record !== null),

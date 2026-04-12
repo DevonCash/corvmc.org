@@ -2,27 +2,24 @@
 
 namespace CorvMC\Finance\Actions\Subscriptions;
 
-use CorvMC\Finance\Exceptions\SubscriptionNotFoundException;
 use App\Models\User;
+use CorvMC\Finance\Services\SubscriptionService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use SubscriptionService::resumeSubscription() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the SubscriptionService directly.
+ */
 class ResumeSubscription
 {
     use AsAction;
 
     /**
-     * Resume a cancelled subscription.
-     *
-     * @throws SubscriptionNotFoundException
+     * @deprecated Use SubscriptionService::resumeSubscription() instead
      */
     public function handle(User $user): void
     {
-        $subscription = $user->subscription('default');
-
-        if (! $subscription || ! $subscription->canceled()) {
-            throw new SubscriptionNotFoundException('No cancelled subscription found to resume');
-        }
-
-        $subscription->resume();
+        app(SubscriptionService::class)->resumeSubscription($user);
     }
 }

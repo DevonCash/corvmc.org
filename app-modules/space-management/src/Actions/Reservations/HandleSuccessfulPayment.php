@@ -17,8 +17,12 @@ class HandleSuccessfulPayment
      * Updates the Charge record and automatically confirms the reservation.
      *
      * Idempotent - safe to call multiple times (e.g., from both redirect and webhook).
+     * 
+     * @param RehearsalReservation $reservation
+     * @param string $sessionId The Stripe checkout session ID
+     * @param string|null $paymentIntentId The Stripe payment intent ID
      */
-    public function handle(RehearsalReservation $reservation, string $sessionId): bool
+    public function handle(RehearsalReservation $reservation, string $sessionId, ?string $paymentIntentId = null): bool
     {
         // Idempotency check - skip if already paid
         if ($reservation->isPaid()) {
@@ -28,7 +32,7 @@ class HandleSuccessfulPayment
         $user = $reservation->getResponsibleUser();
 
         // Update Charge record
-        $reservation->charge?->markAsPaid('stripe', $sessionId, "Paid via Stripe checkout");
+        $reservation->charge?->markAsPaid('stripe', $sessionId, $paymentIntentId, "Paid via Stripe checkout");
 
         activity('reservation')
             ->performedOn($reservation)

@@ -302,7 +302,13 @@ describe('Kiosk: Door Sales', function () {
     });
 
     it('applies member discount to door sale', function () {
-        $basePrice = $this->event->getBaseTicketPrice()->getMinorAmount()->toInt();
+        $basePriceObj = $this->event->getBaseTicketPrice();
+        $basePrice = $basePriceObj->getMinorAmount();
+        
+        // Ensure we have an integer
+        if (is_object($basePrice)) {
+            $basePrice = method_exists($basePrice, 'toInt') ? $basePrice->toInt() : (int) (string) $basePrice;
+        }
 
         $response = $this->postJson("/api/v1/kiosk/events/{$this->event->id}/door-sale", [
             'quantity' => 1,
@@ -314,7 +320,7 @@ describe('Kiosk: Door Sales', function () {
         $total = $response->json('order.total');
         $expectedTotal = (int) round($basePrice * 0.5); // 50% discount
 
-        expect($total)->toBe($expectedTotal);
+        expect((int) $total)->toBe($expectedTotal);
     });
 
     it('returns recent sales', function () {

@@ -3,19 +3,23 @@
 namespace CorvMC\Finance\Actions\Payments;
 
 use Brick\Money\Money;
+use CorvMC\Finance\Services\FeeService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use FeeService::calculateNetAmount() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the FeeService directly.
+ */
 class CalculateNetAmount
 {
     use AsAction;
 
     /**
-     * Calculate what amount we'll actually receive after Stripe processes a payment
+     * @deprecated Use FeeService::calculateNetAmount() instead
      */
     public function handle(Money $totalCharged): Money
     {
-        $processingFee = CalculateProcessingFee::run($totalCharged);
-
-        return $totalCharged->minus($processingFee);
+        return app(FeeService::class)->calculateNetAmount($totalCharged);
     }
 }

@@ -68,7 +68,6 @@ class EquipmentInfolist
                             ]),
 
                         TextEntry::make('estimated_value')
-                            ->money('USD')
                             ->placeholder('Not appraised'),
 
                         TextEntry::make('notes')

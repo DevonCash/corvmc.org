@@ -5,6 +5,7 @@ namespace App\Filament\Staff\Resources\ActivityLog;
 use App\Filament\Staff\Resources\ActivityLog\Tables\ActivityLogTable;
 use App\Models\User;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Cache;
 use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogResource extends Resource
@@ -25,7 +26,10 @@ class ActivityLogResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        return
+            Cache::remember('activity_log_count', now()->addMinutes(5), function () {
+                return static::getEloquentQuery()->count();
+            });
     }
 
     public static function canAccess(): bool

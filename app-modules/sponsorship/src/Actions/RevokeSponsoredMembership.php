@@ -4,9 +4,16 @@ namespace CorvMC\Sponsorship\Actions;
 
 use App\Models\User;
 use CorvMC\Sponsorship\Models\Sponsor;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Sponsorship\Services\SponsorshipService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * Revoke a sponsored membership from a user.
+ *
+ * @deprecated Use SponsorshipService::revokeMembership() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the SponsorshipService directly.
+ */
 class RevokeSponsoredMembership
 {
     use AsAction;
@@ -14,19 +21,11 @@ class RevokeSponsoredMembership
     /**
      * Revoke a sponsored membership from a user.
      *
+     * @deprecated Use SponsorshipService::revokeMembership() instead
      * @throws \Exception if user is not sponsored by this sponsor
      */
     public function handle(Sponsor $sponsor, User $user): void
     {
-        // Check if user is sponsored by this sponsor
-        if (! $sponsor->sponsoredMembers()->where('user_id', $user->id)->exists()) {
-            throw new \Exception(
-                "Cannot revoke sponsored membership: {$user->name} is not sponsored by {$sponsor->name}."
-            );
-        }
-
-        DB::transaction(function () use ($sponsor, $user) {
-            $sponsor->sponsoredMembers()->detach($user->id);
-        });
+        app(SponsorshipService::class)->revokeMembership($sponsor, $user);
     }
 }

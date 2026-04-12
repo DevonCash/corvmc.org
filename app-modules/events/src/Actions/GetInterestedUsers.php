@@ -2,44 +2,23 @@
 
 namespace CorvMC\Events\Actions;
 
-use CorvMC\Bands\Models\Band;
-use CorvMC\Events\Models\Event;
-use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use CorvMC\Events\Services\EventService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use EventService::getInterestedUsers() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the EventService directly.
+ */
 class GetInterestedUsers
 {
     use AsAction;
 
     /**
-     * Get users who should be notified about event updates.
-     * This includes: organizer, band members, and optionally all sustaining members for published events.
+     * @deprecated Use EventService::getInterestedUsers() instead
      */
-    public function handle(Event $event): Collection
+    public function handle(...$args)
     {
-        $users = User::query()->whereNull('id')->get(); // Start with empty EloquentCollection
-
-        // Always notify the event organizer (if community event)
-        if ($event->organizer) {
-            $users = $users->merge([$event->organizer]);
-        }
-
-        // Notify all band members performing in this event
-        foreach ($event->performers as $performer) {
-            if ($performer instanceof Band) {
-                $bandMembers = $performer->members()->get();
-                $users = $users->merge($bandMembers);
-            }
-        }
-
-        // For published events, optionally notify all sustaining members
-        if ($event->isPublished()) {
-            $sustainingMembers = User::role('sustaining member')->get();
-            $users = $users->merge($sustainingMembers);
-        }
-
-        // Remove duplicates and filter out null values
-        return $users->filter()->unique('id');
+        return app(EventService::class)->getInterestedUsers(...$args);
     }
 }

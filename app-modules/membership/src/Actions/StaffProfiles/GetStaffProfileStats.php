@@ -2,35 +2,23 @@
 
 namespace CorvMC\Membership\Actions\StaffProfiles;
 
-use App\Models\StaffProfile;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\StaffProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use StaffProfileService::getStaffProfileStats() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the StaffProfileService directly.
+ */
 class GetStaffProfileStats
 {
     use AsAction;
 
     /**
-     * Get staff profile statistics.
+     * @deprecated Use StaffProfileService::getStaffProfileStats() instead
      */
-    public function handle(): array
+    public function handle(...$args)
     {
-        $typeCounts = StaffProfile::select('type', DB::raw('count(*) as count'))
-            ->where('is_active', true)
-            ->groupBy('type')
-            ->pluck('count', 'type')
-            ->toArray();
-
-        return [
-            'total_profiles' => StaffProfile::count(),
-            'active_profiles' => StaffProfile::active()->count(),
-            'inactive_profiles' => StaffProfile::inactive()->count(),
-            'board_members' => $typeCounts['board'] ?? 0,
-            'staff_members' => $typeCounts['staff'] ?? 0,
-            'by_type' => [
-                'board' => $typeCounts['board'] ?? 0,
-                'staff' => $typeCounts['staff'] ?? 0,
-            ],
-        ];
+        return app(StaffProfileService::class)->getStaffProfileStats(...$args);
     }
 }

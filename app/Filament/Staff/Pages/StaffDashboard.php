@@ -54,29 +54,12 @@ class StaffDashboard extends Page
             ->whereDate('reserved_at', $today)
             ->with(['reservable', 'charge'])
             ->orderBy('reserved_at')
-            ->get()
-            ->map(function ($reservation) {
-                return [
-                    'id' => $reservation->id,
-                    'title' => $reservation->getDisplayTitle(),
-                    'start_time' => $reservation->reserved_at->format('g:i A'),
-                    'end_time' => $reservation->reserved_until->format('g:i A'),
-                    'duration' => $reservation->hours_used,
-                    'status' => $reservation->status,
-                    'is_paid' => $reservation->charge?->status?->isSettled() ?? true,
-                    'amount' => $reservation->charge?->net_amount?->formatTo('en_US'),
-                ];
-            });
+            ->get();
 
         // Calculate stats
         $totalHours = $reservations->sum('duration');
-        $totalRevenue = RehearsalReservation::query()
-            ->whereDate('reserved_at', $today)
-            ->whereHas('charge', fn ($q) => $q->where('status', 'paid'))
-            ->with('charge')
-            ->get()
-            ->sum(fn ($r) => $r->charge?->net_amount?->getMinorAmount()->toInt() ?? 0);
-        $unpaidCount = $reservations->filter(fn ($r) => ! $r['is_paid'] && $r['amount'])->count();
+        $totalRevenue = $reservations->sum(fn($r) => $r->charge ? $r->charge->amount->getMinorAmount() : 0);
+        $unpaidCount = $reservations->filter(fn($r) => ! $r->is_paid && $r->amount)->count();
 
         // Get tonight's event
         $tonightsEvent = Event::publishedToday()
@@ -135,16 +118,16 @@ class StaffDashboard extends Page
             return [
                 'method' => $method ?: 'unknown',
                 'count' => $group->count(),
-                'total' => $group->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt()),
+                'total' => $group->sum(fn($c) => $c->net_amount->getMinorAmount()),
             ];
         });
 
         // Charge totals
-        $chargesPaidCents = $paidCharges->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt());
+        $chargesPaidCents = $paidCharges->sum(fn($c) => $c->net_amount->getMinorAmount());
         $chargesPendingCents = $charges->where('status', ChargeStatus::Pending)
-            ->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt());
-        $chargesGrossCents = $charges->sum(fn ($c) => $c->amount->getMinorAmount()->toInt());
-        $creditsAppliedCents = $chargesGrossCents - $charges->sum(fn ($c) => $c->net_amount->getMinorAmount()->toInt());
+            ->sum(fn($c) => $c->net_amount->getMinorAmount());
+        $chargesGrossCents = $charges->sum(fn($c) => $c->amount->getMinorAmount());
+        $creditsAppliedCents = $chargesGrossCents - $charges->sum(fn($c) => $c->net_amount->getMinorAmount());
 
         // Stripe charges (for fee calculation)
         $stripeChargesCents = $byPaymentMethod->get('stripe')['total'] ?? 0;
@@ -192,29 +175,12 @@ class StaffDashboard extends Page
     public function getRecentActivities(): \Illuminate\Support\Collection
     {
         // Filter out activities with subject types that no longer exist
-        return Activity::with(['causer'])
+        return Activity::with(['causer', 'subject'])
             ->whereNotNull('subject_type')
-            ->where(function ($query) {
-                $query->where('subject_type', 'like', 'CorvMC\\%')
-                    ->orWhere('subject_type', 'like', 'App\\Models\\User%')
-                    ->orWhere('subject_type', 'like', 'App\\Models\\Band%')
-                    ->orWhere('subject_type', 'like', 'App\\Models\\MemberProfile%');
-            })
             ->latest()
             ->limit(30)
             ->get()
             ->map(function (Activity $activity) {
-                // Safely load subject - skip if class doesn't exist
-                try {
-                    $activity->load('subject');
-                } catch (\Throwable) {
-                    return null;
-                }
-
-                if ($activity->subject === null) {
-                    return null;
-                }
-
                 return [
                     'id' => $activity->id,
                     'description' => $this->formatActivityDescription($activity),

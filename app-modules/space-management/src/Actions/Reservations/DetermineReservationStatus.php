@@ -3,49 +3,40 @@
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use Carbon\Carbon;
+use CorvMC\SpaceManagement\Services\ReservationService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use ReservationService::determineReservationStatus() instead
+ * 
+ * This action is maintained for backward compatibility.
+ * New code should use the ReservationService directly.
+ */
 class DetermineReservationStatus
 {
     use AsAction;
 
     /**
-     * Determine the initial status for a reservation based on business rules.
-     *
-     * Business rules:
-     * - Recurring reservations always need manual approval (pending)
-     * - Reservations more than a week away need confirmation reminder (pending)
-     * - Near-term reservations are immediately confirmed
+     * @deprecated Use ReservationService::determineReservationStatus() instead
      */
     public function handle(Carbon $reservationDate, bool $isRecurring = false): string
     {
-        // Recurring reservations always need manual approval
-        if ($isRecurring) {
-            return 'pending';
-        }
-
-        // Reservations more than a week away need confirmation reminder
-        if ($reservationDate->isAfter(Carbon::now()->addWeek())) {
-            return 'pending';
-        }
-
-        // Near-term reservations are immediately confirmed
-        return 'confirmed';
+        return app(ReservationService::class)->determineReservationStatus($reservationDate, $isRecurring);
     }
 
     /**
-     * Check if a reservation needs a confirmation reminder.
+     * @deprecated Use ReservationService::needsConfirmationReminder() instead
      */
     public function needsConfirmationReminder(Carbon $reservationDate, bool $isRecurring = false): bool
     {
-        return ! $isRecurring && $reservationDate->isAfter(Carbon::now()->addWeek());
+        return app(ReservationService::class)->needsConfirmationReminder($reservationDate, $isRecurring);
     }
 
     /**
-     * Calculate when to send the confirmation reminder (1 week before).
+     * @deprecated Use ReservationService::getConfirmationReminderDate() instead
      */
     public function getConfirmationReminderDate(Carbon $reservationDate): Carbon
     {
-        return $reservationDate->copy()->subWeek();
+        return app(ReservationService::class)->getConfirmationReminderDate($reservationDate);
     }
 }

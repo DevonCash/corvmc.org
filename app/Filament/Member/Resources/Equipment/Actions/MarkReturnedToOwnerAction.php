@@ -2,7 +2,7 @@
 
 namespace App\Filament\Member\Resources\Equipment\Actions;
 
-use CorvMC\Equipment\Actions\MarkReturnedToOwner;
+use CorvMC\Equipment\Services\EquipmentService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 
@@ -24,7 +24,7 @@ class MarkReturnedToOwnerAction
                     throw new \Exception('Cannot return equipment to owner while it is checked out to a member.');
                 }
 
-                MarkReturnedToOwner::run($record);
+                app(EquipmentService::class)->markReturnedToOwner($record);
 
                 Notification::make()
                     ->title('Equipment Returned to Owner')

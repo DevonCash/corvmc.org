@@ -3,13 +3,15 @@
 namespace CorvMC\Support\Actions;
 
 use Carbon\Carbon;
+use CorvMC\Support\Services\RecurringService;
 use Lorisleiva\Actions\Concerns\AsAction;
-use RRule\RRule;
 
 /**
  * Calculate occurrence dates from an RRULE recurrence pattern.
  *
- * Uses the rlanvin/php-rrule library to parse and expand recurrence rules.
+ * @deprecated Use RecurringService::calculateOccurrences() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the RecurringService directly.
  */
 class CalculateOccurrences
 {
@@ -18,26 +20,11 @@ class CalculateOccurrences
     /**
      * Calculate occurrence dates from recurrence rule.
      *
+     * @deprecated Use RecurringService::calculateOccurrences() instead
      * @return Carbon[] Array of Carbon instances representing occurrence dates
      */
     public function handle(string $ruleString, Carbon $start, Carbon $end): array
     {
-        // Parse RRULE using rlanvin/php-rrule
-        $rrule = new RRule($ruleString, $start->toDateTimeString());
-
-        $occurrences = [];
-        foreach ($rrule as $occurrence) {
-            $carbonOccurrence = Carbon::instance($occurrence);
-
-            if ($carbonOccurrence->gt($end)) {
-                break;
-            }
-
-            if ($carbonOccurrence->gte($start)) {
-                $occurrences[] = $carbonOccurrence->copy();
-            }
-        }
-
-        return $occurrences;
+        return app(RecurringService::class)->calculateOccurrences($ruleString, $start, $end);
     }
 }

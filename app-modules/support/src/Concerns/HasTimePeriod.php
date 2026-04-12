@@ -8,6 +8,18 @@ use Spatie\Period\Precision;
 
 trait HasTimePeriod
 {
+    public function getStartTime(): ?\DateTimeInterface
+    {
+        $startField = $this->getStartTimeField();
+        return $this->{$startField} ?? null;
+    }
+
+    public function getEndTime(): ?\DateTimeInterface
+    {
+        $endField = $this->getEndTimeField();
+        return $this->{$endField} ?? null;
+    }
+
     /**
      * Create a Period object from the model's time fields.
      */

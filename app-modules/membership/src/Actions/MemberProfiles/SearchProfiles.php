@@ -2,67 +2,23 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use CorvMC\Membership\Models\MemberProfile;
-use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use CorvMC\Membership\Services\MemberProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use MemberProfileService::searchProfiles() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the MemberProfileService directly.
+ */
 class SearchProfiles
 {
     use AsAction;
 
     /**
-     * Search member profiles by skills, genres, or flags.
+     * @deprecated Use MemberProfileService::searchProfiles() instead
      */
-    public function handle(
-        ?string $query = null,
-        ?array $skills = null,
-        ?array $genres = null,
-        ?array $flags = null,
-        ?User $viewingUser = null,
-        int $limit = 50,
-        int $offset = 0
-    ): Collection {
-        $profilesQuery = MemberProfile::withoutGlobalScope(\CorvMC\Moderation\Models\Scopes\MemberVisibilityScope::class);
-
-        // Apply visibility filter based on viewing user
-        if (! $viewingUser) {
-            $profilesQuery->where('visibility', 'public');
-        } elseif (! $viewingUser->can('view private member profiles')) {
-            $profilesQuery->where(function ($q) use ($viewingUser) {
-                $q->where('visibility', 'public')
-                    ->orWhere('user_id', $viewingUser->id)
-                    ->orWhere('visibility', 'members');
-            });
-        }
-
-        // Search by name or bio
-        if ($query) {
-            $profilesQuery->whereHas('user', function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%");
-            })->orWhere('bio', 'like', "%{$query}%");
-        }
-
-        // Filter by skills
-        if ($skills && count($skills) > 0) {
-            $profilesQuery->withAnyTags($skills, 'skill');
-        }
-
-        // Filter by genres
-        if ($genres && count($genres) > 0) {
-            $profilesQuery->withAnyTags($genres, 'genre');
-        }
-
-        // Filter by flags
-        if ($flags && count($flags) > 0) {
-            foreach ($flags as $flag) {
-                $profilesQuery->withFlag($flag);
-            }
-        }
-
-        return $profilesQuery->with(['user', 'tags'])
-            ->offset($offset)
-            ->limit($limit)
-            ->get();
+    public function handle(...$args)
+    {
+        return app(MemberProfileService::class)->searchProfiles(...$args);
     }
 }

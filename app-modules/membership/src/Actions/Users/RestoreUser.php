@@ -2,18 +2,23 @@
 
 namespace CorvMC\Membership\Actions\Users;
 
-use App\Models\User;
+use CorvMC\Membership\Services\UserManagementService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use UserManagementService::restore() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the UserManagementService directly.
+ */
 class RestoreUser
 {
     use AsAction;
 
     /**
-     * Restore a soft-deleted user.
+     * @deprecated Use UserManagementService::restore() instead
      */
-    public function handle(User $user): bool
+    public function handle(...$args)
     {
-        return $user->restore();
+        return app(UserManagementService::class)->restore(...$args);
     }
 }

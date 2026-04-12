@@ -2,31 +2,23 @@
 
 namespace CorvMC\Membership\Actions\StaffProfiles;
 
-use App\Models\StaffProfile;
-use App\Models\StaffProfileType;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\StaffProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use StaffProfileService::create() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the StaffProfileService directly.
+ */
 class CreateStaffProfile
 {
     use AsAction;
 
     /**
-     * Create a new staff profile.
+     * @deprecated Use StaffProfileService::create() instead
      */
-    public function handle(array $data): StaffProfile
+    public function handle(...$args)
     {
-        return DB::transaction(function () use ($data) {
-            $data['type'] = $data['type'] ?? StaffProfileType::Staff;
-            $staffProfile = StaffProfile::create($data);
-
-            // Handle profile image upload if provided
-            if (isset($data['profile_image'])) {
-                $staffProfile->addMediaFromRequest('profile_image')
-                    ->toMediaCollection('profile_image');
-            }
-
-            return $staffProfile;
-        });
+        return app(StaffProfileService::class)->create(...$args);
     }
 }

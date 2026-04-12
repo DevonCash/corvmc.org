@@ -2,11 +2,14 @@
 
 namespace CorvMC\Finance\Actions\Credits;
 
-use CorvMC\Finance\Models\CreditAllocation;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Finance\Services\CreditService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use CreditService::processPendingAllocations() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the CreditService directly.
+ */
 class ProcessPendingAllocations
 {
     use AsAction;
@@ -16,75 +19,48 @@ class ProcessPendingAllocations
     public string $commandDescription = 'Process all pending credit allocations';
 
     /**
-     * Process all pending allocations.
-     * Can be run via: php artisan credits:allocate
+     * @deprecated Use CreditService::processPendingAllocations() instead
      */
     public function handle(): void
     {
         $dryRun = method_exists($this, 'option') ? ($this->option('dry-run') ?? false) : false;
 
-        $allocations = CreditAllocation::where('is_active', true)
-            ->where('next_allocation_at', '<=', now())
-            ->get();
+        $summary = app(CreditService::class)->processPendingAllocations($dryRun);
 
-        if ($allocations->isEmpty()) {
-            if (method_exists($this, 'info')) {
-                $this->info('No pending allocations to process.');
-            }
-
-            return;
-        }
-
+        // Output results if running as command
         if (method_exists($this, 'info')) {
-            $this->info("Processing {$allocations->count()} allocation(s)...");
-        }
+            if ($summary['total'] === 0) {
+                $this->info('No pending allocations to process.');
+                return;
+            }
 
-        foreach ($allocations as $allocation) {
+            $this->info("Processed {$summary['processed']} of {$summary['total']} allocation(s)");
+
+            foreach ($summary['details'] as $detail) {
+                $symbol = match($detail['status']) {
+                    'processed' => '✓',
+                    'dry_run' => '→',
+                    'error' => '✗',
+                    default => '-'
+                };
+
+                $message = "  {$symbol} User {$detail['user_id']}: {$detail['amount']} {$detail['credit_type']} credits";
+                if (isset($detail['error'])) {
+                    $message .= " (Error: {$detail['error']})";
+                }
+
+                $this->line($message);
+            }
+
             if ($dryRun) {
-                if (method_exists($this, 'line')) {
-                    $this->line("  → Would allocate {$allocation->amount} {$allocation->credit_type} credits to user {$allocation->user_id}");
-                }
+                $this->warn('DRY RUN - No changes were made');
+            } elseif ($summary['errors'] > 0) {
+                $this->warn("Completed with {$summary['errors']} error(s)");
             } else {
-                $this->processAllocation($allocation);
-                if (method_exists($this, 'line')) {
-                    $this->line("  ✓ Allocated {$allocation->amount} {$allocation->credit_type} credits to user {$allocation->user_id}");
-                }
+                $this->info('✓ All allocations processed successfully');
             }
         }
-
-        if ($dryRun && method_exists($this, 'warn')) {
-            $this->warn('DRY RUN - No changes were made');
-        } elseif (method_exists($this, 'info')) {
-            $this->info('✓ All allocations processed successfully');
-        }
     }
 
-    protected function processAllocation(CreditAllocation $allocation): void
-    {
-        DB::transaction(function () use ($allocation) {
-            AllocateMonthlyCredits::run(
-                $allocation->user,
-                $allocation->amount,
-                \CorvMC\Finance\Enums\CreditType::from($allocation->credit_type)
-            );
-
-            // Update next allocation date
-            $allocation->last_allocated_at = now();
-            $allocation->next_allocation_at = $this->calculateNextAllocation(
-                $allocation->frequency,
-                now()
-            );
-            $allocation->save();
-        });
-    }
-
-    protected function calculateNextAllocation(string $frequency, Carbon $from): Carbon
-    {
-        return match ($frequency) {
-            'monthly' => $from->copy()->addMonth()->startOfMonth(),
-            'weekly' => $from->copy()->addWeek(),
-            'one_time' => $from->copy()->addYears(100), // Effectively never
-            default => $from->copy()->addMonth(),
-        };
-    }
+    // All helper methods removed - functionality moved to CreditService
 }

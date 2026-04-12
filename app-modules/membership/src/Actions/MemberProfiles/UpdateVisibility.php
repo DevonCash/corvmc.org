@@ -2,34 +2,23 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use CorvMC\Moderation\Enums\Visibility;
-use CorvMC\Membership\Models\MemberProfile;
+use CorvMC\Membership\Services\MemberProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use MemberProfileService::updateVisibility() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the MemberProfileService directly.
+ */
 class UpdateVisibility
 {
     use AsAction;
 
     /**
-     * Update member profile visibility.
-     *
-     * @throws \InvalidArgumentException
+     * @deprecated Use MemberProfileService::updateVisibility() instead
      */
-    public function handle(MemberProfile $profile, Visibility|string $visibility): MemberProfile
+    public function handle(...$args)
     {
-        // Convert string to enum if needed
-        if (is_string($visibility)) {
-            $visibility = Visibility::tryFrom($visibility);
-
-            if ($visibility === null) {
-                throw new \InvalidArgumentException(
-                    'Invalid visibility value. Must be one of: public, members, private'
-                );
-            }
-        }
-
-        $profile->update(['visibility' => $visibility]);
-
-        return $profile;
+        return app(MemberProfileService::class)->updateVisibility(...$args);
     }
 }

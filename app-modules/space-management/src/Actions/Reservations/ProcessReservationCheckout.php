@@ -18,9 +18,10 @@ class ProcessReservationCheckout
      *
      * @param  int  $reservationId  The reservation ID from metadata
      * @param  string  $sessionId  The Stripe checkout session ID
+     * @param  string|null  $paymentIntentId  The Stripe payment intent ID
      * @return bool Whether processing was successful
      */
-    public function handle(int $reservationId, string $sessionId): bool
+    public function handle(int $reservationId, string $sessionId, ?string $paymentIntentId = null): bool
     {
         try {
             if (! $reservationId) {
@@ -51,7 +52,7 @@ class ProcessReservationCheckout
             }
 
             // Process the successful payment (this action is also idempotent)
-            HandleSuccessfulPayment::run($reservation, $sessionId);
+            HandleSuccessfulPayment::run($reservation, $sessionId, $paymentIntentId);
 
             Log::info('Successfully processed reservation checkout', [
                 'reservation_id' => $reservationId,

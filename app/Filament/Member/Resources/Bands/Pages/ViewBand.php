@@ -2,7 +2,7 @@
 
 namespace App\Filament\Member\Resources\Bands\Pages;
 
-use CorvMC\Membership\Actions\Bands\AddBandMember;
+use App\Filament\Actions\Bands\AddBandMemberAction;
 use App\Filament\Shared\Actions\ReportContentAction;
 use App\Filament\Member\Resources\Bands\BandResource;
 use App\Models\User;
@@ -53,7 +53,7 @@ class ViewBand extends Page
     public function getHeaderActions(): array
     {
         return [
-            AddBandMember::filamentAction()
+            AddBandMemberAction::make()
                 ->record($this->record),
             EditAction::make()
                 ->visible(fn () => User::me()?->can('update', $this->record)),
@@ -65,6 +65,7 @@ class ViewBand extends Page
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
+        $this->record->load(['media','tags', 'members']);
 
         // Check if user can view this profile
         if (! User::me()?->can('view', $this->record)) {

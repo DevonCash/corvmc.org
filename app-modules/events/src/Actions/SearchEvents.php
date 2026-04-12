@@ -2,27 +2,23 @@
 
 namespace CorvMC\Events\Actions;
 
-use CorvMC\Events\Models\Event;
-use Illuminate\Database\Eloquent\Collection;
+use CorvMC\Events\Services\EventService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use EventService::search() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the EventService directly.
+ */
 class SearchEvents
 {
     use AsAction;
 
     /**
-     * Search events by title, description, or performers.
+     * @deprecated Use EventService::search() instead
      */
-    public function handle(string $query): Collection
+    public function handle(...$args)
     {
-        return Event::query()
-            ->where('title', 'like', "%{$query}%")
-            ->orWhere('description', 'like', "%{$query}%")
-            ->orWhereHas('performers', function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%");
-            })
-            ->orderBy('start_datetime', 'desc')
-            ->limit(50)
-            ->get();
+        return app(EventService::class)->search(...$args);
     }
 }

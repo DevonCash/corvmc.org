@@ -2,32 +2,23 @@
 
 namespace CorvMC\Moderation\Actions\Revisions;
 
-use CorvMC\Moderation\Actions\Trust\AwardSuccessfulContent;
-use CorvMC\Moderation\Models\Revision;
-use Illuminate\Support\Facades\Log;
+use CorvMC\Moderation\Services\TrustService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use TrustService::awardPoints() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the TrustService directly.
+ */
 class AwardTrustPointsForRevision
 {
     use AsAction;
 
     /**
-     * Award trust points for successful revision.
+     * @deprecated Use TrustService::awardPoints() instead
      */
-    public function handle(Revision $revision): void
+    public function handle(...$args)
     {
-        $submitter = $revision->submittedBy;
-        $model = $revision->revisionable;
-        $contentType = $model ? get_class($model) : null;
-
-        if (! $contentType || ! $model) {
-            Log::warning('Cannot award trust points - model not found', [
-                'revision_id' => $revision->id,
-            ]);
-
-            return;
-        }
-
-        AwardSuccessfulContent::run($submitter, $model, $contentType, true);
+        return app(TrustService::class)->awardPoints(...$args);
     }
 }

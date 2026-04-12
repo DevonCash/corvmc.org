@@ -2,6 +2,9 @@
 
 namespace App\Filament\Staff\Resources\SpaceManagement\Tables;
 
+use App\Filament\Actions\Payment\ChargeableMarkCompedAction;
+use App\Filament\Actions\Payment\ChargeableMarkPaidAction;
+use App\Filament\Actions\Reservations\ReservationConfirmAction;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
 use App\Filament\Shared\Actions\ViewAction;
@@ -148,9 +151,9 @@ class SpaceManagementTable
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Close'),
 
-                MarkReservationAsComped::filamentAction(),
-                MarkReservationAsPaid::filamentAction(),
-                ConfirmReservation::filamentAction(),
+                ChargeableMarkCompedAction::make(),
+                ChargeableMarkPaidAction::make(),
+                ReservationConfirmAction::make(),
 
                 CancelReservation::filamentAction(),
             ])

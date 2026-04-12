@@ -2,31 +2,23 @@
 
 namespace CorvMC\Membership\Actions\Users;
 
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\UserManagementService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use UserManagementService::bulkDelete() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the UserManagementService directly.
+ */
 class BulkDeleteUsers
 {
     use AsAction;
 
     /**
-     * Bulk delete users.
+     * @deprecated Use UserManagementService::bulkDelete() instead
      */
-    public function handle(array $userIds): int
+    public function handle(...$args)
     {
-        return DB::transaction(function () use ($userIds) {
-            $deletedCount = 0;
-
-            foreach ($userIds as $userId) {
-                $user = User::find($userId);
-                if ($user) {
-                    DeleteUser::run($user);
-                    $deletedCount++;
-                }
-            }
-
-            return $deletedCount;
-        });
+        return app(UserManagementService::class)->bulkDelete(...$args);
     }
 }

@@ -2,78 +2,23 @@
 
 namespace CorvMC\Membership\Actions\Bands;
 
-use App\Filament\Resources\Bands\BandResource;
-use CorvMC\Bands\Events\BandCreated as BandCreatedEvent;
-use CorvMC\Bands\Models\Band;
-use App\Models\User;
-use Filament\Actions\Action;
-use Filament\Forms\Components\TextInput;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\UnauthorizedException;
+use CorvMC\Membership\Services\BandService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use BandService::create() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the BandService directly.
+ */
 class CreateBand
 {
     use AsAction;
 
     /**
-     * Create a new band with proper validation and notifications.
+     * @deprecated Use BandService::create() instead
      */
-    public function handle(array $data): Band
+    public function handle(...$args)
     {
-        $band = DB::transaction(function () use ($data) {
-            if (! User::me()?->can('create', Band::class)) {
-                throw new UnauthorizedException('User does not have permission to create bands.');
-            }
-
-            // Set owner to current user if not specified
-            if (! isset($data['owner_id'])) {
-                $data['owner_id'] = User::me()->id;
-            }
-
-            $band = Band::create($data);
-
-            // Attach tags if provided
-            if (! empty($data['tags'])) {
-                $band->attachTags($data['tags']);
-            }
-
-            // Add the creator as the owner (directly active, no invitation needed)
-            $band->members()->attach(User::me()->id, [
-                'role' => 'owner',
-                'status' => 'active',
-            ]);
-
-            return $band;
-        });
-
-        BandCreatedEvent::dispatch($band);
-
-        return $band;
-    }
-
-    public static function filamentAction(): Action
-    {
-        return Action::make('create')
-            ->label('Create Band')
-            ->icon('tabler-plus')
-            ->modalHeading('Create New Band')
-            ->modalWidth('md')
-            ->schema([
-                TextInput::make('name')
-                    ->label('Band Name')
-                    ->required()
-                    ->maxLength(255)
-                    ->placeholder('Enter your band name')
-                    ->autofocus(),
-            ])
-            ->action(function (array $data, $livewire) {
-                // Create the band
-                $band = static::run($data);
-
-                // Redirect to edit page
-                $livewire->redirect(BandResource::getUrl('edit', ['record' => $band]));
-            })
-            ->authorize('create');
+        return app(BandService::class)->create(...$args);
     }
 }

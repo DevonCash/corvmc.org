@@ -2,122 +2,51 @@
 
 namespace CorvMC\Finance\Actions\Payments;
 
-use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
-use App\Filament\Shared\Actions\Action;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use App\Filament\Actions\Payment\ChargeableMarkPaidAction;
+use CorvMC\Finance\Data\PaymentData;
+use CorvMC\Finance\Services\PaymentService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use CorvMC\SpaceManagement\Models\Reservation;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Illuminate\Database\Eloquent\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use PaymentService::recordPayment() instead
+ * 
+ * This action is maintained for backward compatibility.
+ * New code should use the PaymentService directly.
+ */
 class MarkReservationAsPaid
 {
     use AsAction;
 
+    /**
+     * @deprecated Use PaymentService::recordPayment() instead
+     */
     public function handle(RehearsalReservation $reservation, ?string $paymentMethod = null, ?string $notes = null): void
     {
-        // If the reservation is scheduled or reserved, confirm it first
-        if (in_array($reservation->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
-            $reservation = ConfirmReservation::run($reservation);
-            $reservation->refresh();
-        }
+        // Create DTO from parameters
+        $paymentData = PaymentData::from([
+            'chargeable' => $reservation,
+            'paymentMethod' => $paymentMethod ?? 'manual',
+            'notes' => $notes,
+        ]);
 
-        // Update charge record
-        $reservation->charge?->markAsPaid($paymentMethod ?? 'manual', null, $notes);
-
-        $method = $paymentMethod ?? 'manual';
-
-        activity('reservation')
-            ->performedOn($reservation)
-            ->causedBy(auth()->user())
-            ->event('payment_recorded')
-            ->withProperties([
-                'payment_method' => $method,
-                'notes' => $notes,
-            ])
-            ->log("Payment recorded via {$method}");
-    }
-
-    public static function filamentAction(): Action
-    {
-        return Action::make('mark_paid')
-            ->label('Mark Paid')
-            ->icon('tabler-cash')
-            ->color('success')
-            ->authorize('manage')
-            ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation && $record->needsPayment())
-            ->schema([
-                Select::make('payment_method')
-                    ->label('Payment Method')
-                    ->options([
-                        'cash' => 'Cash',
-                        'card' => 'Credit/Debit Card',
-                        'venmo' => 'Venmo',
-                        'paypal' => 'PayPal',
-                        'zelle' => 'Zelle',
-                        'check' => 'Check',
-                        'other' => 'Other',
-                    ])
-                    ->required(),
-                Textarea::make('payment_notes')
-                    ->label('Payment Notes')
-                    ->placeholder('Optional notes about the payment...')
-                    ->rows(2),
-            ])
-            ->action(function (Reservation $record, array $data) {
-                if (! $record instanceof RehearsalReservation) {
-                    return;
-                }
-
-                static::run($record, $data['payment_method'], $data['payment_notes'] ?? null);
-
-                \Filament\Notifications\Notification::make()
-                    ->title('Payment recorded')
-                    ->success()
-                    ->send();
-            });
+        // Delegate to service
+        app(PaymentService::class)->recordPayment($paymentData);
     }
 
     /**
-     * @param  Collection<int, RehearsalReservation>  $records
+     * @deprecated Use ChargeableMarkPaidAction::make() instead
      */
-    public static function filamentBulkAction(): Action
+    public static function filamentAction(): \Filament\Actions\Action
     {
-        return Action::make('mark_paid_bulk')
-            ->label('Mark as Paid')
-            ->icon('tabler-cash')
-            ->color('success')
-            ->authorize('manage')
-            ->schema([
-                Select::make('payment_method')
-                    ->label('Payment Method')
-                    ->options([
-                        'cash' => 'Cash',
-                        'card' => 'Credit/Debit Card',
-                        'venmo' => 'Venmo',
-                        'paypal' => 'PayPal',
-                        'zelle' => 'Zelle',
-                        'check' => 'Check',
-                        'other' => 'Other',
-                    ])
-                    ->required(),
-                Textarea::make('payment_notes')
-                    ->label('Payment Notes')
-                    ->placeholder('Optional notes about the payment...')
-                    ->rows(2),
-            ])
-            ->action(function (Collection $records, array $data) {
-                $count = 0;
-                foreach ($records as $record) {
-                    if ($record instanceof RehearsalReservation && $record->needsPayment()) {
-                        static::run($record, $data['payment_method'], $data['payment_notes'] ?? null);
-                        $count++;
-                    }
-                }
-            })
-            ->successNotificationTitle('Payments recorded')
-            ->successNotification(fn (Collection $records, array $data) => $records->filter(fn ($r) => $r instanceof RehearsalReservation && $r->needsPayment())->count().' reservations marked as paid');
+        return ChargeableMarkPaidAction::make();
+    }
+
+    /**
+     * @deprecated Use ChargeableMarkPaidAction::bulkAction() instead
+     */
+    public static function filamentBulkAction(): \Filament\Actions\Action
+    {
+        return ChargeableMarkPaidAction::bulkAction();
     }
 }

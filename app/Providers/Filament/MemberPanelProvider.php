@@ -133,15 +133,15 @@ class MemberPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,
-                fn (): string => view('filament.components.dark-mode-toggle')->render()
+                fn(): string => view('filament.components.dark-mode-toggle')->render()
             )
             ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,
-                fn (): string => view('livewire.feedback-button-wrapper')->render()
+                fn(): string => view('livewire.feedback-button-wrapper')->render()
             )
             ->renderHook(
                 PanelsRenderHook::SIDEBAR_FOOTER,
-                fn (): string => view('filament.components.sidebar-footer')->render()
+                fn(): string => view('filament.components.sidebar-footer')->render()
             )
             ->viteTheme('resources/css/app.css');
     }
@@ -160,23 +160,24 @@ class MemberPanelProvider extends PanelProvider
             }
 
             // Get user's active bands (limit 5, alphabetically)
-            $activeBands = $user->bands()
-                ->wherePivot('status', 'active')
+            $userBands = $user->bands()
                 ->orderBy('name')
-                ->limit(5)
+                ->with('media')
                 ->get();
 
-            // Get user's invited bands (alphabetically)
-            $invitedBands = $user->bands()
-                ->wherePivot('status', 'invited')
-                ->orderBy('name')
-                ->get();
+            $activeBands = $userBands->filter(function ($band) {
+                return $band->pivot->status === 'active';
+            });
+
+            $invitedBands = $userBands->filter(function ($band) {
+                return $band->pivot->status === 'invited';
+            });
 
             // Add individual band navigation items
             $sort = 1;
             foreach ($activeBands as $band) {
                 $avatarHtml = new HtmlString(
-                    '<img src="'.e($band->avatar_thumb_url).'" alt="'.e($band->name).'" class="size-6 rounded-full object-cover" />'
+                    '<img src="' . e($band->avatar_thumb_url) . '" alt="' . e($band->name) . '" class="size-6 rounded-full object-cover" />'
                 );
 
                 Filament::registerNavigationItems([
@@ -191,7 +192,7 @@ class MemberPanelProvider extends PanelProvider
             // Add invited band navigation items with badges
             foreach ($invitedBands as $band) {
                 $avatarHtml = new HtmlString(
-                    '<img src="'.e($band->avatar_thumb_url).'" alt="'.e($band->name).'" class="size-6 rounded-full object-cover" />'
+                    '<img src="' . e($band->avatar_thumb_url) . '" alt="' . e($band->name) . '" class="size-6 rounded-full object-cover" />'
                 );
 
                 Filament::registerNavigationItems([

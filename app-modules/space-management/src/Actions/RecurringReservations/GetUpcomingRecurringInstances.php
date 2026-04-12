@@ -2,10 +2,18 @@
 
 namespace CorvMC\SpaceManagement\Actions\RecurringReservations;
 
+use CorvMC\SpaceManagement\Services\RecurringReservationService;
 use CorvMC\Support\Models\RecurringSeries;
 use Illuminate\Support\Collection;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use RecurringReservationService::getUpcomingRecurringInstances() instead.
+ * This action will be removed in a future version.
+ * 
+ * The business logic has been moved to RecurringReservationService for better
+ * organization and testability. This action now delegates to the service.
+ */
 class GetUpcomingRecurringInstances
 {
     use AsAction;
@@ -15,12 +23,6 @@ class GetUpcomingRecurringInstances
      */
     public function handle(RecurringSeries $series, int $limit = 10): Collection
     {
-        $modelClass = $series->recurable_type;
-
-        return $modelClass::where('recurring_series_id', $series->id)
-            ->where('instance_date', '>=', now()->toDateString())
-            ->orderBy('instance_date')
-            ->limit($limit)
-            ->get();
+        return app(RecurringReservationService::class)->getUpcomingRecurringInstances($series, $limit);
     }
 }

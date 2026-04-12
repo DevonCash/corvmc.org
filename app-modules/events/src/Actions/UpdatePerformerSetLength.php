@@ -2,32 +2,23 @@
 
 namespace CorvMC\Events\Actions;
 
-use CorvMC\Bands\Models\Band;
-use CorvMC\Events\Models\Event;
+use CorvMC\Events\Services\EventService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use EventService::updatePerformerSetLength() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the EventService directly.
+ */
 class UpdatePerformerSetLength
 {
     use AsAction;
 
     /**
-     * Update a performer's set length.
-     *
-     * @param  Event  $event  The event
-     * @param  Band  $band  The band whose set length to update
-     * @param  int  $setLength  The new set length in minutes
-     * @return bool True if set length was updated, false if band not found
+     * @deprecated Use EventService::updatePerformerSetLength() instead
      */
-    public function handle(Event $event, Band $band, int $setLength): bool
+    public function handle(...$args)
     {
-        // Check if the band is a performer
-        if (! $event->performers()->where('band_profile_id', $band->id)->exists()) {
-            return false;
-        }
-
-        // Update the set length
-        $event->performers()->updateExistingPivot($band->id, ['set_length' => $setLength]);
-
-        return true;
+        return app(EventService::class)->updatePerformerSetLength(...$args);
     }
 }

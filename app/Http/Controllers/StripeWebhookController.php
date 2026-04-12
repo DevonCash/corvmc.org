@@ -50,17 +50,20 @@ class StripeWebhookController extends CashierWebhookController
     private function handleReservationCheckout(array $session, array $metadata): SymfonyResponse
     {
         $sessionId = $session['id'];
+        $paymentIntentId = $session['payment_intent'] ?? null;
         $reservationId = $metadata['reservation_id'] ?? null;
 
         $success = \CorvMC\SpaceManagement\Actions\Reservations\ProcessReservationCheckout::run(
             $reservationId,
-            $sessionId
+            $sessionId,
+            $paymentIntentId
         );
 
         if (! $success && ! $reservationId) {
             // Only return error if processing failed due to something other than missing ID
             Log::warning('Stripe webhook: Failed to process reservation checkout', [
                 'session_id' => $sessionId,
+                'payment_intent_id' => $paymentIntentId,
                 'reservation_id' => $reservationId,
             ]);
         }

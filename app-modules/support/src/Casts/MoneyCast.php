@@ -2,7 +2,8 @@
 
 namespace CorvMC\Support\Casts;
 
-use Brick\Money\Money;
+use Brick\Money\Money as BrickMoney;
+use CorvMC\Support\Money\Money;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 
@@ -43,7 +44,16 @@ class MoneyCast implements CastsAttributes
         }
 
         if ($value instanceof Money) {
-            // If setting a Money object and we have a currency column, update it
+            // If setting our custom Money object
+            if ($this->currencyColumn && isset($attributes[$this->currencyColumn])) {
+                $model->setAttribute($this->currencyColumn, $value->getCurrency()->getCurrencyCode());
+            }
+
+            return $value->getMinorAmount();
+        }
+
+        if ($value instanceof BrickMoney) {
+            // If setting a Brick Money object directly
             if ($this->currencyColumn && isset($attributes[$this->currencyColumn])) {
                 $model->setAttribute($this->currencyColumn, $value->getCurrency()->getCurrencyCode());
             }
@@ -54,13 +64,13 @@ class MoneyCast implements CastsAttributes
         if (is_numeric($value)) {
             $currency = $this->resolveCurrency($attributes);
 
-            return Money::of($value, $currency)->getMinorAmount()->toInt();
+            return Money::of($value, $currency)->getMinorAmount();
         }
 
         if (is_string($value)) {
             $currency = $this->resolveCurrency($attributes);
 
-            return Money::of($value, $currency)->getMinorAmount()->toInt();
+            return Money::of($value, $currency)->getMinorAmount();
         }
 
         return null;

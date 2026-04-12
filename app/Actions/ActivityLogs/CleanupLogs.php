@@ -2,17 +2,25 @@
 
 namespace App\Actions\ActivityLogs;
 
+use App\Services\ActivityLogService;
 use Filament\Actions\Action;
 use Lorisleiva\Actions\Concerns\AsAction;
-use Spatie\Activitylog\Models\Activity;
 
+/**
+ * @deprecated Use ActivityLogService::cleanup() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the ActivityLogService directly.
+ */
 class CleanupLogs
 {
     use AsAction;
 
+    /**
+     * @deprecated Use ActivityLogService::cleanup() instead
+     */
     public function handle(): void
     {
-        Activity::where('created_at', '<', now()->subDays(90))->delete();
+        app(ActivityLogService::class)->cleanup();
     }
 
     public static function filamentAction(): Action
@@ -24,10 +32,11 @@ class CleanupLogs
             ->requiresConfirmation()
             ->modalDescription('This will permanently delete activity logs older than 90 days.')
             ->action(function () {
-                static::run();
+                $deleted = app(ActivityLogService::class)->cleanup();
 
                 \Filament\Notifications\Notification::make()
                     ->title('Logs cleaned up')
+                    ->body("Deleted {$deleted} old activity logs")
                     ->success()
                     ->send();
             });

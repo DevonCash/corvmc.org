@@ -2,33 +2,23 @@
 
 namespace CorvMC\Membership\Actions\Bands;
 
-use CorvMC\Bands\Events\BandDeleted as BandDeletedEvent;
-use CorvMC\Bands\Models\Band;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\BandService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use BandService::delete() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the BandService directly.
+ */
 class DeleteBand
 {
     use AsAction;
 
     /**
-     * Delete a band.
+     * @deprecated Use BandService::delete() instead
      */
-    public function handle(Band $band): bool
+    public function handle(...$args)
     {
-        $result = DB::transaction(function () use ($band) {
-            // Remove all members
-            $band->memberships()->delete();
-
-            $band->tags()->detach();
-
-            return $band->delete();
-        });
-
-        if ($result) {
-            BandDeletedEvent::dispatch($band);
-        }
-
-        return $result;
+        return app(BandService::class)->delete(...$args);
     }
 }

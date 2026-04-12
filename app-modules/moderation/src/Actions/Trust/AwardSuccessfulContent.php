@@ -2,70 +2,23 @@
 
 namespace CorvMC\Moderation\Actions\Trust;
 
-use Illuminate\Support\Facades\Log;
+use CorvMC\Moderation\Services\TrustService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
-use App\Models\User;
-use CorvMC\Bands\Models\Band;
-use CorvMC\Moderation\Contracts\Reportable;
-
+/**
+ * @deprecated Use TrustService::awardSuccessfulContent() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the TrustService directly.
+ */
 class AwardSuccessfulContent
 {
     use AsAction;
 
     /**
-     * Award points for successful content.
+     * @deprecated Use TrustService::awardSuccessfulContent() instead
      */
-    public function handle(User $user, Reportable $content, ?string $contentType = null, bool $forceAward = false): void
+    public function handle(...$args)
     {
-        $contentType = $contentType ?? get_class($content);
-
-        // Only award if content should be evaluated
-        if (! $forceAward && ! $this->shouldEvaluateContent($content)) {
-            return;
-        }
-
-        // Check for upheld reports
-        $hasUpheldReports = $content->reports()
-            ->where('status', 'upheld')
-            ->exists();
-
-        if (! $hasUpheldReports) {
-            $contentId = $content->getKey();
-            $contentTitle = $content->title ?? $content->name ?? $contentId;
-
-            AwardTrustPoints::run(
-                $user,
-                config('moderation.points.successful_content', 1),
-                $contentType,
-                'successful_content',
-                $contentId,
-                'Successful content: ' . $contentTitle
-            );
-
-            Log::info('Trust points awarded for successful content', [
-                'user_id' => $user->id,
-                'content_type' => $contentType,
-                'content_id' => $contentId,
-                'points_awarded' => config('moderation.points.successful_content', 1),
-                'new_total' => $user->getTrustBalance($contentType),
-            ]);
-        }
-    }
-
-    /**
-     * Determine if content should be evaluated for trust.
-     */
-    protected function shouldEvaluateContent(Reportable $content): bool
-    {
-        if ($content instanceof \CorvMC\Events\Models\Event) {
-            return $content->status === 'completed';
-        }
-
-        if ($content instanceof \CorvMC\Membership\Models\MemberProfile || $content instanceof Band) {
-            return true;
-        }
-
-        return true;
+        return app(TrustService::class)->awardSuccessfulContent(...$args);
     }
 }

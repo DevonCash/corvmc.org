@@ -2,24 +2,23 @@
 
 namespace CorvMC\Membership\Actions\StaffProfiles;
 
-use App\Models\StaffProfile;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\StaffProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use StaffProfileService::delete() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the StaffProfileService directly.
+ */
 class DeleteStaffProfile
 {
     use AsAction;
 
     /**
-     * Delete a staff profile.
+     * @deprecated Use StaffProfileService::delete() instead
      */
-    public function handle(StaffProfile $staffProfile): bool
+    public function handle(...$args)
     {
-        return DB::transaction(function () use ($staffProfile) {
-            // Clear all media
-            $staffProfile->clearMediaCollection('profile_image');
-
-            return $staffProfile->delete();
-        });
+        return app(StaffProfileService::class)->delete(...$args);
     }
 }

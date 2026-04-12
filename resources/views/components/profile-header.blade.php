@@ -4,10 +4,9 @@
     <div class="flex flex-col lg:flex-row items-center gap-6 {{ $type === 'member' ? 'my-8 lg:m-0' : '' }}">
         {{-- Profile Photo --}}
         <div class="relative lg:border-r-2 border-base-300 {{ $type === 'band' ? 'overflow-hidden' : '' }}">
-            <img src="{{ $record->avatar_url }}" 
-                 alt="{{ $type === 'member' ? $record->user->name : $record->name }}" 
-                 class="size-48 object-cover">
-            
+            <img src="{{ $record->avatar_url }}" alt="{{ $type === 'member' ? $record->user->name : $record->name }}"
+                class="size-48 object-cover">
+
             @if ($record->visibility === 'private')
                 <div class="absolute -top-2 -right-2">
                     <div class="bg-error text-error-content px-2 py-1 text-xs font-bold flex items-center">
@@ -24,17 +23,20 @@
                 @if ($type === 'member')
                     {{ $record->user->name }}
                     @if ($record->user->pronouns)
-                        <span class="font-medium text-lg text-base-content/70 mb-2">({{ $record->user->pronouns }})</span>
+                        <span
+                            class="font-medium text-lg text-base-content/70 mb-2">({{ $record->user->pronouns }})</span>
                     @endif
                 @else
                     {{ $record->name }}
                     @if ($record->visibility === 'private')
-                        <span class="bg-error text-error-content px-2 py-1 text-xs font-bold inline-flex items-center -top-2 relative">
+                        <span
+                            class="bg-error text-error-content px-2 py-1 text-xs font-bold inline-flex items-center -top-2 relative">
                             <x-tabler-lock class="w-3 h-3 mr-1" />
                             PRIVATE
                         </span>
                     @elseif ($record->visibility === 'members')
-                        <span class="bg-warning text-warning-content px-2 py-1 text-xs font-bold inline-flex items-center">
+                        <span
+                            class="bg-warning text-warning-content px-2 py-1 text-xs font-bold inline-flex items-center">
                             <x-tabler-users class="w-3 h-3 mr-1" />
                             MEMBERS
                         </span>
@@ -45,8 +47,9 @@
             @if ($type === 'band')
                 <div class="flex items-center justify-center lg:justify-start text-base-content/70">
                     <x-tabler-users class="w-4 h-4 mr-1" />
-                    <span>{{ $record->members()->count() }}
-                        {{ $record->members()->count() === 1 ? 'member' : 'members' }}</span>
+                    @php $memberCount = $record->members()->count(); @endphp
+                    <span>{{ $memberCount }}
+                        {{ $memberCount === 1 ? 'member' : 'members' }}</span>
                 </div>
             @endif
 

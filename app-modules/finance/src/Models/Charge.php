@@ -34,6 +34,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string|null $payment_method
  * @property \Illuminate\Support\Carbon|null $paid_at
  * @property string|null $stripe_session_id
+ * @property string|null $stripe_payment_intent_id
  * @property string|null $notes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -63,6 +64,7 @@ class Charge extends Model
         'payment_method',
         'paid_at',
         'stripe_session_id',
+        'stripe_payment_intent_id',
         'notes',
     ];
 
@@ -144,14 +146,24 @@ class Charge extends Model
 
     /**
      * Mark the charge as paid.
+     * 
+     * @param string $paymentMethod The payment method used (e.g., 'stripe', 'manual', 'cash')
+     * @param string|null $stripeSessionId The Stripe Checkout Session ID
+     * @param string|null $stripePaymentIntentId The Stripe Payment Intent ID
+     * @param string|null $notes Additional notes about the payment
      */
-    public function markAsPaid(string $paymentMethod, ?string $stripeSessionId = null, ?string $notes = null): self
-    {
+    public function markAsPaid(
+        string $paymentMethod, 
+        ?string $stripeSessionId = null, 
+        ?string $stripePaymentIntentId = null,
+        ?string $notes = null
+    ): self {
         $this->update([
             'status' => ChargeStatus::Paid,
             'payment_method' => $paymentMethod,
             'paid_at' => now(),
             'stripe_session_id' => $stripeSessionId,
+            'stripe_payment_intent_id' => $stripePaymentIntentId,
             'notes' => $notes,
         ]);
 

@@ -101,7 +101,7 @@ describe('Flow 1: Create Reservation with Credits', function () {
         // Assert: 1 hour free (2 blocks), 1 hour paid ($15)
         expect((float) $reservation->hours_used)->toEqual(2.0)
             ->and((float) $reservation->free_hours_used)->toEqual(1.0)
-            ->and($reservation->charge->net_amount->getMinorAmount()->toInt())->toEqual(1500);
+            ->and($reservation->charge->net_amount->getMinorAmount())->toEqual(1500);
 
         // Assert: All credits used
         expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(0);

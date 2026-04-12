@@ -20,7 +20,7 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::Pending => 'Pending',
             self::Paid => 'Paid',
-            self::CoveredByCredits => 'Covered by Credits',
+            self::CoveredByCredits => 'Credited',
             self::Comped => 'Comped',
             self::Refunded => 'Refunded',
             self::Cancelled => 'Cancelled',
@@ -32,7 +32,7 @@ enum ChargeStatus: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::Pending => 'tabler-clock-dollar',
             self::Paid => 'tabler-coin',
-            self::CoveredByCredits => 'tabler-coin-off',
+            self::CoveredByCredits => 'tabler-heart',
             self::Comped => 'tabler-gift',
             self::Refunded => 'tabler-receipt-refund',
             self::Cancelled => 'tabler-x',

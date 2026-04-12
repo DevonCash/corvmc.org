@@ -2,24 +2,24 @@
 
 namespace CorvMC\Finance\Actions\Subscriptions;
 
-use App\Models\User;
+use CorvMC\Finance\Services\SubscriptionService;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Cache;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use SubscriptionService::getSustainingMembers() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the SubscriptionService directly.
+ */
 class GetSustainingMembers
 {
     use AsAction;
 
     /**
-     * Get all sustaining members (role-based only).
+     * @deprecated Use SubscriptionService::getSustainingMembers() instead
      */
     public function handle(): Collection
     {
-        return Cache::remember('sustaining_members', 1800, function () {
-            return User::whereHas('roles', function ($query) {
-                $query->where('name', config('membership.member_role', 'sustaining member'));
-            })->with(['profile', 'subscriptions'])->get();
-        });
+        return app(SubscriptionService::class)->getSustainingMembers();
     }
 }

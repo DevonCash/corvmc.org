@@ -2,18 +2,16 @@
 
 namespace CorvMC\Support\Actions;
 
-use CorvMC\Support\Contracts\Recurrable;
-use CorvMC\Support\Events\RecurringSeriesCancelled;
 use CorvMC\Support\Models\RecurringSeries;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Support\Services\RecurringService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * Cancel a recurring series and all its future instances.
  *
- * This action calls static methods on the recurable_type class directly.
- * The model must implement the Recurrable interface.
+ * @deprecated Use RecurringService::cancelSeries() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the RecurringService directly.
  */
 class CancelRecurringSeries
 {
@@ -21,25 +19,11 @@ class CancelRecurringSeries
 
     /**
      * Cancel entire recurring series and all future instances.
+     * 
+     * @deprecated Use RecurringService::cancelSeries() instead
      */
     public function handle(RecurringSeries $series, ?string $reason = null): void
     {
-        $recurableType = Relation::getMorphedModel($series->recurable_type) ?? $series->recurable_type;
-
-        if (! is_a($recurableType, Recurrable::class, true)) {
-            throw new \RuntimeException(
-                "Model {$recurableType} must implement ".Recurrable::class
-            );
-        }
-
-        DB::transaction(function () use ($series, $recurableType, $reason) {
-            // Cancel the series itself
-            $series->update(['status' => 'cancelled']);
-
-            // Cancel all future instances
-            $recurableType::cancelFutureInstances($series, $reason);
-        });
-
-        RecurringSeriesCancelled::dispatch($series);
+        app(RecurringService::class)->cancelSeries($series, $reason);
     }
 }

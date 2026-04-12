@@ -2,29 +2,23 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use CorvMC\Membership\Models\MemberProfile;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\MemberProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use MemberProfileService::updateInfluences() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the MemberProfileService directly.
+ */
 class UpdateInfluences
 {
     use AsAction;
 
     /**
-     * Update member profile influences.
+     * @deprecated Use MemberProfileService::updateInfluences() instead
      */
-    public function handle(MemberProfile $profile, array $influences): bool
+    public function handle(...$args)
     {
-        DB::transaction(function () use ($profile, $influences) {
-            // Remove existing influences
-            $profile->detachTags($profile->tagsWithType('influence'));
-
-            // Add new influences
-            foreach ($influences as $influence) {
-                $profile->attachTag($influence, 'influence');
-            }
-        });
-
-        return true;
+        return app(MemberProfileService::class)->updateInfluences(...$args);
     }
 }

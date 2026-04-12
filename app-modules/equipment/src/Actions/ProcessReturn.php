@@ -2,23 +2,23 @@
 
 namespace CorvMC\Equipment\Actions;
 
-use CorvMC\Equipment\Models\EquipmentLoan;
+use CorvMC\Equipment\Services\EquipmentService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use EquipmentService::processReturn() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the EquipmentService directly.
+ */
 class ProcessReturn
 {
     use AsAction;
 
     /**
-     * Process return of equipment.
+     * @deprecated Use EquipmentService::processReturn() instead
      */
-    public function handle(
-        EquipmentLoan $loan,
-        string $conditionIn,
-        ?string $damageNotes = null
-    ): EquipmentLoan {
-        $loan->processReturn($conditionIn, $damageNotes);
-
-        return $loan->fresh();
+    public function handle(...$args)
+    {
+        return app(EquipmentService::class)->processReturn(...$args);
     }
 }

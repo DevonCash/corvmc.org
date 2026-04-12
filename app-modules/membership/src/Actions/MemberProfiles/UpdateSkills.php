@@ -2,29 +2,23 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use CorvMC\Membership\Models\MemberProfile;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\MemberProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use MemberProfileService::updateSkills() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the MemberProfileService directly.
+ */
 class UpdateSkills
 {
     use AsAction;
 
     /**
-     * Update member profile skills.
+     * @deprecated Use MemberProfileService::updateSkills() instead
      */
-    public function handle(MemberProfile $profile, array $skills): bool
+    public function handle(...$args)
     {
-        DB::transaction(function () use ($profile, $skills) {
-            // Remove existing skills
-            $profile->detachTags($profile->tagsWithType('skill'));
-
-            // Add new skills
-            foreach ($skills as $skill) {
-                $profile->attachTag($skill, 'skill');
-            }
-        });
-
-        return true;
+        return app(MemberProfileService::class)->updateSkills(...$args);
     }
 }

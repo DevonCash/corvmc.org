@@ -2,45 +2,23 @@
 
 namespace CorvMC\Membership\Actions\Users;
 
-use App\Models\User;
-use CorvMC\Membership\Events\UserDeleted as UserDeletedEvent;
-use CorvMC\Membership\Notifications\UserDeactivatedNotification;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\UserManagementService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use UserManagementService::delete() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the UserManagementService directly.
+ */
 class DeleteUser
 {
     use AsAction;
 
     /**
-     * Soft delete a user with notifications.
+     * @deprecated Use UserManagementService::delete() instead
      */
-    public function handle(User $user): bool
+    public function handle(...$args)
     {
-        $result = DB::transaction(function () use ($user) {
-            // Cancel any future reservations
-            $user->reservations()
-                ->where('reserved_at', '>', now())
-                ->update(['status' => 'cancelled']);
-
-            // Soft delete the user
-            return $user->delete();
-        });
-
-        if ($result) {
-            UserDeletedEvent::dispatch($user);
-
-            // Send deactivation notification outside transaction
-            try {
-                $user->notify(new UserDeactivatedNotification);
-            } catch (\Exception $e) {
-                \Log::error('Failed to send user deactivated notification', [
-                    'user_id' => $user->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        return $result;
+        return app(UserManagementService::class)->delete(...$args);
     }
 }

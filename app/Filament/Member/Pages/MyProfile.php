@@ -33,7 +33,9 @@ class MyProfile extends Page implements HasForms
 
     public function mount(): void
     {
-        $this->form->fill(User::me()->profile->toArray());
+        $profile = User::me()->profile;
+        $profile->load('flags');
+        $this->form->fill($profile->toArray());
     }
 
     public function form(Schema $form): Schema

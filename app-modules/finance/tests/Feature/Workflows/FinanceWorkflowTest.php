@@ -135,7 +135,7 @@ describe('Finance Workflow: CoveredByCredits Status', function () {
 
         expect($reservation->charge->status)->toBe(ChargeStatus::CoveredByCredits);
         expect($reservation->charge->payment_method)->toBe('credits');
-        expect($reservation->charge->net_amount->getMinorAmount()->toInt())->toBe(0);
+        expect($reservation->charge->net_amount->getMinorAmount())->toBe(0);
     });
 });
 

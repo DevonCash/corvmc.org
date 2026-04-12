@@ -2,34 +2,23 @@
 
 namespace CorvMC\Membership\Actions\MemberProfiles;
 
-use CorvMC\Membership\Events\MemberProfileDeleted as MemberProfileDeletedEvent;
-use CorvMC\Membership\Models\MemberProfile;
-use Illuminate\Support\Facades\DB;
+use CorvMC\Membership\Services\MemberProfileService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use MemberProfileService::delete() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the MemberProfileService directly.
+ */
 class DeleteMemberProfile
 {
     use AsAction;
 
     /**
-     * Delete a member profile.
+     * @deprecated Use MemberProfileService::delete() instead
      */
-    public function handle(MemberProfile $profile): bool
+    public function handle(...$args)
     {
-        $result = DB::transaction(function () use ($profile) {
-            // Clear all media
-            $profile->clearMediaCollection('avatar');
-
-            // Detach all tags
-            $profile->detachTags($profile->tags);
-
-            return $profile->delete();
-        });
-
-        if ($result) {
-            MemberProfileDeletedEvent::dispatch($profile);
-        }
-
-        return $result;
+        return app(MemberProfileService::class)->delete(...$args);
     }
 }

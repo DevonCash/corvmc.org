@@ -2,39 +2,23 @@
 
 namespace CorvMC\Moderation\Actions\Trust;
 
-use App\Models\User;
-use Illuminate\Support\Facades\Log;
+use CorvMC\Moderation\Services\TrustService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
+/**
+ * @deprecated Use TrustService::resetTrustPoints() instead
+ * This action is maintained for backward compatibility only.
+ * New code should use the TrustService directly.
+ */
 class ResetTrustPoints
 {
     use AsAction;
 
     /**
-     * Reset user's trust (admin function).
+     * @deprecated Use TrustService::resetTrustPoints() instead
      */
-    public function handle(User $user, string $contentType = 'global', string $reason = 'Admin reset', ?User $admin = null): void
+    public function handle(...$args)
     {
-        $currentBalance = $user->getTrustBalance($contentType);
-
-        if ($currentBalance != 0) {
-            AwardTrustPoints::run(
-                $user,
-                -$currentBalance, // Negative of current balance
-                $contentType,
-                'reset',
-                null,
-                "Admin reset: {$reason}",
-                $admin
-            );
-
-            Log::warning('Trust points reset by admin', [
-                'user_id' => $user->id,
-                'content_type' => $contentType,
-                'old_points' => $currentBalance,
-                'reason' => $reason,
-                'admin_id' => $admin?->id,
-            ]);
-        }
+        return app(TrustService::class)->resetTrustPoints(...$args);
     }
 }
