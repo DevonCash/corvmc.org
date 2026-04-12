@@ -9,6 +9,8 @@ class EquipmentServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // Register Equipment services as singletons
+        $this->app->singleton(\CorvMC\Equipment\Services\EquipmentService::class);
     }
 
     public function boot(): void

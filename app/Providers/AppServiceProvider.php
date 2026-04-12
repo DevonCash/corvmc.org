@@ -37,7 +37,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Register app layer services as singletons
         $this->app->singleton(\App\Services\GitHubService::class);
+        $this->app->singleton(\App\Services\NotificationService::class);
+        $this->app->singleton(\App\Services\EventSyncService::class);
+        $this->app->singleton(\App\Services\ActivityLogService::class);
+        $this->app->singleton(\App\Services\InvitationService::class);
     }
 
     public function boot(): void

@@ -12,6 +12,14 @@ class FinanceServiceProvider extends ServiceProvider
             __DIR__.'/../../config/finance.php',
             'finance'
         );
+
+        // Register Finance services as singletons
+        $this->app->singleton(\CorvMC\Finance\Services\PaymentService::class);
+        $this->app->singleton(\CorvMC\Finance\Services\CreditService::class);
+        $this->app->singleton(\CorvMC\Finance\Services\SubscriptionService::class);
+        $this->app->singleton(\CorvMC\Finance\Services\FeeService::class);
+        $this->app->singleton(\CorvMC\Finance\Services\MemberBenefitService::class);
+        $this->app->singleton(\CorvMC\Finance\Services\PricingService::class);
     }
 
     public function boot(): void
