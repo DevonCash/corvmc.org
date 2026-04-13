@@ -5,6 +5,7 @@ namespace App\Filament\Staff\Resources\SpaceClosures\Schemas;
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\Actions\Reservations\GetReservationsAffectedByClosure;
 use CorvMC\SpaceManagement\Enums\ClosureType;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
@@ -190,7 +191,7 @@ class SpaceClosureCreateWizard
             return;
         }
 
-        $reservations = GetReservationsAffectedByClosure::run($startsAtCarbon, $endsAtCarbon);
+        $reservations = ReservationService::getReservationsAffectedByClosure($startsAtCarbon, $endsAtCarbon);
 
         $formatted = $reservations->map(function ($r) {
             try {

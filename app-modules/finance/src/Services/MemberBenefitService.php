@@ -4,6 +4,7 @@ namespace CorvMC\Finance\Services;
 
 use App\Models\User;
 use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Facades\SubscriptionService;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Illuminate\Support\Facades\Log;
 
@@ -72,7 +73,7 @@ class MemberBenefitService
         if ($subscription?->active()) {
             try {
                 // Get the maximum contribution amount for this billing period
-                $peakAmount = \CorvMC\Finance\Actions\Subscriptions\GetBillingPeriodPeakAmount::run($subscription);
+                $peakAmount = SubscriptionService::getBillingPeriodPeakAmount($subscription);
 
                 return $this->calculateFreeHours($peakAmount);
             } catch (\Exception $e) {

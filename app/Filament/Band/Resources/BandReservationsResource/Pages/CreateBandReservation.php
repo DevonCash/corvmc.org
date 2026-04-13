@@ -2,11 +2,7 @@
 
 namespace App\Filament\Band\Resources\BandReservationsResource\Pages;
 
-use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
-use CorvMC\SpaceManagement\Actions\Reservations\DetermineReservationStatus;
-use CorvMC\SpaceManagement\Actions\Reservations\GetAvailableTimeSlotsForDate;
-use CorvMC\SpaceManagement\Actions\Reservations\GetValidEndTimesForDate;
-use CorvMC\SpaceManagement\Actions\Reservations\ValidateReservation;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use App\Filament\Band\Resources\BandReservationsResource;
 use CorvMC\Bands\Models\Band;
@@ -110,7 +106,7 @@ class CreateBandReservation extends CreateRecord
                                 return [];
                             }
 
-                            return GetAvailableTimeSlotsForDate::run(Carbon::parse($date, config('app.timezone')));
+                            return ReservationService::getAvailableTimeSlots(Carbon::parse($date, config('app.timezone')));
                         })
                         ->disabled(fn (Get $get) => ! $get('reservation_date'))
                         ->required()
@@ -130,7 +126,7 @@ class CreateBandReservation extends CreateRecord
                                 return [];
                             }
 
-                            return GetValidEndTimesForDate::run(Carbon::parse($date, config('app.timezone')), $startTime);
+                            return ReservationService::getValidEndTimesForDate(Carbon::parse($date, config('app.timezone')), $startTime);
                         })
                         ->required()
                         ->live(debounce: 300)
@@ -196,7 +192,7 @@ class CreateBandReservation extends CreateRecord
             return;
         }
 
-        $status = DetermineReservationStatus::run(Carbon::parse($date), false);
+        $status = ReservationService::determineReservationStatus(Carbon::parse($date), false);
         $set('status', $status);
     }
 
@@ -223,7 +219,7 @@ class CreateBandReservation extends CreateRecord
         }
 
         // Calculate cost using the booking user's credits
-        $calculation = CalculateReservationCost::run(
+        $calculation = ReservationService::calculateReservationCost(
             $user,
             Carbon::parse($start),
             Carbon::parse($end)
@@ -244,7 +240,7 @@ class CreateBandReservation extends CreateRecord
         $endTime = Carbon::parse($data['reserved_until']);
 
         // Validate the reservation
-        $errors = ValidateReservation::run($user, $startTime, $endTime);
+        $errors = ReservationService::validateReservation($user, $startTime, $endTime);
         if (! empty($errors)) {
             Notification::make()
                 ->title('Validation Error')
@@ -258,7 +254,7 @@ class CreateBandReservation extends CreateRecord
         $status = $data['status'] ?? ReservationStatus::Scheduled;
 
         return DB::transaction(function () use ($band, $user, $startTime, $endTime, $data, $status) {
-            $costCalculation = CalculateReservationCost::run($user, $startTime, $endTime);
+            $costCalculation = ReservationService::calculateReservationCost($user, $startTime, $endTime);
 
             $reservation = RehearsalReservation::create([
                 'user_id' => $user->id,

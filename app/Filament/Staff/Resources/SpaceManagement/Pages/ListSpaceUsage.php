@@ -11,6 +11,7 @@ use App\Filament\Staff\Resources\SpaceManagement\Widgets\SpaceStatsWidget;
 use App\Filament\Staff\Resources\SpaceManagement\Widgets\UpcomingClosuresWidget;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
@@ -51,7 +52,7 @@ class ListSpaceUsage extends ListRecords
                     $reservedUntil = $data['reserved_until'];
 
                     // Use CreateReservation action to properly create reservation with notifications
-                    $reservation = CreateReservation::run(
+                    $reservation = ReservationService::create(
                         $user,
                         $reservedAt,
                         $reservedUntil,
@@ -90,23 +91,23 @@ class ListSpaceUsage extends ListRecords
                         ->where('status', '!=', 'cancelled')
                         ->count();
                 })
-                ->modifyQueryUsing(fn (Builder $query) => $query
+                ->modifyQueryUsing(fn(Builder $query) => $query
                     ->where('reserved_until', '>', now())
                     ->where('status', '!=', 'cancelled')
                     ->orderBy('reserved_at', 'asc')),
 
             'needs_attention' => Tab::make('Needs Attention')
                 ->icon('tabler-alert-circle')
-                ->badge(fn () => Reservation::needsAttention()->count())
+                ->badge(fn() => Reservation::needsAttention()->count())
                 ->badgeColor('warning')
                 /** @phpstan-ignore method.notFound */
-                ->modifyQueryUsing(fn (Builder $query) => $query
+                ->modifyQueryUsing(fn(Builder $query) => $query
                     ->needsAttention()
                     ->orderBy('reserved_at', 'asc')),
 
             'all' => Tab::make('All')
                 ->icon('tabler-calendar')
-                ->modifyQueryUsing(fn (Builder $query) => $query
+                ->modifyQueryUsing(fn(Builder $query) => $query
                     ->orderBy('reserved_at', 'desc')),
         ];
     }

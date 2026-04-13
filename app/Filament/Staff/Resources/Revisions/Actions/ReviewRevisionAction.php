@@ -4,8 +4,10 @@ namespace App\Filament\Staff\Resources\Revisions\Actions;
 
 use App\Actions\Revisions\ApproveRevision;
 use App\Actions\Revisions\RejectRevision;
-use App\Filament\Shared\Actions\Action;
+use App\Models\User;
+use CorvMC\Moderation\Facades\RevisionService;
 use CorvMC\Moderation\Models\Revision;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\ViewField;
 use Filament\Notifications\Notification;
@@ -16,43 +18,43 @@ class ReviewRevisionAction
     public static function make(): Action
     {
         return Action::make('reviewRevision')
-            ->label(fn (?Revision $record) => $record?->isPending() ? 'Review' : 'View Review')
+            ->label(fn(?Revision $record) => $record?->isPending() ? 'Review' : 'View Review')
             ->icon('tabler-clipboard-check')
             ->iconPosition(IconPosition::Before)
-            ->color(fn (?Revision $record) => match ($record?->status) {
+            ->color(fn(?Revision $record) => match ($record?->status) {
                 Revision::STATUS_APPROVED => 'success',
                 Revision::STATUS_REJECTED => 'danger',
                 default => 'primary',
             })
             ->authorize('update')
             ->slideOver()
-            ->modalHeading(fn (Revision $record): string => static::getModalHeading($record))
-            ->modalDescription(fn (Revision $record): string => static::getModalDescription($record))
+            ->modalHeading(fn(Revision $record): string => static::getModalHeading($record))
+            ->modalDescription(fn(Revision $record): string => static::getModalDescription($record))
             ->modalWidth('4xl')
             ->schema([
                 ViewField::make('review_decision')
                     ->label('')
                     ->view('moderation::filament.revisions.review-decision')
-                    ->viewData(fn (Revision $record): array => [
+                    ->viewData(fn(Revision $record): array => [
                         'revision' => $record,
                     ])
-                    ->visible(fn (Revision $record) => $record->isReviewed()),
+                    ->visible(fn(Revision $record) => $record->isReviewed()),
 
                 ViewField::make('changes_diff')
                     ->label('Proposed Changes')
                     ->view('moderation::filament.revisions.diff-viewer')
-                    ->viewData(fn (Revision $record): array => [
+                    ->viewData(fn(Revision $record): array => [
                         'changes' => $record->getChanges(),
                         'modelType' => $record->getModelTypeName(),
                         'modelTitle' => $record->getRevisionableTitle(),
                     ]),
             ])
-            ->modalFooterActions(fn (Revision $record) => $record->isPending() ? [
+            ->modalFooterActions(fn(Revision $record) => $record->isPending() ? [
                 static::approveAction(),
                 static::rejectAction(),
             ] : [])
             ->modalFooterActionsAlignment('end')
-            ->modalCancelAction(fn (Revision $record) => $record->isPending() ? false : true)
+            ->modalCancelAction(fn(Revision $record) => $record->isPending() ? false : true)
             ->modalCancelActionLabel('Close');
     }
 
@@ -87,7 +89,7 @@ class ReviewRevisionAction
             ->modalSubmitActionLabel('Approve')
             ->action(function (Revision $record) {
                 try {
-                    ApproveRevision::run($record, auth()->user());
+                    RevisionService::approveRevision($record, User::me());
 
                     Notification::make()
                         ->title('Revision approved')
@@ -125,7 +127,7 @@ class ReviewRevisionAction
             ])
             ->action(function (Revision $record, array $data) {
                 try {
-                    RejectRevision::run($record, auth()->user(), $data['reason']);
+                    RevisionService::rejectRevision($record, User::me(), $data['reason']);
 
                     Notification::make()
                         ->title('Revision rejected')

@@ -1,31 +1,17 @@
 <?php
 
-namespace CorvMC\SpaceManagement\Actions\Reservations;
+namespace App\Filament\Actions\Reservations;
 
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
-use CorvMC\SpaceManagement\Services\ReservationService;
 use App\Models\User;
 use Filament\Actions\Action;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * @deprecated Use ReservationService::createCheckoutSession() instead
- * 
- * This action is maintained for backward compatibility.
- * New code should use the ReservationService directly.
- */
-class CreateCheckoutSession
+class CreateCheckoutSessionAction
 {
-    /**
-     * @deprecated Use ReservationService::createCheckoutSession() instead
-     */
-    public function handle(RehearsalReservation $reservation)
-    {
-        return app(ReservationService::class)->createCheckoutSession($reservation);
-    }
-
-    public static function filamentAction(): Action
+    public static function make(): Action
     {
         return Action::make('pay_stripe')
             ->label('Pay Online')
@@ -34,7 +20,7 @@ class CreateCheckoutSession
             ->visible(fn (Reservation $record) => $record instanceof RehearsalReservation &&
                 $record->requiresPayment() && ($record->reservable_id === Auth::id() || User::me()->can('manage reservations')))
             ->action(function (Reservation $record) {
-                $session = static::run($record);
+                $session = ReservationService::createCheckoutSession($record);
 
                 return redirect($session->url);
             });

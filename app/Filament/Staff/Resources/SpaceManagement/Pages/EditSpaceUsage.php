@@ -6,6 +6,7 @@ use CorvMC\SpaceManagement\Actions\Reservations\UpdateReservation;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationEditForm;
 use App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource;
 use Carbon\Carbon;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
@@ -53,7 +54,7 @@ class EditSpaceUsage extends EditRecord
             'status' => $data['status'] ?? $record->status,
         ];
 
-        return UpdateReservation::run($record, $startTime, $endTime, $options);
+        return ReservationService::update($record, $startTime, $endTime, $options);
     }
 
     protected function getHeaderActions(): array

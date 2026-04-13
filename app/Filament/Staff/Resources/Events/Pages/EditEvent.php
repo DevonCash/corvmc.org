@@ -7,9 +7,9 @@ use App\Filament\Staff\Resources\Events\Actions\CancelEventAction;
 use App\Filament\Staff\Resources\Events\Actions\PublishEventAction;
 use App\Filament\Staff\Resources\Events\Actions\RescheduleEventAction;
 use App\Filament\Staff\Resources\Events\EventResource;
-use CorvMC\Events\Actions\DeleteEvent as DeleteEventAction;
-use CorvMC\Events\Actions\UpdateEvent as UpdateEventAction;
+use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Models\Event;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
@@ -103,7 +103,7 @@ class EditEvent extends EditRecord
         unset($data['setup_minutes'], $data['teardown_minutes']);
 
         /** @var Event $event */
-        $event = UpdateEventAction::run($record, $data);
+        $event = EventService::update($record, $data);
 
         $this->syncSpaceReservationIfNeeded($event, $setupMinutes, $teardownMinutes);
 
@@ -116,7 +116,12 @@ class EditEvent extends EditRecord
             return;
         }
 
-        $result = SyncEventSpaceReservation::run($event, $setupMinutes, $teardownMinutes);
+        $result = ReservationService::syncEventSpaceReservation(
+            event: $event,
+            setupMinutes: $setupMinutes,
+            teardownMinutes: $teardownMinutes,
+        );
+
 
         if (! $result['success']) {
             $this->notifyConflicts($result['conflicts']);
@@ -150,7 +155,7 @@ class EditEvent extends EditRecord
 
     protected function handleRecordDeletion(Model $record): void
     {
-        DeleteEventAction::run($record);
+        EventService::delete($record);
     }
 
     protected function getHeaderActions(): array
@@ -160,7 +165,7 @@ class EditEvent extends EditRecord
                 ->label('Preview')
                 ->icon('tabler-external-link')
                 ->color('gray')
-                ->url(fn () => $this->record->isPublished()
+                ->url(fn() => $this->record->isPublished()
                     ? route('events.show', $this->record)
                     : URL::signedRoute('events.show', $this->record, now()->addHour()))
                 ->openUrlInNewTab(),

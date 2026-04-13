@@ -4,6 +4,7 @@ namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Events\ReservationCreated;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use App\Models\User;
 use CorvMC\SpaceManagement\Notifications\ReservationCreatedNotification;
@@ -31,7 +32,7 @@ class CreateReservation
     public function handle(User $user, Carbon $startTime, Carbon $endTime, array $options = []): RehearsalReservation
     {
         // Validate the reservation
-        $errors = ValidateReservation::run($user, $startTime, $endTime);
+        $errors = ReservationService::validateReservation($user, $startTime, $endTime);
 
         if (! empty($errors)) {
             throw new \InvalidArgumentException('Validation failed: '.implode(' ', $errors));

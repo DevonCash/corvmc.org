@@ -8,6 +8,7 @@ use CorvMC\Support\Events\RecurringSeriesCreated;
 use CorvMC\Support\Events\RecurringSeriesExtended;
 use CorvMC\Support\Events\RecurringSeriesPaused;
 use CorvMC\Support\Events\RecurringSeriesResumed;
+use CorvMC\Support\Facades\RecurringService;
 use CorvMC\Support\Models\RecurringSeries;
 use Spatie\Activitylog\Models\Activity;
 
@@ -137,7 +138,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        \CorvMC\SpaceManagement\Actions\RecurringReservations\PauseRecurringSeries::run($series);
+        RecurringService::pause($series);
 
         $logs = Activity::where('subject_type', 'recurring_series')
             ->where('subject_id', $series->id)
@@ -155,7 +156,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        \CorvMC\SpaceManagement\Actions\RecurringReservations\ResumeRecurringSeries::run($series);
+        RecurringService::resume($series);
 
         $logs = Activity::where('subject_type', 'recurring_series')
             ->where('subject_id', $series->id)

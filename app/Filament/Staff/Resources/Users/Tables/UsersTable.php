@@ -2,6 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Users\Tables;
 
+use App\Facades\InvitationService;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -28,14 +29,14 @@ class UsersTable
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->icon(fn (User $record) => $record->hasRole('admin') ? 'tabler-settings' : ($record->hasRole('sustaining member') ? 'tabler-heart' : null))
+                    ->icon(fn(User $record) => $record->hasRole('admin') ? 'tabler-settings' : ($record->hasRole('sustaining member') ? 'tabler-heart' : null))
                     ->iconPosition('after')
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('email')
                     ->label('Email address')
-                    ->icon(fn (\App\Models\User $record) => $record->email_verified_at ? 'tabler-circle-check' : null)
+                    ->icon(fn(\App\Models\User $record) => $record->email_verified_at ? 'tabler-circle-check' : null)
                     ->iconColor('success')
                     ->iconPosition('after')
                     ->searchable()
@@ -127,18 +128,18 @@ class UsersTable
                 EditAction::make(),
                 RestoreAction::make(),
                 ForceDeleteAction::make()
-                    ->visible(fn ($record) => $record->trashed()),
+                    ->visible(fn($record) => $record->trashed()),
                 Action::make('resend_invitation')
                     ->label('Resend Invitation')
                     ->icon('tabler-send')
                     ->color('info')
-                    ->visible(fn ($record) => $record->email_verified_at === null && $record->name === 'Invited User')
+                    ->visible(fn($record) => $record->email_verified_at === null && $record->name === 'Invited User')
                     ->requiresConfirmation()
                     ->modalHeading('Resend Invitation')
-                    ->modalDescription(fn ($record) => "Resend invitation email to {$record->email}?")
+                    ->modalDescription(fn($record) => "Resend invitation email to {$record->email}?")
                     ->action(function ($record) {
 
-                        if (\App\Actions\Invitations\ResendInvitation::run($record->email)) {
+                        if (InvitationService::resend($record->email)) {
                             Notification::make()
                                 ->title('Invitation resent')
                                 ->body("Invitation email has been resent to {$record->email}")
@@ -185,7 +186,7 @@ class UsersTable
                                     ->whereNull('used_at')
                                     ->first();
 
-                                if ($invitation && \App\Actions\Invitations\CancelInvitation::run($invitation)) {
+                                if ($invitation && InvitationService::cancel($invitation)) {
                                     $canceledCount++;
                                 }
                             }

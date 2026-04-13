@@ -2,6 +2,7 @@
 
 namespace App\Filament\Member\Pages\Auth;
 
+use App\Facades\InvitationService;
 use App\Models\Invitation;
 use App\Rules\NotSpamEmail;
 use Filament\Auth\Pages\Register as BaseRegister;
@@ -24,7 +25,7 @@ class Register extends BaseRegister
         $this->invitationToken = request()->query('invitation');
 
         if ($this->invitationToken) {
-            $invitation = \App\Actions\Invitations\FindInvitationByToken::run($this->invitationToken);
+            $invitation = InvitationService::findByToken($this->invitationToken);
 
             if ($invitation && ! $invitation->isExpired() && ! $invitation->isUsed()) {
                 // Prefill email from invitation
@@ -68,7 +69,7 @@ class Register extends BaseRegister
             ->required()
             ->maxLength(255)
             ->unique($this->getUserModel())
-            ->disabled(fn () => ! empty($this->invitationToken)) // Disable if from invitation
+            ->disabled(fn() => ! empty($this->invitationToken)) // Disable if from invitation
             ->dehydrated()
             ->rule(new NotSpamEmail());
     }
@@ -88,7 +89,7 @@ class Register extends BaseRegister
 
                 // Handle band ownership if invitation includes band data
                 if (isset($invitation->data['band_id'])) {
-                    \App\Actions\Invitations\ConfirmBandOwnership::run($user, $invitation);
+                    InvitationService::confirmBandOwnership($user, $invitation);
                 }
             }
         }

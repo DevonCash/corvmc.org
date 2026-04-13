@@ -6,7 +6,8 @@ use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Finance\Concerns\HasCharges;
 use CorvMC\Finance\Contracts\Chargeable;
-use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
+use CorvMC\SpaceManagement\Data\CreateReservationData;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Database\Factories\RehearsalReservationFactory;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\Support\Contracts\Recurrable;
@@ -137,18 +138,16 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
         $endDateTime = $date->copy()->setTimeFromTimeString($series->end_time->format('H:i:s'));
 
         /** @var static */
-        return CreateReservation::run(
-            $series->user,
-            $startDateTime,
-            $endDateTime,
-            [
-                'recurring_series_id' => $series->id,
-                'instance_date' => $date->toDateString(),
-                'is_recurring' => true,
-                'recurrence_pattern' => ['source' => 'recurring_series'],
-                'status' => ReservationStatus::Reserved,
-            ]
-        );
+        return ReservationService::create(new CreateReservationData([
+            'user' => $series->user,
+            'reserved_at' => $startDateTime,
+            'reserved_until' => $endDateTime,
+            'recurring_series_id' => $series->id,
+            'instance_date' => $date->toDateString(),
+            'is_recurring' => true,
+            'recurrence_pattern' => ['source' => 'recurring_series'],
+            'status' => ReservationStatus::Reserved,
+        ]));
     }
 
     /**

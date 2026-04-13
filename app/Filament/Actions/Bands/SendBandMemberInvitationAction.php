@@ -2,10 +2,10 @@
 
 namespace App\Filament\Actions\Bands;
 
-use App\Filament\Shared\Actions\Action;
 use App\Models\User;
 use CorvMC\Bands\Models\Band;
 use CorvMC\Membership\Services\BandService;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;

@@ -6,6 +6,7 @@ use App\Actions\Events\CheckEventConflicts;
 use App\Settings\ReservationSettings;
 use Carbon\Carbon;
 use CorvMC\Events\Models\Venue;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
@@ -38,11 +39,11 @@ class EventCreateWizard
             Wizard\Step::make('Basic Info')
                 ->icon('tabler-calendar-event')
                 ->schema(static::basicInfoStep())
-                ->afterValidation(fn (Get $get, callable $set) => static::checkConflicts($get, $set)),
+                ->afterValidation(fn(Get $get, callable $set) => static::checkConflicts($get, $set)),
 
             Wizard\Step::make('Space Reservation')
                 ->icon('tabler-home')
-                ->visible(fn (Get $get) => static::isCmcVenue($get))
+                ->visible(fn(Get $get) => static::isCmcVenue($get))
                 ->schema(static::spaceReservationStep()),
 
             Wizard\Step::make('Confirm')
@@ -68,14 +69,14 @@ class EventCreateWizard
                         ->seconds(false)
                         ->required()
                         ->live()
-                        ->afterStateUpdated(fn (callable $set) => $set('end_time', null)),
+                        ->afterStateUpdated(fn(callable $set) => $set('end_time', null)),
 
                     TimePicker::make('end_time')
                         ->label('End Time')
                         ->seconds(false)
                         ->live()
-                        ->required(fn (Get $get) => static::isCmcVenue($get))
-                        ->helperText(fn (Get $get) => static::isCmcVenue($get)
+                        ->required(fn(Get $get) => static::isCmcVenue($get))
+                        ->helperText(fn(Get $get) => static::isCmcVenue($get)
                             ? 'Required for CMC events to check space availability'
                             : 'Optional for external venues'),
                 ]),
@@ -99,10 +100,10 @@ class EventCreateWizard
             ->preload()
             ->required()
             ->live()
-            ->default(fn () => Venue::cmc()->first()?->id)
-            ->getOptionLabelFromRecordUsing(fn (Venue $venue) => $venue->is_cmc
+            ->default(fn() => Venue::cmc()->first()?->id)
+            ->getOptionLabelFromRecordUsing(fn(Venue $venue) => $venue->is_cmc
                 ? $venue->name
-                : $venue->name.' - '.$venue->city)
+                : $venue->name . ' - ' . $venue->city)
             ->createOptionForm([
                 TextInput::make('name')
                     ->required()
@@ -145,7 +146,7 @@ class EventCreateWizard
                                 ->default($settings->default_event_setup_minutes)
                                 ->suffix('minutes')
                                 ->live()
-                                ->afterStateUpdated(fn (Get $get, callable $set) => static::recheckConflicts($get, $set)),
+                                ->afterStateUpdated(fn(Get $get, callable $set) => static::recheckConflicts($get, $set)),
 
                             TextInput::make('teardown_minutes')
                                 ->label('Teardown Time')
@@ -156,14 +157,14 @@ class EventCreateWizard
                                 ->default($settings->default_event_teardown_minutes)
                                 ->suffix('minutes')
                                 ->live()
-                                ->afterStateUpdated(fn (Get $get, callable $set) => static::recheckConflicts($get, $set)),
+                                ->afterStateUpdated(fn(Get $get, callable $set) => static::recheckConflicts($get, $set)),
                         ]),
                 ]),
 
             // Admin override section
             Section::make('Admin Override')
                 ->compact()
-                ->visible(fn () => auth()->user()?->hasRole('admin'))
+                ->visible(fn() => auth()->user()?->hasRole('admin'))
                 ->schema([
                     Toggle::make('force_override')
                         ->label('Override conflicts')
@@ -174,7 +175,7 @@ class EventCreateWizard
             // Show warning for non-admins with event conflicts
             Placeholder::make('conflict_warning')
                 ->content('You cannot proceed with this time slot due to conflicts. Please go back and choose a different time.')
-                ->visible(fn (Get $get) => $get('conflict_status') === 'event_conflict' && ! auth()->user()?->hasRole('admin'))
+                ->visible(fn(Get $get) => $get('conflict_status') === 'event_conflict' && ! auth()->user()?->hasRole('admin'))
                 ->extraAttributes(['class' => 'text-danger-600']),
 
             Hidden::make('force_override')->default(false),
@@ -189,7 +190,7 @@ class EventCreateWizard
                 ->schema([
                     Placeholder::make('summary_title')
                         ->label('Title')
-                        ->content(fn (Get $get) => $get('title')),
+                        ->content(fn(Get $get) => $get('title')),
 
                     Placeholder::make('summary_datetime')
                         ->label('When')
@@ -205,7 +206,7 @@ class EventCreateWizard
                             $formatted = $startCarbon->format('l, F j, Y \a\t g:i A');
 
                             if ($end) {
-                                $formatted .= ' - '.$end;
+                                $formatted .= ' - ' . $end;
                             }
 
                             return $formatted;
@@ -225,7 +226,7 @@ class EventCreateWizard
 
             Section::make('Space Reservation')
                 ->compact()
-                ->visible(fn (Get $get) => static::isCmcVenue($get))
+                ->visible(fn(Get $get) => static::isCmcVenue($get))
                 ->schema([
                     Placeholder::make('reservation_status')
                         ->label('Status')
@@ -258,13 +259,13 @@ class EventCreateWizard
                             }
 
                             $startCarbon = $start instanceof Carbon ? $start : Carbon::parse($start);
-                            $endTime = Carbon::parse($startCarbon->toDateString().' '.$end);
+                            $endTime = Carbon::parse($startCarbon->toDateString() . ' ' . $end);
 
                             $reservedAt = $startCarbon->copy()->subMinutes($setupMinutes);
                             $reservedUntil = $endTime->copy()->addMinutes($teardownMinutes);
 
-                            return $reservedAt->format('g:i A').' - '.$reservedUntil->format('g:i A').
-                                ' (includes '.$setupMinutes.' min setup, '.$teardownMinutes.' min teardown)';
+                            return $reservedAt->format('g:i A') . ' - ' . $reservedUntil->format('g:i A') .
+                                ' (includes ' . $setupMinutes . ' min setup, ' . $teardownMinutes . ' min teardown)';
                         }),
                 ]),
         ];
@@ -305,7 +306,7 @@ class EventCreateWizard
             : Carbon::parse($startDatetime, config('app.timezone'));
 
         // Build end datetime from start date + end time
-        $endCarbon = Carbon::parse($startCarbon->toDateString().' '.$endTime, config('app.timezone'));
+        $endCarbon = Carbon::parse($startCarbon->toDateString() . ' ' . $endTime, config('app.timezone'));
 
         // Get setup/teardown defaults
         $settings = app(ReservationSettings::class);
@@ -320,7 +321,12 @@ class EventCreateWizard
             $set('teardown_minutes', $settings->default_event_teardown_minutes);
         }
 
-        $result = CheckEventConflicts::run($startCarbon, $endCarbon, $setupMinutes, $teardownMinutes);
+        $result = ReservationService::checkEventConflicts(
+            start: $startCarbon,
+            end: $endCarbon,
+            setupMinutes: $setupMinutes,
+            teardownMinutes: $teardownMinutes
+        );
 
         $set('conflict_status', $result['status']);
         $set('conflict_data', json_encode([
@@ -338,19 +344,19 @@ class EventCreateWizard
     protected static function formatConflictsForStorage(array $conflicts): array
     {
         return [
-            'reservations' => $conflicts['reservations']->map(fn ($r) => [
+            'reservations' => $conflicts['reservations']->map(fn($r) => [
                 'id' => $r->id,
                 'reserved_at' => $r->reserved_at->toIso8601String(),
                 'reserved_until' => $r->reserved_until->toIso8601String(),
                 'type' => class_basename($r),
                 'display_title' => $r->getDisplayTitle(),
             ])->values()->all(),
-            'productions' => $conflicts['productions']->map(fn ($p) => [
+            'productions' => $conflicts['productions']->map(fn($p) => [
                 'id' => $p->id,
                 'title' => $p->title,
                 'start_datetime' => $p->start_datetime->toIso8601String(),
             ])->values()->all(),
-            'closures' => $conflicts['closures']->map(fn ($c) => [
+            'closures' => $conflicts['closures']->map(fn($c) => [
                 'id' => $c->id,
                 'reason' => $c->type->getLabel(),
                 'starts_at' => $c->starts_at->toIso8601String(),

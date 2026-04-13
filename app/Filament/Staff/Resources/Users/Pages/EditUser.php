@@ -2,8 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Users\Pages;
 
-use CorvMC\Membership\Actions\Users\DeleteUser as DeleteUserAction;
-use CorvMC\Membership\Actions\Users\UpdateUser as UpdateUserAction;
+use CorvMC\Membership\Facades\UserManagementService;
 use App\Filament\Staff\Resources\Users\UserResource;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -22,12 +21,12 @@ class EditUser extends EditRecord
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        return UpdateUserAction::run($record, $data);
+        return UserManagementService::updateUser($record, $data);
     }
 
     protected function handleRecordDeletion(Model $record): void
     {
-        DeleteUserAction::run($record);
+        UserManagementService::deleteUser($record);
     }
 
     protected function getHeaderActions(): array

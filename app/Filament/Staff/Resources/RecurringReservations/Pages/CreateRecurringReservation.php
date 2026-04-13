@@ -5,6 +5,7 @@ namespace App\Filament\Staff\Resources\RecurringReservations\Pages;
 use App\Filament\Staff\Resources\RecurringReservations\RecurringReservationResource;
 use App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource;
 use App\Models\User;
+use CorvMC\SpaceManagement\Facades\RecurringReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -27,7 +28,7 @@ class CreateRecurringReservation extends CreateRecord
 
         $this->authorize('scheduleRecurring', [RehearsalReservation::class, $forUser]);
         // Build RRULE from form inputs
-        $data['recurrence_rule'] = \CorvMC\SpaceManagement\Actions\RecurringReservations\BuildRRule::run($data);
+        $data['recurrence_rule'] = RecurringReservationService::buildRRule($data);
 
         // Set recurable_type to RehearsalReservation for this resource
         $data['recurable_type'] = 'rehearsal_reservation';
@@ -41,6 +42,6 @@ class CreateRecurringReservation extends CreateRecord
     protected function afterCreate(): void
     {
         // Generate initial instances after creating series
-        \CorvMC\Support\Actions\GenerateRecurringInstances::run($this->record);
+        RecurringReservationService::generateInstances($this->record);
     }
 }

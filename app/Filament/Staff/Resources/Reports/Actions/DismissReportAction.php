@@ -2,6 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Reports\Actions;
 
+use CorvMC\Moderation\Facades\ReportService;
 use CorvMC\Moderation\Models\Report;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -17,7 +18,7 @@ class DismissReportAction
             ->icon('tabler-circle-x')
             ->color('success')
             ->visible(
-                fn (Report $record): bool => $record->status === 'pending' && Auth::user()->can('dismiss', [$record])
+                fn(Report $record): bool => $record->status === 'pending' && Auth::user()->can('dismiss', [$record])
             )
             ->requiresConfirmation()
             ->schema([
@@ -28,12 +29,7 @@ class DismissReportAction
                     ->rows(3),
             ])
             ->action(function (Report $record, array $data): void {
-                \App\Actions\Reports\ResolveReport::run(
-                    $record,
-                    Auth::user(),
-                    'dismissed',
-                    $data['resolution_notes']
-                );
+                ReportService::resolveReport($record, Auth::user(), 'dismissed', $data['resolution_notes']);
 
                 Notification::make()
                     ->title('Report Dismissed')

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Events\Actions;
 
+use App\Facades\InvitationService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -15,7 +16,7 @@ class InviteBandOwnerAction
             ->label('Invite Owner')
             ->icon('tabler-user-plus')
             ->color('success')
-            ->visible(fn ($record) => ! $record->owner_id) // Only show for bands without owners (touring bands)
+            ->visible(fn($record) => ! $record->owner_id) // Only show for bands without owners (touring bands)
             ->schema([
                 TextInput::make('email')
                     ->label('Band Owner Email')
@@ -45,11 +46,7 @@ class InviteBandOwnerAction
                     $bandData['bio'] = $data['bio'];
                 }
 
-                $invitation = \App\Actions\Invitations\InviteUserWithBand::run(
-                    $data['email'],
-                    $record->name,
-                    $bandData
-                );
+                $invitation = InvitationService::inviteWithBand($data['email'], $record->name, $bandData);
 
                 // Add any updated band data
                 if (! empty($bandData)) {
@@ -62,7 +59,7 @@ class InviteBandOwnerAction
                     ->success()
                     ->send();
             })
-            ->modalHeading(fn ($record) => "Invite Owner for {$record->name}")
+            ->modalHeading(fn($record) => "Invite Owner for {$record->name}")
             ->modalDescription('Invite someone to join CMC and take ownership of this band profile.')
             ->modalSubmitActionLabel('Send Invitation');
     }

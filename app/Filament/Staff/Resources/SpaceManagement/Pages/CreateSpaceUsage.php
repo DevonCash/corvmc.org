@@ -7,6 +7,7 @@ use App\Filament\Member\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource;
 use App\Models\User;
 use Carbon\Carbon;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Schema;
 
@@ -39,7 +40,7 @@ class CreateSpaceUsage extends CreateRecord
         $reservedUntil = $data['reserved_until'];
 
         // Create the reservation using the action
-        $reservation = CreateReservation::run(
+        $reservation = ReservationService::create(
             $user,
             $reservedAt,
             $reservedUntil,

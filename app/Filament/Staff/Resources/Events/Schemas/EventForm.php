@@ -7,6 +7,8 @@ use App\Settings\ReservationSettings;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
 use App\Filament\Staff\Resources\Events\Actions\RescheduleEventAction;
+use App\Models\User;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Notifications\Notification;
@@ -306,7 +308,7 @@ class EventForm
                         Toggle::make('force_override')
                             ->label('Override conflicts (admin only)')
                             ->helperText('Force the reservation even if it conflicts with other bookings')
-                            ->visible(fn() => auth()->user()?->hasRole('admin'))
+                            ->visible(fn() => User::me()?->hasRole('admin'))
                             ->default(false),
                     ])
                     ->action(function (array $data, callable $set, $livewire) {
@@ -320,11 +322,11 @@ class EventForm
 
                         // If editing an existing event, directly sync the reservation
                         if (isset($livewire->record) && $livewire->record instanceof Event) {
-                            $result = SyncEventSpaceReservation::run(
-                                $livewire->record,
-                                $setupMinutes,
-                                $teardownMinutes,
-                                $forceOverride
+                            $result = ReservationService::syncEventSpaceReservation(
+                                event: $livewire->record,
+                                setupMinutes: $setupMinutes,
+                                teardownMinutes: $teardownMinutes,
+                                forceOverride: $forceOverride
                             );
 
                             if (! $result['success']) {

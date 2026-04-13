@@ -3,13 +3,10 @@
 use App\Models\User;
 use Brick\Money\Money;
 use Carbon\Carbon;
-use CorvMC\Events\Actions\CreateEvent;
-use CorvMC\Events\Actions\Tickets\CompleteTicketOrder;
-use CorvMC\Events\Actions\Tickets\CreateTicketOrder;
-use CorvMC\Events\Actions\Tickets\GenerateTickets;
-use CorvMC\Events\Actions\Tickets\RefundTicketOrder;
 use CorvMC\Events\Enums\TicketOrderStatus;
 use CorvMC\Events\Enums\TicketStatus;
+use CorvMC\Events\Facades\EventService;
+use CorvMC\Events\Facades\TicketService;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Ticket;
 use CorvMC\Events\Models\TicketOrder;
@@ -33,7 +30,7 @@ beforeEach(function () {
 
     // Create an event with ticketing enabled
     $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
-    $this->event = CreateEvent::run([
+    $this->event = EventService::create([
         'title' => 'Rock Concert',
         'start_datetime' => $startDatetime,
         'end_datetime' => $startDatetime->copy()->addHours(3),
@@ -105,7 +102,7 @@ describe('Ticketing: Create Order', function () {
     it('creates a ticket order for authenticated user', function () {
         $user = User::factory()->create();
 
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 2,
             user: $user
@@ -119,7 +116,7 @@ describe('Ticketing: Create Order', function () {
     });
 
     it('creates a ticket order for guest checkout', function () {
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 1,
             name: 'John Doe',
@@ -133,7 +130,7 @@ describe('Ticketing: Create Order', function () {
     });
 
     it('calculates pricing correctly for guest', function () {
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 3,
             email: 'guest@example.com'
@@ -152,7 +149,7 @@ describe('Ticketing: Create Order', function () {
         $user = User::factory()->create();
         $user->assignRole('sustaining member');
 
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 2,
             user: $user
@@ -177,7 +174,7 @@ describe('Ticketing: Create Order', function () {
         $user = User::factory()->create();
         $user->assignRole('sustaining member');
 
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 1,
             user: $user
@@ -201,7 +198,7 @@ describe('Ticketing: Create Order', function () {
     it('throws exception when ticketing not enabled', function () {
         // Use a different time slot to avoid conflict with the event from beforeEach
         $startTime = Carbon::now()->addDays(14)->setHour(19)->setMinute(0)->setSecond(0);
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'No Tickets Event',
             'start_datetime' => $startTime,
             'end_datetime' => $startTime->copy()->addHours(3),
@@ -209,7 +206,7 @@ describe('Ticketing: Create Order', function () {
             'ticketing_enabled' => false,
         ]);
 
-        CreateTicketOrder::run(
+        TicketService::createOrder(
             event: $event,
             quantity: 1,
             email: 'test@example.com'
@@ -219,7 +216,7 @@ describe('Ticketing: Create Order', function () {
     it('throws exception when not enough tickets available', function () {
         $this->event->update(['ticket_quantity' => 5, 'tickets_sold' => 4]);
 
-        CreateTicketOrder::run(
+        TicketService::createOrder(
             event: $this->event,
             quantity: 2,
             email: 'test@example.com'
@@ -227,7 +224,7 @@ describe('Ticketing: Create Order', function () {
     })->throws(\RuntimeException::class);
 
     it('throws exception when no email or user provided', function () {
-        CreateTicketOrder::run(
+        TicketService::createOrder(
             event: $this->event,
             quantity: 1
         );
@@ -238,7 +235,7 @@ describe('Ticketing: TicketOrder Implements Chargeable', function () {
     it('implements Chargeable interface', function () {
         $user = User::factory()->create();
 
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 2,
             user: $user
@@ -250,7 +247,7 @@ describe('Ticketing: TicketOrder Implements Chargeable', function () {
     it('returns correct billable units', function () {
         $user = User::factory()->create();
 
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 2,
             user: $user
@@ -262,7 +259,7 @@ describe('Ticketing: TicketOrder Implements Chargeable', function () {
     it('returns correct chargeable description', function () {
         $user = User::factory()->create();
 
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 2,
             user: $user
@@ -277,7 +274,7 @@ describe('Ticketing: TicketOrder Implements Chargeable', function () {
     it('returns correct billable user', function () {
         $user = User::factory()->create();
 
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 1,
             user: $user
@@ -291,7 +288,7 @@ describe('Ticketing: Complete Order', function () {
     it('marks order as completed', function () {
         $user = User::factory()->create();
 
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 2,
             user: $user
@@ -299,7 +296,7 @@ describe('Ticketing: Complete Order', function () {
 
         expect($order->status)->toBe(TicketOrderStatus::Pending);
 
-        CompleteTicketOrder::run($order->id, 'cs_test_session_123');
+        TicketService::completeOrder($order->id, 'cs_test_session_123');
 
         $order->refresh();
 
@@ -310,13 +307,13 @@ describe('Ticketing: Complete Order', function () {
     it('generates tickets when completing order', function () {
         $user = User::factory()->create();
 
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 3,
             user: $user
         );
 
-        CompleteTicketOrder::run($order->id, 'cs_test_session_123');
+        TicketService::completeOrder($order->id, 'cs_test_session_123');
 
         expect($order->tickets()->count())->toBe(3);
         expect($order->tickets->first()->status)->toBe(TicketStatus::Valid);
@@ -326,13 +323,13 @@ describe('Ticketing: Complete Order', function () {
         $user = User::factory()->create();
         $initialSold = $this->event->tickets_sold;
 
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 5,
             user: $user
         );
 
-        CompleteTicketOrder::run($order->id, 'cs_test_session_123');
+        TicketService::completeOrder($order->id, 'cs_test_session_123');
 
         $this->event->refresh();
 
@@ -342,14 +339,14 @@ describe('Ticketing: Complete Order', function () {
     it('is idempotent - multiple calls do not duplicate tickets', function () {
         $user = User::factory()->create();
 
-        $order = CreateTicketOrder::run(
+        $order = TicketService::createOrder(
             event: $this->event,
             quantity: 2,
             user: $user
         );
 
-        CompleteTicketOrder::run($order->id, 'cs_test_session_123');
-        CompleteTicketOrder::run($order->id, 'cs_test_session_123');
+        TicketService::completeOrder($order->id, 'cs_test_session_123');
+        TicketService::completeOrder($order->id, 'cs_test_session_123');
 
         expect($order->tickets()->count())->toBe(2);
     });
@@ -362,7 +359,7 @@ describe('Ticketing: Generate Tickets', function () {
             'quantity' => 5,
         ]);
 
-        $tickets = GenerateTickets::run($order);
+        $tickets = TicketService::generateTickets($order);
 
         $codes = $tickets->pluck('code')->toArray();
 
@@ -378,7 +375,7 @@ describe('Ticketing: Generate Tickets', function () {
             'email' => 'jane@example.com',
         ]);
 
-        $tickets = GenerateTickets::run($order);
+        $tickets = TicketService::generateTickets($order);
 
         expect($tickets->first()->attendee_name)->toBe('Jane Doe');
         expect($tickets->first()->attendee_email)->toBe('jane@example.com');
@@ -438,12 +435,12 @@ describe('Ticketing: Refund Order', function () {
         ]);
 
         // Generate tickets first
-        GenerateTickets::run($order);
+        TicketService::generateTickets($order);
         $this->event->incrementTicketsSold(2);
 
         $initialSold = $this->event->tickets_sold;
 
-        RefundTicketOrder::run($order, 'Customer requested refund', false);
+        TicketService::refundOrder($order, 'Customer requested refund', false);
 
         $order->refresh();
         $this->event->refresh();
@@ -459,9 +456,9 @@ describe('Ticketing: Refund Order', function () {
             'quantity' => 3,
         ]);
 
-        GenerateTickets::run($order);
+        TicketService::generateTickets($order);
 
-        RefundTicketOrder::run($order, null, false);
+        TicketService::refundOrder($order, null, false);
 
         expect($order->tickets()->where('status', TicketStatus::Cancelled)->count())->toBe(3);
     });
@@ -472,7 +469,7 @@ describe('Ticketing: Refund Order', function () {
             'status' => TicketOrderStatus::Pending,
         ]);
 
-        RefundTicketOrder::run($order);
+        TicketService::refundOrder($order);
     })->throws(\RuntimeException::class);
 
     it('cannot refund already refunded order', function () {
@@ -480,7 +477,7 @@ describe('Ticketing: Refund Order', function () {
             'event_id' => $this->event->id,
         ]);
 
-        RefundTicketOrder::run($order);
+        TicketService::refundOrder($order);
     })->throws(\RuntimeException::class);
 });
 
@@ -501,7 +498,7 @@ describe('Ticketing: Sold Out', function () {
             'tickets_sold' => 10,
         ]);
 
-        CreateTicketOrder::run(
+        TicketService::createOrder(
             event: $this->event,
             quantity: 1,
             email: 'test@example.com'

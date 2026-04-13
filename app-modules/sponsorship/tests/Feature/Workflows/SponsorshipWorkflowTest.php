@@ -1,9 +1,7 @@
 <?php
 
 use App\Models\User;
-use CorvMC\Sponsorship\Actions\AssignSponsoredMembership;
-use CorvMC\Sponsorship\Actions\GetSponsorAvailableSlots;
-use CorvMC\Sponsorship\Actions\RevokeSponsoredMembership;
+use CorvMC\Sponsorship\Facades\SponsorshipService;
 use CorvMC\Sponsorship\Models\Sponsor;
 use Illuminate\Support\Facades\Notification;
 
@@ -21,7 +19,7 @@ describe('Sponsorship Workflow: Assign Sponsorship', function () {
         expect($sponsor->sponsored_memberships)->toBe(10);
         expect($sponsor->availableSlots())->toBe(10);
 
-        AssignSponsoredMembership::run($sponsor, $user);
+        SponsorshipService::assignSponsoredMembership($sponsor, $user);
 
         expect($sponsor->sponsoredMembers()->count())->toBe(1);
         expect($sponsor->usedSlots())->toBe(1);
@@ -36,7 +34,7 @@ describe('Sponsorship Workflow: Assign Sponsorship', function () {
         expect($sponsor->sponsored_memberships)->toBe(5);
 
         foreach ($users as $user) {
-            AssignSponsoredMembership::run($sponsor, $user);
+            SponsorshipService::assignSponsoredMembership($sponsor, $user);
         }
 
         expect($sponsor->sponsoredMembers()->count())->toBe(3);
@@ -47,9 +45,9 @@ describe('Sponsorship Workflow: Assign Sponsorship', function () {
         $sponsor = Sponsor::factory()->melody()->active()->create();
         $user = User::factory()->create();
 
-        AssignSponsoredMembership::run($sponsor, $user);
+        SponsorshipService::assignSponsoredMembership($sponsor, $user);
 
-        expect(fn () => AssignSponsoredMembership::run($sponsor, $user))
+        expect(fn() => SponsorshipService::assignSponsoredMembership($sponsor, $user))
             ->toThrow(\Exception::class, 'is already sponsored by');
     });
 
@@ -60,7 +58,7 @@ describe('Sponsorship Workflow: Assign Sponsorship', function () {
 
         // Fill all slots
         foreach ($users as $user) {
-            AssignSponsoredMembership::run($sponsor, $user);
+            SponsorshipService::assignSponsoredMembership($sponsor, $user);
         }
 
         expect($sponsor->availableSlots())->toBe(0);
@@ -68,7 +66,7 @@ describe('Sponsorship Workflow: Assign Sponsorship', function () {
 
         // Try to assign one more
         $extraUser = User::factory()->create();
-        expect(fn () => AssignSponsoredMembership::run($sponsor, $extraUser))
+        expect(fn() => SponsorshipService::assignSponsoredMembership($sponsor, $extraUser))
             ->toThrow(\Exception::class, 'has no available slots');
     });
 });
@@ -78,10 +76,10 @@ describe('Sponsorship Workflow: Revoke Sponsorship', function () {
         $sponsor = Sponsor::factory()->melody()->active()->create();
         $user = User::factory()->create();
 
-        AssignSponsoredMembership::run($sponsor, $user);
+        SponsorshipService::assignSponsoredMembership($sponsor, $user);
         expect($sponsor->usedSlots())->toBe(1);
 
-        RevokeSponsoredMembership::run($sponsor, $user);
+        SponsorshipService::revokeSponsoredMembership($sponsor, $user);
 
         expect($sponsor->sponsoredMembers()->count())->toBe(0);
         expect($sponsor->usedSlots())->toBe(0);
@@ -92,7 +90,7 @@ describe('Sponsorship Workflow: Revoke Sponsorship', function () {
         $sponsor = Sponsor::factory()->melody()->active()->create();
         $user = User::factory()->create();
 
-        expect(fn () => RevokeSponsoredMembership::run($sponsor, $user))
+        expect(fn() => SponsorshipService::revokeSponsoredMembership($sponsor, $user))
             ->toThrow(\Exception::class, 'is not sponsored by');
     });
 
@@ -101,15 +99,15 @@ describe('Sponsorship Workflow: Revoke Sponsorship', function () {
         $user = User::factory()->create();
 
         // Assign
-        AssignSponsoredMembership::run($sponsor, $user);
+        SponsorshipService::assignSponsoredMembership($sponsor, $user);
         expect($sponsor->sponsoredMembers()->pluck('user_id'))->toContain($user->id);
 
         // Revoke
-        RevokeSponsoredMembership::run($sponsor, $user);
+        SponsorshipService::revokeSponsoredMembership($sponsor, $user);
         expect($sponsor->sponsoredMembers()->pluck('user_id'))->not->toContain($user->id);
 
         // Re-assign
-        AssignSponsoredMembership::run($sponsor, $user);
+        SponsorshipService::assignSponsoredMembership($sponsor, $user);
         expect($sponsor->sponsoredMembers()->pluck('user_id'))->toContain($user->id);
     });
 });
@@ -137,17 +135,17 @@ describe('Sponsorship Workflow: Slot Availability', function () {
 
         // Assign 3 users
         foreach ($users->take(3) as $user) {
-            AssignSponsoredMembership::run($sponsor, $user);
+            SponsorshipService::assignSponsoredMembership($sponsor, $user);
         }
         expect($sponsor->availableSlots())->toBe(7);
 
         // Revoke 1 user
-        RevokeSponsoredMembership::run($sponsor, $users[0]);
+        SponsorshipService::revokeSponsoredMembership($sponsor, $users[0]);
         expect($sponsor->availableSlots())->toBe(8);
 
         // Assign 2 more users
         foreach ($users->slice(3, 2) as $user) {
-            AssignSponsoredMembership::run($sponsor, $user);
+            SponsorshipService::assignSponsoredMembership($sponsor, $user);
         }
         expect($sponsor->availableSlots())->toBe(6);
         expect($sponsor->usedSlots())->toBe(4);
@@ -161,10 +159,10 @@ describe('Sponsorship Workflow: Available Slots Query', function () {
 
         // Assign some users
         foreach ($users as $user) {
-            AssignSponsoredMembership::run($sponsor, $user);
+            SponsorshipService::assignSponsoredMembership($sponsor, $user);
         }
 
-        $result = GetSponsorAvailableSlots::run($sponsor);
+        $result = SponsorshipService::getSponsorAvailableSlots($sponsor);
 
         expect($result)->toBeArray();
         expect($result)->toHaveKeys(['total', 'used', 'available', 'has_available']);
@@ -181,10 +179,10 @@ describe('Sponsorship Workflow: Available Slots Query', function () {
 
         // Fill all slots
         foreach ($users as $user) {
-            AssignSponsoredMembership::run($sponsor, $user);
+            SponsorshipService::assignSponsoredMembership($sponsor, $user);
         }
 
-        $result = GetSponsorAvailableSlots::run($sponsor);
+        $result = SponsorshipService::getSponsorAvailableSlots($sponsor);
 
         expect($result['total'])->toBe(5);
         expect($result['used'])->toBe(5);
@@ -196,7 +194,7 @@ describe('Sponsorship Workflow: Available Slots Query', function () {
         $sponsor = Sponsor::factory()->rhythm()->active()->create();
         // Rhythm tier has 20 slots
 
-        $result = GetSponsorAvailableSlots::run($sponsor);
+        $result = SponsorshipService::getSponsorAvailableSlots($sponsor);
 
         expect($result['total'])->toBe(20);
         expect($result['used'])->toBe(0);

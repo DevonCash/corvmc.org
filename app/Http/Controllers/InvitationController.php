@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Facades\InvitationService;
+
 class InvitationController extends Controller
 {
     /**
@@ -10,7 +12,7 @@ class InvitationController extends Controller
     public function show(string $token)
     {
         // Find and validate the invitation
-        $invitation = \App\Actions\Invitations\FindInvitationByToken::run($token);
+        $invitation = InvitationService::findByToken($token);
 
         if (! $invitation) {
             return view('auth.invitation-expired', [

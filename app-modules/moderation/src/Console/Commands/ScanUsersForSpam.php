@@ -3,6 +3,7 @@
 namespace CorvMC\Moderation\Console\Commands;
 
 use CorvMC\Moderation\Actions\SpamPrevention\ScanUsersForSpam as ScanUsersForSpamAction;
+use CorvMC\Moderation\Facades\SpamPreventionService;
 use Illuminate\Console\Command;
 
 class ScanUsersForSpam extends Command
@@ -45,7 +46,7 @@ class ScanUsersForSpam extends Command
         $this->newLine();
 
         // Run the scan with progress bar
-        $results = ScanUsersForSpamAction::run(
+        $results = SpamPreventionService::scanUsersForSpam(
             dryRun: $dryRun,
             removeSpam: $removeSpam
         );

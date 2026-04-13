@@ -3,14 +3,14 @@
 namespace CorvMC\Finance\Services;
 
 use App\Models\User;
-use CorvMC\Finance\Actions\Pricing\CalculatePriceForUser;
 use CorvMC\Finance\Contracts\Chargeable;
+use CorvMC\Finance\Facades\PricingService;
 use CorvMC\Finance\Data\CompData;
 use CorvMC\Finance\Data\PaymentData;
 use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Models\Charge;
-use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Illuminate\Database\Eloquent\Model;
@@ -36,7 +36,7 @@ class PaymentService
         if ($chargeable instanceof RehearsalReservation) {
             if (in_array($chargeable->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
                 // TODO: This should be handled via event or callback, not direct dependency
-                $chargeable = ConfirmReservation::run($chargeable);
+                $chargeable = ReservationService::confirm($chargeable);
                 $chargeable->refresh();
             }
         }
@@ -73,7 +73,7 @@ class PaymentService
         if ($chargeable instanceof RehearsalReservation) {
             if (in_array($chargeable->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
                 // TODO: This should be handled via event or callback, not direct dependency
-                $chargeable = ConfirmReservation::run($chargeable);
+                $chargeable = ReservationService::confirm($chargeable);
                 $chargeable->refresh();
             }
         }
@@ -103,7 +103,7 @@ class PaymentService
 
         return DB::transaction(function () use ($chargeable, $user, $deferCredits) {
             // Calculate price with credit application
-            $pricing = CalculatePriceForUser::run($chargeable, $user);
+            $pricing = PricingService::calculatePriceForUser($chargeable, $user);
 
             // Create Charge record
             $charge = Charge::createForChargeable(
@@ -169,7 +169,7 @@ class PaymentService
      */
     public function calculatePrice(Chargeable $chargeable, User $user): array
     {
-        $pricing = CalculatePriceForUser::run($chargeable, $user);
+        $pricing = PricingService::calculatePriceForUser($chargeable, $user);
 
         return [
             'base_amount' => $pricing->amount,

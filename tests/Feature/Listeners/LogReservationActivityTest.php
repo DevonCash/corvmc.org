@@ -1,11 +1,14 @@
 <?php
 
 use App\Models\User;
+use CorvMC\Finance\Data\CompData;
+use CorvMC\Finance\Facades\PaymentService;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Events\ReservationCancelled;
 use CorvMC\SpaceManagement\Events\ReservationConfirmed;
 use CorvMC\SpaceManagement\Events\ReservationCreated;
 use CorvMC\SpaceManagement\Events\ReservationUpdated;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Spatie\Activitylog\Models\Activity;
 
@@ -149,7 +152,7 @@ it('logs activity when a reservation is marked as paid', function () {
     Activity::query()->delete();
 
     $this->actingAs($manager);
-    \CorvMC\Finance\Actions\Payments\MarkReservationAsPaid::run($reservation, 'cash', 'Paid at front desk');
+    PaymentService::recordPayment($reservation, 1500, 'cash', 'Paid at front desk');
 
     $activity = Activity::where('event', 'payment_recorded')
         ->where('log_name', 'payment')
@@ -180,7 +183,7 @@ it('logs activity when a reservation is comped', function () {
     Activity::query()->delete();
 
     $this->actingAs($manager);
-    \CorvMC\Finance\Actions\Payments\MarkReservationAsComped::run($reservation, 'Community event volunteer');
+    PaymentService::recordComp(new CompData($reservation->charge, 'Community event volunteer'));
 
     $activity = Activity::where('event', 'charge_comped')
         ->where('log_name', 'payment')
@@ -202,11 +205,11 @@ describe('No duplicate audit logs', function () {
         \Illuminate\Support\Facades\Notification::fake();
         Activity::query()->delete();
 
-        \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run($user, $startTime, $endTime);
+        ReservationService::create($user, $startTime, $endTime);
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
 
-expect($logs)->toHaveCount(1)
+        expect($logs)->toHaveCount(1)
             ->and($logs->first()->log_name)->toBe('reservation')
             ->and($logs->first()->event)->toBe('created');
     });
@@ -220,7 +223,7 @@ expect($logs)->toHaveCount(1)
         \Illuminate\Support\Facades\Notification::fake();
         Activity::query()->delete();
 
-        $reservation = \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())
             ->orderBy('id')
@@ -238,11 +241,11 @@ expect($logs)->toHaveCount(1)
         $endTime = $startTime->copy()->addHours(2);
 
         \Illuminate\Support\Facades\Notification::fake();
-        $reservation = \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         Activity::query()->delete();
 
-        \CorvMC\SpaceManagement\Actions\Reservations\CancelReservation::run($reservation, 'Test reason');
+        ReservationService::cancel($reservation, 'Test reason');
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
 
@@ -257,14 +260,14 @@ expect($logs)->toHaveCount(1)
         $endTime = $startTime->copy()->addHours(2);
 
         \Illuminate\Support\Facades\Notification::fake();
-        $reservation = \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
         $reservation = $reservation->fresh();
 
         Activity::query()->delete();
 
         $newStart = $startTime->copy()->addHours(1);
         $newEnd = $endTime->copy()->addHours(1);
-        \CorvMC\SpaceManagement\Actions\Reservations\UpdateReservation::run($reservation, $newStart, $newEnd);
+        ReservationService::update($reservation, $newStart, $newEnd);
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
 
@@ -279,14 +282,14 @@ expect($logs)->toHaveCount(1)
         $endTime = $startTime->copy()->addHours(2);
 
         \Illuminate\Support\Facades\Notification::fake();
-        $reservation = \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
         expect($reservation->status)->toBe(ReservationStatus::Scheduled);
 
         Activity::query()->delete();
 
         // Move time forward so confirmation is allowed
         $this->travel(2)->days();
-        \CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation::run($reservation);
+        ReservationService::confirm($reservation);
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
 
@@ -309,7 +312,7 @@ it('logs activity when a reservation is auto-cancelled', function () {
 
     Activity::query()->delete();
 
-    \CorvMC\SpaceManagement\Actions\Reservations\AutoCancelUnconfirmedReservations::run();
+    ReservationService::autoCancelUnconfirmedReservations();
 
     $activity = Activity::where('event', 'auto_cancelled')
         ->where('log_name', 'reservation')

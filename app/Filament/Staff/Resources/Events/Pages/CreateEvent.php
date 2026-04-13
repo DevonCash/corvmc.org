@@ -6,8 +6,9 @@ use App\Actions\Events\SyncEventSpaceReservation;
 use App\Filament\Staff\Resources\Events\EventResource;
 use App\Filament\Staff\Resources\Events\Schemas\EventCreateWizard;
 use Carbon\Carbon;
-use CorvMC\Events\Actions\CreateEvent as CreateEventAction;
+use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Models\Event;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Schema;
@@ -50,7 +51,7 @@ class CreateEvent extends CreateRecord
                 ? $data['start_datetime']
                 : Carbon::parse($data['start_datetime'], config('app.timezone'));
             $endDatetime = Carbon::parse(
-                $startDatetime->toDateString().' '.$data['end_time'],
+                $startDatetime->toDateString() . ' ' . $data['end_time'],
                 config('app.timezone')
             );
             $data['end_datetime'] = $endDatetime;
@@ -58,7 +59,7 @@ class CreateEvent extends CreateRecord
         unset($data['end_time']);
 
         // Create the event
-        $event = CreateEventAction::run($data);
+        $event = EventService::create($data);
 
         // Sync space reservation if needed
         $this->syncSpaceReservationIfNeeded(
@@ -102,11 +103,11 @@ class CreateEvent extends CreateRecord
             return;
         }
 
-        $result = SyncEventSpaceReservation::run(
-            $event,
-            $setupMinutes,
-            $teardownMinutes,
-            $forceOverride
+        $result = ReservationService::syncEventSpaceReservation(
+            event: $event,
+            setupMinutes: $setupMinutes,
+            teardownMinutes: $teardownMinutes,
+            forceOverride: $forceOverride
         );
 
         if (! $result['success']) {
@@ -131,7 +132,7 @@ class CreateEvent extends CreateRecord
         $messages = [];
 
         foreach ($conflicts['reservations'] as $reservation) {
-            $time = $reservation->reserved_at->format('g:i A').' - '.$reservation->reserved_until->format('g:i A');
+            $time = $reservation->reserved_at->format('g:i A') . ' - ' . $reservation->reserved_until->format('g:i A');
             $messages[] = "Reservation: {$time}";
         }
 
@@ -145,7 +146,7 @@ class CreateEvent extends CreateRecord
 
         Notification::make()
             ->title('Space reservation conflicts detected')
-            ->body("The event was created but the space reservation could not be made due to conflicts:\n".implode("\n", $messages))
+            ->body("The event was created but the space reservation could not be made due to conflicts:\n" . implode("\n", $messages))
             ->warning()
             ->persistent()
             ->send();

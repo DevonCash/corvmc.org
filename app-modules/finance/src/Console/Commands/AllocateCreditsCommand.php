@@ -3,6 +3,7 @@
 namespace CorvMC\Finance\Console\Commands;
 
 use App\Models\User;
+use CorvMC\Finance\Facades\MemberBenefitService;
 use Illuminate\Console\Command;
 
 class AllocateCreditsCommand extends Command
@@ -58,7 +59,7 @@ class AllocateCreditsCommand extends Command
 
         foreach ($users as $user) {
             try {
-                $hours = \CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($user);
+                $hours = MemberBenefitService::getUserMonthlyFreeHours($user);
                 $blocks = \CorvMC\SpaceManagement\Models\Reservation::hoursToBlocks($hours);
                 $currentBalance = $user->getCreditBalance(\CorvMC\Finance\Enums\CreditType::FreeHours);
                 $currentHours = \CorvMC\SpaceManagement\Models\Reservation::blocksToHours($currentBalance);
@@ -67,7 +68,7 @@ class AllocateCreditsCommand extends Command
                     $this->line("→ Would allocate {$blocks} blocks ({$hours} hours) to {$user->name}");
                     $this->line("  Current balance: {$currentBalance} blocks ({$currentHours} hours)");
                 } else {
-                    \CorvMC\Finance\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
+                    MemberBenefitService::allocateUserMonthlyCredits($user);
                     $this->line("✓ Allocated {$blocks} blocks ({$hours} hours) to {$user->name}");
                     $allocated++;
                 }

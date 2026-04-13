@@ -4,6 +4,8 @@ namespace App\Filament\Staff\Resources\Users\Actions;
 
 use App\Models\User;
 use Brick\Money\Money;
+use CorvMC\Finance\Facades\PaymentService;
+use CorvMC\Finance\Facades\SubscriptionService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Slider;
 use Filament\Forms\Components\Slider\Enums\PipsMode;
@@ -41,7 +43,7 @@ class CreateMembershipSubscriptionAction
                     ->helperText(function ($get) {
                         $amount = Money::of($get('amount'), 'USD');
                         if (! $amount->isZero()) {
-                            $feeInfo = \CorvMC\Finance\Actions\Payments\GetFeeDisplayInfo::run($amount);
+                            $feeInfo = PaymentService::getFeeDisplayInfo($amount);
 
                             return $feeInfo['message'];
                         }
@@ -57,16 +59,16 @@ class CreateMembershipSubscriptionAction
                         if ($amount->isZero()) {
                             return 'Please select a contribution amount';
                         }
-                        $breakdown = \CorvMC\Finance\Actions\Payments\GetFeeBreakdown::run($amount, $get('cover_fees'));
+                        $breakdown = PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
                         $totalAmount = Money::of($breakdown['total_amount'], 'USD');
 
-                        return $breakdown['description'].' = '.$totalAmount->formatTo('en_US').' total per month';
+                        return $breakdown['description'] . ' = ' . $totalAmount->formatTo('en_US') . ' total per month';
                     })
                     ->extraAttributes(['class' => 'text-lg font-semibold text-primary-600']),
             ])
             ->action(function (array $data) {
                 $baseAmount = Money::of($data['amount'], 'USD');
-                $checkout = \CorvMC\Finance\Actions\Subscriptions\CreateSubscription::run(User::me(), $baseAmount, $data['cover_fees']);
+                $checkout = SubscriptionService::create(User::me(), $baseAmount, $data['cover_fees']);
                 redirect($checkout->url);
             });
     }

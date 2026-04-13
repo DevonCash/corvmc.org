@@ -4,6 +4,8 @@ use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Events\Actions\CreateEvent;
 use CorvMC\Events\Actions\Tickets\CreateDoorSale;
+use CorvMC\Events\Facades\EventService;
+use CorvMC\Events\Facades\TicketService;
 use CorvMC\Events\Models\Venue;
 use CorvMC\Kiosk\Models\KioskDevice;
 use CorvMC\Kiosk\Models\KioskPaymentRequest;
@@ -25,7 +27,7 @@ beforeEach(function () {
 
     // Create an event with ticketing enabled
     $startDatetime = Carbon::now()->addDays(1)->setHour(19)->setMinute(0)->setSecond(0);
-    $this->event = CreateEvent::run([
+    $this->event = EventService::create([
         'title' => 'Test Concert',
         'start_datetime' => $startDatetime,
         'end_datetime' => $startDatetime->copy()->addHours(3),
@@ -213,7 +215,7 @@ describe('Kiosk: Check-in', function () {
         ];
 
         // Create a door sale with ticket
-        $this->order = CreateDoorSale::run(
+        $this->order = TicketService::createDoorSale(
             event: $this->event,
             quantity: 1,
             paymentMethod: 'cash',
@@ -304,7 +306,7 @@ describe('Kiosk: Door Sales', function () {
     it('applies member discount to door sale', function () {
         $basePriceObj = $this->event->getBaseTicketPrice();
         $basePrice = $basePriceObj->getMinorAmount();
-        
+
         // Ensure we have an integer
         if (is_object($basePrice)) {
             $basePrice = method_exists($basePrice, 'toInt') ? $basePrice->toInt() : (int) (string) $basePrice;
@@ -324,7 +326,7 @@ describe('Kiosk: Door Sales', function () {
     });
 
     it('returns recent sales', function () {
-        CreateDoorSale::run(
+        TicketService::createDoorSale(
             event: $this->event,
             quantity: 1,
             paymentMethod: 'cash',
@@ -414,7 +416,13 @@ describe('Kiosk: Payment Requests', function () {
             ->assertStatus(201)
             ->assertJsonStructure([
                 'payment_request' => [
-                    'id', 'status', 'amount', 'quantity', 'customer_email', 'event', 'expires_at',
+                    'id',
+                    'status',
+                    'amount',
+                    'quantity',
+                    'customer_email',
+                    'event',
+                    'expires_at',
                 ],
             ])
             ->assertJson([

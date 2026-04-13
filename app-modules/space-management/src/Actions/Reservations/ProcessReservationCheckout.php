@@ -2,6 +2,7 @@
 
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
+use CorvMC\Finance\Facades\PaymentService;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Illuminate\Support\Facades\Log;
 
@@ -49,7 +50,7 @@ class ProcessReservationCheckout
             }
 
             // Process the successful payment (this action is also idempotent)
-            HandleSuccessfulPayment::run($reservation, $sessionId, $paymentIntentId);
+            PaymentService::processStripePayment($reservation, $sessionId, $paymentIntentId);
 
             Log::info('Successfully processed reservation checkout', [
                 'reservation_id' => $reservationId,

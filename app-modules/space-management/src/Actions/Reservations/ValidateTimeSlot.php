@@ -3,6 +3,7 @@
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use Carbon\Carbon;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 
 class ValidateTimeSlot
 {
@@ -61,7 +62,7 @@ class ValidateTimeSlot
         }
 
         // Check for conflicts using existing methods
-        $conflicts = GetAllConflicts::run($startTime, $endTime, $excludeReservationId);
+        $conflicts = ReservationService::checkForConflicts($startTime, $endTime, $excludeReservationId);
         $errors = [];
 
         if ($conflicts['reservations']->isNotEmpty()) {

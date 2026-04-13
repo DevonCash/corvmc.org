@@ -3,6 +3,7 @@
 namespace App\Filament\Staff\Resources\Reports\Tables;
 
 use CorvMC\Moderation\Actions\Reports\BulkResolveReports;
+use CorvMC\Moderation\Facades\ReportService;
 use CorvMC\Moderation\Models\Report;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
@@ -21,7 +22,7 @@ class ReportsTable
             ->columns([
                 TextColumn::make('reportable.name')
                     ->label('Content')
-                    ->description(fn (Report $record) => class_basename($record->reportable_type).' #'.$record->reportable_id)
+                    ->description(fn(Report $record) => class_basename($record->reportable_type) . ' #' . $record->reportable_id)
                     ->limit(30)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
@@ -34,7 +35,7 @@ class ReportsTable
                 TextColumn::make('reason')
                     ->badge()
                     ->label('Reason')
-                    ->formatStateUsing(fn ($state) => Report::REASONS[$state] ?? $state)
+                    ->formatStateUsing(fn($state) => Report::REASONS[$state] ?? $state)
                     ->colors([
                         'danger' => ['inappropriate_content', 'harassment'],
                         'warning' => ['spam', 'misleading_info'],
@@ -49,7 +50,7 @@ class ReportsTable
                 TextColumn::make('status')
                     ->badge()
                     ->label('Status')
-                    ->formatStateUsing(fn ($state) => Report::STATUSES[$state] ?? $state)
+                    ->formatStateUsing(fn($state) => Report::STATUSES[$state] ?? $state)
                     ->colors([
                         'warning' => 'pending',
                         'danger' => 'upheld',
@@ -83,13 +84,13 @@ class ReportsTable
                     ->options(Report::REASONS),
 
                 Filter::make('unresolved')
-                    ->query(fn (Builder $query): Builder => $query->whereIn('status', ['pending', 'escalated']))
+                    ->query(fn(Builder $query): Builder => $query->whereIn('status', ['pending', 'escalated']))
                     ->default(),
             ])
             ->recordActions([
                 ViewAction::make()
                     ->url(
-                        fn (Report $record): string => route('filament.staff.resources.reports.view', $record)
+                        fn(Report $record): string => route('filament.staff.resources.reports.view', $record)
                     ),
 
             ])
@@ -106,7 +107,7 @@ class ReportsTable
                             ->rows(3),
                     ])
                     ->action(function ($records, array $data): void {
-                        $count = BulkResolveReports::run(
+                        $count = ReportService::bulkResolveReports(
                             $records->pluck('id')->toArray(),
                             Auth::user(),
                             'upheld',
@@ -131,7 +132,7 @@ class ReportsTable
                             ->rows(3),
                     ])
                     ->action(function ($records, array $data): void {
-                        $count = BulkResolveReports::run(
+                        $count = ReportService::bulkResolveReports(
                             $records->pluck('id')->toArray(),
                             Auth::user(),
                             'dismissed',

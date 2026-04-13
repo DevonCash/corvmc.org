@@ -3,6 +3,7 @@
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use Carbon\Carbon;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 
 class GetAllConflicts
 {
@@ -12,9 +13,9 @@ class GetAllConflicts
     public function handle(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): array
     {
         return [
-            'reservations' => GetConflictingReservations::run($startTime, $endTime, $excludeReservationId),
-            'productions' => GetConflictingProductions::run($startTime, $endTime, $excludeReservationId),
-            'closures' => GetConflictingClosures::run($startTime, $endTime),
+            'reservations' => ReservationService::getConflictingReservations($startTime, $endTime, $excludeReservationId),
+            'productions' => app(GetConflictingProductions::class)->handle($startTime, $endTime, $excludeReservationId),
+            'closures' => ReservationService::getConflictingClosures($startTime, $endTime),
         ];
     }
 }

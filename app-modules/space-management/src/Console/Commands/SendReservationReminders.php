@@ -2,7 +2,7 @@
 
 namespace CorvMC\SpaceManagement\Console\Commands;
 
-use App\Actions\Notifications\SendReservationReminders as SendReservationRemindersAction;
+use App\Facades\NotificationService;
 use Illuminate\Console\Command;
 
 class SendReservationReminders extends Command
@@ -31,7 +31,7 @@ class SendReservationReminders extends Command
             $this->warn('DRY RUN MODE - No notifications will be sent');
         }
 
-        $results = SendReservationRemindersAction::run($isDryRun);
+        $results = NotificationService::sendReservationReminders($isDryRun);
 
         if ($results['total'] === 0) {
             $this->info('No reservations found for tomorrow that need reminders.');

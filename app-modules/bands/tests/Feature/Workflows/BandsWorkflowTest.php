@@ -4,14 +4,7 @@ use App\Models\User;
 use CorvMC\Bands\Exceptions\BandException;
 use CorvMC\Bands\Models\Band;
 use CorvMC\Bands\Models\BandMember;
-use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
-use CorvMC\Membership\Actions\Bands\AddBandMember;
-use CorvMC\Membership\Actions\Bands\CancelBandInvitation;
-use CorvMC\Membership\Actions\Bands\CreateBand;
-use CorvMC\Membership\Actions\Bands\DeclineBandInvitation;
-use CorvMC\Membership\Actions\Bands\DeleteBand;
-use CorvMC\Membership\Actions\Bands\RemoveBandMember;
-use CorvMC\Membership\Actions\Bands\UpdateBand;
+use CorvMC\Membership\Facades\BandService;
 use CorvMC\Moderation\Enums\Visibility;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
@@ -26,7 +19,7 @@ describe('Band Model: Visibility', function () {
         $owner = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run([
+        $band = BandService::create([
             'name' => 'Public Band',
             'visibility' => Visibility::Public,
         ]);
@@ -41,14 +34,14 @@ describe('Band Model: Visibility', function () {
         $outsider = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run([
+        $band = BandService::create([
             'name' => 'Private Band',
             'visibility' => Visibility::Private,
         ]);
 
         // Add and accept member
-        AddBandMember::run($band, $member, ['role' => 'member']);
-        AcceptBandInvitation::run($band, $member);
+        BandService::addMember($band, $member, ['role' => 'member']);
+        BandService::acceptInvitation($band, $member);
         $band->refresh();
 
         // Owner can see
@@ -69,7 +62,7 @@ describe('Band Model: Visibility', function () {
         $loggedInUser = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run([
+        $band = BandService::create([
             'name' => 'Members Only Band',
             'visibility' => Visibility::Members,
         ]);
@@ -89,15 +82,15 @@ describe('Band Model: Member Roles', function () {
         $member = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run(['name' => 'Role Test Band']);
+        $band = BandService::create(['name' => 'Role Test Band']);
 
         // Add admin
-        AddBandMember::run($band, $admin, ['role' => 'admin']);
-        AcceptBandInvitation::run($band, $admin);
+        BandService::addMember($band, $admin, ['role' => 'admin']);
+        BandService::acceptInvitation($band, $admin);
 
         // Add member
-        AddBandMember::run($band, $member, ['role' => 'member']);
-        AcceptBandInvitation::run($band, $member);
+        BandService::addMember($band, $member, ['role' => 'member']);
+        BandService::acceptInvitation($band, $member);
 
         $band->refresh();
 
@@ -111,7 +104,7 @@ describe('Band Model: Member Roles', function () {
         $outsider = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run(['name' => 'Non-Member Test Band']);
+        $band = BandService::create(['name' => 'Non-Member Test Band']);
 
         expect($band->getUserRole($outsider))->toBeNull();
     });
@@ -123,9 +116,9 @@ describe('Band Workflow: Member Management Edge Cases', function () {
         $notInvited = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run(['name' => 'Decline Test Band']);
+        $band = BandService::create(['name' => 'Decline Test Band']);
 
-        expect(fn () => DeclineBandInvitation::run($band, $notInvited))
+        expect(fn () => BandService::declineInvitation($band, $notInvited))
             ->toThrow(BandException::class, 'User has not been invited to this band.');
     });
 
@@ -134,9 +127,9 @@ describe('Band Workflow: Member Management Edge Cases', function () {
         $notInvited = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run(['name' => 'Cancel Test Band']);
+        $band = BandService::create(['name' => 'Cancel Test Band']);
 
-        expect(fn () => CancelBandInvitation::run($band, $notInvited))
+        expect(fn () => BandService::cancelInvitation($band, $notInvited))
             ->toThrow(BandException::class, 'User has not been invited to this band.');
     });
 
@@ -145,15 +138,15 @@ describe('Band Workflow: Member Management Edge Cases', function () {
         $member = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run(['name' => 'Remove Member Test Band']);
+        $band = BandService::create(['name' => 'Remove Member Test Band']);
 
-        AddBandMember::run($band, $member, ['role' => 'member']);
-        AcceptBandInvitation::run($band, $member);
+        BandService::addMember($band, $member, ['role' => 'member']);
+        BandService::acceptInvitation($band, $member);
 
         $membership = $band->memberships()->where('user_id', $member->id)->first();
         expect($membership)->not->toBeNull();
 
-        RemoveBandMember::run($membership);
+        BandService::removeMember($membership);
 
         // Verify member was removed
         expect($band->fresh()->memberships()->where('user_id', $member->id)->exists())->toBeFalse();
@@ -164,13 +157,13 @@ describe('Band Workflow: Member Management Edge Cases', function () {
         $member = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run([
+        $band = BandService::create([
             'name' => 'Delete Test Band',
             'tags' => ['Rock', 'Blues'],
         ]);
 
-        AddBandMember::run($band, $member, ['role' => 'member']);
-        AcceptBandInvitation::run($band, $member);
+        BandService::addMember($band, $member, ['role' => 'member']);
+        BandService::acceptInvitation($band, $member);
 
         $bandId = $band->id;
 
@@ -180,7 +173,7 @@ describe('Band Workflow: Member Management Edge Cases', function () {
         expect($band->tags->count())->toBe(2);
 
         // Delete band
-        $result = DeleteBand::run($band);
+        $result = BandService::deleteBand($band);
 
         expect($result)->toBeTrue();
         expect(Band::find($bandId))->toBeNull();
@@ -191,12 +184,12 @@ describe('Band Workflow: Member Management Edge Cases', function () {
         $owner = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run([
+        $band = BandService::create([
             'name' => 'Original Name',
             'bio' => 'Original bio',
         ]);
 
-        $updatedBand = UpdateBand::run($band, [
+        $updatedBand = BandService::updateBand($band, [
             'name' => 'Updated Name',
             'bio' => 'Updated bio',
             'hometown' => 'Portland, OR',
@@ -215,13 +208,13 @@ describe('Band Workflow: Ownership', function () {
         $owner = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run(['name' => 'Owner Duplicate Test Band']);
+        $band = BandService::create(['name' => 'Owner Duplicate Test Band']);
 
         // Owner is automatically a member with owner role
         expect($band->memberships()->where('user_id', $owner->id)->exists())->toBeTrue();
 
         // Trying to add owner again should throw exception
-        expect(fn () => AddBandMember::run($band, $owner, ['role' => 'member']))
+        expect(fn () => BandService::addMember($band, $owner, ['role' => 'member']))
             ->toThrow(BandException::class);
     });
 });

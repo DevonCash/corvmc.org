@@ -2,6 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Reports\Actions;
 
+use CorvMC\Moderation\Facades\ReportService;
 use CorvMC\Moderation\Models\Report;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -17,7 +18,7 @@ class EscalateReportAction
             ->icon('tabler-circle-arrow-up')
             ->color('warning')
             ->visible(
-                fn (Report $record): bool => $record->status === 'pending' && Auth::user()->can('escalate', [$record])
+                fn(Report $record): bool => $record->status === 'pending' && Auth::user()->can('escalate', [$record])
             )
             ->requiresConfirmation()
             ->schema([
@@ -28,12 +29,7 @@ class EscalateReportAction
                     ->rows(3),
             ])
             ->action(function (Report $record, array $data): void {
-                \App\Actions\Reports\ResolveReport::run(
-                    $record,
-                    Auth::user(),
-                    'escalated',
-                    $data['resolution_notes']
-                );
+                ReportService::resolveReport($record, Auth::user(), 'escalated', $data['resolution_notes']);
 
                 Notification::make()
                     ->title('Report Escalated')

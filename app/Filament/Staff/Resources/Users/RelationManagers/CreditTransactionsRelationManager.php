@@ -2,7 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Users\RelationManagers;
 
-use CorvMC\Finance\Actions\Credits\AdjustCredits;
+use App\Filament\Actions\Credits\AdjustCreditsAction;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -122,7 +122,7 @@ class CreditTransactionsRelationManager extends RelationManager
                     ->query(fn ($query) => $query->where('amount', '<', 0)),
             ])
             ->headerActions([
-                AdjustCredits::filamentAction(),
+                AdjustCreditsAction::make(),
             ])
             ->recordActions([
                 // No edit/delete actions - transactions are immutable

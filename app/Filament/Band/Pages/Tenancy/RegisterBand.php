@@ -2,7 +2,7 @@
 
 namespace App\Filament\Band\Pages\Tenancy;
 
-use CorvMC\Membership\Actions\Bands\CreateBand;
+use CorvMC\Membership\Facades\BandService;
 use CorvMC\Bands\Models\Band;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TextInput;
@@ -37,6 +37,6 @@ class RegisterBand extends RegisterTenant
 
     protected function handleRegistration(array $data): Band
     {
-        return CreateBand::run($data);
+        return BandService::createBand($data);
     }
 }

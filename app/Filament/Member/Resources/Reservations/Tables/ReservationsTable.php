@@ -2,11 +2,11 @@
 
 namespace App\Filament\Member\Resources\Reservations\Tables;
 
-use CorvMC\Finance\Actions\Payments\MarkReservationAsComped;
-use CorvMC\Finance\Actions\Payments\MarkReservationAsPaid;
-use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
-use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
-use CorvMC\SpaceManagement\Actions\Reservations\CreateCheckoutSession;
+use App\Filament\Actions\Reservations\CancelReservationAction;
+use App\Filament\Actions\Reservations\ConfirmReservationAction;
+use App\Filament\Actions\Reservations\CreateCheckoutSessionAction;
+use App\Filament\Actions\Payments\MarkReservationAsPaidAction;
+use App\Filament\Actions\Payments\MarkReservationAsCompedAction;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
 use CorvMC\SpaceManagement\Models\Reservation;
@@ -110,21 +110,21 @@ class ReservationsTable
                     ->schema(fn (Schema $infolist) => ReservationInfolist::configure($infolist))
                     ->modalHeading(fn (Reservation $record): string => "Reservation #{$record->id}")
                     ->modalFooterActions([
-                        CancelReservation::filamentAction(),
-                        CreateCheckoutSession::filamentAction(),
-                        ConfirmReservation::filamentAction(),
+                        CancelReservationAction::make(),
+                        CreateCheckoutSessionAction::make(),
+                        ConfirmReservationAction::make(),
                     ]),
-                ConfirmReservation::filamentAction(),
-                CreateCheckoutSession::filamentAction(),
+                ConfirmReservationAction::make(),
+                CreateCheckoutSessionAction::make(),
                 ActionGroup::make([
-                    CancelReservation::filamentAction(),
+                    CancelReservationAction::make(),
                 ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    MarkReservationAsPaid::filamentBulkAction(),
-                    MarkReservationAsComped::filamentBulkAction(),
-                    CancelReservation::filamentBulkAction(),
+                    MarkReservationAsPaidAction::bulkAction(),
+                    MarkReservationAsCompedAction::bulkAction(),
+                    CancelReservationAction::bulkAction(),
                 ]),
             ])
             ->emptyStateHeading('No reservations found')

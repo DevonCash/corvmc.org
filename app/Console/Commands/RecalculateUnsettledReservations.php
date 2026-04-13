@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Brick\Money\Money;
-use CorvMC\Finance\Actions\Pricing\CalculatePriceForUser;
+use CorvMC\Finance\Facades\PricingService;
 use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Models\Charge;
@@ -123,7 +123,7 @@ class RecalculateUnsettledReservations extends Command
 
         try {
             // Get fresh pricing (this calculates based on current hours and rate)
-            $pricing = CalculatePriceForUser::run($reservation, $user);
+            $pricing = PricingService::calculatePriceForUser($reservation, $user);
         } catch (\Throwable $e) {
             return ['changed' => false, 'error' => $e->getMessage()];
         }

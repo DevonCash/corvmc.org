@@ -2,7 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Users\Pages;
 
-use CorvMC\Membership\Actions\Users\CreateUser as CreateUserAction;
+use CorvMC\Membership\Facades\UserManagementService;
 use App\Filament\Staff\Resources\Users\UserResource;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -21,7 +21,7 @@ class CreateUser extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        return CreateUserAction::run($data);
+        return UserManagementService::createUser($data);
     }
 
     protected function getCreatedNotificationTitle(): ?string

@@ -3,7 +3,7 @@
 namespace CorvMC\Finance\Listeners;
 
 use CorvMC\Finance\Enums\CreditType;
-use CorvMC\Finance\Actions\Pricing\CalculatePriceForUser;
+use CorvMC\Finance\Facades\PricingService;
 use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\Finance\Models\Charge;
@@ -49,7 +49,7 @@ class HandleChargeableUpdated
 
         DB::transaction(function () use ($chargeable, $charge, $user) {
             // Calculate new pricing
-            $pricing = CalculatePriceForUser::run($chargeable, $user);
+            $pricing = PricingService::calculatePriceForUser($chargeable, $user);
 
             // Get previously applied credits
             $oldCreditsApplied = $charge->credits_applied ?? [];

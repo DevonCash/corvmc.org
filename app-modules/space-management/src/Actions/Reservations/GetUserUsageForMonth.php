@@ -2,7 +2,7 @@
 
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
-use CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours;
+use CorvMC\Finance\Facades\MemberBenefitService;
 use CorvMC\SpaceManagement\Data\ReservationUsageData;
 use App\Models\User;
 use Carbon\Carbon;
@@ -32,7 +32,7 @@ class GetUserUsageForMonth
         $totalHours = $reservations->sum('hours_used');
         $totalPaid = $reservations->sum('cost');
 
-        $allocatedFreeHours = GetUserMonthlyFreeHours::run($user);
+        $allocatedFreeHours = MemberBenefitService::getUserMonthlyFreeHours($user);
 
         return new ReservationUsageData(
             month: $month->format('Y-m'),

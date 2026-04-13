@@ -7,6 +7,7 @@ use App\Filament\Staff\Resources\Users\Actions\ModifyMembershipAmountAction;
 use App\Filament\Staff\Resources\Users\Actions\OpenBillingPortalAction;
 use App\Filament\Staff\Resources\Users\Actions\ResumeMembershipAction;
 use App\Models\User;
+use CorvMC\Finance\Facades\MemberBenefitService;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Section;
@@ -66,7 +67,7 @@ class MembershipForm
                     })
                     ->schema([
                         TextEntry::make('current_subscription')
-                            ->visible(fn (User $record) => (bool) $record->subscription())
+                            ->visible(fn(User $record) => (bool) $record->subscription())
                             ->label('Current Contribution')
                             ->helperText(function ($record) {
                                 $subscription = $record->subscription();
@@ -103,7 +104,7 @@ class MembershipForm
                                         if ($hasFeesCovered) {
                                             // Calculate total cost including fees
                                             $totalAmount = collect($stripeSubscription->items->data)
-                                                ->sum(fn ($item) => $item->price->unit_amount);
+                                                ->sum(fn($item) => $item->price->unit_amount);
                                             $totalCost = \Brick\Money\Money::ofMinor($totalAmount, 'USD');
 
                                             return sprintf(
@@ -196,7 +197,7 @@ class MembershipForm
                             ->state(function (User $record) {
                                 $subscription = $record->subscription();
                                 if ($subscription && $subscription->ends_at) {
-                                    $totalHours = \CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours::run($record);
+                                    $totalHours = MemberBenefitService::getUserMonthlyFreeHours($record);
 
                                     return sprintf('You retain %d free hours/month until %s', $totalHours, $subscription->ends_at->format('M j, Y'));
                                 }

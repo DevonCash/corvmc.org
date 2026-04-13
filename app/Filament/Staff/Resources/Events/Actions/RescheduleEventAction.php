@@ -5,9 +5,10 @@ namespace App\Filament\Staff\Resources\Events\Actions;
 use App\Actions\Events\CheckEventConflicts;
 use App\Actions\Events\SyncEventSpaceReservation;
 use App\Filament\Staff\Resources\Events\EventResource;
+use App\Facades\EventSyncService;
 use App\Settings\ReservationSettings;
 use Carbon\Carbon;
-use CorvMC\Events\Actions\RescheduleEvent;
+use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Enums\EventStatus;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
@@ -285,7 +286,7 @@ class RescheduleEventAction
             $set('teardown_minutes', $settings->default_event_teardown_minutes);
         }
 
-        $result = CheckEventConflicts::run($startCarbon, $endCarbon, $setupMinutes, $teardownMinutes);
+        $result = EventSyncService::checkEventConflicts($startCarbon, $endCarbon, $setupMinutes, $teardownMinutes);
 
         $set('conflict_status', $result['status']);
         $set('conflict_data', json_encode([
@@ -330,7 +331,7 @@ class RescheduleEventAction
 
         if (! $hasNewDate) {
             // TBA mode - just mark as postponed
-            RescheduleEvent::run($record, [], $data['reason'] ?? null);
+            EventService::reschedule($record, [], $data['reason'] ?? null);
 
             Notification::make()
                 ->title('Event Postponed')
@@ -368,7 +369,7 @@ class RescheduleEventAction
         $forceOverride = (bool) ($data['force_override'] ?? false);
 
         // Create new event via reschedule
-        $newEvent = RescheduleEvent::run($record, $newEventData, $data['reason'] ?? null);
+        $newEvent = EventService::reschedule($record, $newEventData, $data['reason'] ?? null);
 
         // Sync space reservation for new event
         if ($newEvent->usesPracticeSpace()) {
@@ -380,7 +381,7 @@ class RescheduleEventAction
             };
 
             if ($shouldCreate) {
-                $result = SyncEventSpaceReservation::run(
+                $result = EventSyncService::syncSpaceReservation(
                     $newEvent,
                     $setupMinutes,
                     $teardownMinutes,

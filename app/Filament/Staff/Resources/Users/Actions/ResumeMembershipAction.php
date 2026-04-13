@@ -3,6 +3,7 @@
 namespace App\Filament\Staff\Resources\Users\Actions;
 
 use App\Models\User;
+use CorvMC\Finance\Facades\SubscriptionService;
 use Filament\Actions\Action;
 
 class ResumeMembershipAction
@@ -19,7 +20,7 @@ class ResumeMembershipAction
             ->modalDescription('Are you sure you want to resume your contribution? Your contribution will continue until you cancel it again.')
             ->modalSubmitActionLabel('Yes, Resume Contribution')
             ->action(function () {
-                \CorvMC\Finance\Actions\Subscriptions\ResumeSubscription::run(User::me());
+                SubscriptionService::resume(User::me());
 
                 \Filament\Notifications\Notification::make()
                     ->title('Contribution Resumed')

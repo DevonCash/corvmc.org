@@ -5,6 +5,7 @@ use CorvMC\Bands\Events\BandCreated;
 use CorvMC\Bands\Events\BandDeleted;
 use CorvMC\Bands\Events\BandUpdated;
 use CorvMC\Bands\Models\Band;
+use CorvMC\Membership\Facades\BandService;
 use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function () {
@@ -76,7 +77,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        $band = \CorvMC\Membership\Actions\Bands\CreateBand::run(['name' => 'New Band']);
+        $band = BandService::create(['name' => 'New Band']);
 
         $logs = Activity::where('subject_type', 'band')
             ->where('subject_id', $band->id)
@@ -94,7 +95,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        \CorvMC\Membership\Actions\Bands\UpdateBand::run($band, ['name' => 'Updated Name']);
+        BandService::update($band, ['name' => 'Updated Name']);
 
         $logs = Activity::where('subject_type', 'band')
             ->where('subject_id', $band->id)
@@ -112,7 +113,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        \CorvMC\Membership\Actions\Bands\UpdateBand::run($band, ['status' => 'active']);
+        BandService::update($band, ['status' => 'active']);
 
         $logs = Activity::where('subject_type', 'band')
             ->where('subject_id', $band->id)

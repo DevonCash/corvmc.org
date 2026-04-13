@@ -2,17 +2,15 @@
 
 namespace App\Filament\Actions\Bands;
 
-use App\Filament\Shared\Actions\Action;
 use CorvMC\Bands\Models\Band;
 use CorvMC\Membership\Data\ContactData;
 use CorvMC\Membership\Services\BandService;
 use CorvMC\Moderation\Enums\Visibility;
+use Filament\Actions\Action;
 use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
 
 /**
  * Filament Action for creating a new band.

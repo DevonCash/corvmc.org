@@ -4,6 +4,7 @@ use App\Models\User;
 use CorvMC\Membership\Events\UserCreated;
 use CorvMC\Membership\Events\UserDeleted;
 use CorvMC\Membership\Events\UserUpdated;
+use CorvMC\Membership\Facades\UserManagementService;
 use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function () {
@@ -69,7 +70,7 @@ describe('No duplicate audit logs', function () {
     it('creates exactly one log entry when creating a user via action', function () {
         Activity::query()->delete();
 
-        $user = \CorvMC\Membership\Actions\Users\CreateUser::run([
+        $user = UserManagementService::create([
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password123',
@@ -89,7 +90,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        \CorvMC\Membership\Actions\Users\UpdateUser::run($user, ['name' => 'New Name']);
+        UserManagementService::update($user, ['name' => 'New Name']);
 
         $logs = Activity::where('subject_type', 'user')
             ->where('subject_id', $user->id)
@@ -106,7 +107,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($admin);
-        \CorvMC\Membership\Actions\Users\DeleteUser::run($user);
+        UserManagementService::delete($user);
 
         $logs = Activity::where('subject_type', 'user')
             ->where('subject_id', $user->id)
@@ -122,7 +123,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        \CorvMC\Membership\Actions\Users\UpdateUser::run($user, ['password' => 'newpassword123']);
+        UserManagementService::update($user, ['password' => 'newpassword123']);
 
         $logs = Activity::where('subject_type', 'user')
             ->where('subject_id', $user->id)

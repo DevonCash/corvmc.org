@@ -2,7 +2,7 @@
 
 namespace CorvMC\SpaceManagement\Console\Commands;
 
-use App\Actions\Notifications\SendReservationConfirmationReminders as SendReservationConfirmationRemindersAction;
+use App\Facades\NotificationService;
 use Illuminate\Console\Command;
 
 class SendReservationConfirmationReminders extends Command
@@ -31,7 +31,7 @@ class SendReservationConfirmationReminders extends Command
             $this->warn('DRY RUN MODE - No notifications will be sent');
         }
 
-        $results = SendReservationConfirmationRemindersAction::run($isDryRun);
+        $results = NotificationService::sendReservationConfirmationReminders($isDryRun);
 
         if ($results['total'] === 0) {
             $this->info('No pending reservations found that need confirmation reminders.');

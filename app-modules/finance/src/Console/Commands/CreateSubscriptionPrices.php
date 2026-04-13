@@ -186,7 +186,7 @@ class CreateSubscriptionPrices extends Command
             return;
         }
 
-        $feeCoverageCents = \CorvMC\Finance\Actions\Payments\CalculateFeeCoverage::run($forPrice->unit_amount);
+        $feeCoverageCents = \CorvMC\Finance\Facades\FeeService::calculateFeeCoverage($forPrice->unit_amount);
 
         $price = $this->stripe->prices->create([
             'product' => $product_id,

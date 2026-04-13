@@ -4,6 +4,7 @@ namespace App\Filament\Member\Resources\Reservations\Widgets;
 
 use App\Models\User;
 use CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours;
+use CorvMC\Finance\Facades\MemberBenefitService;
 use Filament\Widgets\Widget;
 
 class FreeHoursWidget extends Widget
@@ -28,9 +29,10 @@ class FreeHoursWidget extends Widget
         $this->isSustainingMember = $user?->hasRole('sustaining member') ?? false;
 
         if ($this->isSustainingMember) {
+            $monthlyHours = MemberBenefitService::getMonthlyFreeHours($user);
             $this->remainingHours = $user->getRemainingFreeHours();
             $this->usedHours = $user->getUsedFreeHoursThisMonth();
-            $this->monthlyGrantHours = (float) GetUserMonthlyFreeHours::run($user);
+            $this->monthlyGrantHours = $monthlyHours;
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Observers;
 
-use App\Actions\Events\SyncEventSpaceReservation;
+use App\Facades\EventSyncService;
 use Carbon\Carbon;
 use CorvMC\Events\Enums\EventStatus;
 use CorvMC\Events\Models\Event;
@@ -33,7 +33,7 @@ class EventObserver
 
             // If times also changed during reactivation, recalculate the reservation
             if ($event->status->isActive() && ($event->wasChanged('start_datetime') || $event->wasChanged('end_datetime'))) {
-                SyncEventSpaceReservation::run($event, null, null, force: true);
+                EventSyncService::syncSpaceReservation($event, null, null, force: true);
             }
         } else {
             $this->shiftSpaceReservationIfNeeded($event);
@@ -69,7 +69,7 @@ class EventObserver
         // Recreate the space reservation if this is an active CMC event
         // (reservations don't use soft deletes, so the original was hard-deleted)
         if ($event->usesPracticeSpace() && $event->status->isActive()) {
-            SyncEventSpaceReservation::run($event, null, null, force: true);
+            EventSyncService::syncSpaceReservation($event, null, null, force: true);
         }
     }
 
@@ -100,7 +100,7 @@ class EventObserver
     {
         if ($event->usesPracticeSpace()) {
             // Force through since observer has no UI context for conflict warnings
-            SyncEventSpaceReservation::run($event, null, null, force: true);
+            EventSyncService::syncSpaceReservation($event, null, null, force: true);
         }
     }
 
@@ -147,7 +147,7 @@ class EventObserver
                     'cancellation_reason' => null,
                 ]);
             } elseif (! $reservation) {
-                SyncEventSpaceReservation::run($event, null, null, force: true);
+                EventSyncService::syncSpaceReservation($event, null, null, force: true);
             }
         }
     }
@@ -169,7 +169,7 @@ class EventObserver
 
         // If no reservation exists, create one with defaults
         if (! $reservation) {
-            SyncEventSpaceReservation::run($event);
+            EventSyncService::syncSpaceReservation($event);
 
             return;
         }
@@ -204,7 +204,7 @@ class EventObserver
             // If either old or new end is null, recalculate via SyncEventSpaceReservation
             // instead of trying to compute a delta
             if (! $oldEnd || ! $newEnd) {
-                SyncEventSpaceReservation::run($event, null, null, force: true);
+                EventSyncService::syncSpaceReservation($event, null, null, force: true);
 
                 return;
             }

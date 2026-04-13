@@ -6,7 +6,7 @@ use BackedEnum;
 use Brick\Money\Money;
 use CorvMC\Equipment\Models\EquipmentLoan;
 use CorvMC\Events\Models\Event;
-use CorvMC\Finance\Actions\Subscriptions\GetSubscriptionStats;
+use CorvMC\Finance\Facades\SubscriptionService;
 use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\Finance\Models\Charge;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
@@ -100,7 +100,7 @@ class StaffDashboard extends Page
     public function getMonthlyRevenueData(): array
     {
         // Get subscription stats
-        $stats = GetSubscriptionStats::run();
+        $stats = SubscriptionService::getStats();
 
         // Estimate Stripe fees for subscriptions: 2.9% + $0.30 per transaction
         $subscriptionCount = $stats->active_subscriptions_count;

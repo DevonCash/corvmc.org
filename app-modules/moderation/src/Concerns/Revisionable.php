@@ -6,6 +6,7 @@ use CorvMC\Moderation\Models\Revision;
 use App\Models\User;
 use CorvMC\Moderation\Actions\Revisions\HandleRevisionSubmission;
 use CorvMC\Moderation\Actions\Trust\DetermineApprovalWorkflow;
+use CorvMC\Moderation\Facades\RevisionService;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -134,7 +135,7 @@ trait Revisionable
         ]);
 
         // Use action to handle approval workflow
-        HandleRevisionSubmission::run($revision);
+        RevisionService::handleSubmission($revision);
 
         return $revision;
     }
@@ -175,7 +176,7 @@ trait Revisionable
             ]);
 
             // Re-evaluate auto-approval with merged changes
-            HandleRevisionSubmission::run($revision);
+            RevisionService::handleSubmission($revision);
 
             return $revision->fresh();
         });
@@ -497,7 +498,7 @@ trait Revisionable
             default:
                 $currentUser = Auth::user();
                 if ($currentUser) {
-                    $trustWorkflow = DetermineApprovalWorkflow::run($currentUser, static::class);
+                    $trustWorkflow = RevisionService::determineApprovalWorkflow($currentUser, static::class);
 
                     $workflow = array_merge($workflow, [
                         'requires_approval' => $trustWorkflow['requires_approval'],

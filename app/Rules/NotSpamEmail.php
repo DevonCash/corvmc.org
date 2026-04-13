@@ -2,8 +2,8 @@
 
 namespace App\Rules;
 
-use CorvMC\Moderation\Actions\SpamPrevention\CheckEmailAgainstStopForumSpam;
 use Closure;
+use CorvMC\Moderation\Facades\SpamPreventionService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Facades\Log;
 
@@ -11,7 +11,7 @@ class NotSpamEmail implements ValidationRule
 {
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $spamCheck = CheckEmailAgainstStopForumSpam::run($value);
+        $spamCheck = SpamPreventionService::checkEmailAgainstStopForumSpam($value);
 
         if ($spamCheck->is_spam) {
             // Log the blocked attempt to activity log

@@ -2,8 +2,7 @@
 
 namespace App\Filament\Member\Resources\MemberProfiles\Pages;
 
-use CorvMC\Membership\Actions\MemberProfiles\DeleteMemberProfile as DeleteMemberProfileAction;
-use CorvMC\Membership\Actions\MemberProfiles\UpdateMemberProfile as UpdateMemberProfileAction;
+use CorvMC\Membership\Facades\MemberProfileService;
 use App\Filament\Member\Resources\MemberProfiles\MemberProfileResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
@@ -16,12 +15,12 @@ class EditMemberProfile extends EditRecord
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        return UpdateMemberProfileAction::run($record, $data);
+        return MemberProfileService::updateMemberProfile($record, $data);
     }
 
     protected function handleRecordDeletion(Model $record): void
     {
-        DeleteMemberProfileAction::run($record);
+        MemberProfileService::deleteMemberProfile($record);
     }
 
     protected function getHeaderActions(): array

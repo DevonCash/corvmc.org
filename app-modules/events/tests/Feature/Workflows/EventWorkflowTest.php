@@ -3,18 +3,8 @@
 use CorvMC\Bands\Models\Band;
 use App\Models\User;
 use Carbon\Carbon;
-use CorvMC\Events\Actions\AddEventPerformer;
-use CorvMC\Events\Actions\CancelEvent;
-use CorvMC\Events\Actions\CreateEvent;
-use CorvMC\Events\Actions\DeleteEvent;
-use CorvMC\Events\Actions\DuplicateEvent;
-use CorvMC\Events\Actions\PublishEvent;
-use CorvMC\Events\Actions\RemoveEventPerformer;
-use CorvMC\Events\Actions\RescheduleEvent;
-use CorvMC\Events\Actions\UpdateEvent;
-use CorvMC\Events\Actions\UpdatePerformerOrder;
-use CorvMC\Events\Actions\UpdatePerformerSetLength;
 use CorvMC\Events\Enums\EventStatus;
+use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
 use Illuminate\Support\Facades\Auth;
@@ -53,7 +43,7 @@ describe('Event Workflow: Create Event', function () {
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
         $endDatetime = $startDatetime->copy()->addHours(3);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Rock Night',
             'description' => 'An evening of rock music',
             'start_datetime' => $startDatetime,
@@ -75,7 +65,7 @@ describe('Event Workflow: Create Event', function () {
         $startDatetime = Carbon::now()->addDays(7)->setHour(20)->setMinute(0)->setSecond(0);
         $endDatetime = $startDatetime->copy()->addHours(2);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Jazz at the Beanery',
             'description' => 'Smooth jazz evening',
             'start_datetime' => $startDatetime,
@@ -91,7 +81,7 @@ describe('Event Workflow: Create Event', function () {
     it('attaches tags when creating event', function () {
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Multi-Genre Night',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(3),
@@ -112,7 +102,7 @@ describe('Event Workflow: Publish Event', function () {
 
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Unpublished Event',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(2),
@@ -122,7 +112,7 @@ describe('Event Workflow: Publish Event', function () {
 
         expect($event->published_at)->toBeNull();
 
-        PublishEvent::run($event);
+        EventService::publish($event);
 
         $event->refresh();
         expect($event->published_at)->not->toBeNull();
@@ -137,14 +127,14 @@ describe('Event Workflow: Manage Performers', function () {
 
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Band Night',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(3),
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        $result = AddEventPerformer::run($event, $band, ['set_length' => 45]);
+        $result = EventService::addPerformer($event, $band, ['set_length' => 45]);
 
         expect($result)->toBeTrue();
         expect($event->performers()->count())->toBe(1);
@@ -164,16 +154,16 @@ describe('Event Workflow: Manage Performers', function () {
 
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Multi-Band Night',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(4),
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        AddEventPerformer::run($event, $band1);
-        AddEventPerformer::run($event, $band2);
-        AddEventPerformer::run($event, $band3);
+        EventService::addPerformer($event, $band1);
+        EventService::addPerformer($event, $band2);
+        EventService::addPerformer($event, $band3);
 
         $performers = $event->performers()->orderBy('event_bands.order')->get();
         expect($performers[0]->id)->toBe($band1->id);
@@ -188,17 +178,17 @@ describe('Event Workflow: Manage Performers', function () {
 
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Band Night',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(3),
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        AddEventPerformer::run($event, $band);
+        EventService::addPerformer($event, $band);
         expect($event->performers()->count())->toBe(1);
 
-        $result = RemoveEventPerformer::run($event, $band);
+        $result = EventService::removePerformer($event, $band);
 
         expect($result)->toBeTrue();
         expect($event->performers()->count())->toBe(0);
@@ -211,15 +201,15 @@ describe('Event Workflow: Manage Performers', function () {
 
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Band Night',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(3),
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        $firstAdd = AddEventPerformer::run($event, $band);
-        $secondAdd = AddEventPerformer::run($event, $band);
+        $firstAdd = EventService::addPerformer($event, $band);
+        $secondAdd = EventService::addPerformer($event, $band);
 
         expect($firstAdd)->toBeTrue();
         expect($secondAdd)->toBeFalse();
@@ -234,7 +224,7 @@ describe('Event Workflow: Reschedule Event', function () {
         $originalStartDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
         $newStartDatetime = Carbon::now()->addDays(14)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $originalEvent = CreateEvent::run([
+        $originalEvent = EventService::create([
             'title' => 'Original Event',
             'description' => 'Original description',
             'start_datetime' => $originalStartDatetime,
@@ -243,7 +233,7 @@ describe('Event Workflow: Reschedule Event', function () {
             'organizer_id' => $organizer->id,
         ]);
 
-        $newEvent = RescheduleEvent::run($originalEvent, [
+        $newEvent = EventService::rescheduleEvent($originalEvent, [
             'start_datetime' => $newStartDatetime,
             'end_datetime' => $newStartDatetime->copy()->addHours(3),
             'venue_id' => $this->cmcVenue->id,
@@ -269,16 +259,16 @@ describe('Event Workflow: Reschedule Event', function () {
         $originalStartDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
         $newStartDatetime = Carbon::now()->addDays(14)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $originalEvent = CreateEvent::run([
+        $originalEvent = EventService::create([
             'title' => 'Original Event',
             'start_datetime' => $originalStartDatetime,
             'end_datetime' => $originalStartDatetime->copy()->addHours(3),
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        AddEventPerformer::run($originalEvent, $band, ['set_length' => 45, 'order' => 1]);
+        EventService::addPerformer($originalEvent, $band, ['set_length' => 45, 'order' => 1]);
 
-        $newEvent = RescheduleEvent::run($originalEvent, [
+        $newEvent = EventService::rescheduleEvent($originalEvent, [
             'start_datetime' => $newStartDatetime,
             'end_datetime' => $newStartDatetime->copy()->addHours(3),
             'venue_id' => $this->cmcVenue->id,
@@ -294,7 +284,7 @@ describe('Event Workflow: Cancel Event', function () {
     it('cancels an event with a reason', function () {
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Event to Cancel',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(3),
@@ -303,7 +293,7 @@ describe('Event Workflow: Cancel Event', function () {
 
         expect($event->status)->toBe(EventStatus::Scheduled);
 
-        $cancelledEvent = CancelEvent::run($event, 'Weather emergency');
+        $cancelledEvent = EventService::cancelEvent($event, 'Weather emergency');
 
         expect($cancelledEvent->status)->toBe(EventStatus::Cancelled);
         expect($cancelledEvent->cancellation_reason)->toBe('Weather emergency');
@@ -312,14 +302,14 @@ describe('Event Workflow: Cancel Event', function () {
     it('cancels an event without a reason', function () {
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Event to Cancel',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(3),
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        $cancelledEvent = CancelEvent::run($event);
+        $cancelledEvent = EventService::cancelEvent($event);
 
         expect($cancelledEvent->status)->toBe(EventStatus::Cancelled);
         expect($cancelledEvent->cancellation_reason)->toBeNull();
@@ -331,7 +321,7 @@ describe('Event Workflow: Update Event', function () {
         $organizer = User::factory()->create();
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Original Title',
             'description' => 'Original description',
             'start_datetime' => $startDatetime,
@@ -342,7 +332,7 @@ describe('Event Workflow: Update Event', function () {
 
         $newStartDatetime = Carbon::now()->addDays(14)->setHour(20)->setMinute(0)->setSecond(0);
 
-        $updatedEvent = UpdateEvent::run($event, [
+        $updatedEvent = EventService::updateEvent($event, [
             'title' => 'Updated Title',
             'description' => 'Updated description',
             'start_datetime' => $newStartDatetime,
@@ -359,7 +349,7 @@ describe('Event Workflow: Update Event', function () {
     it('updates event tags', function () {
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Tagged Event',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(3),
@@ -369,7 +359,7 @@ describe('Event Workflow: Update Event', function () {
 
         expect($event->tags->count())->toBe(2);
 
-        $updatedEvent = UpdateEvent::run($event, [
+        $updatedEvent = EventService::updateEvent($event, [
             'tags' => ['Jazz', 'Folk', 'Indie'],
         ]);
 
@@ -386,19 +376,19 @@ describe('Event Workflow: Delete Event', function () {
 
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Event to Delete',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(3),
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        AddEventPerformer::run($event, $band);
+        EventService::addPerformer($event, $band);
         expect($event->performers()->count())->toBe(1);
 
         $eventId = $event->id;
 
-        DeleteEvent::run($event);
+        EventService::deleteEvent($event);
 
         // Event should be deleted
         expect(Event::find($eventId))->toBeNull();
@@ -414,7 +404,7 @@ describe('Event Workflow: Duplicate Event', function () {
         $originalStartDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
         $newStartDatetime = Carbon::now()->addDays(30)->setHour(20)->setMinute(0)->setSecond(0);
 
-        $originalEvent = CreateEvent::run([
+        $originalEvent = EventService::create([
             'title' => 'Original Concert',
             'description' => 'An amazing concert',
             'start_datetime' => $originalStartDatetime,
@@ -423,10 +413,10 @@ describe('Event Workflow: Duplicate Event', function () {
             'tags' => ['Rock', 'Alternative'],
         ]);
 
-        AddEventPerformer::run($originalEvent, $band1, ['set_length' => 45, 'order' => 1]);
-        AddEventPerformer::run($originalEvent, $band2, ['set_length' => 60, 'order' => 2]);
+        EventService::addPerformer($originalEvent, $band1, ['set_length' => 45, 'order' => 1]);
+        EventService::addPerformer($originalEvent, $band2, ['set_length' => 60, 'order' => 2]);
 
-        $duplicatedEvent = DuplicateEvent::run(
+        $duplicatedEvent = EventService::duplicateEvent(
             $originalEvent,
             $newStartDatetime,
             $newStartDatetime->copy()->addHours(4)
@@ -469,22 +459,22 @@ describe('Event Workflow: Performer Management Extended', function () {
 
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Multi-Band Night',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(4),
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        AddEventPerformer::run($event, $band1);
-        AddEventPerformer::run($event, $band2);
+        EventService::addPerformer($event, $band1);
+        EventService::addPerformer($event, $band2);
 
         // Band1 should be order 1, band2 should be order 2
         expect($event->performers()->where('band_profile_id', $band1->id)->first()->pivot->order)->toBe(1);
         expect($event->performers()->where('band_profile_id', $band2->id)->first()->pivot->order)->toBe(2);
 
         // Update band2 to be first
-        $result = UpdatePerformerOrder::run($event, $band2, 1);
+        $result = EventService::updatePerformerOrder($event, $band2, 1);
         expect($result)->toBeTrue();
 
         // Verify order was updated
@@ -498,16 +488,16 @@ describe('Event Workflow: Performer Management Extended', function () {
 
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Band Night',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(3),
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        AddEventPerformer::run($event, $bandOnEvent);
+        EventService::addPerformer($event, $bandOnEvent);
 
-        $result = UpdatePerformerOrder::run($event, $bandNotOnEvent, 1);
+        $result = EventService::updatePerformerOrder($event, $bandNotOnEvent, 1);
         expect($result)->toBeFalse();
     });
 
@@ -517,17 +507,17 @@ describe('Event Workflow: Performer Management Extended', function () {
 
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Band Night',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(3),
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        AddEventPerformer::run($event, $band, ['set_length' => 30]);
+        EventService::addPerformer($event, $band, ['set_length' => 30]);
         expect($event->performers()->first()->pivot->set_length)->toBe(30);
 
-        $result = UpdatePerformerSetLength::run($event, $band, 60);
+        $result = EventService::updatePerformerSetLength($event, $band, 60);
         expect($result)->toBeTrue();
 
         // Verify set length was updated
@@ -541,16 +531,16 @@ describe('Event Workflow: Performer Management Extended', function () {
 
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Band Night',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(3),
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        AddEventPerformer::run($event, $bandOnEvent);
+        EventService::addPerformer($event, $bandOnEvent);
 
-        $result = UpdatePerformerSetLength::run($event, $bandNotOnEvent, 45);
+        $result = EventService::updatePerformerSetLength($event, $bandNotOnEvent, 45);
         expect($result)->toBeFalse();
     });
 });

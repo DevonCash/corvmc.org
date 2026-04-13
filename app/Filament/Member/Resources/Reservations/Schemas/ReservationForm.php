@@ -3,10 +3,7 @@
 namespace App\Filament\Member\Resources\Reservations\Schemas;
 
 use App\Models\User;
-use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
-use CorvMC\SpaceManagement\Actions\Reservations\DetermineReservationStatus;
-use CorvMC\SpaceManagement\Actions\Reservations\GetAvailableTimeSlotsForDate;
-use CorvMC\SpaceManagement\Actions\Reservations\GetValidEndTimesForDate;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Carbon\Carbon;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
@@ -178,7 +175,7 @@ class ReservationForm
                                 return [];
                             }
 
-                            return GetAvailableTimeSlotsForDate::run(Carbon::parse($date, config('app.timezone')));
+                            return ReservationService::getAvailableTimeSlots(Carbon::parse($date, config('app.timezone')));
                         })
                         ->disabled(fn(Get $get) => ! $get('reservation_date'))
                         ->required()
@@ -199,7 +196,7 @@ class ReservationForm
                                 return [];
                             }
 
-                            return GetValidEndTimesForDate::run(Carbon::parse($date, config('app.timezone')), $startTime);
+                            return ReservationService::getValidEndTimesForDate(Carbon::parse($date, config('app.timezone')), $startTime);
                         })
                         ->required()
                         ->live(debounce: 300)
@@ -320,7 +317,7 @@ class ReservationForm
                                 return [];
                             }
 
-                            return GetAvailableTimeSlotsForDate::run(Carbon::parse($date, config('app.timezone')));
+                            return ReservationService::getAvailableTimeSlots(Carbon::parse($date, config('app.timezone')));
                         })
                         ->disabled(fn(Get $get) => ! $get('reservation_date'))
                         ->required()
@@ -341,7 +338,7 @@ class ReservationForm
                                 return [];
                             }
 
-                            return GetValidEndTimesForDate::run(Carbon::parse($date, config('app.timezone')), $startTime);
+                            return ReservationService::getValidEndTimesForDate(Carbon::parse($date, config('app.timezone')), $startTime);
                         })
                         ->required()
                         ->live(debounce: 300)
@@ -418,7 +415,7 @@ class ReservationForm
             return;
         }
 
-        $status = DetermineReservationStatus::run(
+        $status = ReservationService::determineReservationStatus(
             Carbon::parse($date),
             (bool) $isRecurring
         );
@@ -449,7 +446,7 @@ class ReservationForm
             return;
         }
 
-        $calculation = CalculateReservationCost::run(
+        $calculation = ReservationService::calculateReservationCost(
             $user,
             Carbon::parse($start),
             Carbon::parse($end)

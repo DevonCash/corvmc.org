@@ -7,6 +7,7 @@ use App\Filament\Staff\Resources\SpaceClosures\SpaceClosureResource;
 use App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource;
 use App\Models\User;
 use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Models\SpaceClosure;
 use Filament\Actions\Action;
@@ -35,7 +36,7 @@ class ListSpaceClosures extends ListRecords
                 ->modalHeading('Create Space Closure')
                 ->modalSubmitActionLabel('Create Closure')
                 ->steps(SpaceClosureCreateWizard::getSteps())
-                ->action(fn (array $data) => $this->createClosure($data)),
+                ->action(fn(array $data) => $this->createClosure($data)),
         ];
     }
 
@@ -63,7 +64,7 @@ class ListSpaceClosures extends ListRecords
             foreach ($affectedReservationIds as $reservationId) {
                 $reservation = Reservation::find($reservationId);
                 if ($reservation && $reservation->status->isActive()) {
-                    CancelReservation::run($reservation, $cancellationReason);
+                    ReservationService::cancelReservation($reservation, $cancellationReason);
                     $cancelledCount++;
                 }
             }
@@ -73,7 +74,7 @@ class ListSpaceClosures extends ListRecords
         if ($cancelledCount > 0) {
             Notification::make()
                 ->title('Closure created')
-                ->body("Space closure created and {$cancelledCount} ".str('reservation')->plural($cancelledCount).' cancelled.')
+                ->body("Space closure created and {$cancelledCount} " . str('reservation')->plural($cancelledCount) . ' cancelled.')
                 ->success()
                 ->send();
         } else {

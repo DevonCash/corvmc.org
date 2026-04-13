@@ -5,6 +5,7 @@ namespace App\Filament\Staff\Resources\RecurringReservations\Schemas;
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\Actions\RecurringReservations\BuildRRule;
 use CorvMC\SpaceManagement\Actions\RecurringReservations\ValidateRecurringPattern;
+use CorvMC\SpaceManagement\Facades\RecurringReservationService;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -41,7 +42,7 @@ class RecurringReservationForm
                             ->default('WEEKLY')
                             ->required()
                             ->reactive()
-                            ->afterStateUpdated(fn (callable $set) => $set('recurrence_rule', null)),
+                            ->afterStateUpdated(fn(callable $set) => $set('recurrence_rule', null)),
 
                         Select::make('interval')
                             ->label('Repeat Every')
@@ -54,7 +55,7 @@ class RecurringReservationForm
                             ->default(1)
                             ->required()
                             ->reactive()
-                            ->suffix(fn (Get $get) => $get('frequency') === 'WEEKLY' ? 'week(s)' : 'month(s)'),
+                            ->suffix(fn(Get $get) => $get('frequency') === 'WEEKLY' ? 'week(s)' : 'month(s)'),
 
                         CheckboxList::make('by_day')
                             ->label('On Days')
@@ -67,8 +68,8 @@ class RecurringReservationForm
                                 'SA' => 'Saturday',
                                 'SU' => 'Sunday',
                             ])
-                            ->visible(fn (Get $get) => $get('frequency') === 'WEEKLY')
-                            ->required(fn (Get $get) => $get('frequency') === 'WEEKLY')
+                            ->visible(fn(Get $get) => $get('frequency') === 'WEEKLY')
+                            ->required(fn(Get $get) => $get('frequency') === 'WEEKLY')
                             ->columns(3)
                             ->reactive(),
 
@@ -81,7 +82,7 @@ class RecurringReservationForm
                         DatePicker::make('series_end_date')
                             ->label('End Date (optional)')
                             ->helperText('Leave blank for ongoing reservation')
-                            ->minDate(fn (Get $get) => $get('series_start_date') ?? now())
+                            ->minDate(fn(Get $get) => $get('series_start_date') ?? now())
                             ->reactive(),
                     ])
                     ->columns(2),
@@ -105,7 +106,7 @@ class RecurringReservationForm
                             ->label('Duration (minutes)')
                             ->disabled()
                             ->dehydrated(true)
-                            ->default(fn (Get $get) => self::calculateDuration($get('start_time'), $get('end_time'))),
+                            ->default(fn(Get $get) => self::calculateDuration($get('start_time'), $get('end_time'))),
                     ])
                     ->columns(3),
 
@@ -145,7 +146,7 @@ class RecurringReservationForm
                                 }
 
                                 if ($frequency === 'WEEKLY') {
-                                    $days = array_map(fn ($d) => ['MO' => 'Mon', 'TU' => 'Tue', 'WE' => 'Wed', 'TH' => 'Thu', 'FR' => 'Fri', 'SA' => 'Sat', 'SU' => 'Sun'][$d] ?? $d, $byDay);
+                                    $days = array_map(fn($d) => ['MO' => 'Mon', 'TU' => 'Tue', 'WE' => 'Wed', 'TH' => 'Thu', 'FR' => 'Fri', 'SA' => 'Sat', 'SU' => 'Sun'][$d] ?? $d, $byDay);
                                     $dayStr = empty($days) ? 'no days selected' : implode(', ', $days);
 
                                     if ($interval == 1) {
@@ -162,22 +163,22 @@ class RecurringReservationForm
                                 return "Every {$interval} months";
                             }),
 
-                        Alert::make('conflict_warnings')
-                            ->warning()
-                            ->visible(fn (Get $get) => self::getConflictWarnings($get)->isNotEmpty())
-                            ->heading('Scheduling Conflicts Detected')
-                            ->body(function (Get $get) {
-                                $warnings = self::getConflictWarnings($get);
-                                if ($warnings->isEmpty()) {
-                                    return '';
-                                }
+                        // Alert::make('conflict_warnings')
+                        //     ->warning()
+                        //     ->visible(fn(Get $get) => self::getConflictWarnings($get)->isNotEmpty())
+                        //     ->heading('Scheduling Conflicts Detected')
+                        //     ->body(function (Get $get) {
+                        //         $warnings = self::getConflictWarnings($get);
+                        //         if ($warnings->isEmpty()) {
+                        //             return '';
+                        //         }
 
-                                $lines = $warnings->map(fn ($w) => "• {$w['date']} ({$w['time']}): {$w['conflicts']}");
+                        //         $lines = $warnings->map(fn($w) => "• {$w['date']} ({$w['time']}): {$w['conflicts']}");
 
-                                return $lines->join("\n");
-                            }),
+                        //         return $lines->join("\n");
+                        //     }),
                     ])
-                    ->visible(fn (Get $get) => $get('frequency') !== null),
+                    ->visible(fn(Get $get) => $get('frequency') !== null),
             ]);
     }
 
@@ -217,7 +218,7 @@ class RecurringReservationForm
         }
 
         try {
-            $rrule = BuildRRule::run([
+            $rrule = RecurringReservationService::buildRRule([
                 'frequency' => $frequency,
                 'interval' => $get('interval') ?? 1,
                 'by_day' => $byDay,
@@ -226,12 +227,12 @@ class RecurringReservationForm
             $seriesStartDate = Carbon::parse($startDate);
             $seriesEndDate = $get('series_end_date') ? Carbon::parse($get('series_end_date')) : null;
 
-            $result = ValidateRecurringPattern::run(
-                $rrule,
-                $seriesStartDate,
-                $seriesEndDate,
-                $startTime,
-                $endTime,
+            $result = RecurringReservationService::validateRecurringPattern(
+                rrule: $rrule,
+                seriesStartDate: $seriesStartDate,
+                seriesEndDate: $seriesEndDate,
+                startTime: Carbon::parse($startTime),
+                endTime: Carbon::parse($endTime),
                 checkOccurrences: 8
             );
 

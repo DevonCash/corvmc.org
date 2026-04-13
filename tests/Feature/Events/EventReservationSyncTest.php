@@ -16,8 +16,10 @@ use CorvMC\Events\Actions\CreateEvent;
 use CorvMC\Events\Actions\RescheduleEvent;
 use CorvMC\Events\Actions\UpdateEvent;
 use CorvMC\Events\Enums\EventStatus;
+use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Models\Venue;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
@@ -49,7 +51,7 @@ describe('Event Creation', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -67,7 +69,7 @@ describe('Event Creation', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3); // 19:00 - 22:00
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -86,7 +88,7 @@ describe('Event Creation', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'External Concert',
             'description' => 'An external event',
             'start_datetime' => $startTime,
@@ -102,7 +104,7 @@ describe('Event Creation', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -112,8 +114,8 @@ describe('Event Creation', function () {
         ]);
 
         // Simulate Filament page calling SyncEventSpaceReservation explicitly
-        SyncEventSpaceReservation::run($event, 120, 60, force: false);
-        SyncEventSpaceReservation::run($event, 120, 60, force: true);
+        ReservationService::syncEventSpaceReservation($event, 120, 60, force: false);
+        ReservationService::syncEventSpaceReservation($event, 120, 60, force: true);
 
         $reservationCount = EventReservation::where('reservable_type', 'event')
             ->where('reservable_id', $event->id)
@@ -128,7 +130,7 @@ describe('Event Time Changes', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -140,7 +142,7 @@ describe('Event Time Changes', function () {
         $newStartTime = $startTime->copy()->addHours(2); // Move to 21:00
         $newEndTime = $newStartTime->copy()->addHours(3); // 21:00 - 00:00
 
-        UpdateEvent::run($event, [
+        EventService::update($event, [
             'start_datetime' => $newStartTime,
             'end_datetime' => $newEndTime,
         ]);
@@ -156,7 +158,7 @@ describe('Event Cancellation', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -169,7 +171,7 @@ describe('Event Cancellation', function () {
         $reservation = $event->spaceReservation;
         expect($reservation->status)->toBe(ReservationStatus::Confirmed);
 
-        CancelEvent::run($event, 'Test cancellation');
+        EventService::cancel($event, 'Test cancellation');
 
         $reservation->refresh();
         expect($reservation->status)->toBe(ReservationStatus::Cancelled)
@@ -180,7 +182,7 @@ describe('Event Cancellation', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -205,7 +207,7 @@ describe('Event Restoration', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -218,7 +220,7 @@ describe('Event Restoration', function () {
         $reservation = $event->spaceReservation;
         $reservationId = $reservation->id;
 
-        CancelEvent::run($event, 'Test cancellation');
+        EventService::cancel($event, 'Test cancellation');
         $reservation->refresh();
         expect($reservation->status)->toBe(ReservationStatus::Cancelled);
 
@@ -235,7 +237,7 @@ describe('Event Restoration', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -266,7 +268,7 @@ describe('Event Rescheduling', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
-        $originalEvent = CreateEvent::run([
+        $originalEvent = EventService::create([
             'title' => 'Original Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -280,7 +282,7 @@ describe('Event Rescheduling', function () {
         expect($originalReservation->status)->toBe(ReservationStatus::Confirmed);
 
         $newStartTime = Carbon::now()->addDays(20)->setHour(20)->setMinute(0)->setSecond(0);
-        $newEvent = RescheduleEvent::run($originalEvent, [
+        $newEvent = EventService::reschedule($originalEvent, [
             'start_datetime' => $newStartTime,
             'end_datetime' => $newStartTime->copy()->addHours(3),
         ], 'Venue conflict');
@@ -298,7 +300,7 @@ describe('Event Rescheduling', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -310,7 +312,7 @@ describe('Event Rescheduling', function () {
         $event->refresh();
         $reservation = $event->spaceReservation;
 
-        RescheduleEvent::run($event, [], 'New date TBA');
+        EventService::reschedule($event, [], 'New date TBA');
 
         $reservation->refresh();
         expect($reservation->status)->toBe(ReservationStatus::Cancelled)
@@ -323,7 +325,7 @@ describe('Event Deletion', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,

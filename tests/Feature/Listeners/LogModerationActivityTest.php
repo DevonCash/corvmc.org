@@ -7,6 +7,7 @@ use CorvMC\Moderation\Events\RevisionApproved;
 use CorvMC\Moderation\Events\RevisionAutoApproved;
 use CorvMC\Moderation\Events\RevisionRejected;
 use CorvMC\Moderation\Events\RevisionSubmitted;
+use CorvMC\Moderation\Facades\ReportService;
 use CorvMC\Moderation\Models\Report;
 use CorvMC\Moderation\Models\Revision;
 use Spatie\Activitylog\Models\Activity;
@@ -176,7 +177,7 @@ describe('No duplicate audit logs', function () {
 
         $reportable = \Illuminate\Database\Eloquent\Relations\Relation::getMorphedModel($reportableType)::find($reportableId);
 
-        $newReport = \CorvMC\Moderation\Actions\Reports\SubmitReport::run(
+        $newReport = ReportService::submitReport(
             $reportable,
             $reporter,
             'spam',
@@ -198,7 +199,7 @@ describe('No duplicate audit logs', function () {
         Illuminate\Support\Facades\Notification::fake();
         Activity::query()->delete();
 
-        \CorvMC\Moderation\Actions\Reports\ResolveReport::run(
+        ReportService::resolve(
             $report,
             $moderator,
             'upheld',

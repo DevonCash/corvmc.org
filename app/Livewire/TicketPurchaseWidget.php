@@ -3,8 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\User;
-use CorvMC\Events\Actions\Tickets\CreateTicketOrder;
-use CorvMC\Events\Actions\Tickets\ProcessTicketCheckout;
+use CorvMC\Events\Facades\TicketService;
 use CorvMC\Events\Models\Event;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\TextInput;
@@ -118,7 +117,7 @@ class TicketPurchaseWidget extends Component implements HasSchemas
             $user = Auth::user();
 
             // Create the ticket order
-            $order = CreateTicketOrder::run(
+            $order = TicketService::createOrder(
                 event: $this->event,
                 quantity: (int) ($validated['quantity'] ?? 1),
                 name: $validated['name'] ?? $user?->name,
@@ -128,7 +127,7 @@ class TicketPurchaseWidget extends Component implements HasSchemas
             );
 
             // Create checkout session and redirect
-            $checkout = ProcessTicketCheckout::run($order);
+            $checkout = TicketService::processCheckout($order);
 
             $this->redirect($checkout->url);
         } catch (\InvalidArgumentException $e) {

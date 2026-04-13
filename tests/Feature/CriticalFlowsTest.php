@@ -15,19 +15,15 @@
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Bands\Models\Band;
-use CorvMC\Events\Actions\CreateEvent;
 use CorvMC\Events\Exceptions\SchedulingConflictException;
+use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
-use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
 use CorvMC\Finance\Enums\CreditType;
-use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
-use CorvMC\Membership\Actions\Bands\AddBandMember;
-use CorvMC\Membership\Actions\Bands\CreateBand;
-use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
-use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
-use CorvMC\SpaceManagement\Actions\Reservations\GetAllConflicts;
+use CorvMC\Finance\Facades\MemberBenefitService;
+use CorvMC\Membership\Facades\BandService;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Illuminate\Support\Facades\Notification;
 
@@ -64,14 +60,14 @@ describe('Flow 1: Create Reservation with Credits', function () {
         $user->assignRole('sustaining member');
 
         // Give user 16 blocks (8 hours at 30 min/block) of free time
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
 
         // Act: Create a 2-hour reservation (4 blocks at 30 min/block)
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         // Assert: Reservation created with free hours applied
         expect($reservation)->toBeInstanceOf(RehearsalReservation::class)
@@ -90,13 +86,13 @@ describe('Flow 1: Create Reservation with Credits', function () {
         $user->assignRole('sustaining member');
 
         // Give user only 2 blocks (1 hour at 30 min/block) of free time
-        AllocateMonthlyCredits::run($user, 2, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 2, CreditType::FreeHours);
 
         // Act: Create a 2-hour reservation (needs 4 blocks, only has 2)
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         // Assert: 1 hour free (2 blocks), 1 hour paid ($15)
         expect((float) $reservation->hours_used)->toEqual(2.0)
@@ -116,7 +112,7 @@ describe('Flow 1: Create Reservation with Credits', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $cost = CalculateReservationCost::run($user, $startTime, $endTime);
+        $cost = ReservationService::calculateCost($user, $startTime, $endTime);
 
         // Assert: Full price, no free hours
         expect($cost['total_hours'])->toEqual(2.0)
@@ -150,7 +146,7 @@ describe('Flow 1: Create Reservation with Credits', function () {
         $overlappingEnd = $overlappingStart->copy()->addHours(2);
 
         // Assert: Should throw validation error
-        expect(fn () => CreateReservation::run($user2, $overlappingStart, $overlappingEnd))
+        expect(fn() => ReservationService::create($user2, $overlappingStart, $overlappingEnd))
             ->toThrow(\InvalidArgumentException::class);
     });
 });
@@ -198,7 +194,7 @@ describe('Flow 2: Create Event with Conflict Checking', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -230,7 +226,7 @@ describe('Flow 2: Create Event with Conflict Checking', function () {
         ]);
 
         // Act & Assert: Event creation should fail due to conflict
-        expect(fn () => CreateEvent::run([
+        expect(fn() => EventService::create([
             'title' => 'Conflicting Concert',
             'description' => 'This should fail',
             'start_datetime' => $startTime,
@@ -257,7 +253,7 @@ describe('Flow 2: Create Event with Conflict Checking', function () {
         ]);
 
         // Act: Create event at external venue (same time, different location)
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'External Venue Concert',
             'description' => 'Should succeed at external venue',
             'start_datetime' => $startTime,
@@ -287,7 +283,7 @@ describe('Flow 2: Create Event with Conflict Checking', function () {
         ]);
 
         // Act: Check for conflicts
-        $conflicts = GetAllConflicts::run($startTime, $endTime);
+        $conflicts = ReservationService::getConflicts($startTime, $endTime);
 
         // Assert: Conflicts detected
         expect($conflicts['reservations'])->not->toBeEmpty();
@@ -317,7 +313,7 @@ describe('Flow 3: Create Band and Invite Member', function () {
         $this->actingAs($owner);
 
         // Act: Create band
-        $band = CreateBand::run([
+        $band = BandService::create([
             'name' => 'The Test Band',
             'bio' => 'A band for testing',
         ]);
@@ -334,7 +330,7 @@ describe('Flow 3: Create Band and Invite Member', function () {
         $owner->assignRole('member');
         $this->actingAs($owner);
 
-        $band = CreateBand::run([
+        $band = BandService::create([
             'name' => 'The Test Band',
         ]);
 
@@ -342,7 +338,7 @@ describe('Flow 3: Create Band and Invite Member', function () {
         $invitee->assignRole('member');
 
         // Act: Invite member
-        AddBandMember::run($band, $invitee, [
+        BandService::addMember($band, $invitee, [
             'role' => 'member',
             'position' => 'Drummer',
         ]);
@@ -360,15 +356,15 @@ describe('Flow 3: Create Band and Invite Member', function () {
         $owner->assignRole('member');
         $this->actingAs($owner);
 
-        $band = CreateBand::run(['name' => 'The Test Band']);
+        $band = BandService::create(['name' => 'The Test Band']);
 
         $invitee = User::factory()->create();
         $invitee->assignRole('member');
 
-        AddBandMember::run($band, $invitee, ['role' => 'member']);
+        BandService::inviteMember($band, $invitee, ['role' => 'member']);
 
         // Act: Accept invitation
-        AcceptBandInvitation::run($band, $invitee);
+        BandService::acceptInvitation($band, $invitee);
 
         // Assert: Member is now active
         $membership = $band->memberships()->active()->where('user_id', $invitee->id)->first();
@@ -385,17 +381,17 @@ describe('Flow 3: Create Band and Invite Member', function () {
         $owner->assignRole('member');
         $this->actingAs($owner);
 
-        $band = CreateBand::run(['name' => 'The Test Band']);
+        $band = BandService::create(['name' => 'The Test Band']);
 
         $member = User::factory()->create();
         $member->assignRole('member');
 
         // Add and accept first invitation
-        AddBandMember::run($band, $member, ['role' => 'member']);
-        AcceptBandInvitation::run($band, $member);
+        BandService::inviteMember($band, $member, ['role' => 'member']);
+        BandService::acceptInvitation($band, $member);
 
         // Act & Assert: Second invitation should fail
-        expect(fn () => AddBandMember::run($band, $member, ['role' => 'member']))
+        expect(fn() => BandService::inviteMember($band, $member, ['role' => 'member']))
             ->toThrow(\CorvMC\Bands\Exceptions\BandException::class);
     });
 });
@@ -421,7 +417,7 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         $user->assignRole('sustaining member');
 
         // Act: Allocate monthly credits (simulates what happens after subscription)
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // Assert: User has credits
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
@@ -433,7 +429,7 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         $user->assignRole('sustaining member');
 
         // First allocation
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // Use some credits
         $user->deductCredit(8, CreditType::FreeHours, 'test_usage');
@@ -441,7 +437,7 @@ describe('Flow 4: Subscription Credit Allocation', function () {
 
         // Act: New month allocation
         $this->travel(1)->month();
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // Assert: Reset to 16, not 16 + 8
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
@@ -452,14 +448,14 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         $user = User::factory()->create();
         $user->assignRole('sustaining member');
 
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // Use 4 blocks, have 12 left
         $user->deductCredit(4, CreditType::FreeHours, 'test_usage');
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(12);
 
         // Act: Upgrade to higher tier (32 blocks) mid-month
-        AllocateMonthlyCredits::run($user, 32, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 32, CreditType::FreeHours);
 
         // Assert: Gets tier delta added (32 - 16 = 16 extra), so 12 + 16 = 28
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(28);
@@ -469,7 +465,7 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         // Arrange: Sustaining member with credits
         $user = User::factory()->create();
         $user->assignRole('sustaining member');
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         Venue::create(['name' => 'CMC', 'is_cmc' => true, 'address' => '420 NW 5th St', 'city' => 'Corvallis', 'state' => 'OR']);
 
@@ -477,7 +473,7 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        CreateReservation::run($user, $startTime, $endTime);
+        ReservationService::create($user, $startTime, $endTime);
 
         // Assert: Credits deducted (2 hours = 8 blocks, 30 min per block)
         // 2 hours * 60 min / 30 min per block = 4 blocks

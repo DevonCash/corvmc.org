@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Facades\InvitationService;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -64,7 +65,7 @@ class InvitationAcceptForm extends Component implements HasForms
     {
         $this->form->getState();
 
-        $user = \App\Actions\Invitations\AcceptInvitation::run($this->token, [
+        $user = InvitationService::accept($this->token, [
             'name' => $this->data['name'],
             'password' => $this->data['password'],
         ]);

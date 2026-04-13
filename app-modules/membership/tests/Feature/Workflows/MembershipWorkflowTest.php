@@ -3,38 +3,31 @@
 use App\Models\StaffProfile;
 use App\Models\User;
 use CorvMC\Bands\Models\Band;
-use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
-use CorvMC\Membership\Actions\Bands\AddBandMember;
-use CorvMC\Membership\Actions\Bands\CreateBand;
-use CorvMC\Membership\Actions\MemberProfiles\CreateMemberProfile;
-use CorvMC\Membership\Actions\MemberProfiles\DeleteMemberProfile;
-use CorvMC\Membership\Actions\MemberProfiles\SearchProfiles;
-use CorvMC\Membership\Actions\MemberProfiles\SetFlags;
-use CorvMC\Membership\Actions\MemberProfiles\UpdateGenres;
-use CorvMC\Membership\Actions\MemberProfiles\UpdateMemberProfile;
-use CorvMC\Membership\Actions\MemberProfiles\UpdateVisibility;
-use CorvMC\Membership\Actions\StaffProfiles\CreateStaffProfile;
-use CorvMC\Membership\Actions\StaffProfiles\DeleteStaffProfile;
-use CorvMC\Membership\Actions\StaffProfiles\LinkToUser;
-use CorvMC\Membership\Actions\StaffProfiles\ReorderStaffProfiles;
-use CorvMC\Membership\Actions\Users\CreateUser;
-use CorvMC\Membership\Actions\Users\UpdateUser;
+// Deprecated action classes removed; using service facades instead.
+use CorvMC\Membership\Facades\MemberProfileService;
+use CorvMC\Membership\Facades\BandService;
+use CorvMC\Membership\Facades\StaffProfileService;
+use CorvMC\Membership\Facades\UserManagementService;
+
+
 use CorvMC\Membership\Models\MemberProfile;
 use CorvMC\Moderation\Enums\Visibility;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithTime;
 
 beforeEach(function () {
     Notification::fake();
-    $this->seed(\Database\Seeders\PermissionSeeder::class);
 });
+// Allow Pest to use InteractsWithTime for travel() helper
+uses(InteractsWithTime::class);
 
 describe('Membership Workflow: Create Band', function () {
     it('creates a band and assigns owner role to creator', function () {
         $user = User::factory()->create();
         Auth::setUser($user);
 
-        $band = CreateBand::run([
+        $band = BandService::create($user, [
             'name' => 'The Test Band',
             'bio' => 'A test band bio',
         ]);
@@ -54,7 +47,7 @@ describe('Membership Workflow: Create Band', function () {
         $user = User::factory()->create();
         Auth::setUser($user);
 
-        $band = CreateBand::run([
+        $band = BandService::create($user, [
             'name' => 'Genre Band',
             'tags' => ['Rock', 'Blues', 'Indie'],
         ]);
@@ -70,9 +63,9 @@ describe('Membership Workflow: Band Invitations', function () {
         $invitee = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run(['name' => 'Invitation Test Band']);
+        $band = BandService::create($owner, ['name' => 'Invitation Test Band']);
 
-        AddBandMember::run($band, $invitee, [
+        BandService::addMember($band, $invitee, [
             'role' => 'member',
             'position' => 'Lead Guitarist',
         ]);
@@ -91,14 +84,14 @@ describe('Membership Workflow: Band Invitations', function () {
         $invitee = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run(['name' => 'Acceptance Test Band']);
-        AddBandMember::run($band, $invitee, ['role' => 'member']);
+        $band = BandService::create($owner, ['name' => 'Acceptance Test Band']);
+        BandService::addMember($band, $invitee, ['role' => 'member']);
 
         // Verify pending invitation
         expect($band->memberships()->invited()->where('user_id', $invitee->id)->exists())->toBeTrue();
 
         // Accept invitation
-        AcceptBandInvitation::run($band, $invitee);
+        BandService::acceptInvitation($band, $invitee);
 
         // Verify membership is now active
         $membership = $band->memberships()->where('user_id', $invitee->id)->first();
@@ -110,8 +103,8 @@ describe('Membership Workflow: Band Invitations', function () {
         $invitee = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run(['name' => 'Resend Test Band']);
-        AddBandMember::run($band, $invitee, [
+        $band = BandService::create($owner, ['name' => 'Resend Test Band']);
+        BandService::addMember($band, $invitee, [
             'role' => 'member',
             'position' => 'Drummer',
         ]);
@@ -123,7 +116,7 @@ describe('Membership Workflow: Band Invitations', function () {
         $this->travel(1)->second();
 
         // Resend invitation with different position
-        AddBandMember::run($band, $invitee, [
+        BandService::addMember($band, $invitee, [
             'role' => 'member',
             'position' => 'Vocalist',
         ]);
@@ -142,12 +135,12 @@ describe('Membership Workflow: Band Invitations', function () {
         $member = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = CreateBand::run(['name' => 'Duplicate Test Band']);
-        AddBandMember::run($band, $member, ['role' => 'member']);
-        AcceptBandInvitation::run($band, $member);
+        $band = BandService::create($owner, ['name' => 'Duplicate Test Band']);
+        BandService::addMember($band, $member, ['role' => 'member']);
+        BandService::acceptInvitation($band, $member);
 
         // Try to add again
-        expect(fn () => AddBandMember::run($band, $member))
+        expect(fn() => BandService::addMember($band, $member))
             ->toThrow(\CorvMC\Bands\Exceptions\BandException::class);
     });
 });
@@ -165,7 +158,7 @@ describe('Membership Workflow: Profile Management', function () {
             ]);
         });
 
-        $updatedProfile = UpdateMemberProfile::run($profile, [
+        $updatedProfile = MemberProfileService::update($profile, [
             'bio' => 'Updated bio with more details',
             'hometown' => 'Portland, OR',
         ]);
@@ -183,7 +176,7 @@ describe('Membership Workflow: Profile Management', function () {
             ]);
         });
 
-        UpdateGenres::run($profile, ['Rock', 'Jazz', 'Electronic']);
+        MemberProfileService::updateGenres($profile, ['Rock', 'Jazz', 'Electronic']);
 
         $genres = $profile->fresh()->tagsWithType('genre');
         expect($genres->count())->toBe(3);
@@ -200,11 +193,11 @@ describe('Membership Workflow: Profile Management', function () {
         });
 
         // Set initial genres
-        UpdateGenres::run($profile, ['Rock', 'Blues']);
+        MemberProfileService::updateGenres($profile, ['Rock', 'Blues']);
         expect($profile->fresh()->tagsWithType('genre')->count())->toBe(2);
 
         // Update with new genres (should replace, not add)
-        UpdateGenres::run($profile, ['Jazz', 'Classical', 'Folk']);
+        MemberProfileService::updateGenres($profile, ['Jazz', 'Classical', 'Folk']);
 
         $genres = $profile->fresh()->tagsWithType('genre');
         expect($genres->count())->toBe(3);
@@ -221,7 +214,7 @@ describe('Membership Workflow: Profile Management', function () {
             ]);
         });
 
-        $updatedProfile = UpdateMemberProfile::run($profile, [
+        $updatedProfile = MemberProfileService::update($profile, [
             'bio' => 'Music lover',
             'genres' => ['Hip Hop', 'R&B', 'Soul'],
         ]);
@@ -267,7 +260,7 @@ describe('Membership Workflow: Profile Visibility', function () {
 
 describe('Membership Workflow: User Management', function () {
     it('creates a user with password and email verification', function () {
-        $user = CreateUser::run([
+        $user = UserManagementService::create([
             'name' => 'New User',
             'email' => 'newuser@example.com',
             'password' => 'secure-password-123',
@@ -280,7 +273,7 @@ describe('Membership Workflow: User Management', function () {
     });
 
     it('throws exception when creating user without password', function () {
-        expect(fn () => CreateUser::run([
+        expect(fn() => UserManagementService::create([
             'name' => 'No Password User',
             'email' => 'nopassword@example.com',
         ]))->toThrow(\InvalidArgumentException::class, 'Password is required');
@@ -292,7 +285,7 @@ describe('Membership Workflow: User Management', function () {
             'email' => 'original@example.com',
         ]);
 
-        $updatedUser = UpdateUser::run($user, [
+        $updatedUser = UserManagementService::update($user, [
             'name' => 'Updated Name',
         ]);
 
@@ -308,7 +301,7 @@ describe('Membership Workflow: Member Profile Extended', function () {
         // Delete auto-created profile to test manual creation
         MemberProfile::where('user_id', $user->id)->delete();
 
-        $profile = CreateMemberProfile::run([
+        $profile = MemberProfileService::create([
             'user_id' => $user->id,
             'bio' => 'A musician from Portland',
             'hometown' => 'Portland, OR',
@@ -332,12 +325,12 @@ describe('Membership Workflow: Member Profile Extended', function () {
             ]);
         });
 
-        UpdateGenres::run($profile, ['Rock', 'Jazz']);
+        MemberProfileService::updateGenres($profile, ['Rock', 'Jazz']);
         expect($profile->fresh()->tags->count())->toBe(2);
 
         $profileId = $profile->id;
 
-        DeleteMemberProfile::run($profile);
+        MemberProfileService::delete($profile);
 
         expect(MemberProfile::find($profileId))->toBeNull();
     });
@@ -354,7 +347,7 @@ describe('Membership Workflow: Member Profile Extended', function () {
 
         expect($profile->visibility)->toBe(Visibility::Public);
 
-        UpdateVisibility::run($profile, Visibility::Private);
+        MemberProfileService::updateVisibility($profile, Visibility::Private);
 
         expect($profile->fresh()->visibility)->toBe(Visibility::Private);
     });
@@ -368,7 +361,7 @@ describe('Membership Workflow: Member Profile Extended', function () {
             ]);
         });
 
-        SetFlags::run($profile, ['is_teacher', 'is_professional']);
+        MemberProfileService::setFlags($profile, ['is_teacher', 'is_professional']);
 
         expect($profile->fresh()->hasFlag('is_teacher'))->toBeTrue();
         expect($profile->fresh()->hasFlag('is_professional'))->toBeTrue();
@@ -394,7 +387,7 @@ describe('Membership Workflow: Member Profile Extended', function () {
         });
 
         // Guest search (should only find public)
-        $guestResults = SearchProfiles::run(null, null, null, null, null);
+        $guestResults = MemberProfileService::search(null, null, null, null, null);
         expect($guestResults->pluck('user_id')->toArray())->toContain($publicUser->id);
         expect($guestResults->pluck('user_id')->toArray())->not->toContain($privateUser->id);
     });
@@ -404,7 +397,7 @@ describe('Membership Workflow: Staff Profiles', function () {
     it('creates a staff profile via action', function () {
         $user = User::factory()->create();
 
-        $staffProfile = CreateStaffProfile::run([
+        $staffProfile = StaffProfileService::create([
             'name' => 'John Staff',
             'title' => 'Community Manager',
             'bio' => 'Managing the community',
@@ -427,7 +420,7 @@ describe('Membership Workflow: Staff Profiles', function () {
 
         expect($staffProfile->user_id)->toBe($originalUser->id);
 
-        LinkToUser::run($staffProfile, $newUser);
+        StaffProfileService::linkToUser($staffProfile, $newUser);
 
         expect($staffProfile->fresh()->user_id)->toBe($newUser->id);
     });
@@ -438,7 +431,7 @@ describe('Membership Workflow: Staff Profiles', function () {
         $profile3 = StaffProfile::factory()->create(['sort_order' => 3]);
 
         // Reorder: third should be first, first should be third
-        ReorderStaffProfiles::run([$profile3->id, $profile2->id, $profile1->id]);
+        StaffProfileService::reorder([$profile3->id, $profile2->id, $profile1->id]);
 
         expect($profile3->fresh()->sort_order)->toBe(1);
         expect($profile2->fresh()->sort_order)->toBe(2);
@@ -449,7 +442,7 @@ describe('Membership Workflow: Staff Profiles', function () {
         $staffProfile = StaffProfile::factory()->create();
         $profileId = $staffProfile->id;
 
-        DeleteStaffProfile::run($staffProfile);
+        StaffProfileService::delete($staffProfile);
 
         expect(StaffProfile::find($profileId))->toBeNull();
     });

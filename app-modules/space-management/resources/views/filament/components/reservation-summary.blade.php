@@ -1,7 +1,7 @@
 @php
     use App\Models\User;
     use Carbon\Carbon;
-    use CorvMC\SpaceManagement\Actions\Reservations\CalculateReservationCost;
+    use CorvMC\Finance\Facades\PricingService;
 
     $start = $get('reserved_at');
     $end = $get('reserved_until');
@@ -21,7 +21,7 @@
             $endTime = Carbon::parse($end)->format('g:i A');
             $duration = Carbon::parse($start)->diffInMinutes(Carbon::parse($end)) / 60;
 
-            $calculation = CalculateReservationCost::run(
+            $calculation = PricingService::calculateReservationCost(
                 $user,
                 Carbon::parse($start),
                 Carbon::parse($end)

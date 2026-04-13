@@ -6,7 +6,7 @@ use App\Models\EventReservation;
 use App\Settings\ReservationSettings;
 use Carbon\Carbon;
 use CorvMC\Events\Models\Event;
-use CorvMC\SpaceManagement\Actions\Reservations\GetAllConflicts;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use Illuminate\Support\Facades\DB;
 
@@ -60,7 +60,7 @@ class EventSyncService
 
         // Check for conflicts (excluding this event's own reservation if it exists)
         $excludeId = $existingReservation?->id;
-        $conflicts = GetAllConflicts::run($reservedAt, $reservedUntil, $excludeId);
+        $conflicts = ReservationService::checkForConflicts($reservedAt, $reservedUntil, $excludeId);
 
         $hasConflicts = $conflicts['reservations']->isNotEmpty()
             || $conflicts['productions']->isNotEmpty()
@@ -118,10 +118,10 @@ class EventSyncService
         $reservedUntil = $endTime->copy()->addMinutes($teardownMinutes);
 
         // Get all conflicts for full period (setup + event + teardown)
-        $allConflicts = GetAllConflicts::run($reservedAt, $reservedUntil, $excludeReservationId);
+        $allConflicts = ReservationService::checkForConflicts($reservedAt, $reservedUntil, $excludeReservationId);
 
         // Also check conflicts for just the event time
-        $eventConflicts = GetAllConflicts::run($startTime, $endTime, $excludeReservationId);
+        $eventConflicts = ReservationService::checkForConflicts($startTime, $endTime, $excludeReservationId);
 
         // Determine if there are event-time conflicts
         $hasEventConflicts = $eventConflicts['reservations']->isNotEmpty()

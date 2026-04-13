@@ -4,14 +4,16 @@ use CorvMC\Finance\Enums\CreditType;
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Finance\Actions\Credits\AdjustCredits;
-use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
 use CorvMC\Finance\Actions\Payments\CalculateFeeCoverage;
-use CorvMC\Finance\Actions\Payments\CalculateTotalWithFeeCoverage;
 use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\Finance\Actions\Payments\MarkReservationAsPaid;
 use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use Illuminate\Support\Facades\Notification;
 use Brick\Money\Money;
+use CorvMC\Finance\Facades\CreditService;
+use CorvMC\Finance\Facades\MemberBenefitService;
+use CorvMC\Finance\Facades\PaymentService;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 
 beforeEach(function () {
     Notification::fake();
@@ -26,7 +28,7 @@ describe('Finance Workflow: Monthly Credit Allocation', function () {
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(0);
 
         // Allocate 8 blocks (4 hours) of free credits
-        AllocateMonthlyCredits::run($user, 8, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 8, CreditType::FreeHours);
 
         expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(8);
     });
@@ -35,7 +37,7 @@ describe('Finance Workflow: Monthly Credit Allocation', function () {
         $user = User::factory()->sustainingMember()->create();
 
         // First allocation
-        AllocateMonthlyCredits::run($user, 8, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 8, CreditType::FreeHours);
         expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(8);
 
         // Simulate using some credits
@@ -46,7 +48,7 @@ describe('Finance Workflow: Monthly Credit Allocation', function () {
         $this->travel(1)->month();
 
         // Next monthly allocation should reset to the full amount
-        AllocateMonthlyCredits::run($user, 8, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 8, CreditType::FreeHours);
         expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(8);
     });
 
@@ -54,11 +56,11 @@ describe('Finance Workflow: Monthly Credit Allocation', function () {
         $user = User::factory()->sustainingMember()->create();
 
         // Initial allocation at tier 1 (8 blocks)
-        AllocateMonthlyCredits::run($user, 8, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 8, CreditType::FreeHours);
         expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(8);
 
         // Upgrade to tier 2 (16 blocks) mid-month - should add 8 more
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
         expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(16);
     });
 
@@ -66,14 +68,14 @@ describe('Finance Workflow: Monthly Credit Allocation', function () {
         $user = User::factory()->sustainingMember()->create();
 
         // First allocation
-        AllocateMonthlyCredits::run($user, 50, CreditType::EquipmentCredits);
+        MemberBenefitService::allocateMonthlyCredits($user, 50, CreditType::EquipmentCredits);
         expect($user->fresh()->getCreditBalance(CreditType::EquipmentCredits))->toBe(50);
 
         // Move forward one month
         $this->travel(1)->month();
 
         // Second allocation should add (rollover)
-        AllocateMonthlyCredits::run($user, 50, CreditType::EquipmentCredits);
+        MemberBenefitService::allocateMonthlyCredits($user, 50, CreditType::EquipmentCredits);
         expect($user->fresh()->getCreditBalance(CreditType::EquipmentCredits))->toBe(100);
     });
 });
@@ -86,7 +88,7 @@ describe('Finance Workflow: Credit Adjustments', function () {
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(0);
 
         // Admin adds credits
-        AdjustCredits::run($user, 4, CreditType::FreeHours);
+        CreditService::adjust($user, 4, CreditType::FreeHours);
 
         expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(4);
     });
@@ -98,7 +100,7 @@ describe('Finance Workflow: Credit Adjustments', function () {
         $user->addCredit(10, CreditType::FreeHours, 'test_setup', null, 'Setup');
 
         // Deduct via adjustment
-        AdjustCredits::run($user, -3, CreditType::FreeHours);
+        CreditService::adjust($user, -3, CreditType::FreeHours);
 
         expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(7);
     });
@@ -111,13 +113,13 @@ describe('Finance Workflow: Payment Processing', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
-        expect($reservation->getChargeStatus())->toBe(ChargeStatus::Pending);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
+        expect($reservation->charge->status)->toBe(ChargeStatus::Pending);
 
-        MarkReservationAsPaid::run($reservation, 'cash', 'Paid in person');
+        PaymentService::markAsPaid($reservation->charge, 'cash', 'Paid in person');
 
         $reservation->refresh();
-        expect($reservation->getChargeStatus())->toBe(ChargeStatus::Paid);
+        expect($reservation->charge->status)->toBe(ChargeStatus::Paid);
         expect($reservation->charge->payment_method)->toBe('cash');
         expect($reservation->charge->paid_at)->not->toBeNull();
     });
@@ -131,7 +133,7 @@ describe('Finance Workflow: CoveredByCredits Status', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         expect($reservation->charge->status)->toBe(ChargeStatus::CoveredByCredits);
         expect($reservation->charge->payment_method)->toBe('credits');
@@ -142,7 +144,7 @@ describe('Finance Workflow: CoveredByCredits Status', function () {
 describe('Finance Workflow: Fee Calculations', function () {
     it('calculates fee coverage amount for base price', function () {
         // Test with $30 base (3000 cents)
-        $feeCoverage = CalculateFeeCoverage::run(3000);
+        $feeCoverage = PaymentService::calculateFeeCoverage(3000);
 
         expect($feeCoverage)->toBeInstanceOf(Money::class);
         // Fee coverage should be positive
@@ -152,7 +154,7 @@ describe('Finance Workflow: Fee Calculations', function () {
     it('calculates total with fee coverage', function () {
         $baseAmount = Money::ofMinor(3000, 'USD'); // $30.00
 
-        $totalWithCoverage = CalculateTotalWithFeeCoverage::run($baseAmount);
+        $totalWithCoverage = PaymentService::calculateTotalWithFeeCoverage($baseAmount);
 
         expect($totalWithCoverage)->toBeInstanceOf(Money::class);
         // Total should be higher than base amount

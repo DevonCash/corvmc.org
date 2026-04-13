@@ -2,6 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Reports\Actions;
 
+use CorvMC\Moderation\Facades\ReportService;
 use CorvMC\Moderation\Models\Report;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -28,12 +29,7 @@ class UpholdReportAction
                     ->rows(3),
             ])
             ->action(function (Report $record, array $data): void {
-                \App\Actions\Reports\ResolveReport::run(
-                    $record,
-                    Auth::user(),
-                    'upheld',
-                    $data['resolution_notes']
-                );
+                ReportService::resolveReport($record, Auth::user(), 'upheld', $data['resolution_notes']);
 
                 Notification::make()
                     ->title('Report Upheld')

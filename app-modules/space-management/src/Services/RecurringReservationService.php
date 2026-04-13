@@ -3,9 +3,8 @@
 namespace CorvMC\SpaceManagement\Services;
 
 use Carbon\Carbon;
-use CorvMC\SpaceManagement\Actions\Reservations\GetAllConflicts;
-use CorvMC\Support\Actions\CalculateOccurrences;
-use CorvMC\Support\Actions\GenerateRecurringInstances;
+use CorvMC\SpaceManagement\Facades\ReservationService as ReservationServiceFacade;
+use CorvMC\Support\Facades\RecurringService;
 use CorvMC\Support\Enums\RecurringSeriesStatus;
 use CorvMC\Support\Events\RecurringSeriesCreated;
 use CorvMC\Support\Models\RecurringSeries;
@@ -47,7 +46,7 @@ class RecurringReservationService
         ]);
 
         // Generate initial instances
-        GenerateRecurringInstances::run($series);
+        RecurringService::generateInstances($series);
 
         RecurringSeriesCreated::dispatch($series);
 
@@ -135,7 +134,7 @@ class RecurringReservationService
 
         // Calculate the dates to check
         $maxDate = $seriesEndDate ?? $seriesStartDate->copy()->addMonths(3);
-        $occurrences = collect(CalculateOccurrences::run($recurrenceRule, $seriesStartDate, $maxDate))
+        $occurrences = collect(RecurringService::calculateOccurrences($recurrenceRule, $seriesStartDate, $maxDate))
             ->take($checkOccurrences);
 
         foreach ($occurrences as $date) {
@@ -143,7 +142,7 @@ class RecurringReservationService
             $endDateTime = $date->copy()->setTimeFromTimeString($endTime);
 
             // Check for one-off reservation/production/closure conflicts
-            $conflicts = GetAllConflicts::run($startDateTime, $endDateTime);
+            $conflicts = ReservationServiceFacade::checkForConflicts($startDateTime, $endDateTime);
 
             if ($conflicts['reservations']->isNotEmpty() || $conflicts['productions']->isNotEmpty() || $conflicts['closures']->isNotEmpty()) {
                 $conflictDetails = $this->formatConflicts($conflicts);
@@ -216,7 +215,7 @@ class RecurringReservationService
         ]);
 
         // Generate new future instances
-        GenerateRecurringInstances::run($series);
+        RecurringService::generateInstances($series);
 
         return $series->fresh();
     }
@@ -235,7 +234,7 @@ class RecurringReservationService
         ]);
 
         // Generate additional instances for the extended period
-        GenerateRecurringInstances::run($series);
+        RecurringService::generateInstances($series);
 
         return $series->fresh();
     }
@@ -260,7 +259,7 @@ class RecurringReservationService
                 ->update(['status' => 'cancelled']);
 
             // Generate new instances with updated pattern
-            GenerateRecurringInstances::run($series);
+            RecurringService::generateInstances($series);
         }
 
         return $series->fresh();
@@ -308,7 +307,7 @@ class RecurringReservationService
      */
     public function generateFutureRecurringInstances(RecurringSeries $series): Collection
     {
-        return GenerateRecurringInstances::run($series);
+        return RecurringService::generateInstances($series);
     }
 
     /**
@@ -382,7 +381,7 @@ class RecurringReservationService
 
         foreach ($potentialConflicts as $series) {
             // Check if this series occurs on the given date
-            $occurrences = CalculateOccurrences::run(
+            $occurrences = RecurringService::calculateOccurrences(
                 $series->recurrence_rule,
                 $series->series_start_date,
                 $date->copy()->addDay()

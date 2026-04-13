@@ -2,12 +2,9 @@
 
 use App\Models\User;
 use Carbon\Carbon;
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
-use CorvMC\Support\Actions\CalculateOccurrences;
-use CorvMC\Support\Actions\CancelRecurringSeries;
-use CorvMC\Support\Actions\GenerateRecurringInstances;
 use CorvMC\Support\Enums\RecurringSeriesStatus;
+use CorvMC\Support\Facades\RecurringService;
 use CorvMC\Support\Models\RecurringSeries;
 use Illuminate\Support\Facades\Notification;
 
@@ -22,7 +19,7 @@ describe('Support Workflow: Calculate Occurrences', function () {
         $end = Carbon::parse('2025-01-31', config('app.timezone'));
 
         // Weekly on Mondays
-        $occurrences = CalculateOccurrences::run('FREQ=WEEKLY;BYDAY=MO', $start, $end);
+        $occurrences = RecurringService::calculateOccurrences('FREQ=WEEKLY;BYDAY=MO', $start, $end);
 
         expect($occurrences)->toHaveCount(4);
         expect($occurrences[0]->format('Y-m-d'))->toBe('2025-01-06');
@@ -36,7 +33,7 @@ describe('Support Workflow: Calculate Occurrences', function () {
         $end = Carbon::parse('2025-02-28', config('app.timezone'));
 
         // Bi-weekly on Tuesdays
-        $occurrences = CalculateOccurrences::run('FREQ=WEEKLY;INTERVAL=2;BYDAY=TU', $start, $end);
+        $occurrences = RecurringService::calculateOccurrences('FREQ=WEEKLY;INTERVAL=2;BYDAY=TU', $start, $end);
 
         expect($occurrences)->toHaveCount(4);
         expect($occurrences[0]->format('Y-m-d'))->toBe('2025-01-07');
@@ -50,7 +47,7 @@ describe('Support Workflow: Calculate Occurrences', function () {
         $end = Carbon::parse('2025-06-30', config('app.timezone'));
 
         // Monthly on the 15th
-        $occurrences = CalculateOccurrences::run('FREQ=MONTHLY;BYMONTHDAY=15', $start, $end);
+        $occurrences = RecurringService::calculateOccurrences('FREQ=MONTHLY;BYMONTHDAY=15', $start, $end);
 
         expect($occurrences)->toHaveCount(6);
         expect($occurrences[0]->format('Y-m-d'))->toBe('2025-01-15');
@@ -62,7 +59,7 @@ describe('Support Workflow: Calculate Occurrences', function () {
         $end = Carbon::parse('2025-01-25', config('app.timezone'));
 
         // Weekly on Mondays
-        $occurrences = CalculateOccurrences::run('FREQ=WEEKLY;BYDAY=MO', $start, $end);
+        $occurrences = RecurringService::calculateOccurrences('FREQ=WEEKLY;BYDAY=MO', $start, $end);
 
         // Only Jan 20 should be in range (Jan 13 before start, Jan 27 after end)
         expect($occurrences)->toHaveCount(1);
@@ -74,7 +71,7 @@ describe('Support Workflow: Calculate Occurrences', function () {
         $end = Carbon::parse('2025-01-02', config('app.timezone')); // Thursday
 
         // Weekly on Fridays - neither Wed nor Thu is Friday
-        $occurrences = CalculateOccurrences::run('FREQ=WEEKLY;BYDAY=FR', $start, $end);
+        $occurrences = RecurringService::calculateOccurrences('FREQ=WEEKLY;BYDAY=FR', $start, $end);
 
         expect($occurrences)->toBeEmpty();
     });
@@ -96,7 +93,7 @@ describe('Support Workflow: Generate Recurring Instances', function () {
             'status' => RecurringSeriesStatus::ACTIVE,
         ]);
 
-        $created = GenerateRecurringInstances::run($series);
+        $created = RecurringService::generateInstances($series);
 
         // Should create instances for next ~2 weeks of Tuesdays
         expect($created->count())->toBeLessThanOrEqual(3);
@@ -127,7 +124,7 @@ describe('Support Workflow: Generate Recurring Instances', function () {
             'status' => RecurringSeriesStatus::ACTIVE,
         ]);
 
-        $created = GenerateRecurringInstances::run($series);
+        $created = RecurringService::generateInstances($series);
 
         // Should create exactly 3 instances (start + 2 weeks)
         expect($created->count())->toBeLessThanOrEqual(3);
@@ -162,14 +159,14 @@ describe('Support Workflow: Generate Recurring Instances', function () {
         ]);
 
         // Generate first batch
-        $firstBatch = GenerateRecurringInstances::run($series);
+        $firstBatch = RecurringService::generateInstances($series);
         expect($firstBatch->count())->toBeGreaterThan(0);
 
         // Count instances for this specific series
         $countAfterFirstBatch = Reservation::where('recurring_series_id', $series->id)->count();
 
         // Generate again - should not create duplicates
-        $secondBatch = GenerateRecurringInstances::run($series);
+        $secondBatch = RecurringService::generateInstances($series);
 
         expect($secondBatch->count())->toBe(0);
 
@@ -196,9 +193,9 @@ describe('Support Workflow: Cancel Recurring Series', function () {
         ]);
 
         // Generate some instances
-        GenerateRecurringInstances::run($series);
+        RecurringService::generateInstances($series);
 
-        CancelRecurringSeries::run($series, 'User requested cancellation');
+        RecurringService::cancelSeries($series, 'User requested cancellation');
 
         $series->refresh();
         expect($series->status)->toBe(RecurringSeriesStatus::CANCELLED);
@@ -222,11 +219,11 @@ describe('Support Workflow: Cancel Recurring Series', function () {
         ]);
 
         // Generate instances
-        $created = GenerateRecurringInstances::run($series);
+        $created = RecurringService::generateInstances($series);
         $instanceCount = $created->count();
 
         // Cancel with reason
-        CancelRecurringSeries::run($series, 'Schedule conflict');
+        RecurringService::cancelSeries($series, 'Schedule conflict');
 
         // Verify all future instances are cancelled
         $cancelledInstances = Reservation::where('recurring_series_id', $series->id)

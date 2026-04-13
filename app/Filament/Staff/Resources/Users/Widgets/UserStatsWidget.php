@@ -3,6 +3,7 @@
 namespace App\Filament\Staff\Resources\Users\Widgets;
 
 use CorvMC\Finance\Actions\Subscriptions\GetSubscriptionStats;
+use CorvMC\Finance\Facades\SubscriptionService;
 use Filament\Widgets\Widget;
 
 class UserStatsWidget extends Widget
@@ -35,7 +36,7 @@ class UserStatsWidget extends Widget
 
     public function mount(): void
     {
-        $stats = GetSubscriptionStats::run();
+        $stats = SubscriptionService::getStats();
 
         $this->totalMembers = $stats->total_users;
         $this->sustainingMembers = $stats->sustaining_members;

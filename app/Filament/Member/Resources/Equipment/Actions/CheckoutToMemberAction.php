@@ -5,7 +5,7 @@ namespace App\Filament\Member\Resources\Equipment\Actions;
 use App\Filament\Shared\Components\MemberSelector;
 use App\Models\User;
 use Carbon\Carbon;
-use CorvMC\Equipment\Actions\CheckoutToMember;
+use CorvMC\Equipment\Facades\EquipmentService;
 use CorvMC\Equipment\Models\EquipmentLoan;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
@@ -68,7 +68,7 @@ class CheckoutToMemberAction
             ->action(function (array $data, $record) {
                 $borrower = User::find($data['borrower_id']);
 
-                $loan = CheckoutToMember::run(
+                $loan = EquipmentService::checkoutToMember(
                     equipment: $record,
                     borrower: $borrower,
                     dueDate: Carbon::parse($data['due_at']),

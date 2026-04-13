@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Actions\Notifications\SendMembershipReminders as SendMembershipRemindersAction;
+use App\Facades\NotificationService;
 use Illuminate\Console\Command;
 
 class SendMembershipReminders extends Command
@@ -34,7 +34,7 @@ class SendMembershipReminders extends Command
 
         $this->info("Checking for users inactive for {$inactiveDays}+ days...");
 
-        $results = SendMembershipRemindersAction::run($isDryRun, $inactiveDays);
+        $results = NotificationService::sendMembershipReminders($isDryRun, $inactiveDays);
 
         if ($results['total'] === 0) {
             $this->info('No inactive users found that need membership reminders.');

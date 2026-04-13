@@ -7,9 +7,10 @@ use App\Filament\Staff\Resources\Events\EventResource;
 use App\Filament\Staff\Resources\Events\Schemas\EventCreateWizard;
 use App\Filament\Staff\Resources\Venues\VenueResource;
 use Carbon\Carbon;
-use CorvMC\Events\Actions\CreateEvent as CreateEventAction;
+use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Exceptions\SchedulingConflictException;
 use CorvMC\Events\Models\Event;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
@@ -32,23 +33,23 @@ class ListEvents extends ListRecords
         return [
             'upcoming' => Tab::make('Upcoming')
                 ->icon('tabler-calendar-event')
-                ->badge(fn () => Event::where('start_datetime', '>=', now()->startOfDay())
+                ->badge(fn() => Event::where('start_datetime', '>=', now()->startOfDay())
                     ->whereIn('status', $activeStatuses)
                     ->count())
-                ->modifyQueryUsing(fn (Builder $query) => $query
+                ->modifyQueryUsing(fn(Builder $query) => $query
                     ->where('start_datetime', '>=', now()->startOfDay())
                     ->whereIn('status', $activeStatuses)
                     ->orderBy('start_datetime', 'asc')),
 
             'past' => Tab::make('Past')
                 ->icon('tabler-history')
-                ->modifyQueryUsing(fn (Builder $query) => $query
+                ->modifyQueryUsing(fn(Builder $query) => $query
                     ->where('start_datetime', '<', now()->startOfDay())
                     ->orderBy('start_datetime', 'desc')),
 
             'all' => Tab::make('All')
                 ->icon('tabler-list')
-                ->modifyQueryUsing(fn (Builder $query) => $query
+                ->modifyQueryUsing(fn(Builder $query) => $query
                     ->orderBy('start_datetime', 'desc')),
         ];
     }
@@ -106,7 +107,7 @@ class ListEvents extends ListRecords
                 ? $data['start_datetime']
                 : Carbon::parse($data['start_datetime'], config('app.timezone'));
             $endDatetime = Carbon::parse(
-                $startDatetime->toDateString().' '.$data['end_time'],
+                $startDatetime->toDateString() . ' ' . $data['end_time'],
                 config('app.timezone')
             );
             $data['end_datetime'] = $endDatetime;
@@ -123,7 +124,7 @@ class ListEvents extends ListRecords
         }
 
         try {
-            $event = CreateEventAction::run($data);
+            $event = EventService::create($data);
 
             // If we bypassed conflict check, update with end_datetime now
             if ($bypassConflictCheck && $endDateTime) {
@@ -132,7 +133,7 @@ class ListEvents extends ListRecords
         } catch (SchedulingConflictException $e) {
             Notification::make()
                 ->title('Event creation failed')
-                ->body($e->getMessage().'. Please go back and resolve conflicts or use admin override.')
+                ->body($e->getMessage() . '. Please go back and resolve conflicts or use admin override.')
                 ->danger()
                 ->persistent()
                 ->send();
@@ -189,17 +190,17 @@ class ListEvents extends ListRecords
             return;
         }
 
-        $result = SyncEventSpaceReservation::run(
-            $event,
-            $setupMinutes,
-            $teardownMinutes,
-            $forceOverride
+        $result = ReservationService::syncEventSpaceReservation(
+            event: $event,
+            setupMinutes: $setupMinutes,
+            teardownMinutes: $teardownMinutes,
+            forceOverride: $forceOverride
         );
 
         if (! $result['success']) {
             $messages = [];
             foreach ($result['conflicts']['reservations'] as $reservation) {
-                $time = $reservation->reserved_at->format('g:i A').' - '.$reservation->reserved_until->format('g:i A');
+                $time = $reservation->reserved_at->format('g:i A') . ' - ' . $reservation->reserved_until->format('g:i A');
                 $name = $reservation->getDisplayTitle();
                 $messages[] = "Reservation: {$name} ({$time})";
             }
@@ -212,7 +213,7 @@ class ListEvents extends ListRecords
 
             Notification::make()
                 ->title('Space reservation conflicts detected')
-                ->body("The event was created but the space reservation could not be made:\n".implode("\n", $messages))
+                ->body("The event was created but the space reservation could not be made:\n" . implode("\n", $messages))
                 ->warning()
                 ->persistent()
                 ->send();

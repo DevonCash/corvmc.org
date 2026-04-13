@@ -7,7 +7,7 @@ use App\Models\EventReservation;
 use App\Models\User;
 use Brick\Money\Money;
 use Carbon\Carbon;
-use CorvMC\Events\Actions\CreateEvent;
+use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Concerns\HasPoster;
 use CorvMC\Events\Concerns\HasPublishing;
 use CorvMC\Events\Data\LocationData;
@@ -778,7 +778,7 @@ class Event extends ContentModel implements Recurrable
         $endDateTime = $date->copy()->setTimeFromTimeString($series->end_time->format('H:i:s'));
 
         /** @var static */
-        return CreateEvent::run([
+        return EventService::create([
             'organizer_id' => $series->user_id,
             'recurring_series_id' => $series->id,
             'instance_date' => $date->toDateString(),

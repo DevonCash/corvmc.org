@@ -3,6 +3,8 @@
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use Carbon\Carbon;
+use CorvMC\SpaceManagement\Facades\ReservationService;
+use CorvMC\SpaceManagement\Services\ConflictData;
 
 class GetValidEndTimesForDate
 {
@@ -20,7 +22,7 @@ class GetValidEndTimesForDate
     public function handle(Carbon $date, string $startTime, ?ConflictData $conflicts = null): array
     {
         // Fetch conflicts once if not provided
-        $conflicts ??= GetConflictsForDate::run($date);
+        $conflicts ??= ReservationService::getConflictsForDate($date);
 
         $slots = [];
         $start = $date->copy()->setTimeFromTimeString($startTime);

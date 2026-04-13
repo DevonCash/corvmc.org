@@ -2,11 +2,7 @@
 
 use App\Models\User;
 use Carbon\Carbon;
-use CorvMC\Equipment\Actions\CheckoutToMember;
-use CorvMC\Equipment\Actions\GetStatistics;
-use CorvMC\Equipment\Actions\MarkOverdue;
-use CorvMC\Equipment\Actions\MarkReturnedToOwner;
-use CorvMC\Equipment\Actions\ProcessReturn;
+use CorvMC\Equipment\Facades\EquipmentService;
 use CorvMC\Equipment\Models\Equipment;
 use CorvMC\Equipment\Models\EquipmentLoan;
 use CorvMC\Equipment\States\EquipmentLoan\CheckedOut;
@@ -28,7 +24,7 @@ describe('Equipment Workflow: Checkout Flow', function () {
 
         $dueDate = Carbon::now()->addDays(7);
 
-        $loan = CheckoutToMember::run(
+        $loan = EquipmentService::checkout(
             equipment: $equipment,
             borrower: $borrower,
             dueDate: $dueDate,
@@ -57,7 +53,7 @@ describe('Equipment Workflow: Checkout Flow', function () {
             'loanable' => true,
         ]);
 
-        $loan = CheckoutToMember::run(
+        $loan = EquipmentService::checkout(
             equipment: $equipment,
             borrower: $borrower,
             dueDate: Carbon::now()->addDays(7)
@@ -77,7 +73,7 @@ describe('Equipment Workflow: Return Flow', function () {
         ]);
 
         // First checkout
-        $loan = CheckoutToMember::run(
+        $loan = EquipmentService::checkout(
             equipment: $equipment,
             borrower: $borrower,
             dueDate: Carbon::now()->addDays(7),
@@ -85,7 +81,7 @@ describe('Equipment Workflow: Return Flow', function () {
         );
 
         // Process return
-        $returnedLoan = ProcessReturn::run($loan, 'good', null);
+        $returnedLoan = EquipmentService::processReturn($loan, 'good', null);
 
         expect($returnedLoan->returned_at)->not->toBeNull();
         expect($returnedLoan->condition_in)->toBe('good');
@@ -103,14 +99,14 @@ describe('Equipment Workflow: Return Flow', function () {
             'loanable' => true,
         ]);
 
-        $loan = CheckoutToMember::run(
+        $loan = EquipmentService::checkout(
             equipment: $equipment,
             borrower: $borrower,
             dueDate: Carbon::now()->addDays(7),
             conditionOut: 'good'
         );
 
-        $returnedLoan = ProcessReturn::run($loan, 'fair', 'Minor scratch on body');
+        $returnedLoan = EquipmentService::processReturn($loan, 'fair', 'Minor scratch on body');
 
         expect($returnedLoan->condition_in)->toBe('fair');
         expect($returnedLoan->damage_notes)->toBe('Minor scratch on body');
@@ -125,7 +121,7 @@ describe('Equipment Workflow: Availability Check', function () {
             'loanable' => true,
         ]);
 
-        expect(fn () => CheckoutToMember::run(
+        expect(fn() => EquipmentService::checkout(
             equipment: $equipment,
             borrower: $borrower,
             dueDate: Carbon::now()->addDays(7)
@@ -139,7 +135,7 @@ describe('Equipment Workflow: Availability Check', function () {
             'loanable' => false,
         ]);
 
-        expect(fn () => CheckoutToMember::run(
+        expect(fn() => EquipmentService::checkout(
             equipment: $equipment,
             borrower: $borrower,
             dueDate: Carbon::now()->addDays(7)
@@ -154,14 +150,14 @@ describe('Equipment Workflow: Availability Check', function () {
         ]);
 
         // First checkout succeeds
-        CheckoutToMember::run(
+        EquipmentService::checkout(
             equipment: $equipment,
             borrower: $borrower1,
             dueDate: Carbon::now()->addDays(7)
         );
 
         // Second checkout should fail
-        expect(fn () => CheckoutToMember::run(
+        expect(fn() => EquipmentService::checkout(
             equipment: $equipment,
             borrower: $borrower2,
             dueDate: Carbon::now()->addDays(7)
@@ -176,19 +172,19 @@ describe('Equipment Workflow: Availability Check', function () {
         ]);
 
         // First checkout and return
-        $loan1 = CheckoutToMember::run(
+        $loan1 = EquipmentService::checkout(
             equipment: $equipment,
             borrower: $borrower1,
             dueDate: Carbon::now()->addDays(7)
         );
-        ProcessReturn::run($loan1, 'good');
+        EquipmentService::processReturn($loan1, 'good');
 
         // Refresh equipment to get updated status
         $equipment->refresh();
         expect($equipment->status)->toBe('available');
 
         // Second checkout should succeed
-        $loan2 = CheckoutToMember::run(
+        $loan2 = EquipmentService::checkout(
             equipment: $equipment,
             borrower: $borrower2,
             dueDate: Carbon::now()->addDays(14)
@@ -207,7 +203,7 @@ describe('Equipment Workflow: Overdue Loans', function () {
         ]);
 
         // Create a loan
-        $loan = CheckoutToMember::run(
+        $loan = EquipmentService::checkout(
             equipment: $equipment,
             borrower: $borrower,
             dueDate: Carbon::now()->addDays(7)
@@ -216,7 +212,7 @@ describe('Equipment Workflow: Overdue Loans', function () {
         expect($loan->state)->toBeInstanceOf(CheckedOut::class);
 
         // Mark as overdue
-        MarkOverdue::run($loan);
+        EquipmentService::markOverdue($loan);
 
         $loan->refresh();
         expect($loan->state)->toBeInstanceOf(Overdue::class);
@@ -239,13 +235,13 @@ describe('Equipment Workflow: Statistics', function () {
             'loanable' => true,
             'acquisition_type' => 'purchased',
         ]);
-        CheckoutToMember::run(
+        EquipmentService::checkout(
             equipment: $checkedOutEquipment,
             borrower: $borrower,
             dueDate: Carbon::now()->addDays(7)
         );
 
-        $stats = GetStatistics::run();
+        $stats = EquipmentService::getStatistics();
 
         expect($stats)->toBeArray();
         expect($stats)->toHaveKey('total_equipment');
@@ -277,7 +273,7 @@ describe('Equipment Workflow: Return to Owner', function () {
             'loanable' => true,
         ]);
 
-        MarkReturnedToOwner::run($equipment);
+        EquipmentService::markReturnedToOwner($equipment);
 
         $equipment->refresh();
         expect($equipment->ownership_status)->toBe('returned_to_owner');

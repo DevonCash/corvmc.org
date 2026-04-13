@@ -9,6 +9,7 @@ use CorvMC\SpaceManagement\Actions\Reservations\CheckTimeSlotAvailability;
 use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
 use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Illuminate\Support\Facades\Notification;
 
@@ -25,7 +26,7 @@ describe('Reservation Workflow: Create Single Reservation', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         expect($reservation)->toBeInstanceOf(RehearsalReservation::class);
         expect($reservation->reservable_id)->toBe($user->id);
@@ -44,7 +45,7 @@ describe('Reservation Workflow: Create Single Reservation', function () {
 
         $initialBalance = $user->getCreditBalance(CreditType::FreeHours);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         expect($reservation->charge->net_amount->getMinorAmount())->toBe(0);
         expect((float) $reservation->free_hours_used)->toBe(2.0);
@@ -60,7 +61,7 @@ describe('Reservation Workflow: Create Single Reservation', function () {
         $startTime = Carbon::now()->addDays(1)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         expect($reservation->status)->toBe(ReservationStatus::Confirmed);
     });
@@ -72,13 +73,13 @@ describe('Reservation Workflow: Confirm Reservation', function () {
         $startTime = Carbon::now()->addDays(4)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
         expect($reservation->status)->toBe(ReservationStatus::Scheduled);
 
         // Move time forward so confirmation is allowed (within 5 days of reservation)
         $this->travel(2)->days();
 
-        $confirmedReservation = ConfirmReservation::run($reservation);
+        $confirmedReservation = ReservationService::confirm($reservation);
 
         expect($confirmedReservation->status)->toBe(ReservationStatus::Confirmed);
     });
@@ -92,7 +93,7 @@ describe('Reservation Workflow: Confirm Reservation', function () {
 
         // Create with Reserved status using CreateReservation to ensure Charge is created
         // Reserved status defers credit deduction until confirmation
-        $reservation = CreateReservation::run($user, $startTime, $endTime, [
+        $reservation = ReservationService::create($user, $startTime, $endTime, [
             'status' => ReservationStatus::Reserved,
         ]);
 
@@ -103,7 +104,7 @@ describe('Reservation Workflow: Confirm Reservation', function () {
         // Move time forward so confirmation is allowed
         $this->travel(2)->days();
 
-        $confirmedReservation = ConfirmReservation::run($reservation);
+        $confirmedReservation = ReservationService::confirm($reservation);
 
         expect($confirmedReservation->status)->toBe(ReservationStatus::Confirmed);
 
@@ -118,7 +119,7 @@ describe('Reservation Workflow: Availability Check', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $isAvailable = CheckTimeSlotAvailability::run($startTime, $endTime);
+        $isAvailable = ReservationService::checkAvailability($startTime, $endTime);
 
         expect($isAvailable)->toBeTrue();
     });
@@ -128,13 +129,13 @@ describe('Reservation Workflow: Availability Check', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        CreateReservation::run($user, $startTime, $endTime);
+        ReservationService::create($user, $startTime, $endTime);
 
         // Check overlapping time slot
         $overlapStart = $startTime->copy()->addMinutes(30);
         $overlapEnd = $overlapStart->copy()->addHours(2);
 
-        $isAvailable = CheckTimeSlotAvailability::run($overlapStart, $overlapEnd);
+        $isAvailable = ReservationService::checkAvailability($overlapStart, $overlapEnd);
 
         expect($isAvailable)->toBeFalse();
     });
@@ -144,10 +145,10 @@ describe('Reservation Workflow: Availability Check', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         // Check the same time slot, excluding the reservation
-        $isAvailable = CheckTimeSlotAvailability::run($startTime, $endTime, $reservation->id);
+        $isAvailable = ReservationService::checkAvailability($startTime, $endTime, $reservation->id);
 
         expect($isAvailable)->toBeTrue();
     });
@@ -159,9 +160,9 @@ describe('Reservation Workflow: Cancel Reservation', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
-        $cancelledReservation = CancelReservation::run($reservation, 'Test cancellation');
+        $cancelledReservation = ReservationService::cancel($reservation, 'Test cancellation');
 
         expect($cancelledReservation->status)->toBe(ReservationStatus::Cancelled);
         expect($cancelledReservation->cancellation_reason)->toBe('Test cancellation');
@@ -174,13 +175,13 @@ describe('Reservation Workflow: Cancel Reservation', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         // Verify credits were deducted
         $balanceAfterCreate = $user->fresh()->getCreditBalance(CreditType::FreeHours);
         expect($balanceAfterCreate)->toBe(4); // 8 - 4 = 4
 
-        CancelReservation::run($reservation);
+        ReservationService::cancel($reservation);
 
         // Credits should be refunded
         $balanceAfterCancel = $user->fresh()->getCreditBalance(CreditType::FreeHours);
@@ -192,15 +193,15 @@ describe('Reservation Workflow: Cancel Reservation', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         // Verify slot is not available
-        expect(CheckTimeSlotAvailability::run($startTime, $endTime))->toBeFalse();
+        expect(ReservationService::checkAvailability($startTime, $endTime))->toBeFalse();
 
-        CancelReservation::run($reservation);
+        ReservationService::cancel($reservation);
 
         // Slot should now be available
-        expect(CheckTimeSlotAvailability::run($startTime, $endTime))->toBeTrue();
+        expect(ReservationService::checkAvailability($startTime, $endTime))->toBeTrue();
     });
 
     it('marks charge as cancelled when cancelling an unpaid reservation', function () {
@@ -208,12 +209,12 @@ describe('Reservation Workflow: Cancel Reservation', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         // Verify charge is pending (unpaid)
         expect($reservation->charge->status)->toBe(ChargeStatus::Pending);
 
-        CancelReservation::run($reservation);
+        ReservationService::cancel($reservation);
 
         // Charge should be marked as Cancelled, not Refunded
         $reservation->refresh();
@@ -227,14 +228,14 @@ describe('Reservation Workflow: Cancel Reservation', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         // Verify charge is CoveredByCredits (not Paid)
         expect($reservation->charge->status)->toBe(ChargeStatus::CoveredByCredits);
 
         $balanceBeforeCancel = $user->fresh()->getCreditBalance(CreditType::FreeHours);
 
-        CancelReservation::run($reservation);
+        ReservationService::cancel($reservation);
 
         // Charge should be Cancelled, NOT Refunded (no money was exchanged)
         $reservation->refresh();
@@ -250,13 +251,13 @@ describe('Reservation Workflow: Cancel Reservation', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = CreateReservation::run($user, $startTime, $endTime);
+        $reservation = ReservationService::create($user, $startTime, $endTime);
 
         // Mark the charge as paid
         $reservation->charge->markAsPaid('cash', null, null, 'Test payment');
         expect($reservation->charge->status)->toBe(ChargeStatus::Paid);
 
-        CancelReservation::run($reservation);
+        ReservationService::cancel($reservation);
 
         // Charge should be marked as Refunded since payment was made
         $reservation->refresh();

@@ -5,6 +5,7 @@ namespace App\Filament\Staff\Resources\SpaceClosures\Pages;
 use App\Filament\Staff\Resources\SpaceClosures\SpaceClosureResource;
 use App\Models\User;
 use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -40,7 +41,7 @@ class CreateSpaceClosure extends CreateRecord
             foreach ($affectedReservationIds as $reservationId) {
                 $reservation = Reservation::find($reservationId);
                 if ($reservation && $reservation->status->isActive()) {
-                    CancelReservation::run($reservation, $cancellationReason);
+                    ReservationService::cancelReservation($reservation, $cancellationReason);
                     $cancelledCount++;
                 }
             }

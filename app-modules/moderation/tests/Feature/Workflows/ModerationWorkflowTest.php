@@ -10,6 +10,9 @@ use CorvMC\Moderation\Actions\Reports\SubmitReport;
 use CorvMC\Moderation\Actions\Revisions\ApproveRevision;
 use CorvMC\Moderation\Actions\Revisions\HandleRevisionSubmission;
 use CorvMC\Moderation\Actions\Trust\AwardTrustPoints;
+use CorvMC\Moderation\Facades\ReportService;
+use CorvMC\Moderation\Facades\RevisionService;
+use CorvMC\Moderation\Facades\TrustService;
 use CorvMC\Moderation\Models\Report;
 use CorvMC\Moderation\Models\Revision;
 use Illuminate\Support\Facades\Notification;
@@ -29,7 +32,7 @@ describe('Moderation Workflow: Report Flow', function () {
             'organizer_id' => $organizer->id,
         ]);
 
-        $report = SubmitReport::run(
+        $report = ReportService::submit(
             $event,
             $reporter,
             'inappropriate_content',
@@ -49,9 +52,9 @@ describe('Moderation Workflow: Report Flow', function () {
         $reporter = User::factory()->create();
         $event = Event::factory()->create();
 
-        SubmitReport::run($event, $reporter, 'spam');
+        ReportService::submit($event, $reporter, 'spam');
 
-        expect(fn () => SubmitReport::run($event, $reporter, 'spam'))
+        expect(fn () => ReportService::submit($event, $reporter, 'spam'))
             ->toThrow(\Exception::class, 'You have already reported this content');
     });
 
@@ -60,10 +63,10 @@ describe('Moderation Workflow: Report Flow', function () {
         $moderator = User::factory()->admin()->create();
         $event = Event::factory()->create();
 
-        $report = SubmitReport::run($event, $reporter, 'misleading_info');
+        $report = ReportService::submit($event, $reporter, 'misleading_info');
         expect($report->status)->toBe('pending');
 
-        $resolvedReport = ResolveReport::run(
+        $resolvedReport = ReportService::resolve(
             $report,
             $moderator,
             'upheld',
@@ -81,9 +84,9 @@ describe('Moderation Workflow: Report Flow', function () {
         $moderator = User::factory()->admin()->create();
         $event = Event::factory()->create();
 
-        $report = SubmitReport::run($event, $reporter, 'spam');
+        $report = ReportService::submit($event, $reporter, 'spam');
 
-        $resolvedReport = ResolveReport::run(
+        $resolvedReport = ReportService::resolve(
             $report,
             $moderator,
             'dismissed',
@@ -98,7 +101,7 @@ describe('Moderation Workflow: Trust Points', function () {
     it('awards trust points to a user', function () {
         $user = User::factory()->create();
 
-        $transaction = AwardTrustPoints::run(
+        $transaction = TrustService::awardPoints(
             user: $user,
             points: 5,
             contentType: Event::class,
@@ -115,7 +118,7 @@ describe('Moderation Workflow: Trust Points', function () {
     it('accumulates trust points over multiple awards', function () {
         $user = User::factory()->create();
 
-        AwardTrustPoints::run(
+        TrustService::award(
             user: $user,
             points: 3,
             contentType: Event::class,
@@ -123,7 +126,7 @@ describe('Moderation Workflow: Trust Points', function () {
             reason: 'First event'
         );
 
-        $secondTransaction = AwardTrustPoints::run(
+        $secondTransaction = TrustService::award(
             user: $user,
             points: 5,
             contentType: Event::class,
@@ -138,7 +141,7 @@ describe('Moderation Workflow: Trust Points', function () {
         $user = User::factory()->create();
 
         // Award some points first
-        AwardTrustPoints::run(
+        TrustService::award(
             user: $user,
             points: 2,
             contentType: Event::class,
@@ -147,7 +150,7 @@ describe('Moderation Workflow: Trust Points', function () {
         );
 
         // Deduct more than available
-        $transaction = AwardTrustPoints::run(
+        $transaction = TrustService::award(
             user: $user,
             points: -10,
             contentType: Event::class,
@@ -162,7 +165,7 @@ describe('Moderation Workflow: Trust Points', function () {
     it('tracks different content types separately', function () {
         $user = User::factory()->create();
 
-        AwardTrustPoints::run(
+        TrustService::award(
             user: $user,
             points: 10,
             contentType: Event::class,
@@ -170,7 +173,7 @@ describe('Moderation Workflow: Trust Points', function () {
             reason: 'Event trust'
         );
 
-        AwardTrustPoints::run(
+        TrustService::award(
             user: $user,
             points: 5,
             contentType: Band::class,
@@ -208,7 +211,7 @@ describe('Moderation Workflow: Revision Approval', function () {
             'revision_type' => 'update',
         ]);
 
-        $result = ApproveRevision::run($revision, $reviewer, 'Good update');
+        $result = RevisionService::approve($revision, $reviewer, 'Good update');
 
         expect($result)->toBeTrue();
 
@@ -246,7 +249,7 @@ describe('Moderation Workflow: Revision Approval', function () {
             'reviewed_at' => now(),
         ]);
 
-        expect(fn () => ApproveRevision::run($revision, $reviewer))
+        expect(fn () => RevisionService::approve($revision, $reviewer))
             ->toThrow(\InvalidArgumentException::class, 'Revision is not pending approval');
     });
 });
@@ -273,7 +276,7 @@ describe('Moderation Workflow: Auto-Approval', function () {
             'revision_type' => 'update',
         ]);
 
-        HandleRevisionSubmission::run($revision);
+        RevisionService::handleSubmission($revision);
 
         $revision->refresh();
         expect($revision->status)->toBe(Revision::STATUS_APPROVED);

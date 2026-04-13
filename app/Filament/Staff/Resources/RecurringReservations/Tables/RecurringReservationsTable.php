@@ -2,6 +2,7 @@
 
 namespace App\Filament\Staff\Resources\RecurringReservations\Tables;
 
+use CorvMC\SpaceManagement\Facades\RecurringReservationService;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -24,12 +25,12 @@ class RecurringReservationsTable
 
                 TextColumn::make('recurrence_rule')
                     ->label('Pattern')
-                    ->formatStateUsing(fn ($state) => \CorvMC\SpaceManagement\Actions\RecurringReservations\FormatRRuleForHumans::run($state))
+                    ->formatStateUsing(fn($state) => RecurringReservationService::formatRRuleForHumans($state))
                     ->wrap(),
 
                 TextColumn::make('start_time')
                     ->label('Time')
-                    ->formatStateUsing(fn ($record) => $record->start_time->format('g:i A').' - '.$record->end_time->format('g:i A'))
+                    ->formatStateUsing(fn($record) => $record->start_time->format('g:i A') . ' - ' . $record->end_time->format('g:i A'))
                     ->description(function ($record) {
                         $nextInstance = Reservation::where('recurring_series_id', $record->id)
                             ->where('instance_date', '>=', now()->toDateString())
@@ -38,7 +39,7 @@ class RecurringReservationsTable
                             ->first();
 
                         return $nextInstance
-                            ? 'Next: '.$nextInstance->instance_date->format('M j, Y')
+                            ? 'Next: ' . $nextInstance->instance_date->format('M j, Y')
                             : null;
                     }),
 
@@ -64,7 +65,7 @@ class RecurringReservationsTable
 
                 TextColumn::make('instances_count')
                     ->label('Instances')
-                    ->state(fn ($record) => Reservation::where('recurring_series_id', $record->id)->count()),
+                    ->state(fn($record) => Reservation::where('recurring_series_id', $record->id)->count()),
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -79,7 +80,7 @@ class RecurringReservationsTable
                 Action::make('view_instances')
                     ->label('View Instances')
                     ->icon('heroicon-o-eye')
-                    ->url(fn ($record) => route('filament.member.resources.reservations.index', [
+                    ->url(fn($record) => route('filament.member.resources.reservations.index', [
                         'tableFilters[recurring_series_id][value]' => $record->id,
                     ])),
 
@@ -90,8 +91,8 @@ class RecurringReservationsTable
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->visible(fn ($record) => $record->status === 'active')
-                    ->action(fn ($record) => \CorvMC\Support\Actions\CancelRecurringSeries::run($record)),
+                    ->visible(fn($record) => $record->status === 'active')
+                    ->action(fn($record) => RecurringReservationService::cancelSeries($record)),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

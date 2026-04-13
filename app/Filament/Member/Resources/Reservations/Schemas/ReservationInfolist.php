@@ -2,10 +2,10 @@
 
 namespace App\Filament\Member\Resources\Reservations\Schemas;
 
-use App\Filament\Shared\Actions\Action;
 use App\Filament\Staff\Resources\Users\UserResource;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;

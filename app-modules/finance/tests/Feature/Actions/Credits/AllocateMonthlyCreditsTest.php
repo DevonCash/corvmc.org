@@ -1,16 +1,16 @@
 <?php
 
-use CorvMC\Finance\Actions\Credits\AllocateMonthlyCredits;
 use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Models\CreditTransaction;
 use App\Models\User;
+use CorvMC\Finance\Facades\MemberBenefitService;
 use Illuminate\Support\Facades\DB;
 
 describe('AllocateMonthlyCredits - First Allocation', function () {
     it('allocates free hours credits on first allocation', function () {
         $user = User::factory()->create();
 
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
     });
@@ -18,7 +18,7 @@ describe('AllocateMonthlyCredits - First Allocation', function () {
     it('allocates equipment credits on first allocation', function () {
         $user = User::factory()->create();
 
-        AllocateMonthlyCredits::run($user, 10, CreditType::EquipmentCredits);
+        MemberBenefitService::allocateMonthlyCredits($user, 10, CreditType::EquipmentCredits);
 
         expect($user->getCreditBalance(CreditType::EquipmentCredits))->toBe(10);
     });
@@ -26,7 +26,7 @@ describe('AllocateMonthlyCredits - First Allocation', function () {
     it('creates transaction with monthly_reset source for free hours', function () {
         $user = User::factory()->create();
 
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         $transaction = $user->creditTransactions()->latest()->first();
 
@@ -39,7 +39,7 @@ describe('AllocateMonthlyCredits - First Allocation', function () {
     it('creates transaction with monthly_allocation source for equipment credits', function () {
         $user = User::factory()->create();
 
-        AllocateMonthlyCredits::run($user, 10, CreditType::EquipmentCredits);
+        MemberBenefitService::allocateMonthlyCredits($user, 10, CreditType::EquipmentCredits);
 
         $transaction = $user->creditTransactions()->latest()->first();
 
@@ -55,7 +55,7 @@ describe('AllocateMonthlyCredits - Free Hours Strategy (Reset)', function () {
         $user = User::factory()->create();
 
         // First allocation: 16 blocks
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // User uses 10 blocks
         $user->deductCredit(10, CreditType::FreeHours, 'test_usage');
@@ -63,7 +63,7 @@ describe('AllocateMonthlyCredits - Free Hours Strategy (Reset)', function () {
 
         // Second allocation after a month: should reset to 16, not add 16
         $this->travel(1)->month();
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
     });
@@ -72,7 +72,7 @@ describe('AllocateMonthlyCredits - Free Hours Strategy (Reset)', function () {
         $user = User::factory()->create();
 
         // First allocation: 16 blocks
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // User only uses 2 blocks, has 14 left
         $user->deductCredit(2, CreditType::FreeHours, 'test_usage');
@@ -80,7 +80,7 @@ describe('AllocateMonthlyCredits - Free Hours Strategy (Reset)', function () {
 
         // Second allocation: resets to 16 (14 leftover credits are lost)
         $this->travel(1)->month();
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
     });
@@ -88,11 +88,11 @@ describe('AllocateMonthlyCredits - Free Hours Strategy (Reset)', function () {
     it('records correct delta in transaction when resetting', function () {
         $user = User::factory()->create();
 
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
         $user->deductCredit(10, CreditType::FreeHours, 'test_usage');
 
         $this->travel(1)->month();
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         $transaction = $user->creditTransactions()
             ->where('source', 'monthly_reset')
@@ -110,7 +110,7 @@ describe('AllocateMonthlyCredits - Equipment Credits Strategy (Rollover with Cap
         $user = User::factory()->create();
 
         // First allocation: 10 credits
-        AllocateMonthlyCredits::run($user, 10, CreditType::EquipmentCredits);
+        MemberBenefitService::allocateMonthlyCredits($user, 10, CreditType::EquipmentCredits);
 
         // User only uses 2, has 8 left
         $user->deductCredit(2, CreditType::EquipmentCredits, 'test_usage');
@@ -118,7 +118,7 @@ describe('AllocateMonthlyCredits - Equipment Credits Strategy (Rollover with Cap
 
         // Second allocation: should ADD 10 to existing 8 = 18
         $this->travel(1)->month();
-        AllocateMonthlyCredits::run($user, 10, CreditType::EquipmentCredits);
+        MemberBenefitService::allocateMonthlyCredits($user, 10, CreditType::EquipmentCredits);
 
         expect($user->getCreditBalance(CreditType::EquipmentCredits))->toBe(18);
     });
@@ -130,7 +130,7 @@ describe('AllocateMonthlyCredits - Equipment Credits Strategy (Rollover with Cap
         $user->addCredit(245, CreditType::EquipmentCredits, 'test_setup');
 
         // Try to allocate 10 more (would be 255, but cap is 250)
-        AllocateMonthlyCredits::run($user, 10, CreditType::EquipmentCredits);
+        MemberBenefitService::allocateMonthlyCredits($user, 10, CreditType::EquipmentCredits);
 
         // Should only add 5 to reach cap
         expect($user->getCreditBalance(CreditType::EquipmentCredits))->toBe(250);
@@ -143,7 +143,7 @@ describe('AllocateMonthlyCredits - Equipment Credits Strategy (Rollover with Cap
         $user->addCredit(250, CreditType::EquipmentCredits, 'test_setup');
 
         // Try to allocate more
-        AllocateMonthlyCredits::run($user, 10, CreditType::EquipmentCredits);
+        MemberBenefitService::allocateMonthlyCredits($user, 10, CreditType::EquipmentCredits);
 
         // Should remain at cap
         expect($user->getCreditBalance(CreditType::EquipmentCredits))->toBe(250);
@@ -161,7 +161,7 @@ describe('AllocateMonthlyCredits - Equipment Credits Strategy (Rollover with Cap
         $user = User::factory()->create();
         $user->addCredit(245, CreditType::EquipmentCredits, 'test_setup');
 
-        AllocateMonthlyCredits::run($user, 10, CreditType::EquipmentCredits);
+        MemberBenefitService::allocateMonthlyCredits($user, 10, CreditType::EquipmentCredits);
 
         $transaction = CreditTransaction::where('user_id', $user->id)
             ->where('source', 'monthly_allocation')
@@ -185,7 +185,7 @@ describe('AllocateMonthlyCredits - Mid-Month Upgrades', function () {
         $user = User::factory()->create();
 
         // Initial allocation: 16 blocks
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // User uses 4 blocks, has 12 left
         $user->deductCredit(4, CreditType::FreeHours, 'test_usage');
@@ -194,7 +194,7 @@ describe('AllocateMonthlyCredits - Mid-Month Upgrades', function () {
         // Mid-month: user upgrades subscription to 32 blocks
         // Tier delta = 32 - 16 = 16
         // Balance should be 12 + 16 = 28 (not 32!)
-        AllocateMonthlyCredits::run($user, 32, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 32, CreditType::FreeHours);
 
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(28);
     });
@@ -202,11 +202,11 @@ describe('AllocateMonthlyCredits - Mid-Month Upgrades', function () {
     it('creates upgrade_adjustment transaction for mid-month upgrade', function () {
         $user = User::factory()->create();
 
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
         $user->deductCredit(4, CreditType::FreeHours, 'test_usage');
 
         // Upgrade same month
-        AllocateMonthlyCredits::run($user, 32, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 32, CreditType::FreeHours);
 
         $transaction = $user->creditTransactions()
             ->where('source', 'upgrade_adjustment')
@@ -230,12 +230,12 @@ describe('AllocateMonthlyCredits - Mid-Month Upgrades', function () {
         $user = User::factory()->create();
 
         // Initial allocation: 32 blocks
-        AllocateMonthlyCredits::run($user, 32, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 32, CreditType::FreeHours);
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(32);
 
         // Mid-month: user downgrades to 16 blocks
         // Should keep the 32 until next cycle
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(32);
 
@@ -251,7 +251,7 @@ describe('AllocateMonthlyCredits - Mid-Month Upgrades', function () {
         $user = User::factory()->create();
 
         // Initial allocation: 5 credits
-        AllocateMonthlyCredits::run($user, 5, CreditType::EquipmentCredits);
+        MemberBenefitService::allocateMonthlyCredits($user, 5, CreditType::EquipmentCredits);
         expect($user->getCreditBalance(CreditType::EquipmentCredits))->toBe(5);
 
         // Manually add 243 more to get to 248 (2 below cap of 250)
@@ -261,7 +261,7 @@ describe('AllocateMonthlyCredits - Mid-Month Upgrades', function () {
         // Mid-month upgrade to 10 credits tier
         // Tier delta = 10 - 5 = 5
         // But can only add 2 more to reach cap (250 - 248 = 2)
-        AllocateMonthlyCredits::run($user, 10, CreditType::EquipmentCredits);
+        MemberBenefitService::allocateMonthlyCredits($user, 10, CreditType::EquipmentCredits);
 
         // Should only add 2 to reach cap
         expect($user->getCreditBalance(CreditType::EquipmentCredits))->toBe(250);
@@ -273,7 +273,7 @@ describe('AllocateMonthlyCredits - Timing Logic', function () {
         $user = User::factory()->create();
 
         // First allocation
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
 
         $user->deductCredit(10, CreditType::FreeHours, 'test_usage');
@@ -282,7 +282,7 @@ describe('AllocateMonthlyCredits - Timing Logic', function () {
         // Try to allocate same amount again immediately (same month, same tier)
         // Previous allocation: 16, new allocation: 16
         // Tier delta = 16 - 16 = 0, so no change
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // Balance should remain unchanged since tier didn't change
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(6);
@@ -293,13 +293,13 @@ describe('AllocateMonthlyCredits - Timing Logic', function () {
 
         // First allocation on Jan 31
         $this->travel(1)->month();
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         $user->deductCredit(10, CreditType::FreeHours, 'test_usage');
 
         // Travel exactly one month forward
         $this->travel(1)->month();
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // Should have reset to 16
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
@@ -312,7 +312,7 @@ describe('AllocateMonthlyCredits - Thread Safety', function () {
 
         DB::beginTransaction();
         try {
-            AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+            MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
             DB::rollBack();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -327,7 +327,7 @@ describe('AllocateMonthlyCredits - Thread Safety', function () {
 
         // This is tested implicitly by the action using lockForUpdate()
         // Multiple concurrent runs should not cause balance corruption
-        AllocateMonthlyCredits::run($user, 16, CreditType::FreeHours);
+        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
     });

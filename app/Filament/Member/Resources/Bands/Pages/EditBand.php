@@ -2,8 +2,7 @@
 
 namespace App\Filament\Member\Resources\Bands\Pages;
 
-use CorvMC\Membership\Actions\Bands\DeleteBand as DeleteBandAction;
-use CorvMC\Membership\Actions\Bands\UpdateBand as UpdateBandAction;
+use CorvMC\Membership\Facades\BandService;
 use App\Filament\Member\Resources\Bands\BandResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
@@ -15,12 +14,12 @@ class EditBand extends EditRecord
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        return UpdateBandAction::run($record, $data);
+        return BandService::updateBand($record, $data);
     }
 
     protected function handleRecordDeletion(Model $record): void
     {
-        DeleteBandAction::run($record);
+        BandService::deleteBand($record);
     }
 
     protected function getHeaderActions(): array

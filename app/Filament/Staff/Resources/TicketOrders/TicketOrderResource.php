@@ -11,6 +11,7 @@ use App\Models\User;
 use BackedEnum;
 use CorvMC\Events\Actions\Tickets\RefundTicketOrder;
 use CorvMC\Events\Enums\TicketOrderStatus;
+use CorvMC\Events\Facades\TicketService;
 use CorvMC\Events\Models\TicketOrder;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\ParentResourceRegistration;
@@ -124,7 +125,7 @@ class TicketOrderResource extends Resource
                     )
                     ->visible(fn(TicketOrder $record) => $record->canRefund())
                     ->action(function (TicketOrder $record) {
-                        RefundTicketOrder::run($record, 'Refunded by staff');
+                        TicketService::refund($record, 'Refunded by staff');
                     }),
             ]);
     }

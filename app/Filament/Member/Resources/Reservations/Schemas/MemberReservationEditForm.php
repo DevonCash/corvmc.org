@@ -2,8 +2,7 @@
 
 namespace App\Filament\Member\Resources\Reservations\Schemas;
 
-use CorvMC\SpaceManagement\Actions\Reservations\GetAvailableTimeSlotsForDate;
-use CorvMC\SpaceManagement\Actions\Reservations\GetValidEndTimesForDate;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -35,7 +34,7 @@ class MemberReservationEditForm
                             if (! $date) {
                                 return [];
                             }
-                            $options = GetAvailableTimeSlotsForDate::run(Carbon::parse($date));
+                            $options = ReservationService::getAvailableTimeSlots(Carbon::parse($date));
 
                             // Ensure current value is in options when editing (with proper 12-hour format label)
                             if ($state && ! isset($options[$state])) {
@@ -58,7 +57,7 @@ class MemberReservationEditForm
                             if (! $date || ! $startTime) {
                                 return [];
                             }
-                            $options = GetValidEndTimesForDate::run(Carbon::parse($date), $startTime);
+                            $options = ReservationService::getValidEndTimesForDate(Carbon::parse($date), $startTime);
 
                             // Ensure current value is in options when editing (with proper 12-hour format label)
                             if ($state && ! isset($options[$state])) {

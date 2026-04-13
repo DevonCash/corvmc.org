@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use CorvMC\Finance\Actions\Subscriptions\UpdateUserMembershipStatus;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
+use CorvMC\SpaceManagement\Facades\ReservationService;
+use CorvMC\Finance\Facades\SubscriptionService;
+use CorvMC\Finance\Facades\MemberBenefitService;
+use CorvMC\Events\Facades\TicketService;
 use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Http\Controllers\WebhookController as CashierWebhookController;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
@@ -53,7 +56,7 @@ class StripeWebhookController extends CashierWebhookController
         $paymentIntentId = $session['payment_intent'] ?? null;
         $reservationId = $metadata['reservation_id'] ?? null;
 
-        $success = \CorvMC\SpaceManagement\Actions\Reservations\ProcessReservationCheckout::run(
+        $success = ReservationService::processCheckout(
             $reservationId,
             $sessionId,
             $paymentIntentId
@@ -83,7 +86,7 @@ class StripeWebhookController extends CashierWebhookController
         $sessionId = $session['id'];
         $userId = $metadata['user_id'] ?? null;
 
-        $success = \CorvMC\Finance\Actions\Subscriptions\ProcessSubscriptionCheckout::run(
+        $success = SubscriptionService::processCheckout(
             $userId,
             $sessionId,
             $metadata
@@ -115,7 +118,7 @@ class StripeWebhookController extends CashierWebhookController
             return $this->successMethod();
         }
 
-        $success = \CorvMC\Events\Actions\Tickets\CompleteTicketOrder::run(
+        $success = TicketService::completeOrder(
             (int) $orderId,
             $sessionId
         );
@@ -161,7 +164,7 @@ class StripeWebhookController extends CashierWebhookController
             }
 
             // Handle failed payment
-            \CorvMC\SpaceManagement\Actions\Reservations\HandleFailedPayment::run($reservation);
+            ReservationService::handleFailedPayment($reservation);
 
             Log::info('Stripe webhook: Processed payment failure', [
                 'reservation_id' => $reservationId,
@@ -194,10 +197,10 @@ class StripeWebhookController extends CashierWebhookController
 
             if ($user && $subscription['status'] === 'active') {
                 // Update membership status since Cashier created the subscription
-                UpdateUserMembershipStatus::run($user);
+                SubscriptionService::updateUserMembershipStatus($user);
 
                 // Allocate monthly credits now that subscription exists and role is assigned
-                \CorvMC\Finance\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
+                MemberBenefitService::allocateUserMonthlyCredits($user);
 
                 Log::info('Stripe webhook: Updated membership status and allocated credits after subscription creation', [
                     'user_id' => $user->id,
@@ -231,7 +234,7 @@ class StripeWebhookController extends CashierWebhookController
 
             if ($user) {
                 // Update membership status since Cashier updated the subscription
-                UpdateUserMembershipStatus::run($user);
+                SubscriptionService::updateUserMembershipStatus($user);
 
                 Log::info('Stripe webhook: Updated membership status after subscription update', [
                     'user_id' => $user->id,
@@ -266,7 +269,7 @@ class StripeWebhookController extends CashierWebhookController
 
             if ($user) {
                 // Update membership status since subscription was deleted
-                UpdateUserMembershipStatus::run($user);
+                SubscriptionService::updateUserMembershipStatus($user);
 
                 Log::info('Stripe webhook: Updated membership status after subscription deletion', [
                     'user_id' => $user->id,
@@ -297,11 +300,11 @@ class StripeWebhookController extends CashierWebhookController
 
             if ($user) {
                 // Update membership status in case this payment qualifies them
-                UpdateUserMembershipStatus::run($user);
+                SubscriptionService::updateUserMembershipStatus($user);
                 // Allocate monthly credits if they're a sustaining member
                 // This is idempotent - won't double-allocate in same month
                 if ($user->hasRole('sustaining member')) {
-                    \CorvMC\Finance\Actions\MemberBenefits\AllocateUserMonthlyCredits::run($user);
+                    MemberBenefitService::allocateUserMonthlyCredits($user);
 
                     Log::info('Stripe webhook: Allocated monthly credits after invoice payment', [
                         'user_id' => $user->id,

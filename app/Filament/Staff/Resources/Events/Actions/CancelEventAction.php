@@ -2,7 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Events\Actions;
 
-use CorvMC\Events\Actions\CancelEvent;
+use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Enums\EventStatus;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -29,7 +29,7 @@ class CancelEventAction
             ->modalSubmitActionLabel('Cancel Event')
             ->modalCancelActionLabel('Dismiss')
             ->action(function ($record, array $data) {
-                CancelEvent::run($record, $data['reason'] ?? null);
+                EventService::cancel($record, $data['reason'] ?? null);
 
                 Notification::make()
                     ->title('Event Cancelled')

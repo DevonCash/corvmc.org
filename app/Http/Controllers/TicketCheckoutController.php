@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use CorvMC\Events\Actions\Tickets\CompleteTicketOrder;
+use CorvMC\Events\Facades\TicketService;
 use CorvMC\Events\Models\TicketOrder;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
@@ -44,13 +44,10 @@ class TicketCheckoutController extends Controller
 
             // Process the ticket order completion
             if ($session->payment_status === 'paid') {
-                CompleteTicketOrder::run((int) $orderId, $sessionId);
+                TicketService::completeOrder((int) $orderId, $sessionId);
 
-                // Send after-commit notification
+                // Notification will be handled by the service
                 $order = TicketOrder::find($orderId);
-                if ($order) {
-                    CompleteTicketOrder::make()->afterCommit($order);
-                }
 
                 Log::info('Ticket checkout success', [
                     'order_id' => $orderId,

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use CorvMC\SpaceManagement\Facades\ReservationService;
+use CorvMC\Finance\Facades\SubscriptionService;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -88,12 +90,12 @@ class CheckoutController extends Controller
             if ($session->payment_status === 'paid') {
                 // Process payment immediately for better UX
                 if ($checkoutType === 'practice_space_reservation') {
-                    \CorvMC\SpaceManagement\Actions\Reservations\ProcessReservationCheckout::run(
+                    ReservationService::processCheckout(
                         $metadata['reservation_id'] ?? null,
                         $sessionId
                     );
                 } elseif ($checkoutType === 'sliding_scale_membership') {
-                    \CorvMC\Finance\Actions\Subscriptions\ProcessSubscriptionCheckout::run(
+                    SubscriptionService::processCheckout(
                         $metadata['user_id'] ?? null,
                         $sessionId,
                         $metadata

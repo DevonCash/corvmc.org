@@ -2,7 +2,7 @@
 
 namespace CorvMC\Kiosk\Http\Controllers;
 
-use CorvMC\Events\Actions\Tickets\CreateDoorSale;
+use CorvMC\Events\Facades\TicketService;
 use CorvMC\Events\Enums\TicketOrderStatus;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\TicketOrder;
@@ -65,7 +65,7 @@ class DoorController extends Controller
         }
 
         try {
-            $order = CreateDoorSale::run(
+            $order = TicketService::createDoorSale(
                 event: $event,
                 quantity: $request->quantity,
                 paymentMethod: $request->payment_method,
@@ -191,7 +191,7 @@ class DoorController extends Controller
             }
 
             // Create the door sale
-            $order = CreateDoorSale::run(
+            $order = TicketService::createDoorSale(
                 event: $event,
                 quantity: $request->quantity,
                 paymentMethod: 'card',

@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Settings\ReservationSettings;
 use Brick\Money\Money;
 use Carbon\Carbon;
-use CorvMC\Finance\Actions\MemberBenefits\GetUserMonthlyFreeHours;
+use CorvMC\Finance\Facades\MemberBenefitService;
 use CorvMC\SpaceManagement\Services\ConflictData;
 use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\Finance\Enums\CreditType;
@@ -575,7 +575,7 @@ class ReservationService
         $currentBalance = $user->getCreditBalance(CreditType::FreeHours);
 
         // Get monthly allocation amount
-        $monthlyFreeHours = GetUserMonthlyFreeHours::run($user);
+        $monthlyFreeHours = MemberBenefitService::getUserMonthlyFreeHours($user);
         $monthlyBlockAllocation = Reservation::hoursToBlocks($monthlyFreeHours);
 
         // Find last allocation date to predict next allocations
@@ -873,7 +873,7 @@ class ReservationService
         $totalHours = $reservations->sum('hours_used');
         $totalPaid = $reservations->sum('cost');
 
-        $allocatedFreeHours = GetUserMonthlyFreeHours::run($user);
+        $allocatedFreeHours = MemberBenefitService::getUserMonthlyFreeHours($user);
 
         return new ReservationUsageData(
             month: $month->format('Y-m'),

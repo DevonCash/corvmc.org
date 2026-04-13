@@ -2,7 +2,7 @@
 
 namespace App\Filament\Band\Pages;
 
-use CorvMC\Membership\Actions\Bands\UpdateBand;
+use CorvMC\Membership\Facades\BandService;
 use App\Filament\Member\Resources\Bands\Schemas\BandForm;
 use CorvMC\Bands\Models\Band;
 use Filament\Facades\Filament;
@@ -58,7 +58,7 @@ class EditBandProfile extends Page implements HasForms
         $band = Filament::getTenant();
 
         $data = $this->form->getState();
-        UpdateBand::run($band, $data);
+        BandService::updateBand($band, $data);
 
         Notification::make()
             ->success()

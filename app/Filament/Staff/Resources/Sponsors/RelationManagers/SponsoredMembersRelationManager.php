@@ -5,6 +5,7 @@ namespace App\Filament\Staff\Resources\Sponsors\RelationManagers;
 use CorvMC\Sponsorship\Actions\AssignSponsoredMembership;
 use CorvMC\Sponsorship\Actions\RevokeSponsoredMembership;
 use App\Models\User;
+use CorvMC\Sponsorship\Facades\SponsorshipService;
 use Filament\Actions\AttachAction;
 use Filament\Actions\DetachAction;
 use Filament\Forms\Components\Select;
@@ -44,7 +45,7 @@ class SponsoredMembersRelationManager extends RelationManager
                     ->color('primary')
                     ->icon('tabler-user-plus')
                     ->recordSelect(
-                        fn (Select $select) => $select
+                        fn(Select $select) => $select
                             ->label('CMC Member')
                             ->placeholder('Search for a member...')
                             ->getSearchResultsUsing(function (string $search): array {
@@ -57,11 +58,11 @@ class SponsoredMembersRelationManager extends RelationManager
                                     })
                                     ->limit(50)
                                     ->get()
-                                    ->mapWithKeys(fn ($user) => [$user->id => "{$user->name} ({$user->email})"])
+                                    ->mapWithKeys(fn($user) => [$user->id => "{$user->name} ({$user->email})"])
                                     ->toArray();
                             })
                             ->getOptionLabelUsing(
-                                fn ($value): ?string => ($user = User::find($value)) ? "{$user->name} ({$user->email})" : null
+                                fn($value): ?string => ($user = User::find($value)) ? "{$user->name} ({$user->email})" : null
                             )
                             ->searchable()
                             ->required()
@@ -71,7 +72,7 @@ class SponsoredMembersRelationManager extends RelationManager
                         $user = User::find($data['recordId']);
 
                         try {
-                            AssignSponsoredMembership::run($sponsor, $user);
+                            SponsorshipService::assignMembership($sponsor, $user);
 
                             Notification::make()
                                 ->title('Sponsored member added')
@@ -102,7 +103,7 @@ class SponsoredMembersRelationManager extends RelationManager
                         $sponsor = $this->ownerRecord;
 
                         try {
-                            RevokeSponsoredMembership::run($sponsor, $record);
+                            SponsorshipService::revokeMembership($sponsor, $record);
                         } catch (\Exception $e) {
                             Notification::make()
                                 ->title('Failed to revoke sponsored membership')

@@ -14,6 +14,7 @@ use CorvMC\Events\Models\Venue;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Carbon\Carbon;
+use CorvMC\Events\Facades\EventService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
 
@@ -141,7 +142,7 @@ describe('Event Cache Invalidation', function () {
         // Act: Create event
         $startTime = $eventDate->copy()->setHour(19)->setMinute(0)->setSecond(0);
 
-        CreateEvent::run([
+        EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -161,7 +162,7 @@ describe('Event Cache Invalidation', function () {
         // Act: Create event
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
 
-        CreateEvent::run([
+        EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -181,7 +182,7 @@ describe('Event Cache Invalidation', function () {
 
         $startTime = $originalDate->copy()->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,
@@ -211,7 +212,7 @@ describe('Event Cache Invalidation', function () {
         $eventDate = Carbon::now()->addDays(10);
         $startTime = $eventDate->copy()->setHour(19)->setMinute(0)->setSecond(0);
 
-        $event = CreateEvent::run([
+        $event = EventService::create([
             'title' => 'Test Concert',
             'description' => 'A test event',
             'start_datetime' => $startTime,

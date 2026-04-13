@@ -3,6 +3,7 @@
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Events\Actions\CreateEvent;
+use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
 use CorvMC\Moderation\Enums\Visibility;
@@ -27,7 +28,7 @@ beforeEach(function () {
     $this->createEvent = function (array $attributes = []) {
         $startDatetime = Carbon::now()->addDays(7)->setHour(19)->setMinute(0)->setSecond(0);
 
-        return CreateEvent::run(array_merge([
+        return EventService::create(array_merge([
             'title' => 'Test Event',
             'start_datetime' => $startDatetime,
             'end_datetime' => $startDatetime->copy()->addHours(3),

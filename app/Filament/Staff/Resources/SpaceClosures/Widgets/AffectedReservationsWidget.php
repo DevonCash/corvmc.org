@@ -5,6 +5,7 @@ namespace App\Filament\Staff\Resources\SpaceClosures\Widgets;
 use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
 use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Models\SpaceClosure;
 use Filament\Actions\Action;
@@ -59,7 +60,7 @@ class AffectedReservationsWidget extends BaseWidget
                     ->visible(fn (Reservation $record) => $record->status->isActive())
                     ->action(function (Reservation $record) use ($closure) {
                         if ($closure) {
-                            CancelReservation::run($record, "Space closure: {$closure->type->getLabel()}");
+                            ReservationService::cancelReservation($record, "Space closure: {$closure->type->getLabel()}");
 
                             Notification::make()
                                 ->title('Reservation cancelled')
@@ -86,7 +87,7 @@ class AffectedReservationsWidget extends BaseWidget
 
                             foreach ($records as $record) {
                                 if ($record->status->isActive()) {
-                                    CancelReservation::run($record, "Space closure: {$closure->type->getLabel()}");
+                                    ReservationService::cancel($record, "Space closure: {$closure->type->getLabel()}");
                                     $count++;
                                 }
                             }

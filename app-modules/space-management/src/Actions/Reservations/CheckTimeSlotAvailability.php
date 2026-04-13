@@ -3,6 +3,7 @@
 namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use Carbon\Carbon;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 
 class CheckTimeSlotAvailability
 {
@@ -16,7 +17,7 @@ class CheckTimeSlotAvailability
             return false;
         }
 
-        $conflicts = GetAllConflicts::run($startTime, $endTime, $excludeReservationId);
+        $conflicts = ReservationService::checkForConflicts($startTime, $endTime, $excludeReservationId);
 
         return $conflicts['reservations']->isEmpty()
             && $conflicts['productions']->isEmpty()

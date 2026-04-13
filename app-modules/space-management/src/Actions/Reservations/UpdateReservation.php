@@ -4,6 +4,7 @@ namespace CorvMC\SpaceManagement\Actions\Reservations;
 
 use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\SpaceManagement\Events\ReservationUpdated;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Carbon\Carbon;
@@ -32,7 +33,7 @@ class UpdateReservation
 
         // Only validate for rehearsal reservations
         if ($reservation instanceof RehearsalReservation) {
-            $errors = ValidateReservation::run($reservation->getResponsibleUser(), $startTime, $endTime, $reservation->id);
+            $errors = ReservationService::validateReservation($reservation->getResponsibleUser(), $startTime, $endTime, $reservation->id);
 
             if (! empty($errors)) {
                 throw new \InvalidArgumentException('Validation failed: '.implode(' ', $errors));

@@ -4,9 +4,7 @@ namespace CorvMC\Moderation\Concerns;
 
 use CorvMC\Moderation\Models\Report;
 use App\Models\User;
-use CorvMC\Moderation\Actions\Trust\AwardSuccessfulContent;
-use CorvMC\Moderation\Actions\Trust\DetermineApprovalWorkflow;
-use CorvMC\Moderation\Actions\Trust\PenalizeViolation;
+use CorvMC\Moderation\Facades\TrustService;
 
 trait Reportable
 {
@@ -168,7 +166,7 @@ trait Reportable
             ];
         }
 
-        return DetermineApprovalWorkflow::run($creator, $this->getTrustContentType());
+        return TrustService::determineApprovalWorkflow($creator, $this->getTrustContentType());
     }
 
     /**
@@ -181,7 +179,7 @@ trait Reportable
             return;
         }
 
-        AwardSuccessfulContent::run($creator, $this, $this->getTrustContentType());
+        TrustService::awardSuccessfulContent($creator, $this, $this->getTrustContentType());
     }
 
     /**
@@ -194,7 +192,7 @@ trait Reportable
             return;
         }
 
-        PenalizeViolation::run($creator, $violationType, $this->getTrustContentType(), null, $reason);
+        TrustService::penalizeViolation($creator, $violationType, $this->getTrustContentType(), null, $reason);
     }
 
     /**

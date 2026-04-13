@@ -4,6 +4,7 @@ use App\Models\User;
 use CorvMC\Membership\Events\MemberProfileCreated;
 use CorvMC\Membership\Events\MemberProfileDeleted;
 use CorvMC\Membership\Events\MemberProfileUpdated;
+use CorvMC\Membership\Facades\MemberProfileService;
 use CorvMC\Membership\Models\MemberProfile;
 use Spatie\Activitylog\Models\Activity;
 
@@ -76,7 +77,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        $profile = \CorvMC\Membership\Actions\MemberProfiles\CreateMemberProfile::run([
+        $profile = MemberProfileService::create([
             'user_id' => $user->id,
             'bio' => 'Hello world',
         ]);
@@ -100,7 +101,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        \CorvMC\Membership\Actions\MemberProfiles\UpdateMemberProfile::run($profile, ['bio' => 'New bio']);
+        MemberProfileService::update($profile, ['bio' => 'New bio']);
 
         $logs = Activity::where('subject_type', 'member_profile')
             ->where('subject_id', $profile->id)

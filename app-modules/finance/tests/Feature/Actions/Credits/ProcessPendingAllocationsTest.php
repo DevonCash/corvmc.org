@@ -1,9 +1,9 @@
 <?php
 
-use CorvMC\Finance\Actions\Credits\ProcessPendingAllocations;
 use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Models\CreditAllocation;
 use App\Models\User;
+use CorvMC\Finance\Facades\CreditService;
 
 it('processes pending monthly allocations', function () {
     $user = User::factory()->create();
@@ -20,7 +20,7 @@ it('processes pending monthly allocations', function () {
         'next_allocation_at' => now()->subDay(),
     ]);
 
-    ProcessPendingAllocations::run();
+    CreditService::processPendingAllocations();
 
     expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16)
         ->and($allocation->fresh()->last_allocated_at)->not->toBeNull();
@@ -40,7 +40,7 @@ it('skips allocations not yet due', function () {
         'next_allocation_at' => now()->addDay(), // Tomorrow
     ]);
 
-    ProcessPendingAllocations::run();
+    CreditService::processPendingAllocations();
 
     expect($user->getCreditBalance(CreditType::FreeHours))->toBe(0)
         ->and($allocation->fresh()->last_allocated_at)->toBeNull();
@@ -60,7 +60,7 @@ it('skips inactive allocations', function () {
         'next_allocation_at' => now()->subDay(),
     ]);
 
-    ProcessPendingAllocations::run();
+    CreditService::processPendingAllocations();
 
     expect($user->getCreditBalance(CreditType::FreeHours))->toBe(0);
 });
@@ -80,7 +80,7 @@ it('updates next_allocation_at for monthly frequency', function () {
         'next_allocation_at' => $originalNextDate,
     ]);
 
-    ProcessPendingAllocations::run();
+    CreditService::processPendingAllocations();
 
     $allocation->refresh();
 
@@ -103,7 +103,7 @@ it('updates next_allocation_at for weekly frequency', function () {
         'next_allocation_at' => $originalNextDate,
     ]);
 
-    ProcessPendingAllocations::run();
+    CreditService::processPendingAllocations();
 
     $allocation->refresh();
 
@@ -128,7 +128,7 @@ it('handles one_time frequency by setting far future date', function () {
         'next_allocation_at' => now()->subDay(),
     ]);
 
-    ProcessPendingAllocations::run();
+    CreditService::processPendingAllocations();
 
     $allocation->refresh();
 
@@ -162,7 +162,7 @@ it('processes multiple pending allocations', function () {
         'next_allocation_at' => now()->subHour(),
     ]);
 
-    ProcessPendingAllocations::run();
+    CreditService::processPendingAllocations();
 
     expect($user1->getCreditBalance(CreditType::FreeHours))->toBe(16)
         ->and($user2->getCreditBalance(CreditType::EquipmentCredits))->toBe(10);
@@ -182,7 +182,7 @@ it('processes allocation with different credit types', function () {
         'next_allocation_at' => now()->subDay(),
     ]);
 
-    ProcessPendingAllocations::run();
+    CreditService::processPendingAllocations();
 
     expect($user->getCreditBalance(CreditType::EquipmentCredits))->toBe(5)
         ->and($user->getCreditBalance(CreditType::FreeHours))->toBe(0);
@@ -203,7 +203,7 @@ it('uses AllocateMonthlyCredits action internally', function () {
         'next_allocation_at' => now()->subDay(),
     ]);
 
-    ProcessPendingAllocations::run();
+    CreditService::processPendingAllocations();
 
     // Check that transaction was created with proper source
     $transaction = $user->creditTransactions()
@@ -229,7 +229,7 @@ it('wraps allocation in database transaction', function () {
         'next_allocation_at' => now()->subDay(),
     ]);
 
-    ProcessPendingAllocations::run();
+    CreditService::processPendingAllocations();
 
     // If transaction works correctly, both credit and allocation update should succeed
     $allocation->refresh();
@@ -240,7 +240,7 @@ it('wraps allocation in database transaction', function () {
 
 it('returns early when no pending allocations exist', function () {
     // No allocations in database
-    ProcessPendingAllocations::run();
+    CreditService::processPendingAllocations();
 
     // Should complete without errors
     expect(true)->toBeTrue();
@@ -261,7 +261,7 @@ it('handles allocations exactly at next_allocation_at time', function () {
         'next_allocation_at' => $exactTime,
     ]);
 
-    ProcessPendingAllocations::run();
+    CreditService::processPendingAllocations();
 
     expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
 });

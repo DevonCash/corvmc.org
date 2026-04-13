@@ -2,7 +2,8 @@
 
 namespace App\Filament\Member\Resources\Reservations\Pages;
 
-use CorvMC\SpaceManagement\Actions\Reservations\CreateCheckoutSession;
+use CorvMC\SpaceManagement\Data\CreateReservationData;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use App\Filament\Member\Resources\Reservations\ReservationResource;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Carbon\Carbon;
@@ -22,17 +23,15 @@ class CreateReservation extends CreateRecord
         $startTime = Carbon::parse($data['reserved_at']);
         $endTime = Carbon::parse($data['reserved_until']);
 
-        return \CorvMC\SpaceManagement\Actions\Reservations\CreateReservation::run(
-            $user,
-            $startTime,
-            $endTime,
-            [
-                'notes' => $data['notes'] ?? null,
-                'status' => $data['status'] ?? null,
-                'is_recurring' => $data['is_recurring'] ?? false,
-                'recurrence_pattern' => $data['recurrence_pattern'] ?? null,
-            ]
-        );
+        return ReservationService::create(new CreateReservationData([
+            'user' => $user,
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+            'notes' => $data['notes'] ?? null,
+            'status' => $data['status'] ?? null,
+            'is_recurring' => $data['is_recurring'] ?? false,
+            'recurrence_pattern' => $data['recurrence_pattern'] ?? null,
+        ]));
     }
 
     protected function afterCreate(): void
@@ -45,7 +44,7 @@ class CreateReservation extends CreateRecord
 
         if ($shouldCheckout) {
             try {
-                $session = CreateCheckoutSession::run($record);
+                $session = ReservationService::createCheckoutSession($record);
 
                 // Store the redirect URL in session to use after the page redirects
                 session()->put('stripe_checkout_url', $session->url);

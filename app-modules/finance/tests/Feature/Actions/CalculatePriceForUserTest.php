@@ -2,9 +2,9 @@
 
 use CorvMC\Finance\Enums\CreditType;
 use App\Models\User;
-use CorvMC\Finance\Actions\Pricing\CalculatePriceForUser;
 use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\Finance\Data\PriceCalculationData;
+use CorvMC\Finance\Facades\PricingService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Illuminate\Support\Facades\Notification;
 
@@ -32,7 +32,7 @@ describe('CalculatePriceForUser Action', function () {
 
         $chargeable = createMockChargeable($user, 2.0);
 
-        $result = CalculatePriceForUser::run($chargeable, $user);
+        $result = PricingService::calculatePriceForUser($chargeable, $user);
 
         expect($result)->toBeInstanceOf(PriceCalculationData::class);
         expect($result->amount)->toBe(3000); // $30 for 2 hours
@@ -52,7 +52,7 @@ describe('CalculatePriceForUser Action', function () {
 
         $chargeable = createMockChargeable($user, 2.0);
 
-        $result = CalculatePriceForUser::run($chargeable, $user);
+        $result = PricingService::calculatePriceForUser($chargeable, $user);
 
         expect($result->amount)->toBe(3000); // Gross: $30 for 2 hours
         expect($result->net_amount)->toBe(0); // Fully covered by credits
@@ -68,7 +68,7 @@ describe('CalculatePriceForUser Action', function () {
 
         $chargeable = createMockChargeable($user, 2.0);
 
-        $result = CalculatePriceForUser::run($chargeable, $user);
+        $result = PricingService::calculatePriceForUser($chargeable, $user);
 
         expect($result->amount)->toBe(3000); // Gross: $30 for 2 hours
         expect($result->net_amount)->toBe(1500); // $15 remaining after 1 hour credit
@@ -84,7 +84,7 @@ describe('CalculatePriceForUser Action', function () {
 
         $chargeable = createMockChargeable($user, 1.0);
 
-        $result = CalculatePriceForUser::run($chargeable, $user);
+        $result = PricingService::calculatePriceForUser($chargeable, $user);
 
         expect($result->amount)->toBe(1500); // Gross: $15 for 1 hour
         expect($result->net_amount)->toBe(0); // Fully covered
@@ -100,7 +100,7 @@ describe('CalculatePriceForUser Action', function () {
 
         $chargeable = createMockChargeable($user, 2.0);
 
-        $result = (new CalculatePriceForUser)->withoutCredits($chargeable);
+        $result = PricingService::calculatePriceWithoutCredits($chargeable);
 
         expect($result->amount)->toBe(3000);
         expect($result->net_amount)->toBe(3000); // No credits applied
@@ -112,7 +112,7 @@ describe('CalculatePriceForUser Action', function () {
         $user = User::factory()->create();
         $chargeable = createMockChargeable($user, 2.0);
 
-        $result = CalculatePriceForUser::run($chargeable, $user);
+        $result = PricingService::calculatePriceForUser($chargeable, $user);
 
         $amountMoney = $result->getAmountAsMoney();
         expect($amountMoney->getAmount()->toFloat())->toBe(30.0);
@@ -129,7 +129,7 @@ describe('CalculatePriceForUser Action', function () {
 
         $chargeable = createMockChargeable($user, 2.0);
 
-        $result = CalculatePriceForUser::run($chargeable, $user);
+        $result = PricingService::calculatePriceForUser($chargeable, $user);
 
         $savings = $result->getCreditSavings();
         expect($savings->getMinorAmount()->toInt())->toBe(1500); // $15 saved (1 hour worth)
@@ -141,7 +141,7 @@ describe('CalculatePriceForUser Action', function () {
 
         $chargeable = createMockChargeable($user, 2.0);
 
-        $result = CalculatePriceForUser::run($chargeable, $user);
+        $result = PricingService::calculatePriceForUser($chargeable, $user);
 
         expect($result->requiresPayment())->toBeTrue();
         expect($result->hasCreditsApplied())->toBeTrue();
@@ -154,7 +154,7 @@ describe('CalculatePriceForUser Action', function () {
 
         $chargeable = createMockChargeable($user, 2.0);
 
-        $result = CalculatePriceForUser::run($chargeable, $user);
+        $result = PricingService::calculatePriceForUser($chargeable, $user);
 
         expect($result->requiresPayment())->toBeFalse();
     });

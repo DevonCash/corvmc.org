@@ -133,7 +133,7 @@ class ManageOrganizationSettings extends Page implements HasForms
                             ->label('Enable Equipment Rental Features')
                             ->helperText('When enabled, members can checkout and return equipment through the system. When disabled, only the equipment catalog view is available.')
                             ->default(false)
-                            ->visible(fn (callable $get) => $get('enable_equipment_features')),
+                            ->visible(fn(callable $get) => $get('enable_equipment_features')),
 
                         Forms\Components\Toggle::make('enable_community_calendar')
                             ->label('Enable Community Calendar')
@@ -154,13 +154,13 @@ class ManageOrganizationSettings extends Page implements HasForms
                             ->label('Google Calendar ID')
                             ->helperText('The ID of the Google Calendar to sync to (e.g., your-calendar@group.calendar.google.com)')
                             ->placeholder('calendar-id@group.calendar.google.com')
-                            ->visible(fn (callable $get) => $get('enable_google_calendar_sync'))
-                            ->required(fn (callable $get) => $get('enable_google_calendar_sync')),
+                            ->visible(fn(callable $get) => $get('enable_google_calendar_sync'))
+                            ->required(fn(callable $get) => $get('enable_google_calendar_sync')),
 
                         Forms\Components\Placeholder::make('service_account_info')
                             ->label('Service Account Setup')
                             ->content('Place your Google service account JSON key file at: storage/app/google-calendar-service-account.json. Set the path in your .env file: GOOGLE_CALENDAR_CREDENTIALS_PATH')
-                            ->visible(fn (callable $get) => $get('enable_google_calendar_sync')),
+                            ->visible(fn(callable $get) => $get('enable_google_calendar_sync')),
                     ]),
 
                 Section::make('Reservation Settings')
@@ -309,42 +309,6 @@ class ManageOrganizationSettings extends Page implements HasForms
             Action::make('save')
                 ->label('Save changes')
                 ->submit('save'),
-        ];
-    }
-
-    protected function getHeaderActions(): array
-    {
-        $googleCalendarSettings = app(GoogleCalendarSettings::class);
-
-        if (! $googleCalendarSettings->enable_google_calendar_sync) {
-            return [];
-        }
-
-        return [
-            Action::make('bulkSyncGoogleCalendar')
-                ->label('Sync All Reservations')
-                ->icon('heroicon-o-arrow-path')
-                ->requiresConfirmation()
-                ->modalHeading('Sync All Reservations to Google Calendar')
-                ->modalDescription('This will sync all future/current non-cancelled reservations to Google Calendar. Reservations already synced will be skipped.')
-                ->modalSubmitActionLabel('Sync Now')
-                ->action(function () {
-                    $result = BulkSyncReservationsToGoogleCalendar::run();
-
-                    if ($result['success']) {
-                        Notification::make()
-                            ->success()
-                            ->title('Bulk sync completed')
-                            ->body("{$result['synced']} reservations synced, {$result['failed']} failed, {$result['skipped']} skipped")
-                            ->send();
-                    } else {
-                        Notification::make()
-                            ->danger()
-                            ->title('Bulk sync failed')
-                            ->body($result['message'])
-                            ->send();
-                    }
-                }),
         ];
     }
 

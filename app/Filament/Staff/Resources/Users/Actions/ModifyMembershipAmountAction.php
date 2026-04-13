@@ -4,6 +4,8 @@ namespace App\Filament\Staff\Resources\Users\Actions;
 
 use App\Models\User;
 use Brick\Money\Money;
+use CorvMC\Finance\Facades\PaymentService;
+use CorvMC\Finance\Facades\SubscriptionService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Slider;
 use Filament\Forms\Components\Slider\Enums\PipsMode;
@@ -54,7 +56,7 @@ class ModifyMembershipAmountAction
                     ->helperText(function ($get) {
                         $amount = Money::of($get('amount'), 'USD');
                         if (! $amount->isZero()) {
-                            $feeInfo = \CorvMC\Finance\Actions\Payments\GetFeeDisplayInfo::run($amount);
+                            $feeInfo = PaymentService::getFeeDisplayInfo($amount);
 
                             return $feeInfo['message'];
                         }
@@ -82,7 +84,7 @@ class ModifyMembershipAmountAction
                             return 'Please select a contribution amount';
                         }
 
-                        $breakdown = \CorvMC\Finance\Actions\Payments\GetFeeBreakdown::run($amount, $get('cover_fees'));
+                        $breakdown = PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
                         $totalAmount = Money::of($breakdown['total_amount'], 'USD');
 
                         return $breakdown['description'].' = '.$totalAmount->formatTo('en_US').' total per month';
@@ -94,7 +96,7 @@ class ModifyMembershipAmountAction
             ->action(function (array $data) {
                 $baseAmount = Money::of($data['amount'], 'USD');
 
-                \CorvMC\Finance\Actions\Subscriptions\UpdateSubscriptionAmount::run(User::me(), $baseAmount, $data['cover_fees']);
+                SubscriptionService::update(User::me(), $baseAmount, $data['cover_fees']);
                 \Filament\Notifications\Notification::make()
                     ->title('Membership Updated')
                     ->success()

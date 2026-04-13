@@ -6,6 +6,7 @@ use CorvMC\SpaceManagement\Actions\Reservations\UpdateReservation;
 use App\Filament\Member\Resources\Reservations\ReservationResource;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationEditForm;
 use Carbon\Carbon;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
@@ -45,15 +46,15 @@ class EditReservation extends EditRecord
     {
         /** @var \CorvMC\SpaceManagement\Models\Reservation $record */
         // Combine date and time fields in the app's timezone
-        $startTime = Carbon::parse($data['reservation_date'].' '.$data['start_time'], config('app.timezone'));
-        $endTime = Carbon::parse($data['reservation_date'].' '.$data['end_time'], config('app.timezone'));
+        $startTime = Carbon::parse($data['reservation_date'] . ' ' . $data['start_time'], config('app.timezone'));
+        $endTime = Carbon::parse($data['reservation_date'] . ' ' . $data['end_time'], config('app.timezone'));
 
         $options = [
             'notes' => $data['notes'] ?? null,
             'status' => $data['status'] ?? $record->status,
         ];
 
-        return UpdateReservation::run($record, $startTime, $endTime, $options);
+        return ReservationService::updateReservation($record, $startTime, $endTime, $options);
     }
 
     protected function getHeaderActions(): array
