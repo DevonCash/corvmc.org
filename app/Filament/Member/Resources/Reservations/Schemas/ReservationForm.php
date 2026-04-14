@@ -4,6 +4,7 @@ namespace App\Filament\Member\Resources\Reservations\Schemas;
 
 use App\Models\User;
 use CorvMC\SpaceManagement\Facades\ReservationService;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Carbon\Carbon;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
@@ -415,7 +416,7 @@ class ReservationForm
             return;
         }
 
-        $status = ReservationService::determineReservationStatus(
+        $status = RehearsalReservation::determineStatusForDate(
             Carbon::parse($date),
             (bool) $isRecurring
         );

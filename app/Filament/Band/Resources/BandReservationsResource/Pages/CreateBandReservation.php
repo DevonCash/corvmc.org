@@ -192,7 +192,7 @@ class CreateBandReservation extends CreateRecord
             return;
         }
 
-        $status = ReservationService::determineReservationStatus(Carbon::parse($date), false);
+        $status = RehearsalReservation::determineStatusForDate(Carbon::parse($date), false);
         $set('status', $status);
     }
 

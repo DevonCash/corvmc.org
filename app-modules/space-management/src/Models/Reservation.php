@@ -3,7 +3,9 @@
 namespace CorvMC\SpaceManagement\Models;
 
 use App\Models\User;
+use Carbon\Carbon;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\States\ReservationState;
 use CorvMC\Support\Concerns\HasRecurringSeries;
 use CorvMC\Support\Concerns\HasTimePeriod;
 use Filament\Support\Contracts\HasColor;
@@ -18,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Spatie\Activitylog\Models\Activity;
+use Spatie\ModelStates\HasStates;
 
 /**
  * Base class for all reservation types using Single Table Inheritance.
@@ -62,7 +65,7 @@ use Spatie\Activitylog\Models\Activity;
  */
 class Reservation extends Model implements HasColor, HasIcon, HasLabel
 {
-    use HasRecurringSeries, HasTimePeriod;
+    use HasRecurringSeries, HasTimePeriod, HasStates;
 
     protected $table = 'reservations';
 
@@ -73,7 +76,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     protected function casts(): array
     {
         return [
-            'status' => ReservationStatus::class,
+            'status' => ReservationState::class,
             'reserved_at' => 'datetime',
             'reserved_until' => 'datetime',
             'hours_used' => 'decimal:2',
@@ -114,6 +117,11 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
                 $builder->where('type', (new static)->getMorphClass());
             });
         }
+
+        // Add global scope to exclude cancelled reservations by default
+        static::addGlobalScope('active', function (Builder $builder) {
+            $builder->whereNotIn('status', [ReservationStatus::Cancelled]);
+        });
     }
 
     /**
@@ -182,6 +190,102 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     public function charge(): MorphOne
     {
         return $this->morphOne(Charge::class, 'chargeable');
+    }
+
+    /**
+     * Query scope: Get active reservations that overlap with a given time period.
+     * Useful for finding reservations affected by closures or other events.
+     *
+     * @param Builder $query
+     * @param Carbon $startsAt
+     * @param Carbon $endsAt
+     * @return Builder
+     */
+    public function scopeAffectedByClosure(Builder $query, Carbon $startsAt, Carbon $endsAt): Builder
+    {
+        return $query->with(['reservable', 'user'])
+            ->where('reserved_until', '>', $startsAt)
+            ->where('reserved_at', '<', $endsAt)
+            ->orderBy('reserved_at');
+    }
+
+    /**
+     * Query scope: Get upcoming reservations within a specified number of days.
+     *
+     * @param Builder $query
+     * @param int $days Number of days to look ahead (default: 7)
+     * @return Builder
+     */
+    public function scopeUpcoming(Builder $query, int $days = 7): Builder
+    {
+        return $query->with(['reservable', 'charge'])
+            ->where('reserved_at', '>=', now())
+            ->where('reserved_at', '<=', now()->addDays($days))
+            ->orderBy('reserved_at');
+    }
+
+    /**
+     * Query scope: Get reservations for a specific user.
+     * Note: This uses the 'reservable' polymorphic relationship.
+     *
+     * @param Builder $query
+     * @param User $user
+     * @param string|null $status Optional status filter
+     * @return Builder
+     */
+    public function scopeForUser(Builder $query, User $user, ?string $status = null): Builder
+    {
+        $query = $query->where(function ($q) use ($user) {
+            $q->where(function ($subQ) use ($user) {
+                $subQ->where('reservable_type', User::class)
+                     ->where('reservable_id', $user->id);
+            });
+            // Could add other conditions here if needed
+        });
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        return $query->with(['reservable', 'charge'])
+            ->orderBy('reserved_at', 'desc');
+    }
+
+
+    /**
+     * Query scope: Get reservations within a time range.
+     * Returns reservations that have any overlap with the given range.
+     *
+     * @param Builder $query
+     * @param Carbon $start
+     * @param Carbon $end
+     * @return Builder
+     */
+    public function scopeInRange(Builder $query, Carbon $start, Carbon $end): Builder
+    {
+        return $query->where('reserved_until', '>', $start)
+                     ->where('reserved_at', '<', $end);
+    }
+
+    /**
+     * Query scope: Get reservations that overlap with a given period.
+     * Includes partial overlaps.
+     *
+     * @param Builder $query
+     * @param Carbon $from
+     * @param Carbon $to
+     * @return Builder
+     */
+    public function scopeOverlappingPeriod(Builder $query, Carbon $from, Carbon $to): Builder
+    {
+        return $query->where(function ($query) use ($from, $to) {
+            $query->whereBetween('reserved_at', [$from, $to])
+                ->orWhereBetween('reserved_until', [$from, $to])
+                ->orWhere(function ($q) use ($from, $to) {
+                    $q->where('reserved_at', '<=', $from)
+                        ->where('reserved_until', '>=', $to);
+                });
+        });
     }
 
     /**
@@ -372,5 +476,155 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         return ! $user->rehearsals()
             ->where('id', '!=', $this->id)
             ->exists();
+    }
+
+    /**
+     * Update reservation from data.
+     * Handles validation and recalculation of duration.
+     */
+    public function updateFromData(\CorvMC\SpaceManagement\Data\UpdateReservationData $data): self
+    {
+        $updates = [];
+
+        // Check for time changes
+        if (!$data->startTime instanceof \Spatie\LaravelData\Optional) {
+            $updates['reserved_at'] = $data->startTime;
+        }
+
+        if (!$data->endTime instanceof \Spatie\LaravelData\Optional) {
+            $updates['reserved_until'] = $data->endTime;
+        }
+
+        // If times are changing, validate and recalculate duration
+        if (isset($updates['reserved_at']) || isset($updates['reserved_until'])) {
+            $startTime = $updates['reserved_at'] ?? $this->reserved_at;
+            $endTime = $updates['reserved_until'] ?? $this->reserved_until;
+
+            if (!$data->skipConflictCheck) {
+                app(\CorvMC\SpaceManagement\Services\ReservationService::class)->validate($startTime, $endTime, [
+                    'user' => $this->getResponsibleUser(),
+                    'excludeId' => $this->id,
+                    'throwOnFailure' => true,
+                ]);
+            }
+
+            // Recalculate duration
+            $updates['hours_used'] = $startTime->diffInMinutes($endTime) / 60;
+        }
+
+        if (!$data->notes instanceof \Spatie\LaravelData\Optional) {
+            $updates['notes'] = $data->notes;
+        }
+
+        if (!$data->status instanceof \Spatie\LaravelData\Optional) {
+            $updates['status'] = $data->status;
+        }
+
+        if (!empty($updates)) {
+            $this->update($updates);
+        }
+
+        return $this->fresh();
+    }
+
+    /**
+     * Check if this reservation can be confirmed.
+     * Returns array with 'can_confirm' boolean and optional 'reason' string.
+     */
+    public function checkConfirmationReadiness(): array
+    {
+        // Only RehearsalReservations can be confirmed
+        if (!$this instanceof RehearsalReservation) {
+            return [
+                'can_confirm' => false,
+                'reason' => 'Only rehearsal reservations can be confirmed',
+            ];
+        }
+
+        // Must be in a confirmable status
+        if (!in_array($this->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
+            return [
+                'can_confirm' => false,
+                'reason' => 'Reservation is already ' . $this->status->value,
+            ];
+        }
+
+        // Business rule: Can't confirm more than 5 days in advance
+        $daysUntilReservation = now()->diffInDays($this->reserved_at, false);
+        if ($daysUntilReservation > 5) {
+            return [
+                'can_confirm' => false,
+                'reason' => "Cannot confirm more than 5 days in advance. Please wait " . ($daysUntilReservation - 5) . " more days.",
+            ];
+        }
+
+        return ['can_confirm' => true];
+    }
+
+    /**
+     * Check if this reservation needs a confirmation reminder.
+     */
+    public function needsConfirmationReminder(): bool
+    {
+        // Only scheduled reservations need reminders
+        if ($this->status !== ReservationStatus::Scheduled) {
+            return false;
+        }
+        
+        // Check if it's within the reminder window (e.g., 2 days before)
+        $reminderDate = $this->getConfirmationReminderDate();
+        return now()->isAfter($reminderDate);
+    }
+
+    /**
+     * Get the date when confirmation reminder should be sent.
+     */
+    public function getConfirmationReminderDate(): Carbon
+    {
+        // Send reminder 2 days before the reservation
+        return $this->reserved_at->copy()->subDays(2)->startOfDay();
+    }
+
+    /**
+     * Cancel the reservation with an optional reason.
+     *
+     * @param string|null $reason Cancellation reason
+     * @return $this
+     */
+    public function cancel(?string $reason = null): self
+    {
+        // Transition to cancelled state, passing reason to transition
+        $this->status->transitionTo(
+            \CorvMC\SpaceManagement\States\ReservationState\Cancelled::class,
+            ['reason' => $reason]
+        );
+
+        return $this->fresh();
+    }
+
+    /**
+     * Confirm the reservation.
+     *
+     * @return $this
+     */
+    public function confirm(): self
+    {
+        // Transition to confirmed state
+        $this->status->transitionTo(\CorvMC\SpaceManagement\States\ReservationState\Confirmed::class);
+
+        return $this->fresh();
+    }
+
+    /**
+     * Mark the reservation as complete.
+     *
+     * @return $this
+     */
+    public function complete(): self
+    {
+        // Transition to completed state
+        $this->status->transitionTo(\CorvMC\SpaceManagement\States\ReservationState\Completed::class);
+
+        return $this->fresh();
     }
 }

@@ -10,10 +10,12 @@ use CorvMC\SpaceManagement\Data\CreateReservationData;
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Database\Factories\RehearsalReservationFactory;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\States\ReservationState;
 use CorvMC\Support\Contracts\Recurrable;
 use CorvMC\Support\Models\RecurringSeries;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\ModelStates\HasStates;
 
 /**
  * Represents a practice space reservation made by an individual user.
@@ -22,7 +24,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $deleted_at
- * @property \CorvMC\SpaceManagement\Enums\ReservationStatus $status
+ * @property \CorvMC\SpaceManagement\States\ReservationState $status
  * @property numeric $hours_used
  * @property numeric $free_hours_used
  * @property bool $is_recurring
@@ -43,7 +45,103 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  */
 class RehearsalReservation extends Reservation implements Chargeable, Recurrable
 {
-    use HasCharges, HasFactory;
+    use HasCharges, HasFactory, HasStates;
+    
+    /**
+     * Determine the initial status for a new reservation based on the user's role.
+     */
+    public static function determineInitialStatus(User $user): ReservationStatus
+    {
+        if ($user->hasRole(['admin', 'staff', 'practice space manager'])) {
+            return ReservationStatus::Confirmed;
+        }
+
+        if ($user->hasRole('sustaining member')) {
+            return ReservationStatus::Scheduled;
+        }
+
+        return ReservationStatus::Reserved;
+    }
+
+    /**
+     * Determine the initial status for a reservation based on date and business rules.
+     * Used by forms before a reservation is created.
+     */
+    public static function determineStatusForDate(Carbon $reservationDate, bool $isRecurring = false): string
+    {
+        // Recurring reservations always need manual approval
+        if ($isRecurring) {
+            return 'pending';
+        }
+
+        // Reservations more than a week away need confirmation reminder
+        if ($reservationDate->isAfter(Carbon::now()->addWeek())) {
+            return 'pending';
+        }
+
+        // Near-term reservations are immediately confirmed
+        return 'confirmed';
+    }
+
+    /**
+     * Check if a reservation date needs a confirmation reminder.
+     */
+    public static function dateNeedsConfirmationReminder(Carbon $reservationDate, bool $isRecurring = false): bool
+    {
+        return ! $isRecurring && $reservationDate->isAfter(Carbon::now()->addWeek());
+    }
+
+    /**
+     * Calculate when to send the confirmation reminder (1 week before).
+     */
+    public static function getConfirmationReminderDateForReservation(Carbon $reservationDate): Carbon
+    {
+        return $reservationDate->copy()->subWeek();
+    }
+
+    /**
+     * Create a new reservation from data.
+     * Handles validation and initial status determination.
+     */
+    public static function createFromData(CreateReservationData $data): self
+    {
+        $user = $data->getResponsibleUser();
+        
+        // Validate unless explicitly skipped
+        if (!$data->skipConflictCheck) {
+            app(ReservationService::class)->validate($data->startTime, $data->endTime, [
+                'user' => $user,
+                'throwOnFailure' => true,
+            ]);
+        }
+
+        // Create the reservation
+        $reservation = static::create([
+            'reserver_type' => get_class($data->reserver),
+            'reserver_id' => $data->reserver->id,
+            'reserved_at' => $data->startTime,
+            'reserved_until' => $data->endTime,
+            'hours_used' => $data->getDurationInHours(),
+            'notes' => $data->notes,
+            'status' => static::determineInitialStatus($user),
+            'is_recurring' => $data->isRecurring,
+            'recurring_series_id' => $data->recurringSeriesId,
+        ]);
+
+        // Fire event for charge creation
+        // The Finance module listens to this event and creates the charge
+        event(new \CorvMC\SpaceManagement\Events\ReservationCreated(
+            $reservation, 
+            deferCredits: $reservation->status === ReservationStatus::Reserved
+        ));
+
+        return $reservation;
+    }
+    
+    protected function registerStates(): void
+    {
+        $this->addState('status', ReservationState::class);
+    }
 
     public function isOwnedBy(?User $user): bool
     {

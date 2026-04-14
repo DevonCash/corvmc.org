@@ -4,6 +4,8 @@ namespace App\Policies;
 
 use App\Models\User;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
+use CorvMC\SpaceManagement\States\ReservationState\Cancelled;
 
 class RehearsalReservationPolicy
 {
@@ -29,6 +31,11 @@ class RehearsalReservationPolicy
 
     public function confirm(User $user, RehearsalReservation $reservation): bool
     {
+        // Check if state transition is valid
+        if (!$reservation->status->canTransitionTo(Confirmed::class)) {
+            return false;
+        }
+        
         // Managers can always confirm
         if ($this->manage($user)) {
             return true;
@@ -37,8 +44,6 @@ class RehearsalReservationPolicy
         // Owners can confirm their own reservations within the time window
         if ($reservation->isOwnedBy($user)) {
             // Business rule: Can't confirm more than 5 days in advance
-            // This could also use ReservationService::checkConfirmationReadiness()
-            // but we'll keep it simple here
             $daysUntilReservation = now()->diffInDays($reservation->reserved_at, false);
             return $daysUntilReservation <= 5;
         }
@@ -48,6 +53,11 @@ class RehearsalReservationPolicy
 
     public function cancel(User $user, RehearsalReservation $reservation): bool
     {
+        // Check if state transition is valid
+        if (!$reservation->status->canTransitionTo(Cancelled::class)) {
+            return false;
+        }
+        
         return $this->manage($user) || $reservation->isOwnedBy($user);
     }
 

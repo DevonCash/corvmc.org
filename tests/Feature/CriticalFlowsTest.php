@@ -20,8 +20,10 @@ use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
 use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Facades\CreditService;
 use CorvMC\Finance\Facades\MemberBenefitService;
 use CorvMC\Membership\Facades\BandService;
+use CorvMC\SpaceManagement\Data\CreateReservationData;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
@@ -60,14 +62,19 @@ describe('Flow 1: Create Reservation with Credits', function () {
         $user->assignRole('sustaining member');
 
         // Give user 16 blocks (8 hours at 30 min/block) of free time
-        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
+        CreditService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
 
         // Act: Create a 2-hour reservation (4 blocks at 30 min/block)
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = ReservationService::create($user, $startTime, $endTime);
+        $reservationData = new CreateReservationData(
+            reserver: $user,
+            startTime: $startTime,
+            endTime: $endTime,
+        );
+        $reservation = ReservationService::create($reservationData);
 
         // Assert: Reservation created with free hours applied
         expect($reservation)->toBeInstanceOf(RehearsalReservation::class)
@@ -92,7 +99,12 @@ describe('Flow 1: Create Reservation with Credits', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = ReservationService::create($user, $startTime, $endTime);
+        $reservationData = new CreateReservationData(
+            reserver: $user,
+            startTime: $startTime,
+            endTime: $endTime,
+        );
+        $reservation = ReservationService::create($reservationData);
 
         // Assert: 1 hour free (2 blocks), 1 hour paid ($15)
         expect((float) $reservation->hours_used)->toEqual(2.0)
@@ -146,7 +158,12 @@ describe('Flow 1: Create Reservation with Credits', function () {
         $overlappingEnd = $overlappingStart->copy()->addHours(2);
 
         // Assert: Should throw validation error
-        expect(fn() => ReservationService::create($user2, $overlappingStart, $overlappingEnd))
+        $reservationData = new CreateReservationData(
+            reserver: $user2,
+            startTime: $overlappingStart,
+            endTime: $overlappingEnd,
+        );
+        expect(fn() => ReservationService::create($reservationData))
             ->toThrow(\InvalidArgumentException::class);
     });
 });
@@ -473,7 +490,12 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        ReservationService::create($user, $startTime, $endTime);
+        $reservationData = new CreateReservationData(
+            reserver: $user,
+            startTime: $startTime,
+            endTime: $endTime,
+        );
+        ReservationService::create($reservationData);
 
         // Assert: Credits deducted (2 hours = 8 blocks, 30 min per block)
         // 2 hours * 60 min / 30 min per block = 4 blocks
