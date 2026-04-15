@@ -8,6 +8,7 @@
  */
 
 use App\Actions\Events\SyncEventSpaceReservation;
+use App\Facades\EventSyncService;
 use App\Models\EventReservation;
 use App\Models\User;
 use Carbon\Carbon;
@@ -114,8 +115,8 @@ describe('Event Creation', function () {
         ]);
 
         // Simulate Filament page calling SyncEventSpaceReservation explicitly
-        ReservationService::syncEventSpaceReservation($event, 120, 60, force: false);
-        ReservationService::syncEventSpaceReservation($event, 120, 60, force: true);
+        EventSyncService::syncSpaceReservation($event, 120, 60, force: false);
+        EventSyncService::syncSpaceReservation($event, 120, 60, force: true);
 
         $reservationCount = EventReservation::where('reservable_type', 'event')
             ->where('reservable_id', $event->id)

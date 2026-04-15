@@ -8,7 +8,6 @@ use CorvMC\SpaceManagement\Events\ReservationCancelled;
 use CorvMC\SpaceManagement\Events\ReservationConfirmed;
 use CorvMC\SpaceManagement\Events\ReservationCreated;
 use CorvMC\SpaceManagement\Events\ReservationUpdated;
-use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Spatie\Activitylog\Models\Activity;
 
@@ -205,7 +204,14 @@ describe('No duplicate audit logs', function () {
         \Illuminate\Support\Facades\Notification::fake();
         Activity::query()->delete();
 
-        ReservationService::create($user, $startTime, $endTime);
+        RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+            'status' => RehearsalReservation::determineInitialStatus($user),
+            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
+        ]);
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
 
@@ -223,7 +229,14 @@ describe('No duplicate audit logs', function () {
         \Illuminate\Support\Facades\Notification::fake();
         Activity::query()->delete();
 
-        $reservation = ReservationService::create($user, $startTime, $endTime);
+        $reservation = RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+            'status' => RehearsalReservation::determineInitialStatus($user),
+            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
+        ]);
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())
             ->orderBy('id')
@@ -241,11 +254,18 @@ describe('No duplicate audit logs', function () {
         $endTime = $startTime->copy()->addHours(2);
 
         \Illuminate\Support\Facades\Notification::fake();
-        $reservation = ReservationService::create($user, $startTime, $endTime);
+        $reservation = RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+            'status' => RehearsalReservation::determineInitialStatus($user),
+            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
+        ]);
 
         Activity::query()->delete();
 
-        ReservationService::cancel($reservation, 'Test reason');
+        $reservation->cancel('Test reason');
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
 
@@ -260,14 +280,25 @@ describe('No duplicate audit logs', function () {
         $endTime = $startTime->copy()->addHours(2);
 
         \Illuminate\Support\Facades\Notification::fake();
-        $reservation = ReservationService::create($user, $startTime, $endTime);
+        $reservation = RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+            'status' => RehearsalReservation::determineInitialStatus($user),
+            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
+        ]);
         $reservation = $reservation->fresh();
 
         Activity::query()->delete();
 
         $newStart = $startTime->copy()->addHours(1);
         $newEnd = $endTime->copy()->addHours(1);
-        ReservationService::update($reservation, $newStart, $newEnd);
+        $reservation->update([
+            'reserved_at' => $newStart,
+            'reserved_until' => $newEnd,
+            'hours_used' => $newStart->diffInMinutes($newEnd) / 60,
+        ]);
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
 
@@ -282,14 +313,21 @@ describe('No duplicate audit logs', function () {
         $endTime = $startTime->copy()->addHours(2);
 
         \Illuminate\Support\Facades\Notification::fake();
-        $reservation = ReservationService::create($user, $startTime, $endTime);
+        $reservation = RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+            'status' => RehearsalReservation::determineInitialStatus($user),
+            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
+        ]);
         expect($reservation->status)->toBe(ReservationStatus::Scheduled);
 
         Activity::query()->delete();
 
         // Move time forward so confirmation is allowed
         $this->travel(2)->days();
-        ReservationService::confirm($reservation);
+        $reservation->confirm();
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
 
@@ -297,29 +335,4 @@ describe('No duplicate audit logs', function () {
             ->and($logs->first()->log_name)->toBe('reservation')
             ->and($logs->first()->event)->toBe('confirmed');
     });
-});
-
-it('logs activity when a reservation is auto-cancelled', function () {
-    $user = User::factory()->create();
-    RehearsalReservation::factory()->create([
-        'reservable_type' => 'user',
-        'reservable_id' => $user->id,
-        'status' => ReservationStatus::Reserved,
-        'reserved_at' => now()->addDays(2),
-        'reserved_until' => now()->addDays(2)->addHours(2),
-        'hours_used' => 2,
-    ]);
-
-    Activity::query()->delete();
-
-    ReservationService::autoCancelUnconfirmedReservations();
-
-    $activity = Activity::where('event', 'auto_cancelled')
-        ->where('log_name', 'reservation')
-        ->first();
-
-    expect($activity)->not->toBeNull()
-        ->and($activity->description)->toContain('auto-cancelled')
-        ->and($activity->causer_id)->toBeNull()
-        ->and($activity->properties['original_status'])->toBe('reserved');
 });

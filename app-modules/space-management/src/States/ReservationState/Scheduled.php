@@ -27,4 +27,9 @@ class Scheduled extends ReservationState
     {
         return true;
     }
+
+    public function canConfirm(): bool
+    {
+        return true;
+    }
 }

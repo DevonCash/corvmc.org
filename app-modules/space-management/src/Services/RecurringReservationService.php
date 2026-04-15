@@ -142,9 +142,14 @@ class RecurringReservationService
             $endDateTime = $date->copy()->setTimeFromTimeString($endTime);
 
             // Check for one-off reservation/production/closure conflicts
-            $conflicts = ReservationServiceFacade::checkForConflicts($startDateTime, $endDateTime);
+            $conflicts = ReservationServiceFacade::getConflicts(
+                $startDateTime, 
+                $endDateTime,
+                includeBuffer: false,
+                includeClosures: true
+            );
 
-            if ($conflicts['reservations']->isNotEmpty() || $conflicts['productions']->isNotEmpty() || $conflicts['closures']->isNotEmpty()) {
+            if ($conflicts['reservations']->isNotEmpty() || $conflicts['closures']->isNotEmpty()) {
                 $conflictDetails = $this->formatConflicts($conflicts);
                 $warnings->push([
                     'date' => $date->format('M j, Y'),
@@ -337,17 +342,12 @@ class RecurringReservationService
     {
         $parts = [];
 
-        if ($conflicts['reservations']->isNotEmpty()) {
+        if (isset($conflicts['reservations']) && $conflicts['reservations']->isNotEmpty()) {
             $count = $conflicts['reservations']->count();
             $parts[] = $count . ' ' . str()->plural('reservation', $count);
         }
 
-        if ($conflicts['productions']->isNotEmpty()) {
-            $count = $conflicts['productions']->count();
-            $parts[] = $count . ' ' . str()->plural('event', $count);
-        }
-
-        if ($conflicts['closures']->isNotEmpty()) {
+        if (isset($conflicts['closures']) && $conflicts['closures']->isNotEmpty()) {
             $parts[] = 'space closure';
         }
 

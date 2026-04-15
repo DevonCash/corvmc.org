@@ -2,14 +2,12 @@
 
 namespace App\Filament\Staff\Resources\Events\Schemas;
 
-use App\Actions\Events\CheckEventConflicts;
 use App\Settings\ReservationSettings;
 use Carbon\Carbon;
 use CorvMC\Events\Models\Venue;
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
@@ -17,6 +15,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\ViewField;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Schema;
@@ -173,8 +172,8 @@ class EventCreateWizard
                 ]),
 
             // Show warning for non-admins with event conflicts
-            Placeholder::make('conflict_warning')
-                ->content('You cannot proceed with this time slot due to conflicts. Please go back and choose a different time.')
+            TextEntry::make('conflict_warning')
+                ->state('You cannot proceed with this time slot due to conflicts. Please go back and choose a different time.')
                 ->visible(fn(Get $get) => $get('conflict_status') === 'event_conflict' && ! auth()->user()?->hasRole('admin'))
                 ->extraAttributes(['class' => 'text-danger-600']),
 
@@ -188,13 +187,13 @@ class EventCreateWizard
             Section::make('Event Summary')
                 ->compact()
                 ->schema([
-                    Placeholder::make('summary_title')
+                    TextEntry::make('summary_title')
                         ->label('Title')
-                        ->content(fn(Get $get) => $get('title')),
+                        ->state(fn(Get $get) => $get('title')),
 
-                    Placeholder::make('summary_datetime')
+                    TextEntry::make('summary_datetime')
                         ->label('When')
-                        ->content(function (Get $get) {
+                        ->state(function (Get $get) {
                             $start = $get('start_datetime');
                             $end = $get('end_time');
 
@@ -212,9 +211,9 @@ class EventCreateWizard
                             return $formatted;
                         }),
 
-                    Placeholder::make('summary_venue')
+                    TextEntry::make('summary_venue')
                         ->label('Venue')
-                        ->content(function (Get $get) {
+                        ->state(function (Get $get) {
                             $venueId = $get('venue_id');
                             if (! $venueId) {
                                 return 'Not set';
@@ -228,9 +227,9 @@ class EventCreateWizard
                 ->compact()
                 ->visible(fn(Get $get) => static::isCmcVenue($get))
                 ->schema([
-                    Placeholder::make('reservation_status')
+                    TextEntry::make('reservation_status')
                         ->label('Status')
-                        ->content(function (Get $get) {
+                        ->state(function (Get $get) {
                             $status = $get('conflict_status');
                             $forceOverride = $get('force_override');
 
@@ -246,9 +245,9 @@ class EventCreateWizard
                             };
                         }),
 
-                    Placeholder::make('reservation_times')
+                    TextEntry::make('reservation_times')
                         ->label('Reserved Period')
-                        ->content(function (Get $get) {
+                        ->state(function (Get $get) {
                             $start = $get('start_datetime');
                             $end = $get('end_time');
                             $setupMinutes = (int) ($get('setup_minutes') ?? 0);
@@ -321,11 +320,10 @@ class EventCreateWizard
             $set('teardown_minutes', $settings->default_event_teardown_minutes);
         }
 
-        $result = ReservationService::checkEventConflicts(
-            start: $startCarbon,
-            end: $endCarbon,
-            setupMinutes: $setupMinutes,
-            teardownMinutes: $teardownMinutes
+        $result = ReservationService::getConflicts(
+            start: $startCarbon->copy()->subMinutes($setupMinutes),
+            end: $endCarbon->copy()->addMinutes($teardownMinutes),
+            includeBuffer: false,
         );
 
         $set('conflict_status', $result['status']);

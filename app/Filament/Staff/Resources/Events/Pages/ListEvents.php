@@ -3,6 +3,7 @@
 namespace App\Filament\Staff\Resources\Events\Pages;
 
 use App\Actions\Events\SyncEventSpaceReservation;
+use App\Facades\EventSyncService;
 use App\Filament\Staff\Resources\Events\EventResource;
 use App\Filament\Staff\Resources\Events\Schemas\EventCreateWizard;
 use App\Filament\Staff\Resources\Venues\VenueResource;
@@ -190,7 +191,7 @@ class ListEvents extends ListRecords
             return;
         }
 
-        $result = ReservationService::syncEventSpaceReservation(
+        $result = EventSyncService::syncSpaceReservation(
             event: $event,
             setupMinutes: $setupMinutes,
             teardownMinutes: $teardownMinutes,

@@ -6,7 +6,6 @@ use CorvMC\SpaceManagement\Actions\Reservations\UpdateReservation;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationEditForm;
 use App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource;
 use Carbon\Carbon;
-use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
@@ -49,12 +48,15 @@ class EditSpaceUsage extends EditRecord
         $startTime = Carbon::parse($data['reservation_date'].' '.$data['start_time'], config('app.timezone'));
         $endTime = Carbon::parse($data['reservation_date'].' '.$data['end_time'], config('app.timezone'));
 
-        $options = [
+        $record->update([
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
             'notes' => $data['notes'] ?? null,
             'status' => $data['status'] ?? $record->status,
-        ];
+            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
+        ]);
 
-        return ReservationService::update($record, $startTime, $endTime, $options);
+        return $record;
     }
 
     protected function getHeaderActions(): array

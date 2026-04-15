@@ -1,19 +1,31 @@
 <?php
 
 use CorvMC\Finance\Enums\CreditType;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use App\Models\User;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Carbon\Carbon;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\Finance\Actions\Credits\AdjustCredits;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\Finance\Actions\Payments\CalculateFeeCoverage;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\Finance\Enums\ChargeStatus;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\Finance\Actions\Payments\MarkReservationAsPaid;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Illuminate\Support\Facades\Notification;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Brick\Money\Money;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\Finance\Facades\CreditService;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\Finance\Facades\MemberBenefitService;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\Finance\Facades\PaymentService;
-use CorvMC\SpaceManagement\Facades\ReservationService;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 
 beforeEach(function () {
     Notification::fake();
@@ -113,7 +125,14 @@ describe('Finance Workflow: Payment Processing', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = ReservationService::create($user, $startTime, $endTime);
+        $reservation = RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+            'status' => RehearsalReservation::determineInitialStatus($user),
+            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
+        ]);
         expect($reservation->charge->status)->toBe(ChargeStatus::Pending);
 
         PaymentService::markAsPaid($reservation->charge, 'cash', 'Paid in person');
@@ -133,7 +152,14 @@ describe('Finance Workflow: CoveredByCredits Status', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservation = ReservationService::create($user, $startTime, $endTime);
+        $reservation = RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+            'status' => RehearsalReservation::determineInitialStatus($user),
+            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
+        ]);
 
         expect($reservation->charge->status)->toBe(ChargeStatus::CoveredByCredits);
         expect($reservation->charge->payment_method)->toBe('credits');

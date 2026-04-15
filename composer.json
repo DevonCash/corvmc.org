@@ -59,6 +59,7 @@
         "stechstudio/filament-impersonate": "^4.0",
         "symfony/http-client": "^7.3",
         "symfony/postmark-mailer": "^7.3",
+        "watson/validating": "^8.3",
         "zenstruck/commonmark-extensions": "1.x-dev"
     },
     "require-dev": {

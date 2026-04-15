@@ -49,12 +49,15 @@ class EditReservation extends EditRecord
         $startTime = Carbon::parse($data['reservation_date'] . ' ' . $data['start_time'], config('app.timezone'));
         $endTime = Carbon::parse($data['reservation_date'] . ' ' . $data['end_time'], config('app.timezone'));
 
-        $options = [
-            'notes' => $data['notes'] ?? null,
+        $record->update([
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+            'notes' => $data['notes'] ?? $record->notes,
             'status' => $data['status'] ?? $record->status,
-        ];
+        ]);
 
-        return ReservationService::updateReservation($record, $startTime, $endTime, $options);
+        $record->save();
+        return $record;
     }
 
     protected function getHeaderActions(): array

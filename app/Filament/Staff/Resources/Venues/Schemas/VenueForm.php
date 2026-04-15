@@ -4,8 +4,8 @@ namespace App\Filament\Staff\Resources\Venues\Schemas;
 
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
 
@@ -90,11 +90,11 @@ class VenueForm
             ]);
     }
 
-    protected static function calculateDistanceAction(): Placeholder
+    protected static function calculateDistanceAction(): TextEntry
     {
-        return Placeholder::make('calculate_distance')
+        return TextEntry::make('calculate_distance')
             ->label('Distance')
-            ->content(function ($record) {
+            ->state(function ($record) {
                 if (! $record) {
                     return 'Save venue to calculate distance';
                 }
@@ -117,11 +117,11 @@ class VenueForm
             );
     }
 
-    protected static function distanceField(): Placeholder
+    protected static function distanceField(): TextEntry
     {
-        return Placeholder::make('driving_time')
+        return TextEntry::make('driving_time')
             ->label('Driving Time from Corvallis')
-            ->content(function ($record) {
+            ->state(function ($record) {
                 if (! $record || ! $record->driving_time_display) {
                     return 'N/A';
                 }

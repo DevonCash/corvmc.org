@@ -24,7 +24,7 @@ class HandleReservationFinance
      */
     public function handleReservationCreated(ReservationCreated $event): void
     {
-        $reservation = $event->reservation;
+        $reservation = $event->chargeable;
         
         if (!$reservation instanceof RehearsalReservation) {
             return;
@@ -37,8 +37,9 @@ class HandleReservationFinance
         // This would typically update the charge record
         if ($reservation->charge) {
             $reservation->charge->update([
-                'amount' => $pricing->finalAmount,
-                'credits_applied' => $pricing->creditsApplied,
+                'amount' => $pricing->amount,
+                'net_amount' => $pricing->net_amount,
+                'credits_applied' => $pricing->credits_applied,
             ]);
         }
     }
@@ -48,7 +49,7 @@ class HandleReservationFinance
      */
     public function handleReservationConfirmed(ReservationConfirmed $event): void
     {
-        $reservation = $event->reservation;
+        $reservation = $event->chargeable;
         
         if (!$reservation instanceof RehearsalReservation) {
             return;
@@ -74,7 +75,7 @@ class HandleReservationFinance
      */
     public function handleReservationCancelled(ReservationCancelled $event): void
     {
-        $reservation = $event->reservation;
+        $reservation = $event->chargeable;
         
         if (!$reservation instanceof RehearsalReservation) {
             return;

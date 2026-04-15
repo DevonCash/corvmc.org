@@ -6,10 +6,10 @@ use App\Models\User;
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Carbon\Carbon;
+use CorvMC\Finance\Facades\PaymentService;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -447,11 +447,13 @@ class ReservationForm
             return;
         }
 
-        $calculation = ReservationService::calculateReservationCost(
-            $user,
-            Carbon::parse($start),
-            Carbon::parse($end)
-        );
+        $reservation = new RehearsalReservation([
+            'reservable_id' => $user->id,
+            'reservable_type' => User::class,
+            'reserved_at' => Carbon::parse($start),
+            'reserved_until' => Carbon::parse($end),
+        ]);
+        $calculation = PaymentService::calculateCost($reservation);
 
         // Store cost as cents (integer) for Livewire compatibility
         $set('cost', $calculation['cost']->getMinorAmount()->toInt());

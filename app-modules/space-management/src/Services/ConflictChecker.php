@@ -10,6 +10,13 @@ class ConflictChecker implements ConflictCheckerInterface
 {
     public function checkConflicts(Carbon $start, Carbon $end, ?int $excludeReservationId = null): array
     {
-        return ReservationService::checkForConflicts($start, $end, $excludeReservationId);
+        $excludeReservation = $excludeReservationId ? \CorvMC\SpaceManagement\Models\Reservation::find($excludeReservationId) : null;
+        return ReservationService::getConflicts(
+            $start,
+            $end,
+            excludeId: $excludeReservation?->id,
+            includeBuffer: false,
+            includeClosures: false
+        );
     }
 }

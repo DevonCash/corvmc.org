@@ -4,6 +4,7 @@ namespace App\Filament\Actions\Reservations;
 
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Services\ReservationService;
+use CorvMC\SpaceManagement\States\ReservationState;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -31,14 +32,14 @@ class ReservationCancelAction
             ])
             ->requiresConfirmation()
             ->modalHeading('Cancel Reservation')
-            ->modalDescription(fn (Reservation $record) =>
+            ->modalDescription(
+                fn(Reservation $record) =>
                 "Are you sure you want to cancel the reservation for {$record->reserved_at->format('M j, g:i A')}?"
             )
             ->modalIcon('tabler-alert-triangle')
             ->action(function (Reservation $record, array $data) {
                 try {
-                    $service = app(ReservationService::class);
-                    $service->cancel($record, $data['cancellation_reason'] ?? null);
+                    $record->state->transitionTo(ReservationState\Cancelled::class, ['reason' => $data['cancellation_reason']]);
 
                     Notification::make()
                         ->title('Reservation cancelled')

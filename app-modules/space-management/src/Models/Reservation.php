@@ -17,61 +17,43 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use CorvMC\Finance\Models\Charge;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Watson\Validating\ValidatingTrait;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\ModelStates\HasStates;
 
-/**
- * Base class for all reservation types using Single Table Inheritance.
- *
- * Reservations can be owned by different entities (User, Production, Band, etc.)
- * using a polymorphic relationship.
- *
- * @property int $id
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $deleted_at
- * @property ReservationStatus $status
- * @property numeric $hours_used
- * @property numeric $free_hours_used
- * @property bool $is_recurring
- * @property array<array-key, mixed>|null $recurrence_pattern
- * @property string|null $notes
- * @property \Illuminate\Support\Carbon|null $reserved_at
- * @property \Illuminate\Support\Carbon|null $reserved_until
- * @property int|null $recurring_series_id
- * @property \Illuminate\Support\Carbon|null $instance_date
- * @property string|null $cancellation_reason
- * @property string $type
- * @property string|null $reservable_type
- * @property int|null $reservable_id
- * @property string|null $google_calendar_event_id
- * @property-read float $duration
- * @property-read string $time_range
- * @property-read \CorvMC\Support\Models\RecurringSeries|null $recurringSeries
- * @property-read Model|\Eloquent|null $reservable
- * @property-read \App\Models\User|null $user
- * @property-read \CorvMC\Finance\Models\Charge|null $charge
- *
- * @method static \Database\Factories\ReservationFactory factory($count = null, $state = [])
- * @method static Builder<static>|Reservation needsAttention()
- * @method static Builder<static>|Reservation status(ReservationStatus $status)
- * @method static Builder<static>|Reservation newModelQuery()
- * @method static Builder<static>|Reservation newQuery()
- * @method static Builder<static>|Reservation query()
- *
- * @mixin \Eloquent
- */
 class Reservation extends Model implements HasColor, HasIcon, HasLabel
 {
-    use HasRecurringSeries, HasTimePeriod, HasStates;
+    use ValidatingTrait, HasRecurringSeries, HasTimePeriod, HasStates;
 
     protected $table = 'reservations';
 
     protected $primaryKey = 'id';
 
     protected $guarded = ['id'];
+
+    /**
+     * Whether the model should throw a ValidationException if it
+     * fails validation. If not set, it will default to false.
+     */
+    protected $throwValidationExceptions = true;
+
+    /**
+     * Base validation rules for all reservations.
+     */
+    protected array $rules = [
+        'reserved_at' => 'required|date',
+        'reserved_until' => 'required|date|after:reserved_at',
+        'reservable_type' => 'required|string',
+        'reservable_id' => 'required|integer',
+        'hours_used' => 'required|numeric|min:0.5|max:8',
+    ];
+
+    /**
+     * User exposed observable events for validation hooks.
+     */
+    protected $observables = ['validating', 'validated'];
 
     protected function casts(): array
     {
@@ -106,8 +88,21 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         parent::boot();
 
         static::creating(function ($model) {
+            // Auto-calculate hours if not set
+            if (!$model->hours_used && $model->reserved_at && $model->reserved_until) {
+                $model->hours_used = $model->reserved_at->diffInMinutes($model->reserved_until) / 60;
+            }
+
+            // Set type for STI
             if (empty($model->type)) {
                 $model->type = $model->getMorphClass();
+            }
+        });
+
+        static::updating(function ($model) {
+            // Recalculate hours if times changed
+            if ($model->isDirty(['reserved_at', 'reserved_until'])) {
+                $model->hours_used = $model->reserved_at->diffInMinutes($model->reserved_until) / 60;
             }
         });
 
@@ -238,7 +233,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         $query = $query->where(function ($q) use ($user) {
             $q->where(function ($subQ) use ($user) {
                 $subQ->where('reservable_type', User::class)
-                     ->where('reservable_id', $user->id);
+                    ->where('reservable_id', $user->id);
             });
             // Could add other conditions here if needed
         });
@@ -264,7 +259,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     public function scopeInRange(Builder $query, Carbon $start, Carbon $end): Builder
     {
         return $query->where('reserved_until', '>', $start)
-                     ->where('reserved_at', '<', $end);
+            ->where('reserved_at', '<', $end);
     }
 
     /**
@@ -339,10 +334,10 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         }
 
         if ($this->reserved_at->isSameDay($this->reserved_until)) {
-            return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('g:i A');
+            return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('g:i A');
         }
 
-        return $this->reserved_at->format('M j, Y g:i A').' - '.$this->reserved_until->format('M j, Y g:i A');
+        return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('M j, Y g:i A');
     }
 
     public function getColor(): string|array
@@ -438,8 +433,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     protected function upcoming(Builder $query): void
     {
         $query->where('reserved_at', '>', now())
-            ->where('status', '!=', ReservationStatus::Cancelled)
-            ->where('status', '!=', ReservationStatus::Completed);
+            ->whereNotStatus('status', [ReservationStatus::Cancelled, ReservationStatus::Completed]);
     }
 
     #[Scope]
@@ -478,87 +472,13 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
             ->exists();
     }
 
-    /**
-     * Update reservation from data.
-     * Handles validation and recalculation of duration.
-     */
-    public function updateFromData(\CorvMC\SpaceManagement\Data\UpdateReservationData $data): self
-    {
-        $updates = [];
-
-        // Check for time changes
-        if (!$data->startTime instanceof \Spatie\LaravelData\Optional) {
-            $updates['reserved_at'] = $data->startTime;
-        }
-
-        if (!$data->endTime instanceof \Spatie\LaravelData\Optional) {
-            $updates['reserved_until'] = $data->endTime;
-        }
-
-        // If times are changing, validate and recalculate duration
-        if (isset($updates['reserved_at']) || isset($updates['reserved_until'])) {
-            $startTime = $updates['reserved_at'] ?? $this->reserved_at;
-            $endTime = $updates['reserved_until'] ?? $this->reserved_until;
-
-            if (!$data->skipConflictCheck) {
-                app(\CorvMC\SpaceManagement\Services\ReservationService::class)->validate($startTime, $endTime, [
-                    'user' => $this->getResponsibleUser(),
-                    'excludeId' => $this->id,
-                    'throwOnFailure' => true,
-                ]);
-            }
-
-            // Recalculate duration
-            $updates['hours_used'] = $startTime->diffInMinutes($endTime) / 60;
-        }
-
-        if (!$data->notes instanceof \Spatie\LaravelData\Optional) {
-            $updates['notes'] = $data->notes;
-        }
-
-        if (!$data->status instanceof \Spatie\LaravelData\Optional) {
-            $updates['status'] = $data->status;
-        }
-
-        if (!empty($updates)) {
-            $this->update($updates);
-        }
-
-        return $this->fresh();
-    }
 
     /**
      * Check if this reservation can be confirmed.
-     * Returns array with 'can_confirm' boolean and optional 'reason' string.
      */
-    public function checkConfirmationReadiness(): array
+    public function canConfirm(): bool
     {
-        // Only RehearsalReservations can be confirmed
-        if (!$this instanceof RehearsalReservation) {
-            return [
-                'can_confirm' => false,
-                'reason' => 'Only rehearsal reservations can be confirmed',
-            ];
-        }
-
-        // Must be in a confirmable status
-        if (!in_array($this->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
-            return [
-                'can_confirm' => false,
-                'reason' => 'Reservation is already ' . $this->status->value,
-            ];
-        }
-
-        // Business rule: Can't confirm more than 5 days in advance
-        $daysUntilReservation = now()->diffInDays($this->reserved_at, false);
-        if ($daysUntilReservation > 5) {
-            return [
-                'can_confirm' => false,
-                'reason' => "Cannot confirm more than 5 days in advance. Please wait " . ($daysUntilReservation - 5) . " more days.",
-            ];
-        }
-
-        return ['can_confirm' => true];
+        return false; // By default, reservations cannot be confirmed. Override in subclasses that support confirmation.
     }
 
     /**
@@ -570,7 +490,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         if ($this->status !== ReservationStatus::Scheduled) {
             return false;
         }
-        
+
         // Check if it's within the reminder window (e.g., 2 days before)
         $reminderDate = $this->getConfirmationReminderDate();
         return now()->isAfter($reminderDate);

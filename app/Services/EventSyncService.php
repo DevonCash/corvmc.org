@@ -53,17 +53,21 @@ class EventSyncService
         ) {
             return [
                 'success' => true,
-                'conflicts' => ['reservations' => collect(), 'productions' => collect(), 'closures' => collect()],
+                'conflicts' => ['reservations' => collect(), 'closures' => collect()],
                 'reservation' => $existingReservation,
             ];
         }
 
         // Check for conflicts (excluding this event's own reservation if it exists)
-        $excludeId = $existingReservation?->id;
-        $conflicts = ReservationService::checkForConflicts($reservedAt, $reservedUntil, $excludeId);
+        $conflicts = ReservationService::getConflicts(
+            $reservedAt, 
+            $reservedUntil, 
+            excludeId: $existingReservation?->id,
+            includeBuffer: false,
+            includeClosures: true
+        );
 
         $hasConflicts = $conflicts['reservations']->isNotEmpty()
-            || $conflicts['productions']->isNotEmpty()
             || $conflicts['closures']->isNotEmpty();
 
         // If there are conflicts and we're not forcing, return without creating
@@ -118,19 +122,30 @@ class EventSyncService
         $reservedUntil = $endTime->copy()->addMinutes($teardownMinutes);
 
         // Get all conflicts for full period (setup + event + teardown)
-        $allConflicts = ReservationService::checkForConflicts($reservedAt, $reservedUntil, $excludeReservationId);
+        $excludeReservation = $excludeReservationId ? \CorvMC\SpaceManagement\Models\Reservation::find($excludeReservationId) : null;
+        $allConflicts = ReservationService::getConflicts(
+            $reservedAt, 
+            $reservedUntil, 
+            excludeId: $excludeReservationId,
+            includeBuffer: false,
+            includeClosures: true
+        );
 
         // Also check conflicts for just the event time
-        $eventConflicts = ReservationService::checkForConflicts($startTime, $endTime, $excludeReservationId);
+        $eventConflicts = ReservationService::getConflicts(
+            $startTime, 
+            $endTime, 
+            excludeId: $excludeReservationId,
+            includeBuffer: false,
+            includeClosures: true
+        );
 
         // Determine if there are event-time conflicts
         $hasEventConflicts = $eventConflicts['reservations']->isNotEmpty()
-            || $eventConflicts['productions']->isNotEmpty()
             || $eventConflicts['closures']->isNotEmpty();
 
         // Determine if there are any conflicts (including setup/teardown)
         $hasAnyConflicts = $allConflicts['reservations']->isNotEmpty()
-            || $allConflicts['productions']->isNotEmpty()
             || $allConflicts['closures']->isNotEmpty();
 
         // Calculate setup-only conflicts (conflicts that only affect setup/teardown, not event time)
@@ -159,7 +174,6 @@ class EventSyncService
     {
         return [
             'reservations' => $allConflicts['reservations']->diff($eventConflicts['reservations']),
-            'productions' => $allConflicts['productions']->diff($eventConflicts['productions']),
             'closures' => $allConflicts['closures']->diff($eventConflicts['closures']),
         ];
     }

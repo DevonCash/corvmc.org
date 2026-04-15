@@ -67,6 +67,14 @@ abstract class ReservationState extends State
     }
 
     /**
+     * Check if this state can transition to confirmed.
+     */
+    public function canConfirm(): bool
+    {
+        return false;
+    }
+
+    /**
      * Get the database value for this state.
      */
     public function getValue(): string

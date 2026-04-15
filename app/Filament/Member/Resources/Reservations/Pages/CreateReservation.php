@@ -2,11 +2,12 @@
 
 namespace App\Filament\Member\Resources\Reservations\Pages;
 
-use CorvMC\SpaceManagement\Data\CreateReservationData;
-use CorvMC\SpaceManagement\Facades\ReservationService;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use App\Models\User;
 use App\Filament\Member\Resources\Reservations\ReservationResource;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Carbon\Carbon;
+use CorvMC\Finance\Facades\PaymentService;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Log;
@@ -17,21 +18,22 @@ class CreateReservation extends CreateRecord
 
     protected function handleRecordCreation(array $data): Reservation
     {
-        // Use CreateReservation action instead of direct model creation
-        // This ensures credits are properly deducted
+        // Create reservation using Eloquent
         $user = auth()->user();
         $startTime = Carbon::parse($data['reserved_at']);
         $endTime = Carbon::parse($data['reserved_until']);
 
-        return ReservationService::create(new CreateReservationData([
-            'user' => $user,
+        return RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
             'notes' => $data['notes'] ?? null,
-            'status' => $data['status'] ?? null,
+            'status' => $data['status'] ?? RehearsalReservation::determineInitialStatus($user),
             'is_recurring' => $data['is_recurring'] ?? false,
             'recurrence_pattern' => $data['recurrence_pattern'] ?? null,
-        ]));
+            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
+        ]);
     }
 
     protected function afterCreate(): void
@@ -44,15 +46,15 @@ class CreateReservation extends CreateRecord
 
         if ($shouldCheckout) {
             try {
-                $session = ReservationService::createCheckoutSession($record);
-
+                // TODO: Update to use new payment service
+                $session = PaymentService::createCheckoutSession($record);
                 // Store the redirect URL in session to use after the page redirects
                 session()->put('stripe_checkout_url', $session->url);
             } catch (\Exception $e) {
                 Log::error($e);
                 Notification::make()
                     ->title('Payment Error')
-                    ->body('Unable to create payment session: '.$e->getMessage())
+                    ->body('Unable to create payment session: ' . $e->getMessage())
                     ->danger()
                     ->send();
             }

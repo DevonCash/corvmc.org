@@ -8,6 +8,7 @@ use App\Filament\Band\Resources\BandReservationsResource;
 use CorvMC\Bands\Models\Band;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Carbon\Carbon;
+use CorvMC\Finance\Facades\PaymentService;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
@@ -76,7 +77,7 @@ class CreateBandReservation extends CreateRecord
 
                         return 'tabler-circle-check';
                     })
-                        ->color(fn (Get $get) => match (true) {
+                        ->color(fn(Get $get) => match (true) {
                             ! $get('reservation_date') => 'gray',
                             ! $get('start_time') => 'primary',
                             ! $get('end_time') => 'primary',
@@ -108,7 +109,7 @@ class CreateBandReservation extends CreateRecord
 
                             return ReservationService::getAvailableTimeSlots(Carbon::parse($date, config('app.timezone')));
                         })
-                        ->disabled(fn (Get $get) => ! $get('reservation_date'))
+                        ->disabled(fn(Get $get) => ! $get('reservation_date'))
                         ->required()
                         ->live(debounce: 300)
                         ->afterStateUpdated(function ($state, callable $set, Get $get) {
@@ -134,7 +135,7 @@ class CreateBandReservation extends CreateRecord
                             $this->updateDateTimes($get, $set);
                             $this->calculateCost($get, $set);
                         })
-                        ->disabled(fn (Get $get) => ! $get('start_time')),
+                        ->disabled(fn(Get $get) => ! $get('start_time')),
                 ])->columnSpanFull(),
 
             Textarea::make('notes')
@@ -170,12 +171,12 @@ class CreateBandReservation extends CreateRecord
         $endTime = $get('end_time');
 
         if ($date && $startTime) {
-            $datetime = Carbon::parse($date.' '.$startTime, config('app.timezone'));
+            $datetime = Carbon::parse($date . ' ' . $startTime, config('app.timezone'));
             $set('reserved_at', $datetime);
         }
 
         if ($date && $endTime) {
-            $datetime = Carbon::parse($date.' '.$endTime, config('app.timezone'));
+            $datetime = Carbon::parse($date . ' ' . $endTime, config('app.timezone'));
             $set('reserved_until', $datetime);
         }
 
@@ -218,12 +219,15 @@ class CreateBandReservation extends CreateRecord
             return;
         }
 
+        $reservation = new RehearsalReservation([
+            'reservable_type' => Band::class,
+            'reservable_id' => Filament::getTenant()->id,
+            'reserved_at' => Carbon::parse($start),
+            'reserved_until' => Carbon::parse($end),
+        ]);
+
         // Calculate cost using the booking user's credits
-        $calculation = ReservationService::calculateReservationCost(
-            $user,
-            Carbon::parse($start),
-            Carbon::parse($end)
-        );
+        $calculation = PaymentService::calculateCost($reservation);
 
         $set('cost', $calculation['cost']->getMinorAmount()->toInt());
         $set('free_hours_used', $calculation['free_hours']);
@@ -234,51 +238,18 @@ class CreateBandReservation extends CreateRecord
     {
         /** @var Band $band */
         $band = Filament::getTenant();
-        $user = Auth::user();
 
-        $startTime = Carbon::parse($data['reserved_at']);
-        $endTime = Carbon::parse($data['reserved_until']);
+        // Simply create the reservation - validation happens automatically
+        $reservation = RehearsalReservation::create([
+            'reservable_type' => Band::class,
+            'reservable_id' => $band->id,
+            'reserved_at' => $data['reserved_at'],
+            'reserved_until' => $data['reserved_until'],
+            'notes' => $data['notes'] ?? null,
+            'status' => $data['status'] ?? null, // Will be set by model if null
+        ]);
 
-        // Validate the reservation
-        $errors = ReservationService::validateReservation($user, $startTime, $endTime);
-        if (! empty($errors)) {
-            Notification::make()
-                ->title('Validation Error')
-                ->body(implode(' ', $errors))
-                ->danger()
-                ->send();
-
-            throw new \InvalidArgumentException(implode(' ', $errors));
-        }
-
-        $status = $data['status'] ?? ReservationStatus::Scheduled;
-
-        return DB::transaction(function () use ($band, $user, $startTime, $endTime, $data, $status) {
-            $costCalculation = ReservationService::calculateReservationCost($user, $startTime, $endTime);
-
-            $reservation = RehearsalReservation::create([
-                'user_id' => $user->id,
-                'reservable_type' => 'band',
-                'reservable_id' => $band->id,
-                'reserved_at' => $startTime,
-                'reserved_until' => $endTime,
-                'cost' => $costCalculation['cost'],
-                'hours_used' => $costCalculation['total_hours'],
-                'free_hours_used' => $costCalculation['free_hours'],
-                'status' => $status,
-                'notes' => $data['notes'] ?? null,
-                'is_recurring' => false,
-            ]);
-
-            // Mark payment as not applicable if free
-            if ($reservation->cost->isZero()) {
-                $reservation->update([
-                    'payment_status' => 'n/a',
-                ]);
-            }
-
-            return $reservation;
-        });
+        return $reservation;
     }
 
     protected function getRedirectUrl(): string

@@ -19,19 +19,16 @@ class ReservationConfirmAction
                 return auth()->user()->can('confirm', $record);
             })
             ->visible(function (RehearsalReservation $record) {
-                $service = app(ReservationService::class);
-                $result = $service->checkConfirmationReadiness($record);
-                return $result['can_confirm'];
+                return $record->canConfirm();
             })
             ->requiresConfirmation()
             ->modalHeading('Confirm Reservation')
-            ->modalDescription(fn (RehearsalReservation $record) => "Are you sure you want to confirm this reservation for {$record->reserved_at->format('M j, g:i A')}?")
+            ->modalDescription(fn(RehearsalReservation $record) => "Are you sure you want to confirm this reservation for {$record->reserved_at->format('M j, g:i A')}?")
             ->modalSubmitActionLabel('Confirm Reservation')
             ->action(function (RehearsalReservation $record) {
                 try {
-                    $service = app(ReservationService::class);
-                    $service->confirm($record);
-                    
+                    $record->confirm();
+
                     Notification::make()
                         ->title('Reservation confirmed')
                         ->success()

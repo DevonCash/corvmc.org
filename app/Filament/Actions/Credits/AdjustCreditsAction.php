@@ -2,13 +2,12 @@
 
 namespace App\Filament\Actions\Credits;
 
-use App\Models\User;
 use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Facades\CreditService;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
 
 class AdjustCreditsAction
 {
@@ -23,9 +22,9 @@ class AdjustCreditsAction
 
                 return [
                     Grid::make(3)->schema([
-                        Placeholder::make('free_hours_label')
+                        TextEntry::make('free_hours_label')
                             ->label('Free Hours')
-                            ->content(fn() => $user->getCreditBalance(CreditType::FreeHours) . ' blocks'),
+                            ->state(fn() => $user->getCreditBalance(CreditType::FreeHours) . ' blocks'),
                         TextInput::make('free_hours_adjustment')
                             ->label('Adjustment')
                             ->numeric()
@@ -34,9 +33,9 @@ class AdjustCreditsAction
                             ->columnSpan(2),
                     ]),
                     Grid::make(3)->schema([
-                        Placeholder::make('equipment_credits_label')
+                        TextEntry::make('equipment_credits_label')
                             ->label('Equipment Credits')
-                            ->content(fn() => $user->getCreditBalance(CreditType::EquipmentCredits) . ' blocks'),
+                            ->state(fn() => $user->getCreditBalance(CreditType::EquipmentCredits) . ' blocks'),
                         TextInput::make('equipment_credits_adjustment')
                             ->label('Adjustment')
                             ->numeric()

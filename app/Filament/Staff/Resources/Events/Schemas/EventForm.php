@@ -3,6 +3,7 @@
 namespace App\Filament\Staff\Resources\Events\Schemas;
 
 use App\Actions\Events\SyncEventSpaceReservation;
+use App\Facades\EventSyncService;
 use App\Settings\ReservationSettings;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
@@ -322,7 +323,7 @@ class EventForm
 
                         // If editing an existing event, directly sync the reservation
                         if (isset($livewire->record) && $livewire->record instanceof Event) {
-                            $result = ReservationService::syncEventSpaceReservation(
+                            $result = EventSyncService::syncSpaceReservation(
                                 event: $livewire->record,
                                 setupMinutes: $setupMinutes,
                                 teardownMinutes: $teardownMinutes,

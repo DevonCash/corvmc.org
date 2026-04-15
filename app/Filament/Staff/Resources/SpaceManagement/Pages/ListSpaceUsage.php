@@ -11,7 +11,7 @@ use App\Filament\Staff\Resources\SpaceManagement\Widgets\SpaceStatsWidget;
 use App\Filament\Staff\Resources\SpaceManagement\Widgets\UpcomingClosuresWidget;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
-use CorvMC\SpaceManagement\Facades\ReservationService;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
@@ -51,18 +51,18 @@ class ListSpaceUsage extends ListRecords
                     $reservedAt = $data['reserved_at'];
                     $reservedUntil = $data['reserved_until'];
 
-                    // Use CreateReservation action to properly create reservation with notifications
-                    $reservation = ReservationService::create(
-                        $user,
-                        $reservedAt,
-                        $reservedUntil,
-                        [
-                            'status' => $data['status'] ?? 'confirmed',
-                            'notes' => $data['notes'] ?? null,
-                            'is_recurring' => $data['is_recurring'] ?? false,
-                            'payment_status' => $data['payment_status'] ?? 'unpaid',
-                        ]
-                    );
+                    // Create reservation using Eloquent
+                    $reservation = RehearsalReservation::create([
+                        'reservable_type' => User::class,
+                        'reservable_id' => $user->id,
+                        'reserved_at' => $reservedAt,
+                        'reserved_until' => $reservedUntil,
+                        'status' => $data['status'] ?? 'confirmed',
+                        'notes' => $data['notes'] ?? null,
+                        'is_recurring' => $data['is_recurring'] ?? false,
+                        'payment_status' => $data['payment_status'] ?? 'unpaid',
+                        'hours_used' => $reservedAt->diffInMinutes($reservedUntil) / 60,
+                    ]);
 
                     Notification::make()
                         ->title('Reservation Created')

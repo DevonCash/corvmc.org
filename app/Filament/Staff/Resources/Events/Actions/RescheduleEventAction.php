@@ -2,10 +2,9 @@
 
 namespace App\Filament\Staff\Resources\Events\Actions;
 
-use App\Actions\Events\CheckEventConflicts;
-use App\Actions\Events\SyncEventSpaceReservation;
 use App\Filament\Staff\Resources\Events\EventResource;
 use App\Facades\EventSyncService;
+use App\Models\User;
 use App\Settings\ReservationSettings;
 use Carbon\Carbon;
 use CorvMC\Events\Facades\EventService;
@@ -15,12 +14,12 @@ use CorvMC\Events\Models\Venue;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ViewField;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -35,11 +34,11 @@ class RescheduleEventAction
             ->label('Reschedule')
             ->icon('tabler-calendar-event')
             ->color('warning')
-            ->visible(fn ($record) => in_array($record->status, [EventStatus::Scheduled, EventStatus::Cancelled]))
+            ->visible(fn($record) => in_array($record->status, [EventStatus::Scheduled, EventStatus::Cancelled]))
             ->authorize('reschedule')
             ->modalWidth('lg')
             ->steps(static::getSteps())
-            ->fillForm(fn (Event $record) => [
+            ->fillForm(fn(Event $record) => [
                 'venue_id' => $record->venue_id,
             ])
             ->modalHeading('Reschedule')
@@ -55,11 +54,11 @@ class RescheduleEventAction
             Wizard\Step::make('New Date')
                 ->icon('tabler-calendar-event')
                 ->schema(static::dateStep())
-                ->afterValidation(fn (Get $get, callable $set) => static::checkConflicts($get, $set)),
+                ->afterValidation(fn(Get $get, callable $set) => static::checkConflicts($get, $set)),
 
             Wizard\Step::make('Space Reservation')
                 ->icon('tabler-home')
-                ->visible(fn (Get $get) => $get('has_new_date') && static::isCmcVenue($get))
+                ->visible(fn(Get $get) => $get('has_new_date') && static::isCmcVenue($get))
                 ->schema(static::spaceReservationStep()),
 
             Wizard\Step::make('Confirm')
@@ -78,7 +77,7 @@ class RescheduleEventAction
                 ->helperText('If unchecked, the event will be marked as "Postponed (TBA)".'),
 
             Grid::make(2)
-                ->visible(fn (Get $get) => $get('has_new_date'))
+                ->visible(fn(Get $get) => $get('has_new_date'))
                 ->schema([
                     DateTimePicker::make('start_datetime')
                         ->label('New Start Date & Time')
@@ -86,14 +85,14 @@ class RescheduleEventAction
                         ->native(true)
                         ->seconds(false)
                         ->live()
-                        ->afterStateUpdated(fn (callable $set) => $set('end_time', null)),
+                        ->afterStateUpdated(fn(callable $set) => $set('end_time', null)),
 
                     TimePicker::make('end_time')
                         ->label('End Time')
                         ->seconds(false)
                         ->live()
-                        ->required(fn (Get $get) => static::isCmcVenue($get))
-                        ->helperText(fn (Get $get) => static::isCmcVenue($get)
+                        ->required(fn(Get $get) => static::isCmcVenue($get))
+                        ->helperText(fn(Get $get) => static::isCmcVenue($get)
                             ? 'Required for CMC events to check space availability'
                             : 'Optional for external venues'),
                 ]),
@@ -136,7 +135,7 @@ class RescheduleEventAction
                                 ->default($settings->default_event_setup_minutes)
                                 ->suffix('minutes')
                                 ->live()
-                                ->afterStateUpdated(fn (Get $get, callable $set) => static::recheckConflicts($get, $set)),
+                                ->afterStateUpdated(fn(Get $get, callable $set) => static::recheckConflicts($get, $set)),
 
                             TextInput::make('teardown_minutes')
                                 ->label('Teardown Time')
@@ -147,13 +146,13 @@ class RescheduleEventAction
                                 ->default($settings->default_event_teardown_minutes)
                                 ->suffix('minutes')
                                 ->live()
-                                ->afterStateUpdated(fn (Get $get, callable $set) => static::recheckConflicts($get, $set)),
+                                ->afterStateUpdated(fn(Get $get, callable $set) => static::recheckConflicts($get, $set)),
                         ]),
                 ]),
 
             Section::make('Admin Override')
                 ->compact()
-                ->visible(fn () => auth()->user()?->hasRole('admin'))
+                ->visible(fn() => User::me()?->hasRole('admin'))
                 ->schema([
                     Toggle::make('force_override')
                         ->label('Override conflicts')
@@ -161,9 +160,10 @@ class RescheduleEventAction
                         ->default(false),
                 ]),
 
-            Placeholder::make('conflict_warning')
-                ->content('You cannot proceed with this time slot due to conflicts. Please go back and choose a different time.')
-                ->visible(fn (Get $get) => $get('conflict_status') === 'event_conflict' && ! auth()->user()?->hasRole('admin'))
+            TextEntry::make('conflict_warning')
+                ->label('Conflict Warning')
+                ->state('You cannot proceed with this time slot due to conflicts. Please go back and choose a different time.')
+                ->visible(fn(Get $get) => $get('conflict_status') === 'event_conflict' && ! auth()->user()?->hasRole('admin'))
                 ->extraAttributes(['class' => 'text-danger-600']),
 
             Hidden::make('force_override')->default(false),
@@ -176,16 +176,16 @@ class RescheduleEventAction
             Section::make('Reschedule Summary')
                 ->compact()
                 ->schema([
-                    Placeholder::make('summary_action')
+                    TextEntry::make('summary_action')
                         ->label('Action')
-                        ->content(fn (Get $get) => $get('has_new_date')
+                        ->state(fn(Get $get) => $get('has_new_date')
                             ? 'Create new event with the new date'
                             : 'Mark as Postponed (TBA)'),
 
-                    Placeholder::make('summary_datetime')
+                    TextEntry::make('summary_datetime')
                         ->label('New Date & Time')
-                        ->visible(fn (Get $get) => $get('has_new_date'))
-                        ->content(function (Get $get) {
+                        ->visible(fn(Get $get) => $get('has_new_date'))
+                        ->state(function (Get $get) {
                             $start = $get('start_datetime');
                             $end = $get('end_time');
 
@@ -197,24 +197,24 @@ class RescheduleEventAction
                             $formatted = $startCarbon->format('l, F j, Y \a\t g:i A');
 
                             if ($end) {
-                                $formatted .= ' - '.$end;
+                                $formatted .= ' - ' . $end;
                             }
 
                             return $formatted;
                         }),
 
-                    Placeholder::make('summary_reason')
+                    TextEntry::make('summary_reason')
                         ->label('Reason')
-                        ->content(fn (Get $get) => $get('reason') ?: 'No reason provided'),
+                        ->state(fn(Get $get) => $get('reason') ?: 'No reason provided'),
                 ]),
 
             Section::make('Space Reservation')
                 ->compact()
-                ->visible(fn (Get $get) => $get('has_new_date') && static::isCmcVenue($get))
+                ->visible(fn(Get $get) => $get('has_new_date') && static::isCmcVenue($get))
                 ->schema([
-                    Placeholder::make('reservation_status')
+                    TextEntry::make('reservation_status')
                         ->label('Status')
-                        ->content(function (Get $get) {
+                        ->state(function (Get $get) {
                             $status = $get('conflict_status');
                             $forceOverride = $get('force_override');
 
@@ -273,7 +273,7 @@ class RescheduleEventAction
             ? $startDatetime
             : Carbon::parse($startDatetime, config('app.timezone'));
 
-        $endCarbon = Carbon::parse($startCarbon->toDateString().' '.$endTime, config('app.timezone'));
+        $endCarbon = Carbon::parse($startCarbon->toDateString() . ' ' . $endTime, config('app.timezone'));
 
         $settings = app(ReservationSettings::class);
         $setupMinutes = (int) ($get('setup_minutes') ?? $settings->default_event_setup_minutes);
@@ -304,19 +304,19 @@ class RescheduleEventAction
     protected static function formatConflictsForStorage(array $conflicts): array
     {
         return [
-            'reservations' => $conflicts['reservations']->map(fn ($r) => [
+            'reservations' => $conflicts['reservations']->map(fn($r) => [
                 'id' => $r->id,
                 'reserved_at' => $r->reserved_at->toIso8601String(),
                 'reserved_until' => $r->reserved_until->toIso8601String(),
                 'type' => class_basename($r),
                 'display_title' => $r->getDisplayTitle(),
             ])->values()->all(),
-            'productions' => $conflicts['productions']->map(fn ($p) => [
+            'productions' => $conflicts['productions']->map(fn($p) => [
                 'id' => $p->id,
                 'title' => $p->title,
                 'start_datetime' => $p->start_datetime->toIso8601String(),
             ])->values()->all(),
-            'closures' => $conflicts['closures']->map(fn ($c) => [
+            'closures' => $conflicts['closures']->map(fn($c) => [
                 'id' => $c->id,
                 'reason' => $c->type->getLabel(),
                 'starts_at' => $c->starts_at->toIso8601String(),
@@ -353,7 +353,7 @@ class RescheduleEventAction
 
         if (! empty($data['end_time'])) {
             $newEventData['end_datetime'] = Carbon::parse(
-                $startDatetime->toDateString().' '.$data['end_time'],
+                $startDatetime->toDateString() . ' ' . $data['end_time'],
                 config('app.timezone')
             );
         }

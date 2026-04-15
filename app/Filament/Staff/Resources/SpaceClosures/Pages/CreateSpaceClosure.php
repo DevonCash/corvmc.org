@@ -10,6 +10,7 @@ use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
+use CorvMC\SpaceManagement\States\ReservationState;
 
 class CreateSpaceClosure extends CreateRecord
 {
@@ -40,9 +41,10 @@ class CreateSpaceClosure extends CreateRecord
 
             foreach ($affectedReservationIds as $reservationId) {
                 $reservation = Reservation::find($reservationId);
-                if ($reservation && $reservation->status->isActive()) {
-                    ReservationService::cancelReservation($reservation, $cancellationReason);
+                try {
+                    $reservation->state->transitionTo(ReservationState\Cancelled::class, ['reason' => $cancellationReason]);
                     $cancelledCount++;
+                } catch (\Exception $e) {
                 }
             }
 

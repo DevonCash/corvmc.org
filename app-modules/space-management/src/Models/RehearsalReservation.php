@@ -6,14 +6,10 @@ use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Finance\Concerns\HasCharges;
 use CorvMC\Finance\Contracts\Chargeable;
-use CorvMC\SpaceManagement\Data\CreateReservationData;
-use CorvMC\SpaceManagement\Facades\ReservationService;
-use CorvMC\SpaceManagement\Database\Factories\RehearsalReservationFactory;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\States\ReservationState;
 use CorvMC\Support\Contracts\Recurrable;
 use CorvMC\Support\Models\RecurringSeries;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\ModelStates\HasStates;
 
@@ -46,7 +42,72 @@ use Spatie\ModelStates\HasStates;
 class RehearsalReservation extends Reservation implements Chargeable, Recurrable
 {
     use HasCharges, HasFactory, HasStates;
-    
+
+    /**
+     * Validation rules specific to rehearsal reservations.
+     */
+    protected array $rules = [
+        'reserved_at' => 'required|date|after:now',
+        'reserved_until' => 'required|date|after:reserved_at',
+        'reservable_type' => 'required|string',
+        'reservable_id' => 'required|integer',
+        'hours_used' => 'required|numeric|min:0.5|max:8',
+    ];
+
+    /**
+     * Boot method for model events.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Use static observer for validating event
+        static::observe(new class {
+            public function validating($reservation)
+            {
+                // Create virtual time_slot for custom rules
+                $reservation->setAttribute('time_slot', [
+                    'start_time' => $reservation->reserved_at,
+                    'end_time' => $reservation->reserved_until,
+                ]);
+
+                // Add custom rules dynamically based on state
+                $excludeId = $reservation->exists ? $reservation->id : null;
+                $rules = $reservation->getRules();
+                $rules['time_slot'] = [
+                    new \CorvMC\SpaceManagement\Rules\NoReservationOverlap($excludeId),
+                    new \CorvMC\SpaceManagement\Rules\NoClosureOverlap(),
+                    new \CorvMC\SpaceManagement\Rules\WithinBusinessHours(9, 22),
+                ];
+                $reservation->setRules($rules);
+            }
+
+            public function validated($reservation)
+            {
+                // Remove virtual attribute after validation
+                unset($reservation->time_slot);
+            }
+        });
+
+        // Determine status on creation if not set
+        static::creating(function ($reservation) {
+            if (!$reservation->status) {
+                $user = $reservation->getResponsibleUser();
+                if ($user) {
+                    $reservation->status = static::determineInitialStatus($user);
+                }
+            }
+        });
+
+        // Fire event for charge creation after validation passes
+        static::created(function ($reservation) {
+            event(new \CorvMC\SpaceManagement\Events\ReservationCreated(
+                $reservation,
+                deferCredits: $reservation->status === ReservationStatus::Reserved
+            ));
+        });
+    }
+
     /**
      * Determine the initial status for a new reservation based on the user's role.
      */
@@ -99,45 +160,7 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
         return $reservationDate->copy()->subWeek();
     }
 
-    /**
-     * Create a new reservation from data.
-     * Handles validation and initial status determination.
-     */
-    public static function createFromData(CreateReservationData $data): self
-    {
-        $user = $data->getResponsibleUser();
-        
-        // Validate unless explicitly skipped
-        if (!$data->skipConflictCheck) {
-            app(ReservationService::class)->validate($data->startTime, $data->endTime, [
-                'user' => $user,
-                'throwOnFailure' => true,
-            ]);
-        }
 
-        // Create the reservation
-        $reservation = static::create([
-            'reserver_type' => get_class($data->reserver),
-            'reserver_id' => $data->reserver->id,
-            'reserved_at' => $data->startTime,
-            'reserved_until' => $data->endTime,
-            'hours_used' => $data->getDurationInHours(),
-            'notes' => $data->notes,
-            'status' => static::determineInitialStatus($user),
-            'is_recurring' => $data->isRecurring,
-            'recurring_series_id' => $data->recurringSeriesId,
-        ]);
-
-        // Fire event for charge creation
-        // The Finance module listens to this event and creates the charge
-        event(new \CorvMC\SpaceManagement\Events\ReservationCreated(
-            $reservation, 
-            deferCredits: $reservation->status === ReservationStatus::Reserved
-        ));
-
-        return $reservation;
-    }
-    
     protected function registerStates(): void
     {
         $this->addState('status', ReservationState::class);
@@ -236,8 +259,9 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
         $endDateTime = $date->copy()->setTimeFromTimeString($series->end_time->format('H:i:s'));
 
         /** @var static */
-        return ReservationService::create(new CreateReservationData([
-            'user' => $series->user,
+        return static::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $series->user_id,
             'reserved_at' => $startDateTime,
             'reserved_until' => $endDateTime,
             'recurring_series_id' => $series->id,
@@ -245,7 +269,29 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
             'is_recurring' => true,
             'recurrence_pattern' => ['source' => 'recurring_series'],
             'status' => ReservationStatus::Reserved,
-        ]));
+            'hours_used' => $startDateTime->diffInMinutes($endDateTime) / 60,
+        ]);
+    }
+
+    public function canConfirm(): bool
+    {
+        // Only RehearsalReservations can be confirmed
+        if (!$this instanceof RehearsalReservation) {
+            return false;
+        }
+
+        // Delegate to state
+        if (!$this->status->canConfirm()) {
+            return false;
+        }
+
+        // Business rule: Can't confirm more than 5 days in advance
+        $daysUntilReservation = now()->diffInDays($this->reserved_at, false);
+        if ($daysUntilReservation > 5) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

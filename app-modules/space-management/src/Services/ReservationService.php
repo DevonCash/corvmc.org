@@ -6,12 +6,7 @@ use App\Models\User;
 use App\Settings\ReservationSettings;
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\Services\ConflictData;
-use CorvMC\SpaceManagement\Data\CreateReservationData;
 use CorvMC\SpaceManagement\Data\ReservationUsageData;
-use CorvMC\SpaceManagement\Data\UpdateReservationData;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
-use CorvMC\SpaceManagement\Events\ReservationCreated;
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Models\SpaceClosure;
 use Illuminate\Database\Eloquent\Collection;
@@ -24,94 +19,27 @@ use Spatie\Period\Period;
 use Spatie\Period\PeriodCollection;
 use Spatie\Period\Precision;
 
-/**
- * Service class for managing space reservations.
- *
- * This service handles reservation lifecycle and space management logic.
- * Authorization is handled by policies.
- * Payment concerns are handled by the Finance module's PaymentService.
- */
 class ReservationService
 {
-    /**
-     * Create a new reservation.
-     * Delegates to the model and logs activity.
-     */
-    public function create(CreateReservationData $data): RehearsalReservation
-    {
-        $reservation = RehearsalReservation::createFromData($data);
-
-        // Log activity outside transaction so it doesn't cause creation to fail
-        $this->logActivity('created', $reservation, $data->getResponsibleUser(), [
-            'hours' => $reservation->hours_used,
-            'status' => $reservation->status,
-        ]);
-
-        return $reservation;
-    }
-
-    /**
-     * Update an existing reservation.
-     * Delegates to the model and logs activity.
-     */
-    public function update(Reservation $reservation, UpdateReservationData $data): Reservation
-    {
-        // Collect the updates for logging
-        $originalValues = [
-            'reserved_at' => $reservation->reserved_at,
-            'reserved_until' => $reservation->reserved_until,
-            'notes' => $reservation->notes,
-            'status' => $reservation->status,
-        ];
-
-        // Update the reservation
-        $reservation = $reservation->updateFromData($data);
-
-        // Determine what changed for logging
-        $updates = [];
-        if ($reservation->reserved_at != $originalValues['reserved_at']) {
-            $updates['reserved_at'] = $reservation->reserved_at;
-        }
-        if ($reservation->reserved_until != $originalValues['reserved_until']) {
-            $updates['reserved_until'] = $reservation->reserved_until;
-        }
-        if ($reservation->notes != $originalValues['notes']) {
-            $updates['notes'] = $reservation->notes;
-        }
-        if ($reservation->status != $originalValues['status']) {
-            $updates['status'] = $reservation->status;
-        }
-
-        // Log activity outside transaction
-        if (!empty($updates)) {
-            $this->logActivity('updated', $reservation, User::me(), $updates);
-        }
-
-        return $reservation;
-    }
-
-
-
-
     /**
      * Unified conflict checking method.
      *
      * @param Carbon $startTime Start time to check
      * @param Carbon $endTime End time to check
-     * @param array $options Options:
-     *   - excludeId: Reservation ID to exclude
-     *   - includeBuffer: Apply buffer time (default: true)
-     *   - includeClosures: Check closures (default: true)
-     *   - returnData: Return ConflictData object vs Collection (default: false)
+     * @param int|null $excludeId Reservation ID to exclude
+     * @param bool $includeBuffer Apply buffer time (default: true)
+     * @param bool $includeClosures Check closures (default: true)
+     * @param bool $returnData Return ConflictData object vs Collection (default: false)
      * @return ConflictData|Collection|array
      */
-    public function getConflicts(Carbon $startTime, Carbon $endTime, array $options = [])
-    {
-        $excludeId = $options['excludeId'] ?? null;
-        $includeBuffer = $options['includeBuffer'] ?? true;
-        $includeClosures = $options['includeClosures'] ?? true;
-        $returnData = $options['returnData'] ?? false;
-
+    public function getConflicts(
+        Carbon $startTime,
+        Carbon $endTime,
+        ?int $excludeId = null,
+        bool $includeBuffer = true,
+        bool $includeClosures = true,
+        bool $returnData = false
+    ) {
         $bufferMinutes = $includeBuffer ? app(ReservationSettings::class)->buffer_minutes : 0;
         $bufferedStart = $startTime->copy()->subMinutes($bufferMinutes);
         $bufferedEnd = $endTime->copy()->addMinutes($bufferMinutes);
@@ -131,101 +59,12 @@ class ReservationService
 
         // Return as array for backwards compatibility
         if ($includeClosures) {
-            return [
-                'reservations' => $reservations,
-                'closures' => $closures,
-            ];
+            return $reservations->merge($closures)
+                ->sortBy(fn($item): string => $item->reserved_at ?? $item->starts_at);
         }
 
         // Simple Collection for checkForConflicts compatibility
         return $reservations;
-    }
-
-    /**
-     * Legacy method - redirects to unified getConflicts.
-     * @deprecated Use getConflicts() instead
-     */
-    public function checkForConflicts(
-        Carbon $startTime,
-        Carbon $endTime,
-        ?Reservation $excludeReservation = null
-    ): Collection {
-        return $this->getConflicts($startTime, $endTime, [
-            'excludeId' => $excludeReservation?->id,
-            'includeBuffer' => false,
-            'includeProductions' => false,
-            'includeClosures' => false,
-        ]);
-    }
-
-    /**
-     * Get availability calendar for a date range.
-     */
-    public function getAvailabilityCalendar(Carbon $from, Carbon $to): array
-    {
-        $reservations = Reservation::overlappingPeriod($from, $to)
-            ->get();
-
-        return [
-            'period' => [
-                'from' => $from->toDateString(),
-                'to' => $to->toDateString(),
-            ],
-            'reservations' => $reservations->map(fn($r) => [
-                'id' => $r->id,
-                'from' => $r->reserved_at->toDateTimeString(),
-                'to' => $r->reserved_until->toDateTimeString(),
-                'type' => class_basename($r),
-                'status' => $r->status->value,
-                'reserver' => $r->reserver?->name ?? 'Unknown',
-            ])->toArray(),
-        ];
-    }
-
-    /**
-    }
-
-
-
-
-    /**
-     * Create recurring reservations for sustaining members.
-     */
-    public function createRecurringReservation(User $user, Carbon $startTime, Carbon $endTime, array $recurrencePattern): array
-    {
-        if (! $user->isSustainingMember()) {
-            throw new \InvalidArgumentException('Only sustaining members can create recurring reservations.');
-        }
-
-
-        $reservations = [];
-        $weeks = $recurrencePattern['weeks'] ?? 4; // Default to 4 weeks
-        $interval = $recurrencePattern['interval'] ?? 1; // Every N weeks
-
-        for ($i = 0; $i < $weeks; $i++) {
-            $weekOffset = $i * $interval;
-            $recurringStart = $startTime->copy()->addWeeks($weekOffset);
-            $recurringEnd = $endTime->copy()->addWeeks($weekOffset);
-
-            try {
-                $reservation = $this->create(new CreateReservationData([
-                    'reserver' => $user,
-                    'startTime' => $recurringStart,
-                    'endTime' => $recurringEnd,
-                    'isRecurring' => true,
-                    'recurrencePattern' => $recurrencePattern,
-                ]));
-
-                $reservations[] = $reservation;
-            } catch (\InvalidArgumentException $e) {
-                // Skip this slot if there's a conflict, but continue with others
-                continue;
-            }
-        }
-
-        return [
-            'reservations' => $reservations,
-        ];
     }
 
     /**
@@ -338,7 +177,11 @@ class ReservationService
     public function getAvailableTimeSlotsForDate(Carbon $date, ?ConflictData $conflicts = null): array
     {
         // Fetch conflicts once if not provided
-        $conflicts ??= $this->getConflictsForDate($date);
+        $conflicts ??= $this->getConflicts(
+            $date->copy()->startOfDay(),
+            $date->copy()->endOfDay(),
+            returnData: true
+        );
 
         $allSlots = $this->getAllTimeSlots();
         $availableSlots = [];
@@ -367,7 +210,8 @@ class ReservationService
     {
         // Simple database query - let the DB do the rectangle select
         $query = Reservation::with('reservable')
-            ->inRange($startTime, $endTime)
+            ->where('ends_at', '>', $startTime)
+            ->where('reserved_at', '<', $endTime)
             ->when($excludeReservationId, function ($q) use ($excludeReservationId) {
                 $q->where('id', '!=', $excludeReservationId);
             });
@@ -375,19 +219,18 @@ class ReservationService
         return $query->get();
     }
 
-    /**
-     * Get all conflicts for a date.
-     * @deprecated Use getConflicts() with date range instead
-     */
-    public function getConflictsForDate(Carbon $date, ?int $excludeReservationId = null): ConflictData
-    {
-        $dayStart = $date->copy()->startOfDay();
-        $dayEnd = $date->copy()->endOfDay();
 
-        return $this->getConflicts($dayStart, $dayEnd, [
-            'excludeId' => $excludeReservationId,
-            'returnData' => true,
-        ]);
+    /**
+     * Internal helper to get conflicting closures.
+     */
+    private function getConflictingClosuresInternal(Carbon $startTime, Carbon $endTime): Collection
+    {
+        // Simple database query - let the DB do the rectangle select
+        $query = SpaceClosure::query()
+            ->where('ends_at', '>', $startTime)
+            ->where('starts_at', '<', $endTime);
+
+        return $query->get();
     }
 
     /**
@@ -440,17 +283,18 @@ class ReservationService
     /**
      * Get valid end time options based on start time.
      */
-    public function getValidEndTimes(string $startTime): array
+    public function getValidEndTimes(string $startTime, ?Carbon $date = null): array
     {
+        $date ??= Carbon::now();
         $slots = [];
-        $start = Carbon::createFromFormat('H:i', $startTime);
+        $start = $date->copy()->setTimeFromTimeString($startTime);
 
         // Minimum 1 hour, maximum 8 hours
         $earliestEnd = $start->copy()->addHour();
         $latestEnd = $start->copy()->addHours(8); // MAX_RESERVATION_DURATION
 
         // Don't go past 10 PM
-        $businessEnd = Carbon::createFromTime(22, 0);
+        $businessEnd = $date->copy()->setTime(22, 0);
         if ($latestEnd->greaterThan($businessEnd)) {
             $latestEnd = $businessEnd;
         }
@@ -471,7 +315,11 @@ class ReservationService
     public function getValidEndTimesForDate(Carbon $date, string $startTime, ?ConflictData $conflicts = null): array
     {
         // Fetch conflicts once if not provided
-        $conflicts ??= $this->getConflictsForDate($date);
+        $conflicts ??= $this->getConflicts(
+            $date->copy()->startOfDay(),
+            $date->copy()->endOfDay(),
+            returnData: true
+        );
 
         $slots = [];
         $start = $date->copy()->setTimeFromTimeString($startTime);
@@ -580,206 +428,5 @@ class ReservationService
             'hours.min' => 'Minimum reservation duration is 1 hour.',
             'hours.max' => 'Maximum reservation duration is 8 hours.',
         ];
-    }
-
-    /**
-     * Unified validation method using Laravel's Validator.
-     *
-     * @param Carbon $startTime
-     * @param Carbon $endTime
-     * @param array $options Options:
-     *   - user: User making the reservation (for user-specific rules)
-     *   - excludeId: Reservation ID to exclude from conflict check
-     *   - checkConflicts: Whether to check for reservation conflicts (default: true)
-     *   - checkClosures: Whether to check for closure conflicts (default: true)
-     *   - checkBusinessHours: Whether to validate business hours (default: true)
-     *   - throwOnFailure: Whether to throw exception on validation failure (default: false)
-     * @return \CorvMC\SpaceManagement\Data\ValidationResult
-     * @throws \InvalidArgumentException When validation fails and throwOnFailure is true
-     */
-    public function validate(Carbon $startTime, Carbon $endTime, array $options = []): \CorvMC\SpaceManagement\Data\ValidationResult
-    {
-        $throwOnFailure = $options['throwOnFailure'] ?? false;
-
-        // Prepare data for validation
-        $data = [
-            'start_time' => $startTime,
-            'end_time' => $endTime,
-            'hours' => $startTime->diffInMinutes($endTime) / 60,
-            'time_slot' => [
-                'start_time' => $startTime,
-                'end_time' => $endTime,
-            ],
-        ];
-
-        // Create validator with rules
-        $validator = Validator::make(
-            $data,
-            $this->getValidationRules($options),
-            $this->getValidationMessages()
-        );
-
-        // Extract conflicts if validation fails
-        if ($validator->fails()) {
-            $conflicts = [];
-
-            // Get conflicts from the custom rules if they were used
-            foreach ($validator->getRules()['time_slot'] ?? [] as $rule) {
-                if ($rule instanceof NoReservationOverlap) {
-                    $conflicts['reservations'] = $rule->getConflicts();
-                } elseif ($rule instanceof NoClosureOverlap) {
-                    $conflicts['closures'] = $rule->getClosures();
-                }
-            }
-
-            $result = \CorvMC\SpaceManagement\Data\ValidationResult::failure(
-                $validator->errors()->all(),
-                empty($conflicts) ? null : $conflicts
-            );
-
-            if ($throwOnFailure) {
-                throw new \InvalidArgumentException(
-                    'Validation failed: ' . implode('; ', $result->errors)
-                );
-            }
-
-            return $result;
-        }
-
-        return \CorvMC\SpaceManagement\Data\ValidationResult::success();
-    }
-
-    /**
-     * Legacy validation method.
-     * @deprecated Use validate() instead
-     */
-    public function validateReservation(User $user, Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): array
-    {
-        $result = $this->validate($startTime, $endTime, [
-            'user' => $user,
-            'excludeId' => $excludeReservationId,
-        ]);
-
-        // Return errors in legacy format
-        return $result->errors;
-    }
-
-    /**
-     * Validate that a time slot is valid and available.
-     * @deprecated Use validate() instead
-     */
-    public function validateTimeSlot(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): array
-    {
-        $result = $this->validate($startTime, $endTime, [
-            'excludeId' => $excludeReservationId,
-            'checkConflicts' => true,
-        ]);
-
-        // Return legacy array format
-        return [
-            'valid' => $result->valid,
-            'errors' => $result->errors,
-            'conflicts' => $result->conflicts,
-        ];
-    }
-
-    /**
-     * Internal helper to get conflicting closures.
-     * Note: Buffer should already be applied by caller.
-     */
-    private function getConflictingClosuresInternal(Carbon $startTime, Carbon $endTime): Collection
-    {
-
-        $dayStart = $startTime->copy()->startOfDay();
-        $dayEnd = $startTime->copy()->endOfDay();
-
-        // Skip cache in testing to ensure fresh data
-        if (app()->environment('testing')) {
-            $dayClosures = SpaceClosure::query()
-                ->with('createdBy')
-                ->where('ends_at', '>', $dayStart)
-                ->where('starts_at', '<', $dayEnd)
-                ->get();
-        } else {
-            $cacheKey = 'closures.conflicts.' . $startTime->format('Y-m-d');
-
-            // Cache all day's closures, then filter for specific conflicts
-            $dayClosures = Cache::remember($cacheKey, 1800, function () use ($dayStart, $dayEnd) {
-                return SpaceClosure::query()
-                    ->with('createdBy')
-                    ->where('ends_at', '>', $dayStart)
-                    ->where('starts_at', '<', $dayEnd)
-                    ->get();
-            });
-        }
-
-        // Filter cached results for the specific time range
-        $filteredClosures = $dayClosures->filter(function (SpaceClosure $closure) use ($startTime, $endTime) {
-            return $closure->ends_at > $startTime && $closure->starts_at < $endTime;
-        });
-
-        // If invalid time period, return all potentially overlapping closures
-        if ($endTime <= $startTime) {
-            return $filteredClosures;
-        }
-
-        // Use Period for precise overlap detection
-        $requestedPeriod = Period::make($startTime, $endTime, Precision::MINUTE());
-
-        return $filteredClosures->filter(function (SpaceClosure $closure) use ($requestedPeriod) {
-            return $closure->overlapsWithPeriod($requestedPeriod);
-        });
-    }
-
-    /**
-     * Check if a time slot is available.
-     * @deprecated Use getConflicts() and check if empty
-     */
-    public function checkTimeSlotAvailability(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): bool
-    {
-        // Invalid time period means slot is not available
-        if ($endTime <= $startTime) {
-            return false;
-        }
-
-        $conflicts = $this->getConflicts($startTime, $endTime, [
-            'excludeId' => $excludeReservationId,
-            'includeClosures' => true,
-        ]);
-
-        return $conflicts['reservations']->isEmpty()
-            && $conflicts['closures']->isEmpty();
-    }
-
-
-    /**
-     * Get all conflicts for a time slot.
-     * @deprecated Use getConflicts() instead
-     */
-    public function getAllConflicts(Carbon $startTime, Carbon $endTime, ?int $excludeReservationId = null): array
-    {
-        return $this->getConflicts($startTime, $endTime, [
-            'excludeId' => $excludeReservationId,
-            'includeClosures' => true,
-        ]);
-    }
-
-    /**
-     * Log activity for reservation operations.
-     */
-    protected function logActivity(string $event, Reservation $reservation, ?User $user, array $properties = []): void
-    {
-        activity('reservation')
-            ->performedOn($reservation)
-            ->causedBy($user)
-            ->event($event)
-            ->withProperties($properties)
-            ->log(match ($event) {
-                'created' => "Reservation created for {$reservation->reserved_at->format('M j, g:i A')}",
-                'updated' => 'Reservation updated',
-                'confirmed' => 'Reservation confirmed',
-                'cancelled' => 'Reservation cancelled',
-                default => $event,
-            });
     }
 }

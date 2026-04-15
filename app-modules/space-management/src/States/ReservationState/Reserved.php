@@ -28,6 +28,11 @@ class Reserved extends ReservationState
         return true;
     }
 
+    public function canConfirm(): bool
+    {
+        return true;
+    }
+
     /**
      * Reserved status requires confirmation within 3 days or auto-cancellation.
      */

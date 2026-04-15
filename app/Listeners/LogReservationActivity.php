@@ -24,7 +24,9 @@ class LogReservationActivity
                 'reserved_until' => $reservation->reserved_until->toIso8601String(),
                 'hours_used' => $reservation->hours_used,
                 'free_hours_used' => $reservation->free_hours_used,
-                'status' => $reservation->status->value,
+                'status' => $reservation->status instanceof \Spatie\ModelStates\State 
+                    ? $reservation->status->getValue() 
+                    : $reservation->status,
             ])
             ->log("Reservation created for {$date} {$timeRange}");
     }

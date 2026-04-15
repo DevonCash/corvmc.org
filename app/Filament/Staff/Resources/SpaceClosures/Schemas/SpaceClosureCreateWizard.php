@@ -3,16 +3,15 @@
 namespace App\Filament\Staff\Resources\SpaceClosures\Schemas;
 
 use Carbon\Carbon;
-use CorvMC\SpaceManagement\Actions\Reservations\GetReservationsAffectedByClosure;
 use CorvMC\SpaceManagement\Enums\ClosureType;
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ViewField;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -91,8 +90,8 @@ class SpaceClosureCreateWizard
                         ->default(false),
                 ]),
 
-            Placeholder::make('no_reservations_note')
-                ->content('No reservations will be affected by this closure. You can proceed.')
+            TextEntry::make('no_reservations_note')
+                ->state('No reservations will be affected by this closure. You can proceed.')
                 ->visible(fn (Get $get) => ! static::hasAffectedReservations($get)),
         ];
     }
@@ -103,9 +102,9 @@ class SpaceClosureCreateWizard
             Section::make('Closure Summary')
                 ->compact()
                 ->schema([
-                    Placeholder::make('summary_type')
+                    TextEntry::make('summary_type')
                         ->label('Type')
-                        ->content(function (Get $get) {
+                        ->state(function (Get $get) {
                             $type = $get('type');
                             if ($type instanceof ClosureType) {
                                 return $type->getLabel();
@@ -114,9 +113,9 @@ class SpaceClosureCreateWizard
                             return ClosureType::tryFrom($type)?->getLabel() ?? $type;
                         }),
 
-                    Placeholder::make('summary_period')
+                    TextEntry::make('summary_period')
                         ->label('Period')
-                        ->content(function (Get $get) {
+                        ->state(function (Get $get) {
                             $startsAt = $get('starts_at');
                             $endsAt = $get('ends_at');
 
@@ -134,18 +133,18 @@ class SpaceClosureCreateWizard
                             return $start->format('M j, Y g:i A').' to '.$end->format('M j, Y g:i A');
                         }),
 
-                    Placeholder::make('summary_notes')
+                    TextEntry::make('summary_notes')
                         ->label('Notes')
                         ->visible(fn (Get $get) => filled($get('notes')))
-                        ->content(fn (Get $get) => $get('notes')),
+                        ->state(fn (Get $get) => $get('notes')),
                 ]),
 
             Section::make('Reservations')
                 ->compact()
                 ->schema([
-                    Placeholder::make('reservations_action')
+                    TextEntry::make('reservations_action')
                         ->label('Action')
-                        ->content(function (Get $get) {
+                        ->state(function (Get $get) {
                             $hasAffected = static::hasAffectedReservations($get);
                             $willCancel = $get('cancel_affected_reservations');
 
@@ -191,7 +190,13 @@ class SpaceClosureCreateWizard
             return;
         }
 
-        $reservations = ReservationService::getReservationsAffectedByClosure($startsAtCarbon, $endsAtCarbon);
+        $reservations = ReservationService::getConflicts(
+            $startsAtCarbon,
+            $endsAtCarbon,
+            includeBuffer: false,  // No buffer needed for closure overlap
+            includeClosures: false, // Don't need closures, we're checking FOR a closure
+            returnData: false
+        );
 
         $formatted = $reservations->map(function ($r) {
             try {

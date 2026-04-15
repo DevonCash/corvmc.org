@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Service class for managing payment operations.
- * 
+ *
  * This service consolidates payment-related business logic
  * and provides a clear public API for other modules.
  */
@@ -43,7 +43,7 @@ class PaymentService
 
         // Get or create charge record
         $charge = $chargeable->charge;
-        
+
         if (!$charge) {
             throw new \Exception('No charge record found for this entity');
         }
@@ -57,6 +57,8 @@ class PaymentService
         );
 
         $this->logPayment($chargeable, $data);
+
+        // TODO: Trigger 'payment accepted' event for further processing (e.g. send receipt, update user status, etc.)
 
         return $charge;
     }
@@ -73,14 +75,14 @@ class PaymentService
         if ($chargeable instanceof RehearsalReservation) {
             if (in_array($chargeable->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
                 // TODO: This should be handled via event or callback, not direct dependency
-                $chargeable = ReservationService::confirm($chargeable);
+                $chargeable->status->transitionTo(ReservationStatus::Confirmed);
                 $chargeable->refresh();
             }
         }
 
         // Get or create charge record
         $charge = $chargeable->charge;
-        
+
         if (!$charge) {
             throw new \Exception('No charge record found for this entity');
         }
@@ -89,6 +91,8 @@ class PaymentService
         $charge->markAsComped($data->reason, $data->notes);
 
         $this->logComp($chargeable, $data);
+
+        // TODO: Trigger 'payment accepted' event for further processing (e.g. send notification, update user status, etc.)
 
         return $charge;
     }
@@ -187,7 +191,7 @@ class PaymentService
         // TODO: Implement refund logic
         // This would integrate with Stripe for stripe payments
         // and handle credit restoration if applicable
-        
+
         $charge->update([
             'status' => ChargeStatus::Refunded,
             'refunded_amount' => $amount,

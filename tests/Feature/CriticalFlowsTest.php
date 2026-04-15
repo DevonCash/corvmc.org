@@ -23,7 +23,6 @@ use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Facades\CreditService;
 use CorvMC\Finance\Facades\MemberBenefitService;
 use CorvMC\Membership\Facades\BandService;
-use CorvMC\SpaceManagement\Data\CreateReservationData;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
@@ -69,12 +68,12 @@ describe('Flow 1: Create Reservation with Credits', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservationData = new CreateReservationData(
-            reserver: $user,
-            startTime: $startTime,
-            endTime: $endTime,
-        );
-        $reservation = ReservationService::create($reservationData);
+        $reservation = RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+        ]);
 
         // Assert: Reservation created with free hours applied
         expect($reservation)->toBeInstanceOf(RehearsalReservation::class)
@@ -93,18 +92,18 @@ describe('Flow 1: Create Reservation with Credits', function () {
         $user->assignRole('sustaining member');
 
         // Give user only 2 blocks (1 hour at 30 min/block) of free time
-        MemberBenefitService::allocateMonthlyCredits($user, 2, CreditType::FreeHours);
+        CreditService::allocateMonthlyCredits($user, 2, CreditType::FreeHours);
 
         // Act: Create a 2-hour reservation (needs 4 blocks, only has 2)
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservationData = new CreateReservationData(
-            reserver: $user,
-            startTime: $startTime,
-            endTime: $endTime,
-        );
-        $reservation = ReservationService::create($reservationData);
+        $reservation = RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+        ]);
 
         // Assert: 1 hour free (2 blocks), 1 hour paid ($15)
         expect((float) $reservation->hours_used)->toEqual(2.0)
@@ -115,23 +114,26 @@ describe('Flow 1: Create Reservation with Credits', function () {
         expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(0);
     });
 
-    it('calculates cost correctly for non-members', function () {
+    it('charges full price for non-sustaining members', function () {
         // Arrange: Regular member without sustaining status
         $user = User::factory()->create();
         $user->assignRole('member');
 
-        // Act: Calculate cost for 2-hour reservation
+        // Act: Create 2-hour reservation
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $cost = ReservationService::calculateCost($user, $startTime, $endTime);
+        $reservation = RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+        ]);
 
-        // Assert: Full price, no free hours
-        expect($cost['total_hours'])->toEqual(2.0)
-            ->and($cost['free_hours'])->toEqual(0)
-            ->and($cost['paid_hours'])->toEqual(2.0)
-            ->and($cost['cost']->getAmount()->toFloat())->toEqual(30.0)
-            ->and($cost['is_sustaining_member'])->toBeFalse();
+        // Assert: Full price charged, no free hours
+        expect((float) $reservation->hours_used)->toEqual(2.0)
+            ->and((float) $reservation->free_hours_used)->toEqual(0)
+            ->and($reservation->charge->net_amount->getAmount()->toFloat())->toEqual(30.0);
     });
 
     it('prevents conflicting reservations', function () {
@@ -158,13 +160,12 @@ describe('Flow 1: Create Reservation with Credits', function () {
         $overlappingEnd = $overlappingStart->copy()->addHours(2);
 
         // Assert: Should throw validation error
-        $reservationData = new CreateReservationData(
-            reserver: $user2,
-            startTime: $overlappingStart,
-            endTime: $overlappingEnd,
-        );
-        expect(fn() => ReservationService::create($reservationData))
-            ->toThrow(\InvalidArgumentException::class);
+        expect(fn() => RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user2->id,
+            'reserved_at' => $overlappingStart,
+            'reserved_until' => $overlappingEnd,
+        ]))->toThrow(\Illuminate\Validation\ValidationException::class);
     });
 });
 
@@ -284,7 +285,7 @@ describe('Flow 2: Create Event with Conflict Checking', function () {
             ->and($event->venue_id)->toBe($this->externalVenue->id);
     });
 
-    it('detects conflicts via GetAllConflicts action', function () {
+    it('detects conflicts via ReservationService', function () {
         // Arrange: Create reservation
         $user = User::factory()->create();
 
@@ -330,7 +331,7 @@ describe('Flow 3: Create Band and Invite Member', function () {
         $this->actingAs($owner);
 
         // Act: Create band
-        $band = BandService::create([
+        $band = BandService::create($owner, [
             'name' => 'The Test Band',
             'bio' => 'A band for testing',
         ]);
@@ -347,7 +348,7 @@ describe('Flow 3: Create Band and Invite Member', function () {
         $owner->assignRole('member');
         $this->actingAs($owner);
 
-        $band = BandService::create([
+        $band = BandService::create($owner, [
             'name' => 'The Test Band',
         ]);
 
@@ -373,7 +374,7 @@ describe('Flow 3: Create Band and Invite Member', function () {
         $owner->assignRole('member');
         $this->actingAs($owner);
 
-        $band = BandService::create(['name' => 'The Test Band']);
+        $band = BandService::create($owner, ['name' => 'The Test Band']);
 
         $invitee = User::factory()->create();
         $invitee->assignRole('member');
@@ -398,7 +399,7 @@ describe('Flow 3: Create Band and Invite Member', function () {
         $owner->assignRole('member');
         $this->actingAs($owner);
 
-        $band = BandService::create(['name' => 'The Test Band']);
+        $band = BandService::create($owner, ['name' => 'The Test Band']);
 
         $member = User::factory()->create();
         $member->assignRole('member');
@@ -434,7 +435,7 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         $user->assignRole('sustaining member');
 
         // Act: Allocate monthly credits (simulates what happens after subscription)
-        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
+        CreditService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // Assert: User has credits
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
@@ -446,7 +447,7 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         $user->assignRole('sustaining member');
 
         // First allocation
-        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
+        CreditService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // Use some credits
         $user->deductCredit(8, CreditType::FreeHours, 'test_usage');
@@ -454,7 +455,7 @@ describe('Flow 4: Subscription Credit Allocation', function () {
 
         // Act: New month allocation
         $this->travel(1)->month();
-        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
+        CreditService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // Assert: Reset to 16, not 16 + 8
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
@@ -465,14 +466,14 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         $user = User::factory()->create();
         $user->assignRole('sustaining member');
 
-        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
+        CreditService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         // Use 4 blocks, have 12 left
         $user->deductCredit(4, CreditType::FreeHours, 'test_usage');
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(12);
 
         // Act: Upgrade to higher tier (32 blocks) mid-month
-        MemberBenefitService::allocateMonthlyCredits($user, 32, CreditType::FreeHours);
+        CreditService::allocateMonthlyCredits($user, 32, CreditType::FreeHours);
 
         // Assert: Gets tier delta added (32 - 16 = 16 extra), so 12 + 16 = 28
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(28);
@@ -482,7 +483,7 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         // Arrange: Sustaining member with credits
         $user = User::factory()->create();
         $user->assignRole('sustaining member');
-        MemberBenefitService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
+        CreditService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
         Venue::create(['name' => 'CMC', 'is_cmc' => true, 'address' => '420 NW 5th St', 'city' => 'Corvallis', 'state' => 'OR']);
 
@@ -490,12 +491,12 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        $reservationData = new CreateReservationData(
-            reserver: $user,
-            startTime: $startTime,
-            endTime: $endTime,
-        );
-        ReservationService::create($reservationData);
+        RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $startTime,
+            'reserved_until' => $endTime,
+        ]);
 
         // Assert: Credits deducted (2 hours = 8 blocks, 30 min per block)
         // 2 hours * 60 min / 30 min per block = 4 blocks

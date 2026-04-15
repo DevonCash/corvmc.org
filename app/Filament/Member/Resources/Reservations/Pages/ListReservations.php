@@ -7,8 +7,7 @@ use App\Filament\Member\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Member\Resources\Reservations\Widgets\RecurringSeriesTableWidget;
 use App\Models\User;
 use Carbon\Carbon;
-use CorvMC\SpaceManagement\Data\CreateReservationData;
-use CorvMC\SpaceManagement\Facades\ReservationService;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
@@ -72,15 +71,17 @@ class ListReservations extends ListRecords
                     ? $data['reserved_until']
                     : Carbon::parse($data['reserved_until']);
 
-                // Use CreateReservation action to properly create reservation with notifications
-                $reservation = ReservationService::create(new CreateReservationData([
-                    'user' => $user,
+                // Create reservation using Eloquent
+                $reservation = RehearsalReservation::create([
+                    'reservable_type' => User::class,
+                    'reservable_id' => $user->id,
                     'reserved_at' => $reservedAt,
                     'reserved_until' => $reservedUntil,
                     'status' => $data['status'],
                     'notes' => $data['notes'] ?? null,
                     'is_recurring' => $data['is_recurring'] ?? false,
-                ]));
+                    'hours_used' => $reservedAt->diffInMinutes($reservedUntil) / 60,
+                ]);
 
                 Notification::make()
                     ->title('Reservation Created')

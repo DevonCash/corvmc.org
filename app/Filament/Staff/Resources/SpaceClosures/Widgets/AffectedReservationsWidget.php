@@ -2,6 +2,7 @@
 
 namespace App\Filament\Staff\Resources\SpaceClosures\Widgets;
 
+use App\Filament\Actions\Reservations\CancelReservationAction;
 use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
 use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
@@ -32,10 +33,10 @@ class AffectedReservationsWidget extends BaseWidget
 
         $query = $closure
             ? Reservation::query()
-                ->with(['reservable', 'user', 'charge'])
-                ->where('status', '!=', ReservationStatus::Cancelled)
-                ->where('reserved_until', '>', $closure->starts_at)
-                ->where('reserved_at', '<', $closure->ends_at)
+            ->with(['reservable', 'user', 'charge'])
+            ->where('status', '!=', ReservationStatus::Cancelled)
+            ->where('reserved_until', '>', $closure->starts_at)
+            ->where('reserved_at', '<', $closure->ends_at)
             : Reservation::query()->whereRaw('1 = 0');
 
         return $table
@@ -49,27 +50,11 @@ class AffectedReservationsWidget extends BaseWidget
                 ReservationColumns::costDisplay(),
             ])
             ->defaultSort('reserved_at', 'asc')
-            ->recordClasses(fn (Reservation $record) => 'bg-danger-50 dark:bg-danger-950/20')
+            ->recordClasses(fn(Reservation $record) => 'bg-danger-50 dark:bg-danger-950/20')
             ->recordActions([
-                Action::make('cancel')
-                    ->label('Cancel')
-                    ->icon('tabler-x')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalDescription('Are you sure you want to cancel this reservation? The member will be notified.')
-                    ->visible(fn (Reservation $record) => $record->status->isActive())
-                    ->action(function (Reservation $record) use ($closure) {
-                        if ($closure) {
-                            ReservationService::cancelReservation($record, "Space closure: {$closure->type->getLabel()}");
-
-                            Notification::make()
-                                ->title('Reservation cancelled')
-                                ->success()
-                                ->send();
-                        }
-                    }),
+                CancelReservationAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     BulkAction::make('cancelAll')
                         ->label('Cancel Selected')
@@ -86,14 +71,16 @@ class AffectedReservationsWidget extends BaseWidget
                             $count = 0;
 
                             foreach ($records as $record) {
-                                if ($record->status->isActive()) {
-                                    ReservationService::cancel($record, "Space closure: {$closure->type->getLabel()}");
+                                try {
+                                    $record->state->transitionTo(ReservationStatus::Cancelled, ['reason' => "Space closure: {$closure->type->getLabel()}"]);
                                     $count++;
+                                } catch (\Exception $e) {
+                                    // Log the exception or handle it as needed
                                 }
                             }
 
                             Notification::make()
-                                ->title("{$count} ".str('reservation')->plural($count).' cancelled')
+                                ->title("{$count} " . str('reservation')->plural($count) . ' cancelled')
                                 ->success()
                                 ->send();
                         })

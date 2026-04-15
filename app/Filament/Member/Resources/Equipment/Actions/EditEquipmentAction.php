@@ -4,11 +4,11 @@ namespace App\Filament\Member\Resources\Equipment\Actions;
 
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
@@ -24,7 +24,7 @@ class EditEquipmentAction
             ->color('primary')
             ->modalWidth('2xl')
             ->modalHeading(fn ($record) => "Edit {$record->name}")
-            ->form([
+            ->schema([
                 Section::make('Basic Information')
                     ->schema([
                         Group::make([
@@ -71,9 +71,9 @@ class EditEquipmentAction
 
                 Section::make('Current Status')
                     ->schema([
-                        Placeholder::make('current_status')
+                        TextEntry::make('current_status')
                             ->label('Current Status')
-                            ->content(fn ($record) => match ($record->status) {
+                            ->state(fn ($record) => match ($record->status) {
                                 'available' => '✅ Available for checkout',
                                 'checked_out' => '⚠️ Currently checked out'.
                                     ($record->currentLoan ? " to {$record->currentLoan->borrower->name}" : ''),

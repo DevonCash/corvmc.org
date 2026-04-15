@@ -56,16 +56,17 @@ class ListSpaceClosures extends ListRecords
             'created_by_id' => User::me()->id,
         ]);
 
-        // Cancel affected reservations if requested
+        // Bulk cancel affected reservations if requested
         $cancelledCount = 0;
         if ($cancelReservations && ! empty($affectedReservationIds)) {
             $cancellationReason = "Space closure: {$closure->type->getLabel()}";
 
             foreach ($affectedReservationIds as $reservationId) {
                 $reservation = Reservation::find($reservationId);
-                if ($reservation && $reservation->status->isActive()) {
-                    ReservationService::cancelReservation($reservation, $cancellationReason);
+                try {
+                    $reservation->state->transitionTo(\CorvMC\SpaceManagement\States\ReservationState\Cancelled::class, ['reason' => $cancellationReason]);
                     $cancelledCount++;
+                } catch (\Exception $e) {
                 }
             }
         }

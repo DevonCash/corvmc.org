@@ -4,7 +4,7 @@ namespace CorvMC\SpaceManagement\Rules;
 
 use Carbon\Carbon;
 use Closure;
-use CorvMC\SpaceManagement\Services\ReservationService;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Collection;
 
@@ -13,7 +13,7 @@ class NoReservationOverlap implements ValidationRule
     protected ?int $excludeId;
     protected bool $includeBuffer;
     protected ?Collection $conflicts = null;
-    
+
     public function __construct(
         ?int $excludeId = null,
         bool $includeBuffer = true
@@ -21,7 +21,7 @@ class NoReservationOverlap implements ValidationRule
         $this->excludeId = $excludeId;
         $this->includeBuffer = $includeBuffer;
     }
-    
+
     /**
      * Run the validation rule.
      *
@@ -35,31 +35,32 @@ class NoReservationOverlap implements ValidationRule
             $fail('Invalid time slot data for reservation overlap check.');
             return;
         }
-        
-        $startTime = $value['start_time'] instanceof Carbon 
-            ? $value['start_time'] 
+
+        $startTime = $value['start_time'] instanceof Carbon
+            ? $value['start_time']
             : Carbon::parse($value['start_time']);
-            
-        $endTime = $value['end_time'] instanceof Carbon 
-            ? $value['end_time'] 
+
+        $endTime = $value['end_time'] instanceof Carbon
+            ? $value['end_time']
             : Carbon::parse($value['end_time']);
-        
+
         // Get conflicting reservations
-        $reservationService = app(ReservationService::class);
-        $conflicts = $reservationService->getConflicts($startTime, $endTime, [
-            'excludeId' => $this->excludeId,
-            'includeBuffer' => $this->includeBuffer,
-            'includeClosures' => false,
-        ]);
-        
+        $conflicts = ReservationService::getConflicts(
+            $startTime,
+            $endTime,
+            excludeId: $this->excludeId,
+            includeBuffer: $this->includeBuffer,
+            includeClosures: false
+        );
+
         $this->conflicts = $conflicts['reservations'] ?? collect();
-        
+
         if ($this->conflicts->isNotEmpty()) {
             $count = $this->conflicts->count();
             $fail("Conflicts with {$count} existing reservation(s).");
         }
     }
-    
+
     /**
      * Get the conflicting reservations found during validation.
      */

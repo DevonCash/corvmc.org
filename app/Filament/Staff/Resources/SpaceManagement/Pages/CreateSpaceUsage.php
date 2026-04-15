@@ -7,7 +7,7 @@ use App\Filament\Member\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource;
 use App\Models\User;
 use Carbon\Carbon;
-use CorvMC\SpaceManagement\Facades\ReservationService;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Schema;
 
@@ -39,17 +39,17 @@ class CreateSpaceUsage extends CreateRecord
         $reservedAt = $data['reserved_at'];
         $reservedUntil = $data['reserved_until'];
 
-        // Create the reservation using the action
-        $reservation = ReservationService::create(
-            $user,
-            $reservedAt,
-            $reservedUntil,
-            [
-                'status' => $data['status'] ?? 'confirmed',
-                'notes' => $data['notes'] ?? null,
-                'is_recurring' => $data['is_recurring'] ?? false,
-            ]
-        );
+        // Create the reservation using Eloquent
+        $reservation = RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $reservedAt,
+            'reserved_until' => $reservedUntil,
+            'status' => $data['status'] ?? 'confirmed',
+            'notes' => $data['notes'] ?? null,
+            'is_recurring' => $data['is_recurring'] ?? false,
+            'hours_used' => $reservedAt->diffInMinutes($reservedUntil) / 60,
+        ]);
 
         return $reservation;
     }

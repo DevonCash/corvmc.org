@@ -3,6 +3,7 @@
 namespace App\Filament\Staff\Resources\Events\Pages;
 
 use App\Actions\Events\SyncEventSpaceReservation;
+use App\Facades\EventSyncService;
 use App\Filament\Staff\Resources\Events\Actions\CancelEventAction;
 use App\Filament\Staff\Resources\Events\Actions\PublishEventAction;
 use App\Filament\Staff\Resources\Events\Actions\RescheduleEventAction;
@@ -116,7 +117,7 @@ class EditEvent extends EditRecord
             return;
         }
 
-        $result = ReservationService::syncEventSpaceReservation(
+        $result = EventSyncService::syncSpaceReservation(
             event: $event,
             setupMinutes: $setupMinutes,
             teardownMinutes: $teardownMinutes,
