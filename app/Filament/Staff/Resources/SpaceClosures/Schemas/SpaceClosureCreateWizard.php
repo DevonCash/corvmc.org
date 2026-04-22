@@ -195,7 +195,6 @@ class SpaceClosureCreateWizard
             $endsAtCarbon,
             includeBuffer: false,  // No buffer needed for closure overlap
             includeClosures: false, // Don't need closures, we're checking FOR a closure
-            returnData: false
         );
 
         $formatted = $reservations->map(function ($r) {

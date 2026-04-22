@@ -89,13 +89,4 @@ class MemberProfileService
         return $query->get();
     }
 
-    public function getDirectoryStats(): array
-    {
-        return [
-            'total_profiles' => MemberProfile::count(),
-            'public_profiles' => MemberProfile::where('visibility', 'public')->count(),
-            'teachers' => MemberProfile::flagged('is_teacher')->count(),
-            'professionals' => MemberProfile::flagged('is_professional')->count(),
-        ];
-    }
 }

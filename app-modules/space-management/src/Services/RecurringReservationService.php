@@ -355,6 +355,51 @@ class RecurringReservationService
     }
 
     /**
+     * Cancel a recurring series and all its future instances.
+     *
+     * @param RecurringSeries $series The series to cancel
+     * @return RecurringSeries The updated series
+     */
+    public function cancelSeries(RecurringSeries $series): RecurringSeries
+    {
+        // Update series status
+        $series->update([
+            'status' => RecurringSeriesStatus::CANCELLED,
+        ]);
+
+        // Cancel all future instances
+        $series->instances()
+            ->where('reserved_at', '>', now())
+            ->whereIn('status', ['scheduled', 'reserved'])
+            ->update(['status' => 'cancelled']);
+
+        return $series->fresh();
+    }
+
+    /**
+     * Alias for cancelSeries for backward compatibility.
+     *
+     * @param RecurringSeries $series The series to cancel
+     * @return RecurringSeries The updated series
+     */
+    public function cancelRecurringSeries(RecurringSeries $series): RecurringSeries
+    {
+        return $this->cancelSeries($series);
+    }
+
+    /**
+     * Generate instances for a recurring series.
+     * Wrapper for generateFutureRecurringInstances.
+     *
+     * @param RecurringSeries $series The series to generate instances for
+     * @return Collection The generated instances
+     */
+    public function generateInstances(RecurringSeries $series): Collection
+    {
+        return $this->generateFutureRecurringInstances($series);
+    }
+
+    /**
      * Check for conflicts with other recurring series.
      *
      * @param Carbon $date The date to check

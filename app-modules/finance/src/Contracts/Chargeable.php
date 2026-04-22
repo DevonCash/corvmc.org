@@ -24,6 +24,11 @@ interface Chargeable
     public function getBillableUnits(): float;
 
     /**
+     * Get the base price per unit for this chargeable.
+     */
+    public function getPricePerUnit(): float;
+
+    /**
      * Get a human-readable description for the charge.
      *
      * Used in receipts, invoices, and Stripe checkout descriptions.

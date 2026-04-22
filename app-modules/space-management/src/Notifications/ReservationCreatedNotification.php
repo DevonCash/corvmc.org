@@ -42,11 +42,11 @@ class ReservationCreatedNotification extends Notification implements ShouldQueue
 
         $message->line('**Reservation Details:**')
             ->line("Date & Time: {$this->reservation->time_range}")
-            ->line("Duration: {$this->reservation->hours_used} hours")
+            ->line("Duration: {$this->reservation->duration} hours")
             ->line('Cost: '.$this->reservation->cost_display);
 
-        if ($this->reservation->free_hours_used > 0) {
-            $message->line("Free Hours Used: {$this->reservation->free_hours_used} hours");
+        if ($this->reservation->charge && $this->reservation->charge->getFreeHoursApplied() > 0) {
+            $message->line("Free Hours Used: {$this->reservation->charge->getFreeHoursApplied()} hours");
         }
 
         if ($this->reservation->notes) {

@@ -53,17 +53,17 @@ class ReservationCard
                             TextEntry::make("{$relationship}.status")
                                 ->hiddenLabel()
                                 ->badge(),
-                            TextEntry::make("{$relationship}.hours_used")
+                            TextEntry::make("{$relationship}.duration")
                                 ->hiddenLabel()
                                 ->badge()
                                 ->color('gray')
-                                ->state(fn(?Model $record) => self::formatHours($record?->{$relationship}?->hours_used)),
-                            TextEntry::make("{$relationship}.free_hours_used")
+                                ->state(fn(?Model $record) => self::formatHours($record?->{$relationship}?->duration)),
+                            TextEntry::make("{$relationship}.charge.free_hours")
                                 ->hiddenLabel()
                                 ->badge()
                                 ->color('success')
-                                ->state(fn(?Model $record) => self::formatHours($record?->{$relationship}?->free_hours_used) . ' free')
-                                ->visible(fn(?Model $record) => $record?->{$relationship}?->free_hours_used > 0),
+                                ->state(fn(?Model $record) => self::formatHours($record?->{$relationship}?->charge?->getFreeHoursApplied()) . ' free')
+                                ->visible(fn(?Model $record) => $record?->{$relationship}?->charge && $record?->{$relationship}?->charge->getFreeHoursApplied() > 0),
                         ]),
                     ]),
             ]);
@@ -115,13 +115,13 @@ class ReservationCard
 
         return $reservation->reserved_at->format('g:i A') . ' – ' . 
                $reservation->reserved_until->format('g:i A') . ' (' . 
-               self::formatHours($reservation->hours_used) . ')';
+               self::formatHours($reservation->duration) . ')';
     }
 
     /**
      * Format hours consistently
      */
-    private static function formatHours(?float $hours): string
+    protected static function formatHours(?float $hours): string
     {
         if (!$hours) {
             return '0 hrs';

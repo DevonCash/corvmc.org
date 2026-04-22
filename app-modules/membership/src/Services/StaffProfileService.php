@@ -54,12 +54,4 @@ class StaffProfileService
         return StaffProfile::whereIn('id', $profileIds)->update($data);
     }
 
-    public function getStaffProfileStats(): array
-    {
-        return [
-            'total_profiles' => StaffProfile::count(),
-            'active_profiles' => StaffProfile::where('is_active', true)->count(),
-            'linked_profiles' => StaffProfile::whereNotNull('user_id')->count(),
-        ];
-    }
 }

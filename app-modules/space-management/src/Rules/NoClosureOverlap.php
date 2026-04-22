@@ -34,7 +34,7 @@ class NoClosureOverlap implements ValidationRule
             ? $value['end_time']
             : Carbon::parse($value['end_time']);
 
-        // Get conflicting closures
+        // Get conflicting closures (returns a Collection)
         $conflicts = ReservationService::getConflicts(
             $startTime,
             $endTime,
@@ -43,7 +43,10 @@ class NoClosureOverlap implements ValidationRule
             includeClosures: true
         );
 
-        $this->closures = $conflicts['closures'] ?? collect();
+        // Filter to only closures
+        $this->closures = $conflicts->filter(function($item) {
+            return $item instanceof \CorvMC\SpaceManagement\Models\SpaceClosure;
+        });
 
         if ($this->closures->isNotEmpty()) {
             $fail('Space is closed during this time.');

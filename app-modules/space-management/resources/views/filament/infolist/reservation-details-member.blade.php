@@ -59,10 +59,10 @@
     <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
         <h3 class="text-lg font-semibold mb-4">Cost</h3>
         <div class="space-y-3">
-            @if ($record->free_hours_used > 0)
+            @if ($record->charge && $record->charge->getFreeHoursApplied() > 0)
                 <div class="flex justify-between items-center">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Free Hours Used</span>
-                    <span class="font-medium">{{ $record->free_hours_used }} hours</span>
+                    <span class="font-medium">{{ $record->charge->getFreeHoursApplied() }} hours</span>
                 </div>
             @endif
 

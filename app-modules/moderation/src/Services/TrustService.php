@@ -207,32 +207,6 @@ class TrustService
     }
 
     /**
-     * Get trust statistics for a user.
-     *
-     * @param User $user The user to get stats for
-     * @return array Statistics including balances and achievements
-     */
-    public function getTrustStatistics(User $user): array
-    {
-        $balances = UserTrustBalance::where('user_id', $user->id)->get();
-        $achievements = TrustAchievement::where('user_id', $user->id)->get();
-        $totalPoints = $balances->sum('balance');
-
-        return [
-            'total_points' => $totalPoints,
-            'balances' => $balances->pluck('balance', 'content_type')->toArray(),
-            'achievements' => $achievements->map(function ($achievement) {
-                return [
-                    'type' => $achievement->achievement_type,
-                    'level' => $achievement->level,
-                    'awarded_at' => $achievement->created_at,
-                ];
-            })->toArray(),
-            'trust_level' => $this->calculateTrustLevel($totalPoints),
-        ];
-    }
-
-    /**
      * Determine the approval workflow based on user's trust level.
      *
      * @param User $user The user submitting content

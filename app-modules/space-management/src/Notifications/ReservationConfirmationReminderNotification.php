@@ -29,7 +29,7 @@ class ReservationConfirmationReminderNotification extends Notification implement
             ->line('Your practice space reservation is coming up in 3 days!')
             ->line('**Reservation Details:**')
             ->line("Date & Time: {$this->reservation->time_range}")
-            ->line("Duration: {$this->reservation->hours_used} hours")
+            ->line("Duration: {$this->reservation->duration} hours")
             ->line('Cost: '.$this->reservation->cost_display)
             ->line('')
             ->line('**Action Required:** Please confirm this reservation to let us know you remember it, or cancel if you can\'t make it. If no action is taken within 24 hours, it will be automatically cancelled to make the slot available to other members.')

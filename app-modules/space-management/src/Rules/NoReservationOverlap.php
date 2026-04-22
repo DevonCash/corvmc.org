@@ -44,7 +44,7 @@ class NoReservationOverlap implements ValidationRule
             ? $value['end_time']
             : Carbon::parse($value['end_time']);
 
-        // Get conflicting reservations
+        // Get conflicting reservations (returns a Collection)
         $conflicts = ReservationService::getConflicts(
             $startTime,
             $endTime,
@@ -53,7 +53,7 @@ class NoReservationOverlap implements ValidationRule
             includeClosures: false
         );
 
-        $this->conflicts = $conflicts['reservations'] ?? collect();
+        $this->conflicts = $conflicts;
 
         if ($this->conflicts->isNotEmpty()) {
             $count = $this->conflicts->count();

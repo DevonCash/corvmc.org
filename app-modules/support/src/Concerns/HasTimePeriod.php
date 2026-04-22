@@ -110,38 +110,163 @@ trait HasTimePeriod
 
     /**
      * Get the name of the start time field for this model.
-     * Override in models if different from default.
+     * Models should define protected static string $startTimeField to customize.
      */
     protected function getStartTimeField(): string
     {
-        return 'start_time';
+        return static::$startTimeField ?? 'start_time';
     }
 
     /**
      * Get the name of the end time field for this model.
-     * Override in models if different from default.
+     * Models should define protected static string $endTimeField to customize.
      */
     protected function getEndTimeField(): string
     {
-        return 'end_time';
+        return static::$endTimeField ?? 'end_time';
     }
 
     /**
-     * Scope to filter by common date ranges.
+     * Scope to get items that overlap with a given time period.
+     *
+     * @param Builder $query
+     * @param \DateTimeInterface|string $start
+     * @param \DateTimeInterface|string $end
+     * @param bool $strict If true, only return items fully contained within the period
+     * @return Builder
      */
-    public function scopeDateRange(Builder $query, string $range): Builder
+    public function scopeOverlapping(Builder $query, $start, $end, bool $strict = false): Builder
     {
         $startField = $this->getStartTimeField();
+        $endField = $this->getEndTimeField();
 
-        switch ($range) {
-            case 'this_week':
-                return $query->whereBetween($startField, [now()->startOfWeek(), now()->endOfWeek()]);
-            case 'this_month':
-                return $query->whereBetween($startField, [now()->startOfMonth(), now()->endOfMonth()]);
-            case 'next_month':
-                return $query->whereBetween($startField, [now()->addMonth()->startOfMonth(), now()->addMonth()->endOfMonth()]);
-            default:
-                return $query;
+        if ($strict) {
+            // Items fully contained within the period
+            return $query->where($startField, '>=', $start)
+                ->where($endField, '<=', $end);
         }
+
+        // Items with any overlap
+        return $query->where($endField, '>', $start)
+            ->where($startField, '<', $end);
+    }
+
+    /**
+     * Scope to get items that have started.
+     */
+    public function scopeStarted(Builder $query): Builder
+    {
+        $startField = $this->getStartTimeField();
+        return $query->where($startField, '<=', now());
+    }
+
+    /**
+     * Scope to get items that have not started yet.
+     */
+    public function scopeNotStarted(Builder $query): Builder
+    {
+        $startField = $this->getStartTimeField();
+        return $query->where($startField, '>', now());
+    }
+
+    /**
+     * Scope to get items that have ended.
+     */
+    public function scopeEnded(Builder $query): Builder
+    {
+        $endField = $this->getEndTimeField();
+        return $query->where($endField, '<', now());
+    }
+
+    /**
+     * Scope to get items that have not ended yet.
+     */
+    public function scopeNotEnded(Builder $query): Builder
+    {
+        $endField = $this->getEndTimeField();
+        return $query->where($endField, '>=', now());
+    }
+
+    /**
+     * Scope to filter by duration.
+     *
+     * @param Builder $query
+     * @param string $operator Comparison operator ('>', '<', '>=', '<=', '=', '!=')
+     * @param int $minutes Duration in minutes
+     * @return Builder
+     */
+    public function scopeByDuration(Builder $query, string $operator, int $minutes): Builder
+    {
+        $startField = $this->getStartTimeField();
+        $endField = $this->getEndTimeField();
+
+        // Using raw SQL to calculate duration in minutes
+        $durationExpression = "TIMESTAMPDIFF(MINUTE, {$startField}, {$endField})";
+        
+        return $query->whereRaw("{$durationExpression} {$operator} ?", [$minutes]);
+    }
+
+    /**
+     * Scope to order by start time.
+     *
+     * @param Builder $query
+     * @param string $direction 'asc' or 'desc'
+     * @return Builder
+     */
+    public function scopeOrderByStart(Builder $query, string $direction = 'asc'): Builder
+    {
+        $startField = $this->getStartTimeField();
+        return $query->orderBy($startField, $direction);
+    }
+
+    /**
+     * Scope to order by end time.
+     *
+     * @param Builder $query
+     * @param string $direction 'asc' or 'desc'
+     * @return Builder
+     */
+    public function scopeOrderByEnd(Builder $query, string $direction = 'asc'): Builder
+    {
+        $endField = $this->getEndTimeField();
+        return $query->orderBy($endField, $direction);
+    }
+
+    /**
+     * Scope to order by duration.
+     *
+     * @param Builder $query
+     * @param string $direction 'asc' or 'desc'
+     * @return Builder
+     */
+    public function scopeOrderByDuration(Builder $query, string $direction = 'asc'): Builder
+    {
+        $startField = $this->getStartTimeField();
+        $endField = $this->getEndTimeField();
+
+        // Using raw SQL to calculate and order by duration
+        $durationExpression = "TIMESTAMPDIFF(MINUTE, {$startField}, {$endField})";
+        
+        return $query->orderByRaw("{$durationExpression} {$direction}");
+    }
+
+    /**
+     * Get a human-readable time range display.
+     * Handles single-day and multi-day ranges.
+     */
+    public function getTimeRangeAttribute(): string
+    {
+        $startField = $this->getStartTimeField();
+        $endField = $this->getEndTimeField();
+        
+        if (! $this->{$startField} || ! $this->{$endField}) {
+            return 'TBD';
+        }
+
+        if ($this->{$startField}->isSameDay($this->{$endField})) {
+            return $this->{$startField}->format('M j, Y g:i A') . ' - ' . $this->{$endField}->format('g:i A');
+        }
+
+        return $this->{$startField}->format('M j, Y g:i A') . ' - ' . $this->{$endField}->format('M j, Y g:i A');
     }
 }

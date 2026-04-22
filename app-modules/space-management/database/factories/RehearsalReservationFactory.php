@@ -4,8 +4,10 @@ namespace CorvMC\SpaceManagement\Database\Factories;
 
 use App\Models\User;
 use Carbon\Carbon;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\States\ReservationState\Scheduled;
+use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
+use CorvMC\SpaceManagement\States\ReservationState\Cancelled;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -32,7 +34,7 @@ class RehearsalReservationFactory extends Factory
             'reservable_id' => User::factory(),
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
-            'status' => $this->faker->randomElement([ReservationStatus::Scheduled, ReservationStatus::Confirmed, ReservationStatus::Cancelled]),
+            'status' => $this->faker->randomElement([Scheduled::class, Confirmed::class, Cancelled::class]),
             'hours_used' => function (array $attributes) {
                 $start = Carbon::parse($attributes['reserved_at']);
                 $end = Carbon::parse($attributes['reserved_until']);

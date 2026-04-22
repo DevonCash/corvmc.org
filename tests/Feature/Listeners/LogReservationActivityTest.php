@@ -210,7 +210,6 @@ describe('No duplicate audit logs', function () {
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
             'status' => RehearsalReservation::determineInitialStatus($user),
-            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
         ]);
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
@@ -235,7 +234,6 @@ describe('No duplicate audit logs', function () {
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
             'status' => RehearsalReservation::determineInitialStatus($user),
-            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
         ]);
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())
@@ -260,7 +258,6 @@ describe('No duplicate audit logs', function () {
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
             'status' => RehearsalReservation::determineInitialStatus($user),
-            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
         ]);
 
         Activity::query()->delete();
@@ -286,7 +283,6 @@ describe('No duplicate audit logs', function () {
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
             'status' => RehearsalReservation::determineInitialStatus($user),
-            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
         ]);
         $reservation = $reservation->fresh();
 
@@ -297,7 +293,6 @@ describe('No duplicate audit logs', function () {
         $reservation->update([
             'reserved_at' => $newStart,
             'reserved_until' => $newEnd,
-            'hours_used' => $newStart->diffInMinutes($newEnd) / 60,
         ]);
 
         $logs = Activity::where('subject_type', (new RehearsalReservation)->getMorphClass())->get();
@@ -319,7 +314,6 @@ describe('No duplicate audit logs', function () {
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
             'status' => RehearsalReservation::determineInitialStatus($user),
-            'hours_used' => $startTime->diffInMinutes($endTime) / 60,
         ]);
         expect($reservation->status)->toBe(ReservationStatus::Scheduled);
 

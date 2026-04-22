@@ -112,9 +112,9 @@ trait HasPublishing
     /**
      * Get the start time field name for time-based published scopes.
      */
-    protected function getStartTimeField(): string
+    protected function getPublicationTimeField(): string
     {
-        return static::$startTimeField ?? 'start_datetime';
+        return static::$publicationTimeField ?? 'published_at';
     }
 
     /**
@@ -130,7 +130,7 @@ trait HasPublishing
      */
     public function scopePublishedUpcoming(Builder $query): Builder
     {
-        $startField = $this->getStartTimeField();
+        $startField = $this->getPublicationTimeField();
         $query = $query->published()
             ->where($startField, '>', now())
             ->orderBy($startField);
@@ -148,7 +148,7 @@ trait HasPublishing
      */
     public function scopePublishedPast(Builder $query): Builder
     {
-        $startField = $this->getStartTimeField();
+        $startField = $this->getPublicationTimeField();
         $query = $query->published()
             ->where($startField, '<', now())
             ->orderBy($startField, 'desc');
@@ -166,7 +166,7 @@ trait HasPublishing
      */
     public function scopePublishedToday(Builder $query): Builder
     {
-        $startField = $this->getStartTimeField();
+        $startField = $this->getPublicationTimeField();
         $query = $query->published()
             ->where($startField, '>=', now()->startOfDay())
             ->where($startField, '<=', now()->endOfDay())

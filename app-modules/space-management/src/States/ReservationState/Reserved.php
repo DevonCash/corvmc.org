@@ -33,15 +33,4 @@ class Reserved extends ReservationState
         return true;
     }
 
-    /**
-     * Reserved status requires confirmation within 3 days or auto-cancellation.
-     */
-    public function onEntry(): void
-    {
-        // Log that credits are deferred for Reserved status
-        activity('reservation')
-            ->performedOn($this->model)
-            ->event('reserved')
-            ->log('Reservation reserved - confirmation required within 3 days');
-    }
 }

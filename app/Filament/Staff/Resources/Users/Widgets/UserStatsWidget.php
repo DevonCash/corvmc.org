@@ -2,8 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Users\Widgets;
 
-use CorvMC\Finance\Actions\Subscriptions\GetSubscriptionStats;
-use CorvMC\Finance\Facades\SubscriptionService;
+use App\Facades\Analytics;
 use Filament\Widgets\Widget;
 
 class UserStatsWidget extends Widget
@@ -36,7 +35,7 @@ class UserStatsWidget extends Widget
 
     public function mount(): void
     {
-        $stats = SubscriptionService::getStats();
+        $stats = Analytics::getSubscriptionStats();
 
         $this->totalMembers = $stats->total_users;
         $this->sustainingMembers = $stats->sustaining_members;
@@ -46,7 +45,7 @@ class UserStatsWidget extends Widget
         $this->mrrTotal = $stats->mrr_total->formatTo('en_US');
         $this->mrrBase = $stats->mrr_base->formatTo('en_US');
         $this->feeCost = $stats->mrr_total->minus($stats->mrr_base)->formatTo('en_US');
-        $this->averageMrr = $stats->average_mrr->formatTo('en_US');
+        $this->averageMrr = $stats->average_contribution->formatTo('en_US');
         $this->medianContribution = $stats->median_contribution->formatTo('en_US');
     }
 }

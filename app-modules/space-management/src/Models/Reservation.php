@@ -4,8 +4,8 @@ namespace CorvMC\SpaceManagement\Models;
 
 use App\Models\User;
 use Carbon\Carbon;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\States\ReservationState;
+use CorvMC\SpaceManagement\States\ReservationState\Cancelled;
 use CorvMC\Support\Concerns\HasRecurringSeries;
 use CorvMC\Support\Concerns\HasTimePeriod;
 use Filament\Support\Contracts\HasColor;
@@ -41,13 +41,14 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
 
     /**
      * Base validation rules for all reservations.
+     * 
+     * @deprecated hours_used is auto-calculated and will be removed in future version
      */
     protected array $rules = [
         'reserved_at' => 'required|date',
         'reserved_until' => 'required|date|after:reserved_at',
         'reservable_type' => 'required|string',
         'reservable_id' => 'required|integer',
-        'hours_used' => 'required|numeric|min:0.5|max:8',
     ];
 
     /**
@@ -61,8 +62,8 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
             'status' => ReservationState::class,
             'reserved_at' => 'datetime',
             'reserved_until' => 'datetime',
-            'hours_used' => 'decimal:2',
-            'free_hours_used' => 'decimal:2',
+            'hours_used' => 'decimal:2', // @deprecated Use $this->duration from HasTimePeriod trait
+            'free_hours_used' => 'decimal:2', // @deprecated Use $this->charge?->getFreeHoursApplied()
             'is_recurring' => 'boolean',
             'recurrence_pattern' => 'array',
             'instance_date' => 'date',
@@ -115,7 +116,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
 
         // Add global scope to exclude cancelled reservations by default
         static::addGlobalScope('active', function (Builder $builder) {
-            $builder->whereNotIn('status', [ReservationStatus::Cancelled]);
+            $builder->whereNotIn('status', [Cancelled::class]);
         });
     }
 
@@ -187,22 +188,6 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         return $this->morphOne(Charge::class, 'chargeable');
     }
 
-    /**
-     * Query scope: Get active reservations that overlap with a given time period.
-     * Useful for finding reservations affected by closures or other events.
-     *
-     * @param Builder $query
-     * @param Carbon $startsAt
-     * @param Carbon $endsAt
-     * @return Builder
-     */
-    public function scopeAffectedByClosure(Builder $query, Carbon $startsAt, Carbon $endsAt): Builder
-    {
-        return $query->with(['reservable', 'user'])
-            ->where('reserved_until', '>', $startsAt)
-            ->where('reserved_at', '<', $endsAt)
-            ->orderBy('reserved_at');
-    }
 
     /**
      * Query scope: Get upcoming reservations within a specified number of days.
@@ -247,41 +232,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     }
 
 
-    /**
-     * Query scope: Get reservations within a time range.
-     * Returns reservations that have any overlap with the given range.
-     *
-     * @param Builder $query
-     * @param Carbon $start
-     * @param Carbon $end
-     * @return Builder
-     */
-    public function scopeInRange(Builder $query, Carbon $start, Carbon $end): Builder
-    {
-        return $query->where('reserved_until', '>', $start)
-            ->where('reserved_at', '<', $end);
-    }
 
-    /**
-     * Query scope: Get reservations that overlap with a given period.
-     * Includes partial overlaps.
-     *
-     * @param Builder $query
-     * @param Carbon $from
-     * @param Carbon $to
-     * @return Builder
-     */
-    public function scopeOverlappingPeriod(Builder $query, Carbon $from, Carbon $to): Builder
-    {
-        return $query->where(function ($query) use ($from, $to) {
-            $query->whereBetween('reserved_at', [$from, $to])
-                ->orWhereBetween('reserved_until', [$from, $to])
-                ->orWhere(function ($q) use ($from, $to) {
-                    $q->where('reserved_at', '<=', $from)
-                        ->where('reserved_until', '>=', $to);
-                });
-        });
-    }
 
     /**
      * Get the human-readable label for this reservation type.
@@ -327,18 +278,6 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         return 'N/A';
     }
 
-    public function getTimeRangeAttribute(): string
-    {
-        if (! $this->reserved_at || ! $this->reserved_until) {
-            return 'TBD';
-        }
-
-        if ($this->reserved_at->isSameDay($this->reserved_until)) {
-            return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('g:i A');
-        }
-
-        return $this->reserved_at->format('M j, Y g:i A') . ' - ' . $this->reserved_until->format('M j, Y g:i A');
-    }
 
     public function getColor(): string|array
     {
@@ -356,22 +295,10 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     }
 
     /**
-     * Get the name of the start time field for this model.
-     * Required by HasTimePeriod trait.
+     * HasTimePeriod configuration
      */
-    protected function getStartTimeField(): string
-    {
-        return 'reserved_at';
-    }
-
-    /**
-     * Get the name of the end time field for this model.
-     * Required by HasTimePeriod trait.
-     */
-    protected function getEndTimeField(): string
-    {
-        return 'reserved_until';
-    }
+    protected static string $startTimeField = 'reserved_at';
+    protected static string $endTimeField = 'reserved_until';
 
     /**
      * Convert hours to credit blocks.
@@ -415,7 +342,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         $query->where(function ($q) {
             $q->where(function ($q) {
                 // Scheduled reservations about to be autocancelled (< 3 days away)
-                $q->where('status', ReservationStatus::Scheduled)
+                $q->whereState('status', ReservationState\Scheduled::class)
                     ->where('reserved_at', '>', now())
                     ->where('reserved_at', '<=', now()->addDays(3));
             })->orWhere(function ($q) {
@@ -427,19 +354,6 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
                     ->where('reserved_at', '<', now());
             });
         })->where('status', '!=', 'cancelled');
-    }
-
-    #[Scope]
-    protected function upcoming(Builder $query): void
-    {
-        $query->where('reserved_at', '>', now())
-            ->whereNotStatus('status', [ReservationStatus::Cancelled, ReservationStatus::Completed]);
-    }
-
-    #[Scope]
-    protected function status(Builder $query, ReservationStatus $status): void
-    {
-        $query->where('status', $status);
     }
 
     protected ?bool $preloadedIsFirstReservation = null;
@@ -469,6 +383,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
 
         return ! $user->rehearsals()
             ->where('id', '!=', $this->id)
+            ->whereNotState('status', ReservationState\Cancelled::class)
             ->exists();
     }
 
@@ -487,7 +402,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     public function needsConfirmationReminder(): bool
     {
         // Only scheduled reservations need reminders
-        if ($this->status !== ReservationStatus::Scheduled) {
+        if ($this->status->isNot(ReservationState\Scheduled::class)) {
             return false;
         }
 

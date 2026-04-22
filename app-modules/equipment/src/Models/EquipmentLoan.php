@@ -103,20 +103,10 @@ class EquipmentLoan extends Model
     use HasFactory, HasStates, HasTimePeriod, LogsActivity;
 
     /**
-     * Get the name of the start time field for this model.
+     * HasTimePeriod configuration
      */
-    protected function getStartTimeField(): string
-    {
-        return 'reserved_from';
-    }
-
-    /**
-     * Get the name of the end time field for this model.
-     */
-    protected function getEndTimeField(): string
-    {
-        return 'due_at';
-    }
+    protected static string $startTimeField = 'reserved_from';
+    protected static string $endTimeField = 'due_at';
 
     protected $fillable = [
         'equipment_id',

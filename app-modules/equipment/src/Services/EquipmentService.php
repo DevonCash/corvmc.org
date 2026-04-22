@@ -266,23 +266,6 @@ class EquipmentService
     }
 
     /**
-     * Get comprehensive equipment statistics.
-     */
-    public function getStatistics(): array
-    {
-        return [
-            'total_equipment' => Equipment::count(),
-            'available_equipment' => Equipment::available()->count(),
-            'checked_out_equipment' => Equipment::where('status', 'checked_out')->count(),
-            'maintenance_equipment' => Equipment::where('status', 'maintenance')->count(),
-            'active_loans' => EquipmentLoan::active()->count(),
-            'overdue_loans' => EquipmentLoan::overdue()->count(),
-            'donated_equipment' => Equipment::donated()->count(),
-            'loaned_to_cmc' => Equipment::onLoanToCmc()->count(),
-        ];
-    }
-
-    /**
      * Mark an equipment loan as overdue.
      */
     public function markOverdue(EquipmentLoan $loan): void

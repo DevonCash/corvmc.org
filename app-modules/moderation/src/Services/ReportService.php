@@ -200,41 +200,6 @@ class ReportService
     }
 
     /**
-     * Get report statistics.
-     *
-     * @param \DateTimeInterface|null $startDate Start date for stats
-     * @param \DateTimeInterface|null $endDate End date for stats
-     * @return array Report statistics
-     */
-    public function getStatistics(?\DateTimeInterface $startDate = null, ?\DateTimeInterface $endDate = null): array
-    {
-        $query = Report::query();
-
-        if ($startDate) {
-            $query->where('created_at', '>=', $startDate);
-        }
-        if ($endDate) {
-            $query->where('created_at', '<=', $endDate);
-        }
-
-        $total = $query->count();
-        $byStatus = $query->get()->groupBy('status')->map->count();
-        $byReason = $query->get()->groupBy('reason')->map->count();
-        $avgResolutionTime = Report::where('status', ReportStatus::Resolved)
-            ->whereNotNull('resolved_at')
-            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, resolved_at)) as avg_hours')
-            ->value('avg_hours');
-
-        return [
-            'total_reports' => $total,
-            'by_status' => $byStatus,
-            'by_reason' => $byReason,
-            'pending_count' => $byStatus[ReportStatus::Pending->value] ?? 0,
-            'avg_resolution_hours' => round($avgResolutionTime ?? 0, 1),
-        ];
-    }
-
-    /**
      * Handle specific resolution actions.
      *
      * @param Report $report The report being resolved

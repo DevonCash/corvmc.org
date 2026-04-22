@@ -56,7 +56,8 @@ class ReservationInfolist
                                         return null;
                                     }
 
-                                    return '(' . $record->hours_used . ' hrs - ' . $record->free_hours_used . ' free hrs) × $15';
+                                    $freeHours = $record->charge?->getFreeHoursApplied() ?? 0;
+                                    return '(' . $record->duration . ' hrs - ' . $freeHours . ' free hrs) × $15';
                                 })
                         ])->columnSpanFull(),
                     ])

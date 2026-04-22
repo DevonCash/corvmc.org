@@ -75,16 +75,4 @@ class UserManagementService
         return $query->get();
     }
 
-    public function getUserStats(): array
-    {
-        return [
-            'total_users' => User::count(),
-            'active_users' => User::whereNotNull('email_verified_at')->count(),
-            'new_this_month' => User::where('created_at', '>=', now()->startOfMonth())->count(),
-            'by_role' => User::selectRaw('count(*) as count')
-                ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
-                ->groupBy('model_has_roles.role_id')
-                ->pluck('count'),
-        ];
-    }
 }

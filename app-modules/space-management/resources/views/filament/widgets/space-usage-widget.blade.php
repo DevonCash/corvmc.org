@@ -55,9 +55,9 @@
                                 <div class="flex items-center gap-2 text-sm">
                                     <x-filament::icon icon="tabler-currency-dollar" class="w-4 h-4 text-gray-400" />
                                     <span>{{ $next->charge?->net_amount?->formatTo('en_US') ?? 'N/A' }}</span>
-                                    @if($next->free_hours_used > 0)
+                                    @if($next->charge && $next->charge->getFreeHoursApplied() > 0)
                                         <span class="text-success-600 dark:text-success-400">
-                                            ({{ number_format($next->free_hours_used, 1) }}h free)
+                                            ({{ number_format($next->charge->getFreeHoursApplied(), 1) }}h free)
                                         </span>
                                     @endif
                                 </div>

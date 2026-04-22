@@ -1,0 +1,58 @@
+flowchart TD
+    Start([User clicks Commit])
+    Start --> Orch[CommitOrderAction<br/>opens DB transaction]
+
+    Orch --> W1[credit portion:<br/>wallet.withdraw<br/>no Transaction written]
+    Orch --> W2[stripe portion:<br/>Transaction Pending<br/>type: payment]
+    Orch --> W3[stripe fee if covers_fees:<br/>Transaction Pending<br/>type: fee]
+    Orch --> W4[cash portion:<br/>Transaction Pending<br/>type: payment]
+
+    W1 --> Confirmed[Reservation: Confirmed<br/>Order: Pending<br/>DB transaction commits]
+    W2 --> Confirmed
+    W3 --> Confirmed
+    W4 --> Confirmed
+
+    Confirmed --> WaitLoop{Waiting for<br/>all Transactions<br/>to clear}
+
+    WaitLoop -->|Stripe webhook| StripeClr[stripe Transactions:<br/>Pending → Cleared]
+    WaitLoop -->|Staff records cash| CashClr[cash Transaction:<br/>Pending → Cleared]
+    WaitLoop -->|Session expires / voided| Cancelled[Transaction: Cancelled<br/>no money moved]
+    WaitLoop -->|Rail rejects| Failed[Transaction: Failed<br/>user can retry<br/>spawns new Pending]
+
+    StripeClr --> CheckAll{All Transactions<br/>on Order Cleared?}
+    CashClr --> CheckAll
+
+    CheckAll -->|no| WaitLoop
+    CheckAll -->|yes| Completed[Order: Completed<br/>Tickets activated<br/>OrderSettled event]
+
+    Failed --> WaitLoop
+    Cancelled --> OrderCancelled{Any Transactions<br/>still outstanding?}
+    OrderCancelled -->|no| OrderX[Order: Cancelled]
+    OrderCancelled -->|yes| WaitLoop
+
+    Completed --> RefundQ{Refund requested?}
+    RefundQ -->|no| Done([done])
+    RefundQ -->|yes| RefundOrch[Refund orchestrator]
+
+    RefundOrch --> R1[credit was used:<br/>wallet.deposit<br/>no Transaction written]
+    RefundOrch --> R2[stripe was charged:<br/>new Transaction<br/>type: refund, Pending<br/>+ Stripe refund API]
+    RefundOrch --> R3[cash was paid:<br/>new Transaction<br/>type: refund, Pending<br/>+ cash-out staff task]
+
+    R1 --> Refunded[Order: Refunded]
+    R2 --> RefWh[Stripe refund webhook]
+    R3 --> RefStaff[Staff hands cash back]
+    RefWh --> RefundedTxClr[refund Transaction:<br/>Pending → Cleared]
+    RefStaff --> RefundedTxClr
+    RefundedTxClr --> Refunded
+
+    classDef commit fill:#0369a1,stroke:#0c4a6e,color:#fff
+    classDef wait fill:#b45309,stroke:#78350f,color:#fff
+    classDef cleared fill:#15803d,stroke:#14532d,color:#fff
+    classDef terminal fill:#b91c1c,stroke:#7f1d1d,color:#fff
+    classDef refund fill:#7e22ce,stroke:#581c87,color:#fff
+
+    class Orch,W1,W2,W3,W4,Confirmed commit
+    class WaitLoop,StripeClr,CashClr wait
+    class Completed cleared
+    class OrderX,Failed,Cancelled terminal
+    class RefundOrch,R1,R2,R3,Refunded,RefWh,RefStaff,RefundedTxClr refund

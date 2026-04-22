@@ -32,6 +32,12 @@ class SpaceClosure extends Model
 {
     use HasTimePeriod, SoftDeletes;
 
+    /**
+     * HasTimePeriod configuration
+     */
+    protected static string $startTimeField = 'starts_at';
+    protected static string $endTimeField = 'ends_at';
+
     protected $fillable = [
         'starts_at',
         'ends_at',
@@ -55,16 +61,6 @@ class SpaceClosure extends Model
         return $this->belongsTo(User::class, 'created_by_id');
     }
 
-    protected function getStartTimeField(): string
-    {
-        return 'starts_at';
-    }
-
-    protected function getEndTimeField(): string
-    {
-        return 'ends_at';
-    }
-
     /**
      * Scope to get active (non-deleted) closures.
      */
@@ -82,21 +78,11 @@ class SpaceClosure extends Model
     }
 
     /**
-     * Scope to get closures that overlap with a given period.
-     */
-    public function scopeOverlapping(Builder $query, \Carbon\Carbon $start, \Carbon\Carbon $end): Builder
-    {
-        return $query->where('ends_at', '>', $start)
-            ->where('starts_at', '<', $end);
-    }
-
-    /**
      * Scope to get upcoming closures.
      */
     public function scopeUpcoming(Builder $query): Builder
     {
-        return $query->where('ends_at', '>', now())
-            ->orderBy('starts_at');
+        return $query->notEnded()->orderByStart();
     }
 
     /**
@@ -111,33 +97,4 @@ class SpaceClosure extends Model
             ->where('starts_at', '<', $dayEnd);
     }
 
-    /**
-     * Check if this closure overlaps with a given period.
-     */
-    public function overlapsWithPeriod(Period $period): bool
-    {
-        $closurePeriod = $this->createPeriod();
-
-        if (! $closurePeriod) {
-            return false;
-        }
-
-        return $closurePeriod->overlapsWith($period);
-    }
-
-    /**
-     * Get a human-readable time range display.
-     */
-    public function getTimeRangeAttribute(): string
-    {
-        if (! $this->starts_at || ! $this->ends_at) {
-            return 'TBD';
-        }
-
-        if ($this->starts_at->isSameDay($this->ends_at)) {
-            return $this->starts_at->format('M j, Y g:i A').' - '.$this->ends_at->format('g:i A');
-        }
-
-        return $this->starts_at->format('M j, Y g:i A').' - '.$this->ends_at->format('M j, Y g:i A');
-    }
 }

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Listeners\CheckEventSpaceConflicts;
+use App\Listeners\ConfirmReservationOnPayment;
 use App\Livewire\Synthesizers\MoneySynthesizer;
 use CorvMC\Finance\Models\Subscription;
 use App\Models\User;
@@ -12,6 +13,7 @@ use App\Observers\TagObserver;
 use App\Observers\UserObserver;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
 use CorvMC\Events\Events\EventScheduling;
+use CorvMC\Finance\Events\PaymentAccepted;
 use CorvMC\Finance\Listeners\HandleChargeableCancelled;
 use CorvMC\Finance\Listeners\HandleChargeableConfirmed;
 use CorvMC\Finance\Listeners\HandleChargeableCreated;
@@ -43,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\EventSyncService::class);
         $this->app->singleton(\App\Services\ActivityLogService::class);
         $this->app->singleton(\App\Services\InvitationService::class);
+        $this->app->singleton(\App\Services\AnalyticsService::class);
     }
 
     public function boot(): void
@@ -103,6 +106,9 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(ReservationCancelled::class, HandleChargeableCancelled::class);
         Event::listen(ReservationUpdated::class, HandleChargeableUpdated::class);
         Event::listen(ReservationConfirmed::class, HandleChargeableConfirmed::class);
+        
+        // Finance → SpaceManagement integration (payment confirmation)
+        Event::listen(PaymentAccepted::class, ConfirmReservationOnPayment::class);
 
         // SpaceManagement → Activity logging (reservation lifecycle)
         // LogReservationActivity is auto-discovered by Laravel's event discovery.

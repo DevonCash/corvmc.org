@@ -163,8 +163,9 @@ class Event extends ContentModel implements Recurrable
         return EventFactory::new();
     }
 
-    // HasPublishing configuration
+    // HasTimePeriod configuration
     protected static string $startTimeField = 'start_datetime';
+    protected static string $endTimeField = 'end_datetime';
 
     protected static array $excludedStatuses = [
         EventStatus::Cancelled,
@@ -747,21 +748,6 @@ class Event extends ContentModel implements Recurrable
         });
     }
 
-    /**
-     * Override HasTimePeriod trait to use correct field names.
-     */
-    protected function getStartTimeField(): string
-    {
-        return 'start_datetime';
-    }
-
-    /**
-     * Override HasTimePeriod trait to use correct field names.
-     */
-    protected function getEndTimeField(): string
-    {
-        return 'end_datetime';
-    }
 
     // =========================================================================
     // Recurrable Interface Implementation

@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Exceptions\Services\NotificationSchedulingException;
 use App\Models\User;
 use Carbon\Carbon;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\States\ReservationState;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Notifications\ReservationReminderNotification;
 use CorvMC\SpaceManagement\Notifications\ReservationConfirmationReminderNotification;
@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Service for managing notification operations.
- * 
- * This service handles sending various types of reminders and 
+ *
+ * This service handles sending various types of reminders and
  * scheduled notifications throughout the application.
  */
 class NotificationService
@@ -110,7 +110,7 @@ class NotificationService
                 // TODO: Create and send MembershipExpiringNotification
                 // $user->notify(new MembershipExpiringNotification($user->subscription));
                 $results['sent']++;
-                
+
                 Log::info('Membership reminder sent', [
                     'user_id' => $user->id,
                     'user_email' => $user->email,
@@ -118,7 +118,7 @@ class NotificationService
             } catch (\Exception $e) {
                 $results['failed']++;
                 $results['errors'][] = "User {$user->id}: {$e->getMessage()}";
-                
+
                 Log::error('Failed to send membership reminder', [
                     'user_id' => $user->id,
                     'error' => $e->getMessage(),
@@ -147,7 +147,7 @@ class NotificationService
         $endOfDay = $twoDaysAhead->copy()->endOfDay();
 
         $reservations = Reservation::with('reservable')
-            ->status(ReservationStatus::Pending)
+            ->state(ReservationState\Scheduled::class)
             ->whereBetween('reserved_at', [$startOfDay, $endOfDay])
             ->get();
 
@@ -155,12 +155,12 @@ class NotificationService
 
         foreach ($reservations as $reservation) {
             $reservable = $reservation->reservable;
-            
+
             if ($reservable instanceof User) {
                 try {
                     $reservable->notify(new ReservationConfirmationReminderNotification($reservation));
                     $results['sent']++;
-                    
+
                     Log::info('Confirmation reminder sent', [
                         'reservation_id' => $reservation->id,
                         'user_email' => $reservable->email,
@@ -168,7 +168,7 @@ class NotificationService
                 } catch (\Exception $e) {
                     $results['failed']++;
                     $results['errors'][] = "Reservation {$reservation->id}: {$e->getMessage()}";
-                    
+
                     Log::error('Failed to send confirmation reminder', [
                         'reservation_id' => $reservation->id,
                         'error' => $e->getMessage(),
@@ -243,33 +243,33 @@ class NotificationService
             'notifications_sent_today' => DB::table('notifications')
                 ->whereDate('created_at', $today)
                 ->count(),
-            
+
             'notifications_sent_this_week' => DB::table('notifications')
                 ->where('created_at', '>=', $thisWeek)
                 ->count(),
-            
+
             'notifications_sent_this_month' => DB::table('notifications')
                 ->where('created_at', '>=', $thisMonth)
                 ->count(),
-            
+
             'pending_notifications' => DB::table('notifications')
                 ->whereNull('read_at')
                 ->count(),
-            
+
             'failed_notifications' => DB::table('failed_jobs')
                 ->where('payload', 'like', '%SendNotification%')
                 ->whereDate('failed_at', $today)
                 ->count(),
-                
+
             'upcoming_reservation_reminders' => Reservation::with('reservable')
-                ->status(ReservationStatus::Confirmed)
+                ->state(ReservationState\Confirmed::class)
                 ->whereBetween('reserved_at', [
                     Carbon::now()->addDay()->startOfDay(),
                     Carbon::now()->addDay()->endOfDay()
                 ])
                 ->count(),
-                
-            'pending_confirmations' => Reservation::status(ReservationStatus::Pending)
+
+            'pending_confirmations' => Reservation::state(ReservationState\Scheduled::class)
                 ->whereBetween('reserved_at', [
                     Carbon::now()->addDays(2)->startOfDay(),
                     Carbon::now()->addDays(2)->endOfDay()
@@ -296,7 +296,7 @@ class NotificationService
             try {
                 $user->notify($notification);
                 $results['sent']++;
-                
+
                 Log::info('Bulk notification sent', [
                     'user_id' => $user->id,
                     'notification_class' => get_class($notification),
@@ -304,7 +304,7 @@ class NotificationService
             } catch (\Exception $e) {
                 $results['failed']++;
                 $results['errors'][] = "User {$user->id}: {$e->getMessage()}";
-                
+
                 Log::error('Failed to send bulk notification', [
                     'user_id' => $user->id,
                     'error' => $e->getMessage(),
@@ -321,7 +321,7 @@ class NotificationService
     public function markAsRead(User $user, array $notificationIds = []): int
     {
         $query = $user->unreadNotifications();
-        
+
         if (!empty($notificationIds)) {
             $query->whereIn('id', $notificationIds);
         }

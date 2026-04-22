@@ -111,8 +111,8 @@
                         @endif
                     </div>
                     <div class="text-sm text-gray-600 dark:text-gray-400">
-                        @if ($record->free_hours_used > 0)
-                            {{ number_format($record->free_hours_used ?? 0, 1) }} hrs free
+                        @if ($record->charge && $record->charge->getFreeHoursApplied() > 0)
+                            {{ number_format($record->charge->getFreeHoursApplied(), 1) }} hrs free
                         @else
                             {{ number_format($record->duration, 1) }} hours
                         @endif

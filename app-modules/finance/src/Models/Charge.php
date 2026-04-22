@@ -68,16 +68,13 @@ class Charge extends Model
         'notes',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'amount' => MoneyCast::class.':USD',
-            'net_amount' => MoneyCast::class.':USD',
-            'credits_applied' => 'array',
-            'status' => ChargeStatus::class,
-            'paid_at' => 'datetime',
-        ];
-    }
+    protected $casts =  [
+        'amount' => MoneyCast::class . ':USD',
+        'net_amount' => MoneyCast::class . ':USD',
+        'credits_applied' => 'array',
+        'status' => ChargeStatus::class,
+        'paid_at' => 'datetime',
+    ];
 
     /**
      * Get the user who is responsible for this charge.
@@ -146,15 +143,15 @@ class Charge extends Model
 
     /**
      * Mark the charge as paid.
-     * 
+     *
      * @param string $paymentMethod The payment method used (e.g., 'stripe', 'manual', 'cash')
      * @param string|null $stripeSessionId The Stripe Checkout Session ID
      * @param string|null $stripePaymentIntentId The Stripe Payment Intent ID
      * @param string|null $notes Additional notes about the payment
      */
     public function markAsPaid(
-        string $paymentMethod, 
-        ?string $stripeSessionId = null, 
+        string $paymentMethod,
+        ?string $stripeSessionId = null,
         ?string $stripePaymentIntentId = null,
         ?string $notes = null
     ): self {
@@ -239,5 +236,25 @@ class Charge extends Model
     public function getCreditsAppliedForType(string $creditType): int
     {
         return $this->credits_applied[$creditType] ?? 0;
+    }
+
+    /**
+     * Get credits applied for a specific type (alias for getCreditsAppliedForType).
+     * Provides a cleaner API: $charge->credits('free_hours')
+     */
+    public function credits(string $type): int
+    {
+        return $this->credits_applied[$type] ?? 0;
+    }
+
+    /**
+     * Get free hours applied as hours (converts from blocks).
+     * Each block represents 30 minutes by default.
+     */
+    public function getFreeHoursApplied(): float
+    {
+        $blocks = $this->credits('free_hours');
+        $minutesPerBlock = config('finance.credits.minutes_per_block', 30);
+        return ($blocks * $minutesPerBlock) / 60;
     }
 }

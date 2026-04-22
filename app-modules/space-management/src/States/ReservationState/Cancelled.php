@@ -36,11 +36,8 @@ class Cancelled extends ReservationState
     /**
      * Set cancelled_at timestamp when entering cancelled state.
      */
-    public function onEntry(): void
+    public function entering(): void
     {
-        if (!$this->model->cancelled_at) {
-            $this->model->cancelled_at = now();
-            $this->model->saveQuietly();
-        }
+        $this->model->cancelled_at = now();
     }
 }

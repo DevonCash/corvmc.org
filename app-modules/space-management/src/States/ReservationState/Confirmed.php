@@ -23,19 +23,4 @@ class Confirmed extends ReservationState
         return 'Confirmed';
     }
 
-    public function requiresConfirmation(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Set confirmed_at timestamp when entering confirmed state.
-     */
-    public function onEntry(): void
-    {
-        if (!$this->model->confirmed_at) {
-            $this->model->confirmed_at = now();
-            $this->model->saveQuietly();
-        }
-    }
 }

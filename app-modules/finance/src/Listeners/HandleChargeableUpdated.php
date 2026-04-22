@@ -82,24 +82,6 @@ class HandleChargeableUpdated
     }
 
     /**
-     * Update derived fields on chargeable (free_hours_used) if supported.
-     *
-     * @param  Chargeable&Model  $chargeable
-     * @param  \CorvMC\Finance\Data\PriceCalculationData  $pricing
-     */
-    protected function updateDerivedFields($chargeable, $pricing): void
-    {
-        // Calculate free hours from credits applied if the model supports it
-        if ($chargeable->isFillable('free_hours_used')) {
-            $freeHoursBlocks = $pricing->credits_applied['free_hours'] ?? 0;
-            $minutesPerBlock = config('finance.credits.minutes_per_block', 30);
-            $chargeable->updateQuietly([
-                'free_hours_used' => ($freeHoursBlocks * $minutesPerBlock) / 60,
-            ]);
-        }
-    }
-
-    /**
      * Adjust credits based on difference between old and new credit application.
      *
      * @param  \App\Models\User  $user

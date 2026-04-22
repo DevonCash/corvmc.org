@@ -10,9 +10,7 @@ use CorvMC\Finance\Data\PaymentData;
 use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Models\Charge;
-use CorvMC\SpaceManagement\Facades\ReservationService;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\Finance\Events\PaymentAccepted;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -32,15 +30,6 @@ class PaymentService
         /** @var Chargeable&Model $chargeable */
         $chargeable = $data->chargeable;
 
-        // Special handling for reservations - confirm if needed
-        if ($chargeable instanceof RehearsalReservation) {
-            if (in_array($chargeable->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
-                // TODO: This should be handled via event or callback, not direct dependency
-                $chargeable = ReservationService::confirm($chargeable);
-                $chargeable->refresh();
-            }
-        }
-
         // Get or create charge record
         $charge = $chargeable->charge;
 
@@ -58,7 +47,8 @@ class PaymentService
 
         $this->logPayment($chargeable, $data);
 
-        // TODO: Trigger 'payment accepted' event for further processing (e.g. send receipt, update user status, etc.)
+        // Emit event for further processing
+        PaymentAccepted::dispatch($chargeable, $charge);
 
         return $charge;
     }
@@ -70,15 +60,6 @@ class PaymentService
     {
         /** @var Chargeable&Model $chargeable */
         $chargeable = $data->chargeable;
-
-        // Special handling for reservations - confirm if needed
-        if ($chargeable instanceof RehearsalReservation) {
-            if (in_array($chargeable->status, [ReservationStatus::Scheduled, ReservationStatus::Reserved])) {
-                // TODO: This should be handled via event or callback, not direct dependency
-                $chargeable->status->transitionTo(ReservationStatus::Confirmed);
-                $chargeable->refresh();
-            }
-        }
 
         // Get or create charge record
         $charge = $chargeable->charge;
@@ -92,7 +73,8 @@ class PaymentService
 
         $this->logComp($chargeable, $data);
 
-        // TODO: Trigger 'payment accepted' event for further processing (e.g. send notification, update user status, etc.)
+        // Emit event for further processing
+        PaymentAccepted::dispatch($chargeable, $charge);
 
         return $charge;
     }
@@ -158,6 +140,62 @@ class PaymentService
         );
 
         return $this->recordPayment($paymentData);
+    }
+
+    /**
+     * Process a checkout completion from Stripe.
+     */
+    public function processCheckout(
+        int $reservationId,
+        string $sessionId,
+        ?string $paymentIntentId = null
+    ): bool {
+        try {
+            /** @var \CorvMC\SpaceManagement\Models\Reservation|null $reservation */
+            $reservation = \CorvMC\SpaceManagement\Models\Reservation::find($reservationId);
+
+            if (!$reservation) {
+                \Log::error('ProcessCheckout: Reservation not found', ['reservation_id' => $reservationId]);
+                return false;
+            }
+
+            $this->processStripePayment($reservation, $sessionId, $paymentIntentId);
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('ProcessCheckout failed', [
+                'reservation_id' => $reservationId,
+                'session_id' => $sessionId,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Handle a failed payment for a reservation.
+     */
+    public function handleFailedPayment(Chargeable $chargeable): void {
+        // Get the charge record
+        $charge = $chargeable->charge;
+
+        if ($charge) {
+            $charge->update([
+                'status' => ChargeStatus::Failed,
+                'failed_at' => now(),
+            ]);
+        }
+
+        // Log the failure
+        if ($chargeable instanceof Model) {
+            activity('payment')
+                ->performedOn($chargeable)
+                ->event('payment_failed')
+                ->log('Payment failed');
+        }
+
+        // Emit event for further handling (e.g., canceling reservation)
+        // PaymentFailed::dispatch($chargeable, $charge);
     }
 
     /**

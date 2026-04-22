@@ -58,7 +58,7 @@
                             @endif
                             <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
                                 <x-tabler-hourglass class="w-3 h-3" />
-                                <span>{{ $reservation->hours_used }}h</span>
+                                <span>{{ $reservation->duration }}h</span>
                             </div>
                         </div>
                     </div>

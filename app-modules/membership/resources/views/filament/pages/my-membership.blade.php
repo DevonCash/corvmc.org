@@ -2,7 +2,7 @@
     @php
         $user = \App\Models\User::me();
         $isSustainingMember = $user->isSustainingMember();
-        $stats = \CorvMC\Finance\Facades\SubscriptionService::getSubscriptionStats();
+        $stats = \App\Facades\Analytics::getSubscriptionStats();
     @endphp
     {{-- Hero Section --}}
     <div class="mb-8 rounded-xl bg-primary/10 p-8 text-center">

@@ -32,12 +32,9 @@ class HandleChargeableCreated
         /** @var Chargeable&Model $chargeable */
         $chargeable = $event->chargeable;
 
-        // Check if credits should be deferred (e.g., for Reserved status)
-        $deferCredits = $event->deferCredits ?? false;
-
         $user = $chargeable->getBillableUser();
 
-        DB::transaction(function () use ($chargeable, $user, $deferCredits) {
+        DB::transaction(function () use ($chargeable, $user) {
             // Calculate price with credit application
             $pricing = PricingService::calculatePriceForUser($chargeable, $user);
 
@@ -46,7 +43,6 @@ class HandleChargeableCreated
                 $chargeable,
                 $pricing->amount,
                 $pricing->net_amount,
-                $pricing->credits_applied ?: null
             );
 
             // Determine initial status
@@ -55,53 +51,6 @@ class HandleChargeableCreated
                 $charge->markAsCoveredByCredits();
             }
 
-            // Update derived fields on reservation (cost, free_hours_used)
-            $this->updateDerivedFields($chargeable, $pricing);
-
-            // Deduct credits if not deferred
-            if (! $deferCredits && ! empty($pricing->credits_applied)) {
-                $this->deductCredits($user, $pricing->credits_applied, $chargeable);
-            }
         });
-    }
-
-    /**
-     * Update derived fields on chargeable (free_hours_used) if supported.
-     *
-     * @param  Chargeable&Model  $chargeable
-     * @param  \CorvMC\Finance\Data\PriceCalculationData  $pricing
-     */
-    protected function updateDerivedFields($chargeable, $pricing): void
-    {
-        // Calculate free hours from credits applied if the model supports it
-        if ($chargeable->isFillable('free_hours_used')) {
-            $freeHoursBlocks = $pricing->credits_applied['free_hours'] ?? 0;
-            $minutesPerBlock = config('finance.credits.minutes_per_block', 30);
-            $chargeable->updateQuietly([
-                'free_hours_used' => ($freeHoursBlocks * $minutesPerBlock) / 60,
-            ]);
-        }
-    }
-
-    /**
-     * Deduct credits from user based on pricing calculation.
-     *
-     * @param  \App\Models\User  $user
-     * @param  array<string, int>  $creditsApplied
-     * @param  Chargeable&Model  $chargeable
-     */
-    protected function deductCredits($user, array $creditsApplied, $chargeable): void
-    {
-        foreach ($creditsApplied as $creditTypeKey => $blocks) {
-            if ($blocks > 0) {
-                $creditType = CreditType::from($creditTypeKey);
-                $user->deductCredit(
-                    $blocks,
-                    $creditType,
-                    'charge_usage',
-                    $chargeable->charge?->id
-                );
-            }
-        }
     }
 }

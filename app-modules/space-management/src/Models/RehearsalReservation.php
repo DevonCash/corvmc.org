@@ -6,8 +6,8 @@ use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Finance\Concerns\HasCharges;
 use CorvMC\Finance\Contracts\Chargeable;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\States\ReservationState;
+use CorvMC\SpaceManagement\States\ReservationState\Reserved;
 use CorvMC\Support\Contracts\Recurrable;
 use CorvMC\Support\Models\RecurringSeries;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,8 +21,6 @@ use Spatie\ModelStates\HasStates;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $deleted_at
  * @property \CorvMC\SpaceManagement\States\ReservationState $status
- * @property numeric $hours_used
- * @property numeric $free_hours_used
  * @property bool $is_recurring
  * @property array<array-key, mixed>|null $recurrence_pattern
  * @property string|null $notes
@@ -51,7 +49,6 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
         'reserved_until' => 'required|date|after:reserved_at',
         'reservable_type' => 'required|string',
         'reservable_id' => 'required|integer',
-        'hours_used' => 'required|numeric|min:0.5|max:8',
     ];
 
     /**
@@ -89,40 +86,16 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
             }
         });
 
-        // Determine status on creation if not set
-        static::creating(function ($reservation) {
-            if (!$reservation->status) {
-                $user = $reservation->getResponsibleUser();
-                if ($user) {
-                    $reservation->status = static::determineInitialStatus($user);
-                }
-            }
-        });
 
         // Fire event for charge creation after validation passes
         static::created(function ($reservation) {
             event(new \CorvMC\SpaceManagement\Events\ReservationCreated(
                 $reservation,
-                deferCredits: $reservation->status === ReservationStatus::Reserved
+                deferCredits: $reservation->status->equals(Reserved::class)
             ));
         });
     }
 
-    /**
-     * Determine the initial status for a new reservation based on the user's role.
-     */
-    public static function determineInitialStatus(User $user): ReservationStatus
-    {
-        if ($user->hasRole(['admin', 'staff', 'practice space manager'])) {
-            return ReservationStatus::Confirmed;
-        }
-
-        if ($user->hasRole('sustaining member')) {
-            return ReservationStatus::Scheduled;
-        }
-
-        return ReservationStatus::Reserved;
-    }
 
     /**
      * Determine the initial status for a reservation based on date and business rules.
@@ -268,7 +241,7 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
             'instance_date' => $date->toDateString(),
             'is_recurring' => true,
             'recurrence_pattern' => ['source' => 'recurring_series'],
-            'status' => ReservationStatus::Reserved,
+            'status' => ReservationState\Reserved::class,
             'hours_used' => $startDateTime->diffInMinutes($endDateTime) / 60,
         ]);
     }
@@ -309,7 +282,7 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
             'instance_date' => $date->toDateString(),
             'reserved_at' => $startDateTime,
             'reserved_until' => $endDateTime,
-            'status' => ReservationStatus::Cancelled,
+            'status' => ReservationState\Cancelled::class,
             'cancellation_reason' => 'Scheduling conflict',
             'is_recurring' => true,
             'cost' => 0,
@@ -333,16 +306,12 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
     {
         $futureInstances = Reservation::where('recurring_series_id', $series->id)
             ->where('reserved_at', '>', now())
-            ->whereIn('status', [
-                ReservationStatus::Scheduled->value,
-                ReservationStatus::Reserved->value,
-                ReservationStatus::Confirmed->value,
-            ])
+            ->whereStatus([ReservationState\Scheduled::class, ReservationState\Reserved::class, ReservationState\Confirmed::class])
             ->get();
 
         foreach ($futureInstances as $reservation) {
             $reservation->update([
-                'status' => ReservationStatus::Cancelled,
+                'status' => ReservationState\Cancelled::class,
                 'cancellation_reason' => $reason ?? 'Recurring series cancelled',
             ]);
         }

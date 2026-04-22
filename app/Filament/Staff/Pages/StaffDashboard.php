@@ -2,11 +2,11 @@
 
 namespace App\Filament\Staff\Pages;
 
+use App\Facades\Analytics;
 use BackedEnum;
 use Brick\Money\Money;
 use CorvMC\Equipment\Models\EquipmentLoan;
 use CorvMC\Events\Models\Event;
-use CorvMC\Finance\Facades\SubscriptionService;
 use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\Finance\Models\Charge;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
@@ -100,7 +100,7 @@ class StaffDashboard extends Page
     public function getMonthlyRevenueData(): array
     {
         // Get subscription stats
-        $stats = SubscriptionService::getStats();
+        $stats = Analytics::getSubscriptionStats();
 
         // Estimate Stripe fees for subscriptions: 2.9% + $0.30 per transaction
         $subscriptionCount = $stats->active_subscriptions_count;

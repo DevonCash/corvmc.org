@@ -7,7 +7,7 @@ use App\Settings\ReservationSettings;
 use Carbon\Carbon;
 use CorvMC\Events\Models\Event;
 use CorvMC\SpaceManagement\Facades\ReservationService;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -67,8 +67,8 @@ class EventSyncService
             includeClosures: true
         );
 
-        $hasConflicts = $conflicts['reservations']->isNotEmpty()
-            || $conflicts['closures']->isNotEmpty();
+        // Check if there are any conflicts in the collection
+        $hasConflicts = $conflicts->isNotEmpty();
 
         // If there are conflicts and we're not forcing, return without creating
         if ($hasConflicts && ! $force) {
@@ -79,13 +79,17 @@ class EventSyncService
             ];
         }
 
+        // Calculate hours used
+        $hoursUsed = $reservedAt->diffInMinutes($reservedUntil) / 60;
+        
         $reservation = $event->spaceReservation()->updateOrCreate(
             [],
             [
                 'type' => (new EventReservation)->getMorphClass(),
                 'reserved_at' => $reservedAt,
                 'reserved_until' => $reservedUntil,
-                'status' => ReservationStatus::Confirmed,
+                'hours_used' => $hoursUsed,
+                'status' => new Confirmed($reservation ?? new EventReservation),
                 'notes' => "Setup/breakdown for event: {$event->title}",
             ]
         );
@@ -141,12 +145,10 @@ class EventSyncService
         );
 
         // Determine if there are event-time conflicts
-        $hasEventConflicts = $eventConflicts['reservations']->isNotEmpty()
-            || $eventConflicts['closures']->isNotEmpty();
+        $hasEventConflicts = $eventConflicts->isNotEmpty();
 
         // Determine if there are any conflicts (including setup/teardown)
-        $hasAnyConflicts = $allConflicts['reservations']->isNotEmpty()
-            || $allConflicts['closures']->isNotEmpty();
+        $hasAnyConflicts = $allConflicts->isNotEmpty();
 
         // Calculate setup-only conflicts (conflicts that only affect setup/teardown, not event time)
         $setupConflicts = $this->calculateSetupOnlyConflicts($allConflicts, $eventConflicts);
@@ -170,11 +172,17 @@ class EventSyncService
     /**
      * Calculate conflicts that only affect setup/teardown periods, not the event itself.
      */
-    private function calculateSetupOnlyConflicts(array $allConflicts, array $eventConflicts): array
+    private function calculateSetupOnlyConflicts($allConflicts, $eventConflicts): array
     {
+        // Filter reservations and closures from each collection
+        $allReservations = $allConflicts->filter(fn($item) => $item instanceof \CorvMC\SpaceManagement\Models\Reservation);
+        $eventReservations = $eventConflicts->filter(fn($item) => $item instanceof \CorvMC\SpaceManagement\Models\Reservation);
+        $allClosures = $allConflicts->filter(fn($item) => $item instanceof \CorvMC\SpaceManagement\Models\SpaceClosure);
+        $eventClosures = $eventConflicts->filter(fn($item) => $item instanceof \CorvMC\SpaceManagement\Models\SpaceClosure);
+        
         return [
-            'reservations' => $allConflicts['reservations']->diff($eventConflicts['reservations']),
-            'closures' => $allConflicts['closures']->diff($eventConflicts['closures']),
+            'reservations' => $allReservations->diff($eventReservations),
+            'closures' => $allClosures->diff($eventClosures),
         ];
     }
 

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
-use CorvMC\SpaceManagement\Facades\ReservationService;
+use CorvMC\Finance\Facades\PaymentService;
 use CorvMC\Finance\Facades\SubscriptionService;
 use CorvMC\Finance\Facades\MemberBenefitService;
 use CorvMC\Events\Facades\TicketService;
@@ -56,7 +56,7 @@ class StripeWebhookController extends CashierWebhookController
         $paymentIntentId = $session['payment_intent'] ?? null;
         $reservationId = $metadata['reservation_id'] ?? null;
 
-        $success = ReservationService::processCheckout(
+        $success = PaymentService::processCheckout(
             $reservationId,
             $sessionId,
             $paymentIntentId
@@ -164,7 +164,7 @@ class StripeWebhookController extends CashierWebhookController
             }
 
             // Handle failed payment
-            ReservationService::handleFailedPayment($reservation);
+            PaymentService::handleFailedPayment($reservation);
 
             Log::info('Stripe webhook: Processed payment failure', [
                 'reservation_id' => $reservationId,
