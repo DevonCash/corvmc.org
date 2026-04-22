@@ -19,41 +19,48 @@ class ProcessingFeeProduct extends Product
 
     public static ?string $model = null;
 
-    public static function billableUnits(Model $model = null): float
+    public static function getBillableUnits(Model $model = null): float
     {
         return 1;
     }
 
-    public static function pricePerUnit(Model $model = null): int
+    public static function getPricePerUnit(Model $model = null): int
     {
         return (int) config('finance.processing_fee.fixed_cents', 30);
     }
 
-    public static function description(Model $model = null): string
+    public static function getDescription(Model $model = null): string
     {
         return 'Card processing fee';
     }
 
-    public static function eligibleWallets(Model $model = null): array
+    public static function getEligibleWallets(Model $model = null): array
     {
         return [];
     }
 
-    public static function unit(): string
+    public static function getUnit(): string
     {
         return 'fee';
     }
 
     /**
-     * Compute the full processing fee for a given subtotal in cents.
+     * Compute the exact pass-through processing fee for a given subtotal in cents.
      *
-     * Formula: ceil(subtotal × rate_bps / 10000) + fixed_cents
+     * The goal is that after Stripe takes its cut from the total charge,
+     * the merchant receives exactly $subtotalCents.
+     *
+     * charge = ceil((subtotal + fixed) / (1 - rate))
+     * fee   = charge - subtotal
      */
     public static function computeFee(int $subtotalCents): int
     {
         $rateBps = (int) config('finance.processing_fee.rate_bps', 290);
         $fixedCents = (int) config('finance.processing_fee.fixed_cents', 30);
 
-        return (int) ceil($subtotalCents * $rateBps / 10000) + $fixedCents;
+        $rate = $rateBps / 10000;
+        $charge = (int) ceil(($subtotalCents + $fixedCents) / (1 - $rate));
+
+        return $charge - $subtotalCents;
     }
 }

@@ -47,16 +47,18 @@ abstract class Product
     }
 
     /**
-     * Proxy property access to static methods, passing the bound instance.
+     * Proxy property access to getter methods, passing the bound instance.
      *
-     * Allows: $product->billableUnits instead of ProductClass::billableUnits($model)
+     * Allows: $product->billableUnits instead of ProductClass::getBillableUnits($model)
      */
     public function __get(string $name): mixed
     {
-        if (method_exists(static::class, $name)) {
+        $method = 'get' . ucfirst($name);
+
+        if (method_exists(static::class, $method)) {
             return $this->instance !== null
-                ? static::$name($this->instance)
-                : static::$name();
+                ? static::$method($this->instance)
+                : static::$method();
         }
 
         throw new \RuntimeException("Property [{$name}] does not exist on " . static::class);
@@ -70,23 +72,23 @@ abstract class Product
      * Number of billable units for the given model.
      * For category products (no model), return 1.
      */
-    abstract public static function billableUnits(Model $model = null): float;
+    abstract public static function getBillableUnits(Model $model = null): float;
 
     /**
      * Price per unit in cents.
      */
-    abstract public static function pricePerUnit(Model $model = null): int;
+    abstract public static function getPricePerUnit(Model $model = null): int;
 
     /**
      * Human-readable description for receipts and invoices.
      */
-    abstract public static function description(Model $model = null): string;
+    abstract public static function getDescription(Model $model = null): string;
 
     /**
      * Wallet type keys that can discount a LineItem for this product.
      * Returns an empty array if no wallets apply.
      */
-    abstract public static function eligibleWallets(Model $model = null): array;
+    abstract public static function getEligibleWallets(Model $model = null): array;
 
     // =========================================================================
     // Derived helpers
@@ -95,7 +97,7 @@ abstract class Product
     /**
      * The unit label for LineItem.unit ('hour', 'ticket', 'fee', etc.)
      */
-    abstract public static function unit(): string;
+    abstract public static function getUnit(): string;
 
     /**
      * Compute the total amount in cents: billableUnits × pricePerUnit.

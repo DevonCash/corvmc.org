@@ -18,7 +18,7 @@ class TicketProduct extends Product
 
     public static ?string $model = TicketOrder::class;
 
-    public static function billableUnits(Model $model = null): float
+    public static function getBillableUnits(Model $model = null): float
     {
         if (! $model) {
             return 0;
@@ -27,7 +27,7 @@ class TicketProduct extends Product
         return (float) $model->quantity;
     }
 
-    public static function pricePerUnit(Model $model = null): int
+    public static function getPricePerUnit(Model $model = null): int
     {
         if (! $model) {
             return 0;
@@ -36,7 +36,7 @@ class TicketProduct extends Product
         return (int) ($model->unit_price?->getMinorAmount()?->toInt() ?? 0);
     }
 
-    public static function description(Model $model = null): string
+    public static function getDescription(Model $model = null): string
     {
         if (! $model) {
             return 'Event Ticket';
@@ -48,12 +48,12 @@ class TicketProduct extends Product
         return "{$model->quantity} ticket(s) for {$eventTitle} on {$date}";
     }
 
-    public static function eligibleWallets(Model $model = null): array
+    public static function getEligibleWallets(Model $model = null): array
     {
         return [];
     }
 
-    public static function unit(): string
+    public static function getUnit(): string
     {
         return 'ticket';
     }

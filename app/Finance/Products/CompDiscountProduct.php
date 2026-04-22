@@ -17,28 +17,28 @@ class CompDiscountProduct extends Product
 
     public static ?string $model = null;
 
-    public static function billableUnits(Model $model = null): float
+    public static function getBillableUnits(Model $model = null): float
     {
         return 1;
     }
 
-    public static function pricePerUnit(Model $model = null): int
+    public static function getPricePerUnit(Model $model = null): int
     {
         // Actual discount amount is set per-Order at commit time
         return 0;
     }
 
-    public static function description(Model $model = null): string
+    public static function getDescription(Model $model = null): string
     {
         return 'Complimentary — no charge';
     }
 
-    public static function eligibleWallets(Model $model = null): array
+    public static function getEligibleWallets(Model $model = null): array
     {
         return [];
     }
 
-    public static function unit(): string
+    public static function getUnit(): string
     {
         return 'discount';
     }

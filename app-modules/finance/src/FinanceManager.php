@@ -43,6 +43,13 @@ class FinanceManager
     {
         foreach ($productClasses as $productClass) {
             $type = $productClass::$type;
+
+            if (isset($this->productsByType[$type])) {
+                throw new \RuntimeException(
+                    "Duplicate product type [{$type}]: {$productClass} conflicts with {$this->productsByType[$type]}."
+                );
+            }
+
             $this->productsByType[$type] = $productClass;
 
             if ($productClass::$model !== null) {

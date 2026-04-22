@@ -36,7 +36,7 @@ describe('RehearsalProduct pricing', function () {
 
     it('reads price per unit from config', function () {
         // Default config: 1500 cents ($15/hr)
-        expect(RehearsalProduct::pricePerUnit())->toBe(1500);
+        expect(RehearsalProduct::getPricePerUnit())->toBe(1500);
     });
 
     it('computes totalAmount as hours × rate', function () {
@@ -52,11 +52,11 @@ describe('RehearsalProduct pricing', function () {
     });
 
     it('returns free_hours as eligible wallet', function () {
-        expect(RehearsalProduct::eligibleWallets())->toBe(['free_hours']);
+        expect(RehearsalProduct::getEligibleWallets())->toBe(['free_hours']);
     });
 
     it('has unit "hour"', function () {
-        expect(RehearsalProduct::unit())->toBe('hour');
+        expect(RehearsalProduct::getUnit())->toBe('hour');
     });
 
     it('generates a description with hours and date', function () {
@@ -78,32 +78,45 @@ describe('RehearsalProduct pricing', function () {
 // =========================================================================
 
 describe('ProcessingFeeProduct', function () {
-    it('computes fee from config for a given subtotal', function () {
+    it('computes exact pass-through fee for a given subtotal', function () {
         // Default config: 290 bps (2.9%) + 30 cents
-        // On a $30.00 subtotal (3000 cents): ceil(3000 * 290 / 10000) + 30
-        //   = ceil(87) + 30 = 87 + 30 = 117 cents ($1.17)
-        expect(ProcessingFeeProduct::computeFee(3000))->toBe(117);
+        // charge = ceil((3000 + 30) / (1 - 0.029)) = ceil(3120.49) = 3121
+        // fee = 3121 - 3000 = 121
+        expect(ProcessingFeeProduct::computeFee(3000))->toBe(121);
     });
 
     it('computes fee correctly for zero subtotal', function () {
-        // ceil(0) + 30 = 30 cents
-        expect(ProcessingFeeProduct::computeFee(0))->toBe(30);
+        // charge = ceil(30 / 0.971) = ceil(30.90) = 31
+        // fee = 31 - 0 = 31
+        expect(ProcessingFeeProduct::computeFee(0))->toBe(31);
     });
 
-    it('rounds up fractional bps portion', function () {
-        // 1000 cents: ceil(1000 * 290 / 10000) + 30 = ceil(29) + 30 = 59
-        expect(ProcessingFeeProduct::computeFee(1000))->toBe(59);
+    it('ensures merchant receives the full subtotal after Stripe takes its cut', function () {
+        // Verify the pass-through property: for a range of subtotals,
+        // Stripe's cut of the total charge should never exceed the fee.
+        foreach ([500, 1000, 1500, 3000, 10000, 25000] as $subtotal) {
+            $fee = ProcessingFeeProduct::computeFee($subtotal);
+            $totalCharge = $subtotal + $fee;
 
-        // 1001 cents: ceil(1001 * 290 / 10000) + 30 = ceil(29.029) + 30 = 30 + 30 = 60
-        expect(ProcessingFeeProduct::computeFee(1001))->toBe(60);
+            // Stripe takes: floor(totalCharge * 0.029) + 30
+            // (Stripe rounds down / truncates on their side)
+            $stripeCut = (int) floor($totalCharge * 0.029) + 30;
+
+            $merchantReceives = $totalCharge - $stripeCut;
+
+            expect($merchantReceives)->toBeGreaterThanOrEqual(
+                $subtotal,
+                "Subtotal {$subtotal}: merchant receives {$merchantReceives}, expected >= {$subtotal}"
+            );
+        }
     });
 
     it('has unit "fee"', function () {
-        expect(ProcessingFeeProduct::unit())->toBe('fee');
+        expect(ProcessingFeeProduct::getUnit())->toBe('fee');
     });
 
     it('has no eligible wallets', function () {
-        expect(ProcessingFeeProduct::eligibleWallets())->toBe([]);
+        expect(ProcessingFeeProduct::getEligibleWallets())->toBe([]);
     });
 });
 
@@ -113,15 +126,15 @@ describe('ProcessingFeeProduct', function () {
 
 describe('EquipmentLoanProduct pricing', function () {
     it('returns 1 billable unit (flat fee model)', function () {
-        expect(EquipmentLoanProduct::billableUnits())->toBe(1.0);
+        expect(EquipmentLoanProduct::getBillableUnits())->toBe(1.0);
     });
 
     it('returns equipment_credits as eligible wallet', function () {
-        expect(EquipmentLoanProduct::eligibleWallets())->toBe(['equipment_credits']);
+        expect(EquipmentLoanProduct::getEligibleWallets())->toBe(['equipment_credits']);
     });
 
     it('has unit "loan"', function () {
-        expect(EquipmentLoanProduct::unit())->toBe('loan');
+        expect(EquipmentLoanProduct::getUnit())->toBe('loan');
     });
 });
 
@@ -131,14 +144,14 @@ describe('EquipmentLoanProduct pricing', function () {
 
 describe('TicketProduct pricing', function () {
     it('has no eligible wallets', function () {
-        expect(TicketProduct::eligibleWallets())->toBe([]);
+        expect(TicketProduct::getEligibleWallets())->toBe([]);
     });
 
     it('has unit "ticket"', function () {
-        expect(TicketProduct::unit())->toBe('ticket');
+        expect(TicketProduct::getUnit())->toBe('ticket');
     });
 
     it('returns zero billable units when no model is bound', function () {
-        expect(TicketProduct::billableUnits())->toBe(0.0);
+        expect(TicketProduct::getBillableUnits())->toBe(0.0);
     });
 });

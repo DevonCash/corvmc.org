@@ -60,6 +60,12 @@ class LineItem extends Model
     protected static function booted(): void
     {
         static::saving(function (LineItem $lineItem) {
+            // Skip validation during migrations/seeders where Products
+            // may not be registered yet.
+            if (app()->runningInConsole() && ! app()->runningUnitTests()) {
+                return;
+            }
+
             if (! Finance::isRegisteredType($lineItem->product_type)) {
                 throw new \RuntimeException(
                     "Unknown product_type [{$lineItem->product_type}]. "
