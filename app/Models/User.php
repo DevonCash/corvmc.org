@@ -285,6 +285,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
         return $this->hasMany(\CorvMC\Finance\Models\Charge::class);
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(\CorvMC\Finance\Models\Order::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(\CorvMC\Finance\Models\Transaction::class);
+    }
+
     public function bands(): BelongsToMany
     {
         return $this->belongsToMany(Band::class, 'band_profile_members', 'user_id', 'band_profile_id')

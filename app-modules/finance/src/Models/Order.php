@@ -1,0 +1,114 @@
+<?php
+
+namespace CorvMC\Finance\Models;
+
+use App\Models\User;
+use CorvMC\Finance\States\OrderState;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\ModelStates\HasStates;
+
+/**
+ * Order — a cohesive purchase commitment.
+ *
+ * An Order groups LineItems (what was bought) and Transactions (how it was paid).
+ * All LineItems on an Order are interdependent — cancellation and refund are
+ * Order-level, not per-item.
+ *
+ * @property int $id
+ * @property int|null $user_id
+ * @property OrderState $status
+ * @property int $total_amount Cents — denormalized sum of LineItems
+ * @property \Illuminate\Support\Carbon|null $settled_at
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read User|null $user
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, LineItem> $lineItems
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Transaction> $transactions
+ */
+class Order extends Model
+{
+    use HasFactory, HasStates;
+
+    protected $fillable = [
+        'user_id',
+        'status',
+        'total_amount',
+        'settled_at',
+        'notes',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => OrderState::class,
+            'total_amount' => 'integer',
+            'settled_at' => 'datetime',
+        ];
+    }
+
+    // =========================================================================
+    // Relationships
+    // =========================================================================
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function lineItems(): HasMany
+    {
+        return $this->hasMany(LineItem::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    // =========================================================================
+    // Query helpers
+    // =========================================================================
+
+    /**
+     * Whether this Order has reached a settled state (Completed or Comped).
+     */
+    public function isSettled(): bool
+    {
+        return $this->status instanceof OrderState\Completed
+            || $this->status instanceof OrderState\Comped;
+    }
+
+    /**
+     * Whether this Order is in a terminal state.
+     */
+    public function isTerminal(): bool
+    {
+        return $this->status->isFinal();
+    }
+
+    /**
+     * The sum of Cleared payment Transactions (as a positive cents value).
+     *
+     * Payment Transactions store negative amounts (money leaving customer),
+     * so we negate the sum to get a positive number.
+     */
+    public function paidAmount(): int
+    {
+        return (int) -$this->transactions()
+            ->whereState('status', \CorvMC\Finance\States\TransactionState\Cleared::class)
+            ->where('type', 'payment')
+            ->sum('amount');
+    }
+
+    /**
+     * Outstanding balance: total_amount minus paid amount.
+     */
+    public function outstandingAmount(): int
+    {
+        return max(0, $this->total_amount - $this->paidAmount());
+    }
+}

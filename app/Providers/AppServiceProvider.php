@@ -84,6 +84,8 @@ class AppServiceProvider extends ServiceProvider
 
             // Finance models
             'charge' => \CorvMC\Finance\Models\Charge::class,
+            'order' => \CorvMC\Finance\Models\Order::class,
+            'transaction' => \CorvMC\Finance\Models\Transaction::class,
             'subscription' => \CorvMC\Finance\Models\Subscription::class,
 
             // Moderation models
