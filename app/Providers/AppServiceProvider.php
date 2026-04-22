@@ -123,7 +123,8 @@ class AppServiceProvider extends ServiceProvider
             \App\Finance\Products\TicketProduct::class,
             \App\Finance\Products\EquipmentLoanProduct::class,
             \App\Finance\Products\ProcessingFeeProduct::class,
-            \App\Finance\Products\SustainingMemberDiscountProduct::class,
+            \App\Finance\Products\FreeHoursDiscountProduct::class,
+            \App\Finance\Products\EquipmentCreditsDiscountProduct::class,
             \App\Finance\Products\CompDiscountProduct::class,
             \App\Finance\Products\ManualAdjustmentProduct::class,
         ]);

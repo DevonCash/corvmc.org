@@ -42,7 +42,8 @@ describe('LineItem product_type validation', function () {
             'event_ticket',
             'equipment_loan',
             'processing_fee',
-            'sustaining_member_discount',
+            'free_hours_discount',
+            'equipment_credits_discount',
             'comp_discount',
             'manual_adjustment',
         ];
