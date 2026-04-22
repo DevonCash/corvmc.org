@@ -7,6 +7,7 @@ use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Exceptions\PurchasableLockedException;
 use CorvMC\Finance\Models\LineItem;
 use CorvMC\Finance\Models\Order;
+use CorvMC\Finance\Models\Transaction;
 use CorvMC\Finance\Products\Product;
 use CorvMC\Finance\States\OrderState\Cancelled;
 use CorvMC\Finance\States\OrderState\Refunded;
@@ -100,7 +101,7 @@ class FinanceManager
 
         return Order::whereHas('lineItems', function ($query) use ($model, $productType) {
             $query->where('product_type', $productType)
-                  ->where('product_id', $model->getKey());
+                ->where('product_id', $model->getKey());
         })
             ->whereNotState('status', [Cancelled::class, Refunded::class])
             ->first();
@@ -283,7 +284,7 @@ class FinanceManager
                     if (! $this->isRegisteredType($discountType)) {
                         throw new \RuntimeException(
                             "Wallet [{$walletKey}] requires a registered discount product type [{$discountType}]. "
-                            . 'Create and register the Product class before using this wallet.'
+                                . 'Create and register the Product class before using this wallet.'
                         );
                     }
 
@@ -348,10 +349,163 @@ class FinanceManager
     }
 
     // =========================================================================
-    // Commitment, Settlement, Refund — stubs for later epics
+    // Commitment
     // =========================================================================
 
-    // Finance::commit() — Epic 5
+    /**
+     * Commit an Order: reprice, deduct credits, create Transactions, open Stripe session.
+     *
+     * Runs inside a DB transaction. On success the Order has persisted LineItems,
+     * Transactions for each rail, and credit deductions are applied. If a Stripe
+     * rail is present, Transaction.metadata contains the checkout_url for redirect.
+     *
+     * If the Order is fully covered by discounts (no Transactions needed),
+     * it transitions directly to Completed.
+     *
+     * @param  Order  $order  A Pending Order with at least one LineItem already attached.
+     * @param  array<string, int>  $rails  Payment rails and amounts, e.g. ['stripe' => 2500, 'cash' => 500].
+     * @param  bool  $coversFees  Whether to add a processing fee LineItem for Stripe payments.
+     * @return Order  The fresh Order with all relationships loaded.
+     *
+     * @throws \RuntimeException  If the Order is not in Pending state.
+     * @throws \RuntimeException  If rail amounts don't cover the net total.
+     */
+    public function commit(Order $order, array $rails = [], bool $coversFees = false): Order
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($order, $rails, $coversFees) {
+            // 1. Lock the Order row
+            $order = Order::lockForUpdate()->findOrFail($order->id);
+
+            if (! ($order->status instanceof \CorvMC\Finance\States\OrderState\Pending)) {
+                throw new \RuntimeException(
+                    "Cannot commit Order [{$order->id}]: status is [{$order->status->getLabel()}], expected Pending."
+                );
+            }
+
+            // 2. Resolve domain models from existing LineItems
+            $models = $order->resolveProducts();
+
+            // 3. Reprice: get fresh LineItems with discounts
+            $lineItems = $this->price($models, $order->user);
+
+            // 4. If covering fees and there's a stripe rail, add processing fee LineItem
+            if ($coversFees && isset($rails['stripe'])) {
+                $subtotal = $lineItems->sum('amount');
+                $feeProductClass = get_class($this->productByType('processing_fee'));
+                $feeCents = $feeProductClass::computeFee(max(0, (int) $subtotal));
+
+                if ($feeCents > 0) {
+                    $feeProduct = $this->productByType('processing_fee');
+                    $feeItem = new LineItem([
+                        'product_type' => 'processing_fee',
+                        'product_id' => null,
+                        'description' => $feeProduct->description,
+                        'unit' => $feeProduct->unit,
+                        'unit_price' => $feeCents,
+                        'quantity' => 1,
+                        'amount' => $feeCents,
+                    ]);
+                    $lineItems->push($feeItem);
+                }
+            }
+
+            // 5. Replace old LineItems with fresh ones
+            $order->lineItems()->delete();
+            $netTotal = $lineItems->sum('amount');
+
+            // Validate rail amounts cover the net total exactly
+            $railTotal = (int) array_sum($rails);
+
+            if ($netTotal > 0 && $railTotal !== (int) $netTotal) {
+                throw new \RuntimeException(
+                    "Rail amounts ({$railTotal}) do not match net total ({$netTotal}) on Order [{$order->id}]."
+                );
+            }
+
+            $order->update(['total_amount' => $netTotal]);
+
+            foreach ($lineItems as $lineItem) {
+                $lineItem->order_id = $order->id;
+                $lineItem->save();
+            }
+
+            // 6. Deduct credits for each discount LineItem
+            if ($order->user) {
+                foreach ($lineItems as $lineItem) {
+                    if (! $lineItem->isDiscount()) {
+                        continue;
+                    }
+
+                    // Derive the wallet key from the product_type (e.g. 'free_hours_discount' → 'free_hours')
+                    $walletKey = str_replace('_discount', '', $lineItem->product_type);
+                    $blocks = (int) abs((float) $lineItem->quantity);
+
+                    if ($blocks > 0) {
+                        $creditType = CreditType::from($walletKey);
+                        $order->user->deductCredit(
+                            amount: $blocks,
+                            creditType: $creditType,
+                            source: 'order_commit',
+                            sourceId: $order->id,
+                        );
+                    }
+                }
+            }
+
+            // 7. Create Transactions for each payment rail
+            foreach ($rails as $currency => $amount) {
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $transaction = Transaction::create([
+                    'order_id' => $order->id,
+                    'user_id' => $order->user_id,
+                    'currency' => $currency,
+                    'amount' => -$amount, // negative = money leaving customer
+                    'type' => 'payment',
+                    'metadata' => [],
+                ]);
+
+                // 8. For Stripe rail: create Checkout Session
+                if ($currency === 'stripe' && $order->user) {
+                    $checkout = $order->user->checkoutCharge(
+                        $amount,
+                        "Order #{$order->id}",
+                        1,
+                        [
+                            'success_url' => route('checkout.success') . '?user_id=' . $order->user_id . '&session_id={CHECKOUT_SESSION_ID}',
+                            'cancel_url' => route('checkout.cancel') . '?user_id=' . $order->user_id . '&type=order',
+                            'metadata' => [
+                                'type' => 'order',
+                                'order_id' => $order->id,
+                                'transaction_id' => $transaction->id,
+                            ],
+                        ]
+                    );
+
+                    $transaction->update([
+                        'metadata' => [
+                            'session_id' => $checkout->id,
+                            'checkout_url' => $checkout->url,
+                        ],
+                    ]);
+                }
+            }
+
+            // 9. If no Transactions (fully covered by discounts), settle immediately
+            $hasPendingTransactions = $order->transactions()
+                ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
+                ->exists();
+
+            if (! $hasPendingTransactions) {
+                $order->status->transitionTo(\CorvMC\Finance\States\OrderState\Completed::class);
+            }
+
+            return $order->fresh(['lineItems', 'transactions']);
+        });
+    }
+
     // Finance::settle() — Epic 6
     // Finance::refund() — Epic 7
 }

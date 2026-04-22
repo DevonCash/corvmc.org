@@ -111,4 +111,56 @@ class Order extends Model
     {
         return max(0, $this->total_amount - $this->paidAmount());
     }
+
+    /**
+     * Get the Stripe Checkout Session URL for this Order, if one exists.
+     *
+     * Looks for a Pending Stripe payment Transaction and returns the
+     * session URL from its metadata. Returns null if no pending Stripe
+     * Transaction exists or if the URL is not set.
+     */
+    public function checkoutUrl(): ?string
+    {
+        $transaction = $this->transactions()
+            ->where('currency', 'stripe')
+            ->where('type', 'payment')
+            ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
+            ->first();
+
+        return $transaction?->metadata['checkout_url'] ?? null;
+    }
+
+    /**
+     * Resolve domain model instances from this Order's base (non-discount) LineItems.
+     *
+     * Returns an array of Eloquent models keyed the same as the LineItems.
+     * Skips LineItems that have no product_id (category products like fees/discounts).
+     *
+     * @return array<\Illuminate\Database\Eloquent\Model>
+     */
+    public function resolveProducts(): array
+    {
+        $models = [];
+
+        foreach ($this->lineItems as $lineItem) {
+            if ($lineItem->product_id === null || $lineItem->isDiscount()) {
+                continue;
+            }
+
+            $product = \CorvMC\Finance\Facades\Finance::productByType($lineItem->product_type);
+            $modelClass = $product::$model;
+
+            if ($modelClass === null) {
+                continue;
+            }
+
+            $model = $modelClass::find($lineItem->product_id);
+
+            if ($model !== null) {
+                $models[] = $model;
+            }
+        }
+
+        return $models;
+    }
 }

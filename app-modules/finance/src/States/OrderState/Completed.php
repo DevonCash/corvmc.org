@@ -2,6 +2,7 @@
 
 namespace CorvMC\Finance\States\OrderState;
 
+use CorvMC\Finance\Events\OrderSettled;
 use CorvMC\Finance\States\OrderState;
 
 class Completed extends OrderState
@@ -28,7 +29,11 @@ class Completed extends OrderState
         return 'Payment rendered and settled';
     }
 
-    // Transition hooks will be filled in during Epic 5
-    // entering(): assert all payment Transactions Cleared and sum to total_amount
-    // entered(): fire OrderSettled, dispatch receipt
+    public function entered(): void
+    {
+        $order = $this->getModel();
+        $order->update(['settled_at' => now()]);
+
+        OrderSettled::dispatch($order);
+    }
 }

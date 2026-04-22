@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void allocate(\App\Models\User $user, string $walletType, int $amount, string $reason, ?\Illuminate\Database\Eloquent\Model $source = null)
  * @method static void adjust(\App\Models\User $user, string $walletType, int $amount, string $reason)
  * @method static \Illuminate\Support\Collection price(array $models, ?\App\Models\User $user = null)
+ * @method static \CorvMC\Finance\Models\Order commit(\CorvMC\Finance\Models\Order $order, array $rails = [], bool $coversFees = false)
  * @method static \CorvMC\Finance\Models\Order|null findActiveOrder(\Illuminate\Database\Eloquent\Model $model, ?string $productType = null)
  *
  * @see \CorvMC\Finance\FinanceManager

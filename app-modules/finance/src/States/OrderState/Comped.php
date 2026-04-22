@@ -2,7 +2,10 @@
 
 namespace CorvMC\Finance\States\OrderState;
 
+use CorvMC\Finance\Events\OrderSettled;
 use CorvMC\Finance\States\OrderState;
+use CorvMC\Finance\States\TransactionState\Cancelled as TransactionCancelled;
+use CorvMC\Finance\States\TransactionState\Pending as TransactionPending;
 
 class Comped extends OrderState
 {
@@ -28,7 +31,24 @@ class Comped extends OrderState
         return 'Order waived — no payment';
     }
 
-    // Transition hooks will be filled in during Epic 5
-    // entering(): cascade Pending Transactions to Cancelled
-    // entered(): fire OrderSettled
+    public function entering(): void
+    {
+        $order = $this->getModel();
+
+        // Cancel any pending Transactions — comped means no payment needed
+        $order->transactions()
+            ->whereState('status', TransactionPending::class)
+            ->each(function ($transaction) {
+                $transaction->status->transitionTo(TransactionCancelled::class);
+                $transaction->update(['cancelled_at' => now()]);
+            });
+    }
+
+    public function entered(): void
+    {
+        $order = $this->getModel();
+        $order->update(['settled_at' => now()]);
+
+        OrderSettled::dispatch($order);
+    }
 }
