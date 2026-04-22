@@ -175,6 +175,16 @@ class RehearsalReservation extends Reservation implements Chargeable, Recurrable
     }
 
     /**
+     * Get the price per unit (hour) from config.
+     *
+     * Implements Chargeable::getPricePerUnit()
+     */
+    public function getPricePerUnit(): float
+    {
+        return (float) config('finance.pricing.' . static::class . '.rate', 1500);
+    }
+
+    /**
      * Get the billable hours for this reservation.
      *
      * Implements Chargeable::getBillableUnits()

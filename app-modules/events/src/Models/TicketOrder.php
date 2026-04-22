@@ -133,9 +133,14 @@ class TicketOrder extends Model implements Chargeable
     // Chargeable Interface Implementation
     // =========================================================================
 
+    public function getPricePerUnit(): float
+    {
+        return (float) ($this->unit_price?->getMinorAmount()?->toInt() ?? 0);
+    }
+
     public function getBillableUnits(): float
     {
-        return 1; // One order = one charge
+        return (float) $this->quantity;
     }
 
     public function getChargeableDescription(): string
