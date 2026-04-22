@@ -46,7 +46,6 @@ class PricingService
         // Get applicable credit type for this chargeable
         $creditTypeKey = config("finance.credits.applicable.{$chargeableClass}");
 
-        dump($creditTypeKey);
         if ($creditTypeKey) {
             $creditType = CreditType::from($creditTypeKey);
 

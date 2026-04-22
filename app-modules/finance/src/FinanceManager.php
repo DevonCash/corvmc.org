@@ -4,8 +4,12 @@ namespace CorvMC\Finance;
 
 use App\Models\User;
 use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Exceptions\PurchasableLockedException;
+use CorvMC\Finance\Models\LineItem;
 use CorvMC\Finance\Models\Order;
 use CorvMC\Finance\Products\Product;
+use CorvMC\Finance\States\OrderState\Cancelled;
+use CorvMC\Finance\States\OrderState\Refunded;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -54,8 +58,52 @@ class FinanceManager
 
             if ($productClass::$model !== null) {
                 $this->productsByModel[$productClass::$model] = $productClass;
+                $this->attachPurchasableLock($productClass::$model, $type);
             }
         }
+    }
+
+    /**
+     * Attach an updating observer to a model class that prevents modification
+     * while an active (non-terminal) Order references it.
+     */
+    protected function attachPurchasableLock(string $modelClass, string $productType): void
+    {
+        $modelClass::updating(function (Model $model) use ($productType) {
+            $activeOrder = $this->findActiveOrder($model, $productType);
+
+            if ($activeOrder) {
+                throw new PurchasableLockedException($model, $activeOrder);
+            }
+        });
+    }
+
+    /**
+     * Find an active (non-terminal) Order that references this model instance
+     * via a LineItem.
+     */
+    public function findActiveOrder(Model $model, ?string $productType = null): ?Order
+    {
+        if (! $model->exists) {
+            return null;
+        }
+
+        // Resolve the product type from the registry if not provided
+        if ($productType === null) {
+            $modelClass = get_class($model);
+            if (isset($this->productsByModel[$modelClass])) {
+                $productType = $this->productsByModel[$modelClass]::$type;
+            } else {
+                return null;
+            }
+        }
+
+        return Order::whereHas('lineItems', function ($query) use ($model, $productType) {
+            $query->where('product_type', $productType)
+                  ->where('product_id', $model->getKey());
+        })
+            ->whereNotState('status', [Cancelled::class, Refunded::class])
+            ->first();
     }
 
     /**
