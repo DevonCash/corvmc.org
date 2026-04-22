@@ -13,6 +13,9 @@ class FinanceServiceProvider extends ServiceProvider
             'finance'
         );
 
+        // Register FinanceManager (backing the Finance facade)
+        $this->app->singleton(\CorvMC\Finance\FinanceManager::class);
+
         // Register Finance services as singletons
         $this->app->singleton(\CorvMC\Finance\Services\PaymentService::class);
         $this->app->singleton(\CorvMC\Finance\Services\CreditService::class);

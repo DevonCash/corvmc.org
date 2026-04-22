@@ -48,4 +48,42 @@ return [
         // Minutes per credit block (for time-based credits)
         'minutes_per_block' => 30,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Wallets (New — used by Product system)
+    |--------------------------------------------------------------------------
+    |
+    | Each key is a wallet type (matches CreditType enum values).
+    | cents_per_unit: monetary value of one credit block in that wallet.
+    | label: human-readable name for receipts / UI.
+    |
+    */
+
+    'wallets' => [
+        'free_hours' => [
+            'cents_per_unit' => 750, // $7.50 per 30-min block
+            'label' => 'Free rehearsal hours',
+        ],
+        'equipment_credits' => [
+            'cents_per_unit' => 100,
+            'label' => 'Equipment credits',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Processing Fee
+    |--------------------------------------------------------------------------
+    |
+    | Stripe-style fee structure applied as a LineItem on Orders paid via card.
+    | rate_bps: basis-point surcharge (290 = 2.9%)
+    | fixed_cents: flat per-transaction charge in cents
+    |
+    */
+
+    'processing_fee' => [
+        'rate_bps' => 290,
+        'fixed_cents' => 30,
+    ],
 ];

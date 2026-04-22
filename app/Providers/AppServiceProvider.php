@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
+use CorvMC\Finance\Facades\Finance;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
 use Livewire\Livewire;
@@ -115,6 +116,17 @@ class AppServiceProvider extends ServiceProvider
         // SpaceManagement → Activity logging (reservation lifecycle)
         // LogReservationActivity is auto-discovered by Laravel's event discovery.
         // Do NOT manually register — that causes duplicate log entries.
+
+        // Register Finance Product types
+        Finance::register([
+            \App\Finance\Products\RehearsalProduct::class,
+            \App\Finance\Products\TicketProduct::class,
+            \App\Finance\Products\EquipmentLoanProduct::class,
+            \App\Finance\Products\ProcessingFeeProduct::class,
+            \App\Finance\Products\SustainingMemberDiscountProduct::class,
+            \App\Finance\Products\CompDiscountProduct::class,
+            \App\Finance\Products\ManualAdjustmentProduct::class,
+        ]);
 
         FilamentTimezone::set(config('app.timezone'));
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {

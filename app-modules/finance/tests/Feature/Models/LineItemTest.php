@@ -39,7 +39,7 @@ describe('LineItem creation', function () {
     it('creates a discount line item with negative amount', function () {
         $item = LineItem::create([
             'order_id' => $this->order->id,
-            'product_type' => 'free_hours_discount',
+            'product_type' => 'sustaining_member_discount',
             'description' => '4 free hour blocks applied',
             'unit' => 'discount',
             'unit_price' => -750,
@@ -105,7 +105,7 @@ describe('LineItem helpers', function () {
 
         $discount = LineItem::create([
             'order_id' => $this->order->id,
-            'product_type' => 'free_hours_discount',
+            'product_type' => 'sustaining_member_discount',
             'description' => 'Free hours applied',
             'unit' => 'discount',
             'unit_price' => -750,
@@ -141,7 +141,7 @@ describe('LineItem and Order total', function () {
 
         LineItem::create([
             'order_id' => $order->id,
-            'product_type' => 'free_hours_discount',
+            'product_type' => 'sustaining_member_discount',
             'description' => '2 free hour blocks',
             'unit' => 'discount',
             'unit_price' => -750,

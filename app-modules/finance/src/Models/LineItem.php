@@ -2,6 +2,7 @@
 
 namespace CorvMC\Finance\Models;
 
+use CorvMC\Finance\Facades\Finance;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -50,6 +51,22 @@ class LineItem extends Model
             'quantity' => 'decimal:2',
             'amount' => 'integer',
         ];
+    }
+
+    // =========================================================================
+    // Boot — product_type validation
+    // =========================================================================
+
+    protected static function booted(): void
+    {
+        static::saving(function (LineItem $lineItem) {
+            if (! Finance::isRegisteredType($lineItem->product_type)) {
+                throw new \RuntimeException(
+                    "Unknown product_type [{$lineItem->product_type}]. "
+                    . 'Register the Product class via Finance::register() before creating LineItems.'
+                );
+            }
+        });
     }
 
     // =========================================================================
