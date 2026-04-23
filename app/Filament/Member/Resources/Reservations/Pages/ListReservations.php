@@ -24,6 +24,8 @@ class ListReservations extends ListRecords
 {
     protected static string $resource = ReservationResource::class;
 
+    public string $paymentMethod = 'stripe';
+
     protected static ?string $title = 'Reserve Practice Space';
 
     protected string $view = 'space-management::filament.pages.list-reservations';
@@ -67,7 +69,7 @@ class ListReservations extends ListRecords
             ->steps(ReservationForm::getSteps())
             ->modifyWizardUsing(fn ($wizard) => $wizard
                 ->submitAction(new \Illuminate\Support\HtmlString(\Illuminate\Support\Facades\Blade::render(<<<'BLADE'
-                    <div class="flex gap-3" x-data="{ setMethod(m) { this.$wire.set('mountedActions.0.data.payment_method', m) } }">
+                    <div class="flex gap-3" x-data="{ setMethod(m) { this.$wire.set('paymentMethod', m) } }">
                         <x-filament::button
                             type="submit"
                             icon="tabler-credit-card"
@@ -87,7 +89,7 @@ class ListReservations extends ListRecords
                     </div>
                 BLADE)))
             )
-            ->action(fn (array $data) => $this->createReservationWithPayment($data, $data['payment_method'] ?? 'stripe'));
+            ->action(fn (array $data) => $this->createReservationWithPayment($data, $this->paymentMethod));
     }
 
     private function createReservationWithPayment(array $data, string $paymentMethod): void
