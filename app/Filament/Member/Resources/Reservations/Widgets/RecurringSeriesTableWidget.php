@@ -2,7 +2,7 @@
 
 namespace App\Filament\Member\Resources\Reservations\Widgets;
 
-use CorvMC\SpaceManagement\Actions\RecurringReservations\CreateRecurringRehearsal;
+// TODO: CreateRecurringRehearsal was deleted — rebuild recurring reservation creation
 use CorvMC\Support\Enums\RecurringSeriesStatus;
 use CorvMC\Support\Models\RecurringSeries;
 use App\Models\User;
@@ -39,12 +39,8 @@ class RecurringSeriesTableWidget extends BaseWidget
                     ->with(['user', 'instances'])
             )
             ->heading('My Recurring Reservations')
-            ->headerActions([
-                CreateRecurringRehearsal::filamentAction()
-            ])
-            ->emptyStateActions([
-                CreateRecurringRehearsal::filamentAction()->label('Create Recurring Reservation')
-            ])
+            ->headerActions([])
+            ->emptyStateActions([])
             ->emptyStateHeading('No recurring reservations')
             ->emptyStateDescription('Create a recurring reservation to automatically book the practice space on a regular schedule.')
             ->emptyStateIcon('tabler-calendar-repeat')
