@@ -26,7 +26,7 @@ class CancelReservationAction
             ->authorize('cancel')
             ->requiresConfirmation()
             ->action(function (?Reservation $record) {
-                $record->state->transitionTo(ReservationState\Cancelled::class);
+                $record->status->transitionTo(ReservationState\Cancelled::class);
                 Notification::make()
                     ->title('Reservation cancelled')
                     ->success()
@@ -47,7 +47,7 @@ class CancelReservationAction
             ->action(function (Collection $records) {
                 $count = 0;
                 foreach ($records as $reservation) {
-                    if ($reservation->state->canTransitionTo(ReservationState\Cancelled::class)) {
+                    if ($reservation->status->canTransitionTo(ReservationState\Cancelled::class)) {
                         $reservation->state->transitionTo(ReservationState\Cancelled::class);
                         $count++;
                     }

@@ -23,7 +23,7 @@ class ConfirmReservationAction
             ->modalDescription('Are you sure you want to confirm this reservation? This will finalize your booking.')
             ->modalSubmitActionLabel('Confirm Reservation')
             ->action(function (Reservation $record) {
-                $record->state->transitionTo(ReservationState\Confirmed::class);
+                $record->status->transitionTo(ReservationState\Confirmed::class);
                 Notification::make()
                     ->title('Reservation confirmed')
                     ->success()
