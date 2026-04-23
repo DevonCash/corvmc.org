@@ -4,8 +4,6 @@ namespace CorvMC\Events\Models;
 
 use App\Models\User;
 use CorvMC\Events\Enums\TicketOrderStatus;
-use CorvMC\Finance\Concerns\HasCharges;
-use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\Support\Casts\MoneyCast;
 use Database\Factories\TicketOrderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -55,9 +53,9 @@ use Illuminate\Support\Str;
  *
  * @mixin \Eloquent
  */
-class TicketOrder extends Model implements Chargeable
+class TicketOrder extends Model
 {
-    use HasCharges, HasFactory, \CorvMC\Finance\Concerns\Purchasable;
+    use HasFactory, \CorvMC\Finance\Concerns\Purchasable;
 
     public function getLockableFields(): array
     {

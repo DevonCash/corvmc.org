@@ -4,8 +4,6 @@ namespace CorvMC\SpaceManagement\Models;
 
 use App\Models\User;
 use Carbon\Carbon;
-use CorvMC\Finance\Concerns\HasCharges;
-use CorvMC\Finance\Contracts\Chargeable;
 use CorvMC\SpaceManagement\States\ReservationState;
 use CorvMC\SpaceManagement\States\ReservationState\Reserved;
 use CorvMC\Support\Contracts\Recurrable;
@@ -37,9 +35,9 @@ use Spatie\ModelStates\HasStates;
  *
  * @mixin \Eloquent
  */
-class RehearsalReservation extends Reservation implements Chargeable, Recurrable
+class RehearsalReservation extends Reservation implements Recurrable
 {
-    use HasCharges, HasFactory, HasStates;
+    use HasFactory, HasStates;
 
     /**
      * Validation rules specific to rehearsal reservations.

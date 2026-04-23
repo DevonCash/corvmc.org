@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Listeners\CheckEventSpaceConflicts;
-use App\Listeners\ConfirmReservationOnPayment;
 use App\Livewire\Synthesizers\MoneySynthesizer;
 use CorvMC\Finance\Models\Subscription;
 use App\Models\User;
@@ -13,15 +12,7 @@ use App\Observers\TagObserver;
 use App\Observers\UserObserver;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
 use CorvMC\Events\Events\EventScheduling;
-use CorvMC\Finance\Events\PaymentAccepted;
-use CorvMC\Finance\Listeners\HandleChargeableCancelled;
-use CorvMC\Finance\Listeners\HandleChargeableConfirmed;
-use CorvMC\Finance\Listeners\HandleChargeableCreated;
-use CorvMC\Finance\Listeners\HandleChargeableUpdated;
 use CorvMC\SpaceManagement\Events\ReservationCancelled;
-use CorvMC\SpaceManagement\Events\ReservationConfirmed;
-use CorvMC\SpaceManagement\Events\ReservationCreated;
-use CorvMC\SpaceManagement\Events\ReservationUpdated;
 use Filament\Support\Facades\FilamentTimezone;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event;
@@ -104,15 +95,10 @@ class AppServiceProvider extends ServiceProvider
         // Register event listeners for cross-module integration
         Event::listen(EventScheduling::class, CheckEventSpaceConflicts::class);
 
-        // SpaceManagement → Finance integration (reservation pricing/charges)
-        Event::listen(ReservationCreated::class, HandleChargeableCreated::class);
-        // HandleChargeableCancelled replaced by CancelOrderOnReservationCancelled
-        // (registered in FinanceServiceProvider)
-        Event::listen(ReservationUpdated::class, HandleChargeableUpdated::class);
-        Event::listen(ReservationConfirmed::class, HandleChargeableConfirmed::class);
-        
-        // Finance → SpaceManagement integration (payment confirmation)
-        Event::listen(PaymentAccepted::class, ConfirmReservationOnPayment::class);
+        // SpaceManagement → Finance integration now handled by:
+        // - FinanceServiceProvider: CancelOrderOnReservationCancelled
+        // - EventsServiceProvider: GenerateTicketsOnOrderSettled
+        // - Reservation booking creates Orders directly via Finance facade
 
         // SpaceManagement → Activity logging (reservation lifecycle)
         // LogReservationActivity is auto-discovered by Laravel's event discovery.

@@ -6,7 +6,6 @@ use App\Filament\Staff\Resources\Users\Pages\CreateUser;
 use App\Filament\Staff\Resources\Users\Pages\EditUser;
 use App\Filament\Staff\Resources\Users\Pages\ListUsers;
 use App\Filament\Staff\Resources\Users\RelationManagers\BandsRelationManager;
-use App\Filament\Staff\Resources\Users\RelationManagers\ChargesRelationManager;
 use App\Filament\Staff\Resources\Users\RelationManagers\CreditTransactionsRelationManager;
 use App\Filament\Staff\Resources\Users\RelationManagers\EventsRelationManager;
 use App\Filament\Staff\Resources\Users\RelationManagers\OrdersRelationManager;
@@ -101,7 +100,6 @@ class UserResource extends Resource
             EventsRelationManager::class,
             ReservationsRelationManager::class,
             OrdersRelationManager::class,
-            ChargesRelationManager::class,
             CreditTransactionsRelationManager::class,
         ];
     }

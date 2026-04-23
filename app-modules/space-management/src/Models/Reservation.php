@@ -204,7 +204,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
      */
     public function scopeUpcoming(Builder $query, int $days = 7): Builder
     {
-        return $query->with(['reservable', 'charge'])
+        return $query->with(['reservable'])
             ->where('reserved_at', '>=', now())
             ->where('reserved_at', '<=', now()->addDays($days))
             ->whereNotState('status', Cancelled::class)
@@ -234,7 +234,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
             $query->where('status', $status);
         }
 
-        return $query->with(['reservable', 'charge'])
+        return $query->with(['reservable'])
             ->orderBy('reserved_at', 'desc');
     }
 

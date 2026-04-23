@@ -65,7 +65,7 @@ class StaffDashboard extends Page
         $unpaidCount = 0;
 
         $reservationIds = $reservations->pluck('id');
-        if ($reservationIds->isNotEmpty() && \Schema::hasTable('orders')) {
+        if ($reservationIds->isNotEmpty()) {
             $todaysOrders = Order::whereHas('lineItems', function ($q) use ($reservationIds) {
                 $q->where('product_type', 'rehearsal_time')
                     ->whereIn('product_id', $reservationIds);
@@ -125,42 +125,32 @@ class StaffDashboard extends Page
         $startOfMonth = now()->startOfMonth();
         $endOfMonth = now()->endOfMonth();
 
-        $ordersPaidCents = 0;
-        $ordersPendingCents = 0;
-        $ordersPendingCount = 0;
-        $creditsAppliedCents = 0;
-        $byCurrency = collect();
+        $transactions = Transaction::where('type', 'payment')
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->get();
 
-        if (\Schema::hasTable('transactions')) {
-            $transactions = Transaction::where('type', 'payment')
-                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                ->get();
+        // Cleared transactions by currency
+        $clearedTxns = $transactions->filter(fn ($t) => $t->status instanceof Cleared);
+        $byCurrency = $clearedTxns->groupBy('currency')->map(function ($group, $currency) {
+            return [
+                'method' => $currency,
+                'count' => $group->count(),
+                'total' => (int) $group->sum('amount'),
+            ];
+        });
 
-            // Cleared transactions by currency
-            $clearedTxns = $transactions->filter(fn ($t) => $t->status instanceof Cleared);
-            $byCurrency = $clearedTxns->groupBy('currency')->map(function ($group, $currency) {
-                return [
-                    'method' => $currency,
-                    'count' => $group->count(),
-                    'total' => (int) $group->sum('amount'),
-                ];
-            });
+        $ordersPaidCents = (int) $clearedTxns->sum('amount');
 
-            $ordersPaidCents = (int) $clearedTxns->sum('amount');
+        $pendingTxns = $transactions->filter(fn ($t) => $t->status instanceof \CorvMC\Finance\States\TransactionState\Pending);
+        $ordersPendingCents = (int) $pendingTxns->sum('amount');
+        $ordersPendingCount = $pendingTxns->count();
 
-            $pendingTxns = $transactions->filter(fn ($t) => $t->status instanceof \CorvMC\Finance\States\TransactionState\Pending);
-            $ordersPendingCents = (int) $pendingTxns->sum('amount');
-            $ordersPendingCount = $pendingTxns->count();
-        }
-
-        if (\Schema::hasTable('orders')) {
-            $monthlyOrders = Order::whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                ->whereNotState('status', Cancelled::class)
-                ->with('lineItems')
-                ->get();
-            // Discounts are negative LineItem amounts, abs() to get the value
-            $creditsAppliedCents = (int) abs($monthlyOrders->flatMap->lineItems->filter->isDiscount()->sum('amount'));
-        }
+        $monthlyOrders = Order::whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->whereNotState('status', Cancelled::class)
+            ->with('lineItems')
+            ->get();
+        // Discounts are negative LineItem amounts, abs() to get the value
+        $creditsAppliedCents = (int) abs($monthlyOrders->flatMap->lineItems->filter->isDiscount()->sum('amount'));
 
         // Stripe payments (for fee calculation)
         $stripePaymentsCents = $byCurrency->get('stripe')['total'] ?? 0;
