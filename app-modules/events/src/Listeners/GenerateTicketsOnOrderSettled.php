@@ -22,8 +22,14 @@ class GenerateTicketsOnOrderSettled
 
         $ticketOrder = TicketOrder::find($ticketLineItem->product_id);
 
-        if (! $ticketOrder || $ticketOrder->status === 'completed') {
-            return; // Already completed or not found
+        if (! $ticketOrder) {
+            return;
+        }
+
+        // Guard against duplicate ticket generation — check if tickets
+        // already exist, not just status (handles race conditions)
+        if ($ticketOrder->tickets()->exists()) {
+            return;
         }
 
         $ticketOrder->update([

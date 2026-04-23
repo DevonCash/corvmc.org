@@ -59,6 +59,18 @@ class TicketService
      */
     public function processCheckout(TicketOrder $ticketOrder, string $successUrl, string $cancelUrl): array
     {
+        // Guard against duplicate orders
+        $existingOrder = Finance::findActiveOrder($ticketOrder);
+        if ($existingOrder) {
+            $checkoutUrl = $existingOrder->checkoutUrl();
+
+            return [
+                'success' => true,
+                'checkout_url' => $checkoutUrl,
+                'session_id' => null,
+            ];
+        }
+
         $user = $ticketOrder->user ?? User::find($ticketOrder->purchaser_id);
 
         // Price via Finance

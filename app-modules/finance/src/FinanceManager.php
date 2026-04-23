@@ -76,7 +76,8 @@ class FinanceManager
             // set lifecycle timestamps (cancelled_at, etc.) alongside status.
             if ($model->isDirty('status')) {
                 $changedKeys = array_keys($model->getDirty());
-                $lifecycleKeys = ['status', 'updated_at', 'cancelled_at', 'confirmed_at', 'completed_at'];
+                $lifecycleKeys = ['status', 'updated_at', 'cancelled_at', 'confirmed_at', 'completed_at',
+                    'refunded_at', 'refund_reason', 'cancellation_reason'];
                 $pricingFieldsChanged = ! empty(array_diff($changedKeys, $lifecycleKeys));
 
                 if (! $pricingFieldsChanged) {
