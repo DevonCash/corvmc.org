@@ -153,7 +153,11 @@ class ReservationForm
                                 return [];
                             }
 
-                            return ReservationService::getAvailableTimeSlots(Carbon::parse($date, config('app.timezone')));
+                            $slots = ReservationService::getAvailableTimeSlots(Carbon::parse($date, config('app.timezone')));
+
+                            return collect($slots)->mapWithKeys(fn ($slot) => [
+                                $slot['start']->format('H:i') => $slot['start']->format('g:i A'),
+                            ])->all();
                         })
                         ->disabled(fn(Get $get) => ! $get('reservation_date'))
                         ->required()
@@ -295,7 +299,11 @@ class ReservationForm
                                 return [];
                             }
 
-                            return ReservationService::getAvailableTimeSlots(Carbon::parse($date, config('app.timezone')));
+                            $slots = ReservationService::getAvailableTimeSlots(Carbon::parse($date, config('app.timezone')));
+
+                            return collect($slots)->mapWithKeys(fn ($slot) => [
+                                $slot['start']->format('H:i') => $slot['start']->format('g:i A'),
+                            ])->all();
                         })
                         ->disabled(fn(Get $get) => ! $get('reservation_date'))
                         ->required()
