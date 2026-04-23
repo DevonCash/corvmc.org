@@ -69,9 +69,6 @@ class PayWithStripeAction
             return false;
         }
 
-        // Must have a cost
-        $lineItems = Finance::price([$record], $record->getResponsibleUser());
-
-        return $lineItems->sum('amount') > 0;
+        return true;
     }
 }

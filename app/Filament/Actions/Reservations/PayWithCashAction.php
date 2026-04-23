@@ -60,12 +60,7 @@ class PayWithCashAction
         }
 
         $existingOrder = Finance::findActiveOrder($record);
-        if ($existingOrder) {
-            return false;
-        }
 
-        $lineItems = Finance::price([$record], $record->getResponsibleUser());
-
-        return $lineItems->sum('amount') > 0;
+        return ! $existingOrder;
     }
 }

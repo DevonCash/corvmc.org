@@ -60,6 +60,11 @@ class CreateReservation extends CreateRecord
         }
 
         try {
+            // Guard against duplicate orders
+            if (Finance::findActiveOrder($reservation)) {
+                return;
+            }
+
             $lineItems = Finance::price([$reservation], $user);
             $totalCents = (int) $lineItems->sum('amount');
 

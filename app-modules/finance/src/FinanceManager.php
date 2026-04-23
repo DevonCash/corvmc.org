@@ -71,14 +71,17 @@ class FinanceManager
     protected function attachPurchasableLock(string $modelClass, string $productType): void
     {
         $modelClass::updating(function (Model $model) use ($productType) {
-            // Allow status and related timestamp changes (e.g. Scheduled → Confirmed,
-            // or cancellation which sets cancelled_at alongside status)
-            $changedKeys = array_keys($model->getDirty());
-            $allowedKeys = ['status', 'updated_at', 'cancelled_at', 'confirmed_at', 'completed_at'];
-            $statusOnlyChange = empty(array_diff($changedKeys, $allowedKeys));
+            // Allow state transitions: if status is changing and nothing else
+            // pricing-relevant changed, let it through. State hooks may also
+            // set lifecycle timestamps (cancelled_at, etc.) alongside status.
+            if ($model->isDirty('status')) {
+                $changedKeys = array_keys($model->getDirty());
+                $lifecycleKeys = ['status', 'updated_at', 'cancelled_at', 'confirmed_at', 'completed_at'];
+                $pricingFieldsChanged = ! empty(array_diff($changedKeys, $lifecycleKeys));
 
-            if ($statusOnlyChange) {
-                return;
+                if (! $pricingFieldsChanged) {
+                    return;
+                }
             }
 
             $activeOrder = $this->findActiveOrder($model, $productType);

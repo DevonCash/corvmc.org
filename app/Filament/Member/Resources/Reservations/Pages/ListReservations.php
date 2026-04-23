@@ -133,6 +133,18 @@ class ListReservations extends ListRecords
         }
 
         try {
+            // Guard against duplicate orders (double-click / concurrent request)
+            $existingOrder = Finance::findActiveOrder($reservation);
+            if ($existingOrder) {
+                Notification::make()
+                    ->title('Order already exists')
+                    ->body('A payment is already in progress for this reservation.')
+                    ->warning()
+                    ->send();
+
+                return;
+            }
+
             // Price and create Order
             $lineItems = Finance::price([$reservation], $user);
             $totalCents = (int) $lineItems->sum('amount');
