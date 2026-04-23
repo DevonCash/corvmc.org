@@ -356,6 +356,7 @@ class ReservationForm
             Hidden::make('cost')->default(0),
             Hidden::make('free_hours_used')->default(0),
             Hidden::make('hours_used')->default(0),
+            Hidden::make('payment_method')->default('stripe'),
 
             ViewField::make('reservation_summary')
                 ->label('Reservation Summary')
