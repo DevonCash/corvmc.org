@@ -11,7 +11,6 @@ use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
 use CorvMC\SpaceManagement\States\ReservationState\Scheduled;
-use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Log;
@@ -37,43 +36,9 @@ class CreateReservation extends CreateRecord
         $this->create();
     }
 
-    protected function getCreateFormAction(): Action
+    protected function hasFormWrapper(): bool
     {
-        return parent::getCreateFormAction()
-            ->label('Schedule Reservation')
-            ->hidden(fn () => $this->shouldShowPaymentButtons());
-    }
-
-    protected function getHeaderActions(): array
-    {
-        return [];
-    }
-
-    /**
-     * Extra form actions that appear alongside the default submit button.
-     * When in the confirmation window with a cost, show two payment buttons.
-     */
-    protected function getFormActions(): array
-    {
-        return [
-            $this->getCreateFormAction(),
-
-            Action::make('pay_stripe')
-                ->label('Pay Online')
-                ->icon('tabler-credit-card')
-                ->color('success')
-                ->submit('payWithStripe')
-                ->visible(fn () => $this->shouldShowPaymentButtons()),
-
-            Action::make('pay_cash')
-                ->label('Pay with Cash')
-                ->icon('tabler-cash')
-                ->color('warning')
-                ->submit('payWithCash')
-                ->visible(fn () => $this->shouldShowPaymentButtons()),
-
-            $this->getCancelFormAction(),
-        ];
+        return false;
     }
 
     protected function handleRecordCreation(array $data): Reservation
@@ -164,25 +129,8 @@ class CreateReservation extends CreateRecord
         return $this->getResource()::getUrl('view', ['record' => $this->record]);
     }
 
-    private function shouldShowPaymentButtons(): bool
-    {
-        $costCents = (int) ($this->data['cost'] ?? 0);
-
-        return $costCents > 0 && $this->isFormWithinConfirmationWindow();
-    }
-
     private function isWithinConfirmationWindow(): bool
     {
         return $this->record->reserved_at->lte(now()->addWeek());
-    }
-
-    private function isFormWithinConfirmationWindow(): bool
-    {
-        $date = $this->data['reservation_date'] ?? null;
-        if (! $date) {
-            return false;
-        }
-
-        return Carbon::parse($date, config('app.timezone'))->lte(now()->addWeek());
     }
 }

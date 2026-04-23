@@ -7,6 +7,7 @@ use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Carbon\Carbon;
 use CorvMC\Finance\Facades\Finance;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
@@ -29,7 +30,8 @@ class ReservationForm
             ->components([
                 Wizard::make()
                     ->columnSpanFull()
-                    ->steps(static::getSteps()),
+                    ->steps(static::getSteps())
+                    ->submitAction(view('space-management::filament.components.reservation-submit-actions')),
             ]);
     }
 
