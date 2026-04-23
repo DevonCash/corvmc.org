@@ -45,7 +45,7 @@ class UserStatsWidget extends Widget
         $this->mrrTotal = $stats->mrr_total->formatTo('en_US');
         $this->mrrBase = $stats->mrr_base->formatTo('en_US');
         $this->feeCost = $stats->mrr_total->minus($stats->mrr_base)->formatTo('en_US');
-        $this->averageMrr = $stats->average_contribution->formatTo('en_US');
+        $this->averageMrr = $stats->average_mrr->formatTo('en_US');
         $this->medianContribution = $stats->median_contribution->formatTo('en_US');
     }
 }

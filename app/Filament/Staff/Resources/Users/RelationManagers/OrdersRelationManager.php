@@ -2,15 +2,17 @@
 
 namespace App\Filament\Staff\Resources\Users\RelationManagers;
 
+use App\Filament\Staff\Resources\Orders\Actions;
+use App\Filament\Staff\Resources\Orders\OrderResource;
 use CorvMC\Finance\Models\Order;
 use CorvMC\Finance\States\OrderState\Cancelled;
 use CorvMC\Finance\States\OrderState\Completed;
 use CorvMC\Finance\States\OrderState\Comped;
 use CorvMC\Finance\States\OrderState\Pending;
 use CorvMC\Finance\States\OrderState\Refunded;
-use Filament\Actions;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -29,14 +31,17 @@ class OrdersRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with('lineItems'))
+            ->modifyQueryUsing(fn ($query) => $query->with('lineItems', 'transactions'))
             ->columns([
                 TextColumn::make('id')
                     ->label('#')
+                    ->width(0)
                     ->sortable(),
 
-                TextColumn::make('status')
-                    ->badge(),
+                IconColumn::make('status')
+                    ->label('')
+                    ->width(0)
+                    ->tooltip(fn (Order $record) => $record->status?->getLabel()),
 
                 TextColumn::make('primary_product_type')
                     ->label('Type')
@@ -52,15 +57,29 @@ class OrdersRelationManager extends RelationManager
                         : '—'
                     ),
 
-                TextColumn::make('total_amount')
-                    ->label('Total')
-                    ->money('USD', divideBy: 100)
-                    ->sortable(),
+                TextColumn::make('payment_rail')
+                    ->label('Rail')
+                    ->badge()
+                    ->getStateUsing(function (Order $record): ?string {
+                        $paymentTxns = $record->transactions->where('type', 'payment');
+                        if ($paymentTxns->isEmpty()) {
+                            return null;
+                        }
 
-                TextColumn::make('paid_amount')
-                    ->label('Paid')
+                        return $paymentTxns->pluck('currency')->unique()->sort()->implode(', ');
+                    })
+                    ->formatStateUsing(fn (?string $state) => $state ? ucwords($state) : '—')
+                    ->color(fn (?string $state) => match ($state) {
+                        'cash' => 'warning',
+                        'stripe' => 'info',
+                        default => 'gray',
+                    }),
+
+                TextColumn::make('total_amount')
+                    ->label('Amount')
                     ->money('USD', divideBy: 100)
-                    ->getStateUsing(fn (Order $record) => $record->paidAmount()),
+                    ->color(fn (Order $record) => $record->status instanceof Pending ? 'danger' : null)
+                    ->sortable(),
 
                 TextColumn::make('created_at')
                     ->label('Created')
@@ -79,15 +98,16 @@ class OrdersRelationManager extends RelationManager
                     ])
                     ->multiple(),
             ])
+            ->recordUrl(fn (Order $record) => OrderResource::getUrl('view', ['record' => $record]))
             ->recordActions([
-                Actions\ViewAction::make()
-                    ->url(fn (Order $record) => route('filament.staff.resources.orders.view', $record)),
-
-                \App\Filament\Staff\Resources\Orders\Actions\MarkPaidAction::make(),
-                \App\Filament\Staff\Resources\Orders\Actions\CollectCashAction::make(),
-                \App\Filament\Staff\Resources\Orders\Actions\CompOrderAction::make(),
-                \App\Filament\Staff\Resources\Orders\Actions\CancelOrderAction::make(),
-                \App\Filament\Staff\Resources\Orders\Actions\RefundOrderAction::make(),
+                \Filament\Actions\ActionGroup::make([
+                    \Filament\Actions\ViewAction::make(),
+                    Actions\MarkPaidAction::make(),
+                    Actions\CollectCashAction::make(),
+                    Actions\CompOrderAction::make(),
+                    Actions\CancelOrderAction::make(),
+                    Actions\RefundOrderAction::make(),
+                ]),
             ]);
     }
 }
