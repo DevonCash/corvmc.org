@@ -71,6 +71,14 @@ class FinanceManager
     protected function attachPurchasableLock(string $modelClass, string $productType): void
     {
         $modelClass::updating(function (Model $model) use ($productType) {
+            // Allow status-only changes (e.g. Scheduled → Confirmed after payment)
+            $changedKeys = array_keys($model->getDirty());
+            $statusOnlyChange = $changedKeys === ['status'] || $changedKeys === ['status', 'updated_at'];
+
+            if ($statusOnlyChange) {
+                return;
+            }
+
             $activeOrder = $this->findActiveOrder($model, $productType);
 
             if ($activeOrder) {
