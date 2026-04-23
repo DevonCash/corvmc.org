@@ -3,14 +3,16 @@
 namespace App\Filament\Member\Resources\Reservations\Tables;
 
 use App\Filament\Actions\Reservations\CancelReservationAction;
-use App\Filament\Actions\Reservations\ConfirmReservationAction;
-use App\Filament\Actions\Reservations\CreateCheckoutSessionAction;
-use App\Filament\Actions\Payments\MarkReservationAsPaidAction;
-use App\Filament\Actions\Payments\MarkReservationAsCompedAction;
+use App\Filament\Actions\Reservations\PayWithCashAction;
+use App\Filament\Actions\Reservations\PayWithStripeAction;
+use CorvMC\Finance\Facades\Finance;
+use CorvMC\Finance\Models\Order;
+use CorvMC\Finance\States\OrderState\Pending as OrderPending;
+use CorvMC\Finance\States\TransactionState\Failed as TransactionFailed;
+use CorvMC\Finance\States\TransactionState\Cancelled as TransactionCancelled;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
 use CorvMC\SpaceManagement\Models\Reservation;
-use App\Models\User;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
@@ -23,7 +25,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use CorvMC\Finance\Enums\ChargeStatus;
 use Illuminate\Database\Eloquent\Builder;
 
 class ReservationsTable
@@ -67,10 +68,6 @@ class ReservationsTable
                     ])
                     ->multiple(),
 
-                SelectFilter::make('charge.status')
-                    ->label('Payment Status')
-                    ->options(ChargeStatus::class)
-                    ->multiple(),
 
                 Filter::make('date_range')
                     ->schema([
@@ -110,20 +107,91 @@ class ReservationsTable
                     ->schema(fn (Schema $infolist) => ReservationInfolist::configure($infolist))
                     ->modalHeading(fn (Reservation $record): string => "Reservation #{$record->id}")
                     ->modalFooterActions([
+                        PayWithStripeAction::make(),
+                        PayWithCashAction::make(),
                         CancelReservationAction::make(),
-                        CreateCheckoutSessionAction::make(),
-                        ConfirmReservationAction::make(),
                     ]),
-                ConfirmReservationAction::make(),
-                CreateCheckoutSessionAction::make(),
+                PayWithStripeAction::make(),
+                PayWithCashAction::make(),
+                \Filament\Actions\Action::make('retry_payment')
+                    ->label('Retry Payment')
+                    ->icon('tabler-refresh')
+                    ->color('success')
+                    ->visible(function (Reservation $record) {
+                        $order = Finance::findActiveOrder($record);
+
+                        return $order
+                            && $order->status instanceof OrderPending
+                            && $order->transactions()
+                                ->where('currency', 'stripe')
+                                ->where('type', 'payment')
+                                ->whereState('status', [TransactionFailed::class, TransactionCancelled::class])
+                                ->exists();
+                    })
+                    ->action(function (Reservation $record) {
+                        $order = Finance::findActiveOrder($record);
+                        if (! $order) {
+                            return;
+                        }
+
+                        $failedTxn = $order->transactions()
+                            ->where('currency', 'stripe')
+                            ->where('type', 'payment')
+                            ->whereState('status', [TransactionFailed::class, TransactionCancelled::class])
+                            ->first();
+
+                        if (! $failedTxn) {
+                            return;
+                        }
+
+                        $user = $record->getResponsibleUser();
+                        $amount = $failedTxn->amount;
+
+                        $newTxn = \CorvMC\Finance\Models\Transaction::create([
+                            'order_id' => $order->id,
+                            'user_id' => $user->id,
+                            'currency' => 'stripe',
+                            'amount' => $amount,
+                            'type' => 'payment',
+                            'metadata' => [],
+                        ]);
+
+                        $checkout = \Laravel\Cashier\Cashier::stripe()->checkout->sessions->create([
+                            'mode' => 'payment',
+                            'customer' => $user->stripeId() ?? $user->createAsStripeCustomer()->id,
+                            'line_items' => [[
+                                'price_data' => [
+                                    'currency' => 'usd',
+                                    'unit_amount' => $amount,
+                                    'product_data' => ['name' => "Order #{$order->id} — Retry Payment"],
+                                ],
+                                'quantity' => 1,
+                            ]],
+                            'metadata' => [
+                                'type' => 'order',
+                                'transaction_id' => $newTxn->id,
+                                'order_id' => $order->id,
+                            ],
+                            'success_url' => route('checkout.success') . '?user_id=' . $user->id . '&session_id={CHECKOUT_SESSION_ID}',
+                            'cancel_url' => route('checkout.cancel') . '?type=order',
+                        ]);
+
+                        $newTxn->update([
+                            'metadata' => [
+                                'session_id' => $checkout->id,
+                                'checkout_url' => $checkout->url,
+                                'retry_of' => $failedTxn->id,
+                            ],
+                        ]);
+
+                        return redirect($checkout->url);
+                    }),
                 ActionGroup::make([
                     CancelReservationAction::make(),
                 ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    MarkReservationAsPaidAction::bulkAction(),
-                    MarkReservationAsCompedAction::bulkAction(),
                     CancelReservationAction::bulkAction(),
                 ]),
             ])
