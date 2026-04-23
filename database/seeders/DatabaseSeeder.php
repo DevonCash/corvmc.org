@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             SponsorSeeder::class,
             ReportSeeder::class,
             RevisionSeeder::class,
+            OrderSeeder::class,
         ]);
     }
 }

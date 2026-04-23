@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
+use CorvMC\Membership\Models\MemberProfile;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Seeder;
 
@@ -46,7 +48,13 @@ class MemberProfileSeeder extends Seeder
         UserFactory::createRandomUsers(4, ['visibility' => 'members']);
         UserFactory::createRandomUsers(3, ['bio' => null]);
 
-        $this->command->info('Created member profiles with diverse configurations for testing');
+        // Backfill profiles for any users created by other seeders
+        $orphans = User::whereDoesntHave('profile')->get();
+        foreach ($orphans as $user) {
+            MemberProfile::create(['user_id' => $user->id]);
+        }
+
+        $this->command->info("Created member profiles with diverse configurations for testing ({$orphans->count()} backfilled)");
     }
 
     private function createSustainingMembers(int $count): void
