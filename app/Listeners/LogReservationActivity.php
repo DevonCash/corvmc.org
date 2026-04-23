@@ -64,7 +64,6 @@ class LogReservationActivity
             ->causedBy(auth()->user())
             ->event('cancelled')
             ->withProperties([
-                'original_status' => $event->originalStatus->value,
                 'cancellation_reason' => $reason,
             ])
             ->log("Reservation cancelled: {$reason}");
