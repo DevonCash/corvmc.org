@@ -10,7 +10,6 @@ use CorvMC\Finance\Facades\Finance;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -361,17 +360,6 @@ class ReservationForm
                 ->view('space-management::filament.components.reservation-summary')
                 ->columnSpanFull(),
 
-            // Payment method choice — only shown when in confirmation window and cost > 0
-            Radio::make('payment_method')
-                ->label('How would you like to pay?')
-                ->options([
-                    'stripe' => 'Pay online with card',
-                    'cash' => 'Pay with cash at the space',
-                ])
-                ->default('stripe')
-                ->required()
-                ->visible(fn (Get $get) => static::shouldShowPaymentChoice($get))
-                ->columnSpanFull(),
         ];
     }
 

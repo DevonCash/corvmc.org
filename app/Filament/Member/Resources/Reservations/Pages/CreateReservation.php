@@ -11,6 +11,7 @@ use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
 use CorvMC\SpaceManagement\States\ReservationState\Scheduled;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Log;
@@ -19,13 +20,55 @@ class CreateReservation extends CreateRecord
 {
     protected static string $resource = ReservationResource::class;
 
+    /**
+     * The payment method chosen by the user via submit button.
+     * Set before the form submits via setPaymentMethodAndCreate().
+     */
+    public ?string $paymentMethod = null;
+
+    public function setPaymentMethodAndCreate(string $method): void
+    {
+        $this->paymentMethod = $method;
+        $this->create();
+    }
+
+    protected function getFormActions(): array
+    {
+        $costCents = (int) ($this->data['cost'] ?? 0);
+        $inWindow = $this->isFormWithinConfirmationWindow();
+
+        if ($inWindow && $costCents > 0) {
+            return [
+                Action::make('pay_stripe')
+                    ->label('Pay Online')
+                    ->icon('tabler-credit-card')
+                    ->color('success')
+                    ->action('setPaymentMethodAndCreate', ['method' => 'stripe']),
+
+                Action::make('pay_cash')
+                    ->label('Pay with Cash')
+                    ->icon('tabler-cash')
+                    ->color('warning')
+                    ->action('setPaymentMethodAndCreate', ['method' => 'cash']),
+
+                $this->getCancelFormAction(),
+            ];
+        }
+
+        // Out of window or free — single submit button
+        return [
+            $this->getCreateFormAction()
+                ->label($inWindow ? 'Confirm Reservation' : 'Schedule Reservation'),
+            $this->getCancelFormAction(),
+        ];
+    }
+
     protected function handleRecordCreation(array $data): Reservation
     {
         $user = auth()->user();
         $startTime = Carbon::parse($data['reserved_at']);
         $endTime = Carbon::parse($data['reserved_until']);
 
-        // Always start as Scheduled — confirmation happens after payment method is chosen
         return RehearsalReservation::create([
             'reservable_type' => User::class,
             'reservable_id' => $user->id,
@@ -44,19 +87,15 @@ class CreateReservation extends CreateRecord
         /** @var RehearsalReservation $reservation */
         $reservation = $this->record;
         $user = auth()->user();
-        $data = $this->data;
 
-        // Only create an Order if within the confirmation window
         if (! $this->isWithinConfirmationWindow()) {
             return; // Path 3: stays Scheduled, no Order
         }
 
         try {
-            // Price the reservation
             $lineItems = Finance::price([$reservation], $user);
             $totalCents = (int) $lineItems->sum('amount');
 
-            // Create the Order
             $order = Order::create([
                 'user_id' => $user->id,
                 'total_amount' => 0,
@@ -70,21 +109,20 @@ class CreateReservation extends CreateRecord
             $order->update(['total_amount' => $totalCents]);
 
             if ($totalCents <= 0) {
-                // Path 2: fully discounted — commit with no rails, auto-completes
+                // Path 2: fully discounted
                 Finance::commit($order->fresh(), []);
                 $reservation->status->transitionTo(Confirmed::class);
 
                 return;
             }
 
-            // Path 1: has a cost — commit with chosen payment rail
-            $paymentMethod = $data['payment_method'] ?? 'stripe';
-            $committed = Finance::commit($order->fresh(), [$paymentMethod => $totalCents]);
+            // Path 1: has a cost — use the payment method from the submit button
+            $method = $this->paymentMethod ?? 'stripe';
+            $committed = Finance::commit($order->fresh(), [$method => $totalCents]);
 
-            // Confirm the reservation (it now has a pending payment)
             $reservation->status->transitionTo(Confirmed::class);
 
-            if ($paymentMethod === 'stripe') {
+            if ($method === 'stripe') {
                 $checkoutUrl = $committed->checkoutUrl();
                 if ($checkoutUrl) {
                     session()->put('stripe_checkout_url', $checkoutUrl);
@@ -115,8 +153,16 @@ class CreateReservation extends CreateRecord
 
     private function isWithinConfirmationWindow(): bool
     {
-        $reservationDate = $this->record->reserved_at;
+        return $this->record->reserved_at->lte(now()->addWeek());
+    }
 
-        return $reservationDate->lte(now()->addWeek());
+    private function isFormWithinConfirmationWindow(): bool
+    {
+        $date = $this->data['reservation_date'] ?? null;
+        if (! $date) {
+            return false;
+        }
+
+        return Carbon::parse($date, config('app.timezone'))->lte(now()->addWeek());
     }
 }
