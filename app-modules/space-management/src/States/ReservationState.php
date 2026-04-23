@@ -22,6 +22,11 @@ abstract class ReservationState extends BaseState
         return $this->canTransitionTo(Confirmed::class);
     }
 
+    public function isActive(): bool
+    {
+        return ! $this->isFinal();
+    }
+
     public static function config(): StateConfig
     {
         return parent::config()
