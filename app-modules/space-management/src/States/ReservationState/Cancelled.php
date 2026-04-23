@@ -33,11 +33,9 @@ class Cancelled extends ReservationState
         return false;
     }
 
-    /**
-     * Set cancelled_at timestamp when entering cancelled state.
-     */
     public function entering(): void
     {
-        $this->getModel()->cancelled_at = now();
+        // The status column itself records that this is cancelled.
+        // No additional timestamp column exists on reservations.
     }
 }
