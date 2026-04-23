@@ -57,7 +57,13 @@ use Illuminate\Support\Str;
  */
 class TicketOrder extends Model implements Chargeable
 {
-    use HasCharges, HasFactory;
+    use HasCharges, HasFactory, \CorvMC\Finance\Concerns\Purchasable;
+
+    public function getLockableFields(): array
+    {
+        return ['status', 'updated_at', 'completed_at', 'refunded_at', 'refund_reason',
+            'cancelled_at', 'cancellation_reason', 'payment_method', 'stripe_payment_intent'];
+    }
 
     protected $fillable = [
         'uuid',

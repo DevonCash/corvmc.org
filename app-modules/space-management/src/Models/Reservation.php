@@ -6,6 +6,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\States\ReservationState;
 use CorvMC\SpaceManagement\States\ReservationState\Cancelled;
+use CorvMC\Finance\Concerns\Purchasable;
 use CorvMC\Support\Concerns\HasRecurringSeries;
 use CorvMC\Support\Concerns\HasTimePeriod;
 use Filament\Support\Contracts\HasColor;
@@ -25,7 +26,12 @@ use Spatie\ModelStates\HasStates;
 
 class Reservation extends Model implements HasColor, HasIcon, HasLabel
 {
-    use ValidatingTrait, HasRecurringSeries, HasTimePeriod, HasStates;
+    use ValidatingTrait, HasRecurringSeries, HasTimePeriod, HasStates, Purchasable;
+
+    public function getLockableFields(): array
+    {
+        return ['status', 'updated_at', 'cancelled_at', 'confirmed_at', 'completed_at'];
+    }
 
     protected $table = 'reservations';
 
