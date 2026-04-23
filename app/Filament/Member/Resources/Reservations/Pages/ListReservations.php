@@ -68,10 +68,20 @@ class ListReservations extends ListRecords
             ->modifyWizardUsing(fn ($wizard) => $wizard
                 ->submitAction(new \Illuminate\Support\HtmlString(\Illuminate\Support\Facades\Blade::render(<<<'BLADE'
                     <div class="flex gap-3">
-                        <x-filament::button type="submit" icon="tabler-credit-card" color="success" name="data.payment_method" value="stripe">
+                        <x-filament::button
+                            type="submit"
+                            icon="tabler-credit-card"
+                            color="success"
+                            x-on:click="$wire.set('mountedActionsData.0.payment_method', 'stripe')"
+                        >
                             Pay Online
                         </x-filament::button>
-                        <x-filament::button type="submit" icon="tabler-cash" color="warning" name="data.payment_method" value="cash">
+                        <x-filament::button
+                            type="submit"
+                            icon="tabler-cash"
+                            color="warning"
+                            x-on:click="$wire.set('mountedActionsData.0.payment_method', 'cash')"
+                        >
                             Pay with Cash
                         </x-filament::button>
                     </div>
