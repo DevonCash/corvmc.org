@@ -1,9 +1,9 @@
-<div class="flex gap-3">
+<div class="flex gap-3" x-data>
     <x-filament::button
         type="submit"
         icon="tabler-credit-card"
         color="success"
-        x-on:click="$wire.set('data.payment_method', 'stripe')"
+        x-on:click="$el.closest('form').querySelector('[name=\'data.payment_method\']').value = 'stripe'"
     >
         Pay Online
     </x-filament::button>
@@ -12,7 +12,7 @@
         type="submit"
         icon="tabler-cash"
         color="warning"
-        x-on:click="$wire.set('data.payment_method', 'cash')"
+        x-on:click="$el.closest('form').querySelector('[name=\'data.payment_method\']').value = 'cash'"
     >
         Pay with Cash
     </x-filament::button>
