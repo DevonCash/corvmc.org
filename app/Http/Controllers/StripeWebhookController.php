@@ -257,21 +257,21 @@ class StripeWebhookController extends CashierWebhookController
             }
 
             // Find all Pending refund Transactions whose original payment
-            // used this payment_intent_id
+            // used this payment_intent_id. Uses a subquery to match via
+            // the original_transaction_id stored in refund metadata.
+            $originalTxnIds = Transaction::where('type', 'payment')
+                ->where('currency', 'stripe')
+                ->where('metadata->payment_intent_id', $paymentIntentId)
+                ->pluck('id');
+
             $refundTransactions = Transaction::where('type', 'refund')
                 ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
                 ->where('currency', 'stripe')
-                ->get()
-                ->filter(function ($txn) use ($paymentIntentId) {
-                    // Walk back to the original payment Transaction
-                    $originalId = $txn->metadata['original_transaction_id'] ?? null;
-                    if (! $originalId) {
-                        return false;
-                    }
-                    $original = Transaction::find($originalId);
-
-                    return $original && ($original->metadata['payment_intent_id'] ?? null) === $paymentIntentId;
-                });
+                ->whereIn(
+                    DB::raw("(metadata->>'original_transaction_id')::integer"),
+                    $originalTxnIds
+                )
+                ->get();
 
             foreach ($refundTransactions as $transaction) {
                 try {
@@ -329,8 +329,8 @@ class StripeWebhookController extends CashierWebhookController
             $transaction = Transaction::where('currency', 'stripe')
                 ->where('type', 'payment')
                 ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
-                ->get()
-                ->first(fn ($txn) => ($txn->metadata['session_id'] ?? null) === $sessionId);
+                ->where('metadata->session_id', $sessionId)
+                ->first();
 
             if (! $transaction) {
                 Log::info('Stripe webhook: No pending transaction found for expired session', [
