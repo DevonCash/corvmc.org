@@ -552,5 +552,39 @@ class FinanceManager
         });
     }
 
+    // =========================================================================
+    // Comp
+    // =========================================================================
+
+    /**
+     * Comp an Order: waive payment and transition Pending → Comped.
+     *
+     * The Comped state hooks cancel any Pending Transactions and fire
+     * OrderSettled. Credits already deducted at commit time are NOT
+     * reversed — the patron received the service, credits covered
+     * their share of the cost.
+     *
+     * @param  Order  $order  A Pending Order to comp.
+     * @return Order  The fresh Order.
+     *
+     * @throws \RuntimeException  If the Order is not in Pending state.
+     */
+    public function comp(Order $order): Order
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+            $order = Order::lockForUpdate()->findOrFail($order->id);
+
+            if (! ($order->status instanceof \CorvMC\Finance\States\OrderState\Pending)) {
+                throw new \RuntimeException(
+                    "Cannot comp Order [{$order->id}]: status is [{$order->status->getLabel()}], expected Pending."
+                );
+            }
+
+            $order->status->transitionTo(\CorvMC\Finance\States\OrderState\Comped::class);
+
+            return $order->fresh(['lineItems', 'transactions']);
+        });
+    }
+
     // Finance::refund() — Epic 7
 }
