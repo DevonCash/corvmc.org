@@ -22,43 +22,56 @@ class CreateReservation extends CreateRecord
 
     /**
      * The payment method chosen by the user via submit button.
-     * Set before the form submits via setPaymentMethodAndCreate().
      */
     public ?string $paymentMethod = null;
 
-    public function setPaymentMethodAndCreate(string $method): void
+    public function payWithStripe(): void
     {
-        $this->paymentMethod = $method;
+        $this->paymentMethod = 'stripe';
         $this->create();
     }
 
+    public function payWithCash(): void
+    {
+        $this->paymentMethod = 'cash';
+        $this->create();
+    }
+
+    protected function getCreateFormAction(): Action
+    {
+        return parent::getCreateFormAction()
+            ->label('Schedule Reservation')
+            ->hidden(fn () => $this->shouldShowPaymentButtons());
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [];
+    }
+
+    /**
+     * Extra form actions that appear alongside the default submit button.
+     * When in the confirmation window with a cost, show two payment buttons.
+     */
     protected function getFormActions(): array
     {
-        $costCents = (int) ($this->data['cost'] ?? 0);
-        $inWindow = $this->isFormWithinConfirmationWindow();
-
-        if ($inWindow && $costCents > 0) {
-            return [
-                Action::make('pay_stripe')
-                    ->label('Pay Online')
-                    ->icon('tabler-credit-card')
-                    ->color('success')
-                    ->action('setPaymentMethodAndCreate', ['method' => 'stripe']),
-
-                Action::make('pay_cash')
-                    ->label('Pay with Cash')
-                    ->icon('tabler-cash')
-                    ->color('warning')
-                    ->action('setPaymentMethodAndCreate', ['method' => 'cash']),
-
-                $this->getCancelFormAction(),
-            ];
-        }
-
-        // Out of window or free — single submit button
         return [
-            $this->getCreateFormAction()
-                ->label($inWindow ? 'Confirm Reservation' : 'Schedule Reservation'),
+            $this->getCreateFormAction(),
+
+            Action::make('pay_stripe')
+                ->label('Pay Online')
+                ->icon('tabler-credit-card')
+                ->color('success')
+                ->submit('payWithStripe')
+                ->visible(fn () => $this->shouldShowPaymentButtons()),
+
+            Action::make('pay_cash')
+                ->label('Pay with Cash')
+                ->icon('tabler-cash')
+                ->color('warning')
+                ->submit('payWithCash')
+                ->visible(fn () => $this->shouldShowPaymentButtons()),
+
             $this->getCancelFormAction(),
         ];
     }
@@ -116,7 +129,7 @@ class CreateReservation extends CreateRecord
                 return;
             }
 
-            // Path 1: has a cost — use the payment method from the submit button
+            // Path 1: has a cost
             $method = $this->paymentMethod ?? 'stripe';
             $committed = Finance::commit($order->fresh(), [$method => $totalCents]);
 
@@ -149,6 +162,13 @@ class CreateReservation extends CreateRecord
         }
 
         return $this->getResource()::getUrl('view', ['record' => $this->record]);
+    }
+
+    private function shouldShowPaymentButtons(): bool
+    {
+        $costCents = (int) ($this->data['cost'] ?? 0);
+
+        return $costCents > 0 && $this->isFormWithinConfirmationWindow();
     }
 
     private function isWithinConfirmationWindow(): bool
