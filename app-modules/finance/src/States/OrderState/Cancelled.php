@@ -2,8 +2,8 @@
 
 namespace CorvMC\Finance\States\OrderState;
 
-use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Events\OrderCancelled;
+use CorvMC\Finance\Facades\Finance;
 use CorvMC\Finance\States\OrderState;
 use CorvMC\Finance\States\TransactionState\Cancelled as TransactionCancelled;
 use CorvMC\Finance\States\TransactionState\Pending as TransactionPending;
@@ -45,27 +45,7 @@ class Cancelled extends OrderState
             });
 
         // Reverse credit deductions — service was not delivered
-        if ($order->user) {
-            foreach ($order->lineItems as $lineItem) {
-                if (! $lineItem->isDiscount()) {
-                    continue;
-                }
-
-                $walletKey = str_replace('_discount', '', $lineItem->product_type);
-                $blocks = (int) abs((float) $lineItem->quantity);
-
-                if ($blocks > 0) {
-                    $creditType = CreditType::from($walletKey);
-                    $order->user->addCredit(
-                        amount: $blocks,
-                        creditType: $creditType,
-                        source: 'order_cancelled',
-                        sourceId: $order->id,
-                        description: "Reversed: order #{$order->id} cancelled",
-                    );
-                }
-            }
-        }
+        Finance::reverseDiscountCredits($order, 'order_cancelled');
     }
 
     public function entered(): void

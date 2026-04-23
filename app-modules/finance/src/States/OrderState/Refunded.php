@@ -2,6 +2,8 @@
 
 namespace CorvMC\Finance\States\OrderState;
 
+use CorvMC\Finance\Events\OrderRefunded;
+use CorvMC\Finance\Facades\Finance;
 use CorvMC\Finance\States\OrderState;
 
 class Refunded extends OrderState
@@ -28,6 +30,18 @@ class Refunded extends OrderState
         return 'Settled and then reversed';
     }
 
-    // Transition hooks will be filled in during Epic 7
-    // entering(): write compensating refund Transactions, reverse wallet withdrawals, cancel Tickets
+    public function entering(): void
+    {
+        $order = $this->getModel();
+
+        // Reverse credit deductions — patron is being made whole
+        Finance::reverseDiscountCredits($order, 'order_refunded');
+    }
+
+    public function entered(): void
+    {
+        $order = $this->getModel();
+
+        OrderRefunded::dispatch($order);
+    }
 }

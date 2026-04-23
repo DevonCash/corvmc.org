@@ -227,6 +227,39 @@ class FinanceManager
         }
     }
 
+    /**
+     * Reverse credit deductions for an Order's discount LineItems.
+     *
+     * For each discount LineItem, adds the consumed blocks back to the
+     * user's wallet. Used by Cancelled and Refunded state hooks.
+     */
+    public function reverseDiscountCredits(Order $order, string $source): void
+    {
+        if (! $order->user) {
+            return;
+        }
+
+        foreach ($order->lineItems as $lineItem) {
+            if (! $lineItem->isDiscount()) {
+                continue;
+            }
+
+            $walletKey = str_replace('_discount', '', $lineItem->product_type);
+            $blocks = (int) abs((float) $lineItem->quantity);
+
+            if ($blocks > 0) {
+                $creditType = CreditType::from($walletKey);
+                $order->user->addCredit(
+                    amount: $blocks,
+                    creditType: $creditType,
+                    source: $source,
+                    sourceId: $order->id,
+                    description: "Reversed: order #{$order->id} {$source}",
+                );
+            }
+        }
+    }
+
     // =========================================================================
     // Pricing
     // =========================================================================
@@ -619,5 +652,90 @@ class FinanceManager
         });
     }
 
-    // Finance::refund() — Epic 7
+    // =========================================================================
+    // Refund
+    // =========================================================================
+
+    /**
+     * Refund an Order: create compensating Transactions, call Stripe, transition to Refunded.
+     *
+     * Runs inside a DB transaction. For each Cleared payment Transaction,
+     * creates a compensating refund Transaction (positive amount):
+     *   - Stripe: initiates a Stripe refund via payment_intent_id, refund
+     *     Transaction starts Pending (settled by charge.refunded webhook)
+     *   - Cash: creates a Pending refund Transaction (settled manually by staff)
+     *
+     * The Refunded state hooks reverse credit deductions and fire OrderRefunded.
+     *
+     * @param  Order  $order  A Completed or Comped Order to refund.
+     * @return Order  The fresh Order with refund Transactions.
+     *
+     * @throws \RuntimeException  If the Order is not in Completed or Comped state.
+     * @throws \RuntimeException  If a Stripe refund API call fails.
+     */
+    public function refund(Order $order): Order
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+            $order = Order::lockForUpdate()->findOrFail($order->id);
+
+            $isCompleted = $order->status instanceof \CorvMC\Finance\States\OrderState\Completed;
+            $isComped = $order->status instanceof \CorvMC\Finance\States\OrderState\Comped;
+
+            if (! $isCompleted && ! $isComped) {
+                throw new \RuntimeException(
+                    "Cannot refund Order [{$order->id}]: status is [{$order->status->getLabel()}], expected Completed or Comped."
+                );
+            }
+
+            // Create compensating refund Transactions for each Cleared payment
+            $clearedPayments = $order->transactions()
+                ->where('type', 'payment')
+                ->whereState('status', \CorvMC\Finance\States\TransactionState\Cleared::class)
+                ->get();
+
+            foreach ($clearedPayments as $payment) {
+                $refundAmount = abs($payment->amount); // payment is negative, refund is positive
+
+                $refundTransaction = Transaction::create([
+                    'order_id' => $order->id,
+                    'user_id' => $order->user_id,
+                    'currency' => $payment->currency,
+                    'amount' => $refundAmount,
+                    'type' => 'refund',
+                    'metadata' => [
+                        'original_transaction_id' => $payment->id,
+                    ],
+                ]);
+
+                // For Stripe payments: initiate refund via API
+                if ($payment->currency === 'stripe') {
+                    $paymentIntentId = $payment->metadata['payment_intent_id'] ?? null;
+
+                    if (! $paymentIntentId) {
+                        throw new \RuntimeException(
+                            "Cannot refund Stripe Transaction [{$payment->id}]: no payment_intent_id in metadata."
+                        );
+                    }
+
+                    $stripeRefund = \Laravel\Cashier\Cashier::stripe()->refunds->create([
+                        'payment_intent' => $paymentIntentId,
+                        'amount' => $refundAmount,
+                    ]);
+
+                    $refundTransaction->update([
+                        'metadata' => array_merge($refundTransaction->metadata ?? [], [
+                            'stripe_refund_id' => $stripeRefund->id,
+                        ]),
+                    ]);
+                }
+
+                // Cash refund Transactions stay Pending — staff settles manually
+            }
+
+            // Transition to Refunded (hooks handle credit reversal + event)
+            $order->status->transitionTo(\CorvMC\Finance\States\OrderState\Refunded::class);
+
+            return $order->fresh(['lineItems', 'transactions']);
+        });
+    }
 }

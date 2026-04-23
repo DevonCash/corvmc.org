@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \CorvMC\Finance\Models\Transaction settle(\CorvMC\Finance\Models\Transaction $transaction, ?string $paymentIntentId = null)
  * @method static \CorvMC\Finance\Models\Order comp(\CorvMC\Finance\Models\Order $order)
  * @method static \CorvMC\Finance\Models\Order cancel(\CorvMC\Finance\Models\Order $order)
+ * @method static \CorvMC\Finance\Models\Order refund(\CorvMC\Finance\Models\Order $order)
  * @method static \CorvMC\Finance\Models\Order|null findActiveOrder(\Illuminate\Database\Eloquent\Model $model, ?string $productType = null)
  *
  * @see \CorvMC\Finance\FinanceManager

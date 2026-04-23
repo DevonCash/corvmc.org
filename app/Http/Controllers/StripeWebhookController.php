@@ -229,6 +229,77 @@ class StripeWebhookController extends CashierWebhookController
     }
 
     /**
+     * Handle charge.refunded webhook — settle refund Transactions.
+     *
+     * Looks up the refund Transaction via the Stripe refund ID stored
+     * in metadata by Finance::refund(). Transitions it to Cleared.
+     */
+    public function handleChargeRefunded(array $payload): SymfonyResponse
+    {
+        $eventId = $payload['id'] ?? null;
+
+        if ($eventId && $this->isWebhookEventProcessed($eventId)) {
+            return $this->successMethod();
+        }
+
+        if ($eventId) {
+            $this->recordWebhookEvent($eventId, 'charge.refunded');
+        }
+
+        try {
+            $charge = $payload['data']['object'];
+            $paymentIntentId = $charge['payment_intent'] ?? null;
+
+            if (! $paymentIntentId) {
+                Log::warning('Stripe webhook: No payment_intent on charge.refunded event');
+
+                return $this->successMethod();
+            }
+
+            // Find all Pending refund Transactions whose original payment
+            // used this payment_intent_id
+            $refundTransactions = Transaction::where('type', 'refund')
+                ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
+                ->where('currency', 'stripe')
+                ->get()
+                ->filter(function ($txn) use ($paymentIntentId) {
+                    // Walk back to the original payment Transaction
+                    $originalId = $txn->metadata['original_transaction_id'] ?? null;
+                    if (! $originalId) {
+                        return false;
+                    }
+                    $original = Transaction::find($originalId);
+
+                    return $original && ($original->metadata['payment_intent_id'] ?? null) === $paymentIntentId;
+                });
+
+            foreach ($refundTransactions as $transaction) {
+                try {
+                    Finance::settle($transaction);
+
+                    Log::info('Stripe webhook: Settled refund transaction', [
+                        'transaction_id' => $transaction->id,
+                        'payment_intent_id' => $paymentIntentId,
+                    ]);
+                } catch (\RuntimeException $e) {
+                    Log::info('Stripe webhook: Refund transaction already settled', [
+                        'transaction_id' => $transaction->id,
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Stripe webhook: Error processing charge.refunded', [
+                'error' => $e->getMessage(),
+                'payload' => $payload,
+            ]);
+
+            return response('Error processing webhook', 500);
+        }
+
+        return $this->successMethod();
+    }
+
+    /**
      * Handle payment intent payment failed webhook.
      */
     public function handlePaymentIntentPaymentFailed(array $payload): SymfonyResponse
