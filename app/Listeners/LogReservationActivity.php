@@ -56,7 +56,7 @@ class LogReservationActivity
 
     public function handleCancelled(ReservationCancelled $event): void
     {
-        $reservation = $event->chargeable;
+        $reservation = $event->reservation;
         $reason = $reservation->cancellation_reason ?? 'No reason provided';
 
         activity('reservation')
