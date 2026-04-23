@@ -332,48 +332,64 @@ Wire up to `ReservationCancelled` event — replace `HandleChargeableCancelled` 
 
 ---
 
-## Epic 10: Filament Admin
+## Epic 10: Filament Admin ✅
 
-### 10.1 Create OrderResource
+### 10.1 Create OrderResource ✅
 
-Replaces `ChargeResource`. Same nav group, icon, staff roles.
+Staff panel resource for Orders. List page with status icon, user, product type, payment rail, amount columns. Unsettled filter tab. Action group with View, Mark Paid, Collect Cash, Comp, Cancel, Refund.
 
-- Columns: ID, status, user, primary product type, `total_amount`, paid amount (derived from Cleared Transactions), outstanding, timestamps
-- Filters: status, product type, date range
-- Infolist: LineItems sub-panel, Transactions sub-panel (read-only)
-- Actions: Refund, Cancel, Comp, Mark paid (cash)
+View page: subheading with status/total/user, details section (user link, timestamps, notes), inline Line Items and Transactions relation manager tables (not tabbed). Line items link to backing domain models via `ViewModelAction`. Transactions table is read-only with amount-due header badge.
 
-### 10.2 Create TransactionResource
+All order actions extracted to reusable classes under `Actions/`: `MarkPaidAction`, `CollectCashAction`, `CompOrderAction`, `CancelOrderAction`, `RefundOrderAction`.
 
-New resource for the legal-currency ledger.
+### 10.2 Create relation managers ✅
 
-- Columns: ID, Order, user, currency, type, amount, status, terminal timestamp
-- Row actions: Mark paid (cash), Void
+- `LineItemsRelationManager` on OrderResource — read-only table with total summary, `ViewModelAction` linking to backing models
+- `TransactionsRelationManager` on OrderResource — read-only ledger view, amount-due badge in header
+- `OrdersRelationManager` on UserResource — mirrors OrderResource table layout
 
-### 10.3 Create relation managers
+TransactionResource was built then removed — staff interact with transactions through the order detail view.
 
-- `LineItemsRelationManager` on OrderResource — read-only table
-- `TransactionsRelationManager` on OrderResource and UserResource — read-only with Mark paid / Void row actions
-- `WalletsRelationManager` on UserResource — reads from `UserCredit` / `CreditTransaction`; replaces `CreditTransactionsRelationManager`. Includes Allocate / Adjust action that calls `CreditService`
+### 10.3 Rewrite StaffDashboard queries ✅
 
-### 10.4 Rewrite StaffDashboard queries
+Rewrite `getMonthlyRevenueData()` and `getTodaysOperationsData()` to source from `transactions` + `order_line_items`. `Schema::hasTable()` guards for pre-migration compatibility.
 
-Rewrite `StaffDashboard::getMonthlyRevenueData()` and `getTodaysOperationsData()` to source from `transactions` + `order_line_items`. Metrics preserved 1:1 per the design doc's mapping table.
+### 10.4 Sign convention flip ✅
+
+Transaction amounts flipped from customer perspective (payments negative) to organization perspective (payments positive, refunds negative). Updated FinanceManager, Order model, all tests, dashboard, and UI.
+
+### 10.5 Member order history page
+
+Read-only list of the authenticated user's orders on the member panel. Status, product type, amount, date. Links to order detail.
 
 ---
 
-## Epic 11: Stripe integration cleanup
+## Epic 11: Stripe integration & reservation flow
 
-### 11.1 Move Stripe identifier storage to Transaction.metadata
+### 11.1 Move Stripe identifier storage to Transaction.metadata ✅
 
-- Checkout Session creation writes `session_id` to `Transaction.metadata`
-- Session completion records `payment_intent_id` in metadata
-- Set `session.metadata.transaction_id` on the Checkout Session for webhook correlation
-- Add functional unique index on `transactions.metadata->>'session_id'`
+Already done during Epic 6 — `commit()` stores `session_id` and `checkout_url`, `settle()` stores `payment_intent_id`.
 
-### 11.2 Remove Stripe columns from Charge
+### 11.2 Wire CreateReservation to Finance::commit()
 
-Migration to drop `stripe_session_id` and `stripe_payment_intent_id` from `charges` (deferred to Epic 14 with the rest of the cleanup, but the code stops reading them here).
+Replace `PaymentService::createCheckoutSession()` in `CreateReservation` with the new Order flow:
+
+- Create Order + price via `Finance::price()`
+- Commit via `Finance::commit()` with Stripe rail
+- Redirect to `$order->checkoutUrl()`
+- Handle fully-discounted orders (zero total → direct completion)
+
+### 11.3 Add checkout.session.expired webhook
+
+Listen for `checkout.session.expired` in `StripeWebhookController`. Find the pending Stripe Transaction by session ID in metadata, transition to Failed state.
+
+### 11.4 Retry Payment action
+
+Member-side action on pending Orders with a failed/expired Stripe Transaction. Creates a fresh Checkout Session for the existing Transaction amount and redirects.
+
+### 11.5 Remove Stripe columns from Charge
+
+Deferred to Epic 15 with the rest of the old code cleanup.
 
 ---
 
