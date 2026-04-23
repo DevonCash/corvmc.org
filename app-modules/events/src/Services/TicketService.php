@@ -6,46 +6,38 @@ use App\Models\User;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Ticket;
 use CorvMC\Events\Models\TicketOrder;
-use CorvMC\Finance\Enums\ChargeStatus;
-use CorvMC\Finance\Models\Charge;
+use CorvMC\Finance\Facades\Finance;
+use CorvMC\Finance\Models\Order;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Stripe\Checkout\Session as StripeSession;
-use Stripe\Stripe;
 
 /**
  * Service for managing event tickets and ticket orders.
- * 
- * This service handles ticket sales, orders, refunds, and door sales.
+ *
+ * Ticket purchases flow through the Finance Order system:
+ * createOrder → Finance::price/commit → Stripe checkout → webhook settles → tickets generated.
  */
 class TicketService
 {
     /**
-     * Create a ticket order for an event.
+     * Create a ticket order and its Finance Order.
      *
-     * @param Event $event The event to create tickets for
-     * @param User $purchaser The user purchasing tickets
-     * @param int $quantity Number of tickets to purchase
-     * @param array $additionalData Optional additional order data
-     * @return TicketOrder The created ticket order
+     * @return TicketOrder The created ticket order (with Finance Order committed)
      * @throws \Exception if not enough tickets available
      */
     public function createOrder(Event $event, User $purchaser, int $quantity, array $additionalData = []): TicketOrder
     {
-        // Check ticket availability
         $availableTickets = $event->available_tickets;
         if ($availableTickets !== null && $quantity > $availableTickets) {
             throw new \Exception("Only {$availableTickets} tickets available for this event");
         }
 
         return DB::transaction(function () use ($event, $purchaser, $quantity, $additionalData) {
-            // Calculate total amount
             $ticketPrice = $event->ticket_price ?? 0;
             $totalAmount = $ticketPrice * $quantity;
 
-            // Create the order
-            $order = TicketOrder::create(array_merge([
+            $ticketOrder = TicketOrder::create(array_merge([
                 'event_id' => $event->id,
                 'purchaser_id' => $purchaser->id,
                 'quantity' => $quantity,
@@ -55,122 +47,187 @@ class TicketService
                 'order_number' => $this->generateOrderNumber(),
             ], $additionalData));
 
-            // Create charge record if there's a cost
-            if ($totalAmount > 0) {
-                Charge::create([
-                    'user_id' => $purchaser->id,
-                    'chargeable_type' => TicketOrder::class,
-                    'chargeable_id' => $order->id,
-                    'amount' => $totalAmount,
-                    'description' => "Tickets for {$event->title}",
-                    'status' => ChargeStatus::Pending,
-                ]);
-            }
-
-            return $order;
+            return $ticketOrder;
         });
     }
 
     /**
-     * Process checkout for a ticket order.
+     * Process checkout for a ticket order via the Finance Order system.
      *
-     * @param TicketOrder $order The order to process checkout for
-     * @param string $successUrl URL to redirect on success
-     * @param string $cancelUrl URL to redirect on cancel
-     * @return array Checkout session data
+     * Creates a Finance Order, prices it, commits with Stripe rail,
+     * and returns the checkout URL.
      */
-    public function processCheckout(TicketOrder $order, string $successUrl, string $cancelUrl): array
+    public function processCheckout(TicketOrder $ticketOrder, string $successUrl, string $cancelUrl): array
     {
-        if ($order->total_amount <= 0) {
-            // Free tickets - complete immediately
-            $this->completeOrder($order);
+        $user = $ticketOrder->user ?? User::find($ticketOrder->purchaser_id);
+
+        // Price via Finance
+        $lineItems = Finance::price([$ticketOrder], $user);
+        $totalCents = (int) $lineItems->sum('amount');
+
+        if ($totalCents <= 0) {
+            // Free tickets — create Order, complete immediately, generate tickets
+            $order = $this->createFinanceOrder($ticketOrder, $lineItems, $totalCents);
+            Finance::commit($order->fresh(), []);
+            $this->completeTicketOrder($ticketOrder);
+
             return [
                 'success' => true,
                 'redirect_url' => $successUrl,
             ];
         }
 
-        // Create Stripe checkout session
-        Stripe::setApiKey(config('services.stripe.secret'));
+        // Create Finance Order and commit with Stripe
+        $order = $this->createFinanceOrder($ticketOrder, $lineItems, $totalCents);
+        $committed = Finance::commit($order->fresh(), ['stripe' => $totalCents]);
 
-        $session = StripeSession::create([
-            'payment_method_types' => ['card'],
-            'line_items' => [[
-                'price_data' => [
-                    'currency' => 'usd',
-                    'product_data' => [
-                        'name' => "Tickets for {$order->event->title}",
-                        'description' => "{$order->quantity} ticket(s)",
-                    ],
-                    'unit_amount' => $order->unit_price * 100, // Convert to cents
-                ],
-                'quantity' => $order->quantity,
-            ]],
-            'mode' => 'payment',
-            'success_url' => $successUrl,
-            'cancel_url' => $cancelUrl,
-            'metadata' => [
-                'ticket_order_id' => $order->id,
-            ],
-        ]);
-
-        // Update order with payment intent
-        $order->update([
-            'stripe_session_id' => $session->id,
-            'stripe_payment_intent' => $session->payment_intent,
-        ]);
-
-        // Update charge with payment intent
-        if ($charge = $order->charge) {
-            $charge->update([
-                'stripe_payment_intent' => $session->payment_intent,
-            ]);
-        }
+        $checkoutUrl = $committed->checkoutUrl();
 
         return [
             'success' => true,
-            'checkout_url' => $session->url,
-            'session_id' => $session->id,
+            'checkout_url' => $checkoutUrl,
+            'session_id' => $committed->transactions->first()?->metadata['session_id'] ?? null,
         ];
     }
 
     /**
      * Complete a ticket order after successful payment.
-     *
-     * @param TicketOrder $order The order to complete
-     * @param string|null $paymentIntentId Optional Stripe payment intent ID
-     * @return TicketOrder The completed order
+     * Called by the webhook handler after Finance::settle() succeeds.
      */
-    public function completeOrder(TicketOrder $order, ?string $paymentIntentId = null): TicketOrder
+    public function completeOrder(int $ticketOrderId, ?string $sessionId = null): bool
     {
-        return DB::transaction(function () use ($order, $paymentIntentId) {
-            // Update order status
-            $order->update([
+        $ticketOrder = TicketOrder::find($ticketOrderId);
+
+        if (! $ticketOrder) {
+            return false;
+        }
+
+        // If called from webhook with session ID, settle the Finance Transaction
+        if ($sessionId) {
+            $financeOrder = Finance::findActiveOrder($ticketOrder);
+            if ($financeOrder) {
+                $stripeTxn = $financeOrder->transactions()
+                    ->where('currency', 'stripe')
+                    ->where('type', 'payment')
+                    ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
+                    ->first();
+
+                if ($stripeTxn) {
+                    try {
+                        Finance::settle($stripeTxn);
+                    } catch (\RuntimeException $e) {
+                        // Already settled — that's fine
+                    }
+                }
+            }
+        }
+
+        $this->completeTicketOrder($ticketOrder);
+
+        return true;
+    }
+
+    /**
+     * Create a door sale (in-person ticket sale).
+     * Creates a Finance Order with cash payment, settled immediately.
+     */
+    public function createDoorSale(
+        Event $event,
+        User $seller,
+        int $quantity,
+        ?float $priceOverride = null,
+        ?string $buyerName = null
+    ): TicketOrder {
+        return DB::transaction(function () use ($event, $seller, $quantity, $priceOverride, $buyerName) {
+            $unitPrice = $priceOverride ?? $event->ticket_price ?? 0;
+            $totalAmount = $unitPrice * $quantity;
+
+            $ticketOrder = TicketOrder::create([
+                'event_id' => $event->id,
+                'purchaser_id' => $seller->id,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'total_amount' => $totalAmount,
                 'status' => 'completed',
                 'completed_at' => now(),
-                'stripe_payment_intent' => $paymentIntentId ?: $order->stripe_payment_intent,
+                'order_number' => $this->generateOrderNumber(),
+                'is_door_sale' => true,
+                'buyer_name' => $buyerName,
+                'notes' => "Door sale by {$seller->name}",
             ]);
 
-            // Update charge status
-            if ($charge = $order->charge) {
-                $charge->update([
-                    'status' => ChargeStatus::Paid,
-                    'stripe_payment_intent' => $paymentIntentId ?: $charge->stripe_payment_intent,
-                ]);
+            // Generate tickets immediately
+            $this->generateTickets($ticketOrder);
+
+            // Create Finance Order with cash, settled immediately
+            if ($totalAmount > 0) {
+                $lineItems = Finance::price([$ticketOrder], $seller);
+                $netCents = (int) $lineItems->sum('amount');
+                $order = $this->createFinanceOrder($ticketOrder, $lineItems, $netCents);
+                $committed = Finance::commit($order->fresh(), ['cash' => $netCents]);
+
+                // Settle the cash transaction immediately
+                $cashTxn = $committed->transactions->first();
+                if ($cashTxn) {
+                    Finance::settle($cashTxn);
+                }
             }
 
-            // Generate tickets
-            $this->generateTickets($order);
-
-            return $order->fresh();
+            return $ticketOrder;
         });
     }
 
     /**
+     * Refund a ticket order via Finance::refund().
+     */
+    public function refundOrder(TicketOrder $ticketOrder, ?string $reason = null): TicketOrder
+    {
+        return DB::transaction(function () use ($ticketOrder, $reason) {
+            // Refund via Finance Order
+            $financeOrder = Finance::findActiveOrder($ticketOrder);
+            if ($financeOrder) {
+                Finance::refund($financeOrder);
+            }
+
+            $ticketOrder->update([
+                'status' => 'refunded',
+                'refunded_at' => now(),
+                'refund_reason' => $reason,
+            ]);
+
+            // Void all tickets
+            $ticketOrder->tickets()->update(['status' => 'voided']);
+
+            return $ticketOrder->fresh();
+        });
+    }
+
+    /**
+     * Cancel a pending ticket order.
+     */
+    public function cancelOrder(TicketOrder $ticketOrder, ?string $reason = null): TicketOrder
+    {
+        if ($ticketOrder->status !== 'pending') {
+            throw new \Exception('Only pending orders can be cancelled');
+        }
+
+        // Cancel Finance Order
+        $financeOrder = Finance::findActiveOrder($ticketOrder);
+        if ($financeOrder) {
+            Finance::cancel($financeOrder);
+        }
+
+        $ticketOrder->update([
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+            'cancellation_reason' => $reason,
+        ]);
+
+        return $ticketOrder->fresh();
+    }
+
+    /**
      * Generate tickets for a completed order.
-     *
-     * @param TicketOrder $order The order to generate tickets for
-     * @return Collection The generated tickets
      */
     public function generateTickets(TicketOrder $order): Collection
     {
@@ -189,161 +246,50 @@ class TicketService
         return $tickets;
     }
 
-    /**
-     * Create a door sale (in-person ticket sale).
-     *
-     * @param Event $event The event to sell tickets for
-     * @param User $seller The staff member making the sale
-     * @param int $quantity Number of tickets
-     * @param float|null $priceOverride Optional price override
-     * @param string|null $buyerName Optional buyer name for record keeping
-     * @return TicketOrder The created door sale order
-     */
-    public function createDoorSale(
-        Event $event, 
-        User $seller, 
-        int $quantity, 
-        ?float $priceOverride = null,
-        ?string $buyerName = null
-    ): TicketOrder {
-        return DB::transaction(function () use ($event, $seller, $quantity, $priceOverride, $buyerName) {
-            $unitPrice = $priceOverride ?? $event->ticket_price ?? 0;
-            $totalAmount = $unitPrice * $quantity;
-
-            // Create the order
-            $order = TicketOrder::create([
-                'event_id' => $event->id,
-                'purchaser_id' => $seller->id, // Staff member who made the sale
-                'quantity' => $quantity,
-                'unit_price' => $unitPrice,
-                'total_amount' => $totalAmount,
-                'status' => 'completed',
-                'completed_at' => now(),
-                'order_number' => $this->generateOrderNumber(),
-                'is_door_sale' => true,
-                'buyer_name' => $buyerName,
-                'notes' => "Door sale by {$seller->name}",
-            ]);
-
-            // Generate tickets immediately for door sales
-            $this->generateTickets($order);
-
-            // Create completed charge record
-            if ($totalAmount > 0) {
-                Charge::create([
-                    'user_id' => $seller->id,
-                    'chargeable_type' => TicketOrder::class,
-                    'chargeable_id' => $order->id,
-                    'amount' => $totalAmount,
-                    'description' => "Door sale tickets for {$event->title}",
-                    'status' => ChargeStatus::Paid,
-                    'payment_method' => 'cash', // Assume cash for door sales
-                ]);
-            }
-
-            return $order;
-        });
-    }
+    // =========================================================================
+    // Private helpers
+    // =========================================================================
 
     /**
-     * Refund a ticket order.
-     *
-     * @param TicketOrder $order The order to refund
-     * @param string|null $reason Optional refund reason
-     * @return TicketOrder The refunded order
+     * Create a Finance Order with LineItems for a TicketOrder.
      */
-    public function refundOrder(TicketOrder $order, ?string $reason = null): TicketOrder
+    private function createFinanceOrder(TicketOrder $ticketOrder, \Illuminate\Support\Collection $lineItems, int $totalCents): Order
     {
-        return DB::transaction(function () use ($order, $reason) {
-            // Process Stripe refund if applicable
-            if ($order->stripe_payment_intent && $order->total_amount > 0) {
-                Stripe::setApiKey(config('services.stripe.secret'));
-
-                $refund = \Stripe\Refund::create([
-                    'payment_intent' => $order->stripe_payment_intent,
-                    'reason' => 'requested_by_customer',
-                ]);
-
-                $order->update([
-                    'stripe_refund_id' => $refund->id,
-                ]);
-            }
-
-            // Update order status
-            $order->update([
-                'status' => 'refunded',
-                'refunded_at' => now(),
-                'refund_reason' => $reason,
-            ]);
-
-            // Update charge status
-            if ($charge = $order->charge) {
-                $charge->update([
-                    'status' => ChargeStatus::Refunded,
-                ]);
-            }
-
-            // Void all tickets
-            $order->tickets()->update(['status' => 'voided']);
-
-            return $order->fresh();
-        });
-    }
-
-    /**
-     * Cancel a pending ticket order.
-     *
-     * @param TicketOrder $order The order to cancel
-     * @param string|null $reason Optional cancellation reason
-     * @return TicketOrder The cancelled order
-     */
-    public function cancelOrder(TicketOrder $order, ?string $reason = null): TicketOrder
-    {
-        if ($order->status !== 'pending') {
-            throw new \Exception('Only pending orders can be cancelled');
-        }
-
-        $order->update([
-            'status' => 'cancelled',
-            'cancelled_at' => now(),
-            'cancellation_reason' => $reason,
+        $order = Order::create([
+            'user_id' => $ticketOrder->purchaser_id,
+            'total_amount' => 0,
         ]);
 
-        // Update charge status if exists
-        if ($charge = $order->charge) {
-            $charge->update([
-                'status' => ChargeStatus::Cancelled,
-            ]);
+        foreach ($lineItems as $lineItem) {
+            $lineItem->order_id = $order->id;
+            $lineItem->save();
         }
+
+        $order->update(['total_amount' => $totalCents]);
 
         return $order;
     }
 
     /**
-     * Generate a unique order number.
-     *
-     * @return string
+     * Mark a TicketOrder as completed and generate tickets.
      */
-    protected function generateOrderNumber(): string
+    private function completeTicketOrder(TicketOrder $ticketOrder): void
     {
-        do {
-            $number = 'ORD-' . strtoupper(Str::random(8));
-        } while (TicketOrder::where('order_number', $number)->exists());
+        $ticketOrder->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
 
-        return $number;
+        $this->generateTickets($ticketOrder);
     }
 
-    /**
-     * Generate a unique ticket number.
-     *
-     * @return string
-     */
-    protected function generateTicketNumber(): string
+    private function generateOrderNumber(): string
     {
-        do {
-            $number = 'TKT-' . strtoupper(Str::random(10));
-        } while (Ticket::where('ticket_number', $number)->exists());
+        return 'TKT-' . strtoupper(Str::random(8));
+    }
 
-        return $number;
+    private function generateTicketNumber(): string
+    {
+        return strtoupper(Str::random(12));
     }
 }

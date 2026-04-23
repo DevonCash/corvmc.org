@@ -2,9 +2,12 @@
 
 namespace CorvMC\Events\Providers;
 
+use CorvMC\Events\Listeners\GenerateTicketsOnOrderSettled;
 use CorvMC\Events\Services\EventService;
 use CorvMC\Events\Services\TicketService;
+use CorvMC\Finance\Events\OrderSettled;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class EventsServiceProvider extends ServiceProvider
@@ -20,5 +23,7 @@ class EventsServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'events');
 
         Blade::componentNamespace('CorvMC\\Events\\View\\Components', 'events');
+
+        Event::listen(OrderSettled::class, GenerateTicketsOnOrderSettled::class);
     }
 }
