@@ -66,7 +66,16 @@ class ListReservations extends ListRecords
             ->modalWidth('lg')
             ->steps(ReservationForm::getSteps())
             ->modifyWizardUsing(fn ($wizard) => $wizard
-                ->submitAction(view('space-management::filament.components.reservation-submit-actions'))
+                ->submitAction(new \Illuminate\Support\HtmlString(\Illuminate\Support\Facades\Blade::render(<<<'BLADE'
+                    <div class="flex gap-3">
+                        <x-filament::button type="submit" icon="tabler-credit-card" color="success" name="data.payment_method" value="stripe">
+                            Pay Online
+                        </x-filament::button>
+                        <x-filament::button type="submit" icon="tabler-cash" color="warning" name="data.payment_method" value="cash">
+                            Pay with Cash
+                        </x-filament::button>
+                    </div>
+                BLADE)))
             )
             ->action(fn (array $data) => $this->createReservationWithPayment($data, $data['payment_method'] ?? 'stripe'));
     }

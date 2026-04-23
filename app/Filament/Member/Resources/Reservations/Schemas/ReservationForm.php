@@ -7,7 +7,6 @@ use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Carbon\Carbon;
 use CorvMC\Finance\Facades\Finance;
-use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
@@ -15,6 +14,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ViewField;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\HtmlString;
 use Filament\Schemas\Components\Icon;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -31,7 +32,16 @@ class ReservationForm
                 Wizard::make()
                     ->columnSpanFull()
                     ->steps(static::getSteps())
-                    ->submitAction(view('space-management::filament.components.reservation-submit-actions')),
+                    ->submitAction(new HtmlString(Blade::render(<<<'BLADE'
+                        <div class="flex gap-3">
+                            <x-filament::button type="submit" icon="tabler-credit-card" color="success" name="data.payment_method" value="stripe">
+                                Pay Online
+                            </x-filament::button>
+                            <x-filament::button type="submit" icon="tabler-cash" color="warning" name="data.payment_method" value="cash">
+                                Pay with Cash
+                            </x-filament::button>
+                        </div>
+                    BLADE))),
             ]);
     }
 
@@ -356,7 +366,6 @@ class ReservationForm
             Hidden::make('cost')->default(0),
             Hidden::make('free_hours_used')->default(0),
             Hidden::make('hours_used')->default(0),
-            Hidden::make('payment_method')->default('stripe'),
 
             ViewField::make('reservation_summary')
                 ->label('Reservation Summary')
