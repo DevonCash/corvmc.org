@@ -25,7 +25,7 @@ Route::get('/', function () {
         'monthly_events' => Event::publishedUpcoming()
             ->whereBetween('start_datetime', [now()->startOfMonth(), now()->endOfMonth()])
             ->count(),
-        'practice_hours' => \CorvMC\SpaceManagement\Models\Reservation::state(ReservationState\Confirmed::class)
+        'practice_hours' => \CorvMC\SpaceManagement\Models\Reservation::whereState('status', ReservationState\Confirmed::class)
             ->whereBetween('reserved_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->get()
             ->sum(function ($reservation) {

@@ -20,11 +20,11 @@ class Cancelled extends TransactionState
 
     public function getLabel(): string
     {
-        return 'Cancelled';
+        return 'Voided';
     }
 
     public function getDescription(): string
     {
-        return 'Voided before settlement';
+        return 'Voided at ' . $this->getModel()->cancelled_at?->toDayDateTimeString();
     }
 }

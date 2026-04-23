@@ -156,7 +156,7 @@ describe('Order auto-completion on settlement', function () {
             'order_id' => $order->id,
             'user_id' => $order->user_id,
             'currency' => 'cash',
-            'amount' => -500,
+            'amount' => 500,
             'type' => 'payment',
             'metadata' => [],
         ]);
@@ -186,7 +186,7 @@ describe('Order auto-completion on settlement', function () {
             'order_id' => $order->id,
             'user_id' => $order->user_id,
             'currency' => 'cash',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
             'metadata' => [],
         ]);

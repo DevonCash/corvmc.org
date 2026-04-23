@@ -91,14 +91,22 @@ class Order extends Model
     }
 
     /**
-     * The sum of Cleared payment Transactions (as a positive cents value).
+     * Formatted total amount as a dollar string (e.g. "$30.00").
+     */
+    public function formattedTotal(): string
+    {
+        return '$' . number_format($this->total_amount / 100, 2);
+    }
+
+    /**
+     * The sum of Cleared payment Transactions in cents.
      *
-     * Payment Transactions store negative amounts (money leaving customer),
-     * so we negate the sum to get a positive number.
+     * Payments are positive (money received by the organization),
+     * so this is a direct sum.
      */
     public function paidAmount(): int
     {
-        return (int) -$this->transactions()
+        return (int) $this->transactions()
             ->whereState('status', \CorvMC\Finance\States\TransactionState\Cleared::class)
             ->where('type', 'payment')
             ->sum('amount');
@@ -106,9 +114,14 @@ class Order extends Model
 
     /**
      * Outstanding balance: total_amount minus paid amount.
+     * Terminal states (comped, refunded, cancelled) have no outstanding balance.
      */
     public function outstandingAmount(): int
     {
+        if ($this->isSettled() || $this->status instanceof OrderState\Cancelled || $this->status instanceof OrderState\Refunded) {
+            return 0;
+        }
+
         return max(0, $this->total_amount - $this->paidAmount());
     }
 

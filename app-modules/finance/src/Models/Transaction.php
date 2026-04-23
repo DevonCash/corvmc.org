@@ -15,10 +15,10 @@ use Spatie\ModelStates\HasStates;
  * Only Stripe and cash. Not credits, not discounts, not allocations.
  * Those live elsewhere (credit ledger for balance movements, LineItems for discounts).
  *
- * Sign convention:
- *   payment → negative (money leaving customer)
- *   refund  → positive (money returning)
- *   fee     → positive (Stripe fee we track)
+ * Sign convention (from the organization's perspective):
+ *   payment → positive (money received)
+ *   refund  → negative (money returned)
+ *   fee     → negative (processing cost)
  *
  * Row-level immutability: amount, currency, type, order_id, and user_id are
  * frozen once written. Only status, terminal timestamps, and metadata mutate.
@@ -27,7 +27,7 @@ use Spatie\ModelStates\HasStates;
  * @property int $order_id
  * @property int|null $user_id
  * @property string $currency 'stripe' or 'cash'
- * @property int $amount Cents — negative for payment, positive for refund/fee
+ * @property int $amount Cents — positive for payment, negative for refund/fee
  * @property string $type 'payment', 'refund', or 'fee'
  * @property TransactionState $status
  * @property \Illuminate\Support\Carbon|null $cleared_at

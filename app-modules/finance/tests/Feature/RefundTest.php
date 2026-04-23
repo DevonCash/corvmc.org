@@ -77,7 +77,7 @@ describe('Finance::refund() with cash', function () {
 
         $refundTxn = $refundTxns->first();
         expect($refundTxn->currency)->toBe('cash');
-        expect($refundTxn->amount)->toBe(3000); // positive = money returning
+        expect($refundTxn->amount)->toBe(-3000); // negative = money returned by organization
         expect($refundTxn->status)->toBeInstanceOf(TransactionPending::class);
     });
 

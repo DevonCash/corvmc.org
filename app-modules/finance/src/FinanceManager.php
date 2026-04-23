@@ -495,7 +495,7 @@ class FinanceManager
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
                     'currency' => $currency,
-                    'amount' => -$amount, // negative = money leaving customer
+                    'amount' => $amount, // positive = money received by organization
                     'type' => 'payment',
                     'metadata' => [],
                 ]);
@@ -660,7 +660,7 @@ class FinanceManager
      * Refund an Order: create compensating Transactions, call Stripe, transition to Refunded.
      *
      * Runs inside a DB transaction. For each Cleared payment Transaction,
-     * creates a compensating refund Transaction (positive amount):
+     * creates a compensating refund Transaction (negative amount):
      *   - Stripe: initiates a Stripe refund via payment_intent_id, refund
      *     Transaction starts Pending (settled by charge.refunded webhook)
      *   - Cash: creates a Pending refund Transaction (settled manually by staff)
@@ -694,13 +694,13 @@ class FinanceManager
                 ->get();
 
             foreach ($clearedPayments as $payment) {
-                $refundAmount = abs($payment->amount); // payment is negative, refund is positive
+                $refundAmount = $payment->amount; // payment is positive, refund mirrors as negative
 
                 $refundTransaction = Transaction::create([
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
                     'currency' => $payment->currency,
-                    'amount' => $refundAmount,
+                    'amount' => -$refundAmount,
                     'type' => 'refund',
                     'metadata' => [
                         'original_transaction_id' => $payment->id,
@@ -719,7 +719,7 @@ class FinanceManager
 
                     $stripeRefund = \Laravel\Cashier\Cashier::stripe()->refunds->create([
                         'payment_intent' => $paymentIntentId,
-                        'amount' => $refundAmount,
+                        'amount' => $refundAmount, // Stripe expects positive cents
                     ]);
 
                     $refundTransaction->update([

@@ -84,6 +84,29 @@ class LineItem extends Model
         return $this->belongsTo(Order::class);
     }
 
+    /**
+     * Resolve the underlying domain model for this line item.
+     *
+     * Uses the Finance product registry to map product_type → model class,
+     * then looks up the record by product_id. Returns null for category
+     * products (fees, discounts) that have no backing model.
+     */
+    public function product(): ?\Illuminate\Database\Eloquent\Model
+    {
+        if ($this->product_id === null) {
+            return null;
+        }
+
+        $productClass = Finance::productByType($this->product_type);
+        $modelClass = $productClass::$model ?? null;
+
+        if (! $modelClass) {
+            return null;
+        }
+
+        return $modelClass::find($this->product_id);
+    }
+
     // =========================================================================
     // Helpers
     // =========================================================================

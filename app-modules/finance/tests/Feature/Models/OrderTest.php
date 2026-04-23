@@ -88,7 +88,7 @@ describe('Order relationships', function () {
             'order_id' => $order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -261,12 +261,12 @@ describe('Order helper methods', function () {
             'total_amount' => 3000,
         ]);
 
-        // Cleared payment — negative amount per sign convention
+        // Cleared payment — positive amount per sign convention
         Transaction::create([
             'order_id' => $order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
             'status' => Cleared::getMorphClass(),
             'cleared_at' => now(),
@@ -285,7 +285,7 @@ describe('Order helper methods', function () {
             'order_id' => $order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -303,7 +303,7 @@ describe('Order helper methods', function () {
             'order_id' => $order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -2000,
+            'amount' => 2000,
             'type' => 'payment',
             'status' => Cleared::getMorphClass(),
             'cleared_at' => now(),
@@ -314,7 +314,7 @@ describe('Order helper methods', function () {
             'order_id' => $order->id,
             'user_id' => $this->user->id,
             'currency' => 'cash',
-            'amount' => -1000,
+            'amount' => 1000,
             'type' => 'payment',
             'status' => Cleared::getMorphClass(),
             'cleared_at' => now(),
@@ -333,7 +333,7 @@ describe('Order helper methods', function () {
             'order_id' => $order->id,
             'user_id' => $this->user->id,
             'currency' => 'cash',
-            'amount' => -1000,
+            'amount' => 1000,
             'type' => 'payment',
             'status' => Cleared::getMorphClass(),
             'cleared_at' => now(),
@@ -352,7 +352,7 @@ describe('Order helper methods', function () {
             'order_id' => $order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
             'status' => Cleared::getMorphClass(),
             'cleared_at' => now(),

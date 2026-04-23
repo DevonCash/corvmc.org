@@ -26,7 +26,7 @@ describe('Transaction creation', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -41,7 +41,7 @@ describe('Transaction creation', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
             'metadata' => ['session_id' => 'cs_test_123'],
         ]);
@@ -54,7 +54,7 @@ describe('Transaction creation', function () {
             'order_id' => $this->order->id,
             'user_id' => null,
             'currency' => 'stripe',
-            'amount' => -1500,
+            'amount' => 1500,
             'type' => 'payment',
         ]);
 
@@ -72,7 +72,7 @@ describe('Transaction relationships', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -84,7 +84,7 @@ describe('Transaction relationships', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'cash',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -96,7 +96,7 @@ describe('Transaction relationships', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -114,7 +114,7 @@ describe('Transaction state transitions', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -128,7 +128,7 @@ describe('Transaction state transitions', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -142,7 +142,7 @@ describe('Transaction state transitions', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -156,7 +156,7 @@ describe('Transaction state transitions', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
             'status' => Cleared::getMorphClass(),
         ]);
@@ -169,7 +169,7 @@ describe('Transaction state transitions', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
             'status' => Cancelled::getMorphClass(),
         ]);
@@ -182,7 +182,7 @@ describe('Transaction state transitions', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
             'status' => Failed::getMorphClass(),
         ]);
@@ -201,11 +201,11 @@ describe('Transaction immutability', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
-        $tx->amount = -5000;
+        $tx->amount = 5000;
         $tx->save();
     })->throws(\RuntimeException::class, 'Transaction.amount is immutable once written.');
 
@@ -214,7 +214,7 @@ describe('Transaction immutability', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -227,7 +227,7 @@ describe('Transaction immutability', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -245,7 +245,7 @@ describe('Transaction immutability', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -258,7 +258,7 @@ describe('Transaction immutability', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -282,7 +282,7 @@ describe('Transaction helper methods', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -309,7 +309,7 @@ describe('Transaction helper methods', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
         ]);
 
@@ -317,7 +317,7 @@ describe('Transaction helper methods', function () {
             'order_id' => $this->order->id,
             'user_id' => $this->user->id,
             'currency' => 'cash',
-            'amount' => -1000,
+            'amount' => 1000,
             'type' => 'payment',
             'status' => Cleared::getMorphClass(),
         ]);

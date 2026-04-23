@@ -67,7 +67,7 @@ describe('Finance::commit() with cash rail', function () {
         expect($committed->transactions)->toHaveCount(1);
         $txn = $committed->transactions->first();
         expect($txn->currency)->toBe('cash');
-        expect($txn->amount)->toBe(-3000); // negative = money leaving customer
+        expect($txn->amount)->toBe(3000); // positive = money received by organization
         expect($txn->type)->toBe('payment');
         expect($txn->status)->toBeInstanceOf(\CorvMC\Finance\States\TransactionState\Pending::class);
     });
@@ -258,7 +258,7 @@ describe('Order::checkoutUrl()', function () {
             'order_id' => $order->id,
             'user_id' => $order->user_id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
             'metadata' => [
                 'session_id' => 'cs_test_123',
@@ -276,7 +276,7 @@ describe('Order::checkoutUrl()', function () {
             'order_id' => $order->id,
             'user_id' => $order->user_id,
             'currency' => 'stripe',
-            'amount' => -3000,
+            'amount' => 3000,
             'type' => 'payment',
             'metadata' => [
                 'session_id' => 'cs_test_123',

@@ -7,8 +7,11 @@ use BackedEnum;
 use Brick\Money\Money;
 use CorvMC\Equipment\Models\EquipmentLoan;
 use CorvMC\Events\Models\Event;
-use CorvMC\Finance\Enums\ChargeStatus;
-use CorvMC\Finance\Models\Charge;
+use CorvMC\Finance\Models\Order;
+use CorvMC\Finance\Models\Transaction;
+use CorvMC\Finance\States\OrderState\Cancelled;
+use CorvMC\Finance\States\OrderState\Pending;
+use CorvMC\Finance\States\TransactionState\Cleared;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\SpaceClosure;
 use Filament\Pages\Page;
@@ -52,14 +55,25 @@ class StaffDashboard extends Page
         // Get today's reservations
         $reservations = RehearsalReservation::query()
             ->whereDate('reserved_at', $today)
-            ->with(['reservable', 'charge'])
+            ->with(['reservable'])
             ->orderBy('reserved_at')
             ->get();
 
-        // Calculate stats
+        // Calculate stats from Orders — find Orders referencing today's reservations
         $totalHours = $reservations->sum('duration');
-        $totalRevenue = $reservations->sum(fn($r) => $r->charge ? $r->charge->amount->getMinorAmount() : 0);
-        $unpaidCount = $reservations->filter(fn($r) => ! $r->is_paid && $r->amount)->count();
+        $totalRevenue = 0;
+        $unpaidCount = 0;
+
+        $reservationIds = $reservations->pluck('id');
+        if ($reservationIds->isNotEmpty() && \Schema::hasTable('orders')) {
+            $todaysOrders = Order::whereHas('lineItems', function ($q) use ($reservationIds) {
+                $q->where('product_type', 'rehearsal_time')
+                    ->whereIn('product_id', $reservationIds);
+            })->with('transactions')->get();
+
+            $totalRevenue = $todaysOrders->sum(fn ($o) => $o->paidAmount());
+            $unpaidCount = $todaysOrders->filter(fn ($o) => $o->status instanceof Pending)->count();
+        }
 
         // Get tonight's event
         $tonightsEvent = Event::publishedToday()
@@ -86,7 +100,7 @@ class StaffDashboard extends Page
             'reservations' => $reservations,
             'stats' => [
                 'total_hours' => $totalHours,
-                'total_revenue' => \Brick\Money\Money::ofMinor($totalRevenue, 'USD')->formatTo('en_US'),
+                'total_revenue' => Money::ofMinor($totalRevenue, 'USD')->formatTo('en_US'),
                 'unpaid_count' => $unpaidCount,
             ],
             'tonights_event' => $tonightsEvent,
@@ -95,7 +109,7 @@ class StaffDashboard extends Page
     }
 
     /**
-     * Get combined monthly revenue data (subscriptions + charges).
+     * Get combined monthly revenue data (subscriptions + orders).
      */
     public function getMonthlyRevenueData(): array
     {
@@ -107,39 +121,58 @@ class StaffDashboard extends Page
         $mrrTotalCents = $stats->mrr_total->getMinorAmount()->toInt();
         $subscriptionFeesCents = ($subscriptionCount * 30) + (int) round($mrrTotalCents * 0.029);
 
-        // Get this month's charges
+        // Get this month's order data (guard against missing tables during migration)
         $startOfMonth = now()->startOfMonth();
         $endOfMonth = now()->endOfMonth();
-        $charges = Charge::whereBetween('created_at', [$startOfMonth, $endOfMonth])->get();
 
-        // Charges by payment method
-        $paidCharges = $charges->where('status', ChargeStatus::Paid);
-        $byPaymentMethod = $paidCharges->groupBy('payment_method')->map(function ($group, $method) {
-            return [
-                'method' => $method ?: 'unknown',
-                'count' => $group->count(),
-                'total' => $group->sum(fn($c) => $c->net_amount->getMinorAmount()),
-            ];
-        });
+        $ordersPaidCents = 0;
+        $ordersPendingCents = 0;
+        $ordersPendingCount = 0;
+        $creditsAppliedCents = 0;
+        $byCurrency = collect();
 
-        // Charge totals
-        $chargesPaidCents = $paidCharges->sum(fn($c) => $c->net_amount->getMinorAmount());
-        $chargesPendingCents = $charges->where('status', ChargeStatus::Pending)
-            ->sum(fn($c) => $c->net_amount->getMinorAmount());
-        $chargesGrossCents = $charges->sum(fn($c) => $c->amount->getMinorAmount());
-        $creditsAppliedCents = $chargesGrossCents - $charges->sum(fn($c) => $c->net_amount->getMinorAmount());
+        if (\Schema::hasTable('transactions')) {
+            $transactions = Transaction::where('type', 'payment')
+                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+                ->get();
 
-        // Stripe charges (for fee calculation)
-        $stripeChargesCents = $byPaymentMethod->get('stripe')['total'] ?? 0;
-        $stripeChargesCount = $byPaymentMethod->get('stripe')['count'] ?? 0;
-        $chargesFeesCents = ($stripeChargesCount * 30) + (int) round($stripeChargesCents * 0.029);
+            // Cleared transactions by currency
+            $clearedTxns = $transactions->filter(fn ($t) => $t->status instanceof Cleared);
+            $byCurrency = $clearedTxns->groupBy('currency')->map(function ($group, $currency) {
+                return [
+                    'method' => $currency,
+                    'count' => $group->count(),
+                    'total' => (int) $group->sum('amount'),
+                ];
+            });
+
+            $ordersPaidCents = (int) $clearedTxns->sum('amount');
+
+            $pendingTxns = $transactions->filter(fn ($t) => $t->status instanceof \CorvMC\Finance\States\TransactionState\Pending);
+            $ordersPendingCents = (int) $pendingTxns->sum('amount');
+            $ordersPendingCount = $pendingTxns->count();
+        }
+
+        if (\Schema::hasTable('orders')) {
+            $monthlyOrders = Order::whereBetween('created_at', [$startOfMonth, $endOfMonth])
+                ->whereNotState('status', Cancelled::class)
+                ->with('lineItems')
+                ->get();
+            // Discounts are negative LineItem amounts, abs() to get the value
+            $creditsAppliedCents = (int) abs($monthlyOrders->flatMap->lineItems->filter->isDiscount()->sum('amount'));
+        }
+
+        // Stripe payments (for fee calculation)
+        $stripePaymentsCents = $byCurrency->get('stripe')['total'] ?? 0;
+        $stripePaymentsCount = $byCurrency->get('stripe')['count'] ?? 0;
+        $orderFeesCents = ($stripePaymentsCount * 30) + (int) round($stripePaymentsCents * 0.029);
 
         // Cash collected (no fees)
-        $cashCollectedCents = $byPaymentMethod->get('cash')['total'] ?? 0;
+        $cashCollectedCents = $byCurrency->get('cash')['total'] ?? 0;
 
         // Combined totals
-        $totalGrossRevenueCents = $mrrTotalCents + $chargesPaidCents;
-        $totalFeesCents = $subscriptionFeesCents + $chargesFeesCents;
+        $totalGrossRevenueCents = $mrrTotalCents + $ordersPaidCents;
+        $totalFeesCents = $subscriptionFeesCents + $orderFeesCents;
         $totalNetRevenueCents = $totalGrossRevenueCents - $totalFeesCents;
 
         return [
@@ -153,9 +186,9 @@ class StaffDashboard extends Page
 
             // Revenue breakdown
             'subscriptions_total' => Money::ofMinor($mrrTotalCents, 'USD')->formatTo('en_US'),
-            'charges_collected' => Money::ofMinor($chargesPaidCents, 'USD')->formatTo('en_US'),
-            'charges_pending' => Money::ofMinor($chargesPendingCents, 'USD')->formatTo('en_US'),
-            'charges_pending_count' => $charges->where('status', ChargeStatus::Pending)->count(),
+            'charges_collected' => Money::ofMinor($ordersPaidCents, 'USD')->formatTo('en_US'),
+            'charges_pending' => Money::ofMinor($ordersPendingCents, 'USD')->formatTo('en_US'),
+            'charges_pending_count' => $ordersPendingCount,
             'credits_applied' => Money::ofMinor($creditsAppliedCents, 'USD')->formatTo('en_US'),
             'cash_collected' => Money::ofMinor($cashCollectedCents, 'USD')->formatTo('en_US'),
 
@@ -165,7 +198,7 @@ class StaffDashboard extends Page
             'total_net' => Money::ofMinor($totalNetRevenueCents, 'USD')->formatTo('en_US'),
 
             // For detailed breakdown
-            'by_payment_method' => $byPaymentMethod->values()->toArray(),
+            'by_payment_method' => $byCurrency->values()->toArray(),
         ];
     }
 

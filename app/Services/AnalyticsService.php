@@ -148,7 +148,7 @@ class AnalyticsService
                 total_free_hours_allocated: (int) $totalAllocatedHours,
                 mrr_base: $mrrData['base'],
                 mrr_total: $mrrData['total'],
-                average_contribution: $mrrData['average'],
+                average_mrr: $mrrData['average'],
                 median_contribution: $mrrData['median'],
                 active_subscriptions_count: (int) $subscriptionStats->active_count,
                 new_members_this_month: (int) $userStats->new_this_month,
