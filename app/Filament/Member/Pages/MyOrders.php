@@ -82,7 +82,9 @@ class MyOrders extends Page implements HasTable
                     ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
-            ->recordActions([])
+            ->recordActions([
+                \App\Filament\Staff\Resources\Orders\Actions\RetryPaymentAction::make(),
+            ])
             ->paginated([10, 25]);
     }
 

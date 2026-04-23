@@ -163,6 +163,7 @@ class OrderResource extends Resource
                     \Filament\Actions\ViewAction::make(),
                     Actions\MarkPaidAction::make(),
                     Actions\CollectCashAction::make(),
+                    Actions\RetryPaymentAction::make(),
                     Actions\CompOrderAction::make(),
                     Actions\CancelOrderAction::make(),
                     Actions\RefundOrderAction::make(),

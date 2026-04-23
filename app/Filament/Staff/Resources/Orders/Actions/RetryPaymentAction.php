@@ -1,15 +1,12 @@
 <?php
 
-namespace App\Filament\Actions\Reservations;
+namespace App\Filament\Staff\Resources\Orders\Actions;
 
-use CorvMC\Finance\Facades\Finance;
 use CorvMC\Finance\Models\Order;
 use CorvMC\Finance\Models\Transaction;
 use CorvMC\Finance\States\OrderState\Pending as OrderPending;
 use CorvMC\Finance\States\TransactionState\Failed as TransactionFailed;
 use CorvMC\Finance\States\TransactionState\Cancelled as TransactionCancelled;
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
@@ -26,21 +23,9 @@ class RetryPaymentAction
             ->label('Retry Payment')
             ->icon('tabler-refresh')
             ->color('success')
-            ->visible(fn (RehearsalReservation $record) => static::canRetry($record))
-            ->action(function (RehearsalReservation $record) {
-                $order = Finance::findActiveOrder($record);
-
-                if (! $order) {
-                    Notification::make()
-                        ->title('No active order found')
-                        ->danger()
-                        ->send();
-
-                    return;
-                }
-
-                // Find the failed/cancelled Stripe transaction
-                $failedTxn = $order->transactions()
+            ->visible(fn (Order $record) => static::canRetry($record))
+            ->action(function (Order $record) {
+                $failedTxn = $record->transactions()
                     ->where('currency', 'stripe')
                     ->where('type', 'payment')
                     ->whereState('status', [TransactionFailed::class, TransactionCancelled::class])
@@ -56,12 +41,11 @@ class RetryPaymentAction
                 }
 
                 try {
-                    // Create a new Stripe Transaction with a fresh Checkout Session
-                    $user = $record->getResponsibleUser();
-                    $amount = abs($failedTxn->amount);
+                    $user = $record->user;
+                    $amount = $failedTxn->amount;
 
                     $newTxn = Transaction::create([
-                        'order_id' => $order->id,
+                        'order_id' => $record->id,
                         'user_id' => $user->id,
                         'currency' => 'stripe',
                         'amount' => $amount,
@@ -69,7 +53,6 @@ class RetryPaymentAction
                         'metadata' => [],
                     ]);
 
-                    // Create Stripe Checkout Session
                     $checkout = \Laravel\Cashier\Cashier::stripe()->checkout->sessions->create([
                         'mode' => 'payment',
                         'customer' => $user->stripeId() ?? $user->createAsStripeCustomer()->id,
@@ -78,7 +61,7 @@ class RetryPaymentAction
                                 'currency' => 'usd',
                                 'unit_amount' => $amount,
                                 'product_data' => [
-                                    'name' => "Order #{$order->id} — Retry Payment",
+                                    'name' => "Order #{$record->id} — Retry Payment",
                                 ],
                             ],
                             'quantity' => 1,
@@ -86,7 +69,7 @@ class RetryPaymentAction
                         'metadata' => [
                             'type' => 'order',
                             'transaction_id' => $newTxn->id,
-                            'order_id' => $order->id,
+                            'order_id' => $record->id,
                         ],
                         'success_url' => route('checkout.success') . '?user_id=' . $user->id . '&session_id={CHECKOUT_SESSION_ID}',
                         'cancel_url' => route('checkout.cancel') . '?type=order',
@@ -103,7 +86,7 @@ class RetryPaymentAction
                     return redirect($checkout->url);
                 } catch (\Exception $e) {
                     Log::error('Failed to create retry checkout session', [
-                        'order_id' => $order->id,
+                        'order_id' => $record->id,
                         'error' => $e->getMessage(),
                     ]);
 
@@ -116,20 +99,12 @@ class RetryPaymentAction
             });
     }
 
-    private static function canRetry(RehearsalReservation $record): bool
+    private static function canRetry(Order $order): bool
     {
-        // Must be Confirmed (has an order but payment failed)
-        if (! ($record->status instanceof Confirmed)) {
+        if (! ($order->status instanceof OrderPending)) {
             return false;
         }
 
-        $order = Finance::findActiveOrder($record);
-
-        if (! $order || ! ($order->status instanceof OrderPending)) {
-            return false;
-        }
-
-        // Must have a failed or cancelled Stripe transaction
         return $order->transactions()
             ->where('currency', 'stripe')
             ->where('type', 'payment')

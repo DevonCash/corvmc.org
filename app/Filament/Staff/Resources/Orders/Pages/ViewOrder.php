@@ -103,6 +103,7 @@ class ViewOrder extends ViewRecord
         return [
             Actions\MarkPaidAction::make()->after($refresh),
             Actions\CollectCashAction::make()->after($refresh),
+            Actions\RetryPaymentAction::make(),
             Actions\CompOrderAction::make()->after($refresh),
             Actions\CancelOrderAction::make()->after($refresh),
             Actions\RefundOrderAction::make()->after($refresh),
