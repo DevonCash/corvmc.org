@@ -2,7 +2,6 @@
 
 namespace App\Filament\Staff\Resources\SpaceManagement\Widgets;
 
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\Events\Models\Event;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -21,7 +20,7 @@ class SpaceStatsWidget extends BaseWidget
             now()->startOfWeek(),
             now()->endOfWeek(),
         ])
-            ->where('status', '!=', ReservationStatus::Cancelled->value)
+            ->where('status', '!=', 'cancelled')
             ->get();
 
         $weekHours = $weekReservations->sum('hours_used');
@@ -71,7 +70,7 @@ class SpaceStatsWidget extends BaseWidget
             now()->startOfWeek(),
             now()->endOfWeek(),
         ])
-            ->where('status', '!=', ReservationStatus::Cancelled->value)
+            ->where('status', '!=', 'cancelled')
             ->sum('hours_used');
 
         // Event hours using space

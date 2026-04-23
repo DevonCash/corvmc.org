@@ -2,7 +2,6 @@
 
 namespace App\Filament\Staff\Resources\SpaceManagement\Widgets;
 
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Widgets\Widget;
 
@@ -19,7 +18,7 @@ class SpaceUsageWidget extends Widget
         // Get next reservation of any type
         return Reservation::with('reservable')
             ->where('reserved_at', '>', now())
-            ->where('status', '!=', ReservationStatus::Cancelled->value)
+            ->where('status', '!=', 'cancelled')
             ->orderBy('reserved_at', 'asc')
             ->first();
     }
@@ -28,7 +27,7 @@ class SpaceUsageWidget extends Widget
     {
         return Reservation::with('reservable')
             ->whereDate('reserved_at', today())
-            ->where('status', '!=', ReservationStatus::Cancelled->value)
+            ->where('status', '!=', 'cancelled')
             ->orderBy('reserved_at', 'asc')
             ->get();
     }

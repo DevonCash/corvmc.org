@@ -4,16 +4,16 @@ namespace App\Filament\Staff\Resources\SpaceManagement\Tables;
 
 use App\Filament\Actions\Payment\ChargeableMarkCompedAction;
 use App\Filament\Actions\Payment\ChargeableMarkPaidAction;
+use App\Filament\Actions\Reservations\CancelReservationAction;
 use App\Filament\Actions\Reservations\ReservationConfirmAction;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
 use App\Filament\Shared\Actions\ViewAction;
-use CorvMC\Finance\Actions\Payments\MarkReservationAsComped;
-use CorvMC\Finance\Actions\Payments\MarkReservationAsPaid;
 use CorvMC\Finance\Enums\ChargeStatus;
-use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
-use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\States\ReservationState\Cancelled;
+use CorvMC\SpaceManagement\States\ReservationState\Completed;
+use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
+use CorvMC\SpaceManagement\States\ReservationState\Scheduled;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Models\SpaceClosure;
 use Filament\Forms\Components\DatePicker;
@@ -83,7 +83,12 @@ class SpaceManagementTable
             ->filters([
                 SelectFilter::make('status')
                     ->label('Reservation Status')
-                    ->options(ReservationStatus::class)
+                    ->options([
+                        Scheduled::$name => 'Scheduled',
+                        Confirmed::$name => 'Confirmed',
+                        Completed::$name => 'Completed',
+                        Cancelled::$name => 'Cancelled',
+                    ])
                     ->multiple(),
 
                 SelectFilter::make('charge.status')
@@ -155,7 +160,7 @@ class SpaceManagementTable
                 ChargeableMarkPaidAction::make(),
                 ReservationConfirmAction::make(),
 
-                CancelReservation::filamentAction(),
+                CancelReservationAction::make(),
             ])
             ->emptyStateHeading('No reservations found')
             ->emptyStateDescription('No reservations match your current filters.');
