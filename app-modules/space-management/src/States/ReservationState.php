@@ -17,6 +17,11 @@ abstract class ReservationState extends BaseState
 {
     public Reservation $model;
 
+    public function canConfirm(): bool
+    {
+        return $this->canTransitionTo(Confirmed::class);
+    }
+
     public static function config(): StateConfig
     {
         return parent::config()
