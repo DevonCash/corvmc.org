@@ -2,7 +2,6 @@
 
 namespace App\Filament\Actions\Reservations;
 
-use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\States\ReservationState;
 use Filament\Actions\Action;
@@ -48,7 +47,7 @@ class CancelReservationAction
                 $count = 0;
                 foreach ($records as $reservation) {
                     if ($reservation->status->canTransitionTo(ReservationState\Cancelled::class)) {
-                        $reservation->state->transitionTo(ReservationState\Cancelled::class);
+                        $reservation->status->transitionTo(ReservationState\Cancelled::class);
                         $count++;
                     }
                 }

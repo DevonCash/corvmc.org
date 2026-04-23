@@ -71,9 +71,11 @@ class FinanceManager
     protected function attachPurchasableLock(string $modelClass, string $productType): void
     {
         $modelClass::updating(function (Model $model) use ($productType) {
-            // Allow status-only changes (e.g. Scheduled → Confirmed after payment)
+            // Allow status and related timestamp changes (e.g. Scheduled → Confirmed,
+            // or cancellation which sets cancelled_at alongside status)
             $changedKeys = array_keys($model->getDirty());
-            $statusOnlyChange = $changedKeys === ['status'] || $changedKeys === ['status', 'updated_at'];
+            $allowedKeys = ['status', 'updated_at', 'cancelled_at', 'confirmed_at', 'completed_at'];
+            $statusOnlyChange = empty(array_diff($changedKeys, $allowedKeys));
 
             if ($statusOnlyChange) {
                 return;

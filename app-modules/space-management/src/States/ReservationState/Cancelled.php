@@ -38,6 +38,6 @@ class Cancelled extends ReservationState
      */
     public function entering(): void
     {
-        $this->model->cancelled_at = now();
+        $this->getModel()->cancelled_at = now();
     }
 }
