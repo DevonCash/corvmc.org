@@ -586,7 +586,7 @@ Epics 12 and 13 can be done in parallel with anything — they have no dependenc
 
 ## Epic 17: Ticket purchase → Order integration
 
-Wire the ticket purchase flow to create Orders instead of Charges, same pattern as Epic 11.2 for reservations.
+**Pre-deployment blocker.** Wire the ticket purchase flow to create Orders instead of Charges before cutover — no parallel systems.
 
 ### 17.1 Wire TicketService::createOrder to Finance::commit()
 
