@@ -33,7 +33,7 @@ class ReservationForm
                     ->columnSpanFull()
                     ->steps(static::getSteps())
                     ->submitAction(new HtmlString(Blade::render(<<<'BLADE'
-                        <div class="flex gap-3" x-data="{ setMethod(m) { this.$wire.set('data.payment_method', m) } }">
+                        <div class="flex gap-3" x-data="{ setMethod(m) { this.$wire.set('mountedActions.0.data.payment_method', m) } }">
                             <x-filament::button
                                 type="submit"
                                 icon="tabler-credit-card"
