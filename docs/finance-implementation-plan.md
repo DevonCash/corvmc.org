@@ -443,12 +443,9 @@ Migration script (not a Laravel migration — a command):
   - `Cancelled` → Order `Cancelled`
   - `Pending` → grandfathered (see 14.3)
 
-### 14.2 Backfill ticket charges → Orders
+### 14.2 Backfill ticket charges → Orders ✅
 
-- One Order per TicketOrder
-- LineItems: base ticket, sustaining discount, Stripe fee
-- Tickets in `Valid` status (bypassing Pending)
-- Stripe payment Transaction in `Cleared`
+Backfill command created. One Order per TicketOrder with ticket/discount/fee LineItems and payment Transaction.
 
 ### 14.3 Grandfather pending charges at cutover
 
@@ -584,3 +581,29 @@ Epic 1 (models/migrations)
 ```
 
 Epics 12 and 13 can be done in parallel with anything — they have no dependencies on the new models.
+
+---
+
+## Epic 17: Ticket purchase → Order integration
+
+Wire the ticket purchase flow to create Orders instead of Charges, same pattern as Epic 11.2 for reservations.
+
+### 17.1 Wire TicketService::createOrder to Finance::commit()
+
+Replace `Charge::create()` in `TicketService::createOrder()` with Order creation via `Finance::price()` + `Finance::commit()`. TicketProduct already exists.
+
+### 17.2 Wire TicketService::processCheckout to Order checkout
+
+Replace Stripe Checkout Session creation with the Order's checkout URL from `Finance::commit()` with the Stripe rail.
+
+### 17.3 Update ticket webhook handling
+
+`handleTicketOrderCheckout` in `StripeWebhookController` already resolves via `TicketService::completeOrder()`. Update to call `Finance::settle()` on the Order's Transaction instead.
+
+### 17.4 Update ticket Filament views
+
+Add Order-aware actions to the ticket admin (TicketOrderResource) and member ticket pages. Remove Charge-based payment display.
+
+### 17.5 Remove HasCharges from TicketOrder
+
+Once tickets flow through Orders, remove `implements Chargeable` and `use HasCharges` from TicketOrder.
