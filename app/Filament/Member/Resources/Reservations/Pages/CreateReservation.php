@@ -36,7 +36,7 @@ class CreateReservation extends CreateRecord
         $this->create();
     }
 
-    protected function hasFormWrapper(): bool
+    public function hasFormWrapper(): bool
     {
         return false;
     }
