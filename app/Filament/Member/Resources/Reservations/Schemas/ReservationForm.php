@@ -38,7 +38,7 @@ class ReservationForm
                                 type="submit"
                                 icon="tabler-credit-card"
                                 color="success"
-                                x-on:click="$wire.set('mountedActionsData.0.payment_method', 'stripe')"
+                                x-on:click="document.getElementById('payment-method-field').value = 'stripe'"
                             >
                                 Pay Online
                             </x-filament::button>
@@ -46,7 +46,7 @@ class ReservationForm
                                 type="submit"
                                 icon="tabler-cash"
                                 color="warning"
-                                x-on:click="$wire.set('mountedActionsData.0.payment_method', 'cash')"
+                                x-on:click="document.getElementById('payment-method-field').value = 'cash'"
                             >
                                 Pay with Cash
                             </x-filament::button>
@@ -376,7 +376,9 @@ class ReservationForm
             Hidden::make('cost')->default(0),
             Hidden::make('free_hours_used')->default(0),
             Hidden::make('hours_used')->default(0),
-            Hidden::make('payment_method')->default('stripe'),
+            Hidden::make('payment_method')
+                ->default('stripe')
+                ->extraAttributes(['id' => 'payment-method-field']),
 
             ViewField::make('reservation_summary')
                 ->label('Reservation Summary')

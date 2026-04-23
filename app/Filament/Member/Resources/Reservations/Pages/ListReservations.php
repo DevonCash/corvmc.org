@@ -72,7 +72,7 @@ class ListReservations extends ListRecords
                             type="submit"
                             icon="tabler-credit-card"
                             color="success"
-                            x-on:click="$wire.set('mountedActionsData.0.payment_method', 'stripe')"
+                            x-on:click="document.getElementById('payment-method-field').value = 'stripe'"
                         >
                             Pay Online
                         </x-filament::button>
@@ -80,7 +80,7 @@ class ListReservations extends ListRecords
                             type="submit"
                             icon="tabler-cash"
                             color="warning"
-                            x-on:click="$wire.set('mountedActionsData.0.payment_method', 'cash')"
+                            x-on:click="document.getElementById('payment-method-field').value = 'cash'"
                         >
                             Pay with Cash
                         </x-filament::button>
