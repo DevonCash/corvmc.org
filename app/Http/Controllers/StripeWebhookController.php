@@ -300,6 +300,67 @@ class StripeWebhookController extends CashierWebhookController
     }
 
     /**
+     * Handle checkout.session.expired webhook — mark Stripe Transaction as Failed.
+     *
+     * When a Checkout Session expires (customer didn't complete payment),
+     * find the pending Transaction by session ID and transition to Failed.
+     */
+    public function handleCheckoutSessionExpired(array $payload): SymfonyResponse
+    {
+        $eventId = $payload['id'] ?? null;
+
+        if ($eventId && $this->isWebhookEventProcessed($eventId)) {
+            return $this->successMethod();
+        }
+
+        if ($eventId) {
+            $this->recordWebhookEvent($eventId, 'checkout.session.expired');
+        }
+
+        try {
+            $session = $payload['data']['object'];
+            $sessionId = $session['id'] ?? null;
+
+            if (! $sessionId) {
+                return $this->successMethod();
+            }
+
+            // Find the pending Stripe Transaction with this session_id in metadata
+            $transaction = Transaction::where('currency', 'stripe')
+                ->where('type', 'payment')
+                ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
+                ->get()
+                ->first(fn ($txn) => ($txn->metadata['session_id'] ?? null) === $sessionId);
+
+            if (! $transaction) {
+                Log::info('Stripe webhook: No pending transaction found for expired session', [
+                    'session_id' => $sessionId,
+                ]);
+
+                return $this->successMethod();
+            }
+
+            $transaction->status->transitionTo(\CorvMC\Finance\States\TransactionState\Failed::class);
+            $transaction->update(['failed_at' => now()]);
+
+            Log::info('Stripe webhook: Marked transaction as failed (session expired)', [
+                'transaction_id' => $transaction->id,
+                'session_id' => $sessionId,
+                'order_id' => $transaction->order_id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Stripe webhook: Error processing checkout.session.expired', [
+                'error' => $e->getMessage(),
+                'payload' => $payload,
+            ]);
+
+            return response('Error processing webhook', 500);
+        }
+
+        return $this->successMethod();
+    }
+
+    /**
      * Handle payment intent payment failed webhook.
      */
     public function handlePaymentIntentPaymentFailed(array $payload): SymfonyResponse
