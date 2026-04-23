@@ -751,4 +751,85 @@ class FinanceManager
             return $order->fresh(['lineItems', 'transactions']);
         });
     }
+
+    // =========================================================================
+    // Retry
+    // =========================================================================
+
+    /**
+     * Create a fresh Stripe Checkout Session for a failed payment on an Order.
+     *
+     * Finds the first failed/cancelled Stripe Transaction, creates a new
+     * Transaction with a fresh Checkout Session, and returns the checkout URL.
+     *
+     * @return string|null The Checkout URL, or null if no retryable transaction found.
+     *
+     * @throws \RuntimeException If the Order is not Pending.
+     * @throws \Exception If the Stripe API call fails.
+     */
+    public function retryStripePayment(Order $order): ?string
+    {
+        if (! ($order->status instanceof \CorvMC\Finance\States\OrderState\Pending)) {
+            throw new \RuntimeException(
+                "Cannot retry payment on Order [{$order->id}]: status is [{$order->status->getLabel()}], expected Pending."
+            );
+        }
+
+        $failedTxn = $order->transactions()
+            ->where('currency', 'stripe')
+            ->where('type', 'payment')
+            ->whereState('status', [
+                \CorvMC\Finance\States\TransactionState\Failed::class,
+                \CorvMC\Finance\States\TransactionState\Cancelled::class,
+            ])
+            ->first();
+
+        if (! $failedTxn) {
+            return null;
+        }
+
+        $user = $order->user;
+        $amount = $failedTxn->amount;
+
+        $newTxn = Transaction::create([
+            'order_id' => $order->id,
+            'user_id' => $user->id,
+            'currency' => 'stripe',
+            'amount' => $amount,
+            'type' => 'payment',
+            'metadata' => [],
+        ]);
+
+        $checkout = \Laravel\Cashier\Cashier::stripe()->checkout->sessions->create([
+            'mode' => 'payment',
+            'customer' => $user->stripeId() ?? $user->createAsStripeCustomer()->id,
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => 'usd',
+                    'unit_amount' => $amount,
+                    'product_data' => [
+                        'name' => "Order #{$order->id} — Retry Payment",
+                    ],
+                ],
+                'quantity' => 1,
+            ]],
+            'metadata' => [
+                'type' => 'order',
+                'transaction_id' => $newTxn->id,
+                'order_id' => $order->id,
+            ],
+            'success_url' => route('checkout.success') . '?user_id=' . $user->id . '&session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => route('checkout.cancel') . '?type=order',
+        ]);
+
+        $newTxn->update([
+            'metadata' => [
+                'session_id' => $checkout->id,
+                'checkout_url' => $checkout->url,
+                'retry_of' => $failedTxn->id,
+            ],
+        ]);
+
+        return $checkout->url;
+    }
 }

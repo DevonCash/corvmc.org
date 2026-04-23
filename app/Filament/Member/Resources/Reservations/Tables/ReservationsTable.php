@@ -6,7 +6,6 @@ use App\Filament\Actions\Reservations\CancelReservationAction;
 use App\Filament\Actions\Reservations\PayWithCashAction;
 use App\Filament\Actions\Reservations\PayWithStripeAction;
 use CorvMC\Finance\Facades\Finance;
-use CorvMC\Finance\Models\Order;
 use CorvMC\Finance\States\OrderState\Pending as OrderPending;
 use CorvMC\Finance\States\TransactionState\Failed as TransactionFailed;
 use CorvMC\Finance\States\TransactionState\Cancelled as TransactionCancelled;
@@ -134,57 +133,19 @@ class ReservationsTable
                             return;
                         }
 
-                        $failedTxn = $order->transactions()
-                            ->where('currency', 'stripe')
-                            ->where('type', 'payment')
-                            ->whereState('status', [TransactionFailed::class, TransactionCancelled::class])
-                            ->first();
+                        try {
+                            $checkoutUrl = Finance::retryStripePayment($order);
 
-                        if (! $failedTxn) {
-                            return;
+                            if ($checkoutUrl) {
+                                return redirect($checkoutUrl);
+                            }
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Payment Error')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
                         }
-
-                        $user = $record->getResponsibleUser();
-                        $amount = $failedTxn->amount;
-
-                        $newTxn = \CorvMC\Finance\Models\Transaction::create([
-                            'order_id' => $order->id,
-                            'user_id' => $user->id,
-                            'currency' => 'stripe',
-                            'amount' => $amount,
-                            'type' => 'payment',
-                            'metadata' => [],
-                        ]);
-
-                        $checkout = \Laravel\Cashier\Cashier::stripe()->checkout->sessions->create([
-                            'mode' => 'payment',
-                            'customer' => $user->stripeId() ?? $user->createAsStripeCustomer()->id,
-                            'line_items' => [[
-                                'price_data' => [
-                                    'currency' => 'usd',
-                                    'unit_amount' => $amount,
-                                    'product_data' => ['name' => "Order #{$order->id} — Retry Payment"],
-                                ],
-                                'quantity' => 1,
-                            ]],
-                            'metadata' => [
-                                'type' => 'order',
-                                'transaction_id' => $newTxn->id,
-                                'order_id' => $order->id,
-                            ],
-                            'success_url' => route('checkout.success') . '?user_id=' . $user->id . '&session_id={CHECKOUT_SESSION_ID}',
-                            'cancel_url' => route('checkout.cancel') . '?type=order',
-                        ]);
-
-                        $newTxn->update([
-                            'metadata' => [
-                                'session_id' => $checkout->id,
-                                'checkout_url' => $checkout->url,
-                                'retry_of' => $failedTxn->id,
-                            ],
-                        ]);
-
-                        return redirect($checkout->url);
                     }),
                 ActionGroup::make([
                     CancelReservationAction::make(),

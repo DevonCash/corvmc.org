@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \CorvMC\Finance\Models\Order cancel(\CorvMC\Finance\Models\Order $order)
  * @method static \CorvMC\Finance\Models\Order refund(\CorvMC\Finance\Models\Order $order)
  * @method static \CorvMC\Finance\Models\Order|null findActiveOrder(\Illuminate\Database\Eloquent\Model $model, ?string $productType = null)
+ * @method static string|null retryStripePayment(\CorvMC\Finance\Models\Order $order)
  *
  * @see \CorvMC\Finance\FinanceManager
  */
