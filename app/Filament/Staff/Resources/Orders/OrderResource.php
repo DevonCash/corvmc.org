@@ -6,15 +6,12 @@ use App\Filament\Staff\Resources\Orders\Pages\ListOrders;
 use App\Filament\Staff\Resources\Orders\Pages\ViewOrder;
 use App\Models\User;
 use BackedEnum;
-use CorvMC\Finance\Facades\Finance;
 use CorvMC\Finance\Models\Order;
 use CorvMC\Finance\States\OrderState\Cancelled;
 use CorvMC\Finance\States\OrderState\Completed;
 use CorvMC\Finance\States\OrderState\Comped;
 use CorvMC\Finance\States\OrderState\Pending;
 use CorvMC\Finance\States\OrderState\Refunded;
-use Filament\Actions\Action;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
@@ -164,52 +161,10 @@ class OrderResource extends Resource
             ->recordActions([
                 \Filament\Actions\ActionGroup::make([
                     \Filament\Actions\ViewAction::make(),
-
-                    Action::make('markPaid')
-                        ->label('Mark Paid')
-                        ->icon('tabler-coin')
-                        ->color('success')
-                        ->requiresConfirmation()
-                        ->modalDescription('This will settle all pending cash transactions and mark the order as completed.')
-                        ->visible(
-                            fn(Order $record) => $record->status instanceof Pending
-                                && $record->transactions()->where('currency', 'cash')->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)->exists()
-                        )
-                        ->action(function (Order $record) {
-                            $record->transactions()
-                                ->where('currency', 'cash')
-                                ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
-                                ->each(fn($txn) => Finance::settle($txn));
-
-                            Notification::make()->title('Order marked as paid')->success()->send();
-                        }),
-
+                    Actions\MarkPaidAction::make(),
                     Actions\CollectCashAction::make(),
-
-                    Action::make('comp')
-                        ->label('Comp')
-                        ->icon('tabler-gift')
-                        ->color('info')
-                        ->requiresConfirmation()
-                        ->modalDescription('This will comp the order, waiving all outstanding charges.')
-                        ->visible(fn(Order $record) => $record->status instanceof Pending)
-                        ->action(function (Order $record) {
-                            Finance::comp($record);
-                            Notification::make()->title('Order comped')->success()->send();
-                        }),
-
-                    Action::make('cancel')
-                        ->label('Cancel')
-                        ->icon('tabler-x')
-                        ->color('gray')
-                        ->requiresConfirmation()
-                        ->modalDescription('This will cancel the order and reverse any credit deductions.')
-                        ->visible(fn(Order $record) => $record->status instanceof Pending)
-                        ->action(function (Order $record) {
-                            Finance::cancel($record);
-                            Notification::make()->title('Order cancelled')->success()->send();
-                        }),
-
+                    Actions\CompOrderAction::make(),
+                    Actions\CancelOrderAction::make(),
                     Actions\RefundOrderAction::make(),
                 ]),
             ]);

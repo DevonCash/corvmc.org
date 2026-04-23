@@ -2,9 +2,10 @@
 
 namespace App\Filament\Staff\Resources\Orders\RelationManagers;
 
-use CorvMC\Finance\Models\Order;
 use CorvMC\Finance\Models\Transaction;
 use CorvMC\Finance\States\TransactionState\Cancelled;
+use CorvMC\Finance\States\TransactionState\Cleared;
+use CorvMC\Finance\States\TransactionState\Pending;
 use Filament\Actions\Action;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -65,12 +66,7 @@ class TransactionsRelationManager extends RelationManager
                     }),
 
                 TextColumn::make('status')
-                    ->tooltip(fn(Transaction $record) => match (true) {
-                        $record->status instanceof Cancelled => $record->status->getDescription(),
-                        $record->status instanceof Pending => 'Pending since ' . $record->created_at->toDayDateTimeString(),
-                        $record->status instanceof Cleared => 'Cleared at ' . $record->cleared_at?->toDayDateTimeString(),
-                        default => null,
-                    })
+                    ->tooltip(fn(Transaction $record) => $record->status->getDescription())
                     ->badge(),
             ])
             ->defaultSort('created_at', 'desc')

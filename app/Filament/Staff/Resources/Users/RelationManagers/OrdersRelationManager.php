@@ -2,17 +2,13 @@
 
 namespace App\Filament\Staff\Resources\Users\RelationManagers;
 
-use CorvMC\Finance\Facades\Finance;
 use CorvMC\Finance\Models\Order;
 use CorvMC\Finance\States\OrderState\Cancelled;
 use CorvMC\Finance\States\OrderState\Completed;
 use CorvMC\Finance\States\OrderState\Comped;
 use CorvMC\Finance\States\OrderState\Pending;
 use CorvMC\Finance\States\OrderState\Refunded;
-use CorvMC\Finance\States\TransactionState\Pending as TransactionPending;
 use Filament\Actions;
-use Filament\Actions\Action;
-use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -87,45 +83,10 @@ class OrdersRelationManager extends RelationManager
                 Actions\ViewAction::make()
                     ->url(fn (Order $record) => route('filament.staff.resources.orders.view', $record)),
 
-                Action::make('markPaid')
-                    ->label('Mark Paid')
-                    ->icon('tabler-coin')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->visible(fn (Order $record) => $record->status instanceof Pending
-                        && $record->transactions()->where('currency', 'cash')->whereState('status', TransactionPending::class)->exists()
-                    )
-                    ->action(function (Order $record) {
-                        $record->transactions()
-                            ->where('currency', 'cash')
-                            ->whereState('status', TransactionPending::class)
-                            ->each(fn ($txn) => Finance::settle($txn));
-
-                        Notification::make()->title('Order marked as paid')->success()->send();
-                    }),
-
-                Action::make('comp')
-                    ->label('Comp')
-                    ->icon('tabler-gift')
-                    ->color('info')
-                    ->requiresConfirmation()
-                    ->visible(fn (Order $record) => $record->status instanceof Pending)
-                    ->action(function (Order $record) {
-                        Finance::comp($record);
-                        Notification::make()->title('Order comped')->success()->send();
-                    }),
-
-                Action::make('cancel')
-                    ->label('Cancel')
-                    ->icon('tabler-x')
-                    ->color('gray')
-                    ->requiresConfirmation()
-                    ->visible(fn (Order $record) => $record->status instanceof Pending)
-                    ->action(function (Order $record) {
-                        Finance::cancel($record);
-                        Notification::make()->title('Order cancelled')->success()->send();
-                    }),
-
+                \App\Filament\Staff\Resources\Orders\Actions\MarkPaidAction::make(),
+                \App\Filament\Staff\Resources\Orders\Actions\CollectCashAction::make(),
+                \App\Filament\Staff\Resources\Orders\Actions\CompOrderAction::make(),
+                \App\Filament\Staff\Resources\Orders\Actions\CancelOrderAction::make(),
                 \App\Filament\Staff\Resources\Orders\Actions\RefundOrderAction::make(),
             ]);
     }

@@ -21,7 +21,7 @@ class CollectCashAction
     public static function make(): Action
     {
         return Action::make('collect_cash')
-            ->label('Collect Cash')
+            ->label('Collect as Cash')
             ->icon('tabler-cash')
             ->color('success')
             ->requiresConfirmation()
