@@ -67,12 +67,12 @@ class ListReservations extends ListRecords
             ->steps(ReservationForm::getSteps())
             ->modifyWizardUsing(fn ($wizard) => $wizard
                 ->submitAction(new \Illuminate\Support\HtmlString(\Illuminate\Support\Facades\Blade::render(<<<'BLADE'
-                    <div class="flex gap-3">
+                    <div class="flex gap-3" x-data="{ setMethod(m) { this.$wire.set('data.payment_method', m) } }">
                         <x-filament::button
                             type="submit"
                             icon="tabler-credit-card"
                             color="success"
-                            x-on:click="document.getElementById('payment-method-field').value = 'stripe'"
+                            x-on:click="setMethod('stripe')"
                         >
                             Pay Online
                         </x-filament::button>
@@ -80,7 +80,7 @@ class ListReservations extends ListRecords
                             type="submit"
                             icon="tabler-cash"
                             color="warning"
-                            x-on:click="document.getElementById('payment-method-field').value = 'cash'"
+                            x-on:click="setMethod('cash')"
                         >
                             Pay with Cash
                         </x-filament::button>

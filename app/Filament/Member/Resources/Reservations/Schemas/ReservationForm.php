@@ -33,12 +33,12 @@ class ReservationForm
                     ->columnSpanFull()
                     ->steps(static::getSteps())
                     ->submitAction(new HtmlString(Blade::render(<<<'BLADE'
-                        <div class="flex gap-3">
+                        <div class="flex gap-3" x-data="{ setMethod(m) { this.$wire.set('data.payment_method', m) } }">
                             <x-filament::button
                                 type="submit"
                                 icon="tabler-credit-card"
                                 color="success"
-                                x-on:click="document.getElementById('payment-method-field').value = 'stripe'"
+                                x-on:click="setMethod('stripe')"
                             >
                                 Pay Online
                             </x-filament::button>
@@ -46,7 +46,7 @@ class ReservationForm
                                 type="submit"
                                 icon="tabler-cash"
                                 color="warning"
-                                x-on:click="document.getElementById('payment-method-field').value = 'cash'"
+                                x-on:click="setMethod('cash')"
                             >
                                 Pay with Cash
                             </x-filament::button>
@@ -376,9 +376,7 @@ class ReservationForm
             Hidden::make('cost')->default(0),
             Hidden::make('free_hours_used')->default(0),
             Hidden::make('hours_used')->default(0),
-            Hidden::make('payment_method')
-                ->default('stripe')
-                ->extraAttributes(['id' => 'payment-method-field']),
+            Hidden::make('payment_method')->default('stripe'),
 
             ViewField::make('reservation_summary')
                 ->label('Reservation Summary')
