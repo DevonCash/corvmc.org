@@ -201,6 +201,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         return $query->with(['reservable', 'charge'])
             ->where('reserved_at', '>=', now())
             ->where('reserved_at', '<=', now()->addDays($days))
+            ->whereNotState('status', Cancelled::class)
             ->orderBy('reserved_at');
     }
 
