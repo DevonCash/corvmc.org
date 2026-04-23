@@ -65,19 +65,19 @@ class ListReservations extends ListRecords
             ->icon('tabler-calendar-plus')
             ->modalWidth('lg')
             ->steps(ReservationForm::getSteps())
-            ->modalSubmitActionLabel('Pay Online')
-            ->modalSubmitAction(fn (Action $action) => $action
-                ->icon('tabler-credit-card')
-                ->color('success')
-            )
-            ->extraModalFooterActions([
+            ->modalFooterActions(fn (Action $action) => [
+                Action::make('pay_stripe')
+                    ->label('Pay Online')
+                    ->icon('tabler-credit-card')
+                    ->color('success')
+                    ->action(fn (array $data) => $this->createReservationWithPayment($data, 'stripe')),
                 Action::make('pay_cash')
                     ->label('Pay with Cash')
                     ->icon('tabler-cash')
                     ->color('warning')
                     ->action(fn (array $data) => $this->createReservationWithPayment($data, 'cash')),
-            ])
-            ->action(fn (array $data) => $this->createReservationWithPayment($data, 'stripe'));
+                $action->getModalCancelAction(),
+            ]);
     }
 
     private function createReservationWithPayment(array $data, string $paymentMethod): void
