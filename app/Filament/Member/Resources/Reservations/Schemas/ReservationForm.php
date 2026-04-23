@@ -6,10 +6,11 @@ use App\Models\User;
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Carbon\Carbon;
-use CorvMC\Finance\Facades\PaymentService;
+use CorvMC\Finance\Facades\Finance;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -35,31 +36,7 @@ class ReservationForm
 
     protected static function shouldShowCheckout(Get $get): bool
     {
-        $cost = $get('cost');
-        $reservationDate = $get('reservation_date');
-        $isRecurring = $get('is_recurring');
-
-        // Must have a positive cost
-        if (! $cost || $cost <= 0) {
-            return false;
-        }
-
-        // Cannot be recurring
-        if ($isRecurring) {
-            return false;
-        }
-
-        // Must have a reservation date
-        if (! $reservationDate) {
-            return false;
-        }
-
-        // Must be within auto-confirm range (next 7 days)
-        // Parse the date string with explicit timezone
-        $resDate = Carbon::parse($reservationDate, config('app.timezone'));
-        $oneWeekFromNow = now()->addWeek();
-
-        return $resDate->lte($oneWeekFromNow);
+        return static::shouldShowPaymentChoice($get);
     }
 
     public static function getSteps(): array
@@ -366,7 +343,6 @@ class ReservationForm
     public static function confirmationStep(): array
     {
         return [
-
             // Hidden fields for calculated values
             Hidden::make('cost')->default(0),
             Hidden::make('free_hours_used')->default(0),
@@ -376,7 +352,48 @@ class ReservationForm
                 ->label('Reservation Summary')
                 ->view('space-management::filament.components.reservation-summary')
                 ->columnSpanFull(),
+
+            // Payment method choice — only shown when in confirmation window and cost > 0
+            Radio::make('payment_method')
+                ->label('How would you like to pay?')
+                ->options([
+                    'stripe' => 'Pay online with card',
+                    'cash' => 'Pay with cash at the space',
+                ])
+                ->default('stripe')
+                ->required()
+                ->visible(fn (Get $get) => static::shouldShowPaymentChoice($get))
+                ->columnSpanFull(),
         ];
+    }
+
+    /**
+     * Whether to show the payment method choice in the confirmation step.
+     * True when within the confirmation window and the reservation has a cost.
+     */
+    protected static function shouldShowPaymentChoice(Get $get): bool
+    {
+        $cost = $get('cost');
+        if (! $cost || $cost <= 0) {
+            return false;
+        }
+
+        return static::isWithinConfirmationWindow($get);
+    }
+
+    /**
+     * Whether the reservation date is within the confirmation window (next 7 days).
+     */
+    protected static function isWithinConfirmationWindow(Get $get): bool
+    {
+        $reservationDate = $get('reservation_date');
+        if (! $reservationDate) {
+            return false;
+        }
+
+        $resDate = Carbon::parse($reservationDate, config('app.timezone'));
+
+        return $resDate->lte(now()->addWeek());
     }
 
     private static function updateDateTimes(Get $get, callable $set): void
@@ -453,11 +470,16 @@ class ReservationForm
             'reserved_at' => Carbon::parse($start),
             'reserved_until' => Carbon::parse($end),
         ]);
-        $calculation = PaymentService::calculateCost($reservation);
 
-        // Store cost as cents (integer) for Livewire compatibility
-        $set('cost', $calculation['cost']->getMinorAmount()->toInt());
-        $set('free_hours_used', $calculation['free_hours']);
-        $set('hours_used', $calculation['total_hours']);
+        $lineItems = Finance::price([$reservation], $user);
+        $totalCents = (int) $lineItems->sum('amount');
+        $hours = Carbon::parse($start)->floatDiffInHours(Carbon::parse($end));
+
+        // Count discount blocks as free hours used
+        $discountBlocks = (int) abs($lineItems->filter->isDiscount()->sum('quantity'));
+
+        $set('cost', max(0, $totalCents));
+        $set('free_hours_used', $discountBlocks);
+        $set('hours_used', $hours);
     }
 }

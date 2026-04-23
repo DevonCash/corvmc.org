@@ -2,12 +2,15 @@
 
 namespace App\Filament\Member\Resources\Reservations\Pages;
 
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use App\Models\User;
 use App\Filament\Member\Resources\Reservations\ReservationResource;
-use CorvMC\SpaceManagement\Models\Reservation;
+use App\Models\User;
 use Carbon\Carbon;
-use CorvMC\Finance\Facades\PaymentService;
+use CorvMC\Finance\Facades\Finance;
+use CorvMC\Finance\Models\Order;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\Reservation;
+use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
+use CorvMC\SpaceManagement\States\ReservationState\Scheduled;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Log;
@@ -18,18 +21,18 @@ class CreateReservation extends CreateRecord
 
     protected function handleRecordCreation(array $data): Reservation
     {
-        // Create reservation using Eloquent
         $user = auth()->user();
         $startTime = Carbon::parse($data['reserved_at']);
         $endTime = Carbon::parse($data['reserved_until']);
 
+        // Always start as Scheduled — confirmation happens after payment method is chosen
         return RehearsalReservation::create([
             'reservable_type' => User::class,
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
             'notes' => $data['notes'] ?? null,
-            'status' => $data['status'] ?? RehearsalReservation::determineInitialStatus($user),
+            'status' => Scheduled::class,
             'is_recurring' => $data['is_recurring'] ?? false,
             'recurrence_pattern' => $data['recurrence_pattern'] ?? null,
             'hours_used' => $startTime->diffInMinutes($endTime) / 60,
@@ -38,57 +41,82 @@ class CreateReservation extends CreateRecord
 
     protected function afterCreate(): void
     {
-        /** @var Reservation $record */
-        $record = $this->record;
+        /** @var RehearsalReservation $reservation */
+        $reservation = $this->record;
+        $user = auth()->user();
+        $data = $this->data;
 
-        // Check if this should go to checkout
-        $shouldCheckout = $this->shouldRedirectToCheckout($record);
+        // Only create an Order if within the confirmation window
+        if (! $this->isWithinConfirmationWindow()) {
+            return; // Path 3: stays Scheduled, no Order
+        }
 
-        if ($shouldCheckout) {
-            try {
-                // TODO: Update to use new payment service
-                $session = PaymentService::createCheckoutSession($record);
-                // Store the redirect URL in session to use after the page redirects
-                session()->put('stripe_checkout_url', $session->url);
-            } catch (\Exception $e) {
-                Log::error($e);
-                Notification::make()
-                    ->title('Payment Error')
-                    ->body('Unable to create payment session: ' . $e->getMessage())
-                    ->danger()
-                    ->send();
+        try {
+            // Price the reservation
+            $lineItems = Finance::price([$reservation], $user);
+            $totalCents = (int) $lineItems->sum('amount');
+
+            // Create the Order
+            $order = Order::create([
+                'user_id' => $user->id,
+                'total_amount' => 0,
+            ]);
+
+            foreach ($lineItems as $lineItem) {
+                $lineItem->order_id = $order->id;
+                $lineItem->save();
             }
+
+            $order->update(['total_amount' => $totalCents]);
+
+            if ($totalCents <= 0) {
+                // Path 2: fully discounted — commit with no rails, auto-completes
+                Finance::commit($order->fresh(), []);
+                $reservation->status->transitionTo(Confirmed::class);
+
+                return;
+            }
+
+            // Path 1: has a cost — commit with chosen payment rail
+            $paymentMethod = $data['payment_method'] ?? 'stripe';
+            $committed = Finance::commit($order->fresh(), [$paymentMethod => $totalCents]);
+
+            // Confirm the reservation (it now has a pending payment)
+            $reservation->status->transitionTo(Confirmed::class);
+
+            if ($paymentMethod === 'stripe') {
+                $checkoutUrl = $committed->checkoutUrl();
+                if ($checkoutUrl) {
+                    session()->put('stripe_checkout_url', $checkoutUrl);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to create order for reservation', [
+                'reservation_id' => $reservation->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            Notification::make()
+                ->title('Payment Error')
+                ->body('Your reservation was created but we couldn\'t set up payment: ' . $e->getMessage())
+                ->danger()
+                ->send();
         }
     }
 
     protected function getRedirectUrl(): string
     {
-        // Check if we have a Stripe checkout URL to redirect to
         if ($checkoutUrl = session()->pull('stripe_checkout_url')) {
             return $checkoutUrl;
         }
 
-        // Otherwise, redirect to the reservation view page
         return $this->getResource()::getUrl('view', ['record' => $this->record]);
     }
 
-    protected function shouldRedirectToCheckout(Reservation $record): bool
+    private function isWithinConfirmationWindow(): bool
     {
-        // Must require payment
-        if (! $record->requiresPayment()) {
-            return false;
-        }
+        $reservationDate = $this->record->reserved_at;
 
-        // Cannot be recurring
-        if ($record->recurring_series_id) {
-            return false;
-        }
-
-        // Must be within auto-confirm range (next 7 days)
-        // $record->reserved_at is already a Carbon instance from the model cast
-        $reservationDate = $record->reserved_at;
-        $oneWeekFromNow = now()->addWeek();
-
-        return $reservationDate->lte($oneWeekFromNow);
+        return $reservationDate->lte(now()->addWeek());
     }
 }
