@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
+use CorvMC\Finance\Facades\Finance;
 use CorvMC\Finance\Facades\PaymentService;
 use CorvMC\Finance\Facades\SubscriptionService;
 use CorvMC\Finance\Facades\MemberBenefitService;
+use CorvMC\Finance\Models\Transaction;
 use CorvMC\Events\Facades\TicketService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Http\Controllers\WebhookController as CashierWebhookController;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
@@ -27,7 +30,9 @@ class StripeWebhookController extends CashierWebhookController
             // Handle different types of checkouts
             $checkoutType = $metadata['type'] ?? '';
 
-            if ($checkoutType === 'practice_space_reservation') {
+            if ($checkoutType === 'order') {
+                return $this->handleOrderCheckout($payload, $session, $metadata);
+            } elseif ($checkoutType === 'practice_space_reservation') {
                 return $this->handleReservationCheckout($session, $metadata);
             } elseif ($checkoutType === 'sliding_scale_membership') {
                 return $this->handleSubscriptionCheckout($session, $metadata);
@@ -45,6 +50,96 @@ class StripeWebhookController extends CashierWebhookController
 
             return response('Error processing webhook', 500);
         }
+    }
+
+    /**
+     * Handle Order checkout completion via the new finance system.
+     *
+     * Uses stripe_webhook_events for idempotency. Resolves the Transaction
+     * from session metadata and calls Finance::settle().
+     */
+    private function handleOrderCheckout(array $payload, array $session, array $metadata): SymfonyResponse
+    {
+        $eventId = $payload['id'] ?? null;
+
+        // Idempotency: skip if we've already processed this webhook event
+        if ($eventId && $this->isWebhookEventProcessed($eventId)) {
+            Log::info('Stripe webhook: Skipping duplicate order checkout event', [
+                'event_id' => $eventId,
+            ]);
+
+            return $this->successMethod();
+        }
+
+        $transactionId = $metadata['transaction_id'] ?? null;
+        $paymentIntentId = $session['payment_intent'] ?? null;
+
+        if (! $transactionId) {
+            Log::warning('Stripe webhook: No transaction_id in order checkout metadata', [
+                'session_id' => $session['id'],
+            ]);
+
+            return $this->successMethod();
+        }
+
+        $transaction = Transaction::find($transactionId);
+
+        if (! $transaction) {
+            Log::error('Stripe webhook: Transaction not found for order checkout', [
+                'transaction_id' => $transactionId,
+                'session_id' => $session['id'],
+            ]);
+
+            return $this->successMethod();
+        }
+
+        // Record webhook event before processing — settle() is idempotent,
+        // so a duplicate arrival after a crash is harmless.
+        if ($eventId) {
+            $this->recordWebhookEvent($eventId, 'checkout.session.completed');
+        }
+
+        try {
+            Finance::settle($transaction, $paymentIntentId);
+
+            Log::info('Stripe webhook: Settled order transaction', [
+                'transaction_id' => $transaction->id,
+                'order_id' => $transaction->order_id,
+                'session_id' => $session['id'],
+            ]);
+        } catch (\RuntimeException $e) {
+            // Transaction already settled (e.g. by redirect handler) — not an error
+            Log::info('Stripe webhook: Transaction already settled', [
+                'transaction_id' => $transaction->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
+
+        return $this->successMethod();
+    }
+
+    /**
+     * Check if a Stripe webhook event has already been processed.
+     */
+    private function isWebhookEventProcessed(string $eventId): bool
+    {
+        return DB::table('stripe_webhook_events')
+            ->where('event_id', $eventId)
+            ->exists();
+    }
+
+    /**
+     * Record a Stripe webhook event as processed.
+     */
+    private function recordWebhookEvent(string $eventId, string $eventType): void
+    {
+        DB::table('stripe_webhook_events')->insertOrIgnore([
+            'event_id' => $eventId,
+            'event_type' => $eventType,
+            'processed_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     /**

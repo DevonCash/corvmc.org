@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use CorvMC\Finance\Facades\Finance;
 use CorvMC\Finance\Facades\PaymentService;
 use CorvMC\Finance\Facades\SubscriptionService;
+use CorvMC\Finance\Models\Transaction;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -89,7 +91,9 @@ class CheckoutController extends Controller
 
             if ($session->payment_status === 'paid') {
                 // Process payment immediately for better UX
-                if ($checkoutType === 'practice_space_reservation') {
+                if ($checkoutType === 'order') {
+                    $this->settleOrderTransaction($metadata, $session);
+                } elseif ($checkoutType === 'practice_space_reservation') {
                     PaymentService::processCheckout(
                         $metadata['reservation_id'] ?? null,
                         $sessionId
@@ -174,6 +178,12 @@ class CheckoutController extends Controller
     private function showSuccessNotification(string $checkoutType, array $metadata): void
     {
         match ($checkoutType) {
+            'order' => Notification::make()
+                ->title('Payment Successful!')
+                ->body('Your payment has been processed and your order is confirmed.')
+                ->success()
+                ->send(),
+
             'sliding_scale_membership' => Notification::make()
                 ->title('Subscription Created Successfully!')
                 ->body('You are now a sustaining member. Thank you for your support! Your subscription will be activated shortly.')
@@ -200,6 +210,12 @@ class CheckoutController extends Controller
     private function showPendingNotification(string $checkoutType): void
     {
         match ($checkoutType) {
+            'order' => Notification::make()
+                ->title('Payment Processing')
+                ->body('Your payment is being processed. You will receive confirmation shortly.')
+                ->warning()
+                ->send(),
+
             'sliding_scale_membership' => Notification::make()
                 ->title('Subscription Processing')
                 ->body('Your subscription is being processed. You will receive confirmation shortly.')
@@ -226,6 +242,12 @@ class CheckoutController extends Controller
     private function showCancelNotification(string $checkoutType): void
     {
         match ($checkoutType) {
+            'order' => Notification::make()
+                ->title('Checkout Cancelled')
+                ->body('Your checkout was cancelled. Your order is still pending — you can try again anytime.')
+                ->warning()
+                ->send(),
+
             'sliding_scale_membership' => Notification::make()
                 ->title('Subscription Cancelled')
                 ->body('Your subscription checkout was cancelled. You can try again anytime.')
@@ -252,6 +274,7 @@ class CheckoutController extends Controller
     private function getSuccessRedirect(string $checkoutType, array $metadata, User $user)
     {
         return match ($checkoutType) {
+            'order' => $this->getOrderRedirect($metadata),
             'practice_space_reservation' => $this->getReservationRedirect($metadata),
             'sliding_scale_membership' => redirect()->route('filament.member.pages.membership'),
             default => redirect()->route('filament.member.pages.profile'),
@@ -264,6 +287,7 @@ class CheckoutController extends Controller
     private function getCancelRedirect(string $checkoutType, User $user)
     {
         return match ($checkoutType) {
+            'order' => redirect()->route('filament.member.pages.profile'),
             'practice_space_reservation' => redirect()->route('filament.member.resources.reservations.index'),
             'sliding_scale_membership' => redirect()->route('filament.member.pages.membership'),
             default => redirect()->route('filament.member.pages.profile'),
@@ -278,4 +302,66 @@ class CheckoutController extends Controller
         // Always redirect to the index page - users can view/edit from there
         return redirect()->route('filament.member.resources.reservations.index');
     }
+
+    /**
+     * Settle an Order's Transaction from the checkout redirect.
+     *
+     * Gracefully handles the case where the webhook already settled it.
+     */
+    private function settleOrderTransaction(array $metadata, object $session): void
+    {
+        $transactionId = $metadata['transaction_id'] ?? null;
+
+        if (! $transactionId) {
+            return;
+        }
+
+        $transaction = Transaction::find($transactionId);
+
+        if (! $transaction) {
+            Log::warning('Checkout success: Transaction not found for order', [
+                'transaction_id' => $transactionId,
+            ]);
+
+            return;
+        }
+
+        $paymentIntentId = $session->payment_intent ?? null;
+
+        try {
+            Finance::settle($transaction, $paymentIntentId);
+        } catch (\RuntimeException $e) {
+            // Already settled by webhook — not an error
+            Log::info('Checkout success: Transaction already settled', [
+                'transaction_id' => $transaction->id,
+            ]);
+        }
+    }
+
+    /**
+     * Redirect after successful Order checkout, based on the Order's primary product type.
+     */
+    private function getOrderRedirect(array $metadata)
+    {
+        $orderId = $metadata['order_id'] ?? null;
+
+        if ($orderId) {
+            $order = \CorvMC\Finance\Models\Order::find($orderId);
+
+            if ($order) {
+                $primaryType = $order->lineItems()
+                    ->where('amount', '>=', 0)
+                    ->value('product_type');
+
+                return match ($primaryType) {
+                    'rehearsal_time' => redirect()->route('filament.member.resources.reservations.index'),
+                    'ticket' => redirect()->route('filament.member.resources.events.index'),
+                    default => redirect()->route('filament.member.pages.profile'),
+                };
+            }
+        }
+
+        return redirect()->route('filament.member.pages.profile');
+    }
+
 }

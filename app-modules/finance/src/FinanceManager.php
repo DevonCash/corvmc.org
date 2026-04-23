@@ -506,6 +506,51 @@ class FinanceManager
         });
     }
 
-    // Finance::settle() — Epic 6
+    // =========================================================================
+    // Settlement
+    // =========================================================================
+
+    /**
+     * Settle a Transaction: transition Pending → Cleared.
+     *
+     * Runs inside a DB transaction. On success the Transaction is Cleared,
+     * `cleared_at` is set, and a TransactionCleared event is fired.
+     * The listener on that event checks whether the parent Order should
+     * transition to Completed.
+     *
+     * @param  Transaction  $transaction  A Pending Transaction to settle.
+     * @param  string|null  $paymentIntentId  Optional Stripe payment intent ID to store in metadata.
+     * @return Transaction  The fresh Transaction.
+     *
+     * @throws \RuntimeException  If the Transaction is not in Pending state.
+     */
+    public function settle(Transaction $transaction, ?string $paymentIntentId = null): Transaction
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($transaction, $paymentIntentId) {
+            $transaction = Transaction::lockForUpdate()->findOrFail($transaction->id);
+
+            if (! ($transaction->status instanceof \CorvMC\Finance\States\TransactionState\Pending)) {
+                throw new \RuntimeException(
+                    "Cannot settle Transaction [{$transaction->id}]: status is [{$transaction->status->getLabel()}], expected Pending."
+                );
+            }
+
+            // Store payment intent ID if provided (Stripe settlement)
+            if ($paymentIntentId !== null) {
+                $metadata = $transaction->metadata ?? [];
+                $metadata['payment_intent_id'] = $paymentIntentId;
+                $transaction->update(['metadata' => $metadata]);
+            }
+
+            $transaction->cleared_at = now();
+            $transaction->save();
+            $transaction->status->transitionTo(\CorvMC\Finance\States\TransactionState\Cleared::class);
+
+            \CorvMC\Finance\Events\TransactionCleared::dispatch($transaction);
+
+            return $transaction->fresh();
+        });
+    }
+
     // Finance::refund() — Epic 7
 }

@@ -2,6 +2,9 @@
 
 namespace CorvMC\Finance\Providers;
 
+use CorvMC\Finance\Events\TransactionCleared;
+use CorvMC\Finance\Listeners\CheckOrderSettlement;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class FinanceServiceProvider extends ServiceProvider
@@ -27,5 +30,6 @@ class FinanceServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Event::listen(TransactionCleared::class, CheckOrderSettlement::class);
     }
 }
