@@ -586,5 +586,38 @@ class FinanceManager
         });
     }
 
+    // =========================================================================
+    // Cancellation
+    // =========================================================================
+
+    /**
+     * Cancel an Order: transition Pending → Cancelled.
+     *
+     * The Cancelled state hooks cancel Pending Transactions and reverse
+     * credit deductions (service was not delivered). An OrderCancelled
+     * event is fired for cross-module cleanup (e.g. ticket cancellation).
+     *
+     * @param  Order  $order  A Pending Order to cancel.
+     * @return Order  The fresh Order.
+     *
+     * @throws \RuntimeException  If the Order is not in Pending state.
+     */
+    public function cancel(Order $order): Order
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+            $order = Order::lockForUpdate()->findOrFail($order->id);
+
+            if (! ($order->status instanceof \CorvMC\Finance\States\OrderState\Pending)) {
+                throw new \RuntimeException(
+                    "Cannot cancel Order [{$order->id}]: status is [{$order->status->getLabel()}], expected Pending."
+                );
+            }
+
+            $order->status->transitionTo(\CorvMC\Finance\States\OrderState\Cancelled::class);
+
+            return $order->fresh(['lineItems', 'transactions']);
+        });
+    }
+
     // Finance::refund() — Epic 7
 }
