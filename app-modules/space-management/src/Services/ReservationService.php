@@ -65,8 +65,11 @@ class ReservationService
             includeClosures: true
         );
 
-        for ($hour = $startHour; $hour <= $endHour - $durationHours; $hour++) {
-            $slotStart = $date->copy()->setTime($hour, 0);
+        $intervalMinutes = 30;
+        $totalSlots = (($endHour - $durationHours) - $startHour) * (60 / $intervalMinutes);
+
+        for ($i = 0; $i <= $totalSlots; $i++) {
+            $slotStart = $date->copy()->setTime($startHour, 0)->addMinutes($i * $intervalMinutes);
             $slotEnd = $slotStart->copy()->addHours($durationHours);
             $slotPeriod = Period::make($slotStart, $slotEnd, Precision::MINUTE());
 
