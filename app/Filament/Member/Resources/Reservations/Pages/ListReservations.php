@@ -7,13 +7,18 @@ use App\Filament\Member\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Member\Resources\Reservations\Widgets\RecurringSeriesTableWidget;
 use App\Models\User;
 use Carbon\Carbon;
+use CorvMC\Finance\Facades\Finance;
+use CorvMC\Finance\Models\Order;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
+use CorvMC\SpaceManagement\States\ReservationState\Scheduled;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 
 class ListReservations extends ListRecords
 {
@@ -60,35 +65,118 @@ class ListReservations extends ListRecords
             ->icon('tabler-calendar-plus')
             ->modalWidth('lg')
             ->steps(ReservationForm::getSteps())
-            ->action(function (array $data) {
-                $user = User::find($data['user_id']);
+            ->modalSubmitActionLabel('Pay Online')
+            ->modalSubmitAction(fn (Action $action) => $action
+                ->icon('tabler-credit-card')
+                ->color('success')
+            )
+            ->extraModalFooterActions([
+                Action::make('pay_cash')
+                    ->label('Pay with Cash')
+                    ->icon('tabler-cash')
+                    ->color('warning')
+                    ->action(fn (array $data) => $this->createReservationWithPayment($data, 'cash')),
+            ])
+            ->action(fn (array $data) => $this->createReservationWithPayment($data, 'stripe'));
+    }
 
-                // Parse datetime strings to Carbon instances
-                $reservedAt = $data['reserved_at'] instanceof Carbon
-                    ? $data['reserved_at']
-                    : Carbon::parse($data['reserved_at']);
-                $reservedUntil = $data['reserved_until'] instanceof Carbon
-                    ? $data['reserved_until']
-                    : Carbon::parse($data['reserved_until']);
+    private function createReservationWithPayment(array $data, string $paymentMethod): void
+    {
+        $user = User::find($data['user_id']);
 
-                // Create reservation using Eloquent
-                $reservation = RehearsalReservation::create([
-                    'reservable_type' => User::class,
-                    'reservable_id' => $user->id,
-                    'reserved_at' => $reservedAt,
-                    'reserved_until' => $reservedUntil,
-                    'status' => $data['status'],
-                    'notes' => $data['notes'] ?? null,
-                    'is_recurring' => $data['is_recurring'] ?? false,
-                    'hours_used' => $reservedAt->diffInMinutes($reservedUntil) / 60,
-                ]);
+        $reservedAt = $data['reserved_at'] instanceof Carbon
+            ? $data['reserved_at']
+            : Carbon::parse($data['reserved_at']);
+        $reservedUntil = $data['reserved_until'] instanceof Carbon
+            ? $data['reserved_until']
+            : Carbon::parse($data['reserved_until']);
+
+        // Create reservation as Scheduled
+        $reservation = RehearsalReservation::create([
+            'reservable_type' => User::class,
+            'reservable_id' => $user->id,
+            'reserved_at' => $reservedAt,
+            'reserved_until' => $reservedUntil,
+            'status' => Scheduled::class,
+            'notes' => $data['notes'] ?? null,
+            'is_recurring' => $data['is_recurring'] ?? false,
+            'hours_used' => $reservedAt->diffInMinutes($reservedUntil) / 60,
+        ]);
+
+        // Check if within confirmation window
+        if ($reservedAt->gt(now()->addWeek())) {
+            Notification::make()
+                ->title('Reservation Scheduled')
+                ->body('We\'ll send you a confirmation reminder before your reservation.')
+                ->success()
+                ->send();
+
+            return;
+        }
+
+        try {
+            // Price and create Order
+            $lineItems = Finance::price([$reservation], $user);
+            $totalCents = (int) $lineItems->sum('amount');
+
+            $order = Order::create([
+                'user_id' => $user->id,
+                'total_amount' => 0,
+            ]);
+
+            foreach ($lineItems as $lineItem) {
+                $lineItem->order_id = $order->id;
+                $lineItem->save();
+            }
+
+            $order->update(['total_amount' => $totalCents]);
+
+            if ($totalCents <= 0) {
+                // Fully discounted
+                Finance::commit($order->fresh(), []);
+                $reservation->status->transitionTo(Confirmed::class);
 
                 Notification::make()
-                    ->title('Reservation Created')
-                    ->body('Your reservation has been created successfully.')
+                    ->title('Reservation Confirmed')
+                    ->body('Your free hours cover this reservation — no payment needed.')
                     ->success()
                     ->send();
-            });
+
+                return;
+            }
+
+            // Commit with chosen payment rail
+            $committed = Finance::commit($order->fresh(), [$paymentMethod => $totalCents]);
+            $reservation->status->transitionTo(Confirmed::class);
+
+            if ($paymentMethod === 'stripe') {
+                $checkoutUrl = $committed->checkoutUrl();
+                if ($checkoutUrl) {
+                    $this->redirect($checkoutUrl);
+
+                    return;
+                }
+            }
+
+            Notification::make()
+                ->title('Reservation Confirmed')
+                ->body($paymentMethod === 'cash'
+                    ? 'Please bring ' . $order->formattedTotal() . ' in cash to the space.'
+                    : 'Your reservation has been confirmed.')
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            Log::error('Failed to create order for reservation', [
+                'reservation_id' => $reservation->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            Notification::make()
+                ->title('Payment Error')
+                ->body('Your reservation was created but we couldn\'t set up payment: ' . $e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 
     protected function getHeaderActions(): array
