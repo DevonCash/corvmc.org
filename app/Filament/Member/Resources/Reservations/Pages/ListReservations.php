@@ -111,7 +111,7 @@ class ListReservations extends ListRecords
 
         // Create reservation as Scheduled
         $reservation = RehearsalReservation::create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $user->id,
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,

@@ -37,7 +37,7 @@ class CreateReservation extends CreateRecord
         $endTime = Carbon::parse($data['reserved_until']);
 
         return RehearsalReservation::create([
-            'reservable_type' => User::class,
+            'reservable_type' => 'user',
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
