@@ -19,10 +19,10 @@ class OrderSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = User::all();
+        $users = User::whereHas('profile')->get();
 
         if ($users->isEmpty()) {
-            $this->command->warn('No users found. Run MemberProfileSeeder first.');
+            $this->command->warn('No users with member profiles found. Run MemberProfileSeeder first.');
             return;
         }
 

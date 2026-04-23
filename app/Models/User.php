@@ -220,7 +220,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
     public function getFilamentAvatarUrl(): ?string
     {
         // Use the profile's media library avatar with thumbnail conversion
-        return $this->profile->getFirstMediaUrl('avatar', 'thumb');
+        return $this->profile?->getFirstMediaUrl('avatar', 'thumb');
     }
 
     /**
