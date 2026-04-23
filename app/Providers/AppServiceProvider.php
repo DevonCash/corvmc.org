@@ -106,7 +106,8 @@ class AppServiceProvider extends ServiceProvider
 
         // SpaceManagement → Finance integration (reservation pricing/charges)
         Event::listen(ReservationCreated::class, HandleChargeableCreated::class);
-        Event::listen(ReservationCancelled::class, HandleChargeableCancelled::class);
+        // HandleChargeableCancelled replaced by CancelOrderOnReservationCancelled
+        // (registered in FinanceServiceProvider)
         Event::listen(ReservationUpdated::class, HandleChargeableUpdated::class);
         Event::listen(ReservationConfirmed::class, HandleChargeableConfirmed::class);
         
