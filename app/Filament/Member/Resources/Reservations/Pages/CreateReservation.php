@@ -24,26 +24,10 @@ class CreateReservation extends CreateRecord
      */
     public ?string $paymentMethod = null;
 
-    public function payWithStripe(): void
+    public function submitWithPaymentMethod(string $method): void
     {
-        $this->paymentMethod = 'stripe';
+        $this->paymentMethod = $method;
         $this->create();
-    }
-
-    public function payWithCash(): void
-    {
-        $this->paymentMethod = 'cash';
-        $this->create();
-    }
-
-    public function hasFormWrapper(): bool
-    {
-        return false;
-    }
-
-    protected function getFormActions(): array
-    {
-        return [];
     }
 
     protected function handleRecordCreation(array $data): Reservation
