@@ -41,6 +41,11 @@ class CreateReservation extends CreateRecord
         return false;
     }
 
+    protected function getFormActions(): array
+    {
+        return [];
+    }
+
     protected function handleRecordCreation(array $data): Reservation
     {
         $user = auth()->user();
