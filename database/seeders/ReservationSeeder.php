@@ -350,7 +350,7 @@ class ReservationSeeder extends Seeder
             }
         }
 
-        Charge::create([
+        $chargeData = [
             'user_id' => $user->id,
             'chargeable_type' => $reservation->getMorphClass(),
             'chargeable_id' => $reservation->id,
@@ -360,7 +360,17 @@ class ReservationSeeder extends Seeder
             'status' => $status,
             'payment_method' => $paymentMethod,
             'paid_at' => $paidAt,
-        ]);
+        ];
+
+        // Populate fake Stripe IDs for stripe-paid charges so the backfill
+        // command can exercise its metadata-copying path.
+        if ($paymentMethod === 'stripe') {
+            $fakeId = $reservation->id . '_' . substr(md5(uniqid()), 0, 8);
+            $chargeData['stripe_session_id'] = 'cs_seed_' . $fakeId;
+            $chargeData['stripe_payment_intent_id'] = 'pi_seed_' . $fakeId;
+        }
+
+        Charge::create($chargeData);
 
         // Update reservation's free_hours_used
         if ($freeHoursUsed > 0) {

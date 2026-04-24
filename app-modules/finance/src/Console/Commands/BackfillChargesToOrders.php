@@ -88,8 +88,8 @@ class BackfillChargesToOrders extends Command
 
     private function backfillCharge(Charge $charge, array &$stats): void
     {
-        $grossCents = $charge->amount->getMinorAmount()->toInt();
-        $netCents = $charge->net_amount->getMinorAmount()->toInt();
+        $grossCents = $charge->amount->getMinorAmount();
+        $netCents = $charge->net_amount->getMinorAmount();
         $productType = $this->resolveProductType($charge->chargeable_type);
 
         // Determine Order status
