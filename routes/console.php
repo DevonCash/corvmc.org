@@ -14,7 +14,7 @@ Artisan::command('inspire', function () {
 Schedule::command('reservations:daily-digest')->dailyAt('20:00');
 
 // Schedule confirmation reminders to be sent daily at 9 AM
-Schedule::call(fn() => NotificationService::sendReservationReminders())->dailyAt('09:00');
+Schedule::call(fn() => NotificationService::sendConfirmationReminders())->dailyAt('09:00');
 
 // Schedule reservation reminders to be sent daily at 10 AM
 Schedule::call(fn() => NotificationService::sendReservationReminders())->dailyAt('10:00');
