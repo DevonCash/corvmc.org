@@ -35,3 +35,9 @@ Schedule::call(function () {
 
 // Expire credits daily
 Schedule::command('credits:expire')->dailyAt('01:00');
+
+// Sweep stale Stripe transactions (expired/abandoned checkouts) every hour
+Schedule::command('finance:sweep-stale')->hourly();
+
+// Nightly reconciliation: verify Stripe settlements + archive old webhook events
+Schedule::command('finance:reconcile')->dailyAt('03:00');

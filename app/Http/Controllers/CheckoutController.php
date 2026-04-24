@@ -148,11 +148,20 @@ class CheckoutController extends Controller
 
     /**
      * Handle cancelled checkout for any type.
+     *
+     * For order checkouts, immediately transitions the Stripe Transaction
+     * to Failed so the Order stays Pending for staff/retry without waiting
+     * for the 24h session expiry webhook.
      */
     public function cancel(Request $request)
     {
         $userId = $request->get('user_id');
         $checkoutType = $request->get('type', 'checkout');
+
+        // Fail the Stripe Transaction immediately for order checkouts
+        if ($checkoutType === 'order') {
+            $this->failOrderTransaction($request);
+        }
 
         $this->showCancelNotification($checkoutType);
 
@@ -170,6 +179,44 @@ class CheckoutController extends Controller
         }
 
         return redirect(filament()->getUrl());
+    }
+
+    /**
+     * Fail the Stripe Transaction when the customer cancels checkout.
+     *
+     * Verifies the authenticated user owns the Transaction before transitioning.
+     */
+    private function failOrderTransaction(Request $request): void
+    {
+        $transactionId = $request->get('transaction_id');
+
+        if (! $transactionId) {
+            return;
+        }
+
+        $transaction = Transaction::find($transactionId);
+
+        if (! $transaction) {
+            return;
+        }
+
+        // Security: only the owning user can fail their own Transaction
+        if ($transaction->user_id !== auth()->id()) {
+            Log::warning('Checkout cancel: user mismatch on transaction', [
+                'transaction_id' => $transactionId,
+                'transaction_user' => $transaction->user_id,
+                'authenticated_user' => auth()->id(),
+            ]);
+
+            return;
+        }
+
+        Finance::fail($transaction);
+
+        Log::info('Checkout cancel: Marked transaction as failed', [
+            'transaction_id' => $transaction->id,
+            'order_id' => $transaction->order_id,
+        ]);
     }
 
     /**

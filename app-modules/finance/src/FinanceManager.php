@@ -536,7 +536,7 @@ class FinanceManager
                         1,
                         [
                             'success_url' => route('checkout.success') . '?user_id=' . $order->user_id . '&session_id={CHECKOUT_SESSION_ID}',
-                            'cancel_url' => route('checkout.cancel') . '?user_id=' . $order->user_id . '&type=order',
+                            'cancel_url' => route('checkout.cancel') . '?user_id=' . $order->user_id . '&type=order&transaction_id=' . $transaction->id,
                             'metadata' => [
                                 'type' => 'order',
                                 'order_id' => $order->id,
@@ -608,6 +608,44 @@ class FinanceManager
             $transaction->status->transitionTo(\CorvMC\Finance\States\TransactionState\Cleared::class);
 
             \CorvMC\Finance\Events\TransactionCleared::dispatch($transaction);
+
+            return $transaction->fresh();
+        });
+    }
+
+    // =========================================================================
+    // Failure
+    // =========================================================================
+
+    /**
+     * Fail a Transaction: transition Pending → Failed.
+     *
+     * Runs inside a DB transaction with a row lock. Idempotent — silently
+     * returns the Transaction unchanged if it is already in a terminal state.
+     *
+     * @param  Transaction  $transaction  A Pending Transaction to fail.
+     * @return Transaction  The fresh Transaction.
+     *
+     * @throws \RuntimeException  If the Transaction is in a non-terminal, non-Pending state that cannot transition to Failed.
+     */
+    public function fail(Transaction $transaction): Transaction
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($transaction) {
+            $transaction = Transaction::lockForUpdate()->findOrFail($transaction->id);
+
+            // Already terminal — nothing to do
+            if ($transaction->isTerminal()) {
+                return $transaction;
+            }
+
+            if (! ($transaction->status instanceof \CorvMC\Finance\States\TransactionState\Pending)) {
+                throw new \RuntimeException(
+                    "Cannot fail Transaction [{$transaction->id}]: status is [{$transaction->status->getLabel()}], expected Pending."
+                );
+            }
+
+            $transaction->status->transitionTo(\CorvMC\Finance\States\TransactionState\Failed::class);
+            $transaction->update(['failed_at' => now()]);
 
             return $transaction->fresh();
         });
@@ -834,7 +872,7 @@ class FinanceManager
                 'order_id' => $order->id,
             ],
             'success_url' => route('checkout.success') . '?user_id=' . $user->id . '&session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('checkout.cancel') . '?type=order',
+            'cancel_url' => route('checkout.cancel') . '?user_id=' . $user->id . '&type=order&transaction_id=' . $newTxn->id,
         ]);
 
         $newTxn->update([
@@ -846,5 +884,210 @@ class FinanceManager
         ]);
 
         return $checkout->url;
+    }
+
+    // =========================================================================
+    // Sweep & Reconciliation
+    // =========================================================================
+
+    /**
+     * Sweep stale pending Stripe Transactions by checking their Checkout Session status.
+     *
+     * For each Pending Stripe payment Transaction older than $hours, retrieves
+     * the Checkout Session from Stripe and either settles (paid) or fails (expired/abandoned).
+     *
+     * @param  int  $hours  Age threshold in hours (default 25, just past Stripe's 24h expiry).
+     * @return array{settled: int, failed: int, errors: array<array{transaction_id: int, error: string}>}
+     */
+    public function sweepStaleTransactions(int $hours = 25): array
+    {
+        $cutoff = now()->subHours($hours);
+
+        $staleTransactions = Transaction::query()
+            ->where('currency', 'stripe')
+            ->where('type', 'payment')
+            ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
+            ->where('created_at', '<', $cutoff)
+            ->get();
+
+        $settled = 0;
+        $failed = 0;
+        $errors = [];
+
+        foreach ($staleTransactions as $transaction) {
+            $sessionId = $transaction->metadata['session_id'] ?? null;
+
+            if (! $sessionId) {
+                $errors[] = [
+                    'transaction_id' => $transaction->id,
+                    'error' => 'No session_id in metadata',
+                ];
+
+                continue;
+            }
+
+            try {
+                $session = \Laravel\Cashier\Cashier::stripe()->checkout->sessions->retrieve($sessionId);
+            } catch (\Exception $e) {
+                $errors[] = [
+                    'transaction_id' => $transaction->id,
+                    'error' => $e->getMessage(),
+                ];
+
+                continue;
+            }
+
+            $paymentStatus = $session->payment_status ?? 'unpaid';
+            $sessionStatus = $session->status ?? 'expired';
+
+            if ($paymentStatus === 'paid' && $sessionStatus === 'complete') {
+                $paymentIntentId = $session->payment_intent ?? null;
+
+                try {
+                    $this->settle($transaction, $paymentIntentId);
+                    $settled++;
+                } catch (\RuntimeException $e) {
+                    // Already settled between our query and now
+                    $settled++;
+                }
+            } else {
+                $this->fail($transaction);
+                $failed++;
+            }
+        }
+
+        return compact('settled', 'failed', 'errors');
+    }
+
+    /**
+     * Reconcile cleared Stripe Transactions against Stripe's payment intents.
+     *
+     * Compares local amount and status against the Stripe API for each Cleared
+     * Stripe payment Transaction within the lookback window. Returns mismatches
+     * for staff review. Does NOT make automatic corrections.
+     *
+     * @param  int  $days  How many days back to check (default 7).
+     * @return array{matched: int, mismatches: array<array{transaction_id: int, order_id: int, issue: string}>, errors: int}
+     */
+    public function reconcileTransactions(int $days = 7): array
+    {
+        $since = now()->subDays($days);
+
+        $transactions = Transaction::query()
+            ->where('currency', 'stripe')
+            ->where('type', 'payment')
+            ->whereState('status', \CorvMC\Finance\States\TransactionState\Cleared::class)
+            ->where('cleared_at', '>=', $since)
+            ->whereNotNull('cleared_at')
+            ->get();
+
+        $matched = 0;
+        $mismatches = [];
+        $errors = 0;
+
+        foreach ($transactions as $transaction) {
+            $paymentIntentId = $transaction->metadata['payment_intent_id'] ?? null;
+
+            if (! $paymentIntentId) {
+                $mismatches[] = [
+                    'transaction_id' => $transaction->id,
+                    'order_id' => $transaction->order_id,
+                    'issue' => 'No payment_intent_id in metadata',
+                ];
+
+                continue;
+            }
+
+            try {
+                $paymentIntent = \Laravel\Cashier\Cashier::stripe()->paymentIntents->retrieve($paymentIntentId);
+            } catch (\Exception $e) {
+                $errors++;
+
+                continue;
+            }
+
+            $stripeAmount = $paymentIntent->amount_received ?? 0;
+            $stripeStatus = $paymentIntent->status ?? 'unknown';
+
+            if ((int) $stripeAmount !== (int) $transaction->amount) {
+                $mismatches[] = [
+                    'transaction_id' => $transaction->id,
+                    'order_id' => $transaction->order_id,
+                    'issue' => "Amount mismatch: local={$transaction->amount}, stripe={$stripeAmount}",
+                ];
+
+                continue;
+            }
+
+            if ($stripeStatus !== 'succeeded') {
+                $mismatches[] = [
+                    'transaction_id' => $transaction->id,
+                    'order_id' => $transaction->order_id,
+                    'issue' => "Stripe status is '{$stripeStatus}', expected 'succeeded'",
+                ];
+
+                continue;
+            }
+
+            $matched++;
+        }
+
+        return compact('matched', 'mismatches', 'errors');
+    }
+
+    /**
+     * Archive old Stripe webhook events to a JSONL file and delete them.
+     *
+     * Streams events older than $days to a timestamped JSONL file in
+     * storage/app/finance/archives/, then deletes only the archived rows.
+     *
+     * @param  int  $days  Age threshold in days (default 90).
+     * @return array{archived: int, file: string|null}
+     */
+    public function archiveWebhookEvents(int $days = 90): array
+    {
+        $cutoff = now()->subDays($days);
+
+        $count = \Illuminate\Support\Facades\DB::table('stripe_webhook_events')
+            ->where('created_at', '<', $cutoff)
+            ->count();
+
+        if ($count === 0) {
+            return ['archived' => 0, 'file' => null];
+        }
+
+        \Illuminate\Support\Facades\Storage::disk('local')->makeDirectory('finance/archives');
+
+        $filename = 'finance/archives/webhook-events-' . now()->format('Y-m-d-His') . '.jsonl';
+        $path = \Illuminate\Support\Facades\Storage::disk('local')->path($filename);
+
+        $written = 0;
+        $maxArchivedId = 0;
+        $handle = fopen($path, 'w');
+
+        try {
+            \Illuminate\Support\Facades\DB::table('stripe_webhook_events')
+                ->where('created_at', '<', $cutoff)
+                ->orderBy('id')
+                ->chunk(500, function ($events) use ($handle, &$written, &$maxArchivedId) {
+                    foreach ($events as $event) {
+                        fwrite($handle, json_encode((array) $event) . "\n");
+                        $maxArchivedId = max($maxArchivedId, $event->id);
+                        $written++;
+                    }
+                });
+        } finally {
+            fclose($handle);
+        }
+
+        if ($written === 0 || $maxArchivedId === 0) {
+            return ['archived' => 0, 'file' => null];
+        }
+
+        \Illuminate\Support\Facades\DB::table('stripe_webhook_events')
+            ->where('id', '<=', $maxArchivedId)
+            ->delete();
+
+        return ['archived' => $written, 'file' => $filename];
     }
 }

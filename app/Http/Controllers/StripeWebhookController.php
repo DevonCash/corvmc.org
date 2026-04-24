@@ -340,8 +340,7 @@ class StripeWebhookController extends CashierWebhookController
                 return $this->successMethod();
             }
 
-            $transaction->status->transitionTo(\CorvMC\Finance\States\TransactionState\Failed::class);
-            $transaction->update(['failed_at' => now()]);
+            Finance::fail($transaction);
 
             Log::info('Stripe webhook: Marked transaction as failed (session expired)', [
                 'transaction_id' => $transaction->id,

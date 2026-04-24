@@ -34,5 +34,12 @@ class FinanceServiceProvider extends ServiceProvider
     {
         Event::listen(TransactionCleared::class, CheckOrderSettlement::class);
         Event::listen(ReservationCancelled::class, CancelOrderOnReservationCancelled::class);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \CorvMC\Finance\Console\Commands\SweepStaleTransactions::class,
+                \CorvMC\Finance\Console\Commands\ReconcileTransactions::class,
+            ]);
+        }
     }
 }

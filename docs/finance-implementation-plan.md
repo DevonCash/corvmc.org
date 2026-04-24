@@ -77,8 +77,16 @@ Moving subscriptions out of Finance module. Deferred — will be replaced by rec
 ### Epic 13: Kiosk module deletion — OPTIONAL
 Independent cleanup. Can be done anytime.
 
-### Epic 16: No-show sweep and reconciliation
+### Epic 16: No-show sweep and reconciliation ✅
 Scheduled job to cancel stale Pending Transactions (orders where the checkout session expired but the webhook didn't fire). Nightly reconciliation to flag drift between Orders and Stripe.
+
+**Implemented:**
+- `CheckoutController::cancel()` now immediately fails the Stripe Transaction (was leaving it Pending).
+- `finance:sweep-stale` command — hourly, finds Pending Stripe Transactions >25h old, checks Stripe API, fails or settles accordingly. Supports `--dry-run`.
+- `finance:reconcile` command — nightly at 3 AM, compares Cleared Transactions against Stripe payment intents, flags mismatches for staff. Also archives webhook events older than 90 days to JSONL in `storage/app/finance/archives/`.
+- Cancel URL now includes `transaction_id` for immediate failure on customer-cancelled checkouts.
+- **No automatic credit reversal** on Transaction failure — credits stay deducted until staff cancels the Order via `Finance::cancel()`.
+- Both commands registered in `FinanceServiceProvider` and scheduled in `routes/console.php`.
 
 ---
 
