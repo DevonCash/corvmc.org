@@ -43,6 +43,8 @@ class Transaction extends Model
 {
     use HasFactory, HasStates;
 
+    protected $table = 'finance_transactions';
+
     /**
      * Attributes that are frozen after first write.
      */
