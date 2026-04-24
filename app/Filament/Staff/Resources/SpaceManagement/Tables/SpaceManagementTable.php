@@ -2,14 +2,11 @@
 
 namespace App\Filament\Staff\Resources\SpaceManagement\Tables;
 
-use App\Filament\Actions\Payment\ChargeableMarkCompedAction;
-use App\Filament\Actions\Payment\ChargeableMarkPaidAction;
 use App\Filament\Actions\Reservations\CancelReservationAction;
 use App\Filament\Actions\Reservations\ReservationConfirmAction;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
 use App\Filament\Shared\Actions\ViewAction;
-use CorvMC\Finance\Enums\ChargeStatus;
 use CorvMC\SpaceManagement\States\ReservationState\Cancelled;
 use CorvMC\SpaceManagement\States\ReservationState\Completed;
 use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
@@ -91,10 +88,6 @@ class SpaceManagementTable
                     ])
                     ->multiple(),
 
-                SelectFilter::make('charge.status')
-                    ->label('Payment Status')
-                    ->options(ChargeStatus::class)
-                    ->multiple(),
 
                 SelectFilter::make('type')
                     ->label('Reservation Type')
@@ -156,8 +149,6 @@ class SpaceManagementTable
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Close'),
 
-                ChargeableMarkCompedAction::make(),
-                ChargeableMarkPaidAction::make(),
                 ReservationConfirmAction::make(),
 
                 CancelReservationAction::make(),

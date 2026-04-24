@@ -4,7 +4,6 @@ namespace App\Filament\Staff\Resources\SpaceClosures\Widgets;
 
 use App\Filament\Actions\Reservations\CancelReservationAction;
 use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
-use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
 use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\Reservation;
@@ -33,7 +32,7 @@ class AffectedReservationsWidget extends BaseWidget
 
         $query = $closure
             ? Reservation::query()
-            ->with(['reservable', 'user', 'charge'])
+            ->with(['reservable', 'user'])
             ->where('status', '!=', ReservationStatus::Cancelled)
             ->where('reserved_until', '>', $closure->starts_at)
             ->where('reserved_at', '<', $closure->ends_at)

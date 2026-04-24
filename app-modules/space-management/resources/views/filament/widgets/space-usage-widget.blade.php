@@ -51,19 +51,27 @@
                                 <span class="font-medium">{{ $next->getDisplayTitle() }}</span>
                             </div>
 
-                            @if($isRehearsalReservation && $next->charge?->net_amount?->isPositive())
-                                <div class="flex items-center gap-2 text-sm">
-                                    <x-filament::icon icon="tabler-currency-dollar" class="w-4 h-4 text-gray-400" />
-                                    <span>{{ $next->charge?->net_amount?->formatTo('en_US') ?? 'N/A' }}</span>
-                                    @if($next->charge && $next->charge->getFreeHoursApplied() > 0)
-                                        <span class="text-success-600 dark:text-success-400">
-                                            ({{ number_format($next->charge->getFreeHoursApplied(), 1) }}h free)
-                                        </span>
-                                    @endif
-                                </div>
+                            @if($isRehearsalReservation)
+                                @php
+                                    $nextOrder = \CorvMC\Finance\Facades\Finance::findActiveOrder($next);
+                                @endphp
+                                @if($nextOrder && $nextOrder->total_amount > 0)
+                                    <div class="flex items-center gap-2 text-sm">
+                                        <x-filament::icon icon="tabler-currency-dollar" class="w-4 h-4 text-gray-400" />
+                                        <span>{{ $nextOrder->formattedTotal() }}</span>
+                                        @php
+                                            $freeHrs = $nextOrder->lineItems->filter->isDiscount()->sum(fn($li) => abs((float) $li->quantity));
+                                        @endphp
+                                        @if($freeHrs > 0)
+                                            <span class="text-success-600 dark:text-success-400">
+                                                ({{ number_format($freeHrs, 1) }}h free)
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
                             @endif
 
-                            @if($isRehearsalReservation && $next->needsPayment())
+                            @if($isRehearsalReservation && $next->requiresPayment())
                                 <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                     <x-filament::badge color="danger">
                                         Payment Required
@@ -115,7 +123,7 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        @if($item instanceof \CorvMC\SpaceManagement\Models\RehearsalReservation && $item->needsPayment())
+                                        @if($item instanceof \CorvMC\SpaceManagement\Models\RehearsalReservation && $item->requiresPayment())
                                             <x-filament::icon
                                                 icon="tabler-credit-card-off"
                                                 class="w-4 h-4 text-danger-500"

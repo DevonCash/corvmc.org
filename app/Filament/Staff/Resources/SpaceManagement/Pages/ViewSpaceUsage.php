@@ -2,18 +2,15 @@
 
 namespace App\Filament\Staff\Resources\SpaceManagement\Pages;
 
-use App\Filament\Staff\Resources\Charges\ChargeResource;
+use App\Filament\Staff\Resources\Orders\OrderResource;
 use App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource;
 use App\Filament\Staff\Resources\Users\UserResource;
 use App\Models\User;
-use CorvMC\Finance\Actions\Payments\MarkReservationAsComped;
-use CorvMC\Finance\Actions\Payments\MarkReservationAsPaid;
-use CorvMC\Finance\Enums\ChargeStatus;
-use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
-use CorvMC\SpaceManagement\Actions\Reservations\ConfirmReservation;
+use App\Filament\Actions\Reservations\CancelReservationAction;
+use App\Filament\Actions\Reservations\ReservationConfirmAction;
+use CorvMC\Finance\Facades\Finance;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Filament\Actions\Action;
-use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
@@ -23,7 +20,6 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
-use Filament\Support\Enums\IconSize;
 use Filament\Support\Enums\TextSize;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Activity;
@@ -47,19 +43,29 @@ class ViewSpaceUsage extends ViewRecord
         return fmod($hours, 1) === 0.0 ? intval($hours) . ' hrs' : number_format($hours, 1) . ' hrs';
     }
 
-    protected function formatCostBreakdown(RehearsalReservation $record): string
+    protected function formatCostBreakdown(?Model $record): ?string
     {
-        $parts = [];
-        if ($record->free_hours_used > 0) {
-            $parts[] = $this->formatHours($record->free_hours_used) . ' free';
-        }
-        $paidHours = $record->hours_used - $record->free_hours_used;
-        if ($paidHours > 0) {
-            $freeLabel = fmod($paidHours, 1) === 0.0 ? intval($paidHours) : number_format($paidHours, 1);
-            $parts[] = $freeLabel . ' hrs × $15';
+        $order = $record ? Finance::findActiveOrder($record) : null;
+
+        if (! $order) {
+            return null;
         }
 
-        return implode(' + ', $parts);
+        $order->load('lineItems');
+        $parts = [];
+
+        foreach ($order->lineItems as $lineItem) {
+            if ($lineItem->isDiscount()) {
+                $blocks = abs((float) $lineItem->quantity);
+                $parts[] = $this->formatHours($blocks) . ' free';
+            } else {
+                $qty = (float) $lineItem->quantity;
+                $unitPrice = '$' . number_format($lineItem->unit_price / 100, 2);
+                $parts[] = $this->formatHours($qty) . ' × ' . $unitPrice;
+            }
+        }
+
+        return implode(' + ', $parts) ?: null;
     }
 
     public function infolist(Schema $schema): Schema
@@ -87,11 +93,16 @@ class ViewSpaceUsage extends ViewRecord
                             ->hiddenLabel()
                             ->badge()
                             ->size(TextSize::Large),
-                        TextEntry::make('charge.status')
+                        TextEntry::make('order_status_badge')
                             ->hiddenLabel()
                             ->badge()
                             ->size(TextSize::Large)
-                            ->visible(fn (?Model $record): bool => $record instanceof RehearsalReservation && $record->charge),
+                            ->state(function (?Model $record): ?string {
+                                $order = $record ? Finance::findActiveOrder($record) : null;
+
+                                return $order?->status?->getLabel();
+                            })
+                            ->visible(fn (?Model $record): bool => $record instanceof RehearsalReservation && Finance::findActiveOrder($record) !== null),
                         TextEntry::make('first_reservation_badge')
                             ->hiddenLabel()
                             ->badge()
@@ -176,41 +187,67 @@ class ViewSpaceUsage extends ViewRecord
                             ->icon('tabler-receipt')
                             ->compact()
                             ->headerActions([
-                                Action::make('view_charge')
+                                Action::make('view_order')
                                     ->label('View')
                                     ->icon('tabler-external-link')
                                     ->iconButton()
                                     ->color('gray')
-                                    ->url(fn(?Model $record): ?string => $record?->charge
-                                        ? ChargeResource::getUrl('view', ['record' => $record->charge->getKey()])
-                                        : null)
+                                    ->url(function (?Model $record): ?string {
+                                        $order = $record ? Finance::findActiveOrder($record) : null;
+
+                                        return $order
+                                            ? OrderResource::getUrl('view', ['record' => $order->getKey()])
+                                            : null;
+                                    })
                                     ->openUrlInNewTab(),
                             ])
                             ->schema([
                                 Flex::make([
-                                    IconEntry::make('charge.status')
+                                    TextEntry::make('order_status')
                                         ->hiddenLabel()
-                                        ->size(IconSize::TwoExtraLarge)
+                                        ->badge()
+                                        ->size(TextSize::Large)
+                                        ->state(function (?Model $record): ?string {
+                                            $order = $record ? Finance::findActiveOrder($record) : null;
+
+                                            return $order?->status?->getLabel();
+                                        })
                                         ->grow(false),
                                     Grid::make(1)
                                         ->gap(0)
                                         ->schema([
-                                            TextEntry::make('charge.net_amount')
+                                            TextEntry::make('order_total')
                                                 ->hiddenLabel()
                                                 ->weight(FontWeight::Bold)
                                                 ->size(TextSize::Large)
-                                                ->state(fn(?Model $record): string => (string) $record?->charge?->net_amount),
+                                                ->state(function (?Model $record): string {
+                                                    $order = $record ? Finance::findActiveOrder($record) : null;
+
+                                                    return $order ? $order->formattedTotal() : 'Free';
+                                                }),
                                             TextEntry::make('cost_breakdown')
                                                 ->hiddenLabel()
                                                 ->color('gray')
-                                                ->state(fn(?Model $record): ?string => $record instanceof RehearsalReservation
-                                                    ? $this->formatCostBreakdown($record)
-                                                    : null),
-                                            TextEntry::make('charge.payment_method')
+                                                ->state(fn(?Model $record): ?string => $this->formatCostBreakdown($record)),
+                                            TextEntry::make('order_rail')
                                                 ->hiddenLabel()
                                                 ->icon('tabler-credit-card')
                                                 ->iconColor('gray')
-                                                ->visible(fn(?Model $record): bool => $record?->charge?->payment_method !== null),
+                                                ->state(function (?Model $record): ?string {
+                                                    $order = $record ? Finance::findActiveOrder($record) : null;
+                                                    if (! $order) {
+                                                        return null;
+                                                    }
+
+                                                    $rails = $order->transactions->where('type', 'payment')->pluck('currency')->unique();
+
+                                                    return $rails->map(fn($r) => ucfirst($r))->implode(', ') ?: null;
+                                                })
+                                                ->visible(function (?Model $record): bool {
+                                                    $order = $record ? Finance::findActiveOrder($record) : null;
+
+                                                    return $order?->transactions->where('type', 'payment')->isNotEmpty() ?? false;
+                                                }),
                                         ]),
                                 ])->verticallyAlignCenter(),
                             ])
@@ -276,17 +313,8 @@ class ViewSpaceUsage extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            ConfirmReservation::filamentAction()
-                ->record($this->record),
-
-            MarkReservationAsPaid::filamentAction()
-                ->record($this->record),
-
-            MarkReservationAsComped::filamentAction()
-                ->record($this->record),
-
-            CancelReservation::filamentAction()
-                ->record($this->record),
+            ReservationConfirmAction::make(),
+            CancelReservationAction::make(),
         ];
     }
 }

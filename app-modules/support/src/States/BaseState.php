@@ -12,22 +12,22 @@ class BaseState extends State implements HasDescription, HasColor, HasIcon, HasL
 {
     public function getDescription(): string
     {
-        return static::$description ?? '';
+        return method_exists($this, 'description') ? $this->description() : (static::$description ?? '');
     }
 
     public function getColor(): string
     {
-        return static::$color ?? 'primary';
+        return method_exists($this, 'color') ? $this->color() : (static::$color ?? 'primary');
     }
 
     public function getIcon(): string
     {
-        return static::$icon ?? '';
+        return method_exists($this, 'icon') ? $this->icon() : (static::$icon ?? '');
     }
 
     public function getLabel(): string
     {
-        return static::$label ?? '';
+        return method_exists($this, 'label') ? $this->label() : (static::$label ?? '');
     }
 
     public function isFinal(): bool

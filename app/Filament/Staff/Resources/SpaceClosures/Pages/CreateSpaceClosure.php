@@ -4,7 +4,6 @@ namespace App\Filament\Staff\Resources\SpaceClosures\Pages;
 
 use App\Filament\Staff\Resources\SpaceClosures\SpaceClosureResource;
 use App\Models\User;
-use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Notifications\Notification;

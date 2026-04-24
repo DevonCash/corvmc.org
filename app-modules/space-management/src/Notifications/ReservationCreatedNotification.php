@@ -45,8 +45,12 @@ class ReservationCreatedNotification extends Notification implements ShouldQueue
             ->line("Duration: {$this->reservation->duration} hours")
             ->line('Cost: '.$this->reservation->cost_display);
 
-        if ($this->reservation->charge && $this->reservation->charge->getFreeHoursApplied() > 0) {
-            $message->line("Free Hours Used: {$this->reservation->charge->getFreeHoursApplied()} hours");
+        $order = \CorvMC\Finance\Facades\Finance::findActiveOrder($this->reservation);
+        if ($order) {
+            $freeHours = $order->lineItems->filter->isDiscount()->sum(fn($li) => abs((float) $li->quantity));
+            if ($freeHours > 0) {
+                $message->line("Free Hours Used: {$freeHours} hours");
+            }
         }
 
         if ($this->reservation->notes) {

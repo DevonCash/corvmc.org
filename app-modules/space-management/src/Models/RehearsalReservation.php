@@ -149,11 +149,20 @@ class RehearsalReservation extends Reservation implements Recurrable
     /**
      * Check if this reservation requires payment.
      *
-     * Delegates to the charge system via HasCharges trait.
+     * A reservation needs payment when it's active and has a Pending Order
+     * with an outstanding balance.
      */
     public function requiresPayment(): bool
     {
-        return $this->status->isActive() && $this->needsPayment();
+        if (! $this->status->isActive()) {
+            return false;
+        }
+
+        $order = \CorvMC\Finance\Facades\Finance::findActiveOrder($this);
+
+        return $order
+            && $order->status instanceof \CorvMC\Finance\States\OrderState\Pending
+            && $order->outstandingAmount() > 0;
     }
 
     // STI Abstract Method Implementations

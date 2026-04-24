@@ -2,8 +2,7 @@
 
 namespace App\Filament\Actions\Reservations;
 
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
-use CorvMC\SpaceManagement\Services\ReservationService;
+use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 
@@ -15,17 +14,17 @@ class ReservationConfirmAction
             ->label('Confirm')
             ->color('success')
             ->icon('tabler-check')
-            ->authorize(function (RehearsalReservation $record) {
+            ->authorize(function (Reservation $record) {
                 return auth()->user()->can('confirm', $record);
             })
-            ->visible(function (RehearsalReservation $record) {
-                return $record->canConfirm();
+            ->visible(function (Reservation $record) {
+                return method_exists($record, 'canConfirm') && $record->canConfirm();
             })
             ->requiresConfirmation()
             ->modalHeading('Confirm Reservation')
-            ->modalDescription(fn(RehearsalReservation $record) => "Are you sure you want to confirm this reservation for {$record->reserved_at->format('M j, g:i A')}?")
+            ->modalDescription(fn(Reservation $record) => "Are you sure you want to confirm this reservation for {$record->reserved_at->format('M j, g:i A')}?")
             ->modalSubmitActionLabel('Confirm Reservation')
-            ->action(function (RehearsalReservation $record) {
+            ->action(function (Reservation $record) {
                 try {
                     $record->confirm();
 

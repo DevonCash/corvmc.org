@@ -58,12 +58,35 @@ class ReservationCard
                                 ->badge()
                                 ->color('gray')
                                 ->state(fn(?Model $record) => self::formatHours($record?->{$relationship}?->duration)),
-                            TextEntry::make("{$relationship}.charge.free_hours")
+                            TextEntry::make("{$relationship}.free_hours")
                                 ->hiddenLabel()
                                 ->badge()
                                 ->color('success')
-                                ->state(fn(?Model $record) => self::formatHours($record?->{$relationship}?->charge?->getFreeHoursApplied()) . ' free')
-                                ->visible(fn(?Model $record) => $record?->{$relationship}?->charge && $record?->{$relationship}?->charge->getFreeHoursApplied() > 0),
+                                ->state(function (?Model $record) use ($relationship): ?string {
+                                    $reservation = $record?->{$relationship};
+                                    if (! $reservation) {
+                                        return null;
+                                    }
+                                    $order = \CorvMC\Finance\Facades\Finance::findActiveOrder($reservation);
+                                    if (! $order) {
+                                        return null;
+                                    }
+                                    $freeHours = $order->lineItems->filter->isDiscount()->sum(fn($li) => abs((float) $li->quantity));
+
+                                    return self::formatHours($freeHours) . ' free';
+                                })
+                                ->visible(function (?Model $record) use ($relationship): bool {
+                                    $reservation = $record?->{$relationship};
+                                    if (! $reservation) {
+                                        return false;
+                                    }
+                                    $order = \CorvMC\Finance\Facades\Finance::findActiveOrder($reservation);
+                                    if (! $order) {
+                                        return false;
+                                    }
+
+                                    return $order->lineItems->filter->isDiscount()->isNotEmpty();
+                                }),
                         ]),
                     ]),
             ]);

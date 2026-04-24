@@ -45,19 +45,32 @@ class ReservationInfolist
                     ->columns(3)
                     ->schema([
                         Flex::make([
-                            TextEntry::make('charge.status')
+                            TextEntry::make('order_status')
                                 ->label('Total Cost')
                                 ->badge()
-                                ->beforeContent(fn(?Model $record): ?string => $record->charge?->net_amount->formatTo('en_US'))
-                                ->placeholder('No charge'),
+                                ->state(function (?Model $record): ?string {
+                                    $order = \CorvMC\Finance\Facades\Finance::findActiveOrder($record);
+
+                                    return $order?->status?->getLabel();
+                                })
+                                ->beforeContent(function (?Model $record): ?string {
+                                    $order = \CorvMC\Finance\Facades\Finance::findActiveOrder($record);
+
+                                    return $order ? $order->formattedTotal() : null;
+                                })
+                                ->placeholder('Free'),
                             TextEntry::make('breakdown')
                                 ->state(function (?Model $record): ?string {
                                     if (! $record instanceof RehearsalReservation) {
                                         return null;
                                     }
+                                    $order = \CorvMC\Finance\Facades\Finance::findActiveOrder($record);
+                                    if (! $order) {
+                                        return null;
+                                    }
+                                    $freeHours = $order->lineItems->filter->isDiscount()->sum(fn($li) => abs((float) $li->quantity));
 
-                                    $freeHours = $record->charge?->getFreeHoursApplied() ?? 0;
-                                    return '(' . $record->duration . ' hrs - ' . $freeHours . ' free hrs) × $15';
+                                    return '(' . $record->duration . ' hrs - ' . $freeHours . ' free hrs)';
                                 })
                         ])->columnSpanFull(),
                     ])

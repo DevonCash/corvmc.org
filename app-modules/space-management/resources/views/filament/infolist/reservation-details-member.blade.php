@@ -1,5 +1,8 @@
 @php
     /** @var \CorvMC\SpaceManagement\Models\RehearsalReservation $record */
+    $order = \CorvMC\Finance\Facades\Finance::findActiveOrder($record);
+    $discountItems = $order?->lineItems->filter->isDiscount() ?? collect();
+    $freeHours = $discountItems->sum(fn($li) => abs((float) $li->quantity));
 @endphp
 
 <div class="space-y-6">
@@ -59,23 +62,23 @@
     <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
         <h3 class="text-lg font-semibold mb-4">Cost</h3>
         <div class="space-y-3">
-            @if ($record->charge && $record->charge->getFreeHoursApplied() > 0)
+            @if ($freeHours > 0)
                 <div class="flex justify-between items-center">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Free Hours Used</span>
-                    <span class="font-medium">{{ $record->charge->getFreeHoursApplied() }} hours</span>
+                    <span class="font-medium">{{ $freeHours }} hours</span>
                 </div>
             @endif
 
             <div class="flex justify-between items-center text-lg font-semibold border-t border-gray-200 dark:border-gray-700 pt-3">
                 <span>Total Cost</span>
-                <span>{{ $record->charge?->net_amount?->formatTo('en_US') ?? 'Free' }}</span>
+                <span>{{ $order ? $order->formattedTotal() : 'Free' }}</span>
             </div>
 
-            @if ($record->charge?->net_amount?->isPositive())
+            @if ($order && $order->total_amount > 0)
                 <div class="flex justify-between items-center">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Payment Status</span>
-                    <x-filament::badge :color="$record->charge->status->getColor()">
-                        {{ $record->charge->status->getLabel() }}
+                    <x-filament::badge :color="$order->status->getColor()">
+                        {{ $order->status->getLabel() }}
                     </x-filament::badge>
                 </div>
             @endif

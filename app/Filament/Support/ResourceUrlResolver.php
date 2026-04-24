@@ -22,7 +22,7 @@ class ResourceUrlResolver
         ],
         'staff' => [
             \App\Models\User::class => \App\Filament\Staff\Resources\Users\UserResource::class,
-            \CorvMC\Finance\Models\Charge::class => \App\Filament\Staff\Resources\Charges\ChargeResource::class,
+            \CorvMC\Finance\Models\Order::class => \App\Filament\Staff\Resources\Orders\OrderResource::class,
             \CorvMC\Moderation\Models\Report::class => \App\Filament\Staff\Resources\Reports\ReportResource::class,
             \CorvMC\Moderation\Models\Revision::class => \App\Filament\Staff\Resources\Revisions\RevisionResource::class,
             \CorvMC\Sponsorship\Models\Sponsor::class => \App\Filament\Staff\Resources\Sponsors\SponsorResource::class,

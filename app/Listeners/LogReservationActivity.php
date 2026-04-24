@@ -11,7 +11,7 @@ class LogReservationActivity
 {
     public function handleCreated(ReservationCreated $event): void
     {
-        $reservation = $event->chargeable;
+        $reservation = $event->reservation;
         $date = $reservation->reserved_at->format('M j, Y');
         $timeRange = $reservation->reserved_at->format('g:i A') . ' - ' . $reservation->reserved_until->format('g:i A');
 
@@ -33,7 +33,7 @@ class LogReservationActivity
 
     public function handleConfirmed(ReservationConfirmed $event): void
     {
-        $reservation = $event->chargeable;
+        $reservation = $event->reservation;
         $causer = auth()->user();
 
         $description = $causer
@@ -71,7 +71,7 @@ class LogReservationActivity
 
     public function handleUpdated(ReservationUpdated $event): void
     {
-        $reservation = $event->chargeable;
+        $reservation = $event->reservation;
         $date = $reservation->reserved_at->format('M j, Y');
         $timeRange = $reservation->reserved_at->format('g:i A') . ' - ' . $reservation->reserved_until->format('g:i A');
 

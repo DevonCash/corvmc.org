@@ -21,7 +21,11 @@ class MemberReservationEditForm
                         ->label('Date')
                         ->required()
                         ->live()
-                        ->disabled(fn ($record) => $record->charge?->status?->isPaid() ?? false)
+                        ->disabled(function ($record) {
+                            $order = \CorvMC\Finance\Facades\Finance::findActiveOrder($record);
+
+                            return $order && $order->isSettled();
+                        })
                         ->columnSpan(2)
                         ->default(fn ($record) => $record?->reserved_at?->toDateString())
                         ->minDate(now()->toDateString()),

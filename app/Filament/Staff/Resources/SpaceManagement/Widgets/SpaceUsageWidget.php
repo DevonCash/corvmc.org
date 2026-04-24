@@ -47,8 +47,11 @@ class SpaceUsageWidget extends Widget
             'todaysCount' => $today->count(),
             'hoursToday' => $today->sum('duration'),
             'revenueToday' => $todayRehearsals
-                ->filter(fn ($r) => $r->isPaid())
-                ->sum(fn ($r) => $r->charge?->net_amount?->getMinorAmount()->toInt() ?? 0) / 100,
+                ->sum(function ($r) {
+                    $order = \CorvMC\Finance\Facades\Finance::findActiveOrder($r);
+
+                    return ($order && $order->isSettled()) ? $order->total_amount : 0;
+                }) / 100,
             'rehearsalCount' => $todayRehearsals->count(),
             'productionCount' => $todayProductions->count(),
         ];

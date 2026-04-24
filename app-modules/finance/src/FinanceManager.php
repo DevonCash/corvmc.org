@@ -35,6 +35,14 @@ class FinanceManager
      */
     protected array $productsByModel = [];
 
+    /**
+     * Request-scoped cache for findActiveOrder results.
+     * Keyed by "ModelClass:id".
+     *
+     * @var array<string, Order|null>
+     */
+    protected array $activeOrderCache = [];
+
     // =========================================================================
     // Registry
     // =========================================================================
@@ -102,21 +110,28 @@ class FinanceManager
             return null;
         }
 
+        $cacheKey = get_class($model) . ':' . $model->getKey();
+
+        if (array_key_exists($cacheKey, $this->activeOrderCache)) {
+            return $this->activeOrderCache[$cacheKey];
+        }
+
         // Resolve the product type from the registry if not provided
         if ($productType === null) {
             $modelClass = get_class($model);
             if (isset($this->productsByModel[$modelClass])) {
                 $productType = $this->productsByModel[$modelClass]::$type;
             } else {
-                return null;
+                return $this->activeOrderCache[$cacheKey] = null;
             }
         }
 
-        return Order::whereHas('lineItems', function ($query) use ($model, $productType) {
+        return $this->activeOrderCache[$cacheKey] = Order::whereHas('lineItems', function ($query) use ($model, $productType) {
             $query->where('product_type', $productType)
                 ->where('product_id', $model->getKey());
         })
             ->whereNotState('status', [Cancelled::class, Refunded::class])
+            ->with(['lineItems', 'transactions'])
             ->first();
     }
 

@@ -8,10 +8,6 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Event fired when a reservation is created.
- *
- * Listeners should:
- * - Create Charge record for pricing/payment tracking
- * - Deduct credits (unless deferred)
  */
 class ReservationCreated
 {
@@ -20,11 +16,11 @@ class ReservationCreated
     /**
      * Create a new event instance.
      *
-     * @param  Reservation  $chargeable  The created reservation (implements Chargeable)
+     * @param  Reservation  $reservation  The created reservation
      * @param  bool  $deferCredits  Whether credit deduction should be deferred
      */
     public function __construct(
-        public Reservation $chargeable,
+        public Reservation $reservation,
         public bool $deferCredits = false,
     ) {}
 }

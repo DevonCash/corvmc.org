@@ -2,7 +2,6 @@
 
 namespace App\Filament\Staff\Resources\SpaceManagement\Pages;
 
-use CorvMC\SpaceManagement\Actions\Reservations\CreateReservation;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Staff\Resources\RecurringReservations\RecurringReservationResource;
 use App\Filament\Staff\Resources\SpaceClosures\SpaceClosureResource;

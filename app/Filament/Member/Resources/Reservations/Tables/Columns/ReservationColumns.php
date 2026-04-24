@@ -2,7 +2,10 @@
 
 namespace App\Filament\Member\Resources\Reservations\Tables\Columns;
 
+use App\Filament\Staff\Resources\Orders\OrderResource;
 use App\Models\EventReservation;
+use CorvMC\Finance\Facades\Finance;
+use CorvMC\Finance\States\OrderState;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use Filament\Support\Enums\IconPosition;
@@ -95,23 +98,26 @@ class ReservationColumns
     {
         return TextColumn::make('cost_display')
             ->label('Cost')
-            ->url(fn(Reservation $record) => $record->charge ? route('filament.staff.resources.charges.view', $record->charge) : null)
-            ->state(function (Reservation $record): string {
-                $charge = $record->charge;
+            ->url(function (Reservation $record): ?string {
+                $order = Finance::findActiveOrder($record);
 
-                // No charge or zero amount = free
-                if (! $charge || ! $charge->net_amount->isPositive()) {
+                return $order ? OrderResource::getUrl('view', ['record' => $order]) : null;
+            })
+            ->state(function (Reservation $record): string {
+                $order = Finance::findActiveOrder($record);
+
+                if (! $order || $order->total_amount <= 0) {
                     return 'Free';
                 }
 
-                $amount = $charge->net_amount->formatTo('en_US', true);
+                $amount = $order->formattedTotal();
 
-                return match ($charge->status->value) {
-                    'pending' => "{$amount} due " . $record->reserved_at->format('n/j'),
-                    'paid' => "{$amount} paid " . ($charge->paid_at?->format('n/j') ?? ''),
-                    'comped' => 'Comped',
-                    'refunded' => "{$amount} refunded",
-                    'cancelled' => 'Charge Cancelled',
+                return match (true) {
+                    $order->status instanceof OrderState\Pending => "{$amount} due " . $record->reserved_at->format('n/j'),
+                    $order->status instanceof OrderState\Completed => "{$amount} paid " . ($order->settled_at?->format('n/j') ?? ''),
+                    $order->status instanceof OrderState\Comped => 'Comped',
+                    $order->status instanceof OrderState\Refunded => "{$amount} refunded",
+                    $order->status instanceof OrderState\Cancelled => 'Cancelled',
                     default => $amount,
                 };
             });

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Band\Resources;
 
-use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
+use App\Filament\Actions\Reservations\CancelReservationAction;
 use App\Filament\Band\Resources\BandReservationsResource\Pages;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
@@ -64,10 +64,10 @@ class BandReservationsResource extends Resource
                     ->schema(fn (Schema $infolist) => ReservationInfolist::configure($infolist))
                     ->modalHeading(fn (Reservation $record): string => "Reservation #{$record->id}")
                     ->modalFooterActions([
-                        CancelReservation::filamentAction(),
+                        CancelReservationAction::make(),
                     ]),
                 ActionGroup::make([
-                    CancelReservation::filamentAction(),
+                    CancelReservationAction::make(),
                 ]),
             ])
             ->emptyStateHeading('No reservations found')

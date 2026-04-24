@@ -6,7 +6,6 @@ use App\Filament\Staff\Resources\SpaceClosures\Schemas\SpaceClosureCreateWizard;
 use App\Filament\Staff\Resources\SpaceClosures\SpaceClosureResource;
 use App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource;
 use App\Models\User;
-use CorvMC\SpaceManagement\Actions\Reservations\CancelReservation;
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Models\SpaceClosure;

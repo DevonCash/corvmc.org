@@ -1,5 +1,6 @@
 @php
     /** @var \CorvMC\SpaceManagement\Models\Reservation $record */
+    $order = \CorvMC\Finance\Facades\Finance::findActiveOrder($record);
 @endphp
 
 <div class="space-y-6">
@@ -95,8 +96,8 @@
         <div>
             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
                 Cost & Payment
-                @if ($record->charge)
-                    <x-filament::icon :icon="$record->charge->status->getIcon()" :class="'size-4 text-' . $record->charge->status->getColor() . '-500'" />
+                @if ($order)
+                    <x-filament::icon :icon="$order->status->getIcon()" :class="'size-4 text-' . $order->status->getColor() . '-500'" />
                 @else
                     <x-filament::icon icon="tabler-currency-dollar" class="size-4 text-gray-500" />
                 @endif
@@ -104,34 +105,46 @@
             <dd class="mt-1 flex items-center gap-4">
                 <div>
                     <div class="text-lg font-semibold">
-                        @if (!$record->charge?->net_amount || $record->charge->net_amount->isZero())
+                        @if (!$order || $order->total_amount <= 0)
                             Free
                         @else
-                            {{ $record->charge->net_amount->formatTo('en_US') }}
+                            {{ $order->formattedTotal() }}
                         @endif
                     </div>
                     <div class="text-sm text-gray-600 dark:text-gray-400">
-                        @if ($record->charge && $record->charge->getFreeHoursApplied() > 0)
-                            {{ number_format($record->charge->getFreeHoursApplied(), 1) }} hrs free
+                        @if ($order)
+                            @php
+                                $discountItems = $order->lineItems->filter->isDiscount();
+                                $freeHours = $discountItems->sum(fn($li) => abs((float) $li->quantity));
+                            @endphp
+                            @if ($freeHours > 0)
+                                {{ number_format($freeHours, 1) }} hrs free
+                            @else
+                                {{ number_format($record->duration, 1) }} hours
+                            @endif
                         @else
                             {{ number_format($record->duration, 1) }} hours
                         @endif
                     </div>
                 </div>
-                @if ($record->charge?->net_amount?->isPositive())
+                @if ($order && $order->total_amount > 0)
                     <div class="flex items-center gap-3">
                         <div class="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
-                        <x-filament::badge :color="$record->charge->status->getColor()" size="lg">
-                            {{ $record->charge->status->getLabel() }}
+                        <x-filament::badge :color="$order->status->getColor()" size="lg">
+                            {{ $order->status->getLabel() }}
                         </x-filament::badge>
-                        @if ($record->charge->payment_method || $record->charge->paid_at)
+                        @php
+                            $paymentTxns = $order->transactions->where('type', 'payment');
+                            $rail = $paymentTxns->pluck('currency')->unique()->map(fn($r) => ucfirst($r))->implode(', ');
+                        @endphp
+                        @if ($rail || $order->settled_at)
                             <span class="text-sm text-gray-600 dark:text-gray-400">
-                                @if ($record->charge->payment_method)
-                                    {{ ucfirst($record->charge->payment_method) }}
+                                @if ($rail)
+                                    {{ $rail }}
                                 @endif
-                                @if ($record->charge->paid_at)
-                                    @if ($record->charge->payment_method) &middot; @endif
-                                    {{ $record->charge->paid_at->format('M j, Y') }}
+                                @if ($order->settled_at)
+                                    @if ($rail) &middot; @endif
+                                    {{ $order->settled_at->format('M j, Y') }}
                                 @endif
                             </span>
                         @endif
@@ -148,11 +161,11 @@
             </div>
         @endif
 
-        {{-- Payment Notes (if filled) --}}
-        @if (filled($record->charge?->notes))
+        {{-- Order Notes (if filled) --}}
+        @if (filled($order?->notes))
             <div class="col-span-2 @if(!filled($record->notes)) pt-2 border-t border-gray-200 dark:border-gray-700 @endif">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Payment Notes</dt>
-                <dd class="mt-1 text-base text-gray-900 dark:text-gray-100">{{ $record->charge->notes }}</dd>
+                <dd class="mt-1 text-base text-gray-900 dark:text-gray-100">{{ $order->notes }}</dd>
             </div>
         @endif
     </div>

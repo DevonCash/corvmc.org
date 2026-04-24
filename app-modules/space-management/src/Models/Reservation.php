@@ -69,7 +69,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
             'reserved_at' => 'datetime',
             'reserved_until' => 'datetime',
             'hours_used' => 'decimal:2', // @deprecated Use $this->duration from HasTimePeriod trait
-            'free_hours_used' => 'decimal:2', // @deprecated Use $this->charge?->getFreeHoursApplied()
+            'free_hours_used' => 'decimal:2', // @deprecated Use Order LineItem discounts via Finance::findActiveOrder()
             'is_recurring' => 'boolean',
             'recurrence_pattern' => 'array',
             'instance_date' => 'date',
@@ -282,7 +282,13 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
 
     public function getCostDisplayAttribute(): string
     {
-        return 'N/A';
+        $order = \CorvMC\Finance\Facades\Finance::findActiveOrder($this);
+
+        if (! $order || $order->total_amount <= 0) {
+            return 'Free';
+        }
+
+        return $order->formattedTotal();
     }
 
 
