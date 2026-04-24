@@ -43,6 +43,18 @@ class BandService
         ]);
     }
 
+    public function inviteMember(Band $band, User $user, string $role = 'member', ?string $position = null): BandMember
+    {
+        return BandMember::create([
+            'band_profile_id' => $band->id,
+            'user_id' => $user->id,
+            'role' => $role,
+            'position' => $position,
+            'status' => 'invited',
+            'invited_at' => now(),
+        ]);
+    }
+
     public function removeMember(Band $band, User $user): void
     {
         $band->members()->detach($user->id);
@@ -56,8 +68,10 @@ class BandService
     public function acceptInvitation($invitation): void
     {
         DB::transaction(function () use ($invitation) {
-            $this->addMember($invitation->band, $invitation->user);
-            $invitation->update(['status' => 'accepted']);
+            $invitation->update([
+                'status' => 'active',
+                'joined_at' => now(),
+            ]);
         });
     }
 

@@ -2,12 +2,12 @@
 
 namespace App\Filament\Member\Resources\Bands\RelationManagers;
 
-use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
-use CorvMC\Membership\Actions\Bands\AddBandMember;
-use CorvMC\Membership\Actions\Bands\CancelBandInvitation;
-use CorvMC\Membership\Actions\Bands\DeclineBandInvitation;
-use CorvMC\Membership\Actions\Bands\RemoveBandMember;
-use CorvMC\Membership\Actions\Bands\UpdateBandMember;
+use App\Filament\Actions\Bands\AcceptBandInvitationAction;
+use App\Filament\Actions\Bands\CancelBandInvitationAction;
+use App\Filament\Actions\Bands\DeclineBandInvitationAction;
+use App\Filament\Actions\Bands\RemoveBandMemberAction;
+use App\Filament\Actions\Bands\SendBandMemberInvitationAction;
+use App\Filament\Actions\Bands\UpdateBandMemberAction;
 use App\Models\User;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Enums\FontWeight;
@@ -61,15 +61,15 @@ class MembersRelationManager extends RelationManager
                     ->sortable(),
             ])
             ->headerActions([
-                AddBandMember::filamentAction()
+                SendBandMemberInvitationAction::make()
                     ->record($this->ownerRecord),
             ])
             ->recordActions([
-                AcceptBandInvitation::filamentAction(),
-                DeclineBandInvitation::filamentAction(),
-                UpdateBandMember::filamentAction(),
-                RemoveBandMember::filamentAction(),
-                CancelBandInvitation::filamentAction(),
+                AcceptBandInvitationAction::make(),
+                DeclineBandInvitationAction::make(),
+                UpdateBandMemberAction::make(),
+                RemoveBandMemberAction::make(),
+                CancelBandInvitationAction::make(),
             ])
             ->defaultSort('created_at', 'asc');
     }

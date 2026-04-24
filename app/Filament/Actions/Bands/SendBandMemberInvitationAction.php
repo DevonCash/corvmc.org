@@ -111,17 +111,12 @@ class SendBandMemberInvitationAction
                     return;
                 }
 
-                // Use service to add member
-                $service = app(BandService::class);
-
-                // Add member with invited status initially
-                // They'll need to accept the invitation to become active
-                $record->members()->attach($user->id, [
-                    'role' => $data['role'],
-                    'position' => $data['position'] ?? null,
-                    'status' => 'invited',
-                    'invited_at' => now(),
-                ]);
+                app(BandService::class)->inviteMember(
+                    $record,
+                    $user,
+                    $data['role'],
+                    $data['position'] ?? null,
+                );
 
                 // TODO: Send invitation notification to the user
 

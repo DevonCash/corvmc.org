@@ -2,14 +2,12 @@
 
 namespace App\Filament\Band\Resources;
 
-use App\Filament\Actions\Bands\AddBandMemberAction;
+use App\Filament\Actions\Bands\AcceptBandInvitationAction;
+use App\Filament\Actions\Bands\CancelBandInvitationAction;
+use App\Filament\Actions\Bands\DeclineBandInvitationAction;
+use App\Filament\Actions\Bands\RemoveBandMemberAction;
 use App\Filament\Actions\Bands\SendBandMemberInvitationAction;
-use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
-use CorvMC\Membership\Actions\Bands\AddBandMember;
-use CorvMC\Membership\Actions\Bands\CancelBandInvitation;
-use CorvMC\Membership\Actions\Bands\DeclineBandInvitation;
-use CorvMC\Membership\Actions\Bands\RemoveBandMember;
-use CorvMC\Membership\Actions\Bands\UpdateBandMember;
+use App\Filament\Actions\Bands\UpdateBandMemberAction;
 use App\Filament\Band\Resources\BandMembersResource\Pages;
 use CorvMC\Bands\Models\Band;
 use CorvMC\Bands\Models\BandMember;
@@ -80,7 +78,11 @@ class BandMembersResource extends Resource
                 SendBandMemberInvitationAction::make(),
             ])
             ->recordActions([
-
+                AcceptBandInvitationAction::make(),
+                DeclineBandInvitationAction::make(),
+                UpdateBandMemberAction::make(),
+                RemoveBandMemberAction::make(),
+                CancelBandInvitationAction::make(),
             ])
             ->defaultSort('created_at', 'asc');
     }

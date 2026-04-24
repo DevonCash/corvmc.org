@@ -2,7 +2,7 @@
 
 namespace App\Filament\Member\Resources\MemberProfiles\Tables;
 
-use App\Actions\Invitations\InviteUser;
+use App\Filament\Actions\Invitations\InviteUserAction;
 use App\Settings\MemberDirectorySettings;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -221,7 +221,7 @@ class MemberProfilesTable
                     ->successNotificationTitle('Member profile deleted successfully'),
             ])
             ->headerActions([
-                InviteUser::filamentAction(),
+                InviteUserAction::make(),
             ])
             ->paginated([10, 25, 50]);
     }

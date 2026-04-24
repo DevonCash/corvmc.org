@@ -1,21 +1,3 @@
 <?php
-
-namespace CorvMC\Membership\Actions\Bands;
-
-use CorvMC\Membership\Services\BandService;
-
-/**
- * @deprecated Use BandService::create() instead
- * This action is maintained for backward compatibility only.
- * New code should use the BandService directly.
- */
-class CreateBand
-{
-    /**
-     * @deprecated Use BandService::create() instead
-     */
-    public function handle(...$args)
-    {
-        return app(BandService::class)->create(...$args);
-    }
-}
+// DELETED — replaced by App\Filament\Actions\Bands\ action classes.
+// Run: git rm CreateBand.php

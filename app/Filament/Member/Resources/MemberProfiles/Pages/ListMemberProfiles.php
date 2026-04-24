@@ -2,7 +2,7 @@
 
 namespace App\Filament\Member\Resources\MemberProfiles\Pages;
 
-use App\Actions\Invitations\InviteUser;
+use App\Filament\Actions\Invitations\InviteUserAction;
 use App\Filament\Member\Resources\MemberProfiles\MemberProfileResource;
 use CorvMC\Membership\Models\MemberProfile;
 use App\Models\User;
@@ -59,7 +59,7 @@ class ListMemberProfiles extends Page
     protected function getHeaderActions(): array
     {
         return [
-            InviteUser::filamentAction(),
+            InviteUserAction::make(),
             EditAction::make()
                 ->label('Edit My Profile')
                 ->record(fn (): MemberProfile => Auth::user()->profile),

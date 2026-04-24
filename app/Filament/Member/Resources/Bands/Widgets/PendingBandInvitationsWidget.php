@@ -2,8 +2,8 @@
 
 namespace App\Filament\Member\Resources\Bands\Widgets;
 
-use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
-use CorvMC\Membership\Actions\Bands\DeclineBandInvitation;
+use App\Filament\Actions\Bands\AcceptBandInvitationAction;
+use App\Filament\Actions\Bands\DeclineBandInvitationAction;
 use CorvMC\Bands\Models\BandMember;
 use App\Models\User;
 use Filament\Tables;
@@ -51,24 +51,36 @@ class PendingBandInvitationsWidget extends BaseWidget
                     ->since(),
             ])
             ->recordActions([
-                AcceptBandInvitation::filamentAction(),
-                DeclineBandInvitation::filamentAction(),
+                AcceptBandInvitationAction::make(),
+                DeclineBandInvitationAction::make(),
             ])
             ->paginated(false);
     }
 
     protected function getTableQuery(): Builder
     {
+        $user = User::me();
+
+        if (! $user) {
+            return BandMember::query()->whereRaw('1=0');
+        }
+
         return BandMember::query()
-            ->where('user_id', User::me()->id)
+            ->where('user_id', $user->id)
             ->where('status', 'invited')
             ->with(['band', 'user']);
     }
 
     public static function canView(): bool
     {
+        $user = User::me();
+
+        if (! $user) {
+            return false;
+        }
+
         return BandMember::query()
-            ->where('user_id', User::me()->id)
+            ->where('user_id', $user->id)
             ->where('status', 'invited')
             ->exists();
     }

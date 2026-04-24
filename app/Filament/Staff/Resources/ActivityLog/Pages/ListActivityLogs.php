@@ -2,7 +2,7 @@
 
 namespace App\Filament\Staff\Resources\ActivityLog\Pages;
 
-use App\Actions\ActivityLogs\CleanupLogs;
+use App\Filament\Actions\ActivityLogs\CleanupLogsAction;
 use App\Filament\Staff\Resources\ActivityLog\ActivityLogResource;
 use App\Filament\Staff\Resources\ActivityLog\Widgets\ActivityStatsWidget;
 use Filament\Resources\Pages\ListRecords;
@@ -19,7 +19,7 @@ class ListActivityLogs extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CleanupLogs::filamentAction()
+            CleanupLogsAction::make()
                 ->authorize('delete'),
         ];
     }

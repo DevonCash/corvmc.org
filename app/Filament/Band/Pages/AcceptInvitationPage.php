@@ -6,8 +6,8 @@ use App\Models\User;
 use CorvMC\Bands\Http\Middleware\EnsureActiveBandMembership;
 use CorvMC\Bands\Models\Band;
 use CorvMC\Bands\Models\BandMember;
-use CorvMC\Membership\Actions\Bands\AcceptBandInvitation;
-use CorvMC\Membership\Actions\Bands\DeclineBandInvitation;
+use App\Filament\Actions\Bands\AcceptBandInvitationAction;
+use App\Filament\Actions\Bands\DeclineBandInvitationAction;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -90,7 +90,7 @@ class AcceptInvitationPage extends Page implements HasActions, HasSchemas
 
     public function acceptAction(): Action
     {
-        return AcceptBandInvitation::filamentAction()
+        return AcceptBandInvitationAction::make()
             ->name('accept')
             ->record($this->membership)
             ->after(function () {
@@ -100,7 +100,7 @@ class AcceptInvitationPage extends Page implements HasActions, HasSchemas
 
     public function declineAction(): Action
     {
-        return DeclineBandInvitation::filamentAction()
+        return DeclineBandInvitationAction::make()
             ->name('decline')
             ->record($this->membership)
             ->after(function () {

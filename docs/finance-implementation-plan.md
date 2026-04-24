@@ -133,23 +133,25 @@ Epic 1 (models)
   Epic 12 (subscription relocation) ── deferred
   Epic 13 (kiosk deletion) ── independent
   Epic 16 (reconciliation) ── post-deploy
-  Epic 18 (laravel-actions removal) ── cleanup
+  Epic 18 (laravel-actions removal) ── ✅ complete
 ```
 
-### Epic 18: Remove laravel-actions residuals
+### Epic 18: Remove laravel-actions residuals ✅
 
-**Problem:** The codebase still has ~14 calls to `::filamentAction()` across bands, invitations, member profiles, and activity logs. This static method came from the `lorisleiva/laravel-actions` package, which is no longer installed. These calls will fail at runtime when the relevant pages load.
+Replaced all `::filamentAction()` calls with Filament action classes using `::make()`. Domain logic stays in services (BandService, InvitationService, ActivityLogService); Filament action classes handle UI concerns only.
 
-**Pattern to follow:** The reservation actions already demonstrate the target pattern — a module service handles the domain logic, and a separate Filament action class in `App\Filament\Actions\` wraps it with `::make()`. For example, `CancelReservationAction::make()` delegates to the reservation model's state transition.
+**New action classes created in `App\Filament\Actions\`:**
 
-**Affected files and the actions they call:**
+- `Bands\AcceptBandInvitationAction` — accept a band invitation (BandMember record)
+- `Bands\DeclineBandInvitationAction` — decline a band invitation
+- `Bands\UpdateBandMemberAction` — edit role/position on an active member
+- `Bands\RemoveBandMemberAction` — remove a member (owner/admin only)
+- `Bands\CancelBandInvitationAction` — cancel a pending invitation (owner/admin only)
+- `Invitations\InviteUserAction` — invite a new member by email
+- `ActivityLogs\CleanupLogsAction` — purge old activity logs with configurable retention
 
-- `MyBandsWidget.php` → `CreateBand::filamentAction()`
-- `PendingBandInvitationsWidget.php` → `AcceptBandInvitation`, `DeclineBandInvitation`
-- `MembersRelationManager.php` → `AddBandMember`, `AcceptBandInvitation`, `DeclineBandInvitation`, `UpdateBandMember`, `RemoveBandMember`, `CancelBandInvitation`
-- `AcceptInvitationPage.php` → `AcceptBandInvitation`, `DeclineBandInvitation`
-- `ListMemberProfiles.php` → `InviteUser`
-- `MemberProfilesTable.php` → `InviteUser`
-- `ListActivityLogs.php` → `CleanupLogs`
+**Existing action classes already covered:** `CreateBandAction`, `SendBandMemberInvitationAction`.
 
-**For each one:** move the domain logic into the owning module's service (e.g. `BandService`), create a Filament action factory class in `App\Filament\Actions\`, and replace `::filamentAction()` with `::make()`.
+**Updated calling files:** MyBandsWidget, PendingBandInvitationsWidget, MembersRelationManager, AcceptInvitationPage, BandMembersResource, ListMemberProfiles, MemberProfilesTable, ListActivityLogs.
+
+**Old action classes gutted:** All 9 files in `app-modules/membership/src/Actions/Bands/` are tombstoned (should be `git rm`'d).

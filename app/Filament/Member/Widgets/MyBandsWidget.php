@@ -2,7 +2,7 @@
 
 namespace App\Filament\Member\Widgets;
 
-use CorvMC\Membership\Actions\Bands\CreateBand;
+use App\Filament\Actions\Bands\CreateBandAction;
 use CorvMC\Bands\Models\Band;
 use Filament\Actions\Action;
 use Filament\Tables;
@@ -132,7 +132,7 @@ class MyBandsWidget extends BaseWidget
             ->emptyStateDescription('You haven\'t joined or created any bands.')
             ->emptyStateIcon('tabler-users-off')
             ->emptyStateActions([
-                CreateBand::filamentAction()
+                CreateBandAction::make()
                     ->label('Create Your First Band'),
             ])
             ->paginated(false);
