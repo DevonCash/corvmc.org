@@ -15,6 +15,6 @@ class ListBandMembers extends ListRecords
     public function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn(Builder $query) => $query->with(['memberProfile.user']));
+            ->modifyQueryUsing(fn(Builder $query) => $query->with(['user']));
     }
 }

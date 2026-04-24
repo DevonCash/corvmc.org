@@ -2,7 +2,7 @@
 
 namespace App\Filament\Member\Resources\Bands\Pages;
 
-use App\Filament\Actions\Bands\AddBandMemberAction;
+use App\Filament\Actions\Bands\SendBandMemberInvitationAction;
 use App\Filament\Shared\Actions\ReportContentAction;
 use App\Filament\Member\Resources\Bands\BandResource;
 use App\Models\User;
@@ -53,7 +53,7 @@ class ViewBand extends Page
     public function getHeaderActions(): array
     {
         return [
-            AddBandMemberAction::make()
+            SendBandMemberInvitationAction::make()
                 ->record($this->record),
             EditAction::make()
                 ->visible(fn () => User::me()?->can('update', $this->record)),
