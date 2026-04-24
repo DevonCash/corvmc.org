@@ -75,10 +75,10 @@ class BackfillTicketOrdersToOrders extends Command
 
     private function backfillTicketOrder(TicketOrder $ticketOrder, array &$stats): void
     {
-        $subtotalCents = $ticketOrder->subtotal->getMinorAmount()->toInt();
-        $discountCents = $ticketOrder->discount?->getMinorAmount()?->toInt() ?? 0;
-        $feesCents = $ticketOrder->fees?->getMinorAmount()?->toInt() ?? 0;
-        $totalCents = $ticketOrder->total->getMinorAmount()->toInt();
+        $subtotalCents = $ticketOrder->subtotal->getMinorAmount();
+        $discountCents = $ticketOrder->discount?->getMinorAmount() ?? 0;
+        $feesCents = $ticketOrder->fees?->getMinorAmount() ?? 0;
+        $totalCents = $ticketOrder->total->getMinorAmount();
 
         $orderStatus = match ($ticketOrder->status) {
             TicketOrderStatus::Completed => Completed::class,
@@ -99,7 +99,7 @@ class BackfillTicketOrdersToOrders extends Command
 
         // Base ticket LineItem
         $eventTitle = $ticketOrder->event?->title ?? 'Event';
-        $unitPriceCents = $ticketOrder->unit_price->getMinorAmount()->toInt();
+        $unitPriceCents = $ticketOrder->unit_price->getMinorAmount();
 
         LineItem::create([
             'order_id' => $order->id,
