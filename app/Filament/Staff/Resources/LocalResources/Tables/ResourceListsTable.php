@@ -2,18 +2,25 @@
 
 namespace App\Filament\Staff\Resources\LocalResources\Tables;
 
+use App\Filament\Staff\Resources\LocalResources\Schemas\ResourceListForm;
 use App\Models\LocalResource;
+use App\Models\ResourceList;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
 
@@ -148,10 +155,55 @@ class ResourceListsTable
                             $siblings->values()->each(fn ($r, $i) => $r->update(['sort_order' => $i]));
                         }
                     }),
-                EditAction::make(),
+                EditAction::make()
+                    ->mutateFormDataUsing(fn (array $data) => ResourceListForm::mutatePublishStatus($data)),
+                DeleteAction::make(),
+                RestoreAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('publish')
+                        ->label('Publish now')
+                        ->icon('tabler-check')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalDescription(fn (Collection $records) => "Publish {$records->count()} " . str('resource')->plural($records->count()) . '?')
+                        ->action(fn (Collection $records) => LocalResource::whereIn('id', $records->pluck('id'))->update(['published_at' => now()]))
+                        ->deselectRecordsAfterCompletion(),
+
+                    BulkAction::make('unpublish')
+                        ->label('Unpublish')
+                        ->icon('tabler-pencil')
+                        ->color('gray')
+                        ->requiresConfirmation()
+                        ->modalDescription(fn (Collection $records) => "Unpublish {$records->count()} " . str('resource')->plural($records->count()) . '? They will be saved as drafts.')
+                        ->action(fn (Collection $records) => LocalResource::whereIn('id', $records->pluck('id'))->update(['published_at' => null]))
+                        ->deselectRecordsAfterCompletion(),
+
+                    BulkAction::make('moveToCategory')
+                        ->label('Move to category')
+                        ->icon('tabler-folder-symlink')
+                        ->form([
+                            Select::make('resource_list_id')
+                                ->label('Category')
+                                ->options(fn () => ResourceList::query()->ordered()->pluck('name', 'id'))
+                                ->searchable()
+                                ->required(),
+                        ])
+                        ->action(function (Collection $records, array $data): void {
+                            $targetId = $data['resource_list_id'];
+                            $maxSort = LocalResource::where('resource_list_id', $targetId)->max('sort_order') ?? -1;
+
+                            $records->each(function (LocalResource $record) use ($targetId, &$maxSort) {
+                                $maxSort++;
+                                $record->update([
+                                    'resource_list_id' => $targetId,
+                                    'sort_order' => $maxSort,
+                                ]);
+                            });
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),

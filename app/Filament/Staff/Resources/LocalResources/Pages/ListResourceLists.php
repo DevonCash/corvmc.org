@@ -3,6 +3,7 @@
 namespace App\Filament\Staff\Resources\LocalResources\Pages;
 
 use App\Filament\Staff\Resources\LocalResources\ResourceListResource;
+use App\Filament\Staff\Resources\LocalResources\Schemas\ResourceListForm;
 use App\Models\ResourceList;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -18,7 +19,8 @@ class ListResourceLists extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->mutateFormDataUsing(fn (array $data) => ResourceListForm::mutatePublishStatus($data)),
         ];
     }
 

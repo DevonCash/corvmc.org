@@ -2,8 +2,6 @@
 
 namespace App\Filament\Staff\Resources\LocalResources;
 
-use App\Filament\Staff\Resources\LocalResources\Pages\CreateResourceList;
-use App\Filament\Staff\Resources\LocalResources\Pages\EditResourceList;
 use App\Filament\Staff\Resources\LocalResources\Pages\ListResourceLists;
 use App\Filament\Staff\Resources\LocalResources\Schemas\ResourceListForm;
 use App\Filament\Staff\Resources\LocalResources\Tables\ResourceListsTable;
@@ -51,8 +49,6 @@ class ResourceListResource extends Resource
     {
         return [
             'index' => ListResourceLists::route('/'),
-            'create' => CreateResourceList::route('/create'),
-            'edit' => EditResourceList::route('/{record}/edit'),
         ];
     }
 

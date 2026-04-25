@@ -46,11 +46,10 @@ A LocalResource belongs to a ResourceList. ResourceList has many LocalResources.
    - **Name** — linked to `website` if present (opens in new tab), plain text otherwise.
    - **Note** — the `description` field, rendered as a secondary line under the name. Only shown if populated.
    - **Address** — right-aligned or in a second column. Only shown if populated.
-   - **Contact button** — a small button that opens a native `<dialog>` or `[popover]` with the resource's contact details (contact_name, contact_email as mailto, contact_phone as tel). Only rendered if at least one contact field is populated.
 
-5. The contact popover uses the HTML `popover` attribute (or `<dialog>` as fallback). All contact data is already in the page markup, just hidden. No JavaScript required for the interaction — the `popovertarget` attribute on the button handles open/close. No server roundtrip, no Alpine, no Livewire wire.
+   Contact fields (`contact_name`, `contact_email`, `contact_phone`) are hidden from the public display. The columns remain in the database but are not rendered. The label "Contact" was ambiguous — it wasn't clear whether it referred to the business or a person at the collective — and for a directory listing, the website and address are sufficient.
 
-6. **Suggestion form** at the bottom stays exactly as-is — the `ResourceSuggestionForm` Livewire component and its notification flow are untouched.
+5. **Suggestion form** at the bottom stays exactly as-is — the `ResourceSuggestionForm` Livewire component and its notification flow are untouched.
 
 ### Category border accent
 
@@ -63,9 +62,9 @@ Each category section has a colored left border for visual distinction. Colors a
   │  Category Name                                   │
 ▌ │  Optional category description                   │
 ▌ ├──────────────────────────────────────────────────┤
-▌ │  Resource Name ↗    Note text here    123 Main St │ [Contact]
-▌ │  Another Place ↗                      456 Oak Ave │
-  │  Third Resource     Every other Friday            │ [Contact]
+▌ │  Resource Name ↗    Note text here       123 Main St │
+▌ │  Another Place ↗                         456 Oak Ave │
+  │  Third Resource     Every other Friday               │
   └──────────────────────────────────────────────────┘
 ```
 
@@ -80,7 +79,7 @@ On small screens, each resource stacks vertically within a compact block:
 ```
 Resource Name ↗
   Every other Friday
-  123 Main St · [Contact]
+  123 Main St
 ```
 
 Still significantly denser than the current card layout.
@@ -157,9 +156,9 @@ No migrations. The existing tables are unchanged:
 | resource_list_id | bigint FK nullable | → resource_lists.id |
 | name | varchar(255) | |
 | description | text nullable | Displayed as "Note" in UI |
-| contact_name | varchar(255) nullable | |
-| contact_email | varchar(255) nullable | |
-| contact_phone | varchar(255) nullable | |
+| contact_name | varchar(255) nullable | Hidden from UI (column retained) |
+| contact_email | varchar(255) nullable | Hidden from UI (column retained) |
+| contact_phone | varchar(255) nullable | Hidden from UI (column retained) |
 | website | varchar(255) nullable | |
 | address | varchar(255) nullable | |
 | published_at | timestamp nullable | null=draft, past=published, future=scheduled |
@@ -208,9 +207,6 @@ No migrations. The existing tables are unchanged:
 | Category | Select (relationship) | Searchable, preloaded, inline creation |
 | Website | TextInput (url) | |
 | Note | Textarea (2 rows) | Label "Note", was "Description" |
-| Contact Name | TextInput | |
-| Contact Email | TextInput (email) | |
-| Contact Phone | TextInput (tel) | |
 | Address | TextInput | |
 | Sort Order | TextInput (numeric) | |
 | Publish status | ToggleButtons | Draft / Publish now / Schedule |
@@ -237,8 +233,8 @@ No changes. The `ResourceSuggestionNotification` (sent when a visitor submits th
 
 | Area | Change |
 |---|---|
-| `resources/views/public/local-resources.blade.php` | Replace card grid with dense list layout + native popovers for contact details |
-| `app/Filament/Staff/Resources/LocalResources/Schemas/ResourceListForm.php` | Add publish toggle, rename description → note label |
+| `resources/views/public/local-resources.blade.php` | Replace card grid with dense list layout, remove contact fields from display |
+| `app/Filament/Staff/Resources/LocalResources/Schemas/ResourceListForm.php` | Add publish toggle, rename description → note label, remove contact fields from form |
 | `app/Filament/Staff/Resources/LocalResources/Tables/ResourceListsTable.php` | Add bulk publish/unpublish/move actions |
 | `app/Filament/Staff/Resources/LocalResources/ResourceListResource.php` | Remove create/edit page routes, add modal create/edit actions |
 | `app/Filament/Staff/Resources/LocalResources/Pages/CreateResourceList.php` | Delete — replaced by modal create |
@@ -270,6 +266,8 @@ No changes. The `ResourceSuggestionNotification` (sent when a visitor submits th
 **Resource images/logos.** An optional image per resource via Spatie Media Library. Would require a migration (media library polymorphic), complicate the dense layout, and add authoring friction. Revisit if there's demand.
 
 **Inline table editing.** Editing name, category, and publish status directly in the list table row. Filament supports this but it's additive on top of the modal approach — can layer it in later if staff find the modal too heavy for quick corrections.
+
+**Contact fields.** The `contact_name`, `contact_email`, and `contact_phone` columns are retained in the database but hidden from both the public display and the authoring form. If a clear use case emerges (e.g., "contact person at the collective who can introduce you"), they can be re-exposed with better labeling.
 
 **Category color picker.** Letting staff choose a specific color per category (instead of auto-assigned). Would require a `color` column on `resource_lists` and a color picker in the category edit modal. Not worth the complexity unless the auto-assigned palette proves unsatisfying.
 
