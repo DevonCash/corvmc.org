@@ -5,8 +5,9 @@ namespace App\Filament\Actions\Reservations;
 use CorvMC\Finance\Facades\Finance;
 use CorvMC\Finance\Models\Order;
 use CorvMC\Finance\States\OrderState\Pending as OrderPending;
-use CorvMC\Finance\States\TransactionState\Failed as TransactionFailed;
 use CorvMC\Finance\States\TransactionState\Cancelled as TransactionCancelled;
+use CorvMC\Finance\States\TransactionState\Failed as TransactionFailed;
+use CorvMC\Finance\States\TransactionState\Pending as TransactionPending;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
 use Filament\Actions\Action;
@@ -28,6 +29,25 @@ class PayWithStripeAction
                 if ($existingOrder && static::hasFailedStripePayment($existingOrder)) {
                     try {
                         $checkoutUrl = Finance::retryStripePayment($existingOrder);
+
+                        if ($checkoutUrl) {
+                            return redirect($checkoutUrl);
+                        }
+                    } catch (\Exception $e) {
+                        Notification::make()
+                            ->title('Payment Error')
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+                }
+
+                // Switch: existing order committed to cash, user wants to pay by card instead
+                if ($existingOrder && static::hasPendingCashPayment($existingOrder)) {
+                    try {
+                        $checkoutUrl = Finance::switchToStripe($existingOrder);
 
                         if ($checkoutUrl) {
                             return redirect($checkoutUrl);
@@ -98,8 +118,13 @@ class PayWithStripeAction
             return $record->status instanceof Confirmed;
         }
 
-        // Has order with failed payment — retry
-        return static::hasFailedStripePayment($existingOrder);
+        // Has order with failed stripe payment — retry
+        if (static::hasFailedStripePayment($existingOrder)) {
+            return true;
+        }
+
+        // Has order committed to cash — allow switching to card
+        return static::hasPendingCashPayment($existingOrder);
     }
 
     private static function hasFailedStripePayment(Order $order): bool
@@ -109,6 +134,16 @@ class PayWithStripeAction
                 ->where('currency', 'stripe')
                 ->where('type', 'payment')
                 ->whereState('status', [TransactionFailed::class, TransactionCancelled::class])
+                ->exists();
+    }
+
+    private static function hasPendingCashPayment(Order $order): bool
+    {
+        return $order->status instanceof OrderPending
+            && $order->transactions()
+                ->where('currency', 'cash')
+                ->where('type', 'payment')
+                ->whereState('status', TransactionPending::class)
                 ->exists();
     }
 }

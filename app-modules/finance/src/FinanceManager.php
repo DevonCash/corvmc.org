@@ -530,27 +530,7 @@ class FinanceManager
 
                 // 8. For Stripe rail: create Checkout Session
                 if ($currency === 'stripe' && $order->user) {
-                    $checkout = $order->user->checkoutCharge(
-                        $amount,
-                        "Order #{$order->id}",
-                        1,
-                        [
-                            'success_url' => route('checkout.success') . '?user_id=' . $order->user_id . '&session_id={CHECKOUT_SESSION_ID}',
-                            'cancel_url' => route('checkout.cancel') . '?user_id=' . $order->user_id . '&type=order&transaction_id=' . $transaction->id,
-                            'metadata' => [
-                                'type' => 'order',
-                                'order_id' => $order->id,
-                                'transaction_id' => $transaction->id,
-                            ],
-                        ]
-                    );
-
-                    $transaction->update([
-                        'metadata' => [
-                            'session_id' => $checkout->id,
-                            'checkout_url' => $checkout->url,
-                        ],
-                    ]);
+                    $this->createStripeCheckout($order, $transaction, "Order #{$order->id}");
                 }
             }
 
@@ -841,49 +821,84 @@ class FinanceManager
             return null;
         }
 
-        $user = $order->user;
-        $amount = $failedTxn->amount;
-
         $newTxn = Transaction::create([
             'order_id' => $order->id,
-            'user_id' => $user->id,
+            'user_id' => $order->user_id,
             'currency' => 'stripe',
-            'amount' => $amount,
+            'amount' => $failedTxn->amount,
             'type' => 'payment',
             'metadata' => [],
         ]);
 
-        $checkout = \Laravel\Cashier\Cashier::stripe()->checkout->sessions->create([
-            'mode' => 'payment',
-            'customer' => $user->stripeId() ?? $user->createAsStripeCustomer()->id,
-            'line_items' => [[
-                'price_data' => [
-                    'currency' => 'usd',
-                    'unit_amount' => $amount,
-                    'product_data' => [
-                        'name' => "Order #{$order->id} — Retry Payment",
-                    ],
-                ],
-                'quantity' => 1,
-            ]],
-            'metadata' => [
-                'type' => 'order',
-                'transaction_id' => $newTxn->id,
-                'order_id' => $order->id,
-            ],
-            'success_url' => route('checkout.success') . '?user_id=' . $user->id . '&session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('checkout.cancel') . '?user_id=' . $user->id . '&type=order&transaction_id=' . $newTxn->id,
-        ]);
+        $checkoutUrl = $this->createStripeCheckout($order, $newTxn, "Order #{$order->id} — Retry Payment");
 
+        $newTxn->refresh();
         $newTxn->update([
-            'metadata' => [
-                'session_id' => $checkout->id,
-                'checkout_url' => $checkout->url,
+            'metadata' => array_merge($newTxn->metadata ?? [], [
                 'retry_of' => $failedTxn->id,
-            ],
+            ]),
         ]);
 
-        return $checkout->url;
+        return $checkoutUrl;
+    }
+
+    // =========================================================================
+    // Payment Method Switch
+    // =========================================================================
+
+    /**
+     * Switch an Order's pending cash payment to a Stripe checkout.
+     *
+     * Cancels the pending cash Transaction, creates a new Stripe Transaction
+     * with a Checkout Session, and returns the checkout URL.
+     *
+     * @return string|null The Checkout URL, or null if no switchable transaction found.
+     *
+     * @throws \RuntimeException If the Order is not Pending.
+     */
+    public function switchToStripe(Order $order): ?string
+    {
+        if (! ($order->status instanceof \CorvMC\Finance\States\OrderState\Pending)) {
+            throw new \RuntimeException(
+                "Cannot switch payment on Order [{$order->id}]: status is [{$order->status->getLabel()}], expected Pending."
+            );
+        }
+
+        $cashTxn = $order->transactions()
+            ->where('currency', 'cash')
+            ->where('type', 'payment')
+            ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
+            ->first();
+
+        if (! $cashTxn) {
+            return null;
+        }
+
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($order, $cashTxn) {
+            $amount = $cashTxn->amount;
+
+            $cashTxn->status->transitionTo(\CorvMC\Finance\States\TransactionState\Cancelled::class);
+
+            $newTxn = Transaction::create([
+                'order_id' => $order->id,
+                'user_id' => $order->user_id,
+                'currency' => 'stripe',
+                'amount' => $amount,
+                'type' => 'payment',
+                'metadata' => [],
+            ]);
+
+            $checkoutUrl = $this->createStripeCheckout($order, $newTxn, "Order #{$order->id}");
+
+            $newTxn->refresh();
+            $newTxn->update([
+                'metadata' => array_merge($newTxn->metadata ?? [], [
+                    'switched_from' => $cashTxn->id,
+                ]),
+            ]);
+
+            return $checkoutUrl;
+        });
     }
 
     // =========================================================================
@@ -1089,5 +1104,46 @@ class FinanceManager
             ->delete();
 
         return ['archived' => $written, 'file' => $filename];
+    }
+
+    // =========================================================================
+    // Internal Helpers
+    // =========================================================================
+
+    /**
+     * Create a Stripe Checkout Session for a Transaction and persist session metadata.
+     *
+     * @param  Order  $order  The parent Order.
+     * @param  Transaction  $transaction  The Stripe Transaction to attach the session to.
+     * @param  string  $description  The product name shown in Stripe checkout.
+     * @return string  The Checkout URL.
+     */
+    private function createStripeCheckout(Order $order, Transaction $transaction, string $description): string
+    {
+        $user = $order->user;
+
+        $checkout = $user->checkoutCharge(
+            $transaction->amount,
+            $description,
+            1,
+            [
+                'metadata' => [
+                    'type' => 'order',
+                    'transaction_id' => $transaction->id,
+                    'order_id' => $order->id,
+                ],
+                'success_url' => route('checkout.success') . '?user_id=' . $user->id . '&session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => route('checkout.cancel') . '?user_id=' . $user->id . '&type=order&transaction_id=' . $transaction->id,
+            ]
+        );
+
+        $transaction->update([
+            'metadata' => array_merge($transaction->metadata ?? [], [
+                'session_id' => $checkout->id,
+                'checkout_url' => $checkout->url,
+            ]),
+        ]);
+
+        return $checkout->url;
     }
 }
