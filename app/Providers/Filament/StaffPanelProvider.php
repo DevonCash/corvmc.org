@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Http\Middleware\BlockImpersonationInStaffPanel;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -69,6 +70,7 @@ class StaffPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                BlockImpersonationInStaffPanel::class,
             ])
             ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,

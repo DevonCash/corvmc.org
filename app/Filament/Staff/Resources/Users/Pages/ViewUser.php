@@ -8,6 +8,7 @@ use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use STS\FilamentImpersonate\Actions\Impersonate;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -25,6 +26,8 @@ class ViewUser extends ViewRecord
     {
         return [
             EditAction::make(),
+            Impersonate::make()
+                ->redirectTo('/member'),
 
             Action::make('add_credits')
                 ->label('Add Credits')

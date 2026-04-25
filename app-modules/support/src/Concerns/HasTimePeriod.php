@@ -32,6 +32,10 @@ trait HasTimePeriod
             return null;
         }
 
+        if ($this->{$startField} >= $this->{$endField}) {
+            return null;
+        }
+
         return Period::make(
             $this->{$startField},
             $this->{$endField},
