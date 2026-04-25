@@ -3,6 +3,7 @@
 namespace App\Filament\Member\Resources\Reservations\Pages;
 
 use App\Filament\Actions\Reservations\CancelReservationAction;
+use App\Filament\Actions\Reservations\ConfirmReservationAction;
 use App\Filament\Actions\Reservations\PayWithCashAction;
 use App\Filament\Actions\Reservations\PayWithStripeAction;
 use App\Filament\Member\Resources\Reservations\ReservationResource;
@@ -15,6 +16,7 @@ class ViewReservation extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            ConfirmReservationAction::make(),
             PayWithStripeAction::make(),
             PayWithCashAction::make(),
             CancelReservationAction::make(),

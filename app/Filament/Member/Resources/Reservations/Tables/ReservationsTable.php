@@ -3,6 +3,7 @@
 namespace App\Filament\Member\Resources\Reservations\Tables;
 
 use App\Filament\Actions\Reservations\CancelReservationAction;
+use App\Filament\Actions\Reservations\ConfirmReservationAction;
 use App\Filament\Actions\Reservations\PayWithCashAction;
 use App\Filament\Actions\Reservations\PayWithStripeAction;
 use App\Models\User;
@@ -103,10 +104,12 @@ class ReservationsTable
                     ->schema(fn (Schema $infolist) => ReservationInfolist::configure($infolist))
                     ->modalHeading(fn (Reservation $record): string => "Reservation #{$record->id}")
                     ->modalFooterActions([
+                        ConfirmReservationAction::make(),
                         PayWithStripeAction::make(),
                         PayWithCashAction::make(),
                         CancelReservationAction::make(),
                     ]),
+                ConfirmReservationAction::make(),
                 PayWithStripeAction::make(),
                 PayWithCashAction::make(),
                 ActionGroup::make([

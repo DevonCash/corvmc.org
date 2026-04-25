@@ -110,7 +110,11 @@ class ReservationColumns
             ->state(function (Reservation $record): string {
                 $order = Finance::findActiveOrder($record);
 
-                if (! $order || $order->total_amount <= 0) {
+                if (! $order) {
+                    return number_format($record->duration, 1) . ' hrs';
+                }
+
+                if ($order->total_amount <= 0) {
                     return 'Free';
                 }
 

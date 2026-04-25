@@ -9,7 +9,6 @@ use CorvMC\Finance\States\TransactionState\Failed as TransactionFailed;
 use CorvMC\Finance\States\TransactionState\Cancelled as TransactionCancelled;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
-use CorvMC\SpaceManagement\States\ReservationState\Scheduled;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 
@@ -49,6 +48,16 @@ class PayWithStripeAction
                 $lineItems = Finance::price([$record], $user);
                 $totalCents = (int) $lineItems->sum('amount');
 
+                // Free reservation — no payment needed
+                if ($totalCents <= 0) {
+                    Notification::make()
+                        ->title('No payment required')
+                        ->success()
+                        ->send();
+
+                    return;
+                }
+
                 $order = Order::create([
                     'user_id' => $user->id,
                     'total_amount' => 0,
@@ -62,7 +71,6 @@ class PayWithStripeAction
                 $order->update(['total_amount' => $totalCents]);
 
                 $committed = Finance::commit($order->fresh(), ['stripe' => $totalCents]);
-                $record->status->transitionTo(Confirmed::class);
 
                 $checkoutUrl = $committed->checkoutUrl();
                 if ($checkoutUrl) {
@@ -85,15 +93,9 @@ class PayWithStripeAction
 
         $existingOrder = Finance::findActiveOrder($record);
 
-        // No order yet — initial pay (must be Scheduled and non-free)
+        // No order yet — initial pay (must be Confirmed)
         if (! $existingOrder) {
-            if (! $record->status instanceof Scheduled) {
-                return false;
-            }
-
-            $total = (int) Finance::price([$record], $record->getResponsibleUser())->sum('amount');
-
-            return $total > 0;
+            return $record->status instanceof Confirmed;
         }
 
         // Has order with failed payment — retry
