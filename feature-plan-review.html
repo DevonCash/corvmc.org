@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "feature-plan", "runs": [{"id": "volunteer-plan-with_skill", "prompt": "Write an implementation plan for the volunteer management module. The design spec is at docs/volunteer-management.md.", "eval_id": 2, "outputs": [{"name": "plan.md", "type": "text", "content": "# Volunteer Management \u2014 Implementation Plan\n\nSequenced for a solo developer working through it PR by PR, with parallelizable tracks for admin resources and Filament integration. Foundation (models and state machine) gates everything; core logic and authorization can proceed in parallel once foundation is complete; UI layers depend on authorization.\n\n---\n\n## Epic 1: Foundation \u2014 Models, migrations, and state machine\n\nThe bedrock for everything else. Models must exist before actions, policies, or UI.\n\n### 1.1 Create Role model and migration\n\nCreate `app-modules/volunteering/src/Models/Role.php` with:\n- `title` string\n- `description` text, nullable\n- `timestamps`\n\nCreate `database/migrations/[timestamp]_create_volunteer_roles_table.php`. Include basic indexes on `created_at` for sorting.\n\nTaggable via spatie/laravel-tags (inherit from `HasTags` concern if available, or add the trait).\n\nTest: Model instantiation, mass assignment, timestamps auto-populate.\n\n### 1.2 Create Shift model and migration\n\nCreate `app-modules/volunteering/src/Models/Shift.php` with:\n- `role_id` integer FK to roles\n- `event_id` integer nullable FK (no foreign key constraint \u2014 integration layer wires this)\n- `start_at` timestamp\n- `end_at` timestamp\n- `capacity` integer\n- `timestamps`\n\nCreate `database/migrations/[timestamp]_create_volunteer_shifts_table.php`. Include indexes: `(event_id)`, `(role_id)`, `(start_at)` for efficient queries.\n\nRelationships: `Role::shifts()` one-to-many; `Shift::role()` belongs-to.\n\nTaggable via spatie/laravel-tags.\n\nTest: Model instantiation, timestamps, foreign key integrity.\n\n### 1.3 Create HourLog model and migration\n\nCreate `app-modules/volunteering/src/Models/HourLog.php` with:\n- `user_id` integer FK\n- `shift_id` integer nullable FK\n- `role_id` integer nullable FK\n- `status` string (HourLogState enum/attribute)\n- `started_at` timestamp nullable\n- `ended_at` timestamp nullable\n- `minutes` integer nullable generated column using `EXTRACT(EPOCH FROM (ended_at - started_at)) / 60`\n- `reviewed_by` integer nullable FK\n- `notes` text nullable\n- `timestamps`\n\nCreate `database/migrations/[timestamp]_create_volunteer_hour_logs_table.php` with:\n- Check constraint: exactly one of `shift_id` or `role_id` is non-null\n- Partial unique constraint: `(user_id, shift_id)` where status NOT IN ('released', 'checked_out')\n- Indexes: `(shift_id, status)`, `(user_id, status)`, `(status)`\n- Generated column for `minutes` computed at the database level\n\nRelationships: `User::volunteerHourLogs()` wired in integration layer via `resolveRelationUsing`. Local: `HourLog::shift()` belongs-to, `HourLog::role()` belongs-to, `HourLog::reviewedByUser()` belongs-to.\n\nTaggable via spatie/laravel-tags.\n\nTest: Model instantiation, check constraint validation on DB, partial unique constraint behavior, generated column computation.\n\n### 1.4 Create HourLogState state machine\n\nCreate `app-modules/volunteering/src/States/HourLogState.php` as a spatie/laravel-model-states state machine with states:\n- `Interested`\n- `Confirmed`\n- `Released`\n- `CheckedIn`\n- `CheckedOut`\n- `Pending`\n- `Approved`\n- `Rejected`\n\nDefine allowed transitions:\n- `Interested \u2192 Confirmed, Released`\n- `Confirmed \u2192 CheckedIn, Released`\n- `CheckedIn \u2192 CheckedOut, Released`\n- `CheckedOut` \u2192 terminal\n- `Pending \u2192 Approved, Rejected`\n- `Approved, Rejected, Released` \u2192 terminal\n\nCreate state classes in `States/` subdirectory if using the standard pattern. Add a method or property to determine which statuses count toward reporting: `CheckedOut` and `Approved`.\n\nAttach state machine to HourLog via `State::class` attribute mapping.\n\nTest: State instantiation, valid transitions, invalid transitions throw exception, terminal states prevent further transitions.\n\n---\n\n## Epic 2: Authorization \u2014 Permissions and policies\n\nDefine the permission system and authorization rules before building actions.\n\n### 2.1 Register permissions\n\nCreate `app-modules/volunteering/src/Data/PermissionSeeder.php` (or add to existing seed) to register spatie/laravel-permission permissions:\n- `volunteer.role.manage` \u2014 create/edit roles\n- `volunteer.shift.manage` \u2014 create/edit shifts\n- `volunteer.manage` \u2014 confirm/release volunteers globally\n- `volunteer.checkin` \u2014 check volunteers in/out at events\n- `volunteer.hours.approve` \u2014 approve/reject self-reported hours\n- `volunteer.hours.submit` \u2014 submit self-reported hours\n- `volunteer.hours.report` \u2014 view aggregate reports\n- `volunteer.signup` \u2014 sign up for shifts\n\nDefault grant `volunteer.hours.submit` to all members. Others are staff/coordinator only. Seed via `PermissionSeeder` called from `database/seeders/DatabaseSeeder.php`.\n\nTest: Permissions exist in DB after seeding.\n\n### 2.2 Create HourLogPolicy\n\nCreate `app/Policies/HourLogPolicy.php` with gate methods:\n- `create($user)` \u2014 gates on `volunteer.hours.submit`\n- `confirm($user, HourLog $log)` \u2014 gates on `volunteer.manage` OR user is event organizer for the shift's event\n- `release($user, HourLog $log)` \u2014 same gate as confirm\n- `checkIn($user, HourLog $log)` \u2014 gates on `volunteer.checkin`\n- `checkOut($user, HourLog $log)` \u2014 gates on `volunteer.checkin`; volunteer can also check out their own pending/checked-in log\n- `approve($user, HourLog $log)` \u2014 gates on `volunteer.hours.approve`\n- `reject($user, HourLog $log)` \u2014 gates on `volunteer.hours.approve`\n\nTest: Policy gates enforce correct permissions; event organizers can manage their own events' volunteers.\n\n### 2.3 Create ShiftPolicy\n\nCreate `app/Policies/ShiftPolicy.php` with gate methods:\n- `create($user)` \u2014 gates on `volunteer.shift.manage`\n- `update($user, Shift $shift)` \u2014 gates on `volunteer.shift.manage`\n- `delete($user, Shift $shift)` \u2014 gates on `volunteer.shift.manage` (optional, may defer)\n- `signUp($user, Shift $shift)` \u2014 gates on `volunteer.signup`; also check if shift is in future\n\nTest: Policy gates.\n\n### 2.4 Create RolePolicy\n\nCreate `app/Policies/RolePolicy.php` with gate methods:\n- `create($user)` \u2014 gates on `volunteer.role.manage`\n- `update($user, Role $role)` \u2014 gates on `volunteer.role.manage`\n- `delete($user, Role $role)` \u2014 gates on `volunteer.role.manage` (optional, may defer)\n- `view($user)` \u2014 all authenticated users\n\nTest: Policy gates.\n\n---\n\n## Epic 3: Core actions \u2014 Domain logic for volunteer operations\n\nActions encapsulate business rules. They are services with a `make()` static factory method, used by both Livewire components and Filament resources.\n\n### 3.1 Create CreateRole action\n\nCreate `app-modules/volunteering/src/Actions/CreateRole.php`. Signature: `static make(array $attributes): Role`.\n\nBehavior:\n- Validate `title` required, unique within volunteer roles\n- Validate `description` optional string\n- Create Role, optionally add tags\n- Return the created Role\n\nTest: Role created with correct attributes; validation errors; tags propagate.\n\n### 3.2 Create CreateShift action\n\nCreate `app-modules/volunteering/src/Actions/CreateShift.php`. Signature: `static make(Role $role, ?Event $eventId, Carbon $startAt, Carbon $endAt, int $capacity): Shift`.\n\nBehavior:\n- Validate `$capacity >= 1`\n- Validate `$endAt > $startAt`\n- Validate `$startAt` is in future\n- Create Shift\n- Optionally add tags (staff-only)\n- Return the created Shift\n\nTest: Shift created with correct attributes; validation errors.\n\n### 3.3 Create SignUp action\n\nCreate `app-modules/volunteering/src/Actions/SignUp.php`. Signature: `static make(User $user, Shift $shift): HourLog`.\n\nBehavior:\n- Check policy (user can sign up)\n- Check capacity: count non-released HourLogs for this shift, throw exception if at capacity\n- Check partial unique constraint: user is not already signed up for this shift (status not in released/checked_out)\n- Create HourLog in `Interested` status\n- Fire `VolunteerSignedUp` event\n- Return the created HourLog\n\nTest: HourLog created, capacity enforcement, duplicate signup prevention, event fired.\n\n### 3.4 Create ConfirmVolunteer action\n\nCreate `app-modules/volunteering/src/Actions/ConfirmVolunteer.php`. Signature: `static make(User $authorizer, HourLog $log): void`.\n\nBehavior:\n- Check policy (authorizer can confirm for this log's shift)\n- Assert HourLog is in `Interested` status\n- Transition to `Confirmed`\n- Fire `VolunteerConfirmed` event\n- Optionally set `reviewed_by`\n\nTest: State transition, event fired, authorization checked.\n\n### 3.5 Create ReleaseVolunteer action\n\nCreate `app-modules/volunteering/src/Actions/ReleaseVolunteer.php`. Signature: `static make(User $authorizer, HourLog $log, ?string $notes = null): void`.\n\nBehavior:\n- Check policy\n- Assert HourLog status is one of Interested, Confirmed, CheckedIn\n- Transition to `Released`\n- Set `reviewed_by = $authorizer`\n- Optionally append to `notes`\n- Fire `VolunteerReleased` event\n\nTest: State transition from multiple allowed states, event fired, notes appended.\n\n### 3.6 Create CheckIn action\n\nCreate `app-modules/volunteering/src/Actions/CheckIn.php`. Signature: `static make(User $authorizer, HourLog $log, ?Carbon $startedAt = null): void` (supervisor) OR `static makeSelfCheckIn(User $user, HourLog $log): void` (volunteer).\n\nBehavior:\n- If supervisor: check policy `volunteer.checkin`; create or update log\n- If volunteer: assert HourLog status is `Confirmed` (gate is the confirmed status)\n- Set `started_at` to provided timestamp or now\n- Transition to `CheckedIn`\n- Fire `VolunteerCheckedIn` event\n\nFor walk-ins (supervisor-only): allow creating an HourLog in `CheckedIn` status directly if the shift has capacity, bypassing `Interested \u2192 Confirmed`.\n\nTest: State transition, timestamps set, event fired, walk-in creation.\n\n### 3.7 Create CheckOut action\n\nCreate `app-modules/volunteering/src/Actions/CheckOut.php`. Signature: `static make(User $authorizer, HourLog $log, ?Carbon $endedAt = null): void` (supervisor) OR `static makeSelfCheckOut(User $user, HourLog $log, ?Carbon $endedAt = null): void` (volunteer).\n\nBehavior:\n- If supervisor: check policy `volunteer.checkin`\n- If volunteer: assert HourLog status is `CheckedIn` (gate is the checked-in status)\n- Set `ended_at` to provided timestamp or now\n- Database-generated `minutes` column derives automatically\n- Transition to `CheckedOut`\n- Propagate tags from Shift and Shift's Role onto the HourLog\n- Fire `VolunteerCheckedOut` event\n\nTest: State transition, timestamps set, minutes computed correctly by DB, tags propagated, event fired.\n\n### 3.8 Create SubmitHours action\n\nCreate `app-modules/volunteering/src/Actions/SubmitHours.php`. Signature: `static make(User $user, Role $role, Carbon $startedAt, Carbon $endedAt, ?string $notes = null): HourLog`.\n\nBehavior:\n- Check policy (user can submit hours)\n- Validate `$endedAt > $startedAt`\n- Create HourLog in `Pending` status with `shift_id = null`, `role_id = $role->id`\n- Set `started_at` and `ended_at` from user input\n- Database-generated `minutes` derives automatically\n- Fire `HoursSubmitted` event\n- Return the created HourLog\n\nTest: HourLog created, minutes computed, event fired.\n\n### 3.9 Create ApproveHours action\n\nCreate `app-modules/volunteering/src/Actions/ApproveHours.php`. Signature: `static make(User $approver, HourLog $log, ?array $tags = null, ?string $notes = null): void`.\n\nBehavior:\n- Check policy (user can approve)\n- Assert HourLog status is `Pending`\n- Transition to `Approved`\n- Set `reviewed_by = $approver`\n- Propagate tags from the HourLog's Role onto the HourLog (merge with any staff-provided tags)\n- Append staff notes if provided\n- Fire `HoursApproved` event\n\nTest: State transition, tags propagated, notes appended, event fired.\n\n### 3.10 Create RejectHours action\n\nCreate `app-modules/volunteering/src/Actions/RejectHours.php`. Signature: `static make(User $rejector, HourLog $log, ?string $reason = null): void`.\n\nBehavior:\n- Check policy\n- Assert HourLog status is `Pending`\n- Transition to `Rejected`\n- Set `reviewed_by = $rejector`\n- Set `notes` to reason if provided\n- Fire `HoursRejected` event\n\nTest: State transition, event fired.\n\n---\n\n## Epic 4: Domain events and listeners\n\nEvents enable cross-module integration without tight coupling.\n\n### 4.1 Create domain events\n\nCreate in `app-modules/volunteering/src/Events/`:\n- `VolunteerSignedUp` \u2014 fired when a user signs up for a shift\n- `VolunteerConfirmed` \u2014 fired when a coordinator confirms\n- `VolunteerReleased` \u2014 fired when a volunteer is released\n- `VolunteerCheckedIn` \u2014 fired on check-in\n- `VolunteerCheckedOut` \u2014 fired on check-out\n- `HoursSubmitted` \u2014 fired when volunteer submits self-reported hours\n- `HoursApproved` \u2014 fired when staff approves hours\n- `HoursRejected` \u2014 fired when staff rejects hours\n\nEach event carries the HourLog and relevant user (volunteer, authorizer, etc.). Make events queuable if notifications are sent.\n\nTest: Events instantiate with correct payloads.\n\n### 4.2 Create ReleaseVolunteersOnEventCancelled listener\n\nCreate in `app/Listeners/` (integration layer): `ReleaseVolunteersOnEventCancelled`. Listen to `CorvMC\\Events\\Events\\EventCancelled`.\n\nBehavior:\n- When an event is cancelled, find all HourLogs linked to Shifts for that event in non-terminal statuses (Interested, Confirmed, CheckedIn)\n- For each, call `ReleaseVolunteer::make()` with a system user or flag to set `reviewed_by` to null\n- Fire appropriate events\n\nWire listener in `EventServiceProvider` or use attribute-based discovery.\n\nTest: Listener is invoked on EventCancelled; volunteers are released.\n\n### 4.3 Create SendNotificationOnVolunteerConfirmed listener (optional for now)\n\nOutline structure in `app/Listeners/SendNotificationOnVolunteerConfirmed.php` (to be implemented in Epic 8). Listen to `VolunteerConfirmed`.\n\nBehavior: Will send a notification to the volunteer. Deferred implementation until notifications are in place.\n\nTest: Listener wires correctly, can be enabled/disabled.\n\n---\n\n## Epic 5: Filament Admin \u2014 Models and staff management\n\nFilament resources provide the staff UI for volunteers, roles, and shifts.\n\n### 5.1 Create RoleResource\n\nCreate `app/Filament/Staff/Resources/VolunteerRoleResource.php`.\n\nColumns: `title`, `tags`, `created_at`.\n\nForm:\n- `title` text input, required\n- `description` rich text editor, optional\n- `tags` spatie tag input\n\nRelation managers:\n- `ShiftsRelationManager` \u2014 upcoming shifts using this role\n- `HourLogsRelationManager` \u2014 recent hour logs under this role\n\nPolicies: Gate on `volunteer.role.manage` via `RolePolicy`.\n\nTest: Resource renders, form validates, tags are saved.\n\n### 5.2 Create ShiftResource\n\nCreate `app/Filament/Staff/Resources/VolunteerShiftResource.php`.\n\nColumns: role title, event name (or \"\u2014\" if no event), start_at, end_at, capacity (filled/total), tags.\n\nFilters: by role, by event, date range, tags.\n\nForm:\n- `role_id` select input, required (can search)\n- `event_id` select input, optional\n- `start_at` datetime picker, required\n- `end_at` datetime picker, required\n- `capacity` integer input, required, >= 1\n- `tags` spatie tag input, staff-only\n\nRelation manager:\n- `HourLogsRelationManager` \u2014 shows who's signed up, their status. Row actions: Confirm, Release, Check In, Check Out (conditional on status).\n\nPolicies: Gate on `volunteer.shift.manage` via `ShiftPolicy`.\n\nTest: Resource renders, form validates, relation manager shows sign-ups.\n\n### 5.3 Create HourLogResource\n\nCreate `app/Filament/Staff/Resources/VolunteerHourLogResource.php`.\n\nList view columns: user name, shift/role (conditional), status, started_at, ended_at, minutes, reviewed_by.\n\nFilters: by status, by user, date range, tags.\n\nForm:\n- `user_id` select, required\n- `shift_id` select, optional (conditional: shown if role-based logic allows)\n- `role_id` select, optional (conditional)\n- `status` state select (read-only for most transitions)\n- `started_at`, `ended_at` datetime pickers\n- `minutes` read-only (generated by DB)\n- `reviewed_by` select (read-only, auto-set by actions)\n- `tags` spatie tag input, staff-only\n- `notes` textarea\n\nRow actions: Confirm, Release, Check In, Check Out, Approve, Reject (conditional on status and authorization).\n\nPolicies: Gate on authorization policies (HourLogPolicy).\n\nTest: Resource renders, form validates, row actions trigger correct actions.\n\n---\n\n## Epic 6: Filament custom pages \u2014 Approval queue and reporting\n\nCustom pages for workflows that don't fit standard resources.\n\n### 6.1 Create PendingHourLogsPage\n\nCreate `app/Filament/Staff/Pages/PendingHourLogsPage.php` (or in Staff/Resources/VolunteerHourLog/ subdirectory).\n\nBehavior:\n- Query HourLogs in `Pending` status\n- Display as a table: volunteer name, role, submitted date, started_at, ended_at, minutes, notes\n- Row actions: \"Approve\" (opens modal for adding tags), \"Reject\" (opens modal for reason)\n- Both actions call ApproveHours/RejectHours and refresh the table\n- Gated on `volunteer.hours.approve` permission\n\nTest: Page loads, filters to pending only, actions work.\n\n### 6.2 Create VolunteerReportPage\n\nCreate `app/Filament/Staff/Pages/VolunteerReportPage.php`.\n\nBehavior:\n- Date range picker (defaults to current quarter)\n- Optional tag filter (multi-select)\n- Query HourLogs in `CheckedOut` or `Approved` status matching filters\n- Display sections:\n  - Total hours (sum of minutes for matching rows)\n  - Hours by volunteer (group by user_id, sum minutes)\n  - Hours by role (group by role_id, sum minutes)\n  - Hours by shift/event (group by shift \u2192 event, sum minutes) \u2014 optional\n- Export to CSV button (optional, defer if needed)\n- Gated on `volunteer.hours.report` permission\n\nTest: Page loads, filters work, aggregates are correct, export works (or is deferred).\n\n---\n\n## Epic 7: Integration layer \u2014 Wiring and relationship resolution\n\nGlue layer that connects the Volunteering module to the rest of the app without tight coupling.\n\n### 7.1 Wire User::volunteerHourLogs() relationship\n\nIn `app/Providers/AppServiceProvider` (or dedicated provider), use `resolveRelationUsing` to add:\n```php\nUser::resolveRelationUsing('volunteerHourLogs', fn($model) => \n  $model->hasMany(HourLog::class, 'user_id')\n);\n```\n\nThis adds the relation to User without importing Volunteering models into the core.\n\nTest: Relationship works in tests; users can query their hour logs.\n\n### 7.2 Wire Shift::event() relationship\n\nIn the same provider:\n```php\nShift::resolveRelationUsing('event', fn($model) => \n  $model->belongsTo(Event::class, 'event_id')\n);\n```\n\nThis allows `$shift->event()` without a foreign key constraint or import.\n\nTest: Relationship works; event lookups succeed.\n\n### 7.3 Create VolunteerShiftsRelationManager for EventResource\n\nCreate `app/Filament/Staff/Resources/Events/VolunteerShiftsRelationManager.php`.\n\nBehavior:\n- Shows as a tab on EventResource\n- Lists all Shifts for this event\n- Columns: role title, start_at, end_at, capacity (filled/total), sign-ups count\n- Actions: \"Add Shift\" (select role, set capacity, set times), \"View Sign-ups\" (inline table)\n- Gated on `volunteer.shift.manage`\n\nTest: Relation manager appears on EventResource, actions work.\n\n### 7.4 Wire ReleaseVolunteersOnEventCancelled listener\n\nIn `app/Providers/EventServiceProvider`, listen to `EventCancelled`:\n```php\nEventCancelled::class => [\n  ReleaseVolunteersOnEventCancelled::class,\n],\n```\n\nOr use attribute-based discovery if configured.\n\nTest: Listener is invoked and volunteers are released on event cancellation.\n\n### 7.5 Register permission seeder in DatabaseSeeder\n\nIn `database/seeders/DatabaseSeeder.php`, call `PermissionSeeder::class` to ensure permissions exist.\n\nTest: Permissions are seeded on `php artisan db:seed`.\n\n---\n\n## Epic 8: Notifications\n\nEmail and in-app notifications for volunteers and staff.\n\n### 8.1 Create ShiftConfirmedNotification\n\nCreate `app-modules/volunteering/src/Notifications/ShiftConfirmedNotification.php` using Laravel Notification.\n\nBehavior:\n- Sent to volunteer when coordinator confirms them for a shift\n- Mail channel with Postmark\n- Subject: \"You're confirmed for [Shift Title] on [Date]\"\n- Body: shift details, start/end time, role description\n- Call-to-action: link to check-in on the day\n\nTest: Notification queues on VolunteerConfirmed event.\n\n### 8.2 Create ShiftReminderNotification\n\nCreate `app-modules/volunteering/src/Notifications/ShiftReminderNotification.php`.\n\nBehavior:\n- Sent to confirmed volunteers 24 hours before shift start\n- Scheduled job: `CheckShiftReminders` (command or scheduled job in `routes/console.php`)\n- Runs daily, finds all Confirmed HourLogs for shifts starting tomorrow\n- Sends notification per volunteer\n- Tracks sent reminders to avoid duplicates (or idempotent send)\n\nTest: Notification queues for correct volunteers.\n\n### 8.3 Create HoursApprovedNotification\n\nCreate `app-modules/volunteering/src/Notifications/HoursApprovedNotification.php`.\n\nBehavior:\n- Sent to volunteer when their self-reported hours are approved\n- Includes hours count and approval date\n- Calls to ApproveHours action\n\nTest: Notification queues on HoursApproved event.\n\n### 8.4 Create HoursRejectedNotification\n\nCreate `app-modules/volunteering/src/Notifications/HoursRejectedNotification.php`.\n\nBehavior:\n- Sent to volunteer when hours are rejected\n- Includes reason/notes from staff\n- Calls to RejectHours action\n\nTest: Notification queues on HoursRejected event.\n\n### 8.5 Create HoursSubmittedStaffNotification\n\nCreate `app-modules/volunteering/src/Notifications/HoursSubmittedStaffNotification.php`.\n\nBehavior:\n- Sent to staff (or role with `volunteer.hours.approve`)\n- Triggered on HoursSubmitted event\n- Subject: \"New volunteer hours pending approval\"\n- Body: volunteer name, role, hours, link to approval queue\n- Notification goes to Postmark mail channel\n\nTest: Notification queues on HoursSubmitted event, sent to staff.\n\n### 8.6 Wire event listeners for notifications\n\nIn `VolunteeringServiceProvider` or `EventServiceProvider`, register listeners that send notifications:\n- `VolunteerConfirmed \u2192 ShiftConfirmedNotification`\n- `HoursApproved \u2192 HoursApprovedNotification`\n- `HoursRejected \u2192 HoursRejectedNotification`\n- `HoursSubmitted \u2192 HoursSubmittedStaffNotification`\n\nTest: Listeners are wired, notifications dispatch.\n\n---\n\n## Epic 9: User-facing Livewire components\n\nMember-side views for signing up and checking in.\n\n### 9.1 Create OpenShiftsComponent (Livewire)\n\nCreate `app/Livewire/Volunteer/OpenShiftsComponent.php`.\n\nBehavior:\n- Query all Shifts with `start_at >= now()` sorted chronologically\n- Display as table: role, event name, start_at, end_at, capacity (filled/total), action\n- Action: \"Sign Up\" button (enabled if shift has capacity and user isn't already signed up)\n- On click: call `SignUp::make()` and show success/error message\n- Gated on `volunteer.signup` permission (all members by default)\n\nBlade template: `resources/views/livewire/volunteer/open-shifts.blade.php`\n\nTest: Component renders, sign-up action works, capacity enforcement visible.\n\n### 9.2 Create MyShiftsComponent (Livewire)\n\nCreate `app/Livewire/Volunteer/MyShiftsComponent.php`.\n\nBehavior:\n- Query all HourLogs for the authenticated user\n- Display tabs: Upcoming Confirmed (status = Confirmed, shift.start_at >= now()), Past (status = CheckedOut), Pending (status = Pending)\n- Upcoming: show shift details, start/end time, action: \"Check In\" (calls CheckIn::makeSelfCheckIn())\n- Past: read-only, show hours completed\n- Pending: status indicator, awaiting approval\n\nBlade template: `resources/views/livewire/volunteer/my-shifts.blade.php`\n\nTest: Component renders, tabs work, self-check-in action works.\n\n### 9.3 Create SubmitHoursComponent (Livewire)\n\nCreate `app/Livewire/Volunteer/SubmitHoursComponent.php`.\n\nBehavior:\n- Form: role select (required), started_at datetime (required), ended_at datetime (required), notes textarea (optional)\n- Validate dates, end > start\n- On submit: call `SubmitHours::make()` and show success message\n- Gated on `volunteer.hours.submit` permission\n\nBlade template: `resources/views/livewire/volunteer/submit-hours.blade.php`\n\nTest: Component renders, form validates, submission works.\n\n### 9.4 Create CheckInViewComponent (Livewire)\n\nCreate `app/Livewire/Volunteer/CheckInViewComponent.php`.\n\nBehavior:\n- Defaults to showing shifts for events happening now (within a time window, e.g., today)\n- Query Shifts with `start_at between today and today + 24h`\n- For each shift, show sign-ups: Confirmed, CheckedIn, Released counts\n- Allow quick check-in/check-out: click volunteer name to toggle status\n- Calls CheckIn/CheckOut actions\n- Gated on `volunteer.checkin` permission\n\nFor walk-ins: show an \"Add Walk-In\" button that opens a modal to select shift and create HourLog directly.\n\nBlade template: `resources/views/livewire/volunteer/check-in-view.blade.php`\n\nTest: Component renders, check-in/check-out actions work, walk-in creation works.\n\n---\n\n## Epic 10: Tests\n\nUnit and feature tests for all components. Written alongside epics but grouped here for visibility.\n\n### 10.1 Unit tests for actions\n\nCreate tests in `tests/Unit/Volunteer/Actions/` for each action class:\n- `CreateRoleTest`\n- `CreateShiftTest`\n- `SignUpTest` \u2014 test capacity enforcement, partial unique constraint\n- `ConfirmVolunteerTest` \u2014 test state transition, event firing\n- `ReleaseVolunteerTest` \u2014 test releasing from multiple states\n- `CheckInTest` \u2014 test state transition, walk-in creation\n- `CheckOutTest` \u2014 test minutes computation, tag propagation\n- `SubmitHoursTest` \u2014 test HourLog creation in Pending state\n- `ApproveHoursTest` \u2014 test state transition, tag propagation\n- `RejectHoursTest` \u2014 test state transition\n\nTest isolation: use SQLite test database or transactions.\n\n### 10.2 Feature tests for policies\n\nCreate tests in `tests/Feature/Policies/` for authorization:\n- `HourLogPolicyTest` \u2014 test confirm, release, checkIn, checkOut, approve, reject gates\n- `ShiftPolicyTest` \u2014 test signUp gate, shift-full enforcement\n- `RolePolicyTest` \u2014 test create/update/view gates\n\nTest: correct users can perform actions, incorrect users cannot.\n\n### 10.3 Feature tests for Filament resources\n\nCreate tests in `tests/Feature/Filament/Staff/Resources/` for admin UI:\n- `VolunteerRoleResourceTest` \u2014 test list, create, edit, delete (if implemented)\n- `VolunteerShiftResourceTest` \u2014 test list, create, edit; test relation manager\n- `VolunteerHourLogResourceTest` \u2014 test list, view; test row actions\n\nTest: resources render, forms validate, actions dispatch.\n\n### 10.4 Feature tests for workflows\n\nCreate end-to-end tests in `tests/Feature/Volunteer/`:\n- `EventVolunteerWorkflowTest` \u2014 full flow: staff creates shift, member signs up, coordinator confirms, volunteer checks in/out\n- `SelfReportedWorkflowTest` \u2014 full flow: volunteer submits hours, staff approves, volunteer receives notification\n- `EventCancellationTest` \u2014 event cancellation releases all volunteers\n\nTest: workflows complete successfully, events fire, state transitions are correct.\n\n### 10.5 Feature tests for Livewire components\n\nCreate tests in `tests/Feature/Livewire/Volunteer/`:\n- `OpenShiftsComponentTest` \u2014 test rendering, sign-up action\n- `MyShiftsComponentTest` \u2014 test tabs, self-check-in action\n- `SubmitHoursComponentTest` \u2014 test form, submission\n- `CheckInViewComponentTest` \u2014 test rendering, check-in/check-out actions, walk-in creation\n\nTest: components render, actions dispatch correctly.\n\n### 10.6 Integration test with Events module\n\nCreate `tests/Feature/Integration/VolunteerEventIntegrationTest.php`:\n- Test that ReleaseVolunteersOnEventCancelled listener works correctly\n- Verify volunteers are released when event is cancelled\n- Check notifications are sent appropriately\n\n---\n\n## Epic 11: Database seeding and fixtures\n\nSetup data for local development and testing.\n\n### 11.1 Create VolunteerSeeder\n\nCreate `database/seeders/VolunteerSeeder.php`:\n- Create 5\u201310 roles (Sound Person, Door Volunteer, Host, Tech, Social Media, Grant Writer, etc.)\n- Create 3\u20135 events (reuse existing events from Events module)\n- Create Shifts for a few events: 2\u20133 shifts per event\n- Create 5\u201310 test users\n- Create some HourLogs in various states (Interested, Confirmed, CheckedOut, Pending, Approved)\n- Tag some roles and shifts with \"Spring Grant 2026\", \"OCCF Campaign\", etc.\n\nCall from `DatabaseSeeder::class` if development env.\n\nTest: Seeder runs without error, creates expected records.\n\n### 11.2 Create factory classes\n\nCreate in `database/factories/`:\n- `RoleFactory` \u2014 random title, description\n- `ShiftFactory` \u2014 random role, optional event, future start/end, random capacity\n- `HourLogFactory` \u2014 random user, shift or role, status, timestamps\n\nUse factories in tests for setup data.\n\n---\n\n## Epic 12: Documentation and deployment\n\nFinal steps before launch.\n\n### 12.1 Create module README\n\nCreate `app-modules/volunteering/README.md`:\n- Overview of the module\n- Directory structure\n- Key classes (models, actions, events)\n- Usage examples: signing up, checking in, submitting hours\n- Integration points: how the module fires events for other modules to listen\n\n### 12.2 Create database migration guide\n\nDocument the migration path if this is a new module (greenfield \u2014 no backfill needed). Specify:\n- Tables created\n- Indexes added\n- Constraints (check, unique, foreign keys)\n- Order of execution\n\n### 12.3 Create Filament admin quickstart guide\n\nDocument how to:\n- Create a role\n- Create a shift\n- Confirm volunteers\n- Approve hours\n- Run a report\n\n### 12.4 Prepare deployment checklist\n\nBefore deploying:\n- All tests passing (`php artisan test`)\n- Linting passing (`./vendor/bin/pint`)\n- Migrations reversible (rollback tested)\n- Permissions seeded\n- Notifications configured and tested\n- Policy gates tested\n- Filament resources render and save\n- No unused imports or dead code\n\n---\n\n## Dependency graph\n\n```\nEpic 1 (foundation: models, migrations, state machine)\n  \u251c\u2500\u25b6 Epic 2 (authorization: permissions, policies)\n  \u2502     \u251c\u2500\u25b6 Epic 3 (core actions)\n  \u2502     \u2502     \u251c\u2500\u25b6 Epic 4 (domain events, listeners)\n  \u2502     \u2502     \u2502     \u2514\u2500\u25b6 Epic 8 (notifications)\n  \u2502     \u2502     \u2502           \u2514\u2500\u25b6 Epic 10 (tests)\n  \u2502     \u2502     \u251c\u2500\u25b6 Epic 5 (Filament admin: resources)\n  \u2502     \u2502     \u2502     \u251c\u2500\u25b6 Epic 6 (custom pages: queue, reports)\n  \u2502     \u2502     \u2502     \u2514\u2500\u25b6 Epic 7 (integration layer: relationships, listeners)\n  \u2502     \u2502     \u2502           \u2514\u2500\u25b6 Epic 10 (tests)\n  \u2502     \u2502     \u251c\u2500\u25b6 Epic 9 (user-facing Livewire)\n  \u2502     \u2502     \u2502     \u2514\u2500\u25b6 Epic 10 (tests)\n  \u2502     \u2502     \u2514\u2500\u25b6 Epic 11 (seeders, factories)\n  \u2502     \u2502           \u2514\u2500\u25b6 Epic 10 (tests)\n  \u2502\n  Epic 12 (docs, deployment) \u2014 final, depends on all above\n```\n\nParallelizable tracks after Epic 3 completes:\n- **Track A:** Epic 5 \u2192 6 \u2192 7 (admin UI, integration, deployment)\n- **Track B:** Epic 8 \u2192 notifications listeners (notifications)\n- **Track C:** Epic 9 (user-facing UI)\n- **Track D:** Epic 10 \u2192 11 (tests and seeding, can run in parallel with UI builds)\n\n---\n\n## Out of scope for this plan\n\n- **Credit earning** \u2014 volunteers earning practice space credits. Architecture supports this via domain events, but Finance integration is deferred.\n- **Public dynamic volunteer page** \u2014 replacing static HTML with database-driven open shifts listing and member sign-up. Static page stays for now.\n- **Kiosk check-in view** \u2014 dedicated terminal UI. Functionality works via web app on a phone for now.\n- **Shift templates / event type presets** \u2014 auto-creating shifts from templates on event creation. Manual shift creation for now.\n- **Recurring shifts** \u2014 repeating shift patterns that auto-create instances. Possible future use of `HasRecurringSeries` concern.\n- **Waitlisting** \u2014 allowing members to join a waitlist when a shift is full. Requires new `Waitlisted` state.\n- **Volunteer profiles / skills** \u2014 tracking skills and preferences for better matching.\n- **Shift trading** \u2014 volunteers swapping shifts with each other.\n- **Export to CSV** \u2014 report export functionality, deferred to future.\n- **Deletion of roles, shifts, or hours** \u2014 soft deletes possible in future; not planned for initial implementation.\n"}], "grading": null}, {"id": "volunteer-plan-without_skill", "prompt": "Write an implementation plan for the volunteer management module. The design spec is at docs/volunteer-management.md.", "eval_id": 2, "outputs": [{"name": "plan.md", "type": "text", "content": "# Volunteer Management \u2014 Implementation Plan\n\n## Status: Ready for implementation\n\nAll 9 epics below are independent and can be ordered by integration risk. The Volunteering module has zero dependencies on Finance, SpaceManagement, or Events internals \u2014 it only stores `event_id` as a foreign key and resolves the Event relationship in the integration layer.\n\n**Deployment sequence:**\n1. `php artisan migrate` (creates volunteer_roles, volunteer_shifts, volunteer_hour_logs tables)\n2. `php artisan db:seed --class=VolunteerRoleSeeder` (optional: seed common roles)\n3. `php artisan cache:clear`\n4. Filament admin ready: manage Roles, create Shifts, review pending hours\n5. Enable signup/check-in UI once integration layer wired (Epics 7\u20138)\n\n**Key architecture decisions:**\n- Volunteering is a self-contained module at `app-modules/volunteering/`\n- Event linkage is one-way: Shift stores `event_id` as FK, Events module unaware\n- Event relationship resolution via `resolveRelationUsing` in `AppServiceProvider` (integration layer)\n- Only two HourLog statuses count toward reporting: `CheckedOut` and `Approved`\n- Tags propagate from Shift/Role \u2192 HourLog at finalization (check-out or approval) for efficient reporting\n- Cross-module event listeners in `app/` handle side effects (e.g., release volunteers on event cancellation)\n\n---\n\n## Completed Epics\n\n_(None yet \u2014 sequencing below)_\n\n---\n\n## Implementation Epics\n\n### Epic 1: Models, migrations, state machines \u2705\n\n**Goal:** Database schema and Eloquent models for Roles, Shifts, and HourLogs.\n\n**Tasks:**\n- Create migration: `create_volunteer_roles_table`\n  - id, title (string, unique), description (text, nullable), timestamps\n  - Indexes: none (small table)\n- Create migration: `create_volunteer_shifts_table`\n  - id, role_id (FK \u2192 volunteer_roles), event_id (FK \u2192 events, nullable), start_at, end_at, capacity (int), timestamps\n  - Indexes: `(event_id)`, `(role_id)`, `(start_at)` for filtering\n  - Foreign key constraint: role_id is required; event_id is optional (for non-event shifts)\n- Create migration: `create_volunteer_hour_logs_table`\n  - id, user_id (FK \u2192 users), shift_id (nullable FK \u2192 volunteer_shifts), role_id (nullable FK \u2192 volunteer_roles), status (enum/string), started_at (timestamp, nullable), ended_at (timestamp, nullable), minutes (integer, generated), reviewed_by (nullable FK \u2192 users), notes (text, nullable), timestamps\n  - Check constraint: exactly one of `shift_id` or `role_id` must be non-null\n  - Unique constraint on `(user_id, shift_id)` where status NOT IN ('released', 'checked_out')\n  - Indexes: `(shift_id, status)`, `(user_id, status)`, `(status)`, `(reviewed_by)`\n  - Generated column: `minutes = EXTRACT(EPOCH FROM (ended_at - started_at)) / 60`\n\n- Create `CorvMC\\Volunteering\\Models\\Role` Eloquent model\n  - Cast timestamps; no additional casts needed\n  - Relation: `shifts()` hasMany Shift\n  - Relation: `hourLogs()` hasMany HourLog\n  - Add `Taggable` trait from spatie/laravel-tags\n\n- Create `CorvMC\\Volunteering\\Models\\Shift` Eloquent model\n  - Cast: start_at, end_at as datetime\n  - Relation: `role()` belongsTo Role\n  - Relation: `hourLogs()` hasMany HourLog\n  - Add `Taggable` trait\n  - Scopes: `upcoming()` (start_at > now), `past()` (start_at < now)\n  - Method: `spotsAvailable()` (capacity - count of non-released hourLogs)\n\n- Create `CorvMC\\Volunteering\\Models\\HourLog` Eloquent model\n  - Cast: started_at, ended_at as datetime; status to `HourLogState` (spatie state)\n  - Relation: `user()` belongsTo User\n  - Relation: `shift()` belongsTo Shift (nullable)\n  - Relation: `role()` belongsTo Role (nullable)\n  - Relation: `reviewer()` belongsTo User (reviewed_by, nullable)\n  - Add `Taggable` trait\n  - Scopes: `forShift($shiftId)`, `forUser($userId)`, `reportable()` (status in CheckedOut, Approved)\n\n- Create HourLogState enum/state machine using spatie/laravel-model-states\n  - States: Interested, Confirmed, Released, CheckedIn, CheckedOut, Pending, Approved, Rejected\n  - Transitions: see design spec (shift and self-reported workflows)\n  - State classes: each in `CorvMC\\Volunteering\\States\\HourLogState\\*`\n\n**Dependencies:** None (foundational)\n\n**Testing:**\n- ModelFactory tests for Role, Shift, HourLog\n- State transition tests (valid/invalid transitions)\n- Check constraint tests (exactly one of shift_id/role_id)\n- Scope tests (upcoming, past, reportable)\n- Generated column test (minutes calculation)\n\n---\n\n### Epic 2: Actions for shift-based volunteer work \u2705\n\n**Goal:** Reusable domain actions for the shift sign-up and check-in/check-out flows.\n\n**Tasks:**\n- Create `CorvMC\\Volunteering\\Actions\\SignUp`\n  - Input: user_id, shift_id\n  - Validation: shift exists, shift hasn't started yet, user not already signed up for this shift (or release is terminal)\n  - Output: creates HourLog in Interested status\n  - Side effect: fires `VolunteerSignedUp` event\n\n- Create `CorvMC\\Volunteering\\Actions\\ConfirmVolunteer`\n  - Input: hourlog_id, user_id (approver)\n  - Validation: HourLog is Interested, reviewed_by is staff (has volunteer.manage or is the event organizer)\n  - Output: transitions to Confirmed, sets reviewed_by\n  - Side effect: fires `VolunteerConfirmed` event; sends Shift Confirmed notification\n\n- Create `CorvMC\\Volunteering\\Actions\\ReleaseVolunteer`\n  - Input: hourlog_id, user_id (approver), notes (optional)\n  - Validation: HourLog is not already Released/CheckedOut, approver is staff or event organizer\n  - Output: transitions to Released, sets reviewed_by, notes\n  - Side effect: fires `VolunteerReleased` event\n\n- Create `CorvMC\\Volunteering\\Actions\\CheckIn`\n  - Input: hourlog_id, user_id (optional, supervisor), started_at (optional, defaults now)\n  - Validation: HourLog is Confirmed or CheckedIn already (self-check-in), started_at is plausible\n  - Output: transitions to CheckedIn, sets started_at\n  - Side effect: fires `VolunteerCheckedIn` event\n\n- Create `CorvMC\\Volunteering\\Actions\\CheckOut`\n  - Input: hourlog_id, user_id (optional, supervisor), ended_at (optional, defaults now)\n  - Validation: HourLog is CheckedIn, ended_at >= started_at\n  - Output: transitions to CheckedOut, sets ended_at, minutes is derived, tags propagate from Shift + Role\n  - Side effect: fires `VolunteerCheckedOut` event\n\n- Create `CorvMC\\Volunteering\\Actions\\AddWalkIn`\n  - Input: user_id (walk-in volunteer), shift_id, supervisor_id (who checked them in)\n  - Validation: shift exists, capacity not exceeded (or supervisor override flag)\n  - Output: creates HourLog in CheckedIn status directly, sets started_at\n  - Side effect: fires `VolunteerCheckedIn` event\n\n**Dependencies:** Epic 1\n\n**Testing:**\n- Action contract tests (valid inputs, expected outputs)\n- Authorization tests (staff, event organizer, supervisor permissions)\n- Event firing tests\n- Capacity enforcement tests (normal vs. supervisor override)\n\n---\n\n### Epic 3: Actions for self-reported volunteer work \u2705\n\n**Goal:** Reusable domain actions for submitting and approving/rejecting self-reported hours.\n\n**Tasks:**\n- Create `CorvMC\\Volunteering\\Actions\\SubmitHours`\n  - Input: user_id, role_id, started_at, ended_at, notes (optional)\n  - Validation: role exists, ended_at > started_at, user has volunteer.hours.submit permission\n  - Output: creates HourLog in Pending status, minutes derived by database\n  - Side effect: fires `HoursSubmitted` event; sends notification to staff\n\n- Create `CorvMC\\Volunteering\\Actions\\ApproveHours`\n  - Input: hourlog_id, reviewer_id, tags (optional array)\n  - Validation: HourLog is Pending, reviewer is staff (volunteer.hours.approve)\n  - Output: transitions to Approved, sets reviewed_by, propagates tags from Role + any direct tags passed, minutes is available\n  - Side effect: fires `HoursApproved` event; sends notification to volunteer\n\n- Create `CorvMC\\Volunteering\\Actions\\RejectHours`\n  - Input: hourlog_id, reviewer_id, notes (optional)\n  - Validation: HourLog is Pending, reviewer is staff\n  - Output: transitions to Rejected, sets reviewed_by, notes\n  - Side effect: fires `HoursRejected` event; sends notification to volunteer\n\n**Dependencies:** Epic 1\n\n**Testing:**\n- Action contract tests\n- Authorization tests (member can submit, staff can approve/reject)\n- Tag propagation tests (Role tags + direct tags merged)\n- Event firing and notification tests\n\n---\n\n### Epic 4: Role and Shift creation actions \u2705\n\n**Goal:** Domain actions for staff to define the volunteer catalog.\n\n**Tasks:**\n- Create `CorvMC\\Volunteering\\Actions\\CreateRole`\n  - Input: title (string), description (text, optional), tags (optional array)\n  - Validation: title unique, user has volunteer.role.manage permission\n  - Output: creates Role with tags applied\n  - Side effect: none\n\n- Create `CorvMC\\Volunteering\\Actions\\CreateShift`\n  - Input: role_id, event_id (optional), start_at, end_at, capacity (int), tags (optional array)\n  - Validation: role exists, event exists (if provided), start_at < end_at, capacity > 0, user has volunteer.shift.manage, user is event organizer (if event_id provided)\n  - Output: creates Shift with tags applied\n  - Side effect: none\n\n- Create `CorvMC\\Volunteering\\Actions\\UpdateShift`\n  - Input: shift_id, and any of: role_id, event_id, start_at, end_at, capacity, tags\n  - Validation: same as CreateShift\n  - Output: updates Shift\n  - Side effect: none\n\n**Dependencies:** Epic 1\n\n**Testing:**\n- Action contract tests\n- Authorization tests (volunteer.role.manage, volunteer.shift.manage, event organizer)\n- Tag application tests\n- Validation tests (date ordering, capacity)\n\n---\n\n### Epic 5: Filament admin for Roles, Shifts, and HourLogs \u2705\n\n**Goal:** Staff pages to manage the volunteer program.\n\n**Tasks:**\n- Create `App\\Filament\\Resources\\VolunteerRoleResource`\n  - List: title, description (truncated), shift count, recent hour log count, tags, timestamps\n  - View: title, description, tags, relation managers\n  - Create/Edit form: title (required), description (rich text), tags input\n  - Relation managers: ShiftsRelationManager (upcoming shifts using this role), HourLogsRelationManager (recent hours logged)\n  - Authorization: volunteer.role.manage\n\n- Create `App\\Filament\\Resources\\VolunteerShiftResource`\n  - List: role title, event name (or \"No event\"), date range, capacity (filled/total), tags, timestamps\n  - View: full details, HourLogsRelationManager\n  - Create/Edit form: role select, event select (optional), start_at, end_at, capacity, tags input\n  - Filters: role, event, date range, tag\n  - Actions (inline): Confirm, Release, Check In, Check Out (bulk-capable where sensible)\n  - Relation manager: HourLogsRelationManager (who's signed up, with status badges and quick actions)\n  - Authorization: volunteer.shift.manage\n\n- Create `App\\Filament\\Resources\\VolunteerHourLogResource` (optional, for staff review)\n  - List: volunteer name, role/shift, status badge, started_at, ended_at, minutes, reviewed_by, timestamps\n  - View: full details, notes\n  - Filters: status, volunteer, role, date range, tag\n  - Actions: none (read-only, detailed view only)\n  - Authorization: volunteer.hours.report\n\n- Create `App\\Filament\\Pages\\PendingHourLogsPage` (custom page for approval queue)\n  - Table: volunteer name, role, submitted date, started_at, ended_at, minutes, notes\n  - Row actions: Approve (with optional tag modal), Reject (with notes modal)\n  - Gated on volunteer.hours.approve\n  - Notification hook: when approved/rejected, notify volunteer\n\n**Dependencies:** Epic 1, 2, 3, 4\n\n**Testing:**\n- UI tests (list, view, create, edit)\n- Authorization tests (permission gating)\n- Action tests (confirm/release/check-in/check-out workflows)\n- Relation manager tests\n\n---\n\n### Epic 6: Integration layer \u2014 User relationships and Event linkage \u2705\n\n**Goal:** Wire Volunteering into the User and Event models via the integration layer.\n\n**Tasks:**\n- In `AppServiceProvider` or `VolunteeringServiceProvider`:\n  - Add `User::volunteerHourLogs()` relation via `resolveRelationUsing`\n    - Inverse of `HourLog::user()`\n    - Used on member profiles to show volunteer activity\n  - Add `Shift::event()` relation via `resolveRelationUsing`\n    - Resolves event_id FK (Shift stores the ID, never imports Event model)\n    - Integration layer only; Volunteering module doesn't know about Event\n\n- In `App\\Filament\\Resources\\EventResource` (integration layer):\n  - Add relation manager: `VolunteerShiftsRelationManager`\n  - Shows all Shifts for this event with signup/confirmation counts\n  - Actions: Add Shift (modal to select role, set capacity), quick-view who's signed up\n\n- Ensure `AppServiceProvider` registers Volunteering event listeners (see Epic 8)\n\n**Dependencies:** Epic 1, 5\n\n**Testing:**\n- Relationship tests (User \u2192 HourLogs, Shift \u2192 Event)\n- Relation manager tests (EventResource volunteer shifts tab)\n\n---\n\n### Epic 7: Member-facing UI \u2014 signup and self-reporting \u2705\n\n**Goal:** Let members sign up for shifts and submit self-reported hours.\n\n**Tasks:**\n- Create `App\\Filament\\Pages\\UpcomingVolunteerShifts` (Filament page, member-facing)\n  - List upcoming shifts (next 30 days) with: role title, event name, date/time, capacity (open slots), description\n  - Filter by role, event\n  - Action: \"Sign Up\" button \u2192 calls SignUp action, shows confirmation\n  - Authorization: volunteer.signup (default permission)\n  - Redirect to \"My Volunteer Activity\" after signup\n\n- Create `App\\Filament\\Pages\\MyVolunteerActivity` (member dashboard)\n  - Tabs: \"Upcoming Shifts\" (Confirmed/CheckedIn), \"Past Shifts\" (CheckedOut/Released), \"Self-Reported\" (all statuses)\n  - Upcoming: quick-check-in button if status is Confirmed\n  - Past: show hours, roles, dates\n  - Self-Reported: show status (Pending/Approved/Rejected), minutes, notes\n  - Action: \"Submit Hours\" button \u2192 modal to enter role, date/time, notes\n\n- Create `App\\Http\\Livewire\\VolunteerCheckInForm` (if Livewire is preferred) or modal in Filament\n  - For Confirmed volunteers: quick check-in from their phone\n  - Shows shift details, check-in time (defaults now)\n  - Calls CheckIn action\n  - Shows confirmation: \"You're checked in. Check out when done.\"\n\n- Create check-out workflow (self-serve or supervisor)\n  - Self-serve: \"Check Out\" button on the confirmed shift card in MyVolunteerActivity\n  - Calls CheckOut action\n  - Shows confirmation: hours logged, tags applied\n\n**Dependencies:** Epic 1, 2, 3, 5\n\n**Testing:**\n- UI tests (signup flow, activity dashboard)\n- Action integration tests (signup \u2192 HourLog creation, check-in/out workflows)\n- Permission tests\n\n---\n\n### Epic 8: Event listeners and cross-module effects \u2705\n\n**Goal:** Volunteering fires domain events; integration layer listens for side effects.\n\n**Tasks:**\n- Define domain events in `CorvMC\\Volunteering\\Events`:\n  - VolunteerSignedUp (hourlog_id, user_id, shift_id)\n  - VolunteerConfirmed (hourlog_id, user_id, shift_id)\n  - VolunteerReleased (hourlog_id, user_id)\n  - VolunteerCheckedIn (hourlog_id, user_id)\n  - VolunteerCheckedOut (hourlog_id, user_id, minutes, tags)\n  - HoursSubmitted (hourlog_id, user_id, role_id)\n  - HoursApproved (hourlog_id, user_id, role_id)\n  - HoursRejected (hourlog_id, user_id, role_id)\n\n- Create event listeners in `App\\Listeners`:\n  - `NotifyVolunteerConfirmed` \u2192 HoursApproved event, sends \"Shift Confirmed\" notification\n  - `NotifyVolunteerReleased` \u2192 VolunteerReleased event, sends notification\n  - `NotifyHourSubmitted` \u2192 HoursSubmitted event, sends staff notification (queue not stale)\n  - `NotifyHoursReviewed` \u2192 HoursApproved/HoursRejected events, sends volunteer notifications\n  - `ReleaseVolunteersOnEventCancelled` \u2192 Event cancelled (from Events module), releases all HourLogs for shifts on that event\n    - Calls ReleaseVolunteer action for each Confirmed/CheckedIn HourLog\n    - Notes: \"Event cancelled\"\n\n- Register listeners in `AppServiceProvider` or event map\n\n**Dependencies:** Epic 2, 3\n\n**Testing:**\n- Event firing tests (actions trigger correct events)\n- Listener tests (listeners react correctly)\n- Notification tests (correct recipients, content)\n- Cross-module tests (event cancellation releases volunteers)\n\n---\n\n### Epic 9: Reporting and tagging \u2705\n\n**Goal:** Query volunteer hours for grant reports and aggregate metrics.\n\n**Tasks:**\n- Create `App\\Filament\\Pages\\VolunteerReportPage` (custom Filament page)\n  - Date range picker (defaults to current quarter)\n  - Optional tag filter (dropdown with all tags used in Volunteering module)\n  - Summary stats: total hours, count of volunteers, average hours per volunteer\n  - Breakdown tables:\n    - By volunteer (name, hours, shifts worked, roles)\n    - By role (title, hours, shift count, volunteer count)\n    - By shift/event (event name, dates, hours, volunteers)\n  - \"Export as CSV\" action\n  - Authorization: volunteer.hours.report\n\n- Create queries in a `VolunteerReporter` service:\n  - `totalHoursByTag($tag, $startDate, $endDate)`\n  - `hoursByVolunteer($startDate, $endDate, $tag = null)` (returns paginated collection)\n  - `hoursByRole($startDate, $endDate, $tag = null)`\n  - `hoursByShift($startDate, $endDate, $tag = null)`\n  - All queries filter to `reportable()` HourLogs (CheckedOut + Approved)\n\n- Ensure tag propagation works:\n  - Role tags \u2192 HourLogs when hours are approved\n  - Shift tags \u2192 HourLogs when hours are checked out\n  - Tags merge if both Shift and Role have tags\n  - Staff can add ad-hoc tags during approval\n\n- Document tagging flow in code comments (for future refactoring)\n\n**Dependencies:** Epic 1, 3, 5\n\n**Testing:**\n- Query tests (correct hour sums, tag filtering)\n- Tag propagation tests\n- Export tests (CSV structure, data accuracy)\n- Authorization tests\n\n---\n\n### Epic 10: Shift reminders and notifications \u2705\n\n**Goal:** Automated notifications for volunteers and staff.\n\n**Tasks:**\n- Create `App\\Notifications\\ShiftConfirmedNotification`\n  - Recipient: volunteer\n  - Content: shift details (role, event, date/time), check-in link\n  - Trigger: VolunteerConfirmed event\n\n- Create `App\\Notifications\\ShiftReminderNotification`\n  - Recipient: all Confirmed volunteers for shifts starting in 24 hours\n  - Content: shift details, check-in link\n  - Trigger: scheduled job (daily, 9 AM local time, checks shifts starting tomorrow)\n\n- Create `App\\Notifications\\HourSubmittedNotification`\n  - Recipient: staff with volunteer.hours.approve permission\n  - Content: volunteer name, role, hours, link to approval queue\n  - Trigger: HoursSubmitted event\n\n- Create `App\\Notifications\\HoursApprovedNotification`\n  - Recipient: volunteer\n  - Content: role, hours approved, total hours logged (optional milestone message)\n  - Trigger: HoursApproved event\n\n- Create `App\\Notifications\\HoursRejectedNotification`\n  - Recipient: volunteer\n  - Content: reason (staff notes), encourage resubmission\n  - Trigger: HoursRejected event\n\n- Create scheduled job: `SendShiftReminders`\n  - Runs daily at 9 AM\n  - Finds all Confirmed HourLogs for shifts starting tomorrow\n  - Sends ShiftReminderNotification to each volunteer\n  - Register in `routes/console.php` or `Console\\Kernel.php`\n\n- All notifications use Postmark mail channel (existing)\n\n**Dependencies:** Epic 2, 3, 8\n\n**Testing:**\n- Notification content tests\n- Event \u2192 notification mapping tests\n- Scheduled job tests (correct volunteers targeted, frequency)\n\n---\n\n### Epic 11: Permissions and authorization \u2705\n\n**Goal:** Define and enforce volunteer-related permissions.\n\n**Tasks:**\n- Create permission records in `spatie/laravel-permission`:\n  - `volunteer.role.manage` \u2014 create/edit roles (staff)\n  - `volunteer.shift.manage` \u2014 create/edit shifts (staff)\n  - `volunteer.manage` \u2014 confirm/release volunteers globally (staff, event coordinators)\n  - `volunteer.checkin` \u2014 check in/out at events (trained volunteer supervisors)\n  - `volunteer.hours.approve` \u2014 approve/reject self-reported hours (staff)\n  - `volunteer.hours.submit` \u2014 submit self-reported hours (all members, default)\n  - `volunteer.hours.report` \u2014 view aggregate hour reports (staff, board)\n  - `volunteer.signup` \u2014 sign up for shifts (all members, default)\n\n- Create authorization logic:\n  - Models: use Laravel's built-in policy system or inline gate checks\n  - Actions: checks in constructor (e.g., `ConfirmVolunteer` checks user has `volunteer.manage` or is event organizer)\n  - Filament: use `->authorize()` on resources, pages, table actions\n  - Event organizer can confirm/release volunteers for their own event (derived from `Event.organizer_id`)\n\n- Seed default permissions in a seeder:\n  - Attach `volunteer.hours.submit` and `volunteer.signup` to all members\n  - Attach staff permissions to staff role\n\n**Dependencies:** Epic 5\n\n**Testing:**\n- Authorization tests (each action checks correct permission)\n- Event organizer tests (can manage their event's volunteers)\n- Policy tests (Filament respects authorization)\n\n---\n\n### Epic 12: Data and tests \u2705\n\n**Goal:** Seeders, factories, and comprehensive test suite.\n\n**Tasks:**\n- Create `database/seeders/VolunteerRoleSeeder`\n  - Seed common roles: Sound Person, Door Volunteer, Host, Tech, Worker, Social Media Coordinator, Grant Writer\n  - Include descriptions and tags (e.g., \"Grant Writer\" tagged \"Grants\")\n\n- Create Eloquent factories:\n  - `RoleFactory` \u2014 random title, description, tags\n  - `ShiftFactory` \u2014 role, optional event, random start/end, capacity 1\u20134\n  - `HourLogFactory` \u2014 user, shift or role, random status, timestamps based on state\n\n- Create comprehensive test suite in `tests/Feature/Volunteering/`:\n  - `RoleManagementTest` \u2014 create, edit, list, permissions\n  - `ShiftManagementTest` \u2014 create, edit, filter, capacity enforcement\n  - `SignUpWorkflowTest` \u2014 signup, confirm, release, check-in, check-out\n  - `SelfReportedWorkflowTest` \u2014 submit, approve, reject, tag propagation\n  - `WalkInTest` \u2014 supervisor adds walk-in, bypasses signup\n  - `CapacityTest` \u2014 enforce capacity, supervisor override\n  - `TagPropagationTest` \u2014 tags from Role/Shift merged onto HourLog\n  - `ReportingTest` \u2014 query accuracy, filtering by tag and date\n  - `AuthorizationTest` \u2014 all permissions enforced\n  - `NotificationTest` \u2014 correct notifications sent on events\n  - `EventCancellationTest` \u2014 canceling an event releases linked volunteers\n\n- Cross-module integration test:\n  - `VolunteeringEventIntegrationTest` \u2014 Volunteering listens for event cancellation and releases volunteers\n\n**Dependencies:** All epics\n\n**Testing:**\n- Test structure and coverage (>90% code coverage for Volunteering module)\n\n---\n\n## Dependency Graph\n\n```\nEpic 1 (models, migrations, states)\n  \u251c\u2500\u25b6 Epic 2 (shift sign-up/check-in actions)\n  \u2502     \u2514\u2500\u25b6 Epic 5 (Filament admin)\n  \u2502           \u2514\u2500\u25b6 Epic 7 (member UI)\n  \u2502\n  \u251c\u2500\u25b6 Epic 3 (self-reported actions)\n  \u2502     \u2514\u2500\u25b6 Epic 5 (Filament admin)\n  \u2502           \u2514\u2500\u25b6 Epic 7 (member UI)\n  \u2502\n  \u251c\u2500\u25b6 Epic 4 (role/shift creation)\n  \u2502     \u2514\u2500\u25b6 Epic 5 (Filament admin)\n  \u2502\n  \u251c\u2500\u25b6 Epic 6 (integration layer)\n  \u2502\n  \u251c\u2500\u25b6 Epic 8 (events & listeners)\n  \u2502     \u251c\u2500\u25b6 Epic 7 (member UI)\n  \u2502     \u2514\u2500\u25b6 Epic 10 (notifications)\n  \u2502\n  \u251c\u2500\u25b6 Epic 9 (reporting & tagging)\n  \u2502     \u2514\u2500\u25b6 Epic 5 (Filament admin)\n  \u2502\n  \u251c\u2500\u25b6 Epic 10 (notifications)\n  \u2502\n  \u2514\u2500\u25b6 Epic 11 (permissions)\n        \u2514\u2500\u25b6 Epic 5 (Filament admin)\n        \u2514\u2500\u25b6 Epic 7 (member UI)\n```\n\n**Recommended implementation order:**\n1. Epic 1 (foundation)\n2. Epic 2 & 3 & 4 in parallel (domain actions)\n3. Epic 5 (admin UI)\n4. Epic 6 (integration layer)\n5. Epic 11 (permissions)\n6. Epic 7 (member UI)\n7. Epic 8 (event listeners)\n8. Epic 10 (notifications)\n9. Epic 9 (reporting)\n10. Epic 12 (tests & seeders)\n\n**Parallelizable during implementation:**\n- Epics 2, 3, 4 (all domain actions)\n- Notification implementations (can run in parallel once events are defined)\n\n---\n\n## Known remaining work (non-blocking post-launch)\n\n1. **Public dynamic volunteer page** \u2014 replacing the static `resources/views/public/volunteer.blade.php` with a database-driven listing of open shifts and authenticated sign-up. The static page stays for now; dynamic page is deferred.\n\n2. **Kiosk check-in view** \u2014 simplified check-in screen for the desk terminal. Check-in works via the web app on a phone for now.\n\n3. **Shift templates / event type presets** \u2014 auto-creating shifts from a template when an event is created (e.g., \"every show needs Sound/Door/Host\").\n\n4. **Recurring shifts** \u2014 a repeating shift pattern that auto-creates instances.\n\n5. **Waitlisting** \u2014 when a shift is full, letting members join a waitlist (would add a Waitlisted state).\n\n6. **Volunteer profiles/skills** \u2014 tracking skills and preferences for better matching.\n\n7. **Shift trading** \u2014 volunteers swapping shifts with each other.\n\n8. **Credit earning** \u2014 volunteers earning practice space credits for hours worked. Architecture supports it (Volunteering fires events, Finance listens), but no demand yet.\n\n---\n\n## Architecture decisions locked in\n\n- **Module decoupling:** Volunteering stores `event_id` as a foreign key but never imports Event models. The integration layer resolves relationships via `resolveRelationUsing`.\n- **Event firing:** All volunteer actions fire domain events; cross-module side effects are handled by listeners in `app/` (not inside Volunteering).\n- **Tag propagation:** Tags from Shift and Role are denormalized onto HourLog at finalization (not joined on query). This makes reporting efficient.\n- **Permissions:** All permissions use spatie/laravel-permission; no custom auth logic per action.\n- **Notifications:** Use existing Laravel notification system with Postmark channel.\n- **No Finance integration:** Volunteering does not earn credits. If that requirement emerges, a listener can call `Finance::allocate()` on VolunteerCheckedOut.\n"}], "grading": null}], "previous_feedback": {}, "previous_outputs": {}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

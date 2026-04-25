@@ -108,7 +108,7 @@ class CreateEvent extends CreateRecord
             event: $event,
             setupMinutes: $setupMinutes,
             teardownMinutes: $teardownMinutes,
-            forceOverride: $forceOverride
+            force: $forceOverride
         );
 
         if (! $result['success']) {

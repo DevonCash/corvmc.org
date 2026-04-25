@@ -127,8 +127,8 @@ class ReservationSeeder extends Seeder
             return; // Skip this reservation
         }
 
-        // Create the reservation
-        $reservation = RehearsalReservation::factory()->create([
+        // Build and save without watson validation (rejects past dates)
+        $reservation = RehearsalReservation::factory()->make([
             'reservable_type' => 'user',
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
@@ -136,6 +136,7 @@ class ReservationSeeder extends Seeder
             'status' => $this->getRandomStatus(),
             'notes' => $this->getRandomNotes(),
         ]);
+        $reservation->forceSave();
 
         $this->createChargeForReservation($reservation, $user);
     }
@@ -225,7 +226,7 @@ class ReservationSeeder extends Seeder
                         continue;
                     }
 
-                    $reservation = RehearsalReservation::factory()->create([
+                    $reservation = RehearsalReservation::factory()->make([
                         'reservable_type' => 'user',
                         'reservable_id' => $user->id,
                         'reserved_at' => $startTime,
@@ -236,6 +237,7 @@ class ReservationSeeder extends Seeder
                         'instance_date' => $instanceDate->toDateString(),
                         'notes' => $config['notes'],
                     ]);
+                    $reservation->forceSave();
 
                     $this->createChargeForReservation($reservation, $user);
                 }
@@ -300,7 +302,7 @@ class ReservationSeeder extends Seeder
             return;
         }
 
-        $reservation = RehearsalReservation::factory()->create([
+        $reservation = RehearsalReservation::factory()->make([
             'reservable_type' => 'user',
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
@@ -308,6 +310,7 @@ class ReservationSeeder extends Seeder
             'status' => 'confirmed', // Past reservations are typically confirmed
             'notes' => $this->getRandomNotes(),
         ]);
+        $reservation->forceSave();
 
         $this->createChargeForReservation($reservation, $user, true);
     }

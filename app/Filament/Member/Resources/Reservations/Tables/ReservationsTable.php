@@ -5,10 +5,7 @@ namespace App\Filament\Member\Resources\Reservations\Tables;
 use App\Filament\Actions\Reservations\CancelReservationAction;
 use App\Filament\Actions\Reservations\PayWithCashAction;
 use App\Filament\Actions\Reservations\PayWithStripeAction;
-use CorvMC\Finance\Facades\Finance;
-use CorvMC\Finance\States\OrderState\Pending as OrderPending;
-use CorvMC\Finance\States\TransactionState\Failed as TransactionFailed;
-use CorvMC\Finance\States\TransactionState\Cancelled as TransactionCancelled;
+use App\Models\User;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
 use CorvMC\SpaceManagement\Models\Reservation;
@@ -112,41 +109,6 @@ class ReservationsTable
                     ]),
                 PayWithStripeAction::make(),
                 PayWithCashAction::make(),
-                \Filament\Actions\Action::make('retry_payment')
-                    ->label('Retry Payment')
-                    ->icon('tabler-refresh')
-                    ->color('success')
-                    ->visible(function (Reservation $record) {
-                        $order = Finance::findActiveOrder($record);
-
-                        return $order
-                            && $order->status instanceof OrderPending
-                            && $order->transactions()
-                                ->where('currency', 'stripe')
-                                ->where('type', 'payment')
-                                ->whereState('status', [TransactionFailed::class, TransactionCancelled::class])
-                                ->exists();
-                    })
-                    ->action(function (Reservation $record) {
-                        $order = Finance::findActiveOrder($record);
-                        if (! $order) {
-                            return;
-                        }
-
-                        try {
-                            $checkoutUrl = Finance::retryStripePayment($order);
-
-                            if ($checkoutUrl) {
-                                return redirect($checkoutUrl);
-                            }
-                        } catch (\Exception $e) {
-                            \Filament\Notifications\Notification::make()
-                                ->title('Payment Error')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
                 ActionGroup::make([
                     CancelReservationAction::make(),
                 ]),

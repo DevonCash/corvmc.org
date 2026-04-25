@@ -4,6 +4,10 @@ namespace App\Filament\Actions\Reservations;
 
 use CorvMC\Finance\Facades\Finance;
 use CorvMC\Finance\Models\Order;
+use CorvMC\Finance\Models\Transaction;
+use CorvMC\Finance\States\OrderState\Pending as OrderPending;
+use CorvMC\Finance\States\TransactionState\Failed as TransactionFailed;
+use CorvMC\Finance\States\TransactionState\Cancelled as TransactionCancelled;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
 use CorvMC\SpaceManagement\States\ReservationState\Scheduled;
@@ -22,6 +26,31 @@ class PayWithCashAction
             ->modalDescription('You\'ll need to pay in cash at the space before your reservation. Your booking will be confirmed now.')
             ->visible(fn (RehearsalReservation $record) => static::canPay($record))
             ->action(function (RehearsalReservation $record) {
+                $existingOrder = Finance::findActiveOrder($record);
+
+                // Retry: switch failed stripe order to cash
+                if ($existingOrder && static::hasFailedStripePayment($existingOrder)) {
+                    $amount = $existingOrder->total_amount;
+
+                    Transaction::create([
+                        'order_id' => $existingOrder->id,
+                        'user_id' => $existingOrder->user_id,
+                        'currency' => 'cash',
+                        'amount' => $amount,
+                        'type' => 'payment',
+                        'metadata' => [],
+                    ]);
+
+                    Notification::make()
+                        ->title('Switched to cash payment')
+                        ->body('Please bring ' . $existingOrder->formattedTotal() . ' in cash to the space.')
+                        ->success()
+                        ->send();
+
+                    return;
+                }
+
+                // Initial pay: create new order with cash
                 $user = $record->getResponsibleUser();
                 $lineItems = Finance::price([$record], $user);
                 $totalCents = (int) $lineItems->sum('amount');
@@ -51,16 +80,29 @@ class PayWithCashAction
 
     private static function canPay(RehearsalReservation $record): bool
     {
-        if (! ($record->status instanceof Scheduled)) {
-            return false;
-        }
-
+        // Must be within the confirmation window
         if ($record->reserved_at->gt(now()->addWeek())) {
             return false;
         }
 
         $existingOrder = Finance::findActiveOrder($record);
 
-        return ! $existingOrder;
+        // No order yet — initial pay (must be Scheduled)
+        if (! $existingOrder) {
+            return $record->status instanceof Scheduled;
+        }
+
+        // Has order with failed payment — can switch to cash
+        return static::hasFailedStripePayment($existingOrder);
+    }
+
+    private static function hasFailedStripePayment(Order $order): bool
+    {
+        return $order->status instanceof OrderPending
+            && $order->transactions()
+                ->where('currency', 'stripe')
+                ->where('type', 'payment')
+                ->whereState('status', [TransactionFailed::class, TransactionCancelled::class])
+                ->exists();
     }
 }

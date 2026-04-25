@@ -4,6 +4,7 @@ namespace App\Filament\Staff\Resources\Events\Actions;
 
 use App\Filament\Staff\Resources\Events\EventResource;
 use App\Facades\EventSyncService;
+use CorvMC\SpaceManagement\Facades\ReservationService;
 use App\Models\User;
 use App\Settings\ReservationSettings;
 use Carbon\Carbon;
@@ -286,13 +287,33 @@ class RescheduleEventAction
             $set('teardown_minutes', $settings->default_event_teardown_minutes);
         }
 
-        $result = EventSyncService::checkEventConflicts($startCarbon, $endCarbon, $setupMinutes, $teardownMinutes);
+        $eventStart = $startCarbon->copy();
+        $eventEnd = $endCarbon->copy();
+        $fullStart = $eventStart->copy()->subMinutes($setupMinutes);
+        $fullEnd = $eventEnd->copy()->addMinutes($teardownMinutes);
 
-        $set('conflict_status', $result['status']);
+        $allConflicts = ReservationService::getConflicts(
+            startTime: $fullStart,
+            endTime: $fullEnd,
+            includeBuffer: false,
+        );
+
+        if ($allConflicts->isEmpty()) {
+            $set('conflict_status', 'available');
+            $set('conflict_data', null);
+            return;
+        }
+
+        $eventConflicts = $allConflicts->filter(function ($conflict) use ($eventStart, $eventEnd) {
+            $conflictStart = $conflict->reserved_at ?? $conflict->starts_at;
+            $conflictEnd = $conflict->reserved_until ?? $conflict->ends_at;
+            return $conflictStart < $eventEnd && $conflictEnd > $eventStart;
+        });
+
+        $set('conflict_status', $eventConflicts->isNotEmpty() ? 'event_conflict' : 'setup_conflict');
         $set('conflict_data', json_encode([
-            'event_conflicts' => static::formatConflictsForStorage($result['event_conflicts']),
-            'setup_conflicts' => static::formatConflictsForStorage($result['setup_conflicts']),
-            'all_conflicts' => static::formatConflictsForStorage($result['all_conflicts']),
+            'total' => $allConflicts->count(),
+            'event_conflicts' => $eventConflicts->count(),
         ]));
     }
 
@@ -331,7 +352,7 @@ class RescheduleEventAction
 
         if (! $hasNewDate) {
             // TBA mode - just mark as postponed
-            EventService::reschedule($record, [], $data['reason'] ?? null);
+            EventService::updateStatus($record, 'postponed');
 
             Notification::make()
                 ->title('Event Postponed')
@@ -369,7 +390,11 @@ class RescheduleEventAction
         $forceOverride = (bool) ($data['force_override'] ?? false);
 
         // Create new event via reschedule
-        $newEvent = EventService::reschedule($record, $newEventData, $data['reason'] ?? null);
+        $newEvent = EventService::reschedule(
+            $record,
+            $newEventData['start_datetime'],
+            $newEventData['end_datetime'] ?? null,
+        );
 
         // Sync space reservation for new event
         if ($newEvent->usesPracticeSpace()) {

@@ -51,7 +51,11 @@ class MemberProfileSeeder extends Seeder
         // Backfill profiles for any users created by other seeders
         $orphans = User::whereDoesntHave('profile')->get();
         foreach ($orphans as $user) {
-            MemberProfile::create(['user_id' => $user->id]);
+            try {
+                MemberProfile::firstOrCreate(['user_id' => $user->id]);
+            } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+                // Profile was created by a model event between query and insert
+            }
         }
 
         $this->command->info("Created member profiles with diverse configurations for testing ({$orphans->count()} backfilled)");

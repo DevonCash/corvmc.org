@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Listeners\CheckEventSpaceConflicts;
 use App\Livewire\Synthesizers\MoneySynthesizer;
 use CorvMC\Finance\Models\Subscription;
 use App\Models\User;
@@ -11,7 +10,6 @@ use App\Observers\SpaceClosureObserver;
 use App\Observers\TagObserver;
 use App\Observers\UserObserver;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
-use CorvMC\Events\Events\EventScheduling;
 use CorvMC\SpaceManagement\Events\ReservationCancelled;
 use Filament\Support\Facades\FilamentTimezone;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -91,9 +89,6 @@ class AppServiceProvider extends ServiceProvider
             'resource_list' => \App\Models\ResourceList::class,
             'local_resource' => \App\Models\LocalResource::class,
         ]);
-
-        // Register event listeners for cross-module integration
-        Event::listen(EventScheduling::class, CheckEventSpaceConflicts::class);
 
         // SpaceManagement → Finance integration now handled by:
         // - FinanceServiceProvider: CancelOrderOnReservationCancelled

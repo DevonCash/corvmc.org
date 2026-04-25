@@ -18,22 +18,22 @@ class FreeHoursDiscountProduct extends Product
 
     public static ?string $model = null;
 
-    public static function getBillableUnits(Model $model = null): float
+    public static function getBillableUnits(?Model $model = null): float
     {
         return 1;
     }
 
-    public static function getPricePerUnit(Model $model = null): int
+    public static function getPricePerUnit(?Model $model = null): int
     {
         return 0;
     }
 
-    public static function getDescription(Model $model = null): string
+    public static function getDescription(?Model $model = null): string
     {
         return 'Free hours discount';
     }
 
-    public static function getEligibleWallets(Model $model = null): array
+    public static function getEligibleWallets(?Model $model = null): array
     {
         return [];
     }

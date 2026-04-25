@@ -21,12 +21,12 @@ class EquipmentLoanProduct extends Product
 
     public static ?string $model = EquipmentLoan::class;
 
-    public static function getBillableUnits(Model $model = null): float
+    public static function getBillableUnits(?Model $model = null): float
     {
         return 1;
     }
 
-    public static function getPricePerUnit(Model $model = null): int
+    public static function getPricePerUnit(?Model $model = null): int
     {
         if (! $model) {
             return 0;
@@ -36,7 +36,7 @@ class EquipmentLoanProduct extends Product
         return (int) round((float) $model->rental_fee * 100);
     }
 
-    public static function getDescription(Model $model = null): string
+    public static function getDescription(?Model $model = null): string
     {
         if (! $model) {
             return 'Equipment Loan';
@@ -49,7 +49,7 @@ class EquipmentLoanProduct extends Product
         return "{$equipmentName} loan ({$from} – {$due})";
     }
 
-    public static function getEligibleWallets(Model $model = null): array
+    public static function getEligibleWallets(?Model $model = null): array
     {
         return ['equipment_credits'];
     }

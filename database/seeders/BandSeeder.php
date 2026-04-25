@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use CorvMC\Bands\Models\Band;
+use CorvMC\Bands\Models\BandMember;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -226,20 +227,12 @@ class BandSeeder extends Seeder
     {
         $owner = $band->owner;
 
-        // Update owner's position if they're already a member (added by factory)
-        // or add them if not present
-        $existingMembership = $band->membership($owner);
-        if ($existingMembership) {
-            $existingMembership->update([
+        // Update owner's position (factory already attached them as a member)
+        BandMember::where('band_profile_id', $band->id)
+            ->where('user_id', $owner->id)
+            ->update([
                 'position' => fake()->randomElement(['Lead Vocalist', 'Guitarist', 'Keyboardist', 'Drummer', 'Bassist']),
             ]);
-        } else {
-            $band->members()->attach($owner->id, [
-                'role' => 'admin',
-                'status' => 'active',
-                'position' => fake()->randomElement(['Lead Vocalist', 'Guitarist', 'Keyboardist', 'Drummer', 'Bassist']),
-            ]);
-        }
 
         // Add additional members (subtract 1 since owner is already added)
         $additionalMembers = $users->except($owner->id)->random(min($memberCount - 1, $users->count() - 1));

@@ -17,7 +17,7 @@ return new class extends Migration
         Schema::create('venues', function (Blueprint $table) {
             $table->id();
             $table->string('name')->index();
-            $table->string('address');
+            $table->string('address')->nullable();
             $table->string('city')->default('Corvallis');
             $table->string('state', 2)->default('OR');
             $table->string('zip', 10)->nullable();

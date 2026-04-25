@@ -18,7 +18,7 @@ class RehearsalProduct extends Product
 
     public static ?string $model = RehearsalReservation::class;
 
-    public static function getBillableUnits(Model $model = null): float
+    public static function getBillableUnits(?Model $model = null): float
     {
         if (! $model || ! $model->reserved_at || ! $model->reserved_until) {
             return 0;
@@ -27,12 +27,12 @@ class RehearsalProduct extends Product
         return $model->reserved_at->diffInMinutes($model->reserved_until) / 60;
     }
 
-    public static function getPricePerUnit(Model $model = null): int
+    public static function getPricePerUnit(?Model $model = null): int
     {
         return (int) config('finance.pricing.' . RehearsalReservation::class . '.rate', 1500);
     }
 
-    public static function getDescription(Model $model = null): string
+    public static function getDescription(?Model $model = null): string
     {
         if (! $model) {
             return 'Practice Space';
@@ -44,7 +44,7 @@ class RehearsalProduct extends Product
         return "Practice Space - {$hours} hour(s) on {$date}";
     }
 
-    public static function getEligibleWallets(Model $model = null): array
+    public static function getEligibleWallets(?Model $model = null): array
     {
         return ['free_hours'];
     }

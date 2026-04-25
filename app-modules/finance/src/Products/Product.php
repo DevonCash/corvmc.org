@@ -72,23 +72,23 @@ abstract class Product
      * Number of billable units for the given model.
      * For category products (no model), return 1.
      */
-    abstract public static function getBillableUnits(Model $model = null): float;
+    abstract public static function getBillableUnits(?Model $model = null): float;
 
     /**
      * Price per unit in cents.
      */
-    abstract public static function getPricePerUnit(Model $model = null): int;
+    abstract public static function getPricePerUnit(?Model $model = null): int;
 
     /**
      * Human-readable description for receipts and invoices.
      */
-    abstract public static function getDescription(Model $model = null): string;
+    abstract public static function getDescription(?Model $model = null): string;
 
     /**
      * Wallet type keys that can discount a LineItem for this product.
      * Returns an empty array if no wallets apply.
      */
-    abstract public static function getEligibleWallets(Model $model = null): array;
+    abstract public static function getEligibleWallets(?Model $model = null): array;
 
     // =========================================================================
     // Derived helpers

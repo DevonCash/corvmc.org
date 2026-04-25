@@ -99,9 +99,13 @@ class ReservationColumns
         return TextColumn::make('cost_display')
             ->label('Cost')
             ->url(function (Reservation $record): ?string {
-                $order = Finance::findActiveOrder($record);
+                try {
+                    $order = Finance::findActiveOrder($record);
 
-                return $order ? OrderResource::getUrl('view', ['record' => $order]) : null;
+                    return $order ? OrderResource::getUrl('view', ['record' => $order]) : null;
+                } catch (\Symfony\Component\Routing\Exception\RouteNotFoundException) {
+                    return null;
+                }
             })
             ->state(function (Reservation $record): string {
                 $order = Finance::findActiveOrder($record);

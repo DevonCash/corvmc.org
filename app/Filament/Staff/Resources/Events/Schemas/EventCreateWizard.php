@@ -320,17 +320,35 @@ class EventCreateWizard
             $set('teardown_minutes', $settings->default_event_teardown_minutes);
         }
 
-        $result = ReservationService::getConflicts(
-            start: $startCarbon->copy()->subMinutes($setupMinutes),
-            end: $endCarbon->copy()->addMinutes($teardownMinutes),
+        $eventStart = $startCarbon->copy();
+        $eventEnd = $endCarbon->copy();
+        $fullStart = $eventStart->copy()->subMinutes($setupMinutes);
+        $fullEnd = $eventEnd->copy()->addMinutes($teardownMinutes);
+
+        // Get all conflicts for the full window (event + setup/teardown)
+        $allConflicts = ReservationService::getConflicts(
+            startTime: $fullStart,
+            endTime: $fullEnd,
             includeBuffer: false,
         );
 
-        $set('conflict_status', $result['status']);
+        if ($allConflicts->isEmpty()) {
+            $set('conflict_status', 'available');
+            $set('conflict_data', null);
+            return;
+        }
+
+        // Check if any conflicts overlap the actual event time (not just setup/teardown)
+        $eventConflicts = $allConflicts->filter(function ($conflict) use ($eventStart, $eventEnd) {
+            $conflictStart = $conflict->reserved_at ?? $conflict->starts_at;
+            $conflictEnd = $conflict->reserved_until ?? $conflict->ends_at;
+            return $conflictStart < $eventEnd && $conflictEnd > $eventStart;
+        });
+
+        $set('conflict_status', $eventConflicts->isNotEmpty() ? 'event_conflict' : 'setup_conflict');
         $set('conflict_data', json_encode([
-            'event_conflicts' => static::formatConflictsForStorage($result['event_conflicts']),
-            'setup_conflicts' => static::formatConflictsForStorage($result['setup_conflicts']),
-            'all_conflicts' => static::formatConflictsForStorage($result['all_conflicts']),
+            'total' => $allConflicts->count(),
+            'event_conflicts' => $eventConflicts->count(),
         ]));
     }
 

@@ -19,22 +19,22 @@ class ProcessingFeeProduct extends Product
 
     public static ?string $model = null;
 
-    public static function getBillableUnits(Model $model = null): float
+    public static function getBillableUnits(?Model $model = null): float
     {
         return 1;
     }
 
-    public static function getPricePerUnit(Model $model = null): int
+    public static function getPricePerUnit(?Model $model = null): int
     {
         return (int) config('finance.processing_fee.fixed_cents', 30);
     }
 
-    public static function getDescription(Model $model = null): string
+    public static function getDescription(?Model $model = null): string
     {
         return 'Card processing fee';
     }
 
-    public static function getEligibleWallets(Model $model = null): array
+    public static function getEligibleWallets(?Model $model = null): array
     {
         return [];
     }

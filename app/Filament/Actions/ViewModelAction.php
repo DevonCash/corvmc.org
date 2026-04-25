@@ -37,7 +37,12 @@ class ViewModelAction
 
         foreach (Filament::getResources() as $resource) {
             if ($model instanceof ($resource::getModel())) {
-                return $resource::getUrl('view', ['record' => $model]);
+                try {
+                    return $resource::getUrl('view', ['record' => $model]);
+                } catch (\Symfony\Component\Routing\Exception\MissingMandatoryParametersException) {
+                    // Child resources need parent parameters we can't resolve generically
+                    return null;
+                }
             }
         }
 

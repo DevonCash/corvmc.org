@@ -195,7 +195,7 @@ class ListEvents extends ListRecords
             event: $event,
             setupMinutes: $setupMinutes,
             teardownMinutes: $teardownMinutes,
-            forceOverride: $forceOverride
+            force: $forceOverride
         );
 
         if (! $result['success']) {
