@@ -1,112 +1,280 @@
 # Local Resources Rework
 
-## Problem statement
+The Local Resources page is a public directory of businesses and services useful to the Corvallis music community. This rework replaces the oversized card-grid display with a dense, scannable list layout, moves staff authoring into modals with a cleaner publish workflow, and adds bulk operations. No schema changes — the existing `local_resources` and `resource_lists` tables stay as-is.
 
-The Local Resources page serves as a directory of businesses and services useful to the Corvallis music community. Two things need fixing: the staff authoring experience has friction (clunky publish workflow, no bulk operations), and the public display wastes space with oversized cards that make the page hard to scan.
+---
 
-Members and visitors use this page to quickly find a studio, shop, or repair service. The current card-grid layout forces them to scroll through large blocks of whitespace to compare options within a category. Staff who maintain the directory hit small annoyances repeatedly — manually entering a datetime to publish, no way to re-categorize or publish several resources at once.
+## Why this rework
 
-## Goals
+Two problems, both friction:
 
-1. Public page is scannable at a glance — a visitor can find a resource in a category without scrolling past cards of empty fields.
-2. Staff can publish, unpublish, and re-categorize resources in bulk from the list view.
-3. The publish workflow uses a simple toggle (draft / publish now / schedule) instead of a raw datetime picker.
-4. The page retains its current information architecture (categories with anchor nav, suggestion form at the bottom) — this is a visual/UX pass, not a restructure.
+**Public display is bloated.** Each resource renders as a full card in a 2-column grid. Cards have fixed padding regardless of how many fields are populated, so a resource with just a name and website takes as much vertical space as one with every field filled. Visitors scanning for a rehearsal space or repair shop have to scroll through a lot of whitespace. The layout looks generic rather than curated.
 
-## Non-goals
+**Staff authoring has unnecessary friction.** Publishing requires typing into a raw datetime picker, or leaving it blank for "draft" (which isn't obvious). There are no bulk operations — re-categorizing or publishing several resources means editing each one individually. Creating and editing navigate to separate pages, losing context of the list.
 
-- **Data model changes.** The current schema (name, description, contact fields, website, address, published_at, sort_order) stays as-is. No new columns, no removed columns.
-- **Category restructure.** ResourceList model and its relationship to LocalResource are unchanged.
-- **Suggestion form redesign.** The Livewire `ResourceSuggestionForm` component and its notification flow stay as they are.
-- **Member/Band panel exposure.** Local Resources remain staff-authored content — no self-service editing by members or bands.
-- **Search or filtering on the public page.** The directory is small enough that anchor nav and visual scanning are sufficient for now.
+---
 
-## User stories
+## The "note" field
 
-**As a visitor**, I want to scan a category and see every resource's name, key contact info, and website in a compact layout so I can compare options without excessive scrolling.
+The existing `description` column gets reframed as a "note" in the UI — short supplementary context, not a paragraph. Example: a recurring jam listing might have the note "Third Thursday at Common Fields." The column name stays `description` in the database; only the label changes in the form and display.
 
-**As a staff admin**, I want to select multiple resources and publish, unpublish, or move them to a different category in one action so I don't have to edit each one individually.
+---
 
-**As a staff admin**, I want a clear draft/published/scheduled toggle when editing a resource so I don't have to think about what "leave empty to save as draft" means or type a datetime by hand.
+## Domain model
 
-## Requirements
+No changes. The existing models stay as-is:
 
-### P0 — Must have
+### LocalResource
+The directory entry. Key fields: `name`, `description` (displayed as "note"), `website`, `address`, `contact_name`, `contact_email`, `contact_phone`, `published_at`, `sort_order`, `resource_list_id`.
 
-#### Public display: dense columnar layout
+### ResourceList
+The category grouping. Key fields: `name`, `slug`, `description`, `display_order`.
 
-Replace the current 2-column card grid with a compact, tabular layout within each category section. Think "hotel activity card" — information arranged in columns, easy to scan vertically.
+A LocalResource belongs to a ResourceList. ResourceList has many LocalResources. The `published_at` field controls visibility: null = draft, future datetime = scheduled, past datetime = published.
 
-Each category section displays its resources in a dense list or table where each row shows: name (linked to website if present), description (truncated or omitted if empty), address, and contact info — all on one or two lines. Contact fields that are empty are simply not rendered (this already happens, but cards still take up vertical space due to padding).
+---
 
-Acceptance criteria:
+## Public browsing flow
 
-- Each resource occupies roughly one row of content height, not a full card.
-- Empty optional fields (description, address, contact_name, contact_email, contact_phone) don't produce blank space — the row collapses to fit only populated fields.
-- The layout remains readable on mobile — rows can stack fields vertically at small breakpoints instead of forcing a horizontal table.
-- Category headings, anchor nav, and the overall page structure (hero, nav bar, category sections, suggestion CTA) stay the same.
-- Visual hierarchy is clear: category name is the dominant heading, resource names are scannable within it.
+1. Visitor lands on `/local-resources`. The page loads all ResourceLists that have published resources, eager-loaded and ordered by `display_order`.
 
-#### Authoring: publish workflow improvement
+2. **Sticky anchor nav** at the top lists category names (same as today). Clicking one smooth-scrolls to that section.
 
-Replace the raw `DateTimePicker` for `published_at` in `ResourceListForm` with a segmented control or radio group: **Draft**, **Publish now**, **Schedule**. Selecting "Schedule" reveals a date/time picker. "Publish now" sets `published_at` to `now()` on save. "Draft" nulls it out.
+3. Each **category section** has the category name as an `<h2>`, optional category description below it, then a dense list of resources.
 
-Acceptance criteria:
+4. Each **resource row** shows:
+   - **Name** — linked to `website` if present (opens in new tab), plain text otherwise.
+   - **Note** — the `description` field, rendered as a secondary line under the name. Only shown if populated.
+   - **Address** — right-aligned or in a second column. Only shown if populated.
+   - **Contact button** — a small button that opens a native `<dialog>` or `[popover]` with the resource's contact details (contact_name, contact_email as mailto, contact_phone as tel). Only rendered if at least one contact field is populated.
 
-- New resources default to "Draft."
-- Editing an already-published resource shows "Publish now" as the active state (since `published_at` is in the past).
-- Editing a scheduled resource shows "Schedule" with the existing datetime pre-filled.
-- The underlying `published_at` column behavior is unchanged — this is purely a form UX improvement.
+5. The contact popover uses the HTML `popover` attribute (or `<dialog>` as fallback). All contact data is already in the page markup, just hidden. No JavaScript required for the interaction — the `popovertarget` attribute on the button handles open/close. No server roundtrip, no Alpine, no Livewire wire.
 
-#### Authoring: bulk actions
+6. **Suggestion form** at the bottom stays exactly as-is — the `ResourceSuggestionForm` Livewire component and its notification flow are untouched.
 
-Add bulk actions to the staff list table for: **Publish now**, **Unpublish (revert to draft)**, and **Move to category** (with a category select in the bulk action modal).
+### Category border accent
 
-Acceptance criteria:
+Each category section has a colored left border for visual distinction. Colors are auto-assigned from a fixed palette of 6–8 muted tones, cycling by loop index. No staff configuration, no schema change. Adjacent categories will get different colors as long as the palette is larger than 2.
 
-- Bulk publish sets `published_at = now()` on all selected resources that are currently drafts or scheduled.
-- Bulk unpublish sets `published_at = null` on all selected resources.
-- Bulk move updates `resource_list_id` on all selected resources and resets their `sort_order` to append at the end of the target category.
-- All three actions show a confirmation count ("Publish 4 resources?") before executing.
+### Layout structure (desktop)
 
-### P1 — Nice to have
+```
+  ┌──────────────────────────────────────────────────┐
+  │  Category Name                                   │
+▌ │  Optional category description                   │
+▌ ├──────────────────────────────────────────────────┤
+▌ │  Resource Name ↗    Note text here    123 Main St │ [Contact]
+▌ │  Another Place ↗                      456 Oak Ave │
+  │  Third Resource     Every other Friday            │ [Contact]
+  └──────────────────────────────────────────────────┘
+```
 
-#### Public display: subtle category styling
+The left border (`▌`) is a thick `border-left` on the category section container, colored per-category from the palette.
 
-Give each category section a slight visual distinction — a left border accent, a tinted background, or an icon. This makes the page feel less like a plain list and more like the "hotel card" aesthetic without adding weight.
+Each row is roughly one line of content height. Empty fields don't produce blank space — the row collapses around what's populated.
 
-#### Authoring: inline editing on list view
+### Layout structure (mobile)
 
-Allow editing name, category, and published status directly in the table row (Filament's inline editing) so staff can make quick corrections without opening the full edit form.
+On small screens, each resource stacks vertically within a compact block:
 
-### P2 — Future considerations
+```
+Resource Name ↗
+  Every other Friday
+  123 Main St · [Contact]
+```
 
-#### Public display: search/filter
+Still significantly denser than the current card layout.
 
-If the directory grows significantly, add a client-side search box that filters across all categories. Not needed now — the directory is small.
+### Implementation approach
 
-#### Resource logos/images
+Use a CSS grid or flex layout — not a `<table>`. The number of populated fields varies per row, so a rigid table would create awkward empty cells. A flex row with consistent spacing handles sparse data more gracefully and is easier to make responsive.
 
-Add an optional image per resource (via Spatie Media Library). Would require a schema change and complicates the dense layout, so deferring.
+---
 
-## Success metrics
+## Staff authoring flow
 
-This is an internal-facing improvement for a small nonprofit. Formal metrics aren't practical, but the rework succeeds if:
+### Modal-based create/edit
 
-- Staff who maintain the directory report that bulk operations and the publish toggle save them time.
-- The public page fits more resources on screen without scrolling (rough target: 2–3x as many visible resources per viewport compared to the card layout).
-- No regressions in the existing test suite (`PublicLocalResourcesTest`).
+Replace the separate Create and Edit pages with modal actions on the list page. Staff stays in context of the list while creating or editing resources.
+
+**Create:** A header action on the list page opens a modal with the resource form. On save, the new resource appears in the list.
+
+**Edit:** Clicking the edit action on a row opens the same form in a modal, pre-filled with the resource's data.
+
+The `CreateResourceList` and `EditResourceList` page classes are removed. The `ResourceListResource::getPages()` method returns only the `index` route.
+
+### Form schema
+
+The form stays in `ResourceListForm` with these changes:
+
+**Publish toggle.** Replace the raw `DateTimePicker` for `published_at` with a `ToggleButtons` (or `Radio`) component with three options: **Draft**, **Publish now**, **Schedule**. Selecting "Schedule" reveals a `DateTimePicker`. The toggle is a virtual field — the `mutateFormDataBeforeCreate` and `mutateFormDataBeforeSave` hooks translate it to the actual `published_at` value:
+
+- Draft → `published_at = null`
+- Publish now → `published_at = now()`
+- Schedule → `published_at = <selected datetime>`
+
+When editing, the initial state is derived from the current `published_at` value:
+- null → Draft
+- past → Publish now
+- future → Schedule (with the datetime pre-filled)
+
+**Description label.** The `description` Textarea label changes to "Note" with helper text: "Short context shown on the public page (e.g., 'Third Thursday at Common Fields')."
+
+**Category select.** Already has `->searchable()->preload()` and inline creation. No changes needed.
+
+### Bulk actions
+
+Three new bulk actions added to `ResourceListsTable`:
+
+**Publish now.** Sets `published_at = now()` on all selected resources. Confirmation modal shows count: "Publish 4 resources?"
+
+**Unpublish.** Sets `published_at = null` on all selected resources. Confirmation modal: "Unpublish 3 resources? They will be saved as drafts."
+
+**Move to category.** Modal with a `Select` for the target ResourceList (searchable, preloaded). On confirm, updates `resource_list_id` on all selected resources and sets their `sort_order` to `max(sort_order) + 1` within the target category (appended at end). Confirmation: "Move 5 resources to [Category Name]?"
+
+All three are added to the existing `BulkActionGroup`.
+
+### Category editing
+
+Stays as-is — the modal from the group header that edits category name and display_order.
+
+---
+
+## Module boundaries
+
+This feature doesn't touch any module — LocalResource and ResourceList live in `app/Models/` (integration layer), not in an app-module. The Filament resource lives in `app/Filament/Staff/`. The public view is a plain Blade template served by a route closure in `routes/web.php`. No cross-module communication is involved.
+
+---
+
+## Schema
+
+No migrations. The existing tables are unchanged:
+
+### local_resources
+| Column | Type | Notes |
+|---|---|---|
+| id | bigint PK | |
+| resource_list_id | bigint FK nullable | → resource_lists.id |
+| name | varchar(255) | |
+| description | text nullable | Displayed as "Note" in UI |
+| contact_name | varchar(255) nullable | |
+| contact_email | varchar(255) nullable | |
+| contact_phone | varchar(255) nullable | |
+| website | varchar(255) nullable | |
+| address | varchar(255) nullable | |
+| published_at | timestamp nullable | null=draft, past=published, future=scheduled |
+| sort_order | integer default 0 | |
+| created_at | timestamp | |
+| updated_at | timestamp | |
+| deleted_at | timestamp nullable | Soft deletes |
+
+### resource_lists
+| Column | Type | Notes |
+|---|---|---|
+| id | bigint PK | |
+| name | varchar(255) | |
+| slug | varchar(255) unique | Auto-generated via HasSlug |
+| description | text nullable | Category description |
+| display_order | integer default 0 | |
+| created_at | timestamp | |
+| updated_at | timestamp | |
+| deleted_at | timestamp nullable | Soft deletes |
+
+---
+
+## Staff UI summary
+
+**Location:** Staff panel → Content → Local Resources (`/staff/local-resources`)
+
+### List page
+
+| Element | Behavior |
+|---|---|
+| Header action: Create | Opens modal form |
+| Row action: Edit | Opens modal form for that resource |
+| Row actions: Move up/down | Same as today — reorder within category |
+| Bulk: Publish now | Sets published_at = now() |
+| Bulk: Unpublish | Sets published_at = null |
+| Bulk: Move to category | Select target category, moves + resets sort_order |
+| Group header: Edit | Modal to edit category name/display_order (unchanged) |
+| Filters | Status (Published/Draft/Scheduled), Trashed (unchanged) |
+| Grouping | By category with display_order sort (unchanged) |
+
+### Form fields (in modal)
+
+| Field | Type | Notes |
+|---|---|---|
+| Name | TextInput | Required |
+| Category | Select (relationship) | Searchable, preloaded, inline creation |
+| Website | TextInput (url) | |
+| Note | Textarea (2 rows) | Label "Note", was "Description" |
+| Contact Name | TextInput | |
+| Contact Email | TextInput (email) | |
+| Contact Phone | TextInput (tel) | |
+| Address | TextInput | |
+| Sort Order | TextInput (numeric) | |
+| Publish status | ToggleButtons | Draft / Publish now / Schedule |
+| Publish date | DateTimePicker | Visible only when "Schedule" selected |
+
+---
+
+## Permissions
+
+No changes. The existing `LocalResourcePolicy` stays as-is:
+- `viewAny`, `view`: public (allows null user)
+- `create`, `update`, `delete`, `restore`: admin role only
+- `forceDelete`: never
+
+---
+
+## Notifications
+
+No changes. The `ResourceSuggestionNotification` (sent when a visitor submits the suggestion form) stays as-is.
+
+---
+
+## What changes
+
+| Area | Change |
+|---|---|
+| `resources/views/public/local-resources.blade.php` | Replace card grid with dense list layout + native popovers for contact details |
+| `app/Filament/Staff/Resources/LocalResources/Schemas/ResourceListForm.php` | Add publish toggle, rename description → note label |
+| `app/Filament/Staff/Resources/LocalResources/Tables/ResourceListsTable.php` | Add bulk publish/unpublish/move actions |
+| `app/Filament/Staff/Resources/LocalResources/ResourceListResource.php` | Remove create/edit page routes, add modal create/edit actions |
+| `app/Filament/Staff/Resources/LocalResources/Pages/CreateResourceList.php` | Delete — replaced by modal create |
+| `app/Filament/Staff/Resources/LocalResources/Pages/EditResourceList.php` | Delete — replaced by modal edit |
+| `app/Filament/Staff/Resources/LocalResources/RelationManagers/ResourcesRelationManager.php` | Delete — unused (not in `getRelations()`), has a stale duplicate form |
+| `app/Filament/Staff/Resources/LocalResources/Pages/ListResourceLists.php` | Add create/edit modal action registration |
+| `tests/Feature/LocalResources/PublicLocalResourcesTest.php` | Update assertions for new markup structure |
+
+## What doesn't change
+
+| Area | Notes |
+|---|---|
+| `local_resources` migration/schema | No columns added, removed, or renamed |
+| `resource_lists` migration/schema | No changes |
+| `app/Models/LocalResource.php` | No changes |
+| `app/Models/ResourceList.php` | No changes |
+| `app/Policies/LocalResourcePolicy.php` | No changes |
+| `app/Livewire/ResourceSuggestionForm.php` | Suggestion form untouched |
+| `app/Notifications/ResourceSuggestionNotification.php` | Notification untouched |
+| `routes/web.php` route closure | Same query, same route name, same controller logic |
+| Category edit modal on group header | Stays as-is |
+
+---
+
+## Deferred
+
+**Client-side search/filter.** If the directory grows past ~50 resources, a search box that filters across categories would help. Not needed at current scale. When picked up: a simple JS filter that hides non-matching rows, no server involvement.
+
+**Resource images/logos.** An optional image per resource via Spatie Media Library. Would require a migration (media library polymorphic), complicate the dense layout, and add authoring friction. Revisit if there's demand.
+
+**Inline table editing.** Editing name, category, and publish status directly in the list table row. Filament supports this but it's additive on top of the modal approach — can layer it in later if staff find the modal too heavy for quick corrections.
+
+**Category color picker.** Letting staff choose a specific color per category (instead of auto-assigned). Would require a `color` column on `resource_lists` and a color picker in the category edit modal. Not worth the complexity unless the auto-assigned palette proves unsatisfying.
+
+---
 
 ## Open questions
 
-- **Design: exact dense layout format** — Should this be a literal `<table>`, a CSS grid with defined columns, or a styled definition list? The "hotel card" reference suggests columns with clear alignment, but the best implementation depends on how many contact fields are typically populated. *Owner: Devon (design decision).*
-- **Mobile breakpoint behavior** — At what point do the columns stack? Should mobile show a simplified card-per-resource, or keep the dense list with fields wrapping? *Owner: Devon.*
-
-## Affected files
-
-These are the files that will need changes:
-
-- `resources/views/public/local-resources.blade.php` — public display template
-- `app/Filament/Staff/Resources/LocalResources/Schemas/ResourceListForm.php` — publish workflow
-- `app/Filament/Staff/Resources/LocalResources/Tables/ResourceListsTable.php` — bulk actions
-- `tests/Feature/LocalResources/PublicLocalResourcesTest.php` — update assertions for new markup
+None currently blocking. The layout approach (CSS grid/flex, not `<table>`) and interaction pattern (native popover, modal authoring) are settled.

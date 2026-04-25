@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Sentry\Laravel\Integration;
+use Sentry\State\Scope;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -31,38 +32,27 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // ->withExceptions(function (Exceptions $exceptions) {
         Integration::handles($exceptions);
 
-        // Custom rendering for Livewire requests
-        $exceptions->render(function (Throwable $e, $request) {
-            if ($request->header('X-Livewire')) {
-                try {
-                    report($e);
-                } catch (Throwable $reportException) {
-                    // Silently fail if reporting fails to prevent infinite loop
+        // Enrich Sentry errors with the authenticated user
+        $exceptions->report(function (Throwable $e) {
+            try {
+                if (auth()->check()) {
+                    \Sentry\configureScope(function (Scope $scope): void {
+                        $user = auth()->user();
+                        $scope->setUser([
+                            'id' => $user->id,
+                            'email' => $user->email,
+                            'username' => $user->name,
+                        ]);
+                    });
                 }
-
-                // In development, show the default error modal with full details
-                if (! app()->environment('production')) {
-                    return null;
-                }
-
-                // In production, show a user-friendly message
-                \Filament\Notifications\Notification::make()
-                    ->title('An error occurred')
-                    ->body('Something went wrong. Our team has been notified.')
-                    ->danger()
-                    ->send();
-
-                // Return HTML that Livewire can display in its error modal
-                return response(
-                    '<div style="padding: 2rem; text-align: center;">
-                        <h2 style="margin-bottom: 1rem;">Something went wrong</h2>
-                        <p>Our team has been notified. Please try again.</p>
-                    </div>',
-                    500
-                );
+            } catch (Throwable) {
+                // Auth guard may not be available during early bootstrap errors
             }
         });
+
+        // Filament's built-in error notifications handle Livewire errors
+        // automatically — they intercept failed requests and show a toast
+        // notification instead of the default error modal.
     })->create();
