@@ -29,7 +29,7 @@ class FreeHoursWidget extends Widget
         $this->isSustainingMember = $user?->hasRole('sustaining member') ?? false;
 
         if ($this->isSustainingMember) {
-            $monthlyHours = MemberBenefitService::getMonthlyFreeHours($user);
+            $monthlyHours = MemberBenefitService::getUserMonthlyFreeHours($user);
             $this->remainingHours = $user->getRemainingFreeHours();
             $this->usedHours = $user->getUsedFreeHoursThisMonth();
             $this->monthlyGrantHours = $monthlyHours;

@@ -85,9 +85,15 @@ class PayWithStripeAction
 
         $existingOrder = Finance::findActiveOrder($record);
 
-        // No order yet — initial pay (must be Scheduled)
+        // No order yet — initial pay (must be Scheduled and non-free)
         if (! $existingOrder) {
-            return $record->status instanceof Scheduled;
+            if (! $record->status instanceof Scheduled) {
+                return false;
+            }
+
+            $total = (int) Finance::price([$record], $record->getResponsibleUser())->sum('amount');
+
+            return $total > 0;
         }
 
         // Has order with failed payment — retry
