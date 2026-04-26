@@ -14,19 +14,19 @@ beforeEach(function () {
 
 describe('manage', function () {
     it('allows directory moderator to manage profiles', function () {
-        $moderator = User::factory()->withRole('directory moderator')->create();
+        $moderator = User::withoutEvents(fn() => User::factory()->withRole('directory moderator')->create());
 
         expect($this->policy->manage($moderator))->toBeTrue();
     });
 
     it('denies regular members from managing profiles', function () {
-        $member = User::factory()->create();
+        $member = User::withoutEvents(fn() => User::factory()->create());
 
         expect($this->policy->manage($member))->toBeFalse();
     });
 
     it('denies profile owners from managing all profiles', function () {
-        $owner = User::factory()->create();
+        $owner = User::withoutEvents(fn() => User::factory()->create());
 
         expect($this->policy->manage($owner))->toBeFalse();
     });
@@ -34,7 +34,7 @@ describe('manage', function () {
 
 describe('viewAny', function () {
     it('allows any authenticated user to view profiles list', function () {
-        $member = User::factory()->create();
+        $member = User::withoutEvents(fn() => User::factory()->create());
 
         expect($this->policy->viewAny($member))->toBeTrue();
     });
@@ -45,7 +45,7 @@ describe('view', function () {
         $profile = MemberProfile::factory()->public()->create();
 
         // Authenticated user
-        $viewer = User::factory()->create();
+        $viewer = User::withoutEvents(fn() => User::factory()->create());
         expect($this->policy->view($viewer, $profile))->toBeTrue();
 
         // Guest (null user)
@@ -53,14 +53,14 @@ describe('view', function () {
     });
 
     it('allows directory moderator to view any profile', function () {
-        $moderator = User::factory()->withRole('directory moderator')->create();
+        $moderator = User::withoutEvents(fn() => User::factory()->withRole('directory moderator')->create());
         $profile = MemberProfile::factory()->private()->create();
 
         expect($this->policy->view($moderator, $profile))->toBeTrue();
     });
 
     it('allows owner to view their own private profile', function () {
-        $owner = User::factory()->create();
+        $owner = User::withoutEvents(fn() => User::factory()->create());
         $profile = MemberProfile::factory()->private()->create([
             'user_id' => $owner->id,
         ]);
@@ -70,7 +70,7 @@ describe('view', function () {
 
     it('allows any logged-in user to view members-only profile', function () {
         $profile = MemberProfile::factory()->membersOnly()->create();
-        $viewer = User::factory()->create();
+        $viewer = User::withoutEvents(fn() => User::factory()->create());
 
         expect($this->policy->view($viewer, $profile))->toBeTrue();
     });
@@ -83,7 +83,7 @@ describe('view', function () {
 
     it('denies outsiders from viewing private profiles', function () {
         $profile = MemberProfile::factory()->private()->create();
-        $outsider = User::factory()->create();
+        $outsider = User::withoutEvents(fn() => User::factory()->create());
 
         expect($this->policy->view($outsider, $profile))->toBeFalse();
     });
@@ -97,7 +97,7 @@ describe('view', function () {
 
 describe('create', function () {
     it('allows any authenticated user to create profiles', function () {
-        $member = User::factory()->create();
+        $member = User::withoutEvents(fn() => User::factory()->create());
 
         expect($this->policy->create($member))->toBeTrue();
     });
@@ -105,14 +105,14 @@ describe('create', function () {
 
 describe('update', function () {
     it('allows directory moderator to update any profile', function () {
-        $moderator = User::factory()->withRole('directory moderator')->create();
+        $moderator = User::withoutEvents(fn() => User::factory()->withRole('directory moderator')->create());
         $profile = MemberProfile::factory()->create();
 
         expect($this->policy->update($moderator, $profile))->toBeTrue();
     });
 
     it('allows owner to update their own profile', function () {
-        $owner = User::factory()->create();
+        $owner = User::withoutEvents(fn() => User::factory()->create());
         $profile = MemberProfile::factory()->create([
             'user_id' => $owner->id,
         ]);
@@ -122,7 +122,7 @@ describe('update', function () {
 
     it('denies non-owner from updating another users profile', function () {
         $profile = MemberProfile::factory()->create();
-        $otherUser = User::factory()->create();
+        $otherUser = User::withoutEvents(fn() => User::factory()->create());
 
         expect($this->policy->update($otherUser, $profile))->toBeFalse();
     });
@@ -130,14 +130,14 @@ describe('update', function () {
 
 describe('delete', function () {
     it('allows directory moderator to delete any profile', function () {
-        $moderator = User::factory()->withRole('directory moderator')->create();
+        $moderator = User::withoutEvents(fn() => User::factory()->withRole('directory moderator')->create());
         $profile = MemberProfile::factory()->create();
 
         expect($this->policy->delete($moderator, $profile))->toBeTrue();
     });
 
     it('allows owner to delete their own profile', function () {
-        $owner = User::factory()->create();
+        $owner = User::withoutEvents(fn() => User::factory()->create());
         $profile = MemberProfile::factory()->create([
             'user_id' => $owner->id,
         ]);
@@ -147,7 +147,7 @@ describe('delete', function () {
 
     it('denies non-owner from deleting another users profile', function () {
         $profile = MemberProfile::factory()->create();
-        $otherUser = User::factory()->create();
+        $otherUser = User::withoutEvents(fn() => User::factory()->create());
 
         expect($this->policy->delete($otherUser, $profile))->toBeFalse();
     });
@@ -155,14 +155,14 @@ describe('delete', function () {
 
 describe('restore', function () {
     it('allows directory moderator to restore any profile', function () {
-        $moderator = User::factory()->withRole('directory moderator')->create();
+        $moderator = User::withoutEvents(fn() => User::factory()->withRole('directory moderator')->create());
         $profile = MemberProfile::factory()->create();
 
         expect($this->policy->restore($moderator, $profile))->toBeTrue();
     });
 
     it('allows owner to restore their own profile', function () {
-        $owner = User::factory()->create();
+        $owner = User::withoutEvents(fn() => User::factory()->create());
         $profile = MemberProfile::factory()->create([
             'user_id' => $owner->id,
         ]);
@@ -172,7 +172,7 @@ describe('restore', function () {
 
     it('denies non-owner from restoring another users profile', function () {
         $profile = MemberProfile::factory()->create();
-        $otherUser = User::factory()->create();
+        $otherUser = User::withoutEvents(fn() => User::factory()->create());
 
         expect($this->policy->restore($otherUser, $profile))->toBeFalse();
     });
@@ -180,8 +180,8 @@ describe('restore', function () {
 
 describe('forceDelete', function () {
     it('denies everyone from force deleting profiles', function () {
-        $moderator = User::factory()->withRole('directory moderator')->create();
-        $owner = User::factory()->create();
+        $moderator = User::withoutEvents(fn() => User::factory()->withRole('directory moderator')->create());
+        $owner = User::withoutEvents(fn() => User::factory()->create());
         $profile = MemberProfile::factory()->create([
             'user_id' => $owner->id,
         ]);
@@ -200,7 +200,7 @@ describe('viewContact', function () {
             ]),
         ]);
 
-        $viewer = User::factory()->create();
+        $viewer = User::withoutEvents(fn() => User::factory()->create());
         expect($this->policy->viewContact($viewer, $profile))->toBeTrue();
         expect($this->policy->viewContact(null, $profile))->toBeTrue();
     });
@@ -213,7 +213,7 @@ describe('viewContact', function () {
             ]),
         ]);
 
-        $viewer = User::factory()->create();
+        $viewer = User::withoutEvents(fn() => User::factory()->create());
         expect($this->policy->viewContact($viewer, $profile))->toBeTrue();
     });
 
@@ -229,7 +229,7 @@ describe('viewContact', function () {
     });
 
     it('allows owner to view their own private contact info', function () {
-        $owner = User::factory()->create();
+        $owner = User::withoutEvents(fn() => User::factory()->create());
         $profile = MemberProfile::factory()->create([
             'user_id' => $owner->id,
             'contact' => ContactData::from([
@@ -242,7 +242,7 @@ describe('viewContact', function () {
     });
 
     it('allows directory moderator to view private contact info', function () {
-        $moderator = User::factory()->withRole('directory moderator')->create();
+        $moderator = User::withoutEvents(fn() => User::factory()->withRole('directory moderator')->create());
         $profile = MemberProfile::factory()->create([
             'contact' => ContactData::from([
                 'email' => 'test@example.com',
@@ -260,7 +260,7 @@ describe('viewContact', function () {
                 'visibility' => Visibility::Private,
             ]),
         ]);
-        $outsider = User::factory()->create();
+        $outsider = User::withoutEvents(fn() => User::factory()->create());
 
         expect($this->policy->viewContact($outsider, $profile))->toBeFalse();
     });
@@ -276,8 +276,8 @@ describe('viewContact', function () {
 
 describe('policy via Gate', function () {
     it('allows calling manage via Gate without model instance', function () {
-        $moderator = User::factory()->withRole('directory moderator')->create();
-        $regularUser = User::factory()->create();
+        $moderator = User::withoutEvents(fn() => User::factory()->withRole('directory moderator')->create());
+        $regularUser = User::withoutEvents(fn() => User::factory()->create());
 
         expect($moderator->can('manage', MemberProfile::class))->toBeTrue();
         expect($regularUser->can('manage', MemberProfile::class))->toBeFalse();
