@@ -6,7 +6,8 @@ use App\Facades\EventSyncService;
 use Carbon\Carbon;
 use CorvMC\Events\Enums\EventStatus;
 use CorvMC\Events\Models\Event;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\States\ReservationState\Cancelled;
+use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
 use Illuminate\Support\Facades\Cache;
 
 class EventObserver
@@ -134,16 +135,16 @@ class EventObserver
                     ? 'Event was cancelled'
                     : 'Event was postponed';
 
+                $reservation->status->transitionTo(Cancelled::class);
                 $reservation->update([
-                    'status' => ReservationStatus::Cancelled,
                     'cancellation_reason' => $reason,
                 ]);
             }
         } elseif ($wasInactive && $event->status->isActive()) {
             // Event was reactivated - restore or create reservation
-            if ($reservation && $reservation->status === ReservationStatus::Cancelled) {
+            if ($reservation && $reservation->status instanceof Cancelled) {
+                $reservation->status->transitionTo(Confirmed::class);
                 $reservation->update([
-                    'status' => ReservationStatus::Confirmed,
                     'cancellation_reason' => null,
                 ]);
             } elseif (! $reservation) {
