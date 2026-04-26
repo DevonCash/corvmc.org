@@ -110,7 +110,12 @@ class BandPolicy
 
     public function join(User $user, Band $band): bool
     {
-        return $band->membership($user)?->status === 'invited';
+        return \CorvMC\Support\Models\Invitation::query()
+            ->where('user_id', $user->id)
+            ->where('invitable_type', 'band')
+            ->where('invitable_id', $band->id)
+            ->where('status', 'pending')
+            ->exists();
     }
 
     public function leave(User $user, Band $band): bool

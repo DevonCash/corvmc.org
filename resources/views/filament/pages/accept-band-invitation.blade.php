@@ -42,26 +42,30 @@
                 Your Invitation
             </x-slot>
 
+            @php
+                $role = $membership->data['role'] ?? 'member';
+                $position = $membership->data['position'] ?? null;
+            @endphp
             <dl class="grid grid-cols-2 gap-4">
                 <div>
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Role</dt>
                     <dd class="mt-1">
-                        <x-filament::badge color="{{ $membership->role === 'admin' ? 'success' : 'info' }}">
-                            {{ ucfirst($membership->role) }}
+                        <x-filament::badge color="{{ $role === 'admin' ? 'success' : 'info' }}">
+                            {{ ucfirst($role) }}
                         </x-filament::badge>
                     </dd>
                 </div>
 
-                @if($membership->position)
+                @if($position)
                     <div>
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Position</dt>
-                        <dd class="mt-1 text-sm">{{ $membership->position }}</dd>
+                        <dd class="mt-1 text-sm">{{ $position }}</dd>
                     </div>
                 @endif
 
                 <div>
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Invited</dt>
-                    <dd class="mt-1 text-sm">{{ $membership->invited_at->diffForHumans() }}</dd>
+                    <dd class="mt-1 text-sm">{{ $membership->created_at->diffForHumans() }}</dd>
                 </div>
             </dl>
         </x-filament::section>

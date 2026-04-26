@@ -55,32 +55,13 @@ class BandsRelationManager extends RelationManager
                     ->searchable(query: function ($query, string $search) {
                         return $query->whereRaw('LOWER("band_profile_members"."position") LIKE ?', ['%'.strtolower($search).'%']);
                     }),
-                Tables\Columns\TextColumn::make('pivot.status')
-                    ->badge()
-                    ->label('Status')
-                    ->color(fn (string $state): string => match ($state) {
-                        'active' => 'success',
-                        'invited' => 'warning',
-                        'inactive' => 'gray',
-                        default => 'gray',
-                    }),
-                Tables\Columns\TextColumn::make('pivot.invited_at')
-                    ->label('Invited At')
-                    ->dateTime()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('pivot.status')
-                    ->label('Status')
-                    ->options([
-                        'active' => 'Active',
-                        'invited' => 'Invited',
-                        'inactive' => 'Inactive',
-                    ]),
+                //
             ])
             ->headerActions([
                 Actions\AttachAction::make()

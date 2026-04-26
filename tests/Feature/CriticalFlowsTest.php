@@ -23,6 +23,7 @@ use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Facades\CreditService;
 use CorvMC\Finance\Facades\MemberBenefitService;
 use CorvMC\Membership\Facades\BandService;
+use CorvMC\Support\Models\Invitation;
 use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
@@ -375,16 +376,16 @@ describe('Flow 3: Create Band and Invite Member', function () {
         $invitee->assignRole('member');
 
         // Act: Invite member
-        BandService::addMember($band, $invitee, [
-            'role' => 'member',
-            'position' => 'Drummer',
-        ]);
+        $invitation = BandService::inviteMember($band, $invitee, 'member', 'Drummer');
 
-        // Assert: Invitation exists
-        $invitation = $band->memberships()->invited()->where('user_id', $invitee->id)->first();
-        expect($invitation)->not->toBeNull()
-            ->and($invitation->role)->toBe('member')
-            ->and($invitation->position)->toBe('Drummer');
+        // Assert: Invitation exists in support_invitations
+        expect($invitation)->toBeInstanceOf(Invitation::class)
+            ->and($invitation->isPending())->toBeTrue()
+            ->and($invitation->data['role'])->toBe('member')
+            ->and($invitation->data['position'])->toBe('Drummer');
+
+        // User should not be a band member yet
+        expect($band->isMember($invitee))->toBeFalse();
     });
 
     it('allows invited member to accept invitation', function () {
@@ -398,21 +399,21 @@ describe('Flow 3: Create Band and Invite Member', function () {
         $invitee = User::factory()->create();
         $invitee->assignRole('member');
 
-        BandService::inviteMember($band, $invitee, ['role' => 'member']);
+        $invitation = BandService::inviteMember($band, $invitee, 'member');
 
         // Act: Accept invitation
-        BandService::acceptInvitation($band, $invitee);
+        BandService::acceptInvitation($invitation);
 
         // Assert: Member is now active
-        $membership = $band->memberships()->active()->where('user_id', $invitee->id)->first();
+        $membership = $band->memberships()->where('user_id', $invitee->id)->first();
         expect($membership)->not->toBeNull()
-            ->and($membership->status)->toBe('active');
+            ->and($membership->role)->toBe('member');
 
-        // Assert: No longer shows as invited
-        expect($band->memberships()->invited()->where('user_id', $invitee->id)->exists())->toBeFalse();
+        // Assert: Invitation is accepted
+        expect($invitation->fresh()->isAccepted())->toBeTrue();
     });
 
-    it('prevents duplicate active memberships', function () {
+    it('prevents duplicate invitations for same user', function () {
         // Arrange
         $owner = User::factory()->create();
         $owner->assignRole('member');
@@ -423,13 +424,12 @@ describe('Flow 3: Create Band and Invite Member', function () {
         $member = User::factory()->create();
         $member->assignRole('member');
 
-        // Add and accept first invitation
-        BandService::inviteMember($band, $member, ['role' => 'member']);
-        BandService::acceptInvitation($band, $member);
+        // First invitation
+        BandService::inviteMember($band, $member, 'member');
 
-        // Act & Assert: Second invitation should fail
-        expect(fn() => BandService::inviteMember($band, $member, ['role' => 'member']))
-            ->toThrow(\CorvMC\Bands\Exceptions\BandException::class);
+        // Act & Assert: Second invitation should fail (unique constraint)
+        expect(fn() => BandService::inviteMember($band, $member, 'member'))
+            ->toThrow(\Exception::class);
     });
 });
 

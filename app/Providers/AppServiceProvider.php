@@ -62,6 +62,9 @@ class AppServiceProvider extends ServiceProvider
             'ticket_order' => \CorvMC\Events\Models\TicketOrder::class,
             'ticket' => \CorvMC\Events\Models\Ticket::class,
 
+            // Support module models
+            'support_invitation' => \CorvMC\Support\Models\Invitation::class,
+
             // Space management models
             'reservation' => \CorvMC\SpaceManagement\Models\Reservation::class,
             'rehearsal_reservation' => \CorvMC\SpaceManagement\Models\RehearsalReservation::class,

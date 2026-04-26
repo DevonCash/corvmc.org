@@ -186,9 +186,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
             return new Collection();
         }
 
-        // Return all bands where user is active member or owner
+        // Return all bands where user is a member (all members are active now;
+        // invitations live in support_invitations, not the pivot)
         return $this->bands()
-            ->wherePivot('status', 'active')
             ->orderBy('name')
             ->get();
     }
@@ -209,8 +209,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
             return true;
         }
 
-        // Invited users have limited access (middleware restricts to acceptance page only)
-        if ($tenant->memberships()->invited()->where('user_id', $this->id)->exists()) {
+        // Users with pending invitations have limited access (middleware restricts to acceptance page only)
+        if (\CorvMC\Support\Models\Invitation::query()
+            ->where('user_id', $this->id)
+            ->where('invitable_type', 'band')
+            ->where('invitable_id', $tenant->id)
+            ->where('status', 'pending')
+            ->exists()
+        ) {
             return true;
         }
 
@@ -298,7 +304,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
     public function bands(): BelongsToMany
     {
         return $this->belongsToMany(Band::class, 'band_profile_members', 'user_id', 'band_profile_id')
-            ->withPivot('role', 'position', 'status')
+            ->withPivot('role', 'position')
             ->withTimestamps();
     }
 

@@ -35,10 +35,11 @@ class BandResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $count = Band::whereHas('members', function ($query) {
-            $query->where('user_id', User::me()->id)
-                ->where('status', 'invited');
-        })->count();
+        $count = \CorvMC\Support\Models\Invitation::query()
+            ->where('user_id', User::me()?->id)
+            ->where('invitable_type', 'band')
+            ->where('status', 'pending')
+            ->count();
 
         return $count > 0 ? (string) $count : null;
     }

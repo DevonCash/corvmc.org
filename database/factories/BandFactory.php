@@ -18,7 +18,7 @@ class BandFactory extends Factory
         return $this->afterCreating(function (Band $band) {
             // Ensure the owner is set correctly
             if (! $band->membership($band->owner)) {
-                $band->members()->attach($band->owner_id, ['role' => 'admin', 'status' => 'active']);
+                $band->members()->attach($band->owner_id, ['role' => 'admin']);
             }
         });
     }
@@ -38,6 +38,7 @@ class BandFactory extends Factory
             'bio' => $this->faker->paragraphs(3, true),
             'hometown' => $this->faker->city().', '.$this->faker->stateAbbr(),
             'owner_id' => 1, // Will be overridden by seeder
+            'status' => 'active',
             'visibility' => $this->faker->randomElement([Visibility::Public, Visibility::Members, Visibility::Private]),
             'links' => $this->generateLinks(),
             'contact' => $this->generateContact(),

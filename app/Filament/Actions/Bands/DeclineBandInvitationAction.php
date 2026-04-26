@@ -2,8 +2,8 @@
 
 namespace App\Filament\Actions\Bands;
 
-use CorvMC\Bands\Models\BandMember;
 use CorvMC\Membership\Services\BandService;
+use CorvMC\Support\Models\Invitation;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
@@ -18,13 +18,13 @@ class DeclineBandInvitationAction
             ->color('danger')
             ->requiresConfirmation()
             ->modalHeading('Decline Band Invitation')
-            ->modalDescription(fn (?Model $record) => $record instanceof BandMember
-                ? "Decline the invitation to join {$record->band->name}?"
+            ->modalDescription(fn (?Model $record) => $record instanceof Invitation
+                ? "Decline the invitation to join {$record->invitable->name}?"
                 : 'Decline this band invitation?')
-            ->visible(fn (?Model $record) => $record instanceof BandMember && $record->status === 'invited')
-            ->authorize(fn (?Model $record) => auth()->user()?->can('decline', $record))
+            ->visible(fn (?Model $record) => $record instanceof Invitation && $record->isPending())
+            ->authorize(fn (?Model $record) => auth()->user()?->can('respond', $record))
             ->action(function (Model $record) {
-                $bandName = $record->band->name;
+                $bandName = $record->invitable->name;
                 app(BandService::class)->declineInvitation($record);
 
                 Notification::make()

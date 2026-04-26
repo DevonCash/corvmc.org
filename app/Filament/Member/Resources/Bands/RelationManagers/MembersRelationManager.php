@@ -35,20 +35,6 @@ class MembersRelationManager extends RelationManager
                     ->weight(FontWeight::Bold)
                     ->sortable(),
 
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'active' => 'success',
-                        'invited' => 'warning',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'active' => 'Active',
-                        'invited' => 'Pending Invitation',
-                        default => ucfirst($state),
-                    }),
-
                 TextColumn::make('position')
                     ->label('Position')
                     ->placeholder('No position set')

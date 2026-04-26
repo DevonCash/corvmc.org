@@ -4,6 +4,7 @@ namespace CorvMC\Bands\Http\Middleware;
 
 use Closure;
 use CorvMC\Bands\Models\Band;
+use CorvMC\Support\Models\Invitation;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
@@ -20,21 +21,22 @@ class EnsureActiveBandMembership
             return redirect()->route('filament.member.pages.member-dashboard');
         }
 
-        // Verify user has active membership (not just invited)
         $user = auth()->user();
         if (! $user) {
             return redirect()->route('filament.member.pages.member-dashboard');
         }
 
-        // Check for active membership (owner or active member)
+        // Check for active membership (owner or member — all BandMember rows are active)
         $isActiveMember = $tenant->owner_id === $user->id
             || $tenant->activeMembers()->where('user_id', $user->id)->exists();
 
         if (! $isActiveMember) {
             // Check if user has a pending invitation to this band
-            $hasInvitation = $tenant->memberships()
-                ->invited()
+            $hasInvitation = Invitation::query()
                 ->where('user_id', $user->id)
+                ->where('invitable_type', 'band')
+                ->where('invitable_id', $tenant->id)
+                ->where('status', 'pending')
                 ->exists();
 
             if ($hasInvitation) {

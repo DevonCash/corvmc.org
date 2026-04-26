@@ -4,22 +4,26 @@ namespace CorvMC\Membership\Services;
 
 use App\Models\User;
 use CorvMC\Bands\Models\Band;
-use CorvMC\Bands\Models\BandMember;
+use CorvMC\Support\Models\Invitation;
+use CorvMC\Support\Services\InvitationService;
 use Illuminate\Support\Facades\DB;
 
 class BandService
 {
+    public function __construct(
+        private InvitationService $invitationService,
+    ) {}
+
     public function create(User $owner, array $data): Band
     {
         return DB::transaction(function () use ($owner, $data) {
-            $band = Band::create($data);
-            
+            $band = Band::create(array_merge(['status' => 'active'], $data, ['owner_id' => $owner->id]));
+
             // Add owner as admin member
             $band->members()->attach($owner->id, [
                 'role' => 'owner',
-                'joined_at' => now(),
             ]);
-            
+
             return $band;
         });
     }
@@ -27,6 +31,7 @@ class BandService
     public function update(Band $band, array $data): Band
     {
         $band->update($data);
+
         return $band->fresh();
     }
 
@@ -39,20 +44,20 @@ class BandService
     {
         $band->members()->attach($user->id, [
             'role' => $role,
-            'joined_at' => now(),
         ]);
     }
 
-    public function inviteMember(Band $band, User $user, string $role = 'member', ?string $position = null): BandMember
+    public function inviteMember(Band $band, User $user, string $role = 'member', ?string $position = null): Invitation
     {
-        return BandMember::create([
-            'band_profile_id' => $band->id,
-            'user_id' => $user->id,
-            'role' => $role,
-            'position' => $position,
-            'status' => 'invited',
-            'invited_at' => now(),
-        ]);
+        return $this->invitationService->invite(
+            subject: $band,
+            invitee: $user,
+            inviter: auth()->user(),
+            data: array_filter([
+                'role' => $role,
+                'position' => $position,
+            ]),
+        );
     }
 
     public function removeMember(Band $band, User $user): void
@@ -65,23 +70,18 @@ class BandService
         $band->members()->updateExistingPivot($user->id, $data);
     }
 
-    public function acceptInvitation($invitation): void
+    public function acceptInvitation(Invitation $invitation): void
     {
-        DB::transaction(function () use ($invitation) {
-            $invitation->update([
-                'status' => 'active',
-                'joined_at' => now(),
-            ]);
-        });
+        $this->invitationService->accept($invitation);
     }
 
-    public function declineInvitation($invitation): void
+    public function declineInvitation(Invitation $invitation): void
     {
-        $invitation->update(['status' => 'declined']);
+        $this->invitationService->decline($invitation);
     }
 
-    public function cancelInvitation($invitation): void
+    public function retractInvitation(Invitation $invitation): void
     {
-        $invitation->update(['status' => 'cancelled']);
+        $this->invitationService->retract($invitation);
     }
 }

@@ -49,13 +49,17 @@
         @endif
 
         {{-- Invitation Details --}}
+        @php
+            $role = $membership->data['role'] ?? 'member';
+            $position = $membership->data['position'] ?? null;
+        @endphp
         <x-filament::section>
             <x-slot name="heading">Your Invitation</x-slot>
 
             <div class="space-y-4">
                 {{-- Role with Icon --}}
                 <div class="flex items-center gap-3">
-                    @if($membership->role === 'admin')
+                    @if($role === 'admin')
                         <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-success-50 dark:bg-success-500/10 flex items-center justify-center">
                             <x-tabler-shield class="w-5 h-5 text-success-600 dark:text-success-400" />
                         </div>
@@ -81,14 +85,14 @@
                 </div>
 
                 {{-- Position --}}
-                @if($membership->position)
+                @if($position)
                     <div class="flex items-center gap-3">
                         <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                             <x-tabler-music class="w-5 h-5 text-gray-600 dark:text-gray-400" />
                         </div>
                         <div>
                             <span class="font-medium text-gray-900 dark:text-white">Position</span>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $membership->position }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $position }}</p>
                         </div>
                     </div>
                 @endif
@@ -100,13 +104,13 @@
                     </div>
                     <div>
                         <span class="font-medium text-gray-900 dark:text-white">Invited</span>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ $membership->invited_at->diffForHumans() }}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ $membership->created_at->diffForHumans() }}</p>
                     </div>
                 </div>
 
                 {{-- Capabilities --}}
                 <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">As a {{ $membership->role }}, you'll be able to:</h4>
+                    <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">As a {{ $role }}, you'll be able to:</h4>
                     <ul class="space-y-1">
                         @foreach($this->getRoleCapabilities() as $capability)
                             <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">

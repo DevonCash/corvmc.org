@@ -4,8 +4,8 @@ namespace App\Filament\Member\Resources\Bands\Widgets;
 
 use App\Filament\Actions\Bands\AcceptBandInvitationAction;
 use App\Filament\Actions\Bands\DeclineBandInvitationAction;
-use CorvMC\Bands\Models\BandMember;
 use App\Models\User;
+use CorvMC\Support\Models\Invitation;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -24,16 +24,16 @@ class PendingBandInvitationsWidget extends BaseWidget
             ->heading('Pending Band Invitations')
             ->description('You have been invited to join the following bands.')
             ->columns([
-                Tables\Columns\ImageColumn::make('band.avatar_url')
+                Tables\Columns\ImageColumn::make('invitable.avatar_url')
                     ->label('')
                     ->circular()
-                    ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name='.urlencode($record->band->name).'&color=7C3AED&background=F3E8FF&size=120'),
-                Tables\Columns\TextColumn::make('band.name')
+                    ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name='.urlencode($record->invitable->name).'&color=7C3AED&background=F3E8FF&size=120'),
+                Tables\Columns\TextColumn::make('invitable.name')
                     ->label('Band Name')
                     ->sortable()
-                    ->description(fn ($record) => $record->band->hometown)
+                    ->description(fn ($record) => $record->invitable->hometown)
                     ->weight('bold'),
-                Tables\Columns\TextColumn::make('role')
+                Tables\Columns\TextColumn::make('data.role')
                     ->label('Role')
                     ->badge()
                     ->color(fn ($value) => match ($value) {
@@ -41,10 +41,10 @@ class PendingBandInvitationsWidget extends BaseWidget
                         'member' => 'info',
                         default => 'gray',
                     }),
-                Tables\Columns\TextColumn::make('position')
+                Tables\Columns\TextColumn::make('data.position')
                     ->label('Position')
                     ->placeholder('—'),
-                Tables\Columns\TextColumn::make('invited_at')
+                Tables\Columns\TextColumn::make('created_at')
                     ->label('Invited')
                     ->dateTime()
                     ->sortable()
@@ -62,13 +62,14 @@ class PendingBandInvitationsWidget extends BaseWidget
         $user = User::me();
 
         if (! $user) {
-            return BandMember::query()->whereRaw('1=0');
+            return Invitation::query()->whereRaw('1=0');
         }
 
-        return BandMember::query()
+        return Invitation::query()
             ->where('user_id', $user->id)
-            ->where('status', 'invited')
-            ->with(['band', 'user']);
+            ->where('invitable_type', 'band')
+            ->where('status', 'pending')
+            ->with('invitable');
     }
 
     public static function canView(): bool
@@ -79,9 +80,10 @@ class PendingBandInvitationsWidget extends BaseWidget
             return false;
         }
 
-        return BandMember::query()
+        return Invitation::query()
             ->where('user_id', $user->id)
-            ->where('status', 'invited')
+            ->where('invitable_type', 'band')
+            ->where('status', 'pending')
             ->exists();
     }
 }

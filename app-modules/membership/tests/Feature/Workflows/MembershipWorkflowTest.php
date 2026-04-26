@@ -8,7 +8,7 @@ use CorvMC\Membership\Facades\MemberProfileService;
 use CorvMC\Membership\Facades\BandService;
 use CorvMC\Membership\Facades\StaffProfileService;
 use CorvMC\Membership\Facades\UserManagementService;
-
+use CorvMC\Support\Models\Invitation;
 
 use CorvMC\Membership\Models\MemberProfile;
 use CorvMC\Moderation\Enums\Visibility;
@@ -40,7 +40,6 @@ describe('Membership Workflow: Create Band', function () {
         $membership = $band->memberships()->where('user_id', $user->id)->first();
         expect($membership)->not->toBeNull();
         expect($membership->role)->toBe('owner');
-        expect($membership->status)->toBe('active');
     });
 
     it('creates a band with tags', function () {
@@ -58,90 +57,94 @@ describe('Membership Workflow: Create Band', function () {
 });
 
 describe('Membership Workflow: Band Invitations', function () {
-    it('invites a user to join a band with pending status', function () {
+    it('invites a user to join a band with pending invitation', function () {
         $owner = User::factory()->create();
         $invitee = User::factory()->create();
         Auth::setUser($owner);
 
         $band = BandService::create($owner, ['name' => 'Invitation Test Band']);
 
-        BandService::addMember($band, $invitee, [
-            'role' => 'member',
-            'position' => 'Lead Guitarist',
-        ]);
+        $invitation = BandService::inviteMember($band, $invitee, 'member', 'Lead Guitarist');
 
-        // Check that invitation exists
-        $membership = $band->memberships()->where('user_id', $invitee->id)->first();
-        expect($membership)->not->toBeNull();
-        expect($membership->status)->toBe('invited');
-        expect($membership->role)->toBe('member');
-        expect($membership->position)->toBe('Lead Guitarist');
-        expect($membership->invited_at)->not->toBeNull();
+        // Check that invitation exists in support_invitations
+        expect($invitation)->toBeInstanceOf(Invitation::class);
+        expect($invitation->isPending())->toBeTrue();
+        expect($invitation->data['role'])->toBe('member');
+        expect($invitation->data['position'])->toBe('Lead Guitarist');
+
+        // User should NOT be a band member yet
+        expect($band->isMember($invitee))->toBeFalse();
     });
 
-    it('accepts a band invitation and updates status to active', function () {
+    it('accepts a band invitation and creates membership', function () {
         $owner = User::factory()->create();
         $invitee = User::factory()->create();
         Auth::setUser($owner);
 
         $band = BandService::create($owner, ['name' => 'Acceptance Test Band']);
-        BandService::addMember($band, $invitee, ['role' => 'member']);
+        $invitation = BandService::inviteMember($band, $invitee, 'member');
 
         // Verify pending invitation
-        expect($band->memberships()->invited()->where('user_id', $invitee->id)->exists())->toBeTrue();
+        expect($invitation->isPending())->toBeTrue();
 
         // Accept invitation
-        BandService::acceptInvitation($band, $invitee);
+        BandService::acceptInvitation($invitation);
 
-        // Verify membership is now active
-        $membership = $band->memberships()->where('user_id', $invitee->id)->first();
-        expect($membership->status)->toBe('active');
+        // Refresh to clear once() cache on membership()
+        $band = $band->fresh();
+
+        // Verify user is now a band member
+        expect($band->isMember($invitee))->toBeTrue();
+        $membership = $band->membership($invitee);
+        expect($membership->role)->toBe('member');
+
+        // Invitation should be accepted
+        expect($invitation->fresh()->isAccepted())->toBeTrue();
     });
 
-    it('resends invitation when user already has pending invitation', function () {
+    it('declines a band invitation', function () {
         $owner = User::factory()->create();
         $invitee = User::factory()->create();
         Auth::setUser($owner);
 
-        $band = BandService::create($owner, ['name' => 'Resend Test Band']);
-        BandService::addMember($band, $invitee, [
-            'role' => 'member',
-            'position' => 'Drummer',
-        ]);
+        $band = BandService::create($owner, ['name' => 'Decline Test Band']);
+        $invitation = BandService::inviteMember($band, $invitee, 'member');
 
-        $firstInvitation = $band->memberships()->where('user_id', $invitee->id)->first();
-        $firstInvitedAt = $firstInvitation->invited_at;
+        // Decline invitation
+        BandService::declineInvitation($invitation);
 
-        // Sleep briefly to ensure timestamp difference
-        $this->travel(1)->second();
-
-        // Resend invitation with different position
-        BandService::addMember($band, $invitee, [
-            'role' => 'member',
-            'position' => 'Vocalist',
-        ]);
-
-        // Should still be only one membership record
-        expect($band->memberships()->where('user_id', $invitee->id)->count())->toBe(1);
-
-        // Should have updated position and timestamp
-        $updatedInvitation = $band->memberships()->where('user_id', $invitee->id)->first();
-        expect($updatedInvitation->position)->toBe('Vocalist');
-        expect($updatedInvitation->invited_at->isAfter($firstInvitedAt))->toBeTrue();
+        // User should NOT be a band member
+        expect($band->isMember($invitee))->toBeFalse();
+        expect($invitation->fresh()->isDeclined())->toBeTrue();
     });
 
-    it('throws exception when adding already active member', function () {
+    it('retracts a pending invitation', function () {
         $owner = User::factory()->create();
-        $member = User::factory()->create();
+        $invitee = User::factory()->create();
+        Auth::setUser($owner);
+
+        $band = BandService::create($owner, ['name' => 'Retract Test Band']);
+        $invitation = BandService::inviteMember($band, $invitee, 'member');
+
+        // Retract invitation
+        BandService::retractInvitation($invitation);
+
+        // Invitation should be deleted
+        expect(Invitation::find($invitation->id))->toBeNull();
+        expect($band->isMember($invitee))->toBeFalse();
+    });
+
+    it('prevents duplicate invitations for same user and band', function () {
+        $owner = User::factory()->create();
+        $invitee = User::factory()->create();
         Auth::setUser($owner);
 
         $band = BandService::create($owner, ['name' => 'Duplicate Test Band']);
-        BandService::addMember($band, $member, ['role' => 'member']);
-        BandService::acceptInvitation($band, $member);
+        BandService::inviteMember($band, $invitee, 'member');
 
-        // Try to add again
-        expect(fn() => BandService::addMember($band, $member))
-            ->toThrow(\CorvMC\Bands\Exceptions\BandException::class);
+        // Try to invite again — should throw due to unique constraint
+        expect(fn() => BandService::inviteMember($band, $invitee, 'member'))
+            ->toThrow(\Exception::class);
     });
 });
 

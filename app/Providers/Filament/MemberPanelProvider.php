@@ -159,19 +159,22 @@ class MemberPanelProvider extends PanelProvider
                 return;
             }
 
-            // Get user's active bands (limit 5, alphabetically)
-            $userBands = $user->bands()
+            // Get user's bands (all BandMember rows are active members)
+            $activeBands = $user->bands()
                 ->orderBy('name')
                 ->with('media')
                 ->get();
 
-            $activeBands = $userBands->filter(function ($band) {
-                return $band->pivot->status === 'active';
-            });
+            // Get bands with pending invitations
+            $invitedBandIds = \CorvMC\Support\Models\Invitation::query()
+                ->where('user_id', $user->id)
+                ->where('invitable_type', 'band')
+                ->where('status', 'pending')
+                ->pluck('invitable_id');
 
-            $invitedBands = $userBands->filter(function ($band) {
-                return $band->pivot->status === 'invited';
-            });
+            $invitedBands = $invitedBandIds->isNotEmpty()
+                ? \CorvMC\Bands\Models\Band::whereIn('id', $invitedBandIds)->with('media')->orderBy('name')->get()
+                : collect();
 
             // Add individual band navigation items
             $sort = 1;

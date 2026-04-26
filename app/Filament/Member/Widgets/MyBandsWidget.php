@@ -45,16 +45,10 @@ class MyBandsWidget extends BaseWidget
                             return 'owner';
                         }
 
-                        // Check membership (already eager loaded)
+                        // Check membership (already eager loaded — all rows are active)
                         $membership = $record->members->first();
                         if (! $membership) {
                             return 'none';
-                        }
-
-                        // Check if invited
-                        /** @phpstan-ignore property.notFound */
-                        if ($membership->pivot->status === 'invited') {
-                            return 'invited';
                         }
 
                         /** @phpstan-ignore property.notFound */
@@ -65,7 +59,6 @@ class MyBandsWidget extends BaseWidget
                         'owner' => 'primary',
                         'admin' => 'warning',
                         'member' => 'success',
-                        'invited' => 'info',
                         default => 'gray',
                     }),
 

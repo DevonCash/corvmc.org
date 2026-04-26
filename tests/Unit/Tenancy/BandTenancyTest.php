@@ -2,6 +2,7 @@
 
 use CorvMC\Bands\Models\Band;
 use CorvMC\Bands\Models\BandMember;
+use CorvMC\Support\Models\Invitation;
 use App\Models\User;
 use Filament\Facades\Filament;
 
@@ -38,10 +39,14 @@ it('user cannot see invited bands in tenant list', function () {
     $otherUser = User::factory()->create();
     // Create band with different owner so user isn't auto-added
     $band = Band::factory()->create(['owner_id' => $otherUser->id]);
-    BandMember::factory()->create([
-        'band_profile_id' => $band->id,
+
+    // Create a pending invitation (not a membership)
+    Invitation::factory()->create([
         'user_id' => $user->id,
-        'status' => 'invited',
+        'invitable_type' => 'band',
+        'invitable_id' => $band->id,
+        'inviter_id' => $otherUser->id,
+        'status' => 'pending',
     ]);
 
     $tenants = $user->getTenants($this->bandPanel);
@@ -63,7 +68,6 @@ it('user can access band tenant they are active member of', function () {
     BandMember::factory()->create([
         'band_profile_id' => $band->id,
         'user_id' => $user->id,
-        'status' => 'active',
     ]);
 
     expect($user->canAccessTenant($band))->toBeTrue();
@@ -78,15 +82,19 @@ it('user cannot access band tenant they are not member of', function () {
     expect($user->canAccessTenant($band))->toBeFalse();
 });
 
-it('user can access band tenant with invited status for acceptance page', function () {
+it('user can access band tenant with pending invitation for acceptance page', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();
     // Create band with different owner
     $band = Band::factory()->create(['owner_id' => $otherUser->id]);
-    BandMember::factory()->create([
-        'band_profile_id' => $band->id,
+
+    // Create a pending invitation
+    Invitation::factory()->create([
         'user_id' => $user->id,
-        'status' => 'invited',
+        'invitable_type' => 'band',
+        'invitable_id' => $band->id,
+        'inviter_id' => $otherUser->id,
+        'status' => 'pending',
     ]);
 
     // Invited users can access the tenant (but middleware restricts to acceptance page only)

@@ -2,12 +2,12 @@
 
 namespace App\Filament\Band\Pages;
 
+use App\Filament\Actions\Bands\AcceptBandInvitationAction;
+use App\Filament\Actions\Bands\DeclineBandInvitationAction;
 use App\Models\User;
 use CorvMC\Bands\Http\Middleware\EnsureActiveBandMembership;
 use CorvMC\Bands\Models\Band;
-use CorvMC\Bands\Models\BandMember;
-use App\Filament\Actions\Bands\AcceptBandInvitationAction;
-use App\Filament\Actions\Bands\DeclineBandInvitationAction;
+use CorvMC\Support\Models\Invitation;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -40,7 +40,7 @@ class AcceptInvitationPage extends Page implements HasActions, HasSchemas
 
     public Band $band;
 
-    public BandMember $membership;
+    public Invitation $membership;
 
     public function mount(): void
     {
@@ -49,12 +49,7 @@ class AcceptInvitationPage extends Page implements HasActions, HasSchemas
         $user = User::me();
 
         // Check if user is already an active member
-        $activeMembership = $band->memberships()
-            ->active()
-            ->where('user_id', $user->id)
-            ->exists();
-
-        if ($activeMembership) {
+        if ($band->isMember($user)) {
             Notification::make()
                 ->info()
                 ->title('Already a Member')
@@ -66,10 +61,12 @@ class AcceptInvitationPage extends Page implements HasActions, HasSchemas
             return;
         }
 
-        // Get the invitation record
-        $invitation = $band->memberships()
-            ->invited()
+        // Get the invitation record from support_invitations
+        $invitation = Invitation::query()
             ->where('user_id', $user->id)
+            ->where('invitable_type', 'band')
+            ->where('invitable_id', $band->id)
+            ->where('status', 'pending')
             ->first();
 
         if (! $invitation) {
@@ -133,7 +130,9 @@ class AcceptInvitationPage extends Page implements HasActions, HasSchemas
 
     public function getRoleCapabilities(): array
     {
-        if ($this->membership->role === 'admin') {
+        $role = $this->membership->data['role'] ?? 'member';
+
+        if ($role === 'admin') {
             return [
                 'Manage band profile and settings',
                 'Invite and remove band members',

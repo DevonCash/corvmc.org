@@ -6,6 +6,7 @@ use CorvMC\Bands\Models\Band;
 use CorvMC\Bands\Models\BandMember;
 use CorvMC\Membership\Data\ContactData;
 use CorvMC\Moderation\Enums\Visibility;
+use CorvMC\Support\Models\Invitation;
 use Illuminate\Support\Facades\Gate;
 
 beforeEach(function () {
@@ -91,7 +92,6 @@ describe('view', function () {
             'band_profile_id' => $band->id,
             'user_id' => $member->id,
             'role' => 'member',
-            'status' => 'active',
         ]);
 
         expect($this->policy->view($member, $band))->toBeTrue();
@@ -180,7 +180,6 @@ describe('update', function () {
             'band_profile_id' => $band->id,
             'user_id' => $admin->id,
             'role' => 'admin',
-            'status' => 'active',
         ]);
 
         expect($this->policy->update($admin, $band))->toBeTrue();
@@ -198,7 +197,6 @@ describe('update', function () {
             'band_profile_id' => $band->id,
             'user_id' => $member->id,
             'role' => 'member',
-            'status' => 'active',
         ]);
 
         expect($this->policy->update($member, $band))->toBeFalse();
@@ -247,7 +245,6 @@ describe('delete', function () {
             'band_profile_id' => $band->id,
             'user_id' => $admin->id,
             'role' => 'admin',
-            'status' => 'active',
         ]);
 
         expect($this->policy->delete($admin, $band))->toBeFalse();
@@ -265,7 +262,6 @@ describe('delete', function () {
             'band_profile_id' => $band->id,
             'user_id' => $member->id,
             'role' => 'member',
-            'status' => 'active',
         ]);
 
         expect($this->policy->delete($member, $band))->toBeFalse();
@@ -304,7 +300,6 @@ describe('restore', function () {
             'band_profile_id' => $band->id,
             'user_id' => $admin->id,
             'role' => 'admin',
-            'status' => 'active',
         ]);
 
         expect($this->policy->restore($admin, $band))->toBeFalse();
@@ -356,7 +351,6 @@ describe('invite', function () {
             'band_profile_id' => $band->id,
             'user_id' => $admin->id,
             'role' => 'admin',
-            'status' => 'active',
         ]);
 
         expect($this->policy->invite($admin, $band))->toBeTrue();
@@ -374,7 +368,6 @@ describe('invite', function () {
             'band_profile_id' => $band->id,
             'user_id' => $member->id,
             'role' => 'member',
-            'status' => 'active',
         ]);
 
         expect($this->policy->invite($member, $band))->toBeFalse();
@@ -423,7 +416,6 @@ describe('transfer', function () {
             'band_profile_id' => $band->id,
             'user_id' => $admin->id,
             'role' => 'admin',
-            'status' => 'active',
         ]);
 
         expect($this->policy->transfer($admin, $band))->toBeFalse();
@@ -489,7 +481,6 @@ describe('contact', function () {
             'band_profile_id' => $band->id,
             'user_id' => $member->id,
             'role' => 'member',
-            'status' => 'active',
         ]);
 
         expect($this->policy->contact($owner, $band))->toBeTrue();
@@ -529,11 +520,13 @@ describe('join', function () {
             'owner_id' => $owner->id,
         ]);
 
-        // Create invitation
-        BandMember::factory()->create([
-            'band_profile_id' => $band->id,
+        // Create pending invitation
+        Invitation::factory()->create([
             'user_id' => $invitee->id,
-            'status' => 'invited',
+            'invitable_type' => 'band',
+            'invitable_id' => $band->id,
+            'inviter_id' => $owner->id,
+            'status' => 'pending',
         ]);
 
         expect($this->policy->join($invitee, $band))->toBeTrue();
@@ -560,7 +553,6 @@ describe('join', function () {
         BandMember::factory()->create([
             'band_profile_id' => $band->id,
             'user_id' => $member->id,
-            'status' => 'active',
         ]);
 
         expect($this->policy->join($member, $band))->toBeFalse();
@@ -580,7 +572,6 @@ describe('leave', function () {
             'band_profile_id' => $band->id,
             'user_id' => $member->id,
             'role' => 'member',
-            'status' => 'active',
         ]);
 
         expect($this->policy->leave($member, $band))->toBeTrue();
@@ -638,7 +629,6 @@ describe('manageMembers', function () {
             'band_profile_id' => $band->id,
             'user_id' => $admin->id,
             'role' => 'admin',
-            'status' => 'active',
         ]);
 
         expect($this->policy->manageMembers($admin, $band))->toBeTrue();
@@ -656,7 +646,6 @@ describe('manageMembers', function () {
             'band_profile_id' => $band->id,
             'user_id' => $member->id,
             'role' => 'member',
-            'status' => 'active',
         ]);
 
         expect($this->policy->manageMembers($member, $band))->toBeFalse();

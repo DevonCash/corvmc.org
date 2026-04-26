@@ -7,6 +7,10 @@ use CorvMC\Bands\Models\Scopes\OwnedBandsScope;
 use CorvMC\Membership\Data\ContactData;
 use CorvMC\Moderation\Enums\Visibility;
 use CorvMC\Moderation\Models\ContentModel;
+use CorvMC\Support\Concerns\HasInvitations;
+use CorvMC\Support\Contracts\InvitationSubject;
+use CorvMC\Support\Models\Invitation;
+use Illuminate\Support\Collection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
@@ -97,8 +101,9 @@ use Spatie\Sluggable\SlugOptions;
  *
  * @mixin \Eloquent
  */
-class Band extends ContentModel
+class Band extends ContentModel implements InvitationSubject
 {
+    use HasInvitations;
     use HasSlug;
 
     /**
@@ -170,7 +175,7 @@ class Band extends ContentModel
     public function members(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'band_profile_members', 'band_profile_id', 'user_id')
-            ->withPivot('role', 'position', 'status', 'invited_at')
+            ->withPivot('role', 'position')
             ->withTimestamps();
     }
 
@@ -205,17 +210,16 @@ class Band extends ContentModel
             return true;
         }
 
-        return $this->membership($user)?->status === 'active';
+        return $this->membership($user) !== null;
     }
 
+    /**
+     * All memberships are active — invitation state lives in support_invitations.
+     * Kept as a named method for semantic clarity in calling code.
+     */
     public function activeMembers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->memberships()->active();
-    }
-
-    public function pendingInvitations(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->memberships()->invited();
+        return $this->memberships();
     }
 
     public function owner(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -390,5 +394,53 @@ class Band extends ContentModel
         $membership = $this->memberships()->for($user)->first();
 
         return $membership ? $membership->role : null;
+    }
+
+    // ── InvitationSubject ────────────────────────────────────────
+
+    public function acceptsInvitations(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    public function isInvitable(User $user): bool
+    {
+        return ! $this->isMember($user);
+    }
+
+    public function eligibleUsers(): ?Collection
+    {
+        $memberIds = $this->activeMembers()->pluck('user_id');
+
+        return User::whereNotIn('id', $memberIds)->get();
+    }
+
+    public function allowsSelfInvite(): bool
+    {
+        return false;
+    }
+
+    public function onInvitationAccepted(Invitation $invitation): void
+    {
+        $allowedRoles = ['member', 'admin'];
+        $role = in_array($invitation->data['role'] ?? null, $allowedRoles)
+            ? $invitation->data['role']
+            : 'member';
+        $position = $invitation->data['position'] ?? null;
+
+        $this->members()->attach($invitation->user_id, [
+            'role' => $role,
+            'position' => $position,
+        ]);
+    }
+
+    public function onInvitationDeclined(Invitation $invitation): void
+    {
+        // No-op — declining a band invitation doesn't touch the pivot.
+    }
+
+    public function onInvitationRevoked(Invitation $invitation): void
+    {
+        $this->members()->detach($invitation->user_id);
     }
 }

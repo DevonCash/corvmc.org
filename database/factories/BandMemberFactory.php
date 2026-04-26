@@ -28,20 +28,7 @@ class BandMemberFactory extends Factory
                 'Lead Vocalist', 'Backing Vocalist', 'Lead Guitarist', 'Rhythm Guitarist',
                 'Bassist', 'Drummer', 'Keyboardist', 'Pianist', 'Saxophonist',
             ]),
-            'status' => 'active',
-            'invited_at' => null,
         ];
-    }
-
-    /**
-     * Create an invited (pending) band member.
-     */
-    public function invited(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'status' => 'invited',
-            'invited_at' => $this->faker->dateTimeBetween('-30 days', 'now'),
-        ]);
     }
 
     /**

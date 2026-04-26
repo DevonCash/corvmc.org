@@ -9,32 +9,31 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
+ * Represents an active band membership (the pivot between Band and User).
+ *
+ * Invitation state is no longer tracked here — pending invitations live in
+ * support_invitations via the polymorphic Invitation model.
+ *
  * @property int $id
  * @property int $band_profile_id
  * @property int $user_id
- * @property \Illuminate\Support\Carbon|null $invited_at
  * @property string $role
  * @property string|null $position
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string $status
  * @property-read Band $band
  * @property-read User $user
  *
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember active()
  * @method static \Database\Factories\BandMemberFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember for(User $user)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember invited()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember whereBandProfileId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember whereInvitedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember wherePosition($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember whereRole($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BandMember whereUserId($value)
  *
@@ -59,12 +58,6 @@ class BandMember extends Model
         'user_id',
         'role',
         'position',
-        'status',
-        'invited_at',
-    ];
-
-    protected $casts = [
-        'invited_at' => 'datetime',
     ];
 
     public function band(): BelongsTo
@@ -75,18 +68,6 @@ class BandMember extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    #[Scope]
-    public function active($query)
-    {
-        return $query->where('status', 'active');
-    }
-
-    #[Scope]
-    public function invited($query)
-    {
-        return $query->where('status', 'invited');
     }
 
     #[Scope]

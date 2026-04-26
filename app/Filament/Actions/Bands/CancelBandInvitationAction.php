@@ -3,8 +3,8 @@
 namespace App\Filament\Actions\Bands;
 
 use App\Models\User;
-use CorvMC\Bands\Models\BandMember;
 use CorvMC\Membership\Services\BandService;
+use CorvMC\Support\Models\Invitation;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
@@ -19,22 +19,23 @@ class CancelBandInvitationAction
             ->color('gray')
             ->requiresConfirmation()
             ->modalHeading('Cancel Invitation')
-            ->modalDescription(fn (?Model $record) => $record instanceof BandMember
+            ->modalDescription(fn (?Model $record) => $record instanceof Invitation
                 ? "Cancel the invitation sent to {$record->user->name}?"
                 : 'Cancel this invitation?')
             ->visible(function (?Model $record) {
-                if (! $record instanceof BandMember || $record->status !== 'invited') {
+                if (! $record instanceof Invitation || ! $record->isPending()) {
                     return false;
                 }
 
-                $user = User::me();
+                $user = auth()->user();
+                $band = $record->invitable;
 
-                return $user && ($record->band->isOwner($user) || $record->band->isAdmin($user));
+                return $user && ($band->isOwner($user) || $band->isAdmin($user));
             })
-            ->authorize(fn (?Model $record) => auth()->user()?->can('cancel', $record))
+            ->authorize(fn (?Model $record) => auth()->user()?->can('retract', $record))
             ->action(function (Model $record) {
                 $userName = $record->user->name;
-                app(BandService::class)->cancelInvitation($record);
+                app(BandService::class)->retractInvitation($record);
 
                 Notification::make()
                     ->title('Invitation cancelled')
