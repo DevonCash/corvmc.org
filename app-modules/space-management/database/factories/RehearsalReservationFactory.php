@@ -59,7 +59,7 @@ class RehearsalReservationFactory extends Factory
     public function confirmed(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => ReservationStatus::Confirmed,
+            'status' => Confirmed::class,
         ]);
     }
 
@@ -69,7 +69,7 @@ class RehearsalReservationFactory extends Factory
     public function pending(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => ReservationStatus::Scheduled,
+            'status' => Scheduled::class,
         ]);
     }
 
@@ -79,7 +79,7 @@ class RehearsalReservationFactory extends Factory
     public function cancelled(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => ReservationStatus::Cancelled,
+            'status' => Cancelled::class,
         ]);
     }
 
@@ -139,7 +139,7 @@ class RehearsalReservationFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
-            'status' => ReservationStatus::Confirmed,
+            'status' => Confirmed::class,
         ]);
     }
 
@@ -155,7 +155,7 @@ class RehearsalReservationFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'reserved_at' => $reservedAt,
             'reserved_until' => $reservedUntil,
-            'status' => ReservationStatus::Confirmed,
+            'status' => Confirmed::class,
         ]);
     }
 }

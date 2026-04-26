@@ -6,9 +6,13 @@ use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\SpaceManagement\States\ReservationState;
 use CorvMC\SpaceManagement\States\ReservationState\Reserved;
+use CorvMC\Support\Concerns\HasInvitations;
+use CorvMC\Support\Contracts\InvitationSubject;
 use CorvMC\Support\Contracts\Recurrable;
+use CorvMC\Support\Models\Invitation;
 use CorvMC\Support\Models\RecurringSeries;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Collection;
 use Spatie\ModelStates\HasStates;
 
 /**
@@ -35,9 +39,9 @@ use Spatie\ModelStates\HasStates;
  *
  * @mixin \Eloquent
  */
-class RehearsalReservation extends Reservation implements Recurrable
+class RehearsalReservation extends Reservation implements InvitationSubject, Recurrable
 {
-    use HasFactory, HasStates;
+    use HasFactory, HasInvitations, HasStates;
 
     /**
      * Validation rules specific to rehearsal reservations.
@@ -234,6 +238,44 @@ class RehearsalReservation extends Reservation implements Recurrable
         return $this->user ?? throw new \RuntimeException('No billable user found for reservation');
     }
 
+    // ── InvitationSubject (attendance) ─────────────────────────────────
+
+    public function acceptsInvitations(): bool
+    {
+        return $this->reserved_at?->isFuture()
+            && $this->status->isActive();
+    }
+
+    public function isInvitable(User $user): bool
+    {
+        return ! $this->invitations()->where('user_id', $user->id)->exists();
+    }
+
+    public function eligibleUsers(): ?Collection
+    {
+        return null; // Any authenticated member can be invited.
+    }
+
+    public function allowsSelfInvite(): bool
+    {
+        return false;
+    }
+
+    public function onInvitationAccepted(Invitation $invitation): void
+    {
+        // No side effects — attendance is informational only.
+    }
+
+    public function onInvitationDeclined(Invitation $invitation): void
+    {
+        // No side effects.
+    }
+
+    public function onInvitationRevoked(Invitation $invitation): void
+    {
+        // No side effects.
+    }
+
     // =========================================================================
     // Recurrable Interface Implementation
     // =========================================================================
@@ -265,11 +307,6 @@ class RehearsalReservation extends Reservation implements Recurrable
 
     public function canConfirm(): bool
     {
-        // Only RehearsalReservations can be confirmed
-        if (!$this instanceof RehearsalReservation) {
-            return false;
-        }
-
         // Delegate to state
         if (!$this->status->canConfirm()) {
             return false;
