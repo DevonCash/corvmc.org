@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             ReportSeeder::class,
             RevisionSeeder::class,
             OrderSeeder::class,
+            LocalResourcesSeeder::class,
         ]);
     }
 }

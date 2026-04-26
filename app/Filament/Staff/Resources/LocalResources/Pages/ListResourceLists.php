@@ -4,6 +4,7 @@ namespace App\Filament\Staff\Resources\LocalResources\Pages;
 
 use App\Filament\Staff\Resources\LocalResources\ResourceListResource;
 use App\Filament\Staff\Resources\LocalResources\Schemas\ResourceListForm;
+use App\Models\LocalResource;
 use App\Models\ResourceList;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -20,7 +21,14 @@ class ListResourceLists extends ListRecords
     {
         return [
             CreateAction::make()
-                ->mutateFormDataUsing(fn (array $data) => ResourceListForm::mutatePublishStatus($data)),
+                ->mutateFormDataUsing(function (array $data) {
+                    $data = ResourceListForm::mutatePublishStatus($data);
+
+                    $data['sort_order'] = (LocalResource::where('resource_list_id', $data['resource_list_id'] ?? null)
+                        ->max('sort_order') ?? -1) + 1;
+
+                    return $data;
+                }),
         ];
     }
 

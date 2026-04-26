@@ -56,7 +56,7 @@ describe('public local resources page', function () {
             ->assertDontSee('Draft Teacher Resource');
     });
 
-    it('displays resource contact information', function () {
+    it('displays resource details without contact fields', function () {
         $list = ResourceList::factory()->create();
 
         $resource = LocalResource::factory()->published()->forList($list)->create([
@@ -66,15 +66,18 @@ describe('public local resources page', function () {
             'contact_phone' => '541-555-1234',
             'address' => '123 Main St, Corvallis, OR',
             'website' => 'https://example.com',
+            'description' => 'Great guitar selection',
         ]);
 
         $this->get(route('local-resources'))
             ->assertOk()
             ->assertSee('Test Music Shop')
-            ->assertSee('John Doe')
-            ->assertSee('john@example.com')
-            ->assertSee('541-555-1234')
-            ->assertSee('123 Main St, Corvallis, OR');
+            ->assertSee('123 Main St, Corvallis, OR')
+            ->assertSee('https://example.com', false)
+            ->assertSee('Great guitar selection')
+            ->assertDontSee('John Doe')
+            ->assertDontSee('john@example.com')
+            ->assertDontSee('541-555-1234');
     });
 
     it('orders lists by display_order', function () {
