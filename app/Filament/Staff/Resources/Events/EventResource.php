@@ -4,6 +4,7 @@ namespace App\Filament\Staff\Resources\Events;
 
 use App\Filament\Staff\Resources\Events\Pages\EditEvent;
 use App\Filament\Staff\Resources\Events\Pages\ListEvents;
+use App\Filament\Shared\RelationManagers\InvitationsRelationManager;
 use App\Filament\Staff\Resources\Events\RelationManagers\PerformersRelationManager;
 use App\Filament\Staff\Resources\Events\RelationManagers\TicketOrdersRelationManager;
 use App\Filament\Staff\Resources\Events\Schemas\EventForm;
@@ -40,6 +41,7 @@ class EventResource extends Resource
         return [
             PerformersRelationManager::class,
             'ticketOrders' => TicketOrdersRelationManager::class,
+            'invitations' => InvitationsRelationManager::class,
         ];
     }
 

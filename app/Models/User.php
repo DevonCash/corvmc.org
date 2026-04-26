@@ -14,6 +14,7 @@ use CorvMC\Finance\Enums\CreditType;
 use CorvMC\Finance\Models\CreditTransaction;
 use CorvMC\Membership\Notifications\EmailVerificationNotification;
 use CorvMC\Moderation\Concerns\HasTrust;
+use CorvMC\Support\Concerns\ReceivesInvitations;
 use CorvMC\Moderation\Enums\Visibility;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
@@ -131,7 +132,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenants
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use Billable, HasApiTokens, HasCredits, HasFactory, HasMembershipStatus, HasRoles, HasTrust, Impersonate, LogsActivity, Notifiable, SoftDeletes;
+    use Billable, HasApiTokens, HasCredits, HasFactory, HasMembershipStatus, HasRoles, HasTrust, Impersonate, LogsActivity, Notifiable, ReceivesInvitations, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

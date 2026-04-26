@@ -27,7 +27,6 @@ class BandsRelationManager extends RelationManager
                 Forms\Components\Select::make('status')
                     ->options([
                         'active' => 'Active',
-                        'invited' => 'Invited',
                         'inactive' => 'Inactive',
                     ])
                     ->default('active'),
@@ -76,7 +75,6 @@ class BandsRelationManager extends RelationManager
                         Forms\Components\Select::make('status')
                             ->options([
                                 'active' => 'Active',
-                                'invited' => 'Invited',
                                 'inactive' => 'Inactive',
                             ])
                             ->default('active'),
@@ -93,7 +91,6 @@ class BandsRelationManager extends RelationManager
                         Forms\Components\Select::make('status')
                             ->options([
                                 'active' => 'Active',
-                                'invited' => 'Invited',
                                 'inactive' => 'Inactive',
                             ])
                             ->default('active'),

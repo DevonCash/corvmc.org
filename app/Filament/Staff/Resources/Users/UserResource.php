@@ -5,6 +5,7 @@ namespace App\Filament\Staff\Resources\Users;
 use App\Filament\Staff\Resources\Users\Pages\CreateUser;
 use App\Filament\Staff\Resources\Users\Pages\EditUser;
 use App\Filament\Staff\Resources\Users\Pages\ListUsers;
+use App\Filament\Shared\RelationManagers\UserInvitationsRelationManager;
 use App\Filament\Staff\Resources\Users\RelationManagers\BandsRelationManager;
 use App\Filament\Staff\Resources\Users\RelationManagers\CreditTransactionsRelationManager;
 use App\Filament\Staff\Resources\Users\RelationManagers\EventsRelationManager;
@@ -101,6 +102,7 @@ class UserResource extends Resource
             ReservationsRelationManager::class,
             OrdersRelationManager::class,
             CreditTransactionsRelationManager::class,
+            'receivedInvitations' => UserInvitationsRelationManager::class,
         ];
     }
 
