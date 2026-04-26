@@ -77,7 +77,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        $band = BandService::create(['name' => 'New Band']);
+        $band = BandService::create($user, ['name' => 'New Band']);
 
         $logs = Activity::where('subject_type', 'band')
             ->where('subject_id', $band->id)

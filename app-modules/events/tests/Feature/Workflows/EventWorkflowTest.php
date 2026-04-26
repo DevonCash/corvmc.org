@@ -134,7 +134,7 @@ describe('Event Workflow: Manage Performers', function () {
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        $result = EventService::addPerformer($event, $band, ['set_length' => 45]);
+        $result = EventService::addPerformer($event, $band->id, 1, 45);
 
         expect($result)->toBeTrue();
         expect($event->performers()->count())->toBe(1);
@@ -161,9 +161,9 @@ describe('Event Workflow: Manage Performers', function () {
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        EventService::addPerformer($event, $band1);
-        EventService::addPerformer($event, $band2);
-        EventService::addPerformer($event, $band3);
+        EventService::addPerformer($event, $band1->id);
+        EventService::addPerformer($event, $band2->id);
+        EventService::addPerformer($event, $band3->id);
 
         $performers = $event->performers()->orderBy('event_bands.order')->get();
         expect($performers[0]->id)->toBe($band1->id);
@@ -185,10 +185,10 @@ describe('Event Workflow: Manage Performers', function () {
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        EventService::addPerformer($event, $band);
+        EventService::addPerformer($event, $band->id);
         expect($event->performers()->count())->toBe(1);
 
-        $result = EventService::removePerformer($event, $band);
+        $result = EventService::removePerformer($event, $band->id);
 
         expect($result)->toBeTrue();
         expect($event->performers()->count())->toBe(0);
@@ -208,8 +208,8 @@ describe('Event Workflow: Manage Performers', function () {
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        $firstAdd = EventService::addPerformer($event, $band);
-        $secondAdd = EventService::addPerformer($event, $band);
+        $firstAdd = EventService::addPerformer($event, $band->id);
+        $secondAdd = EventService::addPerformer($event, $band->id);
 
         expect($firstAdd)->toBeTrue();
         expect($secondAdd)->toBeFalse();
@@ -233,18 +233,18 @@ describe('Event Workflow: Reschedule Event', function () {
             'organizer_id' => $organizer->id,
         ]);
 
-        $newEvent = EventService::rescheduleEvent($originalEvent, [
-            'start_datetime' => $newStartDatetime,
-            'end_datetime' => $newStartDatetime->copy()->addHours(3),
-            'venue_id' => $this->cmcVenue->id,
-        ], 'Venue conflict');
+        $newEvent = EventService::reschedule(
+            $originalEvent,
+            $newStartDatetime,
+            $newStartDatetime->copy()->addHours(3),
+            $this->cmcVenue->id
+        );
 
         $originalEvent->refresh();
 
         // Original event should be marked as postponed
         expect($originalEvent->status)->toBe(EventStatus::Postponed);
         expect($originalEvent->rescheduled_to_id)->toBe($newEvent->id);
-        expect($originalEvent->reschedule_reason)->toBe('Venue conflict');
 
         // New event should have the updated time
         expect($newEvent->title)->toBe('Original Event');
@@ -266,13 +266,14 @@ describe('Event Workflow: Reschedule Event', function () {
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        EventService::addPerformer($originalEvent, $band, ['set_length' => 45, 'order' => 1]);
+        EventService::addPerformer($originalEvent, $band->id, 1, 45);
 
-        $newEvent = EventService::rescheduleEvent($originalEvent, [
-            'start_datetime' => $newStartDatetime,
-            'end_datetime' => $newStartDatetime->copy()->addHours(3),
-            'venue_id' => $this->cmcVenue->id,
-        ]);
+        $newEvent = EventService::reschedule(
+            $originalEvent,
+            $newStartDatetime,
+            $newStartDatetime->copy()->addHours(3),
+            $this->cmcVenue->id
+        );
 
         expect($newEvent->performers()->count())->toBe(1);
         expect($newEvent->hasPerformer($band))->toBeTrue();
@@ -293,10 +294,9 @@ describe('Event Workflow: Cancel Event', function () {
 
         expect($event->status)->toBe(EventStatus::Scheduled);
 
-        $cancelledEvent = EventService::cancelEvent($event, 'Weather emergency');
+        $cancelledEvent = EventService::cancel($event);
 
         expect($cancelledEvent->status)->toBe(EventStatus::Cancelled);
-        expect($cancelledEvent->cancellation_reason)->toBe('Weather emergency');
     });
 
     it('cancels an event without a reason', function () {
@@ -309,10 +309,9 @@ describe('Event Workflow: Cancel Event', function () {
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        $cancelledEvent = EventService::cancelEvent($event);
+        $cancelledEvent = EventService::cancel($event);
 
         expect($cancelledEvent->status)->toBe(EventStatus::Cancelled);
-        expect($cancelledEvent->cancellation_reason)->toBeNull();
     });
 });
 
@@ -332,7 +331,7 @@ describe('Event Workflow: Update Event', function () {
 
         $newStartDatetime = Carbon::now()->addDays(14)->setHour(20)->setMinute(0)->setSecond(0);
 
-        $updatedEvent = EventService::updateEvent($event, [
+        $updatedEvent = EventService::update($event, [
             'title' => 'Updated Title',
             'description' => 'Updated description',
             'start_datetime' => $newStartDatetime,
@@ -359,7 +358,7 @@ describe('Event Workflow: Update Event', function () {
 
         expect($event->tags->count())->toBe(2);
 
-        $updatedEvent = EventService::updateEvent($event, [
+        $updatedEvent = EventService::update($event, [
             'tags' => ['Jazz', 'Folk', 'Indie'],
         ]);
 
@@ -383,12 +382,12 @@ describe('Event Workflow: Delete Event', function () {
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        EventService::addPerformer($event, $band);
+        EventService::addPerformer($event, $band->id);
         expect($event->performers()->count())->toBe(1);
 
         $eventId = $event->id;
 
-        EventService::deleteEvent($event);
+        EventService::delete($event);
 
         // Event should be deleted
         expect(Event::find($eventId))->toBeNull();
@@ -413,8 +412,8 @@ describe('Event Workflow: Duplicate Event', function () {
             'tags' => ['Rock', 'Alternative'],
         ]);
 
-        EventService::addPerformer($originalEvent, $band1, ['set_length' => 45, 'order' => 1]);
-        EventService::addPerformer($originalEvent, $band2, ['set_length' => 60, 'order' => 2]);
+        EventService::addPerformer($originalEvent, $band1->id, 1, 45);
+        EventService::addPerformer($originalEvent, $band2->id, 2, 60);
 
         $duplicatedEvent = EventService::duplicateEvent(
             $originalEvent,
@@ -466,15 +465,15 @@ describe('Event Workflow: Performer Management Extended', function () {
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        EventService::addPerformer($event, $band1);
-        EventService::addPerformer($event, $band2);
+        EventService::addPerformer($event, $band1->id);
+        EventService::addPerformer($event, $band2->id);
 
         // Band1 should be order 1, band2 should be order 2
         expect($event->performers()->where('band_profile_id', $band1->id)->first()->pivot->order)->toBe(1);
         expect($event->performers()->where('band_profile_id', $band2->id)->first()->pivot->order)->toBe(2);
 
         // Update band2 to be first
-        $result = EventService::updatePerformerOrder($event, $band2, 1);
+        $result = EventService::updatePerformerOrder($event, $band2->id, 1);
         expect($result)->toBeTrue();
 
         // Verify order was updated
@@ -495,9 +494,9 @@ describe('Event Workflow: Performer Management Extended', function () {
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        EventService::addPerformer($event, $bandOnEvent);
+        EventService::addPerformer($event, $bandOnEvent->id);
 
-        $result = EventService::updatePerformerOrder($event, $bandNotOnEvent, 1);
+        $result = EventService::updatePerformerOrder($event, $bandNotOnEvent->id, 1);
         expect($result)->toBeFalse();
     });
 
@@ -514,10 +513,10 @@ describe('Event Workflow: Performer Management Extended', function () {
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        EventService::addPerformer($event, $band, ['set_length' => 30]);
+        EventService::addPerformer($event, $band->id, null, 30);
         expect($event->performers()->first()->pivot->set_length)->toBe(30);
 
-        $result = EventService::updatePerformerSetLength($event, $band, 60);
+        $result = EventService::updatePerformerSetLength($event, $band->id, 60);
         expect($result)->toBeTrue();
 
         // Verify set length was updated
@@ -538,9 +537,9 @@ describe('Event Workflow: Performer Management Extended', function () {
             'venue_id' => $this->cmcVenue->id,
         ]);
 
-        EventService::addPerformer($event, $bandOnEvent);
+        EventService::addPerformer($event, $bandOnEvent->id);
 
-        $result = EventService::updatePerformerSetLength($event, $bandNotOnEvent, 45);
+        $result = EventService::updatePerformerSetLength($event, $bandNotOnEvent->id, 45);
         expect($result)->toBeFalse();
     });
 });

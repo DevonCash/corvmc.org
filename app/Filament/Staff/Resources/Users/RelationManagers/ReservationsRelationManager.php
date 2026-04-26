@@ -2,7 +2,8 @@
 
 namespace App\Filament\Staff\Resources\Users\RelationManagers;
 
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Models\Reservation;
+use CorvMC\SpaceManagement\States\ReservationState\Scheduled;
 use App\Filament\Staff\Resources\SpaceManagement\Tables\SpaceManagementTable;
 use Filament\Actions;
 use Filament\Forms;
@@ -32,8 +33,8 @@ class ReservationsRelationManager extends RelationManager
                     ->numeric()
                     ->default(0),
                 Forms\Components\Select::make('status')
-                    ->options(ReservationStatus::class)
-                    ->default(ReservationStatus::Scheduled),
+                    ->options(Reservation::getStatesFor('status'))
+                    ->default(Scheduled::class),
             ]);
     }
 
@@ -61,7 +62,7 @@ class ReservationsRelationManager extends RelationManager
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
-                    ->options(ReservationStatus::class),
+                    ->options(Reservation::getStatesFor('status')),
             ])
             ->headerActions([
                 Actions\CreateAction::make(),

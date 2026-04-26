@@ -2,6 +2,8 @@
 
 use App\Models\User;
 use Carbon\Carbon;
+use CorvMC\Equipment\Data\CheckoutData;
+use CorvMC\Equipment\Data\ReturnData;
 use CorvMC\Equipment\Facades\EquipmentService;
 use CorvMC\Equipment\Models\Equipment;
 use CorvMC\Equipment\Models\EquipmentLoan;
@@ -25,13 +27,15 @@ describe('Equipment Workflow: Checkout Flow', function () {
         $dueDate = Carbon::now()->addDays(7);
 
         $loan = EquipmentService::checkout(
-            equipment: $equipment,
-            borrower: $borrower,
-            dueDate: $dueDate,
-            conditionOut: 'good',
-            securityDeposit: 50.00,
-            rentalFee: 10.00,
-            notes: 'Band practice equipment'
+            CheckoutData::from([
+                'equipment' => $equipment,
+                'borrower' => $borrower,
+                'dueDate' => $dueDate,
+                'conditionOut' => 'good',
+                'securityDeposit' => 50.00,
+                'rentalFee' => 10.00,
+                'notes' => 'Band practice equipment'
+            ])
         );
 
         expect($loan)->toBeInstanceOf(EquipmentLoan::class);
@@ -54,9 +58,11 @@ describe('Equipment Workflow: Checkout Flow', function () {
         ]);
 
         $loan = EquipmentService::checkout(
-            equipment: $equipment,
-            borrower: $borrower,
-            dueDate: Carbon::now()->addDays(7)
+            CheckoutData::from([
+                'equipment' => $equipment,
+                'borrower' => $borrower,
+                'dueDate' => Carbon::now()->addDays(7)
+            ])
         );
 
         // Just verify the timestamp was set and is recent
@@ -74,10 +80,12 @@ describe('Equipment Workflow: Return Flow', function () {
 
         // First checkout
         $loan = EquipmentService::checkout(
-            equipment: $equipment,
-            borrower: $borrower,
-            dueDate: Carbon::now()->addDays(7),
-            conditionOut: 'excellent'
+            CheckoutData::from([
+                'equipment' => $equipment,
+                'borrower' => $borrower,
+                'dueDate' => Carbon::now()->addDays(7),
+                'conditionOut' => 'excellent'
+            ])
         );
 
         // Process return
@@ -100,10 +108,12 @@ describe('Equipment Workflow: Return Flow', function () {
         ]);
 
         $loan = EquipmentService::checkout(
-            equipment: $equipment,
-            borrower: $borrower,
-            dueDate: Carbon::now()->addDays(7),
-            conditionOut: 'good'
+            CheckoutData::from([
+                'equipment' => $equipment,
+                'borrower' => $borrower,
+                'dueDate' => Carbon::now()->addDays(7),
+                'conditionOut' => 'good'
+            ])
         );
 
         $returnedLoan = EquipmentService::processReturn($loan, 'fair', 'Minor scratch on body');
@@ -122,9 +132,11 @@ describe('Equipment Workflow: Availability Check', function () {
         ]);
 
         expect(fn() => EquipmentService::checkout(
-            equipment: $equipment,
-            borrower: $borrower,
-            dueDate: Carbon::now()->addDays(7)
+            CheckoutData::from([
+                'equipment' => $equipment,
+                'borrower' => $borrower,
+                'dueDate' => Carbon::now()->addDays(7)
+            ])
         ))->toThrow(\Exception::class, 'Equipment is not available for checkout.');
     });
 
@@ -136,9 +148,11 @@ describe('Equipment Workflow: Availability Check', function () {
         ]);
 
         expect(fn() => EquipmentService::checkout(
-            equipment: $equipment,
-            borrower: $borrower,
-            dueDate: Carbon::now()->addDays(7)
+            CheckoutData::from([
+                'equipment' => $equipment,
+                'borrower' => $borrower,
+                'dueDate' => Carbon::now()->addDays(7)
+            ])
         ))->toThrow(\Exception::class, 'Equipment is not available for checkout.');
     });
 
@@ -151,16 +165,20 @@ describe('Equipment Workflow: Availability Check', function () {
 
         // First checkout succeeds
         EquipmentService::checkout(
-            equipment: $equipment,
-            borrower: $borrower1,
-            dueDate: Carbon::now()->addDays(7)
+            CheckoutData::from([
+                'equipment' => $equipment,
+                'borrower' => $borrower1,
+                'dueDate' => Carbon::now()->addDays(7)
+            ])
         );
 
         // Second checkout should fail
         expect(fn() => EquipmentService::checkout(
-            equipment: $equipment,
-            borrower: $borrower2,
-            dueDate: Carbon::now()->addDays(7)
+            CheckoutData::from([
+                'equipment' => $equipment,
+                'borrower' => $borrower2,
+                'dueDate' => Carbon::now()->addDays(7)
+            ])
         ))->toThrow(\Exception::class, 'Equipment is not available for checkout.');
     });
 
@@ -173,9 +191,11 @@ describe('Equipment Workflow: Availability Check', function () {
 
         // First checkout and return
         $loan1 = EquipmentService::checkout(
-            equipment: $equipment,
-            borrower: $borrower1,
-            dueDate: Carbon::now()->addDays(7)
+            CheckoutData::from([
+                'equipment' => $equipment,
+                'borrower' => $borrower1,
+                'dueDate' => Carbon::now()->addDays(7)
+            ])
         );
         EquipmentService::processReturn($loan1, 'good');
 
@@ -185,9 +205,11 @@ describe('Equipment Workflow: Availability Check', function () {
 
         // Second checkout should succeed
         $loan2 = EquipmentService::checkout(
-            equipment: $equipment,
-            borrower: $borrower2,
-            dueDate: Carbon::now()->addDays(14)
+            CheckoutData::from([
+                'equipment' => $equipment,
+                'borrower' => $borrower2,
+                'dueDate' => Carbon::now()->addDays(14)
+            ])
         );
 
         expect($loan2)->toBeInstanceOf(EquipmentLoan::class);
@@ -204,9 +226,11 @@ describe('Equipment Workflow: Overdue Loans', function () {
 
         // Create a loan
         $loan = EquipmentService::checkout(
-            equipment: $equipment,
-            borrower: $borrower,
-            dueDate: Carbon::now()->addDays(7)
+            CheckoutData::from([
+                'equipment' => $equipment,
+                'borrower' => $borrower,
+                'dueDate' => Carbon::now()->addDays(7)
+            ])
         );
 
         expect($loan->state)->toBeInstanceOf(CheckedOut::class);
@@ -236,9 +260,11 @@ describe('Equipment Workflow: Statistics', function () {
             'acquisition_type' => 'purchased',
         ]);
         EquipmentService::checkout(
-            equipment: $checkedOutEquipment,
-            borrower: $borrower,
-            dueDate: Carbon::now()->addDays(7)
+            CheckoutData::from([
+                'equipment' => $checkedOutEquipment,
+                'borrower' => $borrower,
+                'dueDate' => Carbon::now()->addDays(7)
+            ])
         );
 
         $stats = EquipmentService::getStatistics();

@@ -260,11 +260,11 @@ test('creating revision works and stays pending for never auto-approve mode', fu
 
 test('coalesced revision re-evaluates auto-approval when user gains permission', function () {
     // Create a user without auto-approval permissions
-    $user = User::factory()->create();
+    $user = User::withoutEvents(fn() => User::factory()->create());
 
     // Use MemberProfile for this test since it has 'personal' auto-approve mode
     // which respects permissions
-    $profile = \CorvMC\Membership\Models\MemberProfile::factory()->for($user, 'user')->create(['bio' => 'Original']);
+    $profile = \CorvMC\Membership\Models\MemberProfile::factory()->create(['user_id' => $user->id, 'bio' => 'Original']);
 
     Auth::setUser($user);
 

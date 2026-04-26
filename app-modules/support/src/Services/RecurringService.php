@@ -86,7 +86,7 @@ class RecurringService
             try {
                 $instance = $recurableType::createFromRecurringSeries($series, $date);
                 $created->push($instance);
-            } catch (\InvalidArgumentException $e) {
+            } catch (\InvalidArgumentException|\Illuminate\Validation\ValidationException $e) {
                 // Conflict - create a placeholder to track skip
                 $recurableType::createCancelledPlaceholder($series, $date);
             }

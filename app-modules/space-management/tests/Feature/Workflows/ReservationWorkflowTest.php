@@ -4,7 +4,7 @@ use CorvMC\Finance\Enums\CreditType;
 use App\Models\User;
 use Carbon\Carbon;
 use CorvMC\Finance\Enums\ChargeStatus;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\States\ReservationState\{Scheduled, Confirmed, Reserved, Cancelled, Completed};
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Illuminate\Support\Facades\Notification;
@@ -29,13 +29,13 @@ describe('Reservation Workflow: Create Single Reservation', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => RehearsalReservation::determineInitialStatus($user),
+            'status' => RehearsalReservation::determineStatusForDate($startTime),
         ]);
 
         expect($reservation)->toBeInstanceOf(RehearsalReservation::class);
         expect($reservation->reservable_id)->toBe($user->id);
         expect((float) $reservation->duration)->toBe(2.0);
-        expect($reservation->status)->toBe(ReservationStatus::Scheduled);
+        expect($reservation->status)->toBeInstanceOf(Scheduled::class);
         expect($reservation->charge->net_amount->getMinorAmount())->toBe(3000); // $15/hour * 2 hours = $30
     });
 
@@ -56,7 +56,7 @@ describe('Reservation Workflow: Create Single Reservation', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => RehearsalReservation::determineInitialStatus($user),
+            'status' => RehearsalReservation::determineStatusForDate($startTime),
         ]);
 
         expect($reservation->charge->net_amount->getMinorAmount())->toBe(0);
@@ -78,10 +78,10 @@ describe('Reservation Workflow: Create Single Reservation', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => RehearsalReservation::determineInitialStatus($user),
+            'status' => RehearsalReservation::determineStatusForDate($startTime),
         ]);
 
-        expect($reservation->status)->toBe(ReservationStatus::Confirmed);
+        expect($reservation->status)->toBeInstanceOf(Confirmed::class);
     });
 });
 
@@ -96,16 +96,16 @@ describe('Reservation Workflow: Confirm Reservation', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => RehearsalReservation::determineInitialStatus($user),
+            'status' => RehearsalReservation::determineStatusForDate($startTime),
         ]);
-        expect($reservation->status)->toBe(ReservationStatus::Scheduled);
+        expect($reservation->status)->toBeInstanceOf(Scheduled::class);
 
         // Move time forward so confirmation is allowed (within 5 days of reservation)
         $this->travel(2)->days();
 
         $confirmedReservation = $reservation->confirm();
 
-        expect($confirmedReservation->status)->toBe(ReservationStatus::Confirmed);
+        expect($confirmedReservation->status)->toBeInstanceOf(Confirmed::class);
     });
 
     it('deducts credits when confirming a reserved status reservation', function () {
@@ -122,7 +122,7 @@ describe('Reservation Workflow: Confirm Reservation', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => ReservationStatus::Reserved,
+            'status' => (new Reserved())->__toString(),
         ]);
 
         // Credits should NOT be deducted yet (deferred for Reserved status)
@@ -134,7 +134,7 @@ describe('Reservation Workflow: Confirm Reservation', function () {
 
         $confirmedReservation = $reservation->confirm();
 
-        expect($confirmedReservation->status)->toBe(ReservationStatus::Confirmed);
+        expect($confirmedReservation->status)->toBeInstanceOf(Confirmed::class);
 
         // Credits should now be deducted
         $newBalance = $user->fresh()->getCreditBalance(CreditType::FreeHours);
@@ -162,7 +162,7 @@ describe('Reservation Workflow: Availability Check', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => RehearsalReservation::determineInitialStatus($user),
+            'status' => RehearsalReservation::determineStatusForDate($startTime),
         ]);
 
         // Check overlapping time slot
@@ -184,7 +184,7 @@ describe('Reservation Workflow: Availability Check', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => RehearsalReservation::determineInitialStatus($user),
+            'status' => RehearsalReservation::determineStatusForDate($startTime),
         ]);
 
         // Check the same time slot, excluding the reservation
@@ -205,12 +205,12 @@ describe('Reservation Workflow: Cancel Reservation', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => RehearsalReservation::determineInitialStatus($user),
+            'status' => RehearsalReservation::determineStatusForDate($startTime),
         ]);
 
         $cancelledReservation = $reservation->cancel('Test cancellation');
 
-        expect($cancelledReservation->status)->toBe(ReservationStatus::Cancelled);
+        expect($cancelledReservation->status)->toBeInstanceOf(Cancelled::class);
         expect($cancelledReservation->cancellation_reason)->toBe('Test cancellation');
     });
 
@@ -226,7 +226,7 @@ describe('Reservation Workflow: Cancel Reservation', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => RehearsalReservation::determineInitialStatus($user),
+            'status' => RehearsalReservation::determineStatusForDate($startTime),
         ]);
 
         // Verify credits were deducted
@@ -250,7 +250,7 @@ describe('Reservation Workflow: Cancel Reservation', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => RehearsalReservation::determineInitialStatus($user),
+            'status' => RehearsalReservation::determineStatusForDate($startTime),
         ]);
 
         // Verify slot is not available
@@ -274,7 +274,7 @@ describe('Reservation Workflow: Cancel Reservation', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => RehearsalReservation::determineInitialStatus($user),
+            'status' => RehearsalReservation::determineStatusForDate($startTime),
         ]);
 
         // Verify charge is pending (unpaid)
@@ -301,7 +301,7 @@ describe('Reservation Workflow: Cancel Reservation', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => RehearsalReservation::determineInitialStatus($user),
+            'status' => RehearsalReservation::determineStatusForDate($startTime),
         ]);
 
         // Verify charge is CoveredByCredits (not Paid)
@@ -332,7 +332,7 @@ describe('Reservation Workflow: Cancel Reservation', function () {
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => RehearsalReservation::determineInitialStatus($user),
+            'status' => RehearsalReservation::determineStatusForDate($startTime),
         ]);
 
         // Mark the charge as paid

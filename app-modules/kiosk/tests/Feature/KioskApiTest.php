@@ -219,7 +219,7 @@ describe('Kiosk: Check-in', function () {
             event: $this->event,
             quantity: 1,
             paymentMethod: 'cash',
-            staffUser: $this->staffUser,
+            staffUser: $this->staffUser
         );
         $this->ticket = $this->order->tickets->first();
     });
@@ -330,7 +330,7 @@ describe('Kiosk: Door Sales', function () {
             event: $this->event,
             quantity: 1,
             paymentMethod: 'cash',
-            staffUser: $this->staffUser,
+            staffUser: $this->staffUser
         );
 
         $this->getJson("/api/v1/kiosk/events/{$this->event->id}/recent-sales", $this->headers)

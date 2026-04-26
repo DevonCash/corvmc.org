@@ -72,13 +72,12 @@ it('logs activity when a member profile is deleted', function () {
 
 describe('No duplicate audit logs', function () {
     it('creates exactly one log entry when creating a profile via action', function () {
-        $user = User::factory()->create();
+        $user = User::withoutEvents(fn() => User::factory()->create());
 
         Activity::query()->delete();
 
         $this->actingAs($user);
-        $profile = MemberProfileService::create([
-            'user_id' => $user->id,
+        $profile = MemberProfileService::create($user, [
             'bio' => 'Hello world',
         ]);
 

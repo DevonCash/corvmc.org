@@ -40,11 +40,15 @@ class LogReservationActivity
             ? 'Reservation confirmed'
             : 'Reservation auto-confirmed';
 
+        // Extract the short state name from the class string (e.g., 'Scheduled' from 'CorvMC\...\Scheduled')
+        $previousStatusName = class_basename($event->previousStatus);
+        $previousStatusValue = strtolower($previousStatusName);
+
         $logger = activity('reservation')
             ->performedOn($reservation)
             ->event('confirmed')
             ->withProperties([
-                'previous_status' => $event->previousStatus->value,
+                'previous_status' => $previousStatusValue,
             ]);
 
         if ($causer) {
@@ -59,13 +63,21 @@ class LogReservationActivity
         $reservation = $event->reservation;
         $reason = $reservation->cancellation_reason ?? 'No reason provided';
 
+        $properties = [
+            'cancellation_reason' => $reason,
+        ];
+
+        // Include the previous status if provided
+        if ($event->previousStatus) {
+            $previousStatusName = class_basename($event->previousStatus);
+            $properties['original_status'] = strtolower($previousStatusName);
+        }
+
         activity('reservation')
             ->performedOn($reservation)
             ->causedBy(auth()->user())
             ->event('cancelled')
-            ->withProperties([
-                'cancellation_reason' => $reason,
-            ])
+            ->withProperties($properties)
             ->log("Reservation cancelled: {$reason}");
     }
 

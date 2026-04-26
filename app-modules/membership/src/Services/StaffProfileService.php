@@ -44,7 +44,7 @@ class StaffProfileService
     {
         DB::transaction(function () use ($orderedIds) {
             foreach ($orderedIds as $index => $id) {
-                StaffProfile::where('id', $id)->update(['order' => $index + 1]);
+                StaffProfile::where('id', $id)->update(['sort_order' => $index + 1]);
             }
         });
     }

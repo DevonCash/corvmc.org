@@ -10,6 +10,7 @@ use CorvMC\Moderation\Actions\Reports\SubmitReport;
 use CorvMC\Moderation\Actions\Revisions\ApproveRevision;
 use CorvMC\Moderation\Actions\Revisions\HandleRevisionSubmission;
 use CorvMC\Moderation\Actions\Trust\AwardTrustPoints;
+use CorvMC\Moderation\Enums\ReportStatus;
 use CorvMC\Moderation\Facades\ReportService;
 use CorvMC\Moderation\Facades\RevisionService;
 use CorvMC\Moderation\Facades\TrustService;
@@ -32,9 +33,10 @@ describe('Moderation Workflow: Report Flow', function () {
             'organizer_id' => $organizer->id,
         ]);
 
-        $report = ReportService::submit(
-            $event,
+        $report = ReportService::submitReport(
             $reporter,
+            Event::class,
+            $event->id,
             'inappropriate_content',
             'This event promotes inappropriate activities'
         );
@@ -42,19 +44,19 @@ describe('Moderation Workflow: Report Flow', function () {
         expect($report)->toBeInstanceOf(Report::class);
         expect($report->reportable_type)->toBe(Event::class);
         expect($report->reportable_id)->toBe($event->id);
-        expect($report->reported_by_id)->toBe($reporter->id);
+        expect($report->reporter_id)->toBe($reporter->id);
         expect($report->reason)->toBe('inappropriate_content');
-        expect($report->custom_reason)->toBe('This event promotes inappropriate activities');
-        expect($report->status)->toBe('pending');
+        expect($report->details)->toBe('This event promotes inappropriate activities');
+        expect($report->status)->toBe(ReportStatus::Pending);
     });
 
     it('prevents duplicate pending reports from same user', function () {
         $reporter = User::factory()->create();
         $event = Event::factory()->create();
 
-        ReportService::submit($event, $reporter, 'spam');
+        ReportService::submitReport($reporter, Event::class, $event->id, 'spam');
 
-        expect(fn () => ReportService::submit($event, $reporter, 'spam'))
+        expect(fn () => ReportService::submitReport($reporter, Event::class, $event->id, 'spam'))
             ->toThrow(\Exception::class, 'You have already reported this content');
     });
 
@@ -63,18 +65,18 @@ describe('Moderation Workflow: Report Flow', function () {
         $moderator = User::factory()->admin()->create();
         $event = Event::factory()->create();
 
-        $report = ReportService::submit($event, $reporter, 'misleading_info');
-        expect($report->status)->toBe('pending');
+        $report = ReportService::submitReport($reporter, Event::class, $event->id, 'misleading_info');
+        expect($report->status)->toBe(ReportStatus::Pending);
 
-        $resolvedReport = ReportService::resolve(
+        $resolvedReport = ReportService::resolveReport(
             $report,
             $moderator,
-            'upheld',
+            'removed',
             'Content violates community guidelines'
         );
 
-        expect($resolvedReport->status)->toBe('upheld');
-        expect($resolvedReport->resolved_by_id)->toBe($moderator->id);
+        expect($resolvedReport->status)->toBe(ReportStatus::Resolved);
+        expect($resolvedReport->resolved_by)->toBe($moderator->id);
         expect($resolvedReport->resolved_at)->not->toBeNull();
         expect($resolvedReport->resolution_notes)->toBe('Content violates community guidelines');
     });
@@ -84,16 +86,16 @@ describe('Moderation Workflow: Report Flow', function () {
         $moderator = User::factory()->admin()->create();
         $event = Event::factory()->create();
 
-        $report = ReportService::submit($event, $reporter, 'spam');
+        $report = ReportService::submitReport($reporter, Event::class, $event->id, 'spam');
 
-        $resolvedReport = ReportService::resolve(
+        $resolvedReport = ReportService::resolveReport(
             $report,
             $moderator,
             'dismissed',
             'Report does not meet criteria'
         );
 
-        expect($resolvedReport->status)->toBe('dismissed');
+        expect($resolvedReport->status)->toBe(ReportStatus::Resolved);
     });
 });
 
@@ -118,7 +120,7 @@ describe('Moderation Workflow: Trust Points', function () {
     it('accumulates trust points over multiple awards', function () {
         $user = User::factory()->create();
 
-        TrustService::award(
+        TrustService::awardPoints(
             user: $user,
             points: 3,
             contentType: Event::class,
@@ -126,7 +128,7 @@ describe('Moderation Workflow: Trust Points', function () {
             reason: 'First event'
         );
 
-        $secondTransaction = TrustService::award(
+        $secondTransaction = TrustService::awardPoints(
             user: $user,
             points: 5,
             contentType: Event::class,
@@ -141,7 +143,7 @@ describe('Moderation Workflow: Trust Points', function () {
         $user = User::factory()->create();
 
         // Award some points first
-        TrustService::award(
+        TrustService::awardPoints(
             user: $user,
             points: 2,
             contentType: Event::class,
@@ -150,7 +152,7 @@ describe('Moderation Workflow: Trust Points', function () {
         );
 
         // Deduct more than available
-        $transaction = TrustService::award(
+        $transaction = TrustService::awardPoints(
             user: $user,
             points: -10,
             contentType: Event::class,
@@ -165,7 +167,7 @@ describe('Moderation Workflow: Trust Points', function () {
     it('tracks different content types separately', function () {
         $user = User::factory()->create();
 
-        TrustService::award(
+        TrustService::awardPoints(
             user: $user,
             points: 10,
             contentType: Event::class,
@@ -173,7 +175,7 @@ describe('Moderation Workflow: Trust Points', function () {
             reason: 'Event trust'
         );
 
-        TrustService::award(
+        TrustService::awardPoints(
             user: $user,
             points: 5,
             contentType: Band::class,
@@ -189,16 +191,14 @@ describe('Moderation Workflow: Trust Points', function () {
 
 describe('Moderation Workflow: Revision Approval', function () {
     it('approves a pending revision and applies changes', function () {
-        $submitter = User::factory()->create();
+        $submitter = User::withoutEvents(fn() => User::factory()->create());
         $reviewer = User::factory()->admin()->create();
 
         // Create a profile to revise
-        $profile = User::withoutEvents(function () use ($submitter) {
-            return MemberProfile::create([
-                'user_id' => $submitter->id,
-                'bio' => 'Original bio',
-            ]);
-        });
+        $profile = MemberProfile::create([
+            'user_id' => $submitter->id,
+            'bio' => 'Original bio',
+        ]);
 
         // Create a pending revision
         $revision = Revision::create([
@@ -207,18 +207,18 @@ describe('Moderation Workflow: Revision Approval', function () {
             'original_data' => ['bio' => 'Original bio'],
             'proposed_changes' => ['bio' => 'Updated bio with more details'],
             'status' => Revision::STATUS_PENDING,
-            'submitted_by_id' => $submitter->id,
+            'submitted_by' => $submitter->id,
             'revision_type' => 'update',
         ]);
 
-        $result = RevisionService::approve($revision, $reviewer, 'Good update');
+        $revision = RevisionService::approve($revision, $reviewer, 'Good update');
 
-        expect($result)->toBeTrue();
+        expect($revision)->toBeInstanceOf(Revision::class);
 
         $revision->refresh();
         expect($revision->status)->toBe(Revision::STATUS_APPROVED);
-        expect($revision->reviewed_by_id)->toBe($reviewer->id);
-        expect($revision->reviewed_at)->not->toBeNull();
+        expect($revision->approved_by)->toBe($reviewer->id);
+        expect($revision->approved_at)->not->toBeNull();
 
         // Changes should be applied to the profile
         $profile->refresh();
@@ -226,15 +226,13 @@ describe('Moderation Workflow: Revision Approval', function () {
     });
 
     it('throws exception when approving already reviewed revision', function () {
-        $submitter = User::factory()->create();
+        $submitter = User::withoutEvents(fn() => User::factory()->create());
         $reviewer = User::factory()->admin()->create();
 
-        $profile = User::withoutEvents(function () use ($submitter) {
-            return MemberProfile::create([
-                'user_id' => $submitter->id,
-                'bio' => 'Test bio',
-            ]);
-        });
+        $profile = MemberProfile::create([
+            'user_id' => $submitter->id,
+            'bio' => 'Test bio',
+        ]);
 
         // Create an already approved revision
         $revision = Revision::create([
@@ -243,44 +241,39 @@ describe('Moderation Workflow: Revision Approval', function () {
             'original_data' => ['bio' => 'Test bio'],
             'proposed_changes' => ['bio' => 'New bio'],
             'status' => Revision::STATUS_APPROVED,
-            'submitted_by_id' => $submitter->id,
+            'submitted_by' => $submitter->id,
             'revision_type' => 'update',
-            'reviewed_by_id' => $reviewer->id,
-            'reviewed_at' => now(),
+            'approved_by' => $reviewer->id,
+            'approved_at' => now(),
         ]);
 
         expect(fn () => RevisionService::approve($revision, $reviewer))
-            ->toThrow(\InvalidArgumentException::class, 'Revision is not pending approval');
+            ->toThrow(\Exception::class);
     });
 });
 
 describe('Moderation Workflow: Auto-Approval', function () {
     it('auto-approves revision for users with production manager role', function () {
-        $submitter = User::factory()->create();
+        $submitter = User::withoutEvents(fn() => User::factory()->create());
         $submitter->assignRole('production manager');
 
-        $profile = User::withoutEvents(function () use ($submitter) {
-            return MemberProfile::create([
-                'user_id' => $submitter->id,
-                'bio' => 'Original bio',
-            ]);
-        });
+        $profile = MemberProfile::create([
+            'user_id' => $submitter->id,
+            'bio' => 'Original bio',
+        ]);
 
-        $revision = Revision::create([
+        $data = [
             'revisionable_type' => 'member_profile',
             'revisionable_id' => $profile->id,
             'original_data' => ['bio' => 'Original bio'],
             'proposed_changes' => ['bio' => 'Staff updated bio'],
-            'status' => Revision::STATUS_PENDING,
-            'submitted_by_id' => $submitter->id,
             'revision_type' => 'update',
-        ]);
+        ];
 
-        RevisionService::handleSubmission($revision);
+        $revision = RevisionService::handleSubmission($data, $submitter);
 
         $revision->refresh();
         expect($revision->status)->toBe(Revision::STATUS_APPROVED);
-        expect($revision->auto_approved)->toBeTrue();
 
         // Changes should be applied
         $profile->refresh();

@@ -6,7 +6,6 @@ use App\Models\Invitation;
 use App\Models\User;
 use CorvMC\Bands\Models\Band;
 use CorvMC\Membership\Notifications\UserInvitationNotification;
-use CorvMC\Membership\Notifications\BandInvitationNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -55,17 +54,22 @@ class InvitationService
 
     /**
      * Invite a user with a band association.
+     *
+     * @deprecated Band invitations now go through CorvMC\Support\Services\InvitationService.
+     *             This method is retained for legacy platform-level invite flows only.
      */
     public function inviteUserWithBand(string $email, Band $band, array $data = []): Invitation
     {
         return DB::transaction(function () use ($email, $band, $data) {
             $data['band_id'] = $band->id;
             $data['band_name'] = $band->name;
-            
+
             $invitation = $this->generate($email, $data);
 
+            // Band invitation notification is now dispatched via InvitationCreated event listeners.
+            // This legacy path only creates the platform-level invitation record.
             Notification::route('mail', $email)
-                ->notify(new BandInvitationNotification($invitation, $band, $data));
+                ->notify(new UserInvitationNotification($invitation, $data));
 
             $invitation->update(['last_sent_at' => now()]);
 
@@ -148,6 +152,9 @@ class InvitationService
 
     /**
      * Resend an invitation email.
+     *
+     * @deprecated Band-specific invitations now go through CorvMC\Support\Services\InvitationService.
+     *             This method only sends a generic UserInvitationNotification regardless of invitation type.
      */
     public function resend(Invitation $invitation): Invitation
     {
@@ -160,14 +167,8 @@ class InvitationService
             $invitation->update(['expires_at' => now()->addWeeks(1)]);
         }
 
-        // Send appropriate notification based on invitation type
-        if (isset($invitation->data['band_id']) && $band = Band::find($invitation->data['band_id'])) {
-            Notification::route('mail', $invitation->email)
-                ->notify(new BandInvitationNotification($invitation, $band, $invitation->data ?? []));
-        } else {
-            Notification::route('mail', $invitation->email)
-                ->notify(new UserInvitationNotification($invitation, $invitation->data ?? []));
-        }
+        Notification::route('mail', $invitation->email)
+            ->notify(new UserInvitationNotification($invitation, $invitation->data ?? []));
 
         $invitation->update(['last_sent_at' => now()]);
 

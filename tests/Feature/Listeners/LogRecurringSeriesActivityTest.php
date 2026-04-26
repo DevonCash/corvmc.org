@@ -138,7 +138,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        RecurringService::pause($series);
+        RecurringService::pauseRecurringSeries($series);
 
         $logs = Activity::where('subject_type', 'recurring_series')
             ->where('subject_id', $series->id)
@@ -156,7 +156,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        RecurringService::resume($series);
+        RecurringService::resumeRecurringSeries($series);
 
         $logs = Activity::where('subject_type', 'recurring_series')
             ->where('subject_id', $series->id)

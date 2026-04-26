@@ -11,8 +11,10 @@ use App\Models\User;
 use CorvMC\Events\Actions\CreateEvent;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\States\ReservationState\Scheduled;
+use CorvMC\SpaceManagement\States\ReservationState\Reserved;
+use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
 use Carbon\Carbon;
 use CorvMC\Events\Facades\EventService;
 use Illuminate\Support\Facades\Cache;
@@ -54,7 +56,7 @@ describe('Reservation Cache Invalidation', function () {
             'reservable_id' => $this->user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => ReservationStatus::Reserved,
+            'status' => Reserved::class,
         ]);
 
         // Assert: Cache was cleared
@@ -71,13 +73,13 @@ describe('Reservation Cache Invalidation', function () {
             'reservable_id' => $this->user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
-            'status' => ReservationStatus::Reserved,
+            'status' => Reserved::class,
         ]);
 
         Cache::put("user_stats.{$this->user->id}", 'cached_value', 3600);
 
         // Act: Update the reservation
-        $reservation->update(['status' => ReservationStatus::Confirmed]);
+        $reservation->update(['status' => Confirmed::class]);
 
         // Assert: User stats cache was cleared
         expect(Cache::has("user_stats.{$this->user->id}"))->toBeFalse();
@@ -93,7 +95,7 @@ describe('Reservation Cache Invalidation', function () {
             'reservable_id' => $this->user->id,
             'reserved_at' => $originalDate->copy()->setHour(14),
             'reserved_until' => $originalDate->copy()->setHour(16),
-            'status' => ReservationStatus::Reserved,
+            'status' => Reserved::class,
         ]);
 
         // Set up cache for both dates

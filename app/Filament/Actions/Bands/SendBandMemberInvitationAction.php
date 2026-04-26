@@ -118,7 +118,7 @@ class SendBandMemberInvitationAction
                     $data['position'] ?? null,
                 );
 
-                // TODO: Send invitation notification to the user
+                // Notification is dispatched by the InvitationCreated event listener
 
                 Notification::make()
                     ->title('Member invited successfully')

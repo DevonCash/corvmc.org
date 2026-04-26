@@ -3,19 +3,25 @@
 namespace CorvMC\Membership\Notifications;
 
 use CorvMC\Bands\Models\Band;
+use CorvMC\Support\Models\Invitation;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class BandInvitationAcceptedNotification extends Notification
 {
     use Queueable;
 
+    public Band $band;
+
+    public User $newMember;
+
     public function __construct(
-        public Band $band,
-        public User $newMember
+        public Invitation $invitation,
     ) {
-        //
+        $this->band = $invitation->invitable;
+        $this->newMember = $invitation->user;
     }
 
     /**
@@ -29,9 +35,9 @@ class BandInvitationAcceptedNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail(object $notifiable): \Illuminate\Notifications\Messages\MailMessage
+    public function toMail(object $notifiable): MailMessage
     {
-        return (new \Illuminate\Notifications\Messages\MailMessage)
+        return (new MailMessage)
             ->subject("New member joined {$this->band->name}!")
             ->greeting('Hello!')
             ->line("{$this->newMember->name} has accepted the invitation to join {$this->band->name}!")
@@ -51,6 +57,7 @@ class BandInvitationAcceptedNotification extends Notification
             'title' => 'New Band Member',
             'body' => "{$this->newMember->name} has joined {$this->band->name}",
             'icon' => 'tabler-user-plus',
+            'invitation_id' => $this->invitation->id,
             'band_id' => $this->band->id,
             'band_name' => $this->band->name,
             'new_member_id' => $this->newMember->id,
@@ -64,6 +71,7 @@ class BandInvitationAcceptedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
+            'invitation_id' => $this->invitation->id,
             'band_id' => $this->band->id,
             'band_name' => $this->band->name,
             'new_member_id' => $this->newMember->id,

@@ -3,7 +3,8 @@
 namespace App\Filament\Member\Resources\Reservations\Schemas;
 
 use CorvMC\SpaceManagement\Facades\ReservationService;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\Models\Reservation;
+use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
@@ -84,8 +85,8 @@ class ReservationEditForm
                     ->schema([
                         Select::make('status')
                             ->label('Status')
-                            ->options(ReservationStatus::class)
-                            ->default(ReservationStatus::Confirmed)
+                            ->options(Reservation::getStatesFor('status'))
+                            ->default(Confirmed::class)
                             ->required(),
                     ])
                     ->visible(fn () => User::me()?->can('manage practice space'))

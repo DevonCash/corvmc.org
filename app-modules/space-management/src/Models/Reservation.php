@@ -441,11 +441,18 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
      */
     public function cancel(?string $reason = null): self
     {
-        // Transition to cancelled state, passing reason to transition
+        // Transition to cancelled state
         $this->status->transitionTo(
-            \CorvMC\SpaceManagement\States\ReservationState\Cancelled::class,
-            ['reason' => $reason]
+            \CorvMC\SpaceManagement\States\ReservationState\Cancelled::class
         );
+
+        // Save the state transition
+        $this->save();
+
+        // Update the cancellation reason field
+        if ($reason) {
+            $this->update(['cancellation_reason' => $reason]);
+        }
 
         return $this->fresh();
     }

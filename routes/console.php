@@ -33,6 +33,9 @@ Schedule::call(function () {
 })->daily()->at('00:00');
 
 
+// Send rehearsal attendance reminders 24h before
+Schedule::command('rehearsals:send-reminders')->dailyAt('09:30');
+
 // Expire credits daily
 Schedule::command('credits:expire')->dailyAt('01:00');
 

@@ -87,7 +87,7 @@ describe('Support Workflow: Generate Recurring Instances', function () {
             'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=TU',
             'start_time' => '19:00:00',
             'end_time' => '21:00:00',
-            'series_start_date' => now()->startOfWeek()->addDay(), // Tuesday
+            'series_start_date' => now()->addDays(3)->startOfDay(), // Next Tuesday or 3 days from now
             'series_end_date' => null,
             'max_advance_days' => 14, // Only 2 weeks ahead
             'status' => RecurringSeriesStatus::ACTIVE,
@@ -109,7 +109,7 @@ describe('Support Workflow: Generate Recurring Instances', function () {
     it('respects series_end_date', function () {
         $user = User::factory()->sustainingMember()->create();
 
-        $startDate = now()->startOfWeek()->addDay(); // Tuesday
+        $startDate = now()->addDays(3)->startOfDay(); // 3 days in the future
         $endDate = $startDate->copy()->addWeeks(2);
 
         $series = RecurringSeries::create([
@@ -186,7 +186,7 @@ describe('Support Workflow: Cancel Recurring Series', function () {
             'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=WE',
             'start_time' => '18:00:00',
             'end_time' => '20:00:00',
-            'series_start_date' => now()->startOfWeek()->addDays(2), // Wednesday
+            'series_start_date' => now()->addDays(3)->startOfDay(), // 3 days in the future
             'series_end_date' => null,
             'max_advance_days' => 30,
             'status' => RecurringSeriesStatus::ACTIVE,
@@ -204,7 +204,7 @@ describe('Support Workflow: Cancel Recurring Series', function () {
     it('cancels all future instances with reason', function () {
         $user = User::factory()->sustainingMember()->create();
 
-        $startDate = now()->addDays(1)->startOfDay();
+        $startDate = now()->addDays(3)->startOfDay();
 
         $series = RecurringSeries::create([
             'user_id' => $user->id,
@@ -225,9 +225,11 @@ describe('Support Workflow: Cancel Recurring Series', function () {
         // Cancel with reason
         RecurringService::cancelSeries($series, 'Schedule conflict');
 
-        // Verify all future instances are cancelled
-        $cancelledInstances = Reservation::where('recurring_series_id', $series->id)
-            ->where('status', 'cancelled')
+        // Verify all future instances are cancelled using the state class
+        // Note: Must use withoutGlobalScopes() because Reservation model excludes cancelled by default
+        $cancelledInstances = Reservation::withoutGlobalScopes()
+            ->where('recurring_series_id', $series->id)
+            ->whereState('status', \CorvMC\SpaceManagement\States\ReservationState\Cancelled::class)
             ->get();
 
         expect($cancelledInstances->count())->toBe($instanceCount);

@@ -3,7 +3,6 @@
 namespace App\Filament\Band\Resources\BandReservationsResource\Pages;
 
 use CorvMC\SpaceManagement\Facades\ReservationService;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use App\Filament\Band\Resources\BandReservationsResource;
 use CorvMC\Bands\Models\Band;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;

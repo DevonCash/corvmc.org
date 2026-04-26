@@ -141,47 +141,69 @@ class TicketService
 
     /**
      * Create a door sale (in-person ticket sale).
-     * Creates a Finance Order with cash payment, settled immediately.
+     * Creates a Finance Order with payment method, settled immediately.
      */
     public function createDoorSale(
         Event $event,
-        User $seller,
         int $quantity,
+        string $paymentMethod = 'cash',
+        ?User $staffUser = null,
         ?float $priceOverride = null,
-        ?string $buyerName = null
+        ?bool $isSustainingMember = false,
+        ?string $attendeeName = null,
+        ?string $attendeeEmail = null,
+        ?string $notes = null
     ): TicketOrder {
-        return DB::transaction(function () use ($event, $seller, $quantity, $priceOverride, $buyerName) {
-            $unitPrice = $priceOverride ?? $event->ticket_price ?? 0;
-            $totalAmount = $unitPrice * $quantity;
+        if (!$staffUser) {
+            throw new \Exception('staffUser is required for door sales');
+        }
+
+        return DB::transaction(function () use ($event, $quantity, $paymentMethod, $staffUser, $priceOverride, $isSustainingMember, $attendeeName, $attendeeEmail, $notes) {
+            // Get base unit price in cents (event ticket_price is in cents)
+            $unitPrice = (int) ($priceOverride ?? ($event->ticket_price ?? 0));
+            $subtotal = $unitPrice * $quantity;
+
+            // Calculate discount if sustaining member
+            $discount = 0;
+            if ($isSustainingMember) {
+                $discountPercent = config('ticketing.sustaining_member_discount', 50);
+                $discount = (int) round($subtotal * $discountPercent / 100);
+            }
+
+            $total = $subtotal - $discount;
 
             $ticketOrder = TicketOrder::create([
                 'event_id' => $event->id,
-                'purchaser_id' => $seller->id,
+                'user_id' => $staffUser->id,
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,
-                'total_amount' => $totalAmount,
+                'subtotal' => $subtotal,
+                'discount' => $discount,
+                'fees' => 0,
+                'total' => max($total, 0),
                 'status' => 'completed',
                 'completed_at' => now(),
-                'order_number' => $this->generateOrderNumber(),
                 'is_door_sale' => true,
-                'buyer_name' => $buyerName,
-                'notes' => "Door sale by {$seller->name}",
+                'payment_method' => $paymentMethod,
+                'name' => $attendeeName,
+                'email' => $attendeeEmail,
+                'notes' => $notes ?? "Door sale by {$staffUser->name}",
             ]);
 
             // Generate tickets immediately
             $this->generateTickets($ticketOrder);
 
-            // Create Finance Order with cash, settled immediately
-            if ($totalAmount > 0) {
-                $lineItems = Finance::price([$ticketOrder], $seller);
+            // Create Finance Order with payment method, settled immediately
+            if ($total > 0) {
+                $lineItems = Finance::price([$ticketOrder], $staffUser);
                 $netCents = (int) $lineItems->sum('amount');
                 $order = $this->createFinanceOrder($ticketOrder, $lineItems, $netCents);
-                $committed = Finance::commit($order->fresh(), ['cash' => $netCents]);
+                $committed = Finance::commit($order->fresh(), [$paymentMethod => $netCents]);
 
-                // Settle the cash transaction immediately
-                $cashTxn = $committed->transactions->first();
-                if ($cashTxn) {
-                    Finance::settle($cashTxn);
+                // Settle the transaction immediately
+                $txn = $committed->transactions->first();
+                if ($txn) {
+                    Finance::settle($txn);
                 }
             }
 

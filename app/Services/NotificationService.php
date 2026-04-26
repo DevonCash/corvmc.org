@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Exceptions\Services\NotificationSchedulingException;
 use App\Models\User;
 use Carbon\Carbon;
-use CorvMC\SpaceManagement\States\ReservationState;
+use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Notifications\ReservationReminderNotification;
 use CorvMC\SpaceManagement\Notifications\ReservationConfirmationReminderNotification;
@@ -31,7 +31,7 @@ class NotificationService
         $endOfTomorrow = $tomorrow->copy()->endOfDay();
 
         $reservations = Reservation::with('reservable')
-            ->status(ReservationStatus::Confirmed)
+            ->whereState('status', Confirmed::class)
             ->whereBetween('reserved_at', [$startOfTomorrow, $endOfTomorrow])
             ->get();
 

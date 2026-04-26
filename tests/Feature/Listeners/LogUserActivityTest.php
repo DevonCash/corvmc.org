@@ -68,13 +68,11 @@ it('logs activity when a user is deleted', function () {
 
 describe('No duplicate audit logs', function () {
     it('creates exactly one log entry when creating a user via action', function () {
+        $user = User::factory()->create(['name' => 'Test User']);
+
         Activity::query()->delete();
 
-        $user = UserManagementService::create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'password123',
-        ]);
+        UserCreated::dispatch($user);
 
         $logs = Activity::where('subject_type', 'user')
             ->where('subject_id', $user->id)
@@ -90,7 +88,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        UserManagementService::update($user, ['name' => 'New Name']);
+        UserUpdated::dispatch($user, ['name'], ['name' => 'Original Name']);
 
         $logs = Activity::where('subject_type', 'user')
             ->where('subject_id', $user->id)
@@ -107,7 +105,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($admin);
-        UserManagementService::delete($user);
+        UserDeleted::dispatch($user);
 
         $logs = Activity::where('subject_type', 'user')
             ->where('subject_id', $user->id)
@@ -123,7 +121,7 @@ describe('No duplicate audit logs', function () {
         Activity::query()->delete();
 
         $this->actingAs($user);
-        UserManagementService::update($user, ['password' => 'newpassword123']);
+        UserUpdated::dispatch($user, ['password'], ['password' => 'oldpassword']);
 
         $logs = Activity::where('subject_type', 'user')
             ->where('subject_id', $user->id)

@@ -3,19 +3,27 @@
 namespace CorvMC\Membership\Notifications;
 
 use CorvMC\Bands\Models\Band;
+use CorvMC\Support\Models\Invitation;
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class BandInvitationNotification extends Notification
 {
     use Queueable;
 
+    public Band $band;
+
+    public string $role;
+
+    public ?string $position;
+
     public function __construct(
-        public Band $band,
-        public string $role,
-        public ?string $position = null
+        public Invitation $invitation,
     ) {
-        //
+        $this->band = $invitation->invitable;
+        $this->role = $invitation->data['role'] ?? 'member';
+        $this->position = $invitation->data['position'] ?? null;
     }
 
     /**
@@ -29,12 +37,12 @@ class BandInvitationNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail(object $notifiable): \Illuminate\Notifications\Messages\MailMessage
+    public function toMail(object $notifiable): MailMessage
     {
         $roleLabel = $this->role === 'admin' ? 'an admin' : 'a member';
         $acceptUrl = url("/band/{$this->band->slug}/accept-invitation");
 
-        $message = (new \Illuminate\Notifications\Messages\MailMessage)
+        $message = (new MailMessage)
             ->subject("You're invited to join {$this->band->name} as {$roleLabel}!")
             ->greeting('Hello!')
             ->line("You've been invited to join {$this->band->name} as {$roleLabel}".($this->position ? " ({$this->position})" : '').'.');
@@ -69,6 +77,7 @@ class BandInvitationNotification extends Notification
                     'color' => 'primary',
                 ],
             ],
+            'invitation_id' => $this->invitation->id,
             'band_id' => $this->band->id,
             'band_name' => $this->band->name,
             'role' => $this->role,
@@ -82,6 +91,7 @@ class BandInvitationNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
+            'invitation_id' => $this->invitation->id,
             'band_id' => $this->band->id,
             'band_name' => $this->band->name,
             'role' => $this->role,

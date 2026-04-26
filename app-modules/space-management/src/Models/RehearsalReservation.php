@@ -360,14 +360,15 @@ class RehearsalReservation extends Reservation implements InvitationSubject, Rec
     {
         $futureInstances = Reservation::where('recurring_series_id', $series->id)
             ->where('reserved_at', '>', now())
-            ->whereStatus([ReservationState\Scheduled::class, ReservationState\Reserved::class, ReservationState\Confirmed::class])
+            ->where(function ($query) {
+                $query->whereState('status', ReservationState\Scheduled::class)
+                    ->orWhereState('status', ReservationState\Reserved::class)
+                    ->orWhereState('status', ReservationState\Confirmed::class);
+            })
             ->get();
 
         foreach ($futureInstances as $reservation) {
-            $reservation->update([
-                'status' => ReservationState\Cancelled::class,
-                'cancellation_reason' => $reason ?? 'Recurring series cancelled',
-            ]);
+            $reservation->cancel($reason ?? 'Recurring series cancelled');
         }
 
         return $futureInstances->count();

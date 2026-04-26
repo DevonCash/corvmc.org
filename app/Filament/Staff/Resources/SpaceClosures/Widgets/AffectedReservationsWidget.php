@@ -4,7 +4,7 @@ namespace App\Filament\Staff\Resources\SpaceClosures\Widgets;
 
 use App\Filament\Actions\Reservations\CancelReservationAction;
 use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
+use CorvMC\SpaceManagement\States\ReservationState\Cancelled;
 use CorvMC\SpaceManagement\Facades\ReservationService;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Models\SpaceClosure;
@@ -33,7 +33,7 @@ class AffectedReservationsWidget extends BaseWidget
         $query = $closure
             ? Reservation::query()
             ->with(['reservable', 'user'])
-            ->where('status', '!=', ReservationStatus::Cancelled)
+            ->where('status', '!=', Cancelled::getMorphClass())
             ->where('reserved_until', '>', $closure->starts_at)
             ->where('reserved_at', '<', $closure->ends_at)
             : Reservation::query()->whereRaw('1 = 0');
@@ -71,7 +71,8 @@ class AffectedReservationsWidget extends BaseWidget
 
                             foreach ($records as $record) {
                                 try {
-                                    $record->state->transitionTo(ReservationStatus::Cancelled, ['reason' => "Space closure: {$closure->type->getLabel()}"]);
+                                    $record->status->transitionTo(Cancelled::class);
+                                    $record->update(['cancellation_reason' => "Space closure: {$closure->type->getLabel()}"]);
                                     $count++;
                                 } catch (\Exception $e) {
                                     // Log the exception or handle it as needed

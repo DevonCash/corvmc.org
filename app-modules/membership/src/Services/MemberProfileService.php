@@ -5,6 +5,7 @@ namespace CorvMC\Membership\Services;
 use App\Models\User;
 use CorvMC\Membership\Models\MemberProfile;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class MemberProfileService
@@ -12,26 +13,71 @@ class MemberProfileService
     public function create(User $user, array $data): MemberProfile
     {
         return DB::transaction(function () use ($user, $data) {
+            $existing = MemberProfile::where('user_id', $user->id)->first();
+
+            if ($existing) {
+                if (! empty($data)) {
+                    $genres = Arr::pull($data, 'genres');
+                    $skills = Arr::pull($data, 'skills');
+                    $influences = Arr::pull($data, 'influences');
+
+                    $existing->update($data);
+
+                    if ($genres !== null) {
+                        $existing->syncTagsWithType($genres, 'genre');
+                    }
+
+                    if ($skills !== null) {
+                        $existing->syncTagsWithType($skills, 'skill');
+                    }
+
+                    if ($influences !== null) {
+                        $existing->syncTagsWithType($influences, 'influence');
+                    }
+                }
+
+                return $existing->fresh();
+            }
+
             $profile = MemberProfile::create(array_merge($data, [
                 'user_id' => $user->id,
             ]));
-            
+
             if (isset($data['genres'])) {
                 $profile->attachTags($data['genres'], 'genre');
             }
-            
+
             if (isset($data['skills'])) {
                 $profile->attachTags($data['skills'], 'skill');
             }
-            
+
             return $profile;
         });
     }
 
     public function update(MemberProfile $profile, array $data): MemberProfile
     {
-        $profile->update($data);
-        return $profile->fresh();
+        return DB::transaction(function () use ($profile, $data) {
+            $genres = Arr::pull($data, 'genres');
+            $skills = Arr::pull($data, 'skills');
+            $influences = Arr::pull($data, 'influences');
+
+            $profile->update($data);
+
+            if ($genres !== null) {
+                $profile->syncTagsWithType($genres, 'genre');
+            }
+
+            if ($skills !== null) {
+                $profile->syncTagsWithType($skills, 'skill');
+            }
+
+            if ($influences !== null) {
+                $profile->syncTagsWithType($influences, 'influence');
+            }
+
+            return $profile->fresh();
+        });
     }
 
     public function delete(MemberProfile $profile): bool

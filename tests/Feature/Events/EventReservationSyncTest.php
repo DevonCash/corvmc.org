@@ -19,8 +19,10 @@ use CorvMC\Events\Actions\UpdateEvent;
 use CorvMC\Events\Enums\EventStatus;
 use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Models\Venue;
-use CorvMC\SpaceManagement\Enums\ReservationStatus;
 use CorvMC\SpaceManagement\Facades\ReservationService;
+use CorvMC\SpaceManagement\States\ReservationState\Scheduled;
+use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
+use CorvMC\SpaceManagement\States\ReservationState\Cancelled;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
@@ -170,12 +172,12 @@ describe('Event Cancellation', function () {
 
         $event->refresh();
         $reservation = $event->spaceReservation;
-        expect($reservation->status)->toBe(ReservationStatus::Confirmed);
+        expect($reservation->status)->toBeInstanceOf(Confirmed::class);
 
         EventService::cancel($event, 'Test cancellation');
 
         $reservation->refresh();
-        expect($reservation->status)->toBe(ReservationStatus::Cancelled)
+        expect($reservation->status)->toBeInstanceOf(Cancelled::class)
             ->and($reservation->cancellation_reason)->toBe('Event was cancelled');
     });
 
@@ -198,7 +200,7 @@ describe('Event Cancellation', function () {
         $event->update(['status' => EventStatus::Postponed]);
 
         $reservation->refresh();
-        expect($reservation->status)->toBe(ReservationStatus::Cancelled)
+        expect($reservation->status)->toBeInstanceOf(Cancelled::class)
             ->and($reservation->cancellation_reason)->toBe('Event was postponed');
     });
 });
@@ -223,14 +225,14 @@ describe('Event Restoration', function () {
 
         EventService::cancel($event, 'Test cancellation');
         $reservation->refresh();
-        expect($reservation->status)->toBe(ReservationStatus::Cancelled);
+        expect($reservation->status)->toBeInstanceOf(Cancelled::class);
 
         $event->refresh();
         $event->update(['status' => EventStatus::Scheduled]);
 
         $reservation->refresh();
         expect($reservation->id)->toBe($reservationId)
-            ->and($reservation->status)->toBe(ReservationStatus::Confirmed)
+            ->and($reservation->status)->toBeInstanceOf(Confirmed::class)
             ->and($reservation->cancellation_reason)->toBeNull();
     });
 
@@ -260,7 +262,7 @@ describe('Event Restoration', function () {
 
         // A new reservation should be created
         expect($event->spaceReservation)->not->toBeNull()
-            ->and($event->spaceReservation->status)->toBe(ReservationStatus::Confirmed);
+            ->and($event->spaceReservation->status)->toBeInstanceOf(Confirmed::class);
     });
 });
 
@@ -280,21 +282,19 @@ describe('Event Rescheduling', function () {
 
         $originalEvent->refresh();
         $originalReservation = $originalEvent->spaceReservation;
-        expect($originalReservation->status)->toBe(ReservationStatus::Confirmed);
+        expect($originalReservation->status)->toBeInstanceOf(Confirmed::class);
 
         $newStartTime = Carbon::now()->addDays(20)->setHour(20)->setMinute(0)->setSecond(0);
-        $newEvent = EventService::reschedule($originalEvent, [
-            'start_datetime' => $newStartTime,
-            'end_datetime' => $newStartTime->copy()->addHours(3),
-        ], 'Venue conflict');
+        $newEndTime = $newStartTime->copy()->addHours(3);
+        $newEvent = EventService::reschedule($originalEvent, $newStartTime, $newEndTime);
 
         $originalReservation->refresh();
-        expect($originalReservation->status)->toBe(ReservationStatus::Cancelled);
+        expect($originalReservation->status)->toBeInstanceOf(Cancelled::class);
 
         $newEvent->refresh();
         expect($newEvent->spaceReservation)->not->toBeNull()
             ->and($newEvent->spaceReservation->id)->not->toBe($originalReservation->id)
-            ->and($newEvent->spaceReservation->status)->toBe(ReservationStatus::Confirmed);
+            ->and($newEvent->spaceReservation->status)->toBeInstanceOf(Confirmed::class);
     });
 
     it('cancels reservation when event is rescheduled to TBA', function () {
@@ -313,10 +313,10 @@ describe('Event Rescheduling', function () {
         $event->refresh();
         $reservation = $event->spaceReservation;
 
-        EventService::reschedule($event, [], 'New date TBA');
+        EventService::reschedule($event, null, null);
 
         $reservation->refresh();
-        expect($reservation->status)->toBe(ReservationStatus::Cancelled)
+        expect($reservation->status)->toBeInstanceOf(Cancelled::class)
             ->and($reservation->cancellation_reason)->toBe('Event was postponed');
     });
 });

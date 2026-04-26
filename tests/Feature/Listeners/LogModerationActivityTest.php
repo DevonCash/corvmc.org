@@ -165,8 +165,8 @@ describe('Revision events', function () {
 describe('No duplicate audit logs', function () {
     it('creates exactly one log entry when submitting a report via action', function () {
         $reporter = User::factory()->create();
-        $report = Report::factory()->pending()->create(['reported_by_id' => $reporter->id]);
-        // Delete the report so SubmitReport can create a new one
+        $report = Report::factory()->pending()->create(['reporter_id' => $reporter->id]);
+        // Delete the report so submitReport can create a new one
         $reportableType = $report->reportable_type;
         $reportableId = $report->reportable_id;
         $report->delete();
@@ -175,11 +175,10 @@ describe('No duplicate audit logs', function () {
 
         Illuminate\Support\Facades\Notification::fake();
 
-        $reportable = \Illuminate\Database\Eloquent\Relations\Relation::getMorphedModel($reportableType)::find($reportableId);
-
         $newReport = ReportService::submitReport(
-            $reportable,
             $reporter,
+            $reportableType,
+            $reportableId,
             'spam',
         );
 
@@ -199,7 +198,7 @@ describe('No duplicate audit logs', function () {
         Illuminate\Support\Facades\Notification::fake();
         Activity::query()->delete();
 
-        ReportService::resolve(
+        ReportService::resolveReport(
             $report,
             $moderator,
             'upheld',

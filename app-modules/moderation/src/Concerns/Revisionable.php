@@ -124,18 +124,16 @@ trait Revisionable
             return $this->coalesceRevision($existingRevision, $changes);
         }
 
-        $revision = Revision::create([
+        $data = [
             'revisionable_type' => $this->getMorphClass(),
             'revisionable_id' => $this->getKey(),
             'original_data' => $this->getOriginal(),
             'proposed_changes' => $changes,
-            'submitted_by_id' => $submitter->id,
             'revision_type' => $type,
-            'status' => Revision::STATUS_PENDING,
-        ]);
+        ];
 
-        // Use action to handle approval workflow
-        RevisionService::handleSubmission($revision);
+        // Use service to handle approval workflow
+        $revision = RevisionService::handleSubmission($data, $submitter);
 
         return $revision;
     }
@@ -173,10 +171,8 @@ trait Revisionable
             // Note: original_data is intentionally NOT updated
             $revision->update([
                 'proposed_changes' => $mergedChanges,
+                'updated_at' => now(),
             ]);
-
-            // Re-evaluate auto-approval with merged changes
-            RevisionService::handleSubmission($revision);
 
             return $revision->fresh();
         });

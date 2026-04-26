@@ -33,7 +33,7 @@ class TicketProduct extends Product
             return 0;
         }
 
-        return (int) ($model->unit_price?->getMinorAmount() ?? 0);
+        return $model->unit_price?->getMinorAmount()?->toInt() ?? 0;
     }
 
     public static function getDescription(?Model $model = null): string
