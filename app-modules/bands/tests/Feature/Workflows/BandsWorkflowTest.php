@@ -157,7 +157,7 @@ describe('Band Workflow: Member Management Edge Cases', function () {
         $membership = $band->memberships()->where('user_id', $member->id)->first();
         expect($membership)->not->toBeNull();
 
-        $band->removeMember($member);
+        BandService::removeMember($band, $member);
 
         expect($band->fresh()->memberships()->where('user_id', $member->id)->exists())->toBeFalse();
     });

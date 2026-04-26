@@ -14,16 +14,20 @@ use CorvMC\Events\Data\LocationData;
 use CorvMC\Events\Enums\EventStatus;
 use CorvMC\Moderation\Enums\Visibility;
 use CorvMC\Moderation\Models\ContentModel;
+use CorvMC\Support\Concerns\HasInvitations;
 use CorvMC\Support\Concerns\HasRecurringSeries;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 use CorvMC\Support\Concerns\HasTimePeriod;
+use CorvMC\Support\Contracts\InvitationSubject;
 use CorvMC\Support\Contracts\Recurrable;
+use CorvMC\Support\Models\Invitation;
 use CorvMC\Support\Models\RecurringSeries;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
@@ -144,9 +148,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *
  * @mixin \Eloquent
  */
-class Event extends ContentModel implements Recurrable
+class Event extends ContentModel implements InvitationSubject, Recurrable
 {
-    use HasFactory, HasPoster, HasPublishing, HasRecurringSeries, HasTimePeriod, LogsActivity, SoftDeletes;
+    use HasFactory, HasInvitations, HasPoster, HasPublishing, HasRecurringSeries, HasTimePeriod, LogsActivity, SoftDeletes;
 
     /**
      * Default attribute values.
@@ -748,6 +752,45 @@ class Event extends ContentModel implements Recurrable
         });
     }
 
+
+    // ── InvitationSubject (RSVP) ──────────────────────────────────────
+
+    public function acceptsInvitations(): bool
+    {
+        return $this->published_at !== null
+            && $this->start_datetime?->isFuture()
+            && $this->status->isActive();
+    }
+
+    public function isInvitable(User $user): bool
+    {
+        return ! $this->invitations()->where('user_id', $user->id)->exists();
+    }
+
+    public function eligibleUsers(): ?Collection
+    {
+        return null; // Any authenticated member can RSVP.
+    }
+
+    public function allowsSelfInvite(): bool
+    {
+        return true;
+    }
+
+    public function onInvitationAccepted(Invitation $invitation): void
+    {
+        // No side effects — RSVP is informational only.
+    }
+
+    public function onInvitationDeclined(Invitation $invitation): void
+    {
+        // No side effects.
+    }
+
+    public function onInvitationRevoked(Invitation $invitation): void
+    {
+        // No side effects.
+    }
 
     // =========================================================================
     // Recurrable Interface Implementation

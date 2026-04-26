@@ -1,0 +1,53 @@
+
+   WARN  XDEBUG_MODE=coverage (environment variable) or xdebug.mode=coverage (PHP configuration setting) has to be set
+
+   PASS  Tests\Unit\Models\SponsorTest
+  ✓ it has a sponsoredMembers relationship                               1.51s  
+  ✓ it calculates used slots correctly                                   0.62s  
+  ✓ it calculates available slots correctly for Harmony tier             0.62s  
+  ✓ it calculates available slots correctly for Melody tier              0.63s  
+  ✓ it calculates available slots correctly for Rhythm tier              0.61s  
+  ✓ it calculates available slots correctly for Crescendo tier           0.67s  
+  ✓ it returns false for hasAvailableSlots when all slots are used       0.68s  
+  ✓ it returns true for hasAvailableSlots when slots are available       0.62s  
+  ✓ it handles zero used slots correctly                                 0.61s  
+  ✓ it stores created_at timestamp on pivot table                        0.62s  
+  ✓ it can have multiple sponsored members                               0.63s  
+  ✓ it user can be sponsored by multiple sponsors                        0.64s  
+
+   PASS  Tests\Unit\States\ReservationStateTest
+  ✓ reservation can transition from scheduled to confirmed               0.64s  
+  ✓ reservation can transition from reserved to confirmed                0.63s  
+  ✓ reservation cannot transition from cancelled to confirmed            0.61s  
+  ✓ state transition updates status                                      0.70s  
+  ✓ invalid state transition throws exception                            0.63s  
+  ✓ state has correct properties                                         0.61s  
+
+   PASS  Tests\Unit\Tenancy\BandTenancyTest
+  ✓ it user can get tenants for band panel when owner                    0.65s  
+  ✓ it user can get multiple band tenants                                0.63s  
+  ✓ it user cannot see invited bands in tenant list                      0.62s  
+  ✓ it user can access band tenant they own                              0.63s  
+  ✓ it user can access band tenant they are active member of             0.62s  
+  ✓ it user cannot access band tenant they are not member of             0.63s  
+  ✓ it user can access band tenant with pending invitation for acceptan… 0.62s  
+  ✓ it tenants are returned ordered by name                              0.62s  
+  ✓ it returns empty collection for non-band panel                       0.63s  
+
+   FAIL  Tests\Feature\CacheInvalidationTest
+  ⨯ Reservation Cache Invalidation → it clears conflict cache when rese… 0.63s  
+  ⨯ Reservation Cache Invalidation → it clears user stats cache when re… 0.63s  
+  ⨯ Reservation Cache Invalidation → it clears old date cache when rese… 0.62s  
+  ✓ Event Cache Invalidation → it clears conflict cache for event date   0.70s  
+  ✓ Event Cache Invalidation → it clears organizer user stats cache      0.67s  
+  ✓ Event Cache Invalidation → it clears old date cache when event is m… 0.72s  
+  ✓ Event Cache Invalidation → it clears caches when event is deleted    0.68s  
+  ✓ User Cache Invalidation → it clears user-specific caches when user…  0.61s  
+  ✓ User Cache Invalidation → it clears sustaining member caches when r… 0.63s  
+  ✓ User Cache Invalidation → it clears caches when user is deleted      0.64s  
+
+   PASS  Tests\Feature\ClaudeMdFreshnessTest
+  ✓ it lists all app-modules                                             0.62s  
+  ✓ it lists all state machine classes                                   0.67s  
+  ✓ it lists all Filament panels                                         0.60s  
+  ✓ it lists all service classes in the services pattern section         0.60s  
