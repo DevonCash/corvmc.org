@@ -100,13 +100,12 @@ class Shift extends Model
      */
     public function scopeWithAvailableCapacity(Builder $query): Builder
     {
-        return $query->whereColumn(
-            'capacity',
-            '>',
-            HourLog::selectRaw('count(*)')
+        return $query->where('capacity', '>', function ($sub) {
+            $sub->selectRaw('count(*)')
+                ->from('volunteer_hour_logs')
                 ->whereColumn('volunteer_hour_logs.shift_id', 'volunteer_shifts.id')
-                ->whereNotIn('status', ['released', 'checked_out'])
-        );
+                ->whereNotIn('volunteer_hour_logs.status', HourLog::TERMINAL_STATUSES);
+        });
     }
 
     // =========================================================================
@@ -119,7 +118,7 @@ class Shift extends Model
     public function filledSlots(): int
     {
         return $this->hourLogs()
-            ->whereNotIn('status', ['released', 'checked_out'])
+            ->whereNotIn('status', HourLog::TERMINAL_STATUSES)
             ->count();
     }
 

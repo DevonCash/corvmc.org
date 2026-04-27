@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Register extends BaseRegister
 {
-    protected ?string $invitationToken = null;
+    public ?string $invitationToken = null;
 
     public function mount(): void
     {

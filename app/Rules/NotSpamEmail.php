@@ -13,13 +13,13 @@ class NotSpamEmail implements ValidationRule
     {
         $spamCheck = SpamPreventionService::checkEmailAgainstStopForumSpam($value);
 
-        if ($spamCheck->is_spam) {
+        if ($spamCheck['is_spam']) {
             // Log the blocked attempt to activity log
             activity()
                 ->withProperties([
                     'email_hash' => md5(strtolower(trim($value))),
-                    'frequency' => $spamCheck->frequency,
-                    'last_seen' => $spamCheck->last_seen?->toIso8601String(),
+                    'frequency' => $spamCheck['frequency'],
+                    'last_seen' => $spamCheck['last_seen'],
                     'ip_address' => request()->ip(),
                     'user_agent' => request()->userAgent(),
                 ])
@@ -27,7 +27,7 @@ class NotSpamEmail implements ValidationRule
 
             Log::warning('Registration blocked - email in spam database', [
                 'email_hash' => md5(strtolower(trim($value))),
-                'frequency' => $spamCheck->frequency,
+                'frequency' => $spamCheck['frequency'],
                 'ip' => request()->ip(),
             ]);
 

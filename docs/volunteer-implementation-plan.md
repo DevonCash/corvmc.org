@@ -16,59 +16,69 @@ Create `app-modules/volunteering/` following the existing modular pattern:
 app-modules/volunteering/
 ├── composer.json
 ├── database/
+│   ├── factories/
 │   └── migrations/
 ├── src/
-│   ├── Actions/
 │   ├── Concerns/
 │   ├── Events/
 │   ├── Exceptions/
 │   ├── Models/
 │   ├── Providers/
 │   │   └── VolunteeringServiceProvider.php
+│   ├── Services/
 │   └── States/
 └── tests/
 ```
 
 Register the service provider. Verify the module loads and the test suite still passes.
 
-### 1.2 Create Role model and migration
+**Test:** Module boots, service provider registers, no regressions.
 
-New table `volunteer_roles`:
+### 1.2 Create Position model and migration
+
+New table `volunteer_positions`:
 
 ```
-id, title (string), description (text nullable), timestamps
+id, title (string), description (text nullable), timestamps, soft_deletes
 ```
 
-Model at `app-modules/volunteering/src/Models/Role.php`. Add `HasTags` trait from `spatie/laravel-tags`.
+Model at `app-modules/volunteering/src/Models/Position.php`. Add `HasTags` trait from `spatie/laravel-tags`. Add `SoftDeletes` trait.
+
+Factory at `app-modules/volunteering/database/factories/PositionFactory.php`.
+
+**Test (unit):** Position creation, tagging, soft delete hides from queries but preserves record.
 
 ### 1.3 Create Shift model and migration
 
 New table `volunteer_shifts`:
 
 ```
-id, role_id (FK), event_id (int nullable FK to events.id),
+id, position_id (FK), event_id (int nullable FK to events.id),
 start_at (timestamp), end_at (timestamp), capacity (integer),
 timestamps
 ```
 
-Model at `app-modules/volunteering/src/Models/Shift.php`. Add `HasTags` trait. Scopes: `forEvent($eventId)`, `upcoming()`, `open()` (capacity not filled). Indexes on `(event_id)`, `(role_id)`, `(start_at)`.
+Model at `app-modules/volunteering/src/Models/Shift.php`. Add `HasTags` trait. Scopes: `forEvent($eventId)`, `upcoming()`, `withAvailableCapacity()`. Indexes on `(event_id)`, `(position_id)`, `(start_at)`.
+
+Factory at `app-modules/volunteering/database/factories/ShiftFactory.php`.
+
+**Test (unit):** Shift creation, scopes return correct results, tagging.
 
 ### 1.4 Create HourLog model, migration, and state machine
 
 New table `volunteer_hour_logs`:
 
 ```
-id, user_id (FK), shift_id (int nullable FK), role_id (int nullable FK),
+id, user_id (FK), shift_id (int nullable FK), position_id (int nullable FK),
 status (HourLogState), started_at (timestamp nullable),
 ended_at (timestamp nullable),
-minutes (integer GENERATED ALWAYS AS (EXTRACT(EPOCH FROM (ended_at - started_at)) / 60) STORED),
 reviewed_by (int nullable FK), notes (text nullable),
 timestamps
 ```
 
-Model at `app-modules/volunteering/src/Models/HourLog.php`. Add `HasTags` trait.
+Model at `app-modules/volunteering/src/Models/HourLog.php`. Add `HasTags` trait. Computed `minutes` accessor using `diffInMinutes` from `started_at` to `ended_at` (not a stored column — avoids PostgreSQL/SQLite dialect issues).
 
-Check constraint: exactly one of `shift_id` or `role_id` must be non-null.
+Check constraint: exactly one of `shift_id` or `position_id` must be non-null.
 
 Partial unique index on `(user_id, shift_id)` excluding `released` and `checked_out` statuses.
 
@@ -80,7 +90,7 @@ State classes under `app-modules/volunteering/src/States/HourLogState/`:
 
 **Self-reported lifecycle:** `Pending`, `Approved`, `Rejected`
 
-Allowed transitions:
+Base class at `app-modules/volunteering/src/States/HourLogState.php` with allowed transitions:
 - `Interested → Confirmed`, `Interested → Released`
 - `Confirmed → CheckedIn`, `Confirmed → Released`
 - `CheckedIn → CheckedOut`, `CheckedIn → Released`
@@ -88,7 +98,15 @@ Allowed transitions:
 
 Terminal states: `Released`, `CheckedOut`, `Approved`, `Rejected`.
 
+Each state class gets `$name`, `getColor()`, `getIcon()`, `getLabel()` following the `TicketState` pattern.
+
+Factory at `app-modules/volunteering/database/factories/HourLogFactory.php`.
+
+**Test (unit):** All valid transitions succeed, all invalid transitions are rejected. `minutes` accessor returns correct value. Check constraint rejects both-null and both-set. Unique constraint prevents double-signup.
+
 ### 1.5 Create domain events
+
+All under `app-modules/volunteering/src/Events/`:
 
 - `VolunteerConfirmed` — carries HourLog. Fired on `Interested → Confirmed`.
 - `VolunteerReleased` — carries HourLog. Fired on transition to `Released`.
@@ -97,7 +115,7 @@ Terminal states: `Released`, `CheckedOut`, `Approved`, `Rejected`.
 - `HoursSubmitted` — carries HourLog. Fired on self-reported HourLog creation.
 - `HoursApproved` — carries HourLog. Fired on `Pending → Approved`.
 
-All under `app-modules/volunteering/src/Events/`.
+**Test:** Events are dispatchable, carry the correct payload.
 
 ### 1.6 Wire relationships in integration layer
 
@@ -106,209 +124,234 @@ In `AppServiceProvider::boot()`:
 - `Shift::resolveRelationUsing('event', ...)` — `belongsTo(Event::class, 'event_id')`.
 - `User::resolveRelationUsing('volunteerHourLogs', ...)` — `hasMany(HourLog::class)`.
 
+**Test (integration):** `$shift->event` resolves correctly. `$user->volunteerHourLogs` returns the user's hour logs.
+
 ---
 
-## Epic 2: Core actions
+## Epic 2: Services
 
-The write operations. Each action uses `lorisleiva/laravel-actions` following existing patterns.
+The business logic layer. Each service is a singleton registered in `VolunteeringServiceProvider`, following the pattern established by `EventService`.
 
-### 2.1 CreateRole action
+### 2.1 PositionService
 
-`app-modules/volunteering/src/Actions/CreateRole.php`
+`app-modules/volunteering/src/Services/PositionService.php`
 
-Creates a Role. Validates title is required, description optional.
+Methods:
+- `create(array $data): Position` — validates title required, description optional. Creates and returns.
+- `update(Position $position, array $data): Position` — updates title and/or description.
+- `delete(Position $position): void` — soft-deletes.
 
-### 2.2 CreateShift action
+Register as singleton in `VolunteeringServiceProvider`.
 
-`app-modules/volunteering/src/Actions/CreateShift.php`
+**Test (feature):** Create, update, soft-delete. Soft-deleted position not returned by default queries.
 
-Creates a Shift. Validates: `role_id` exists, `start_at` < `end_at`, `capacity` >= 1, `event_id` optional and exists if provided.
+### 2.2 ShiftService
 
-### 2.3 SignUp action
+`app-modules/volunteering/src/Services/ShiftService.php`
 
-`app-modules/volunteering/src/Actions/SignUp.php`
+Methods:
+- `create(array $data): Shift` — validates `position_id` exists (and not soft-deleted), `start_at` < `end_at`, `capacity` >= 1, `event_id` optional and exists if provided. Wraps in DB transaction.
+- `update(Shift $shift, array $data): Shift` — updates fields.
+- `delete(Shift $shift): void` — deletes (hard delete, no hour logs should reference a shift that never had sign-ups; if it does, FK constraint protects).
 
-Member signs up for a shift:
-- Checks shift exists and `start_at` is in the future.
-- Checks capacity (non-Released, non-CheckedOut HourLog count < capacity).
-- Checks user doesn't already have an active HourLog for this shift.
-- Creates HourLog in `Interested` status with `shift_id` set.
+**Test (feature):** Create with and without event. Validation rejects bad data. Update works.
 
-### 2.4 ConfirmVolunteer action
+### 2.3 HourLogService
 
-`app-modules/volunteering/src/Actions/ConfirmVolunteer.php`
+`app-modules/volunteering/src/Services/HourLogService.php`
 
-Transitions HourLog `Interested → Confirmed`. Sets `reviewed_by`. Fires `VolunteerConfirmed`.
+The core of the module. All methods wrap in DB transactions and fire domain events.
 
-### 2.5 ReleaseVolunteer action
+Methods:
 
-`app-modules/volunteering/src/Actions/ReleaseVolunteer.php`
+**Shift lifecycle:**
+- `signUp(User $user, Shift $shift): HourLog` — checks shift is in the future, capacity not full (non-Released/non-CheckedOut count < capacity), user doesn't already have an active HourLog for this shift. Creates in `Interested` status.
+- `confirm(HourLog $hourLog, User $reviewer): HourLog` — transitions `Interested → Confirmed`, sets `reviewed_by`. Fires `VolunteerConfirmed`.
+- `release(HourLog $hourLog, User $reviewer): HourLog` — transitions to `Released` from `Interested`, `Confirmed`, or `CheckedIn`. Sets `reviewed_by`. Fires `VolunteerReleased`.
+- `checkIn(HourLog $hourLog): HourLog` — transitions `Confirmed → CheckedIn`, sets `started_at` to now. Fires `VolunteerCheckedIn`.
+- `walkIn(User $user, Shift $shift): HourLog` — creates HourLog in `CheckedIn` directly, sets `started_at` to now. Capacity check applies but can be overridden.
+- `checkOut(HourLog $hourLog): HourLog` — transitions `CheckedIn → CheckedOut`, sets `ended_at` to now. Propagates tags from Shift and Shift's Position onto HourLog (additive via `attachTags`). Fires `VolunteerCheckedOut`.
 
-Transitions HourLog to `Released` from `Interested`, `Confirmed`, or `CheckedIn`. Sets `reviewed_by`. Fires `VolunteerReleased`.
+**Self-reported lifecycle:**
+- `submitHours(User $user, array $data): HourLog` — validates `position_id` exists, `started_at` < `ended_at`, both in the past. Creates in `Pending` status with `position_id`, `started_at`, `ended_at`. Fires `HoursSubmitted`.
+- `approve(HourLog $hourLog, User $reviewer, array $tags = []): HourLog` — transitions `Pending → Approved`, sets `reviewed_by`. Propagates tags from Position + any reviewer-supplied tags onto HourLog. Fires `HoursApproved`.
+- `reject(HourLog $hourLog, User $reviewer, ?string $notes = null): HourLog` — transitions `Pending → Rejected`, sets `reviewed_by`, optionally sets notes.
 
-### 2.6 CheckIn action
-
-`app-modules/volunteering/src/Actions/CheckIn.php`
-
-Transitions HourLog `Confirmed → CheckedIn`. Sets `started_at` to now. Fires `VolunteerCheckedIn`.
-
-Also supports walk-ins: creates a new HourLog in `CheckedIn` status directly for a user + shift, setting `started_at` to now. Skips the Interested → Confirmed steps. Still checks capacity.
-
-Also supports self-check-in: a volunteer with a `Confirmed` HourLog can check themselves in (no `volunteer.checkin` permission needed — the confirmed status is the gate).
-
-### 2.7 CheckOut action
-
-`app-modules/volunteering/src/Actions/CheckOut.php`
-
-Transitions HourLog `CheckedIn → CheckedOut`. Sets `ended_at` to now. `minutes` is derived by the database. Fires `VolunteerCheckedOut`.
-
-**Tag propagation.** After check-out, copies tags from the Shift and the Shift's Role onto the HourLog. Uses `syncTagsWithType` or `attachTags` to merge without overwriting any directly-applied tags.
-
-### 2.8 SubmitHours action
-
-`app-modules/volunteering/src/Actions/SubmitHours.php`
-
-Volunteer submits self-reported hours:
-- Validates `role_id` exists, `started_at` < `ended_at`, both in the past.
-- Creates HourLog in `Pending` status with `role_id`, `started_at`, `ended_at` set.
-- Fires `HoursSubmitted`.
-
-### 2.9 ApproveHours action
-
-`app-modules/volunteering/src/Actions/ApproveHours.php`
-
-Transitions HourLog `Pending → Approved`. Sets `reviewed_by`. Optionally applies tags. Propagates tags from the Role onto the HourLog. Fires `HoursApproved`.
-
-### 2.10 RejectHours action
-
-`app-modules/volunteering/src/Actions/RejectHours.php`
-
-Transitions HourLog `Pending → Rejected`. Sets `reviewed_by`. Accepts optional notes (reason for rejection).
+**Test (feature):**
+- `signUp`: capacity enforcement rejects when full, duplicate prevention, past-shift rejection.
+- `confirm` / `release`: correct transitions, `reviewed_by` set, events fired.
+- `checkIn`: normal and self-check-in paths.
+- `walkIn`: creates directly in CheckedIn, capacity checked.
+- `checkOut`: `ended_at` set, tags propagated from Shift + Position, event fired.
+- `submitHours`: validation (started_at < ended_at, both past), Pending status, event fired.
+- `approve` / `reject`: transitions, tag propagation on approve, notes on reject.
 
 ---
 
 ## Epic 3: Permissions and policies
 
-### 3.1 Create and seed volunteer permissions
+### 3.1 Seed volunteer permissions
 
-Add permissions to the seeder (following existing pattern in `database/seeders/`):
+Add to `database/seeders/PermissionSeeder.php` following the existing pattern:
 
-- `volunteer.role.manage` — staff
-- `volunteer.shift.manage` — staff
-- `volunteer.manage` — staff, event coordinators
-- `volunteer.checkin` — volunteer supervisors (trained members)
-- `volunteer.hours.approve` — staff
-- `volunteer.hours.submit` — all members
-- `volunteer.hours.report` — staff, board
-- `volunteer.signup` — all members (default)
+- `volunteer.position.manage`
+- `volunteer.shift.manage`
+- `volunteer.manage`
+- `volunteer.checkin`
+- `volunteer.hours.approve`
+- `volunteer.hours.submit`
+- `volunteer.hours.report`
+- `volunteer.signup`
+
+Assign to appropriate roles: admin gets all, moderator gets a subset, member gets `volunteer.signup` and `volunteer.hours.submit`.
+
+**Test:** Run seeder, verify permissions and role assignments exist.
 
 ### 3.2 Create authorization policies
 
 Policies in `app/Policies/Volunteering/`:
 
-- `RolePolicy` — gates create/edit on `volunteer.role.manage`.
-- `ShiftPolicy` — gates create/edit on `volunteer.shift.manage`.
-- `HourLogPolicy`:
-  - Sign-up: `volunteer.signup` (member can only sign up themselves).
-  - Confirm/release: `volunteer.manage` OR user is the event's `organizer_id`.
-  - Check in/out (others): `volunteer.checkin`.
-  - Self-check-in: allowed if the user's own HourLog is in `Confirmed` status.
-  - Self-check-out: allowed if the user's own HourLog is in `CheckedIn` status.
-  - Submit self-reported: `volunteer.hours.submit`.
-  - Approve/reject: `volunteer.hours.approve`.
+**`PositionPolicy`** — gates create/update/delete on `volunteer.position.manage`.
+
+**`ShiftPolicy`** — gates create/update/delete on `volunteer.shift.manage`.
+
+**`HourLogPolicy`:**
+- `signUp`: user has `volunteer.signup`.
+- `confirm` / `release`: user has `volunteer.manage` OR user is the event's `organizer_id`.
+- `checkIn` (others): user has `volunteer.checkin`.
+- `checkIn` (self): allowed if the user's own HourLog is in `Confirmed` status. No permission needed.
+- `checkOut` (self): allowed if the user's own HourLog is in `CheckedIn` status.
+- `checkOut` (others): user has `volunteer.checkin`.
+- `submitHours`: user has `volunteer.hours.submit`.
+- `approve` / `reject`: user has `volunteer.hours.approve`.
+- `viewReport`: user has `volunteer.hours.report`.
+
+**Test (feature):**
+- Coordinator can confirm/release for their own event but not others'.
+- Supervisor (`volunteer.checkin`) can check in/out any volunteer.
+- Volunteer can self-check-in only when Confirmed, self-check-out only when CheckedIn.
+- Member can submit hours but not approve.
+- Staff with `volunteer.hours.report` can view reports; members cannot.
 
 ---
 
-## Epic 4: Filament Admin — Roles and Shifts
+## Epic 4: Filament Staff Panel — Roles and Shifts
 
-### 4.1 Create RoleResource
+### 4.1 Create PositionResource
 
-Filament resource at `app/Filament/Resources/Volunteering/RoleResource.php`.
+`app/Filament/Staff/Resources/Volunteering/Positions/PositionResource.php` with the standard subdirectory structure (Pages/, Actions/).
 
 Table columns: title, tags, shift count (aggregate), hour log count (aggregate), timestamps.
 
 Form: title (required), description (rich text editor), tags (spatie tag input).
 
-Relation managers: `ShiftsRelationManager` (upcoming shifts using this role), `HourLogsRelationManager` (recent hours logged under this role).
+Relation managers: `ShiftsRelationManager` (upcoming shifts using this position), `HourLogsRelationManager` (recent hours logged under this position).
+
+**Test (feature):** CRUD operations work, relation managers render.
 
 ### 4.2 Create ShiftResource
 
-Filament resource at `app/Filament/Resources/Volunteering/ShiftResource.php`.
+`app/Filament/Staff/Resources/Volunteering/Shifts/ShiftResource.php`
 
-Table columns: role title, event name (if linked), start/end, capacity display ("2/3"), tags, timestamps.
+Table columns: position title, event name (if linked), start/end, capacity display ("2/3 filled"), tags, timestamps.
 
-Filters: role select, event select, date range, tag select.
+Filters: position select, event select, date range, tag select.
 
-Form: role select, event select (optional), start_at, end_at, capacity, tags (spatie tag input).
+Form: position select (excludes soft-deleted), event select (optional), start_at, end_at, capacity, tags.
 
-Relation manager: `HourLogsRelationManager` — shows who's signed up and their status. Columns: volunteer name, status badge, started_at, ended_at, minutes. Row actions: Confirm, Release, Check In, Check Out (each gated on appropriate permission and valid state transition).
+Relation manager: `HourLogsRelationManager` — volunteer name, status badge, started_at, ended_at, minutes. Row actions as extracted Filament action classes: `ConfirmVolunteerAction`, `ReleaseVolunteerAction`, `CheckInAction`, `CheckOutAction`. Each gated on appropriate policy method and valid state transition.
+
+**Test (feature):** CRUD, filters, relation manager actions trigger correct service methods.
 
 ### 4.3 Add VolunteerShiftsRelationManager to EventResource
 
-Integration layer: `app/Filament/Resources/EventResource/RelationManagers/VolunteerShiftsRelationManager.php`.
+Integration layer: `app/Filament/Staff/Resources/Events/RelationManagers/VolunteerShiftsRelationManager.php`.
 
-Shows all Shifts for this event with nested volunteer counts. Actions: Add Shift (modal with role select and capacity), inline view of who's signed up per shift.
+Shows all Shifts for this event with volunteer counts and status. Actions: Add Shift (modal with role select and capacity), Confirm/Release/CheckIn/CheckOut inline.
+
+This is the interim day-of volunteer management UI.
+
+**Test (feature):** Relation manager appears on EventResource, actions work.
 
 ### 4.4 Add VolunteerHourLogsRelationManager to UserResource
 
-Shows a user's volunteer activity (all HourLogs, all statuses). Columns: role (via shift or direct), event name (if shift-based), status badge, started_at, ended_at, minutes, tags. Footer: total approved/checked-out hours.
+`app/Filament/Staff/Resources/Users/RelationManagers/VolunteerHourLogsRelationManager.php`
+
+Shows a user's volunteer activity (all HourLogs). Columns: role (via shift or direct), event name (if shift-based), status badge, started_at, ended_at, minutes, tags. Footer: total approved/checked-out hours.
+
+**Test (feature):** Relation manager renders on user view.
 
 ---
 
-## Epic 5: Filament Admin — Approval and Reporting
+## Epic 5: Filament Staff Panel — Approval and Reporting
 
 ### 5.1 Create PendingHourLogsPage
 
-Filament custom page at `app/Filament/Pages/PendingHourLogsPage.php`.
+Filament custom page at `app/Filament/Staff/Pages/PendingHourLogsPage.php`.
 
 Shows all HourLogs in `Pending` status. Columns: volunteer name, role, submitted date, started_at, ended_at, minutes, notes.
 
-Row actions: Approve (opens modal with optional tag input), Reject (opens modal with notes field).
+Row actions: Approve (modal with optional tag input, calls `HourLogService::approve`), Reject (modal with notes field, calls `HourLogService::reject`).
 
 Gated on `volunteer.hours.approve` permission.
 
+**Test (feature):** Page renders pending logs. Approve action transitions to Approved with tags. Reject transitions to Rejected with notes. Non-pending logs don't appear.
+
 ### 5.2 Create VolunteerReportPage
 
-Filament custom page at `app/Filament/Pages/VolunteerReportPage.php`.
+Filament custom page at `app/Filament/Staff/Pages/VolunteerReportPage.php`.
 
 Date range picker (defaults to current quarter) and optional tag filter.
 
-Queries `HourLog::whereIn('status', ['checked_out', 'approved'])`.
+Queries HourLogs in `CheckedOut` or `Approved` status within the date range.
 
-Summary stats (Filament stat widgets):
-- Total volunteer hours in period
-- Number of unique volunteers in period
-- Number of shifts staffed in period
+Summary stats (Filament stat widgets): total volunteer hours, unique volunteer count, shifts staffed.
 
-Tables:
-- Hours by volunteer: name, total hours, number of sessions. Sortable, exportable.
-- Hours by role: role title, total hours, number of volunteers. Sortable, exportable.
+Tables: hours by volunteer (name, total hours, sessions) and hours by role (title, total hours, volunteer count). Sortable, exportable.
 
-When tag filter is applied, all queries scope to `withAnyTags($tag)`.
+When tag filter is applied, all queries scope via `withAnyTags($tag)`.
 
 Gated on `volunteer.hours.report` permission.
 
+**Test (feature):** Correct totals (only CheckedOut + Approved count). Date range filtering works. Tag filtering scopes correctly. Logs in other statuses excluded.
+
 ---
 
-## Epic 6: Check-in UI
+## Epic 6: Member Panel
 
-### 6.1 Create volunteer check-in page
+### 6.1 Volunteer sign-up page
 
-A page in the authenticated app (not Filament admin) for volunteer supervisors to use on their phone at events.
+`app/Filament/Member/Resources/Volunteering/` or a custom page — list upcoming events with open shifts.
 
-Default view: shifts for events happening now (where `events.start_datetime <= now <= events.end_datetime`), grouped by event.
+For each event: event name, date, list of shifts with role name and available capacity. "Sign Up" button calls `HourLogService::signUp`. Shows current sign-up status if already signed up.
 
-For each shift: role name, capacity, list of confirmed/checked-in volunteers with tap-to-check-in / tap-to-check-out buttons.
+Member can also view their upcoming confirmed shifts and past volunteer history (all their HourLogs).
 
-Walk-in button: opens modal to select a user and a shift, creates HourLog in `CheckedIn` directly.
+Gated on `volunteer.signup` permission.
 
-Gated on `volunteer.checkin` permission.
+**Test (feature):** Member sees open shifts, can sign up, sees confirmation. Full shift not signable. Already-signed-up shift shows status instead of button.
 
-### 6.2 Create volunteer self-check-in/out
+### 6.2 Self-reported hours submission
 
-Volunteers with a `Confirmed` HourLog see a "Check In" button for their upcoming shifts (within a reasonable window — e.g., 30 minutes before shift start through shift end). After checking in, they see a "Check Out" button.
+Page or form in Member panel for submitting self-reported hours.
 
-Lightweight — can be a simple Livewire component on the member dashboard or event detail page.
+Form: position select (excludes soft-deleted), start date/time, end date/time, optional notes. Calls `HourLogService::submitHours`.
+
+Shows submission history with status (Pending/Approved/Rejected) and reviewer notes.
+
+Gated on `volunteer.hours.submit` permission.
+
+**Test (feature):** Member submits hours, sees pending status. After staff approval, status updates. Validation rejects future dates.
+
+### 6.3 Self-check-in and check-out
+
+Members with a `Confirmed` HourLog for a current or upcoming shift (within 30 minutes of start through shift end) see a "Check In" action. After checking in, they see "Check Out".
+
+Can be a widget on the member dashboard or inline on the sign-up page.
+
+No special permission — `Confirmed` status on their own HourLog is the gate.
+
+**Test (feature):** Confirmed volunteer sees check-in button within time window. CheckedIn volunteer sees check-out button. Non-confirmed or out-of-window shows nothing.
 
 ---
 
@@ -318,145 +361,89 @@ Lightweight — can be a simple Livewire component on the member dashboard or ev
 
 `app-modules/volunteering/src/Notifications/ShiftConfirmedNotification.php`
 
-Sent when a volunteer is confirmed for a shift. Email via Postmark: shift role, event name, date/time.
+Email via Postmark: shift role, event name, date/time. Dispatched by listener on `VolunteerConfirmed`.
 
-Dispatched by a listener on `VolunteerConfirmed`.
+### 7.2 Shift released notification
 
-### 7.2 Shift reminder notification and scheduled command
+`app-modules/volunteering/src/Notifications/ShiftReleasedNotification.php`
+
+Email via Postmark: shift role, event name. Dispatched by listener on `VolunteerReleased`.
+
+### 7.3 Shift reminder notification and scheduled command
 
 `app-modules/volunteering/src/Notifications/ShiftReminderNotification.php`
 
 Sent 24 hours before a shift's `start_at` to all volunteers in `Confirmed` status.
 
-`app-modules/volunteering/src/Console/SendShiftReminders.php` — runs daily. Queries shifts where `start_at` is between now+23h and now+25h. Sends reminder to confirmed volunteers. Idempotent — tracks sent reminders via a cache key or `reminded_at` timestamp.
+`app-modules/volunteering/src/Console/SendShiftReminders.php` — runs daily via scheduler. Queries shifts where `start_at` is between now+23h and now+25h. Sends reminder to confirmed volunteers. Idempotent — tracks sent reminders via cache key or `reminded_at` timestamp.
 
-### 7.3 Hours approved/rejected notification
+### 7.4 Hours reviewed notification
 
 `app-modules/volunteering/src/Notifications/HoursReviewedNotification.php`
 
-Sent when self-reported hours are approved or rejected. Includes role, hours, and reviewer notes (if rejected).
+Sent when self-reported hours are approved or rejected. Includes role, hours, and reviewer notes (if rejected). Dispatched by listeners on `HoursApproved` and `Pending → Rejected` transition.
 
-Dispatched by listeners on `HoursApproved` and `Pending → Rejected` transition.
-
-### 7.4 Hours submitted (staff notification)
+### 7.5 Hours submitted (staff notification)
 
 `app-modules/volunteering/src/Notifications/HoursSubmittedNotification.php`
 
-Sent to staff with `volunteer.hours.approve` permission when a volunteer submits hours. Keeps the approval queue from going stale.
+Sent to users with `volunteer.hours.approve` permission when a volunteer submits hours. Dispatched by listener on `HoursSubmitted`.
 
-Dispatched by a listener on `HoursSubmitted`.
+**Test (all notifications):** Each notification is sent to the correct recipient with correct content. Shift reminder only fires for shifts in the 23-25h window. Staff notification reaches all approvers.
 
 ---
 
 ## Epic 8: Event cancellation integration
 
-### 8.1 Release linked volunteers when Event is cancelled
+### 8.1 Release linked volunteers on event cancellation
 
-Integration-layer listener at `app/Listeners/ReleaseVolunteersOnEventCancelled.php`.
+Integration-layer listener at `app/Listeners/Volunteering/ReleaseVolunteersOnEventCancelled.php`.
 
-Listens for the Event module's cancellation event. When an Event is cancelled:
-- Find all Shifts with `event_id` matching the cancelled Event.
-- Transition all non-terminal HourLogs for those shifts to `Released`.
-- Notify affected volunteers.
+Listens for the Events module's cancellation event. When an event is cancelled:
+- Find all Shifts with `event_id` matching the cancelled event.
+- Transition all non-terminal HourLogs for those shifts to `Released` via `HourLogService::release`.
+- Affected volunteers receive the shift released notification.
 
----
-
-## Epic 9: Tag propagation
-
-### 9.1 Implement tag propagation on check-out
-
-In the `CheckOut` action (or as a listener on `VolunteerCheckedOut`):
-- Load the HourLog's Shift and the Shift's Role.
-- Collect tags from both.
-- Attach them to the HourLog via `attachTags()` (additive, preserves any directly-applied tags).
-
-### 9.2 Implement tag propagation on approval
-
-In the `ApproveHours` action (or as a listener on `HoursApproved`):
-- Load the HourLog's Role.
-- Collect its tags.
-- Merge with any tags the reviewer applied directly.
-- Attach to the HourLog.
-
-### 9.3 Test tag propagation
-
-- Tag a Role → approve self-reported hours → verify HourLog has Role's tags.
-- Tag a Shift → check out volunteer → verify HourLog has Shift's tags.
-- Tag both Role and Shift → check out → verify HourLog has both sets of tags.
-- Add direct tag during approval → verify it coexists with propagated tags.
+**Test (integration):** Cancel an event → all linked HourLogs transition to Released → volunteers notified.
 
 ---
 
-## Epic 10: Tests
+## Smoke tests
 
-Written alongside each epic but grouped here for visibility.
+Two end-to-end scenarios that exercise the full feature lifecycle. Run these before considering the module shippable.
 
-### 10.1 Unit tests for models and state machine
+**1. Full shift lifecycle.** Staff creates a Position ("Sound Person"). Staff creates a Shift for an upcoming event (capacity 2). Member A signs up from Member panel → HourLog in Interested. Coordinator confirms Member A → HourLog in Confirmed, notification sent. 24 hours before shift, reminder notification sent. Day of: supervisor checks in Member A → CheckedIn, `started_at` set. Walk-in Member B added by supervisor → CheckedIn directly. Both check out → CheckedOut, `ended_at` set, tags propagated from Shift and Position. Report page shows both volunteers' hours with correct totals and tags.
 
-- Role: creation, tagging.
-- Shift: creation, scopes (`upcoming`, `open`, `forEvent`), capacity calculation, tagging.
-- HourLog: all state transitions (valid and invalid), generated `minutes` column, check constraint (exactly one of shift_id/role_id), unique constraint on (user_id, shift_id).
-
-### 10.2 Feature tests for actions
-
-- SignUp: capacity enforcement, duplicate prevention, past-shift rejection.
-- ConfirmVolunteer / ReleaseVolunteer: state transitions, `reviewed_by` set, events fired.
-- CheckIn: normal check-in, walk-in creation, self-check-in (confirmed gate).
-- CheckOut: `ended_at` set, `minutes` derived, tags propagated, event fired.
-- SubmitHours: validation (started_at < ended_at, both past), `Pending` status, event fired.
-- ApproveHours / RejectHours: state transitions, tag propagation on approve, notes on reject.
-
-### 10.3 Feature tests for policies
-
-- Coordinator can confirm/release for their own event but not others.
-- Supervisor can check in/out at any event.
-- Volunteer can self-check-in only when `Confirmed`.
-- Self-check-out only when `CheckedIn`.
-- Member can submit hours but not approve.
-
-### 10.4 Feature tests for Filament
-
-- RoleResource and ShiftResource: CRUD, relation managers.
-- PendingHourLogsPage: displays pending, approve/reject actions work.
-- VolunteerReportPage: date range filtering, tag filtering, correct totals (only CheckedOut + Approved).
-- VolunteerShiftsRelationManager on EventResource.
-
-### 10.5 Integration tests
-
-- Event cancellation cascade: Event cancelled → HourLogs released → volunteers notified.
-- Full shift lifecycle: create shift → sign up → confirm → check in → check out → verify minutes, tags, reporting total.
-- Full self-report lifecycle: submit hours → approve with tags → verify tags propagated, reporting total.
-- Walk-in: supervisor adds walk-in → check out → hours counted.
+**2. Full self-reported lifecycle.** Member submits 3 hours of "Grant Writer" work from Member panel → HourLog in Pending, staff notified. Staff approves with tag "Spring Grant 2026" → Approved, Role tags + reviewer tag propagated, volunteer notified. Report page filtered by "Spring Grant 2026" shows the hours.
 
 ---
 
-## Dependency graph (epics)
+## Dependency graph
 
 ```
-Epic 1 (models, migrations, state machine)
-  └─▶ Epic 2 (core actions)
+Epic 1 (models, migrations, states, events)
+  └─▶ Epic 2 (services)
         ├─▶ Epic 3 (permissions, policies)
-        │     └─▶ Epic 4 (filament: roles, shifts)
-        │           └─▶ Epic 5 (filament: approval, reporting)
-        ├─▶ Epic 6 (check-in UI)
+        │     ├─▶ Epic 4 (staff panel: roles, shifts, event RM)
+        │     │     └─▶ Epic 5 (staff panel: approval, reporting)
+        │     └─▶ Epic 6 (member panel)
         ├─▶ Epic 7 (notifications)
-        └─▶ Epic 9 (tag propagation)
+        └─▶ Epic 8 (event cancellation)
 
-Epic 8 (event cancellation) ── requires Epics 1+2, independent of 3-7
-Epic 10 (tests) ── written alongside each epic, grouped for visibility
+Epics 4–8 are independent of each other (all depend on 2+3).
+Epic 7 and 8 only depend on Epic 2 (no policy gating needed for listeners).
 ```
-
-Epics 6, 7, 8, and 9 are independent of each other and can be done in any order after Epic 2. Epic 5 depends on Epic 4 which depends on Epic 3. Tests (Epic 10) should be written alongside each epic.
 
 ---
 
-## Out of scope for this plan
+## Out of scope
 
-These are listed in the design doc's Deferred section:
+From the design spec's Deferred section:
 
-- **Credit earning for volunteer hours** — Finance integration via events.
-- **Public dynamic volunteer page** — database-driven shift listing with sign-up.
-- **Kiosk check-in view** — simplified desk terminal UI.
+- **Credit earning** — Finance integration for volunteer hours → credits.
+- **Public dynamic volunteer page** — replacing static `volunteer.blade.php`.
+- **Event control panel** — consolidated day-of operations page (volunteers, tickets, till count, door fees).
+- **Kiosk check-in view** — simplified desk terminal screen.
 - **Shift templates / event type presets** — auto-creating shifts from templates.
 - **Recurring shifts** — repeating shift patterns.
 - **Waitlisting** — `Waitlisted` state when shifts are full.

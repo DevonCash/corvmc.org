@@ -32,26 +32,7 @@ class ReservationForm
                 Wizard::make()
                     ->columnSpanFull()
                     ->steps(static::getSteps())
-                    ->submitAction(new HtmlString(Blade::render(<<<'BLADE'
-                        <div class="flex gap-3">
-                            <x-filament::button
-                                type="button"
-                                icon="tabler-credit-card"
-                                color="success"
-                                wire:click="submitWithPaymentMethod('stripe')"
-                            >
-                                Pay Online
-                            </x-filament::button>
-                            <x-filament::button
-                                type="button"
-                                icon="tabler-cash"
-                                color="warning"
-                                wire:click="submitWithPaymentMethod('cash')"
-                            >
-                                Pay with Cash
-                            </x-filament::button>
-                        </div>
-                    BLADE))),
+                    ->submitAction(static::getSubmitActionHtml('data')),
             ]);
     }
 
@@ -376,6 +357,7 @@ class ReservationForm
             Hidden::make('cost')->default(0),
             Hidden::make('free_hours_used')->default(0),
             Hidden::make('hours_used')->default(0),
+            Hidden::make('within_confirmation_window')->default(true),
 
             ViewField::make('reservation_summary')
                 ->label('Reservation Summary')
@@ -383,6 +365,52 @@ class ReservationForm
                 ->columnSpanFull(),
 
         ];
+    }
+
+    /**
+     * Generate the wizard submit action HTML that toggles between payment
+     * buttons (within confirmation window) and a plain "Reserve" button.
+     *
+     * @param string $statePath Livewire state path prefix for the form data
+     *                          (e.g. 'data' for CreateRecord, 'mountedActions.0.data' for action modals)
+     */
+    public static function getSubmitActionHtml(string $statePath): HtmlString
+    {
+        return new HtmlString(Blade::render(
+            <<<'BLADE'
+            <div x-data="{ withinWindow: $wire.entangle('{{ $statePath }}.within_confirmation_window') }">
+                <div x-show="withinWindow" x-cloak class="flex gap-3">
+                    <x-filament::button
+                        type="button"
+                        icon="tabler-credit-card"
+                        color="success"
+                        wire:click="submitWithPaymentMethod('stripe')"
+                    >
+                        Pay Online
+                    </x-filament::button>
+                    <x-filament::button
+                        type="button"
+                        icon="tabler-cash"
+                        color="warning"
+                        wire:click="submitWithPaymentMethod('cash')"
+                    >
+                        Pay with Cash
+                    </x-filament::button>
+                </div>
+                <div x-show="!withinWindow" x-cloak>
+                    <x-filament::button
+                        type="button"
+                        icon="tabler-calendar-check"
+                        color="primary"
+                        wire:click="submitWithPaymentMethod('stripe')"
+                    >
+                        Reserve
+                    </x-filament::button>
+                </div>
+            </div>
+            BLADE,
+            ['statePath' => $statePath]
+        ));
     }
 
     /**
@@ -429,6 +457,9 @@ class ReservationForm
             $datetime = Carbon::parse($date . ' ' . $endTime, config('app.timezone'));
             $set('reserved_until', $datetime);
         }
+
+        // Update confirmation window flag for submit button rendering
+        $set('within_confirmation_window', static::isWithinConfirmationWindow($get));
 
         // Update status whenever dates change
         self::updateStatus($get, $set);

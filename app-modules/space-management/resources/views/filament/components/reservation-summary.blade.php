@@ -28,6 +28,8 @@
             $freeHours = $freeHoursUsed * 0.5; // blocks to hours
             $paidHours = max(0, $duration - $freeHours);
             $isSustainingMember = $user->hasRole('sustaining member');
+            $grossCost = $duration * $hourlyRate;
+            $discountAmount = $freeHours * $hourlyRate;
             $costFormatted = '$' . number_format($costCents / 100, 2);
             $isFree = $costCents <= 0;
         }
@@ -59,7 +61,7 @@
                 <div class="flex items-center gap-3 mb-3">
                     <x-filament::icon
                         icon="tabler-receipt"
-                        class="w-6 h-6 text-gray-600 dark:text-gray-400"
+                        class="w-6 h-6 text-gray-600 dark:text-gray-400 -ml-1"
                     />
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         Reservation Summary
@@ -80,23 +82,23 @@
 
             {{-- Line Items --}}
             <div class="px-6 py-4 space-y-3">
-                {{-- Total Hours --}}
+                {{-- Practice Time --}}
                 <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                         <x-filament::icon
                             icon="tabler-clock"
                             class="w-5 h-5"
                         />
-                        <span class="font-medium">Practice Time</span>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-semibold text-gray-900 dark:text-gray-100">
-                            {{ number_format($duration, 1) }} {{ Str::plural('hour', $duration) }}
-                        </div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                            @ ${{ number_format($hourlyRate, 2) }}/hr
+                        <div>
+                            <span class="font-medium">Practice Time</span>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ number_format($duration, 1) }} {{ Str::plural('hour', $duration) }} @ ${{ number_format($hourlyRate, 2) }}/hr
+                            </div>
                         </div>
                     </div>
+                    <span class="font-semibold text-gray-900 dark:text-gray-100">
+                        ${{ number_format($grossCost, 2) }}
+                    </span>
                 </div>
 
                 {{-- Free Hours --}}
@@ -106,44 +108,35 @@
                             icon="tabler-gift"
                             class="w-5 h-5 {{ $freeHours > 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-400 dark:text-gray-600' }}"
                         />
-                        <span class="text-sm text-gray-700 dark:text-gray-300">
-                            Free Hours
-                            @if(!$isSustainingMember)
-                                <a
-                                    href="/member/membership"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="text-primary-600 dark:text-primary-400 hover:underline ml-1"
-                                >
-                                    (learn more)
-                                </a>
+                        <div>
+                            <span class="text-sm text-gray-700 dark:text-gray-300">
+                                Free Hours
+                                @if(!$isSustainingMember)
+                                    <a
+                                        href="/member/membership"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="text-primary-600 dark:text-primary-400 hover:underline ml-1"
+                                    >
+                                        (learn more)
+                                    </a>
+                                @endif
+                            </span>
+                            @if($freeHours > 0)
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ number_format($freeHours, 1) }} {{ Str::plural('hour', $freeHours) }} @ ${{ number_format($hourlyRate, 2) }}/hr
+                                </div>
                             @endif
-                        </span>
-                    </div>
-                    <div class="font-semibold {{ $freeHours > 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-500 dark:text-gray-400' }}">
-                        @if($freeHours > 0)
-                            -{{ number_format($freeHours, 1) }} {{ Str::plural('hour', $freeHours) }}
-                        @else
-                            0.0 hours
-                        @endif
-                    </div>
-                </div>
-
-                {{-- Paid Hours --}}
-                @if($paidHours > 0)
-                    <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-700">
-                        <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                            <x-filament::icon
-                                icon="tabler-credit-card"
-                                class="w-5 h-5"
-                            />
-                            <span class="text-sm">Paid Hours</span>
                         </div>
-                        <span class="font-semibold text-gray-900 dark:text-gray-100">
-                            {{ number_format($paidHours, 1) }} {{ Str::plural('hour', $paidHours) }}
-                        </span>
                     </div>
-                @endif
+                    <span class="font-semibold {{ $freeHours > 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-500 dark:text-gray-400' }}">
+                        @if($freeHours > 0)
+                            -${{ number_format($discountAmount, 2) }}
+                        @else
+                            $0.00
+                        @endif
+                    </span>
+                </div>
 
                 {{-- Total --}}
                 <div class="flex items-center justify-between pt-2">
@@ -219,7 +212,7 @@
                                 class="w-5 h-5 text-warning-600 dark:text-warning-400 mt-0.5 flex-shrink-0"
                             />
                             <div class="text-sm text-gray-700 dark:text-gray-300">
-                                You must confirm within 24 hours or the reservation will be cancelled.
+                                You'll need to confirm before <strong>{{ $reservationDate->format('M j') }}</strong> or the reservation will be automatically cancelled.
                             </div>
                         </div>
                     </div>

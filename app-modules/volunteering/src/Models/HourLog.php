@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use InvalidArgumentException;
 use Spatie\ModelStates\HasStates;
 use Spatie\Tags\HasTags;
 
@@ -42,6 +43,17 @@ class HourLog extends Model
 {
     use HasFactory, HasStates, HasTags;
 
+    /**
+     * Statuses that represent a concluded hour log (no longer active).
+     * Used for capacity checks, partial unique indexes, and scope filters.
+     */
+    public const TERMINAL_STATUSES = ['released', 'checked_out', 'rejected'];
+
+    /**
+     * Statuses that count toward volunteer hour reporting.
+     */
+    public const COUNTABLE_STATUSES = ['checked_out', 'approved'];
+
     protected $table = 'volunteer_hour_logs';
 
     protected $fillable = [
@@ -62,6 +74,20 @@ class HourLog extends Model
             'started_at' => 'datetime',
             'ended_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (HourLog $hourLog) {
+            $hasShift = $hourLog->shift_id !== null;
+            $hasPosition = $hourLog->position_id !== null;
+
+            if ($hasShift === $hasPosition) {
+                throw new InvalidArgumentException(
+                    'HourLog must have exactly one of shift_id or position_id set.'
+                );
+            }
+        });
     }
 
     protected static function newFactory(): HourLogFactory
@@ -152,7 +178,7 @@ class HourLog extends Model
      */
     public function scopeCountable(Builder $query): Builder
     {
-        return $query->whereIn('status', ['checked_out', 'approved']);
+        return $query->whereIn('status', self::COUNTABLE_STATUSES);
     }
 
     /**
@@ -168,6 +194,6 @@ class HourLog extends Model
      */
     public function scopeActive(Builder $query): Builder
     {
-        return $query->whereNotIn('status', ['released', 'checked_out', 'rejected']);
+        return $query->whereNotIn('status', self::TERMINAL_STATUSES);
     }
 }

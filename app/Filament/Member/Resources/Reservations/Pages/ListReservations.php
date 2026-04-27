@@ -74,26 +74,7 @@ class ListReservations extends ListRecords
             ->modalWidth('lg')
             ->steps(ReservationForm::getSteps())
             ->modifyWizardUsing(fn ($wizard) => $wizard
-                ->submitAction(new \Illuminate\Support\HtmlString(\Illuminate\Support\Facades\Blade::render(<<<'BLADE'
-                    <div class="flex gap-3">
-                        <x-filament::button
-                            type="button"
-                            icon="tabler-credit-card"
-                            color="success"
-                            wire:click="submitWithPaymentMethod('stripe')"
-                        >
-                            Pay Online
-                        </x-filament::button>
-                        <x-filament::button
-                            type="button"
-                            icon="tabler-cash"
-                            color="warning"
-                            wire:click="submitWithPaymentMethod('cash')"
-                        >
-                            Pay with Cash
-                        </x-filament::button>
-                    </div>
-                BLADE)))
+                ->submitAction(ReservationForm::getSubmitActionHtml('mountedActions.0.data'))
             )
             ->action(fn (array $data) => $this->createReservationWithPayment($data, $this->paymentMethod));
     }

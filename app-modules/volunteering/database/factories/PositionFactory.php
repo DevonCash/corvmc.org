@@ -28,7 +28,7 @@ class PositionFactory extends Factory
         ];
 
         return [
-            'title' => fake()->unique()->randomElement($positions),
+            'title' => fake()->randomElement($positions) . ' ' . fake()->unique()->numberBetween(1, 10000),
             'description' => fake()->boolean(70) ? fake()->paragraph(2) : null,
         ];
     }

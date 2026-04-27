@@ -13,6 +13,8 @@
  */
 
 use App\Models\User;
+use App\Filament\Member\Pages\Auth\Register;
+use App\Models\Invitation as PlatformInvitation;
 use Carbon\Carbon;
 use CorvMC\Bands\Models\Band;
 use CorvMC\Events\Exceptions\SchedulingConflictException;
@@ -20,6 +22,9 @@ use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
 use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Moderation\Facades\SpamPreventionService;
+use Filament\Facades\Filament;
+use Livewire\Livewire;
 use CorvMC\Finance\Facades\CreditService;
 use CorvMC\Finance\Facades\MemberBenefitService;
 use CorvMC\Membership\Facades\BandService;
@@ -525,5 +530,137 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         // Assert: Credits deducted (2 hours = 4 blocks at 30 min/block)
         // 16 starting blocks - 4 blocks used = 12 remaining
         expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(12);
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Flow 5: New User Signup
+|--------------------------------------------------------------------------
+|
+| Tests the full registration flow through the Filament Register page,
+| including spam checking, standard signup, and invitation-based signup.
+|
+*/
+
+describe('Flow 5: New User Signup', function () {
+    beforeEach(function () {
+        Filament::setCurrentPanel(Filament::getPanel('member'));
+        Notification::fake();
+    });
+
+    it('registers a new user through the member panel', function () {
+        SpamPreventionService::shouldReceive('checkEmailAgainstStopForumSpam')
+            ->once()
+            ->andReturn([
+                'is_spam' => false,
+                'frequency' => 0,
+                'last_seen' => null,
+                'confidence' => 0,
+                'source' => 'stopforumspam',
+            ]);
+
+        Livewire::test(Register::class)
+            ->fillForm([
+                'name' => 'New Member',
+                'email' => 'newmember@example.com',
+                'password' => 'password123',
+                'passwordConfirmation' => 'password123',
+            ])
+            ->call('register')
+            ->assertHasNoFormErrors();
+
+        $user = User::where('email', 'newmember@example.com')->first();
+        expect($user)->not->toBeNull()
+            ->and($user->name)->toBe('New Member');
+    });
+
+    it('blocks registration for spam-flagged emails', function () {
+        SpamPreventionService::shouldReceive('checkEmailAgainstStopForumSpam')
+            ->once()
+            ->andReturn([
+                'is_spam' => true,
+                'frequency' => 42,
+                'last_seen' => '2026-04-01',
+                'confidence' => 90,
+                'source' => 'stopforumspam',
+            ]);
+
+        Livewire::test(Register::class)
+            ->fillForm([
+                'name' => 'Spammy User',
+                'email' => 'spammer@example.com',
+                'password' => 'password123',
+                'passwordConfirmation' => 'password123',
+            ])
+            ->call('register')
+            ->assertHasFormErrors(['email']);
+
+        expect(User::where('email', 'spammer@example.com')->exists())->toBeFalse();
+    });
+
+    it('registers a user from a valid invitation and marks it used', function () {
+        SpamPreventionService::shouldReceive('checkEmailAgainstStopForumSpam')
+            ->once()
+            ->andReturn([
+                'is_spam' => false,
+                'frequency' => 0,
+                'last_seen' => null,
+                'confidence' => 0,
+                'source' => 'stopforumspam',
+            ]);
+
+        $inviter = User::factory()->create();
+
+        $invitation = PlatformInvitation::withoutGlobalScopes()->create([
+            'inviter_id' => $inviter->id,
+            'email' => 'invited@example.com',
+            'token' => 'test-invitation-token',
+            'expires_at' => now()->addDays(7),
+            'last_sent_at' => now(),
+            'data' => [],
+        ]);
+
+        Livewire::withQueryParams(['invitation' => 'test-invitation-token'])
+            ->test(Register::class)
+            ->fillForm([
+                'name' => 'Invited User',
+                'email' => 'invited@example.com',
+                'password' => 'password123',
+                'passwordConfirmation' => 'password123',
+            ])
+            ->call('register')
+            ->assertHasNoFormErrors();
+
+        $user = User::where('email', 'invited@example.com')->first();
+        expect($user)->not->toBeNull()
+            ->and($user->name)->toBe('Invited User');
+
+        // Invitation should be marked as used (bypass global scopes since 'unused' scope filters used_at)
+        $freshInvitation = PlatformInvitation::withoutGlobalScopes()->find($invitation->id);
+        expect($freshInvitation->isUsed())->toBeTrue();
+    });
+
+    it('prevents duplicate email registration', function () {
+        User::factory()->create(['email' => 'taken@example.com']);
+
+        SpamPreventionService::shouldReceive('checkEmailAgainstStopForumSpam')
+            ->andReturn([
+                'is_spam' => false,
+                'frequency' => 0,
+                'last_seen' => null,
+                'confidence' => 0,
+                'source' => 'stopforumspam',
+            ]);
+
+        Livewire::test(Register::class)
+            ->fillForm([
+                'name' => 'Duplicate User',
+                'email' => 'taken@example.com',
+                'password' => 'password123',
+                'passwordConfirmation' => 'password123',
+            ])
+            ->call('register')
+            ->assertHasFormErrors(['email']);
     });
 });

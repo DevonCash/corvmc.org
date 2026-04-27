@@ -8,13 +8,29 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('band_profile_members', function (Blueprint $table) {
-            $table->dropIndex('idx_band_members_status');
-        });
+        $columns = Schema::getColumnListing('band_profile_members');
+        $hasStatus = in_array('status', $columns);
+        $hasInvitedAt = in_array('invited_at', $columns);
 
-        Schema::table('band_profile_members', function (Blueprint $table) {
-            $table->dropColumn(['status', 'invited_at']);
-        });
+        if ($hasStatus) {
+            $indexes = Schema::getIndexListing('band_profile_members');
+
+            if (in_array('idx_band_members_status', $indexes)) {
+                Schema::table('band_profile_members', function (Blueprint $table) {
+                    $table->dropIndex('idx_band_members_status');
+                });
+            }
+
+            Schema::table('band_profile_members', function (Blueprint $table) {
+                $table->dropColumn('status');
+            });
+        }
+
+        if ($hasInvitedAt) {
+            Schema::table('band_profile_members', function (Blueprint $table) {
+                $table->dropColumn('invited_at');
+            });
+        }
     }
 
     public function down(): void
