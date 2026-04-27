@@ -152,6 +152,9 @@ class AppServiceProvider extends ServiceProvider
             User::resolveRelationUsing('volunteerHourLogs', function ($model) {
                 return $model->hasMany(\CorvMC\Volunteering\Models\HourLog::class, 'user_id');
             });
+            \CorvMC\Events\Models\Event::resolveRelationUsing('volunteerShifts', function ($model) {
+                return $model->hasMany(\CorvMC\Volunteering\Models\Shift::class, 'event_id');
+            });
         }
 
         // Register facade aliases

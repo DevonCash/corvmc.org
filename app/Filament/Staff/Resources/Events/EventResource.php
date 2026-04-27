@@ -7,6 +7,7 @@ use App\Filament\Staff\Resources\Events\Pages\ListEvents;
 use App\Filament\Shared\RelationManagers\InvitationsRelationManager;
 use App\Filament\Staff\Resources\Events\RelationManagers\PerformersRelationManager;
 use App\Filament\Staff\Resources\Events\RelationManagers\TicketOrdersRelationManager;
+use App\Filament\Staff\Resources\Events\RelationManagers\VolunteerShiftsRelationManager;
 use App\Filament\Staff\Resources\Events\Schemas\EventForm;
 use App\Filament\Staff\Resources\Events\Tables\EventsTable;
 use CorvMC\Events\Models\Event;
@@ -42,6 +43,7 @@ class EventResource extends Resource
             PerformersRelationManager::class,
             'ticketOrders' => TicketOrdersRelationManager::class,
             'invitations' => InvitationsRelationManager::class,
+            'volunteerShifts' => VolunteerShiftsRelationManager::class,
         ];
     }
 

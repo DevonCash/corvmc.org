@@ -12,6 +12,7 @@ use App\Filament\Staff\Resources\Users\RelationManagers\EventsRelationManager;
 use App\Filament\Staff\Resources\Users\RelationManagers\OrdersRelationManager;
 use App\Filament\Staff\Resources\Users\RelationManagers\ProductionsRelationManager;
 use App\Filament\Staff\Resources\Users\RelationManagers\ReservationsRelationManager;
+use App\Filament\Staff\Resources\Users\RelationManagers\VolunteerHourLogsRelationManager;
 use App\Filament\Staff\Resources\Users\Schemas\UserForm;
 use App\Filament\Staff\Resources\Users\Tables\UsersTable;
 use App\Models\User;
@@ -103,6 +104,7 @@ class UserResource extends Resource
             OrdersRelationManager::class,
             CreditTransactionsRelationManager::class,
             'receivedInvitations' => UserInvitationsRelationManager::class,
+            'volunteerHourLogs' => VolunteerHourLogsRelationManager::class,
         ];
     }
 
