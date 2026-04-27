@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             RevisionSeeder::class,
             OrderSeeder::class,
             LocalResourcesSeeder::class,
+            VolunteerSeeder::class,
         ]);
     }
 }
