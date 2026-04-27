@@ -156,8 +156,9 @@ class EventService
      * Cancel an event.
      *
      * @param Event $event The event to cancel
+     * @return Event The cancelled event
      */
-    public function cancel(Event $event): void
+    public function cancel(Event $event): Event
     {
         DB::transaction(function () use ($event) {
             $event->update(['status' => 'cancelled']);
@@ -169,6 +170,8 @@ class EventService
         }
 
         EventCancelled::dispatch($event);
+
+        return $event->fresh();
     }
 
     /**
@@ -180,7 +183,7 @@ class EventService
     {
         DB::transaction(function () use ($event) {
             $event->update([
-                'status' => 'published',
+                'published_at' => now(),
                 'visibility' => 'public',
             ]);
 
@@ -212,14 +215,16 @@ class EventService
      * @return Event The rescheduled event
      */
     public function reschedule(
-        Event $event, 
-        Carbon $newStartDatetime, 
+        Event $event,
+        Carbon $newStartDatetime,
         ?Carbon $newEndDatetime = null,
         ?int $newVenueId = null
     ): Event {
         $oldStartDatetime = $event->start_datetime;
 
-        DB::transaction(function () use ($event, $newStartDatetime, $newEndDatetime, $newVenueId) {
+        $newEvent = null;
+
+        DB::transaction(function () use ($event, $newStartDatetime, $newEndDatetime, $newVenueId, &$newEvent) {
             // Fire scheduling hook to check for conflicts
             EventScheduling::dispatch(
                 $event->toArray(),
@@ -230,7 +235,11 @@ class EventService
             );
 
             $updateData = [
+                'title' => $event->title,
+                'description' => $event->description,
                 'start_datetime' => $newStartDatetime,
+                'venue_id' => $newVenueId ?? $event->venue_id,
+                'organizer_id' => $event->organizer_id,
             ];
 
             if ($newEndDatetime) {
@@ -241,11 +250,28 @@ class EventService
                 $updateData['end_datetime'] = $newStartDatetime->copy()->addMinutes($duration);
             }
 
-            if ($newVenueId) {
-                $updateData['venue_id'] = $newVenueId;
+            $newEvent = $this->create($updateData);
+
+            // Copy performers from original event to new event
+            foreach ($event->performers as $performer) {
+                $this->addPerformer(
+                    $newEvent,
+                    $performer->id,
+                    $performer->pivot->order,
+                    $performer->pivot->set_length
+                );
             }
 
-            $event->update($updateData);
+            // Copy tags from original event to new event
+            if ($event->tags()->count() > 0) {
+                $newEvent->attachTags($event->tags->pluck('name')->toArray());
+            }
+
+            // Mark original event as postponed with reference to new event
+            $event->update([
+                'status' => 'postponed',
+                'rescheduled_to_id' => $newEvent->id,
+            ]);
         });
 
         // Notify attendees and organizer
@@ -253,7 +279,7 @@ class EventService
             $event->organizer->notify(new EventRescheduledNotification($event, $oldStartDatetime));
         }
 
-        return $event->fresh();
+        return $newEvent ?? $event->fresh();
     }
 
     /**
@@ -343,13 +369,20 @@ class EventService
      * @param int $performerId The performer ID (band)
      * @param int|null $order Optional performance order
      * @param int|null $setLength Optional set length in minutes
+     * @return bool True if performer was added, false if already on event
      */
-    public function addPerformer(Event $event, int $performerId, ?int $order = null, ?int $setLength = null): void
+    public function addPerformer(Event $event, int $performerId, ?int $order = null, ?int $setLength = null): bool
     {
+        if ($event->performers()->where('band_profile_id', $performerId)->exists()) {
+            return false;
+        }
+
         $event->performers()->attach($performerId, [
             'order' => $order ?? $event->performers()->count() + 1,
             'set_length' => $setLength,
         ]);
+
+        return true;
     }
 
     /**
@@ -357,10 +390,11 @@ class EventService
      *
      * @param Event $event The event to remove performer from
      * @param int $performerId The performer ID to remove
+     * @return bool True if performer was removed
      */
-    public function removePerformer(Event $event, int $performerId): void
+    public function removePerformer(Event $event, int $performerId): bool
     {
-        $event->performers()->detach($performerId);
+        return $event->performers()->detach($performerId) > 0;
     }
 
     /**
@@ -369,10 +403,17 @@ class EventService
      * @param Event $event The event to update
      * @param int $performerId The performer ID
      * @param int $order The new order
+     * @return bool True if performer was found and updated
      */
-    public function updatePerformerOrder(Event $event, int $performerId, int $order): void
+    public function updatePerformerOrder(Event $event, int $performerId, int $order): bool
     {
+        if (! $event->performers()->where('band_profile_id', $performerId)->exists()) {
+            return false;
+        }
+
         $event->performers()->updateExistingPivot($performerId, ['order' => $order]);
+
+        return true;
     }
 
     /**
@@ -381,9 +422,63 @@ class EventService
      * @param Event $event The event to update
      * @param int $performerId The performer ID
      * @param int $setLength The new set length in minutes
+     * @return bool True if performer was found and updated
      */
-    public function updatePerformerSetLength(Event $event, int $performerId, int $setLength): void
+    public function updatePerformerSetLength(Event $event, int $performerId, int $setLength): bool
     {
+        if (! $event->performers()->where('band_profile_id', $performerId)->exists()) {
+            return false;
+        }
+
         $event->performers()->updateExistingPivot($performerId, ['set_length' => $setLength]);
+
+        return true;
+    }
+
+    /**
+     * Duplicate an event with optional new start/end datetimes.
+     *
+     * @param Event $event The event to duplicate
+     * @param Carbon|null $newStartDatetime Optional new start date/time
+     * @param Carbon|null $newEndDatetime Optional new end date/time
+     * @param array $overrides Optional additional attributes to override
+     * @return Event The duplicated event
+     */
+    public function duplicateEvent(
+        Event $event,
+        ?Carbon $newStartDatetime = null,
+        ?Carbon $newEndDatetime = null,
+        array $overrides = []
+    ): Event {
+        $overrides = array_merge([
+            'title' => $event->title,
+        ], $overrides);
+
+        if ($newStartDatetime) {
+            $overrides['start_datetime'] = $newStartDatetime;
+        }
+
+        if ($newEndDatetime) {
+            $overrides['end_datetime'] = $newEndDatetime;
+        }
+
+        $duplicated = $this->duplicate($event, $overrides);
+
+        // Copy performers from original event to duplicated event
+        foreach ($event->performers as $performer) {
+            $this->addPerformer(
+                $duplicated,
+                $performer->id,
+                $performer->pivot->order,
+                $performer->pivot->set_length
+            );
+        }
+
+        // Copy tags from original event to duplicated event
+        if ($event->tags()->count() > 0) {
+            $duplicated->attachTags($event->tags->pluck('name')->toArray());
+        }
+
+        return $duplicated;
     }
 }
