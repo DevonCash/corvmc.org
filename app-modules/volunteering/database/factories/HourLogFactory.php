@@ -58,20 +58,11 @@ class HourLogFactory extends Factory
     }
 
     /**
-     * Self-reported, pending approval.
+     * Alias for selfReported() — self-reported hour log in Pending status.
      */
     public function pending(): static
     {
-        $startedAt = fake()->dateTimeBetween('-1 month', '-1 hour');
-        $endedAt = (clone $startedAt)->modify('+'.fake()->numberBetween(1, 4).' hours');
-
-        return $this->state(fn (array $attributes) => [
-            'shift_id' => null,
-            'position_id' => $attributes['position_id'] ?? Position::factory(),
-            'status' => Pending::class,
-            'started_at' => $startedAt,
-            'ended_at' => $endedAt,
-        ]);
+        return $this->selfReported();
     }
 
     /**

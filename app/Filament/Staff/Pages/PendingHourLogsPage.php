@@ -2,15 +2,12 @@
 
 namespace App\Filament\Staff\Pages;
 
+use App\Filament\Staff\Resources\Volunteering\Shifts\Actions\ApproveHoursAction;
+use App\Filament\Staff\Resources\Volunteering\Shifts\Actions\RejectHoursAction;
 use CorvMC\Volunteering\Models\HourLog;
-use CorvMC\Volunteering\Services\HourLogService;
 use CorvMC\Volunteering\States\HourLogState\Pending;
-use Filament\Forms\Components\SpatieTagsInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Notifications\Notification;
-use Filament\Pages\Page;
-use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -83,55 +80,8 @@ class PendingHourLogsPage extends Page implements HasTable
             ])
             ->recordActions([
                 ActionGroup::make([
-                    Action::make('approve')
-                        ->label('Approve')
-                        ->icon('tabler-check')
-                        ->color('success')
-                        ->requiresConfirmation()
-                        ->modalHeading('Approve Hours')
-                        ->modalDescription(fn (HourLog $record) => "Approve {$record->minutes} minutes submitted by {$record->user->name}?")
-                        ->schema([
-                            SpatieTagsInput::make('tags')
-                                ->label('Tags (optional)')
-                                ->placeholder('Add tags...'),
-                        ])
-                        ->action(function (HourLog $record, array $data) {
-                            app(HourLogService::class)->approve(
-                                $record,
-                                auth()->user(),
-                                $data['tags'] ?? [],
-                            );
-
-                            Notification::make()
-                                ->title('Hours approved')
-                                ->success()
-                                ->send();
-                        }),
-
-                    Action::make('reject')
-                        ->label('Reject')
-                        ->icon('tabler-x')
-                        ->color('danger')
-                        ->requiresConfirmation()
-                        ->modalHeading('Reject Hours')
-                        ->modalDescription(fn (HourLog $record) => "Reject {$record->minutes} minutes submitted by {$record->user->name}?")
-                        ->schema([
-                            Textarea::make('notes')
-                                ->label('Reason (optional)')
-                                ->placeholder('Explain why these hours are being rejected...'),
-                        ])
-                        ->action(function (HourLog $record, array $data) {
-                            app(HourLogService::class)->reject(
-                                $record,
-                                auth()->user(),
-                                $data['notes'] ?? null,
-                            );
-
-                            Notification::make()
-                                ->title('Hours rejected')
-                                ->success()
-                                ->send();
-                        }),
+                    ApproveHoursAction::make(),
+                    RejectHoursAction::make(),
                 ]),
             ])
             ->emptyStateHeading('No pending submissions')
