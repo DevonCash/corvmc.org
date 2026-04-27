@@ -68,23 +68,6 @@ class MemberProfileFactory extends Factory
         ];
     }
 
-    /**
-     * Override make to handle user_id state properly
-     */
-    public function make($attributes = [], ?Model $parent = null)
-    {
-        // If user_id is explicitly provided in attributes, don't create a new user
-        if (is_array($attributes) && isset($attributes['user_id'])) {
-            $definition = $this->definition();
-            $definition['user_id'] = $attributes['user_id'];
-            unset($attributes['user_id']);
-
-            return $this->state($definition)->make($attributes, $parent);
-        }
-
-        return parent::make($attributes, $parent);
-    }
-
     public function configure()
     {
         return $this->afterCreating(function (MemberProfile $profile) {
