@@ -160,6 +160,7 @@ class AppServiceProvider extends ServiceProvider
         // Register facade aliases
         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
         $loader->alias('GitHubService', \App\Facades\GitHubService::class);
+        $loader->alias('RecurringService', \CorvMC\Support\Facades\RecurringService::class);
 
         // Enable policy auto-discovery for module models
         // Converts CorvMC\{Module}\Models\{Model} -> App\Policies\{Model}Policy
