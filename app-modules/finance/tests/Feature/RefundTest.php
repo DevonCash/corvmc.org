@@ -164,24 +164,26 @@ describe('Finance::refund() for comped order', function () {
 
 describe('Finance::refund() credit reversal', function () {
     it('reverses credit deductions when Order is refunded', function () {
+        // 3 blocks available; 2-hour reservation needs 4 blocks (2 blocks/hour)
+        // → 3 consumed, discount = $22.50, net = $7.50
         $this->user->addCredit(
-            amount: 5,
+            amount: 3,
             creditType: CreditType::FreeHours,
             source: 'test',
             description: 'Test credit',
         );
 
-        expect(Finance::balance($this->user, 'free_hours'))->toBe(5);
-
-        // Commit deducts 2 blocks
-        ['order' => $order] = createCompletedCashOrder($this, 1500);
-
         expect(Finance::balance($this->user, 'free_hours'))->toBe(3);
+
+        // Commit deducts 3 blocks, $7.50 cash
+        ['order' => $order] = createCompletedCashOrder($this, 750);
+
+        expect(Finance::balance($this->user, 'free_hours'))->toBe(0);
 
         // Refund reverses the deduction
         Finance::refund($order);
 
-        expect(Finance::balance($this->user, 'free_hours'))->toBe(5);
+        expect(Finance::balance($this->user, 'free_hours'))->toBe(3);
     });
 });
 

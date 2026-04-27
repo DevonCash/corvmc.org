@@ -4,6 +4,8 @@ namespace CorvMC\Moderation\Services;
 
 use App\Models\User;
 use CorvMC\Moderation\Enums\ReportStatus;
+use CorvMC\Moderation\Events\ReportResolved;
+use CorvMC\Moderation\Events\ReportSubmitted;
 use CorvMC\Moderation\Models\Report;
 use CorvMC\Moderation\Notifications\ReportResolvedNotification;
 use Illuminate\Database\Eloquent\Collection;
@@ -35,7 +37,7 @@ class ReportService
         ?string $details = null
     ): Report {
         // Check for duplicate reports
-        $existing = Report::where('reporter_id', $reporter->id)
+        $existing = Report::where('reported_by_id', $reporter->id)
             ->where('reportable_type', $reportableType)
             ->where('reportable_id', $reportableId)
             ->where('status', ReportStatus::Pending)
@@ -45,14 +47,18 @@ class ReportService
             throw new \Exception('You have already reported this content');
         }
 
-        return Report::create([
-            'reporter_id' => $reporter->id,
+        $report = Report::create([
+            'reported_by_id' => $reporter->id,
             'reportable_type' => $reportableType,
             'reportable_id' => $reportableId,
             'reason' => $reason,
-            'details' => $details,
+            'custom_reason' => $details,
             'status' => ReportStatus::Pending,
         ]);
+
+        ReportSubmitted::dispatch($report);
+
+        return $report;
     }
 
     /**
@@ -71,11 +77,12 @@ class ReportService
         ?string $notes = null
     ): Report {
         return DB::transaction(function () use ($report, $resolver, $action, $notes) {
+            $status = $action === 'dismissed' ? ReportStatus::Dismissed : ReportStatus::Upheld;
+
             $report->update([
-                'status' => ReportStatus::Resolved,
-                'resolved_by' => $resolver->id,
+                'status' => $status,
+                'resolved_by_id' => $resolver->id,
                 'resolved_at' => now(),
-                'resolution_action' => $action,
                 'resolution_notes' => $notes,
             ]);
 
@@ -83,9 +90,11 @@ class ReportService
             $this->handleResolutionAction($report, $action);
 
             // Notify reporter if configured
-            if ($report->reporter && $this->shouldNotifyReporter($action)) {
-                $report->reporter->notify(new ReportResolvedNotification($report));
+            if ($report->reportedBy && $this->shouldNotifyReporter($action)) {
+                $report->reportedBy->notify(new ReportResolvedNotification($report));
             }
+
+            ReportResolved::dispatch($report, $resolver, $action);
 
             return $report;
         });
@@ -167,7 +176,7 @@ class ReportService
     public function markAsReviewed(Report $report, User $reviewer, string $notes): Report
     {
         $report->update([
-            'status' => ReportStatus::UnderReview,
+            'status' => ReportStatus::Pending,
             'reviewed_by' => $reviewer->id,
             'reviewed_at' => now(),
             'review_notes' => $notes,

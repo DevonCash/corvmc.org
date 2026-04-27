@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\User;
-use CorvMC\Finance\Data\CompData;
-use CorvMC\Finance\Facades\PaymentService;
+use CorvMC\Finance\Facades\Finance;
+use CorvMC\Finance\Models\Order;
 use CorvMC\SpaceManagement\States\ReservationState\{Scheduled, Confirmed, Reserved, Cancelled, Completed};
 use CorvMC\SpaceManagement\Events\ReservationCancelled;
 use CorvMC\SpaceManagement\Events\ReservationConfirmed;
@@ -160,27 +160,32 @@ it('logs activity when a reservation is rescheduled', function () {
 });
 
 it('logs activity when a reservation is marked as paid', function () {
-    $this->markTestSkipped('Needs rewrite: references old Charge model and PaymentService — should use Finance::settle()');
-
     $manager = User::factory()->withRole('practice space manager')->create();
     $user = User::factory()->create();
+    $startTime = \Carbon\Carbon::now()->addDays(5)->setHour(10)->setMinute(0)->setSecond(0);
     $reservation = RehearsalReservation::factory()->confirmed()->create([
         'reservable_type' => 'user',
         'reservable_id' => $user->id,
+        'reserved_at' => $startTime,
+        'reserved_until' => $startTime->copy()->addHours(2),
     ]);
 
-    // Create a charge for the reservation so payment can be recorded
-    \CorvMC\Finance\Models\Charge::createForChargeable(
-        $reservation,
-        1500, // $15.00
-        1500,
-        null
-    );
+    // Create an Order with line items for the reservation
+    $order = Order::create(['user_id' => $user->id, 'total_amount' => 0]);
+    $lineItems = Finance::price([$reservation]);
+    foreach ($lineItems as $lineItem) {
+        $lineItem->order_id = $order->id;
+        $lineItem->save();
+    }
+    $order->update(['total_amount' => $lineItems->sum('amount')]);
+    $committed = Finance::commit($order->fresh(), ['cash' => $lineItems->sum('amount')]);
 
     Activity::query()->delete();
 
+    // Settle the cash transaction as the manager
     $this->actingAs($manager);
-    PaymentService::recordPayment($reservation, 1500, 'cash', 'Paid at front desk');
+    $txn = $committed->transactions->first();
+    Finance::settle($txn);
 
     $activity = Activity::where('event', 'payment_recorded')
         ->where('log_name', 'payment')
@@ -193,29 +198,36 @@ it('logs activity when a reservation is marked as paid', function () {
 });
 
 it('logs activity when a reservation is comped', function () {
-    $this->markTestSkipped('Needs rewrite: references old Charge model and PaymentService — should use Finance::comp()');
-
     $manager = User::factory()->withRole('practice space manager')->create();
     $user = User::factory()->create();
+    $startTime = \Carbon\Carbon::now()->addDays(6)->setHour(14)->setMinute(0)->setSecond(0);
     $reservation = RehearsalReservation::factory()->confirmed()->create([
         'reservable_type' => 'user',
         'reservable_id' => $user->id,
+        'reserved_at' => $startTime,
+        'reserved_until' => $startTime->copy()->addHours(2),
     ]);
 
-    // Create a charge for the reservation so it can be comped
-    \CorvMC\Finance\Models\Charge::createForChargeable(
-        $reservation,
-        1500, // $15.00
-        1500,
-        null
-    );
+    // Create a Pending Order with line items for the reservation
+    $order = Order::create([
+        'user_id' => $user->id,
+        'total_amount' => 0,
+        'notes' => 'Community event volunteer',
+    ]);
+    $lineItems = Finance::price([$reservation]);
+    foreach ($lineItems as $lineItem) {
+        $lineItem->order_id = $order->id;
+        $lineItem->save();
+    }
+    $order->update(['total_amount' => $lineItems->sum('amount')]);
 
     Activity::query()->delete();
 
+    // Comp the pending order as the manager (no payment needed)
     $this->actingAs($manager);
-    PaymentService::recordComp(new CompData($reservation->charge, 'Community event volunteer'));
+    Finance::comp($order->fresh());
 
-    $activity = Activity::where('event', 'charge_comped')
+    $activity = Activity::where('event', 'comped')
         ->where('log_name', 'payment')
         ->first();
 
@@ -303,7 +315,6 @@ describe('No duplicate audit logs', function () {
     });
 
     it('creates exactly one log entry when updating a reservation', function () {
-        $this->markTestSkipped('ReservationUpdated event is not dispatched from model update() method yet');
 
         $user = User::factory()->create();
         $startTime = \Carbon\Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
@@ -336,7 +347,6 @@ describe('No duplicate audit logs', function () {
     });
 
     it('creates exactly one log entry when confirming a reservation', function () {
-        $this->markTestSkipped('ReservationConfirmed event is not dispatched from model confirm() method yet');
 
         $user = User::factory()->create();
         $startTime = \Carbon\Carbon::now()->addDays(4)->setHour(14)->setMinute(0)->setSecond(0);

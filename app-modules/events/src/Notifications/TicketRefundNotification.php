@@ -89,7 +89,7 @@ class TicketRefundNotification extends Notification implements ShouldQueue
             'order_uuid' => $this->order->uuid,
             'event_id' => $this->order->event_id,
             'quantity' => $this->order->quantity,
-            'refund_amount' => $this->order->total->getMinorAmount()->toInt(),
+            'refund_amount' => $this->order->total->getMinorAmount(),
             'reason' => $this->reason,
         ];
     }

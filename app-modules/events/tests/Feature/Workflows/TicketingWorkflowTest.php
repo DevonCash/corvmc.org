@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\User;
-use Brick\Money\Money;
+use CorvMC\Support\Money\Money;
 use Carbon\Carbon;
 use CorvMC\Events\Enums\TicketOrderStatus;
 use CorvMC\Events\Enums\TicketStatus;
@@ -49,7 +49,7 @@ describe('Ticketing: Event Configuration', function () {
     it('returns correct ticket price for guests', function () {
         $price = $this->event->getTicketPriceForUser(null);
 
-        expect($price->getMinorAmount()->toInt())->toBe(config('ticketing.default_price', 1000));
+        expect($price->getMinorAmount())->toBe(config('ticketing.default_price', 1000));
     });
 
     it('returns discounted price for sustaining members', function () {
@@ -61,7 +61,7 @@ describe('Ticketing: Event Configuration', function () {
         $discountPercent = config('ticketing.sustaining_member_discount', 50);
         $expectedPrice = (int) round($basePrice * (1 - $discountPercent / 100));
 
-        expect($price->getMinorAmount()->toInt())->toBe($expectedPrice);
+        expect($price->getMinorAmount())->toBe($expectedPrice);
     });
 
     it('respects ticket price override', function () {
@@ -69,7 +69,7 @@ describe('Ticketing: Event Configuration', function () {
 
         $price = $this->event->getBaseTicketPrice();
 
-        expect($price->getMinorAmount()->toInt())->toBe(1500);
+        expect($price->getMinorAmount())->toBe(1500);
     });
 
     it('tracks tickets remaining correctly', function () {

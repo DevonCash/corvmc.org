@@ -103,7 +103,7 @@ class TicketPurchaseConfirmation extends Notification implements ShouldQueue
             'order_uuid' => $this->order->uuid,
             'event_id' => $this->order->event_id,
             'quantity' => $this->order->quantity,
-            'total' => $this->order->total->getMinorAmount()->toInt(),
+            'total' => $this->order->total->getMinorAmount(),
         ];
     }
 }

@@ -141,15 +141,8 @@ class EventObserver
                 ]);
             }
         } elseif ($wasInactive && $event->status->isActive()) {
-            // Event was reactivated - restore or create reservation
-            if ($reservation && $reservation->status instanceof Cancelled) {
-                $reservation->status->transitionTo(Confirmed::class);
-                $reservation->update([
-                    'cancellation_reason' => null,
-                ]);
-            } elseif (! $reservation) {
-                EventSyncService::syncSpaceReservation($event, null, null, force: true);
-            }
+            // Event was reactivated — always create a fresh reservation
+            EventSyncService::syncSpaceReservation($event, null, null, force: true);
         }
     }
 

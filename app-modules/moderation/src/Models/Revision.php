@@ -79,12 +79,22 @@ class Revision extends Model
         'review_reason',
         'revision_type',
         'auto_approved',
+        'approved_by',
+        'approved_at',
+        'approval_notes',
+        'rejected_by',
+        'rejected_at',
+        'rejection_reason',
+        'queued_at',
     ];
 
     protected $casts = [
         'original_data' => 'array',
         'proposed_changes' => 'array',
         'reviewed_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        'queued_at' => 'datetime',
         'auto_approved' => 'boolean',
     ];
 
@@ -120,6 +130,14 @@ class Revision extends Model
     public function submittedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'submitted_by_id');
+    }
+
+    /**
+     * Alias for submittedBy relationship.
+     */
+    public function submitter(): BelongsTo
+    {
+        return $this->submittedBy();
     }
 
     /**

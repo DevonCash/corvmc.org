@@ -48,7 +48,7 @@ class TrustService
                 );
 
             $oldBalance = $balance->balance;
-            $newBalance = $oldBalance + $points;
+            $newBalance = max(0, $oldBalance + $points);
 
             // Update balance
             $balance->update(['balance' => $newBalance]);
@@ -221,8 +221,8 @@ class TrustService
 
         $trustPoints = $balance?->balance ?? 0;
 
-        // Admins always auto-approve
-        if ($user->hasRole('admin')) {
+        // Staff roles always auto-approve
+        if ($user->hasRole(['admin', 'production manager'])) {
             return ApprovalWorkflow::AutoApprove;
         }
 

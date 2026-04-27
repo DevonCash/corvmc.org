@@ -92,7 +92,7 @@ class EventCancelledTicketRefund extends Notification implements ShouldQueue
             'event_id' => $this->order->event_id,
             'event_title' => $this->order->event->title ?? 'Unknown Event',
             'quantity' => $this->order->quantity,
-            'refund_amount' => $this->order->total->getMinorAmount()->toInt(),
+            'refund_amount' => $this->order->total->getMinorAmount(),
             'cancellation_reason' => $this->cancellationReason,
         ];
     }

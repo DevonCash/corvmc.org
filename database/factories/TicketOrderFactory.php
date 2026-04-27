@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
-use Brick\Money\Money;
+use CorvMC\Support\Money\Money;
 use CorvMC\Events\Enums\TicketOrderStatus;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\TicketOrder;

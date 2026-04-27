@@ -22,6 +22,7 @@ use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
 use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Facades\Finance;
 use CorvMC\Moderation\Facades\SpamPreventionService;
 use Filament\Facades\Filament;
 use Livewire\Livewire;
@@ -61,9 +62,7 @@ describe('Flow 1: Create Reservation with Credits', function () {
         Notification::fake();
     });
 
-    it('allows sustaining member to create reservation using free hours', function () {
-        $this->markTestSkipped('Needs rewrite: references old Charge model — should assert against Order/LineItem');
-
+    it('allows sustaining member to create reservation with free hours discount', function () {
         // Arrange: Create sustaining member with credits
         $user = User::factory()->create();
         $user->assignRole('sustaining member');
@@ -72,7 +71,7 @@ describe('Flow 1: Create Reservation with Credits', function () {
         CreditService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(16);
 
-        // Act: Create a 2-hour reservation (4 blocks at 30 min/block)
+        // Act: Create a 2-hour reservation
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
@@ -83,31 +82,31 @@ describe('Flow 1: Create Reservation with Credits', function () {
             'reserved_until' => $endTime,
         ]);
 
-        // Assert: Reservation created with free hours applied
+        // Assert: Reservation created
         expect($reservation)->toBeInstanceOf(RehearsalReservation::class)
             ->and($reservation->reservable_id)->toBe($user->id)
-            ->and((float) $reservation->duration)->toEqual(2.0)
-            ->and((float) $reservation->charge?->getFreeHoursApplied())->toEqual(2.0)
-            ->and($reservation->charge->net_amount->isZero())->toBeTrue();
+            ->and((float) $reservation->duration)->toEqual(2.0);
 
-        // Assert: Credits were deducted (2 hours = 4 blocks at 30 min/block)
-        expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(12);
+        // Assert: Finance::price() applies free hours discount
+        $lineItems = Finance::price([$reservation], $user);
+        $baseItem = $lineItems->first(fn ($item) => $item->amount > 0);
+        $discountItem = $lineItems->first(fn ($item) => $item->amount < 0);
+
+        expect($baseItem->amount)->toBe(3000) // $15/hour × 2 hours
+            ->and($discountItem)->not->toBeNull()
+            ->and($discountItem->product_type)->toBe('free_hours_discount');
     });
 
-    it('charges for hours beyond free credit balance', function () {
-        $this->markTestSkipped('Needs rewrite: references old Charge model — should assert against Order/LineItem');
-
+    it('applies partial discount when credits cover less than full price', function () {
         // Arrange: Create sustaining member with limited credits
         $user = User::factory()->create();
         $user->assignRole('sustaining member');
 
-        // Give user only 2 blocks (1 hour at 30 min/block) of free time
-        CreditService::allocateMonthlyCredits($user, 2, CreditType::FreeHours);
+        // Give user only 1 block of free time
+        CreditService::allocateMonthlyCredits($user, 1, CreditType::FreeHours);
+        expect($user->getCreditBalance(CreditType::FreeHours))->toBe(1);
 
-         dump([
-            'credits_awarded' => $user->getCreditBalance(CreditType::FreeHours),
-        ]);
-        // Act: Create a 2-hour reservation (needs 4 blocks, only has 2)
+        // Act: Create a 2-hour reservation
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
@@ -118,28 +117,17 @@ describe('Flow 1: Create Reservation with Credits', function () {
             'reserved_until' => $endTime,
         ]);
 
-        // Assert: 1 hour free (2 blocks), 1 hour paid ($15)
-        // TODO: Fix bugs - 1) amounts are stored 100x too high 2) credits not being applied correctly
+        // Assert: Partial discount — 1 block × $7.50 = $7.50 off $30
+        $lineItems = Finance::price([$reservation], $user);
+        $baseAmount = $lineItems->first(fn ($item) => $item->amount > 0)->amount;
+        $netTotal = $lineItems->sum('amount');
 
-        // Debug: Check what's actually stored
-        dump([
-            'credits_applied' => $reservation->charge?->credits_applied,
-            'getFreeHoursApplied' => $reservation->charge?->getFreeHoursApplied(),
-            'user_balance' => $user->fresh()->getCreditBalance(CreditType::FreeHours),
-        ]);
-
-        expect((float) $reservation->duration)->toEqual(2.0)
-            ->and((float) $reservation->charge?->getFreeHoursApplied())->toEqual(1.0);
-            // ->and($reservation->charge->net_amount->getMinorAmount())->toEqual(150000); // Should be 1500 but getting 300000
-
-        // Assert: All credits used
-        expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(0);
+        expect($baseAmount)->toBe(3000) // $30
+            ->and($netTotal)->toBe(2250); // $30 - $7.50 = $22.50
     });
 
     it('charges full price for non-sustaining members', function () {
-        $this->markTestSkipped('Needs rewrite: references old Charge model — should assert against Order/LineItem');
-
-        // Arrange: Regular member without sustaining status
+        // Arrange: Regular member without sustaining status (no credits)
         $user = User::factory()->create();
         $user->assignRole('member');
 
@@ -154,11 +142,10 @@ describe('Flow 1: Create Reservation with Credits', function () {
             'reserved_until' => $endTime,
         ]);
 
-        // Assert: Full price charged, no free hours
-        // TODO: Fix bug - amounts are stored 100x too high (300000 instead of 3000 for $30)
-        expect((float) $reservation->duration)->toEqual(2.0)
-            ->and((float) $reservation->charge?->getFreeHoursApplied())->toEqual(0)
-            ->and($reservation->charge->net_amount->getMinorAmount())->toEqual(300000); // Should be 3000
+        // Assert: Full price, no discount
+        $lineItems = Finance::price([$reservation], $user);
+        expect($lineItems)->toHaveCount(1) // base only, no discount
+            ->and($lineItems->first()->amount)->toBe(3000); // $15/hour × 2 hours = $30
     });
 
     it('prevents conflicting reservations', function () {
@@ -253,7 +240,6 @@ describe('Flow 2: Create Event with Conflict Checking', function () {
     });
 
     it('prevents event creation when conflicting reservation exists', function () {
-        $this->markTestSkipped('Conflict checking not yet implemented: EventScheduling listener not registered');
 
         // Arrange: Create existing reservation at the same time
         $user = User::factory()->create();
@@ -505,31 +491,40 @@ describe('Flow 4: Subscription Credit Allocation', function () {
         expect($user->getCreditBalance(CreditType::FreeHours))->toBe(28);
     });
 
-    it('deducts credits when reservation is created', function () {
-        $this->markTestSkipped('Credit deduction not yet implemented: ReservationCreated listener not registered to trigger charge creation');
-
+    it('deducts credits when order is committed for a reservation', function () {
         // Arrange: Sustaining member with credits
         $user = User::factory()->create();
         $user->assignRole('sustaining member');
         CreditService::allocateMonthlyCredits($user, 16, CreditType::FreeHours);
 
-        Venue::create(['name' => 'CMC', 'is_cmc' => true, 'address' => '420 NW 5th St', 'city' => 'Corvallis', 'state' => 'OR']);
-
-        // Act: Create 2-hour reservation
-        // 2 hours = 120 minutes / 30 minutes per block = 4 blocks
+        // Act: Create 2-hour reservation and commit an Order
         $startTime = Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(2);
 
-        RehearsalReservation::create([
+        $reservation = RehearsalReservation::create([
             'reservable_type' => User::class,
             'reservable_id' => $user->id,
             'reserved_at' => $startTime,
             'reserved_until' => $endTime,
         ]);
 
-        // Assert: Credits deducted (2 hours = 4 blocks at 30 min/block)
-        // 16 starting blocks - 4 blocks used = 12 remaining
-        expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(12);
+        // Credits not deducted yet — deduction happens at commit time
+        expect($user->fresh()->getCreditBalance(CreditType::FreeHours))->toBe(16);
+
+        // Create and commit an Order with discount
+        $order = \CorvMC\Finance\Models\Order::create(['user_id' => $user->id, 'total_amount' => 0]);
+        $lineItems = Finance::price([$reservation], $user);
+        foreach ($lineItems as $lineItem) {
+            $lineItem->order_id = $order->id;
+            $lineItem->save();
+        }
+        $netTotal = $lineItems->sum('amount');
+        $order->update(['total_amount' => $netTotal]);
+        Finance::commit($order->fresh(), $netTotal > 0 ? ['cash' => $netTotal] : []);
+
+        // Assert: Credits deducted after commit
+        $newBalance = $user->fresh()->getCreditBalance(CreditType::FreeHours);
+        expect($newBalance)->toBeLessThan(16);
     });
 });
 

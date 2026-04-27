@@ -311,6 +311,25 @@ class EquipmentService
     }
 
     /**
+     * Get equipment statistics.
+     *
+     * @return array{total_equipment: int, available_equipment: int, checked_out_equipment: int, maintenance_equipment: int, active_loans: int, overdue_loans: int, donated_equipment: int, loaned_to_cmc: int}
+     */
+    public function getStatistics(): array
+    {
+        return [
+            'total_equipment' => Equipment::count(),
+            'available_equipment' => Equipment::where('status', 'available')->count(),
+            'checked_out_equipment' => Equipment::where('status', 'checked_out')->count(),
+            'maintenance_equipment' => Equipment::where('status', 'maintenance')->count(),
+            'active_loans' => EquipmentLoan::whereIn('state', ['checked_out', 'ready_for_pickup', 'staff_preparing'])->count(),
+            'overdue_loans' => EquipmentLoan::where('state', 'overdue')->count(),
+            'donated_equipment' => Equipment::where('acquisition_type', 'donated')->count(),
+            'loaned_to_cmc' => Equipment::where('acquisition_type', 'loaned_to_us')->count(),
+        ];
+    }
+
+    /**
      * Log activity for equipment operations.
      */
     protected function logActivity(string $event, Equipment $equipment, ?User $user, array $properties = []): void

@@ -28,6 +28,11 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
 {
     use ValidatingTrait, HasRecurringSeries, HasTimePeriod, HasStates, Purchasable;
 
+    /**
+     * Temporary store for old billable units between updating/updated hooks.
+     */
+    protected static array $pendingOldBillableUnits = [];
+
     public function getLockableFields(): array
     {
         return ['status', 'updated_at', 'cancelled_at', 'confirmed_at', 'completed_at'];
@@ -109,7 +114,19 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
         static::updating(function ($model) {
             // Recalculate hours if times changed
             if ($model->isDirty(['reserved_at', 'reserved_until'])) {
+                // Stash old billable units for the updated hook (not a model attribute)
+                static::$pendingOldBillableUnits[$model->id ?? spl_object_id($model)] = (float) ($model->getOriginal('hours_used') ?? 0);
                 $model->hours_used = $model->reserved_at->diffInMinutes($model->reserved_until) / 60;
+            }
+        });
+
+        static::updated(function ($model) {
+            // Fire rescheduled event when time fields changed
+            $key = $model->id ?? spl_object_id($model);
+            if (isset(static::$pendingOldBillableUnits[$key])) {
+                $oldUnits = static::$pendingOldBillableUnits[$key];
+                unset(static::$pendingOldBillableUnits[$key]);
+                \CorvMC\SpaceManagement\Events\ReservationUpdated::dispatch($model, $oldUnits);
             }
         });
 
@@ -464,10 +481,16 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
      */
     public function confirm(): self
     {
+        $previousStatus = get_class($this->status);
+
         // Transition to confirmed state
         $this->status->transitionTo(\CorvMC\SpaceManagement\States\ReservationState\Confirmed::class);
 
-        return $this->fresh();
+        $this->refresh();
+
+        \CorvMC\SpaceManagement\Events\ReservationConfirmed::dispatch($this, $previousStatus);
+
+        return $this;
     }
 
     /**

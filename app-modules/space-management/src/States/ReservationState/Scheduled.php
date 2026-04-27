@@ -6,7 +6,7 @@ use CorvMC\SpaceManagement\States\ReservationState;
 
 class Scheduled extends ReservationState
 {
-    public static $name = 'pending';
+    public static $name = 'scheduled';
 
     public function color(): string
     {

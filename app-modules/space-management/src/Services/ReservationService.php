@@ -99,6 +99,7 @@ class ReservationService
         $query = Reservation::with('reservable')
             ->where('reserved_until', '>', $startTime)
             ->where('reserved_at', '<', $endTime)
+            ->where('status', '!=', 'cancelled')
             ->when($excludeReservationId, function ($q) use ($excludeReservationId) {
                 $q->where('id', '!=', $excludeReservationId);
             });

@@ -33,24 +33,22 @@ test('reservation cannot transition from cancelled to confirmed', function () {
 });
 
 test('state transition updates status', function () {
-    $reservation = RehearsalReservation::factory()->make([
+    $startTime = \Carbon\Carbon::now()->addDays(5)->setHour(14)->setMinute(0)->setSecond(0);
+    $endTime = $startTime->copy()->addHours(2);
+
+    $reservation = RehearsalReservation::factory()->create([
+        'reserved_at' => $startTime,
+        'reserved_until' => $endTime,
         'status' => Scheduled::class,
     ]);
-    $reservation->forceSave();
-    
-    // Debug: check state before and after transition
+
     expect($reservation->status)->toBeInstanceOf(Scheduled::class);
-    
+
     $reservation->status->transitionTo(Confirmed::class);
-    
-    // Check if the state changed on the model itself
+
     expect($reservation->status)->toBeInstanceOf(Confirmed::class);
-    
-    $reservation->forceSave();
 
     expect($reservation->fresh()->status)->toBeInstanceOf(Confirmed::class);
-    // TODO: Test confirmed_at once column is added
-    // expect($reservation->fresh()->confirmed_at)->not->toBeNull();
 });
 
 test('invalid state transition throws exception', function () {

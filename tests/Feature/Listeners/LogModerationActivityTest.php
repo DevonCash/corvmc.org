@@ -165,7 +165,7 @@ describe('Revision events', function () {
 describe('No duplicate audit logs', function () {
     it('creates exactly one log entry when submitting a report via action', function () {
         $reporter = User::factory()->create();
-        $report = Report::factory()->pending()->create(['reporter_id' => $reporter->id]);
+        $report = Report::factory()->pending()->create(['reported_by_id' => $reporter->id]);
         // Delete the report so submitReport can create a new one
         $reportableType = $report->reportable_type;
         $reportableId = $report->reportable_id;

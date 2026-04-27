@@ -19,18 +19,30 @@ class LogUserActivity
             ->log("User account created: {$user->name}");
     }
 
+    /**
+     * Fields that trigger activity logging when changed.
+     */
+    private const TRACKED_FIELDS = ['name', 'email', 'phone'];
+
     public function handleUpdated(UserUpdated $event): void
     {
         $user = $event->user;
-        $summary = implode(', ', $event->changedFields);
+        $trackedChanges = array_intersect($event->changedFields, self::TRACKED_FIELDS);
+
+        if (empty($trackedChanges)) {
+            return;
+        }
+
+        $summary = implode(', ', $trackedChanges);
+        $oldValues = array_intersect_key($event->oldValues, array_flip($trackedChanges));
 
         activity('user')
             ->performedOn($user)
             ->causedBy(auth()->user())
             ->event('updated')
             ->withProperties([
-                'changed_fields' => $event->changedFields,
-                'old_values' => $event->oldValues,
+                'changed_fields' => array_values($trackedChanges),
+                'old_values' => $oldValues,
             ])
             ->log("User account updated: {$summary}");
     }

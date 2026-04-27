@@ -26,11 +26,11 @@ use Illuminate\Support\Str;
  * @property string|null $email
  * @property string|null $name
  * @property int $quantity
- * @property \Brick\Money\Money $unit_price
- * @property \Brick\Money\Money $subtotal
- * @property \Brick\Money\Money $discount
- * @property \Brick\Money\Money $fees
- * @property \Brick\Money\Money $total
+ * @property \CorvMC\Support\Money\Money $unit_price
+ * @property \CorvMC\Support\Money\Money $subtotal
+ * @property \CorvMC\Support\Money\Money $discount
+ * @property \CorvMC\Support\Money\Money $fees
+ * @property \CorvMC\Support\Money\Money $total
  * @property bool $covers_fees
  * @property bool $is_door_sale
  * @property string|null $payment_method
@@ -139,7 +139,7 @@ class TicketOrder extends Model
 
     public function getPricePerUnit(): float
     {
-        return (float) ($this->unit_price?->getMinorAmount()?->toInt() ?? 0);
+        return (float) ($this->unit_price?->getMinorAmount() ?? 0);
     }
 
     public function getBillableUnits(): float
@@ -173,7 +173,7 @@ class TicketOrder extends Model
      */
     public function getChargeableAmount(): int
     {
-        return $this->total->getMinorAmount()->toInt();
+        return $this->total->getMinorAmount();
     }
 
     // =========================================================================

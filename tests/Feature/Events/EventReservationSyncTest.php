@@ -206,7 +206,7 @@ describe('Event Cancellation', function () {
 });
 
 describe('Event Restoration', function () {
-    it('restores EventReservation when cancelled event is reactivated', function () {
+    it('creates a new EventReservation when cancelled event is reactivated', function () {
         $startTime = Carbon::now()->addDays(10)->setHour(19)->setMinute(0)->setSecond(0);
         $endTime = $startTime->copy()->addHours(3);
 
@@ -220,20 +220,24 @@ describe('Event Restoration', function () {
         ]);
 
         $event->refresh();
-        $reservation = $event->spaceReservation;
-        $reservationId = $reservation->id;
+        $originalReservation = $event->spaceReservation;
+        $originalId = $originalReservation->id;
 
         EventService::cancel($event, 'Test cancellation');
-        $reservation->refresh();
-        expect($reservation->status)->toBeInstanceOf(Cancelled::class);
+        $originalReservation->refresh();
+        expect($originalReservation->status)->toBeInstanceOf(Cancelled::class);
 
         $event->refresh();
         $event->update(['status' => EventStatus::Scheduled]);
 
-        $reservation->refresh();
-        expect($reservation->id)->toBe($reservationId)
-            ->and($reservation->status)->toBeInstanceOf(Confirmed::class)
-            ->and($reservation->cancellation_reason)->toBeNull();
+        $event->refresh();
+        // Old reservation stays cancelled, a new one is created
+        $originalReservation->refresh();
+        expect($originalReservation->status)->toBeInstanceOf(Cancelled::class);
+
+        expect($event->spaceReservation)->not->toBeNull()
+            ->and($event->spaceReservation->id)->not->toBe($originalId)
+            ->and($event->spaceReservation->status)->toBeInstanceOf(Confirmed::class);
     });
 
     it('recreates EventReservation when soft-deleted event is restored', function () {

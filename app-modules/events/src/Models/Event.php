@@ -5,7 +5,7 @@ namespace CorvMC\Events\Models;
 use CorvMC\Bands\Models\Band;
 use App\Models\EventReservation;
 use App\Models\User;
-use Brick\Money\Money;
+use CorvMC\Support\Money\Money;
 use Carbon\Carbon;
 use CorvMC\Events\Facades\EventService;
 use CorvMC\Events\Concerns\HasPoster;
@@ -284,7 +284,7 @@ class Event extends ContentModel implements InvitationSubject, Recurrable
      */
     public function spaceReservation()
     {
-        return $this->morphOne(EventReservation::class, 'reservable');
+        return $this->morphOne(EventReservation::class, 'reservable')->latestOfMany();
     }
 
     /**

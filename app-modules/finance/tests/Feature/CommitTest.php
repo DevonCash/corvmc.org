@@ -150,8 +150,10 @@ describe('Finance::commit() fully discounted', function () {
 
 describe('Finance::commit() credit deduction', function () {
     it('deducts credit blocks from the user wallet', function () {
+        // 3 blocks available; 2-hour reservation needs 4 blocks (2 blocks/hour)
+        // → 3 consumed, discount = 3 × $7.50 = $22.50, net = $30 - $22.50 = $7.50
         $this->user->addCredit(
-            amount: 5,
+            amount: 3,
             creditType: CreditType::FreeHours,
             source: 'test',
             description: 'Test credit',
@@ -160,13 +162,13 @@ describe('Finance::commit() credit deduction', function () {
         ['order' => $order] = createOrderWithReservation($this, 2.0);
 
         $balanceBefore = Finance::balance($this->user, 'free_hours');
-        expect($balanceBefore)->toBe(5);
+        expect($balanceBefore)->toBe(3);
 
-        Finance::commit($order, ['cash' => 1500]);
+        Finance::commit($order, ['cash' => 750]);
 
-        // 2 billable units consumed 2 blocks
+        // All 3 available blocks consumed
         $balanceAfter = Finance::balance($this->user, 'free_hours');
-        expect($balanceAfter)->toBe(3);
+        expect($balanceAfter)->toBe(0);
     });
 });
 

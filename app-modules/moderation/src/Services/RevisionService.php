@@ -41,9 +41,8 @@ class RevisionService
 
             // Create revision
             $revision = Revision::create(array_merge($data, [
-                'submitted_by' => $submitter->id,
-                'status' => RevisionStatus::Pending,
-                'approval_workflow' => $workflow,
+                'submitted_by_id' => $submitter->id,
+                'status' => RevisionStatus::Pending->value,
             ]));
 
             // Auto-approve if workflow allows
@@ -86,6 +85,10 @@ class RevisionService
      */
     public function approve(Revision $revision, ?User $approvedBy = null, string $notes = ''): Revision
     {
+        if (! $revision->isPending()) {
+            throw new \Exception('Revision has already been reviewed');
+        }
+
         return DB::transaction(function () use ($revision, $approvedBy, $notes) {
             $revision->update([
                 'status' => RevisionStatus::Approved,
@@ -159,18 +162,19 @@ class RevisionService
             throw new \Exception('Cannot apply non-approved revision');
         }
 
-        $model = $revision->revisionable;
+        // Bypass global scopes (e.g., MemberVisibilityScope) when resolving revisionable
+        $model = $revision->revisionable()->withoutGlobalScopes()->first();
         if (!$model) {
             throw new \Exception('Revisionable model not found');
         }
 
-        // Apply changes
+        // Apply changes — use saveQuietly to avoid re-triggering revision observers
         $changes = $revision->proposed_changes;
         foreach ($changes as $field => $value) {
             $model->$field = $value;
         }
-        
-        $model->save();
+
+        $model->saveQuietly();
 
         $revision->update(['applied_at' => now()]);
 

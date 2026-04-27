@@ -40,7 +40,7 @@ class SubmitHoursPage extends Page implements HasForms
 
     public static function canAccess(): bool
     {
-        return false; // Temporarily disable access until the feature is ready
+        // return false; // Temporarily disable access until the feature is ready
         return auth()->user()?->can('volunteer.hours.submit') ?? false;
     }
 

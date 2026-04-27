@@ -87,27 +87,29 @@ describe('Finance::cancel()', function () {
 
 describe('Finance::cancel() credit reversal', function () {
     it('reverses credit deductions when Order is cancelled', function () {
+        // 3 blocks available; 2-hour reservation needs 4 blocks (2 blocks/hour)
+        // → 3 consumed, discount = $22.50, net = $7.50
         $this->user->addCredit(
-            amount: 5,
+            amount: 3,
             creditType: CreditType::FreeHours,
             source: 'test',
             description: 'Test credit',
         );
 
         $balanceBefore = Finance::balance($this->user, 'free_hours');
-        expect($balanceBefore)->toBe(5);
+        expect($balanceBefore)->toBe(3);
 
-        // Commit deducts 2 blocks (2-hour reservation)
-        ['order' => $order] = createCommittedOrderForCancel($this, 1500);
+        // Commit deducts 3 blocks, leaves $7.50 cash
+        ['order' => $order] = createCommittedOrderForCancel($this, 750);
 
         $balanceAfterCommit = Finance::balance($this->user, 'free_hours');
-        expect($balanceAfterCommit)->toBe(3);
+        expect($balanceAfterCommit)->toBe(0);
 
         // Cancel reverses the deduction
         Finance::cancel($order);
 
         $balanceAfterCancel = Finance::balance($this->user, 'free_hours');
-        expect($balanceAfterCancel)->toBe(5);
+        expect($balanceAfterCancel)->toBe(3);
     });
 
     it('does not reverse credits when there are no discounts', function () {

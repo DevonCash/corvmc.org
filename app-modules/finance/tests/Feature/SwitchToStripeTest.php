@@ -151,7 +151,7 @@ it('preserves order total when switching payment method', function () {
     expect($stripeTxn->amount)->toBe(4500);
 });
 
-it('rolls back if stripe checkout creation fails', function () {
+it('preserves cash transaction when stripe checkout creation fails', function () {
     $order = Order::create([
         'user_id' => $this->user->id,
         'total_amount' => 3000,
@@ -178,11 +178,12 @@ it('rolls back if stripe checkout creation fails', function () {
         // Expected
     }
 
-    // Cash transaction should still be Pending (rolled back)
+    // Cash transaction should still be Pending — never cancelled since
+    // the stripe checkout is attempted before touching cash
     expect($cashTxn->fresh()->status)->toBeInstanceOf(TransactionPending::class);
 
-    // No stripe transaction should exist
-    expect($order->transactions()->where('currency', 'stripe')->exists())->toBeFalse();
+    // Order should still be in a payable state
+    expect($order->fresh()->status)->toBeInstanceOf(OrderPending::class);
 });
 
 // ---------------------------------------------------------------------------

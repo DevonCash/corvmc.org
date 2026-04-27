@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Finance Product wrapping TicketOrder.
  *
- * Pricing comes from the TicketOrder's unit_price (Brick\Money).
+ * Pricing comes from the TicketOrder's unit_price.
  * One billable unit = one ticket. No wallet discounts currently.
  */
 class TicketProduct extends Product
@@ -33,7 +33,7 @@ class TicketProduct extends Product
             return 0;
         }
 
-        return $model->unit_price?->getMinorAmount()?->toInt() ?? 0;
+        return $model->unit_price?->getMinorAmount() ?? 0;
     }
 
     public static function getDescription(?Model $model = null): string

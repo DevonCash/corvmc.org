@@ -3,6 +3,9 @@
 namespace CorvMC\Membership\Services;
 
 use App\Models\User;
+use CorvMC\Membership\Events\MemberProfileCreated;
+use CorvMC\Membership\Events\MemberProfileDeleted;
+use CorvMC\Membership\Events\MemberProfileUpdated;
 use CorvMC\Membership\Models\MemberProfile;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
@@ -12,7 +15,7 @@ class MemberProfileService
 {
     public function create(User $user, array $data): MemberProfile
     {
-        return DB::transaction(function () use ($user, $data) {
+        $profile = DB::transaction(function () use ($user, $data) {
             $existing = MemberProfile::where('user_id', $user->id)->first();
 
             if ($existing) {
@@ -53,11 +56,20 @@ class MemberProfileService
 
             return $profile;
         });
+
+        MemberProfileCreated::dispatch($profile);
+
+        return $profile;
     }
 
     public function update(MemberProfile $profile, array $data): MemberProfile
     {
-        return DB::transaction(function () use ($profile, $data) {
+        $oldValues = collect($data)->reject(fn ($v, $k) => in_array($k, ['genres', 'skills', 'influences']))
+            ->mapWithKeys(fn ($v, $k) => [$k => $profile->getOriginal($k)])
+            ->toArray();
+        $changedFields = array_keys($oldValues);
+
+        $result = DB::transaction(function () use ($profile, $data) {
             $genres = Arr::pull($data, 'genres');
             $skills = Arr::pull($data, 'skills');
             $influences = Arr::pull($data, 'influences');
@@ -78,17 +90,27 @@ class MemberProfileService
 
             return $profile->fresh();
         });
+
+        if (! empty($changedFields)) {
+            MemberProfileUpdated::dispatch($result, $changedFields, $oldValues);
+        }
+
+        return $result;
     }
 
     public function delete(MemberProfile $profile): bool
     {
-        return $profile->delete();
+        $result = $profile->delete();
+
+        MemberProfileDeleted::dispatch($profile);
+
+        return $result;
     }
 
-    public function updateVisibility(MemberProfile $profile, string $visibility): MemberProfile
+    public function updateVisibility(MemberProfile $profile, mixed $visibility): MemberProfile
     {
         $profile->update(['visibility' => $visibility]);
-        return $profile;
+        return $profile->fresh();
     }
 
     public function updateGenres(MemberProfile $profile, array $genres): void
@@ -109,7 +131,10 @@ class MemberProfileService
     public function setFlags(MemberProfile $profile, array $flags): void
     {
         foreach ($flags as $flag => $value) {
-            if ($value) {
+            // Handle indexed arrays: ['is_teacher', 'is_professional'] means enable all
+            if (is_int($flag)) {
+                $profile->flag($value);
+            } elseif ($value) {
                 $profile->flag($flag);
             } else {
                 $profile->unflag($flag);

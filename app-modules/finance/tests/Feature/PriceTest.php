@@ -90,7 +90,7 @@ describe('Finance::price() wallet discounts', function () {
             description: 'Test credit',
         );
 
-        $reservation = makeReservation($this, 2.0); // 2 billable units
+        $reservation = makeReservation($this, 2.0); // 2 hours = 4 blocks at 2 blocks/hour
 
         $lineItems = Finance::price([$reservation], $this->user);
 
@@ -103,13 +103,13 @@ describe('Finance::price() wallet discounts', function () {
         expect($discount->product_type)->toBe('free_hours_discount');
         expect($discount->unit)->toBe('discount');
         expect($discount->unit_price)->toBe(-750);
-        expect($discount->quantity)->toBe('2.00'); // 2 blocks consumed (matching billable units)
-        expect($discount->amount)->toBe(-1500); // 2 × $7.50
+        expect($discount->quantity)->toBe('4.00'); // 4 blocks consumed (2 hours × 2 blocks/hour)
+        expect($discount->amount)->toBe(-3000); // 4 × $7.50 = fully covered
         expect($discount->product_id)->toBeNull();
     });
 
-    it('caps discount blocks at billable units', function () {
-        // User has 10 blocks but reservation is only 2 hours (2 billable units)
+    it('caps discount blocks at what the item needs', function () {
+        // User has 10 blocks but reservation is only 2 hours (4 blocks needed)
         $this->user->addCredit(
             amount: 10,
             creditType: CreditType::FreeHours,
@@ -122,17 +122,16 @@ describe('Finance::price() wallet discounts', function () {
         $lineItems = Finance::price([$reservation], $this->user);
 
         $discount = $lineItems[1];
-        expect($discount->quantity)->toBe('2.00'); // capped at billable units, not 10
-        expect($discount->amount)->toBe(-1500);
+        expect($discount->quantity)->toBe('4.00'); // capped at 4 blocks (2h × 2 blocks/h), not 10
+        expect($discount->amount)->toBe(-3000); // fully covered
     });
 
     it('caps discount at the base LineItem amount and floors to whole blocks', function () {
-        // Override cents_per_unit so blocks × centsPerUnit exceeds the base amount.
-        // With cents_per_unit = 1000 and rate = $15/hr:
-        //   2-hour reservation = $30 base, user has 10 blocks
-        //   blocksToApply = min(10, 2) = 2, raw discount = 2 × 1000 = 2000 < 3000 → no cap
-        // Instead use cents_per_unit = 2000:
-        //   blocksToApply = min(10, 2) = 2, raw discount = 2 × 2000 = 4000 > 3000 → cap fires
+        // Override cents_per_unit so raw block discount exceeds the base amount.
+        // With cents_per_unit = 2000 and rate = $15/hr:
+        //   blocksPerBillableUnit = 1500/2000 = 0.75
+        //   maxBlocksForItem = 2 × 0.75 = 1.5
+        //   discountCents = (int)(1.5 × 2000) = 3000, equals base → cap at base
         //   actualBlocks = floor(3000 / 2000) = 1, discount = 1 × 2000 = 2000
         config(['finance.wallets.free_hours.cents_per_unit' => 2000]);
 
@@ -207,8 +206,8 @@ describe('Finance::price() wallet discounts', function () {
 
 describe('Finance::price() multi-item wallet sharing', function () {
     it('applies credits first-come-first-served across items', function () {
-        // User has 3 blocks. Two reservations of 2 hours each.
-        // First gets 2 blocks (capped by billable units), second gets 1 block (remaining).
+        // User has 3 blocks. Two reservations of 2 hours each (4 blocks needed each).
+        // First gets all 3 remaining blocks, second gets nothing.
         $this->user->addCredit(
             amount: 3,
             creditType: CreditType::FreeHours,
@@ -224,18 +223,13 @@ describe('Finance::price() multi-item wallet sharing', function () {
 
         $lineItems = Finance::price([$r1, $r2], $this->user);
 
-        // 2 base + 2 discount = 4
-        expect($lineItems)->toHaveCount(4);
+        // 2 base + 1 discount (second gets nothing) = 3
+        expect($lineItems)->toHaveCount(3);
 
-        // First reservation: 2 blocks applied
+        // First reservation: 3 blocks applied (all available, needs 4)
         $discount1 = $lineItems[2];
-        expect($discount1->quantity)->toBe('2.00');
-        expect($discount1->amount)->toBe(-1500);
-
-        // Second reservation: 1 block remaining
-        $discount2 = $lineItems[3];
-        expect($discount2->quantity)->toBe('1.00');
-        expect($discount2->amount)->toBe(-750);
+        expect($discount1->quantity)->toBe('3.00');
+        expect($discount1->amount)->toBe(-2250);
     });
 
     it('exhausts wallet and skips subsequent items', function () {

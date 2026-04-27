@@ -36,7 +36,7 @@ class SendDailyReservationDigest extends Command
         // Get all reservations for tomorrow, ordered by start time
         $tomorrowsReservations = RehearsalReservation::with('reservable')
             ->whereDate('reserved_at', $tomorrow)
-            ->whereIn('status', ['confirmed', 'pending'])
+            ->whereIn('status', ['confirmed', 'scheduled'])
             ->orderBy('reserved_at')
             ->get();
 

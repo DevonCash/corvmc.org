@@ -35,6 +35,10 @@ _ide_helper*.php
 phpmd-report.html
 .phpmd.result-cache.php
 
+# Test database files
+database/testing*.sqlite
+database/.snapshot.lock
+
 # PHPStan
 phpstan-baseline.neon
 .phpstan.cache/

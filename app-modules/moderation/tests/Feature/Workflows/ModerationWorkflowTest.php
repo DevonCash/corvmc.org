@@ -44,9 +44,9 @@ describe('Moderation Workflow: Report Flow', function () {
         expect($report)->toBeInstanceOf(Report::class);
         expect($report->reportable_type)->toBe(Event::class);
         expect($report->reportable_id)->toBe($event->id);
-        expect($report->reporter_id)->toBe($reporter->id);
+        expect($report->reported_by_id)->toBe($reporter->id);
         expect($report->reason)->toBe('inappropriate_content');
-        expect($report->details)->toBe('This event promotes inappropriate activities');
+        expect($report->custom_reason)->toBe('This event promotes inappropriate activities');
         expect($report->status)->toBe(ReportStatus::Pending);
     });
 
@@ -75,8 +75,8 @@ describe('Moderation Workflow: Report Flow', function () {
             'Content violates community guidelines'
         );
 
-        expect($resolvedReport->status)->toBe(ReportStatus::Resolved);
-        expect($resolvedReport->resolved_by)->toBe($moderator->id);
+        expect($resolvedReport->status)->toBe(ReportStatus::Upheld);
+        expect($resolvedReport->resolved_by_id)->toBe($moderator->id);
         expect($resolvedReport->resolved_at)->not->toBeNull();
         expect($resolvedReport->resolution_notes)->toBe('Content violates community guidelines');
     });
@@ -95,7 +95,7 @@ describe('Moderation Workflow: Report Flow', function () {
             'Report does not meet criteria'
         );
 
-        expect($resolvedReport->status)->toBe(ReportStatus::Resolved);
+        expect($resolvedReport->status)->toBe(ReportStatus::Dismissed);
     });
 });
 
@@ -202,12 +202,12 @@ describe('Moderation Workflow: Revision Approval', function () {
 
         // Create a pending revision
         $revision = Revision::create([
-            'revisionable_type' => 'member_profile',
+            'revisionable_type' => MemberProfile::class,
             'revisionable_id' => $profile->id,
             'original_data' => ['bio' => 'Original bio'],
             'proposed_changes' => ['bio' => 'Updated bio with more details'],
             'status' => Revision::STATUS_PENDING,
-            'submitted_by' => $submitter->id,
+            'submitted_by_id' => $submitter->id,
             'revision_type' => 'update',
         ]);
 
@@ -236,12 +236,12 @@ describe('Moderation Workflow: Revision Approval', function () {
 
         // Create an already approved revision
         $revision = Revision::create([
-            'revisionable_type' => 'member_profile',
+            'revisionable_type' => MemberProfile::class,
             'revisionable_id' => $profile->id,
             'original_data' => ['bio' => 'Test bio'],
             'proposed_changes' => ['bio' => 'New bio'],
             'status' => Revision::STATUS_APPROVED,
-            'submitted_by' => $submitter->id,
+            'submitted_by_id' => $submitter->id,
             'revision_type' => 'update',
             'approved_by' => $reviewer->id,
             'approved_at' => now(),
@@ -263,7 +263,7 @@ describe('Moderation Workflow: Auto-Approval', function () {
         ]);
 
         $data = [
-            'revisionable_type' => 'member_profile',
+            'revisionable_type' => MemberProfile::class,
             'revisionable_id' => $profile->id,
             'original_data' => ['bio' => 'Original bio'],
             'proposed_changes' => ['bio' => 'Staff updated bio'],

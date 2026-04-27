@@ -45,9 +45,10 @@ class EventSyncService
         $reservedUntil = $event->end_datetime?->copy()->addMinutes($teardownMinutes)
             ?? $event->start_datetime->copy()->addHours(3);
 
-        // If reservation already exists with same times, no sync needed
+        // If an active reservation already exists with same times, no sync needed
         $existingReservation = $event->spaceReservation;
         if ($existingReservation
+            && $existingReservation->status->isActive()
             && $existingReservation->reserved_at->equalTo($reservedAt)
             && $existingReservation->reserved_until->equalTo($reservedUntil)
         ) {
@@ -81,18 +82,22 @@ class EventSyncService
 
         // Calculate hours used
         $hoursUsed = $reservedAt->diffInMinutes($reservedUntil) / 60;
-        
-        $reservation = $event->spaceReservation()->updateOrCreate(
-            [],
-            [
-                'type' => (new EventReservation)->getMorphClass(),
-                'reserved_at' => $reservedAt,
-                'reserved_until' => $reservedUntil,
-                'hours_used' => $hoursUsed,
-                'status' => new Confirmed($reservation ?? new EventReservation),
-                'notes' => "Setup/breakdown for event: {$event->title}",
-            ]
-        );
+
+        $reservationData = [
+            'type' => (new EventReservation)->getMorphClass(),
+            'reserved_at' => $reservedAt,
+            'reserved_until' => $reservedUntil,
+            'hours_used' => $hoursUsed,
+            'status' => Confirmed::class,
+            'notes' => "Setup/breakdown for event: {$event->title}",
+        ];
+
+        // If existing reservation is cancelled, create a fresh one (cancelled is terminal)
+        if ($existingReservation && ! $existingReservation->status->isActive()) {
+            $reservation = $event->spaceReservation()->create($reservationData);
+        } else {
+            $reservation = $event->spaceReservation()->updateOrCreate([], $reservationData);
+        }
 
         return [
             'success' => true,

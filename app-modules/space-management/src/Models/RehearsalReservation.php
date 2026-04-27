@@ -105,18 +105,14 @@ class RehearsalReservation extends Reservation implements InvitationSubject, Rec
      */
     public static function determineStatusForDate(Carbon $reservationDate, bool $isRecurring = false): string
     {
-        // Recurring reservations always need manual approval
-        if ($isRecurring) {
-            return 'pending';
+        // Auto-confirm reservations within the buffer window (default 3 days)
+        $bufferDays = config('space-management.reservation_buffer_days', 3);
+
+        if ($reservationDate->diffInDays(now(), absolute: true) < $bufferDays) {
+            return 'confirmed';
         }
 
-        // Reservations more than a week away need confirmation reminder
-        if ($reservationDate->isAfter(Carbon::now()->addWeek())) {
-            return 'pending';
-        }
-
-        // Near-term reservations are immediately confirmed
-        return 'confirmed';
+        return 'scheduled';
     }
 
     /**

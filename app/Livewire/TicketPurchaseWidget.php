@@ -182,7 +182,7 @@ class TicketPurchaseWidget extends Component implements HasSchemas
         /** @var User|null $user */
         $user = Auth::user();
 
-        $unitPrice = $this->event->getTicketPriceForUser($user)->getMinorAmount()->toInt();
+        $unitPrice = $this->event->getTicketPriceForUser($user)->getMinorAmount();
         $subtotal = $unitPrice * $this->quantity;
 
         // Stripe fee: 2.9% + $0.30
@@ -197,7 +197,7 @@ class TicketPurchaseWidget extends Component implements HasSchemas
         /** @var User|null $user */
         $user = Auth::user();
 
-        $unitPrice = $this->event->getTicketPriceForUser($user)->getMinorAmount()->toInt();
+        $unitPrice = $this->event->getTicketPriceForUser($user)->getMinorAmount();
         $subtotal = $unitPrice * $this->quantity;
 
         if ($this->coversFees) {
@@ -215,7 +215,7 @@ class TicketPurchaseWidget extends Component implements HasSchemas
         /** @var User|null $user */
         $user = Auth::user();
 
-        return $this->event->getTicketPriceForUser($user)->getMinorAmount()->toInt();
+        return $this->event->getTicketPriceForUser($user)->getMinorAmount();
     }
 
     /**
@@ -223,7 +223,7 @@ class TicketPurchaseWidget extends Component implements HasSchemas
      */
     public function getBasePrice(): int
     {
-        return $this->event->getBaseTicketPrice()->getMinorAmount()->toInt();
+        return $this->event->getBaseTicketPrice()->getMinorAmount();
     }
 
     /**

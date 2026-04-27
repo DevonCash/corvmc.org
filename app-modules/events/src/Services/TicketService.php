@@ -8,6 +8,7 @@ use CorvMC\Events\Models\Ticket;
 use CorvMC\Events\Models\TicketOrder;
 use CorvMC\Finance\Facades\Finance;
 use CorvMC\Finance\Models\Order;
+use CorvMC\Support\Money\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -159,28 +160,29 @@ class TicketService
         }
 
         return DB::transaction(function () use ($event, $quantity, $paymentMethod, $staffUser, $priceOverride, $isSustainingMember, $attendeeName, $attendeeEmail, $notes) {
-            // Get base unit price in cents (event ticket_price is in cents)
-            $unitPrice = (int) ($priceOverride ?? ($event->ticket_price ?? 0));
-            $subtotal = $unitPrice * $quantity;
+            // Get base unit price in cents
+            $basePrice = $event->getBaseTicketPrice()->getMinorAmount();
+            $unitPriceCents = (int) ($priceOverride ?? $basePrice);
+            $subtotalCents = $unitPriceCents * $quantity;
 
             // Calculate discount if sustaining member
-            $discount = 0;
+            $discountCents = 0;
             if ($isSustainingMember) {
                 $discountPercent = config('ticketing.sustaining_member_discount', 50);
-                $discount = (int) round($subtotal * $discountPercent / 100);
+                $discountCents = (int) round($subtotalCents * $discountPercent / 100);
             }
 
-            $total = $subtotal - $discount;
+            $totalCents = max($subtotalCents - $discountCents, 0);
 
             $ticketOrder = TicketOrder::create([
                 'event_id' => $event->id,
                 'user_id' => $staffUser->id,
                 'quantity' => $quantity,
-                'unit_price' => $unitPrice,
-                'subtotal' => $subtotal,
-                'discount' => $discount,
-                'fees' => 0,
-                'total' => max($total, 0),
+                'unit_price' => Money::ofMinor($unitPriceCents, 'USD'),
+                'subtotal' => Money::ofMinor($subtotalCents, 'USD'),
+                'discount' => Money::ofMinor($discountCents, 'USD'),
+                'fees' => Money::ofMinor(0, 'USD'),
+                'total' => Money::ofMinor($totalCents, 'USD'),
                 'status' => 'completed',
                 'completed_at' => now(),
                 'is_door_sale' => true,
@@ -193,8 +195,11 @@ class TicketService
             // Generate tickets immediately
             $this->generateTickets($ticketOrder);
 
+            // Increment sold count on the event
+            $event->incrementTicketsSold($quantity);
+
             // Create Finance Order with payment method, settled immediately
-            if ($total > 0) {
+            if ($totalCents > 0) {
                 $lineItems = Finance::price([$ticketOrder], $staffUser);
                 $netCents = (int) $lineItems->sum('amount');
                 $order = $this->createFinanceOrder($ticketOrder, $lineItems, $netCents);

@@ -153,7 +153,7 @@ describe('Membership Workflow: Band Invitations', function () {
 describe('Membership Workflow: Profile Management', function () {
     it('updates member profile with bio and hometown', function () {
         $user = User::factory()->create();
-        MemberProfile::where('user_id', $user->id)->delete();
+        MemberProfile::withoutGlobalScopes()->where('user_id', $user->id)->delete();
         $profile = MemberProfile::forceCreate(['user_id' => $user->id]);
 
         $profile->update([
@@ -172,7 +172,7 @@ describe('Membership Workflow: Profile Management', function () {
 
     it('updates profile genres through UpdateGenres action', function () {
         $user = User::factory()->create();
-        MemberProfile::where('user_id', $user->id)->delete();
+        MemberProfile::withoutGlobalScopes()->where('user_id', $user->id)->delete();
         $profile = MemberProfile::forceCreate(['user_id' => $user->id]);
 
         MemberProfileService::updateGenres($profile, ['Rock', 'Jazz', 'Electronic']);
@@ -184,7 +184,7 @@ describe('Membership Workflow: Profile Management', function () {
 
     it('replaces genres when updating', function () {
         $user = User::factory()->create();
-        MemberProfile::where('user_id', $user->id)->delete();
+        MemberProfile::withoutGlobalScopes()->where('user_id', $user->id)->delete();
         $profile = MemberProfile::forceCreate(['user_id' => $user->id]);
 
         // Set initial genres
@@ -202,7 +202,7 @@ describe('Membership Workflow: Profile Management', function () {
 
     it('updates profile with genres via UpdateMemberProfile', function () {
         $user = User::factory()->create();
-        MemberProfile::where('user_id', $user->id)->delete();
+        MemberProfile::withoutGlobalScopes()->where('user_id', $user->id)->delete();
         $profile = MemberProfile::forceCreate(['user_id' => $user->id]);
 
         $updatedProfile = MemberProfileService::update($profile, [
@@ -222,13 +222,13 @@ describe('Membership Workflow: Profile Visibility', function () {
         $membersUser = User::factory()->create();
         $privateUser = User::factory()->create();
 
-        MemberProfile::where('user_id', $publicUser->id)->delete();
+        MemberProfile::withoutGlobalScopes()->where('user_id', $publicUser->id)->delete();
         $publicProfile = MemberProfile::create(['user_id' => $publicUser->id, 'visibility' => Visibility::Public]);
 
-        MemberProfile::where('user_id', $membersUser->id)->delete();
+        MemberProfile::withoutGlobalScopes()->where('user_id', $membersUser->id)->delete();
         $membersProfile = MemberProfile::create(['user_id' => $membersUser->id, 'visibility' => Visibility::Members]);
 
-        MemberProfile::where('user_id', $privateUser->id)->delete();
+        MemberProfile::withoutGlobalScopes()->where('user_id', $privateUser->id)->delete();
         $privateProfile = MemberProfile::create(['user_id' => $privateUser->id, 'visibility' => Visibility::Private]);
 
         expect($publicProfile->fresh()->visibility)->toBe(Visibility::Public);
@@ -272,7 +272,7 @@ describe('Membership Workflow: Member Profile Extended', function () {
         $user = User::factory()->create();
 
         // Delete auto-created profile to test manual creation
-        MemberProfile::where('user_id', $user->id)->delete();
+        MemberProfile::withoutGlobalScopes()->where('user_id', $user->id)->delete();
 
         $profile = MemberProfileService::create($user, [
             'bio' => 'A musician from Portland',
@@ -289,7 +289,7 @@ describe('Membership Workflow: Member Profile Extended', function () {
 
     it('deletes a member profile with all associated data', function () {
         $user = User::factory()->create();
-        MemberProfile::where('user_id', $user->id)->delete();
+        MemberProfile::withoutGlobalScopes()->where('user_id', $user->id)->delete();
         $profile = MemberProfile::forceCreate(['user_id' => $user->id]);
         $profile->update(['bio' => 'Test bio']);
 
@@ -305,7 +305,7 @@ describe('Membership Workflow: Member Profile Extended', function () {
 
     it('updates profile visibility', function () {
         $user = User::factory()->create();
-        MemberProfile::where('user_id', $user->id)->delete();
+        MemberProfile::withoutGlobalScopes()->where('user_id', $user->id)->delete();
         $profile = MemberProfile::forceCreate(['user_id' => $user->id]);
         $profile->update(['visibility' => Visibility::Public]);
 
@@ -318,7 +318,7 @@ describe('Membership Workflow: Member Profile Extended', function () {
 
     it('sets profile flags', function () {
         $user = User::factory()->create();
-        MemberProfile::where('user_id', $user->id)->delete();
+        MemberProfile::withoutGlobalScopes()->where('user_id', $user->id)->delete();
         $profile = MemberProfile::forceCreate(['user_id' => $user->id]);
 
         MemberProfileService::setFlags($profile, ['is_teacher', 'is_professional']);
@@ -330,12 +330,12 @@ describe('Membership Workflow: Member Profile Extended', function () {
     it('searches profiles by visibility', function () {
         // Create public profile
         $publicUser = User::factory()->create(['name' => 'Public User']);
-        $publicProfile = MemberProfile::where('user_id', $publicUser->id)->firstOrFail();
+        $publicProfile = MemberProfile::withoutGlobalScopes()->where('user_id', $publicUser->id)->firstOrFail();
         $publicProfile->update(['visibility' => Visibility::Public]);
 
         // Create private profile
         $privateUser = User::factory()->create(['name' => 'Private User']);
-        $privateProfile = MemberProfile::where('user_id', $privateUser->id)->firstOrFail();
+        $privateProfile = MemberProfile::withoutGlobalScopes()->where('user_id', $privateUser->id)->firstOrFail();
         $privateProfile->update(['visibility' => Visibility::Private]);
 
         // Guest search (should only find public)

@@ -68,6 +68,7 @@ class Report extends Model
 
     protected $casts = [
         'resolved_at' => 'datetime',
+        'status' => \CorvMC\Moderation\Enums\ReportStatus::class,
     ];
 
     // Report reasons - context-aware

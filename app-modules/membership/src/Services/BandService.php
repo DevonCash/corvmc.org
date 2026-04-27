@@ -3,6 +3,9 @@
 namespace CorvMC\Membership\Services;
 
 use App\Models\User;
+use CorvMC\Bands\Events\BandCreated;
+use CorvMC\Bands\Events\BandUpdated;
+use CorvMC\Bands\Events\BandDeleted;
 use CorvMC\Bands\Models\Band;
 use CorvMC\Support\Models\Invitation;
 use CorvMC\Support\Services\InvitationService;
@@ -16,7 +19,7 @@ class BandService
 
     public function create(User $owner, array $data): Band
     {
-        return DB::transaction(function () use ($owner, $data) {
+        $band = DB::transaction(function () use ($owner, $data) {
             $band = Band::create(array_merge(['status' => 'active'], $data, ['owner_id' => $owner->id]));
 
             // Add owner as admin member
@@ -26,18 +29,29 @@ class BandService
 
             return $band;
         });
+
+        BandCreated::dispatch($band);
+
+        return $band;
     }
 
     public function update(Band $band, array $data): Band
     {
+        $oldValues = collect($data)->mapWithKeys(fn ($v, $k) => [$k => $band->getOriginal($k)])->toArray();
         $band->update($data);
+
+        BandUpdated::dispatch($band, array_keys($data), $oldValues);
 
         return $band->fresh();
     }
 
     public function delete(Band $band): bool
     {
-        return $band->delete();
+        $result = $band->delete();
+
+        BandDeleted::dispatch($band);
+
+        return $result;
     }
 
     public function addMember(Band $band, User $user, string $role = 'member'): void

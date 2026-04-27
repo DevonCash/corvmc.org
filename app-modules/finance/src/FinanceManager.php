@@ -366,8 +366,11 @@ class FinanceManager
                         continue;
                     }
 
-                    // How many blocks can we apply? Capped by billable units on this item.
-                    $blocksToApply = min($availableBlocks, (float) $lineItem->quantity);
+                    // Convert billable units to credit blocks, then cap at available balance.
+                    // e.g. 2 hours at $15/hr with $7.50/block → 2 * (1500/750) = 4 blocks max.
+                    $blocksPerBillableUnit = $lineItem->unit_price / $centsPerUnit;
+                    $maxBlocksForItem = (float) $lineItem->quantity * $blocksPerBillableUnit;
+                    $blocksToApply = min($availableBlocks, $maxBlocksForItem);
 
                     // Convert to cents and cap at the base LineItem amount
                     $discountCents = (int) ($blocksToApply * $centsPerUnit);
@@ -877,8 +880,8 @@ class FinanceManager
         return \Illuminate\Support\Facades\DB::transaction(function () use ($order, $cashTxn) {
             $amount = $cashTxn->amount;
 
-            $cashTxn->status->transitionTo(\CorvMC\Finance\States\TransactionState\Cancelled::class);
-
+            // Create the stripe transaction and attempt checkout BEFORE cancelling
+            // the cash transaction. If Stripe fails, cash is untouched.
             $newTxn = Transaction::create([
                 'order_id' => $order->id,
                 'user_id' => $order->user_id,
@@ -889,6 +892,9 @@ class FinanceManager
             ]);
 
             $checkoutUrl = $this->createStripeCheckout($order, $newTxn, "Order #{$order->id}");
+
+            // Stripe succeeded — now safe to cancel the cash transaction
+            $cashTxn->status->transitionTo(\CorvMC\Finance\States\TransactionState\Cancelled::class);
 
             $newTxn->refresh();
             $newTxn->update([

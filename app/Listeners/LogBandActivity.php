@@ -19,18 +19,30 @@ class LogBandActivity
             ->log("Band created: {$band->name}");
     }
 
+    /**
+     * Fields that trigger activity logging when changed.
+     */
+    private const TRACKED_FIELDS = ['name', 'bio', 'genre', 'location', 'website'];
+
     public function handleUpdated(BandUpdated $event): void
     {
         $band = $event->band;
-        $summary = implode(', ', $event->changedFields);
+        $trackedChanges = array_intersect($event->changedFields, self::TRACKED_FIELDS);
+
+        if (empty($trackedChanges)) {
+            return;
+        }
+
+        $summary = implode(', ', $trackedChanges);
+        $oldValues = array_intersect_key($event->oldValues, array_flip($trackedChanges));
 
         activity('band')
             ->performedOn($band)
             ->causedBy(auth()->user())
             ->event('updated')
             ->withProperties([
-                'changed_fields' => $event->changedFields,
-                'old_values' => $event->oldValues,
+                'changed_fields' => array_values($trackedChanges),
+                'old_values' => $oldValues,
             ])
             ->log("Band updated: {$summary}");
     }

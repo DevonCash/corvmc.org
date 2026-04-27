@@ -24,7 +24,7 @@ class DoorController extends Controller
             ], 404);
         }
 
-        $basePrice = $event->getBaseTicketPrice()->getMinorAmount()->toInt();
+        $basePrice = $event->getBaseTicketPrice()->getMinorAmount();
         $memberDiscount = config('ticketing.sustaining_member_discount', 50);
 
         return response()->json([
@@ -117,7 +117,7 @@ class DoorController extends Controller
         }
 
         // Calculate the amount
-        $basePrice = $event->getBaseTicketPrice()->getMinorAmount()->toInt();
+        $basePrice = $event->getBaseTicketPrice()->getMinorAmount();
         $subtotal = $basePrice * $request->quantity;
         $discount = 0;
 

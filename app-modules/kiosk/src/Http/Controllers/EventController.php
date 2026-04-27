@@ -74,7 +74,7 @@ class EventController extends Controller
             'venue_name' => $event->venue_name,
             'ticket_quantity' => $event->ticket_quantity,
             'tickets_sold' => $event->tickets_sold ?? 0,
-            'base_price' => $event->getBaseTicketPrice()->getMinorAmount()->toInt(),
+            'base_price' => $event->getBaseTicketPrice()->getMinorAmount(),
         ];
     }
 }

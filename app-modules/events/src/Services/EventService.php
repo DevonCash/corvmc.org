@@ -216,10 +216,19 @@ class EventService
      */
     public function reschedule(
         Event $event,
-        Carbon $newStartDatetime,
+        ?Carbon $newStartDatetime = null,
         ?Carbon $newEndDatetime = null,
         ?int $newVenueId = null
     ): Event {
+        // If no new start datetime, this is a "postpone to TBA" — just mark as postponed
+        if ($newStartDatetime === null) {
+            $event->update([
+                'status' => 'postponed',
+            ]);
+
+            return $event;
+        }
+
         $oldStartDatetime = $event->start_datetime;
 
         $newEvent = null;

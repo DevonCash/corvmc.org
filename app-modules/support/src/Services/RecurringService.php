@@ -4,7 +4,10 @@ namespace CorvMC\Support\Services;
 
 use Carbon\Carbon;
 use CorvMC\Support\Contracts\Recurrable;
+use CorvMC\Support\Enums\RecurringSeriesStatus;
 use CorvMC\Support\Events\RecurringSeriesCancelled;
+use CorvMC\Support\Events\RecurringSeriesPaused;
+use CorvMC\Support\Events\RecurringSeriesResumed;
 use CorvMC\Support\Models\RecurringSeries;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
@@ -121,5 +124,29 @@ class RecurringService
         });
 
         RecurringSeriesCancelled::dispatch($series);
+    }
+
+    /**
+     * Pause a recurring series, preventing future instance generation.
+     *
+     * @param RecurringSeries $series The series to pause
+     */
+    public function pauseRecurringSeries(RecurringSeries $series): void
+    {
+        $series->update(['status' => RecurringSeriesStatus::PAUSED]);
+
+        RecurringSeriesPaused::dispatch($series);
+    }
+
+    /**
+     * Resume a paused recurring series.
+     *
+     * @param RecurringSeries $series The series to resume
+     */
+    public function resumeRecurringSeries(RecurringSeries $series): void
+    {
+        $series->update(['status' => RecurringSeriesStatus::ACTIVE]);
+
+        RecurringSeriesResumed::dispatch($series);
     }
 }
