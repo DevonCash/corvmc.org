@@ -58,6 +58,34 @@ class HourLogFactory extends Factory
     }
 
     /**
+     * Self-reported, pending approval.
+     */
+    public function pending(): static
+    {
+        $startedAt = fake()->dateTimeBetween('-1 month', '-1 hour');
+        $endedAt = (clone $startedAt)->modify('+'.fake()->numberBetween(1, 4).' hours');
+
+        return $this->state(fn (array $attributes) => [
+            'shift_id' => null,
+            'position_id' => $attributes['position_id'] ?? Position::factory(),
+            'status' => Pending::class,
+            'started_at' => $startedAt,
+            'ended_at' => $endedAt,
+        ]);
+    }
+
+    /**
+     * Shift-based hour log for a specific shift.
+     */
+    public function forShift(Shift $shift): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'shift_id' => $shift->id,
+            'position_id' => null,
+        ]);
+    }
+
+    /**
      * Interested in a shift (default status, explicit alias).
      */
     public function interested(): static
