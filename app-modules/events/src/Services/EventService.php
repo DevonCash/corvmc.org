@@ -4,6 +4,7 @@ namespace CorvMC\Events\Services;
 
 use Carbon\Carbon;
 use CorvMC\Events\Data\EventFormData;
+use CorvMC\Events\Events\EventCancelled;
 use CorvMC\Events\Events\EventScheduling;
 use CorvMC\Events\Models\Event;
 use CorvMC\Events\Models\Venue;
@@ -165,6 +166,8 @@ class EventService
             if ($event->organizer) {
                 $event->organizer->notify(new EventCancelledNotification($event));
             }
+
+            EventCancelled::dispatch($event);
         });
     }
 

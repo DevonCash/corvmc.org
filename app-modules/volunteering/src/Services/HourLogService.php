@@ -80,11 +80,14 @@ class HourLogService
     /**
      * Release a volunteer from a shift. Valid from Interested, Confirmed, or CheckedIn.
      */
-    public function release(HourLog $hourLog, User $reviewer): HourLog
+    public function release(HourLog $hourLog, ?User $reviewer = null): HourLog
     {
         return DB::transaction(function () use ($hourLog, $reviewer) {
             $hourLog->status->transitionTo(\CorvMC\Volunteering\States\HourLogState\Released::class);
-            $hourLog->update(['reviewed_by' => $reviewer->id]);
+
+            if ($reviewer) {
+                $hourLog->update(['reviewed_by' => $reviewer->id]);
+            }
 
             VolunteerReleased::dispatch($hourLog->fresh());
 
