@@ -2,7 +2,6 @@
 
 namespace App\Filament\Staff\Resources\Volunteering\Shifts\Tables;
 
-use CorvMC\Volunteering\Models\Position;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -16,7 +15,9 @@ class ShiftsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with(['position', 'event']))
+            ->modifyQueryUsing(fn ($query) => $query
+                ->with(['position', 'event'])
+                ->withCount(['hourLogs as active_volunteers_count' => fn ($q) => $q->active()]))
             ->columns([
                 TextColumn::make('position.title')
                     ->label('Position')
@@ -41,11 +42,7 @@ class ShiftsTable
 
                 TextColumn::make('capacity')
                     ->label('Filled')
-                    ->formatStateUsing(function ($record) {
-                        $active = $record->hourLogs()->active()->count();
-
-                        return "{$active}/{$record->capacity}";
-                    }),
+                    ->formatStateUsing(fn ($record) => "{$record->active_volunteers_count}/{$record->capacity}"),
 
                 SpatieTagsColumn::make('tags')
                     ->limitList(3)

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Staff\Resources\Volunteering\Positions\RelationManagers;
 
-use CorvMC\Volunteering\Models\HourLog;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -16,7 +15,10 @@ class ShiftsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->where('start_at', '>', now())->orderBy('start_at'))
+            ->modifyQueryUsing(fn ($query) => $query
+                ->where('start_at', '>', now())
+                ->withCount(['hourLogs as active_volunteers_count' => fn ($q) => $q->active()])
+                ->orderBy('start_at'))
             ->columns([
                 TextColumn::make('event.title')
                     ->label('Event')
@@ -35,11 +37,7 @@ class ShiftsRelationManager extends RelationManager
 
                 TextColumn::make('capacity')
                     ->label('Filled')
-                    ->formatStateUsing(function ($record) {
-                        $active = $record->hourLogs()->active()->count();
-
-                        return "{$active}/{$record->capacity}";
-                    }),
+                    ->formatStateUsing(fn ($record) => "{$record->active_volunteers_count}/{$record->capacity}"),
             ]);
     }
 }

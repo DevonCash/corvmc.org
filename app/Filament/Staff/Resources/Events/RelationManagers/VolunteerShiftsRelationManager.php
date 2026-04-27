@@ -2,9 +2,7 @@
 
 namespace App\Filament\Staff\Resources\Events\RelationManagers;
 
-use App\Filament\Staff\Resources\Volunteering\Shifts\Actions\WalkInAction;
 use CorvMC\Volunteering\Models\Position;
-use CorvMC\Volunteering\Services\ShiftService;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -22,7 +20,10 @@ class VolunteerShiftsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with('position')->orderBy('start_at'))
+            ->modifyQueryUsing(fn ($query) => $query
+                ->with('position')
+                ->withCount(['hourLogs as active_volunteers_count' => fn ($q) => $q->active()])
+                ->orderBy('start_at'))
             ->columns([
                 TextColumn::make('position.title')
                     ->label('Position')
@@ -39,11 +40,7 @@ class VolunteerShiftsRelationManager extends RelationManager
 
                 TextColumn::make('capacity')
                     ->label('Filled')
-                    ->formatStateUsing(function ($record) {
-                        $active = $record->hourLogs()->active()->count();
-
-                        return "{$active}/{$record->capacity}";
-                    }),
+                    ->formatStateUsing(fn ($record) => "{$record->active_volunteers_count}/{$record->capacity}"),
             ])
             ->headerActions([
                 CreateAction::make()
