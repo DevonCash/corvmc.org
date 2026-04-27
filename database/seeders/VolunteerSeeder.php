@@ -7,21 +7,21 @@ use CorvMC\Events\Models\Event;
 use CorvMC\Volunteering\Models\HourLog;
 use CorvMC\Volunteering\Models\Position;
 use CorvMC\Volunteering\Models\Shift;
-use CorvMC\Volunteering\Services\HourLogService;
 use CorvMC\Volunteering\States\HourLogState\CheckedIn;
 use CorvMC\Volunteering\States\HourLogState\Confirmed;
 use CorvMC\Volunteering\States\HourLogState\Interested;
 use CorvMC\Volunteering\States\HourLogState\Pending;
 use Illuminate\Database\Seeder;
-use Spatie\Tags\Tag;
 
 class VolunteerSeeder extends Seeder
 {
-    private HourLogService $hourLogService;
-
     public function run(): void
     {
-        $this->hourLogService = app(HourLogService::class);
+        if (Position::exists()) {
+            $this->command->info('Volunteer data already exists, skipping.');
+
+            return;
+        }
 
         $users = User::take(10)->get();
         if ($users->count() < 5) {
