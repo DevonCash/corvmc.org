@@ -36,6 +36,8 @@ class SubmitHoursPage extends Page implements HasForms
 
     public ?array $data = [];
 
+    protected ?Collection $cachedSubmissions = null;
+
     public static function canAccess(): bool
     {
         return auth()->user()?->can('volunteer.hours.submit') ?? false;
@@ -87,16 +89,25 @@ class SubmitHoursPage extends Page implements HasForms
         try {
             app(HourLogService::class)->submitHours($user, $data);
 
+            $this->cachedSubmissions = null;
             $this->form->fill();
 
             Notification::make()
                 ->title('Hours submitted for review')
                 ->success()
                 ->send();
-        } catch (\Exception $e) {
+        } catch (\InvalidArgumentException|\RuntimeException $e) {
             Notification::make()
                 ->title('Could not submit hours')
                 ->body($e->getMessage())
+                ->danger()
+                ->send();
+        } catch (\Exception $e) {
+            report($e);
+
+            Notification::make()
+                ->title('Could not submit hours')
+                ->body('Something went wrong. Please try again.')
                 ->danger()
                 ->send();
         }
@@ -107,9 +118,13 @@ class SubmitHoursPage extends Page implements HasForms
      */
     public function getSubmissions(): Collection
     {
+        if ($this->cachedSubmissions !== null) {
+            return $this->cachedSubmissions;
+        }
+
         $user = User::me();
 
-        return HourLog::where('user_id', $user->id)
+        return $this->cachedSubmissions = HourLog::where('user_id', $user->id)
             ->whereNotNull('position_id')
             ->whereNull('shift_id')
             ->with(['position', 'reviewer'])

@@ -25,7 +25,7 @@
                                 <th class="px-3 py-3.5 text-sm font-semibold text-gray-950 dark:text-white text-start">Date</th>
                                 <th class="px-3 py-3.5 text-sm font-semibold text-gray-950 dark:text-white text-end">Minutes</th>
                                 <th class="px-3 py-3.5 text-sm font-semibold text-gray-950 dark:text-white text-start">Status</th>
-                                <th class="px-3 py-3.5 text-sm font-semibold text-gray-950 dark:text-white text-start">Reviewer Notes</th>
+                                <th class="px-3 py-3.5 text-sm font-semibold text-gray-950 dark:text-white text-start">Notes</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-white/5">
