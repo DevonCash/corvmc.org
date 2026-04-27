@@ -113,7 +113,7 @@
                 <div>
                     <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Tonight's Event</h4>
                     @if ($data['tonights_event'])
-                        <a href="{{ route('filament.staff.resources.events.view', $data['tonights_event']) }}"
+                        <a href="{{ route('filament.staff.resources.events.edit', $data['tonights_event']) }}"
                             class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800/70 transition-colors">
                             <div class="flex items-start gap-3">
                                 <div
