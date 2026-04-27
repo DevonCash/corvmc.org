@@ -26,6 +26,23 @@ class MemberProfileFactory extends Factory
         });
     }
 
+    /**
+     * Override create() to handle the case where explicit user_id is provided
+     * and a profile already exists for that user (from User::booted() auto-creation)
+     */
+    public function create($attributes = [], ?Model $parent = null)
+    {
+        // If explicit user_id provided, delete any existing profile first
+        if (is_array($attributes) && isset($attributes['user_id'])) {
+            $userId = $attributes['user_id'];
+            // Query and hard-delete all profiles for this user
+            // This bypasses any model events and soft delete logic
+            \DB::table('member_profiles')->where('user_id', $userId)->delete();
+        }
+
+        return parent::create($attributes, $parent);
+    }
+
     public function definition(): array
     {
         $platforms = [
