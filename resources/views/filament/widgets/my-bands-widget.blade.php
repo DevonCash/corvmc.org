@@ -198,7 +198,7 @@
                 </div>
             @empty
                 <div class="text-center py-8">
-                    <x-icon name="tabler-users-off" class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" />
+                    <x-icon name="tabler-users-minus" class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" />
                     <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                         You're not in any bands yet
                     </p>

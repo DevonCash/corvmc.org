@@ -17,7 +17,7 @@ class ShiftResource extends Resource
 {
     protected static ?string $model = Shift::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'tabler-clock-shift-left';
+    protected static string|\BackedEnum|null $navigationIcon = 'tabler-clock';
 
     protected static ?string $recordTitleAttribute = 'position.title';
 

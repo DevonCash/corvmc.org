@@ -123,7 +123,7 @@ class MyBandsWidget extends BaseWidget
             ])
             ->emptyStateHeading('No bands yet')
             ->emptyStateDescription('You haven\'t joined or created any bands.')
-            ->emptyStateIcon('tabler-users-off')
+            ->emptyStateIcon('tabler-users-minus')
             ->emptyStateActions([
                 CreateBandAction::make()
                     ->label('Create Your First Band'),

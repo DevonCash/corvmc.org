@@ -97,7 +97,7 @@
             {{-- Today's Schedule --}}
             <div>
                 <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <x-filament::icon icon="tabler-calendar-today" class="w-5 h-5" />
+                    <x-filament::icon icon="tabler-calendar-due" class="w-5 h-5" />
                     Today's Schedule
                     <x-filament::badge>{{ $data['todaysCount'] }}</x-filament::badge>
                 </h3>

@@ -139,7 +139,7 @@
                 <div class="rounded-lg border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <div class="mb-6 flex items-center gap-4">
                         <div class="flex size-16 items-center justify-center rounded-full bg-primary/10">
-                            <x-heroicon-o-credit-card class="size-8 text-primary-600" />
+                            <x-icon name="tabler-credit-card" class="size-8 text-primary-600" />
                         </div>
                         <div class="flex-1">
                             <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Your Membership Contribution</h3>
@@ -152,7 +152,7 @@
                             <div class="mb-1 flex items-center gap-2">
                                 <span class="text-4xl font-bold text-gray-900 dark:text-white">{{ $contributionAmount }}</span>
                                 @if($hasFeeCovered)
-                                    <x-heroicon-s-heart class="size-6 text-danger-600" />
+                                    <x-icon name="tabler-heart-filled" class="size-6 text-danger-600" />
                                 @endif
                             </div>
                             @if($nextBillingDate)
@@ -180,7 +180,7 @@
                 <div class="rounded-lg border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <div class="mb-6 flex items-center gap-4">
                         <div class="flex size-16 items-center justify-center rounded-full bg-primary/10">
-                            <x-heroicon-o-musical-note class="size-8 text-primary-600" />
+                            <x-icon name="tabler-music" class="size-8 text-primary-600" />
                         </div>
                         <div class="flex-1">
                             <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Free Practice Hours</h3>
@@ -213,11 +213,11 @@
 
                     <div class="mt-6 space-y-2 border-t border-gray-200 pt-4 dark:border-gray-700">
                         <div class="flex items-start gap-2 text-gray-700 dark:text-gray-300">
-                            <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                            <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                             <span><strong>Recurring reservations</strong> to secure your regular practice times</span>
                         </div>
                         <div class="flex items-start gap-2 text-gray-700 dark:text-gray-300">
-                            <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                            <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                             <span><strong>Priority booking</strong> for last-minute availability</span>
                         </div>
                     </div>
@@ -229,7 +229,7 @@
                     <div class="rounded-lg border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                         <div class="mb-6 flex items-center gap-4">
                             <div class="flex size-16 items-center justify-center rounded-full bg-secondary/10">
-                                <x-heroicon-o-wrench-screwdriver class="size-8 text-secondary-600" />
+                                <x-icon name="tabler-tool" class="size-8 text-secondary-600" />
                             </div>
                             <div class="flex-1">
                                 <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Equipment Access</h3>
@@ -239,15 +239,15 @@
 
                         <ul class="space-y-3 text-gray-700 dark:text-gray-300">
                             <li class="flex items-start gap-2">
-                                <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                                <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                                 <span><strong>Free accessory rentals</strong> (cables, stands, mic clips, etc.)</span>
                             </li>
                             <li class="flex items-start gap-2">
-                                <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                                <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                                 <span><strong>Monthly equipment credits</strong> equal to your contribution</span>
                             </li>
                             <li class="flex items-start gap-2">
-                                <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                                <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                                 <span><strong>Discounted rentals</strong> on premium gear</span>
                             </li>
                         </ul>
@@ -257,7 +257,7 @@
                     <div class="rounded-lg border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                         <div class="mb-6 flex items-center gap-4">
                             <div class="flex size-16 items-center justify-center rounded-full bg-accent/10">
-                                <x-heroicon-o-users class="size-8 text-accent-600" />
+                                <x-icon name="tabler-users" class="size-8 text-accent-600" />
                             </div>
                             <div class="flex-1">
                                 <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Community Perks</h3>
@@ -267,15 +267,15 @@
 
                         <ul class="space-y-3 text-gray-700 dark:text-gray-300">
                             <li class="flex items-start gap-2">
-                                <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                                <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                                 <span><strong>50% off admission</strong> to all CMC events and shows</span>
                             </li>
                             <li class="flex items-start gap-2">
-                                <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                                <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                                 <span><strong>Early access</strong> to workshops and special events</span>
                             </li>
                             <li class="flex items-start gap-2">
-                                <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                                <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                                 <span><strong>Support local music</strong> and help us grow the community</span>
                             </li>
                         </ul>
@@ -297,20 +297,20 @@
                 {{-- Practice Space Benefits --}}
                 <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <div class="mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10">
-                        <x-heroicon-o-musical-note class="size-6 text-primary-600" />
+                        <x-icon name="tabler-music" class="size-6 text-primary-600" />
                     </div>
                     <h3 class="mb-3 text-xl font-semibold text-gray-900 dark:text-white">Practice Space</h3>
                     <ul class="space-y-2 text-gray-700 dark:text-gray-300">
                         <li class="flex items-start gap-2">
-                            <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                            <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                             <span><strong>1 free hour for every $5</strong> you contribute each month</span>
                         </li>
                         <li class="flex items-start gap-2">
-                            <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                            <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                             <span><strong>Recurring reservations</strong> to secure your regular practice times</span>
                         </li>
                         <li class="flex items-start gap-2">
-                            <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                            <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                             <span><strong>Priority booking</strong> for last-minute availability</span>
                         </li>
                     </ul>
@@ -319,20 +319,20 @@
                 {{-- Equipment Benefits --}}
                 <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <div class="mb-4 flex size-12 items-center justify-center rounded-full bg-secondary/10">
-                        <x-heroicon-o-wrench-screwdriver class="size-6 text-secondary-600" />
+                        <x-icon name="tabler-tool" class="size-6 text-secondary-600" />
                     </div>
                     <h3 class="mb-3 text-xl font-semibold text-gray-900 dark:text-white">Equipment Access</h3>
                     <ul class="space-y-2 text-gray-700 dark:text-gray-300">
                         <li class="flex items-start gap-2">
-                            <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                            <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                             <span><strong>Free accessory rentals</strong> (cables, stands, mic clips, etc.)</span>
                         </li>
                         <li class="flex items-start gap-2">
-                            <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                            <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                             <span><strong>Monthly equipment credits</strong> equal to your contribution</span>
                         </li>
                         <li class="flex items-start gap-2">
-                            <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                            <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                             <span><strong>Discounted rentals</strong> on premium gear</span>
                         </li>
                     </ul>
@@ -341,20 +341,20 @@
                 {{-- Community Benefits --}}
                 <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <div class="mb-4 flex size-12 items-center justify-center rounded-full bg-accent/10">
-                        <x-heroicon-o-users class="size-6 text-accent-600" />
+                        <x-icon name="tabler-users" class="size-6 text-accent-600" />
                     </div>
                     <h3 class="mb-3 text-xl font-semibold text-gray-900 dark:text-white">Community Perks</h3>
                     <ul class="space-y-2 text-gray-700 dark:text-gray-300">
                         <li class="flex items-start gap-2">
-                            <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                            <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                             <span><strong>50% off admission</strong> to all CMC events and shows</span>
                         </li>
                         <li class="flex items-start gap-2">
-                            <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                            <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                             <span><strong>Early access</strong> to workshops and special events</span>
                         </li>
                         <li class="flex items-start gap-2">
-                            <x-heroicon-s-check-circle class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
+                            <x-icon name="tabler-circle-check-filled" class="mt-0.5 size-5 flex-shrink-0 text-success-600" />
                             <span><strong>Support local music</strong> and help us grow the community</span>
                         </li>
                     </ul>
