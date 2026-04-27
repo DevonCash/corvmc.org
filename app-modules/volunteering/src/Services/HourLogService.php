@@ -257,7 +257,11 @@ class HourLogService
             }
             $hourLog->update($updates);
 
-            return $hourLog->fresh();
+            $hourLog = $hourLog->fresh();
+
+            \CorvMC\Volunteering\Events\HoursRejected::dispatch($hourLog);
+
+            return $hourLog;
         });
     }
 }

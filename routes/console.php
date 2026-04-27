@@ -39,6 +39,9 @@ Schedule::command('rehearsals:send-reminders')->dailyAt('09:30');
 // Expire credits daily
 Schedule::command('credits:expire')->dailyAt('01:00');
 
+// Send volunteer shift reminders 24h before
+Schedule::command('volunteering:send-shift-reminders')->dailyAt('09:00');
+
 // Sweep stale Stripe transactions (expired/abandoned checkouts) every hour
 Schedule::command('finance:sweep-stale')->hourly();
 
