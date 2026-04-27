@@ -17,7 +17,7 @@ class SendShiftReminders extends Command
     public function handle(): int
     {
         $hourLogs = HourLog::query()
-            ->whereIn('status', [Confirmed::getMorphClass()])
+            ->where('status', Confirmed::getMorphClass())
             ->whereNotNull('shift_id')
             ->whereHas('shift', function ($query) {
                 $query->whereBetween('start_at', [

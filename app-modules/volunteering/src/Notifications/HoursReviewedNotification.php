@@ -32,7 +32,7 @@ class HoursReviewedNotification extends Notification implements ShouldQueue
                 ->subject("Hours approved: {$positionTitle}")
                 ->greeting('Hours approved!')
                 ->line("Your submitted hours for **{$positionTitle}** have been approved.")
-                ->line("**Hours:** {$this->formatMinutes()}")
+                ->line("**Hours:** {$this->hourLog->formattedDuration()}")
                 ->line('Thanks for volunteering!');
         }
 
@@ -50,25 +50,4 @@ class HoursReviewedNotification extends Notification implements ShouldQueue
         return $mail;
     }
 
-    private function formatMinutes(): string
-    {
-        $minutes = $this->hourLog->minutes;
-
-        if ($minutes === null) {
-            return '—';
-        }
-
-        $hours = intdiv($minutes, 60);
-        $remainder = $minutes % 60;
-
-        if ($hours === 0) {
-            return "{$remainder}m";
-        }
-
-        if ($remainder === 0) {
-            return "{$hours}h";
-        }
-
-        return "{$hours}h {$remainder}m";
-    }
 }

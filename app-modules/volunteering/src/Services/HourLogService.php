@@ -4,6 +4,7 @@ namespace CorvMC\Volunteering\Services;
 
 use App\Models\User;
 use CorvMC\Volunteering\Events\HoursApproved;
+use CorvMC\Volunteering\Events\HoursRejected;
 use CorvMC\Volunteering\Events\HoursSubmitted;
 use CorvMC\Volunteering\Events\VolunteerCheckedIn;
 use CorvMC\Volunteering\Events\VolunteerCheckedOut;
@@ -259,7 +260,7 @@ class HourLogService
 
             $hourLog = $hourLog->fresh();
 
-            \CorvMC\Volunteering\Events\HoursRejected::dispatch($hourLog);
+            HoursRejected::dispatch($hourLog);
 
             return $hourLog;
         });

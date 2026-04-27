@@ -169,6 +169,29 @@ class HourLog extends Model
         return $this->shift_id !== null;
     }
 
+    /**
+     * Human-readable duration string (e.g. "2h 30m", "45m", "3h").
+     */
+    public function formattedDuration(): string
+    {
+        if ($this->minutes === null) {
+            return '—';
+        }
+
+        $hours = intdiv($this->minutes, 60);
+        $remainder = $this->minutes % 60;
+
+        if ($hours === 0) {
+            return "{$remainder}m";
+        }
+
+        if ($remainder === 0) {
+            return "{$hours}h";
+        }
+
+        return "{$hours}h {$remainder}m";
+    }
+
     // =========================================================================
     // Scopes
     // =========================================================================
