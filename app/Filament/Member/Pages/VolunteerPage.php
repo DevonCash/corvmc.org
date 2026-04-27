@@ -30,6 +30,8 @@ class VolunteerPage extends Page
 
     protected ?Collection $cachedHistory = null;
 
+    protected static bool $showInNavigation = false;
+
     protected function resetCache(): void
     {
         $this->cachedOpenShifts = null;
@@ -39,6 +41,7 @@ class VolunteerPage extends Page
 
     public static function canAccess(): bool
     {
+        return false; // Temporarily disable access until the feature is ready
         return auth()->user()?->can('volunteer.signup') ?? false;
     }
 
@@ -58,7 +61,7 @@ class VolunteerPage extends Page
             ->upcoming()
             ->withAvailableCapacity()
             ->with(['position', 'event'])
-            ->withCount(['hourLogs as active_count' => fn ($q) => $q->active()])
+            ->withCount(['hourLogs as active_count' => fn($q) => $q->active()])
             ->orderBy('start_at')
             ->get();
 
@@ -78,7 +81,7 @@ class VolunteerPage extends Page
                 'can_sign_up' => $myLog === null,
                 'available' => $shift->capacity - $shift->active_count,
             ];
-        })->groupBy(fn ($item) => $item['shift']->event?->title ?? 'Standalone Shifts');
+        })->groupBy(fn($item) => $item['shift']->event?->title ?? 'Standalone Shifts');
     }
 
     /**
@@ -95,7 +98,7 @@ class VolunteerPage extends Page
         return $this->cachedMyShifts = HourLog::where('user_id', $user->id)
             ->whereNotNull('shift_id')
             ->whereIn('status', [Confirmed::getMorphClass(), CheckedIn::getMorphClass()])
-            ->whereHas('shift', fn ($q) => $q->where('end_at', '>', now()))
+            ->whereHas('shift', fn($q) => $q->where('end_at', '>', now()))
             ->with(['shift.position', 'shift.event'])
             ->get()
             ->sortBy('shift.start_at')
@@ -138,7 +141,7 @@ class VolunteerPage extends Page
                 ->body("You've signed up for {$shift->position->title}.")
                 ->success()
                 ->send();
-        } catch (\InvalidArgumentException|\RuntimeException $e) {
+        } catch (\InvalidArgumentException | \RuntimeException $e) {
             Notification::make()
                 ->title('Could not sign up')
                 ->body($e->getMessage())
