@@ -6,9 +6,6 @@ use CorvMC\Events\Models\Venue;
 use CorvMC\Volunteering\Models\HourLog;
 use CorvMC\Volunteering\Models\Position;
 use CorvMC\Volunteering\Models\Shift;
-use CorvMC\Volunteering\States\HourLogState\CheckedIn;
-use CorvMC\Volunteering\States\HourLogState\Confirmed;
-use CorvMC\Volunteering\States\HourLogState\Interested;
 use Illuminate\Support\Facades\Gate;
 
 beforeEach(function () {
@@ -154,9 +151,8 @@ describe('HourLogPolicy::checkIn', function () {
     });
 
     it('denies self-check-in when own HourLog is Interested (not yet confirmed)', function () {
-        $hourLog = HourLog::factory()->for($this->shift, 'shift')->create([
+        $hourLog = HourLog::factory()->for($this->shift, 'shift')->interested()->create([
             'user_id' => $this->member->id,
-            'status' => Interested::class,
         ]);
 
         expect(Gate::forUser($this->member)->allows('checkIn', $hourLog))->toBeFalse();

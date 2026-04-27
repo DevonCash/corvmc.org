@@ -58,6 +58,16 @@ class HourLogFactory extends Factory
     }
 
     /**
+     * Interested in a shift (default status, explicit alias).
+     */
+    public function interested(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => Interested::class,
+        ]);
+    }
+
+    /**
      * Confirmed for a shift.
      */
     public function confirmed(): static
