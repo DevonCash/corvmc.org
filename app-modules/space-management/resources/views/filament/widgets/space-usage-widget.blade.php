@@ -132,7 +132,7 @@
                                         @endif
                                         <x-filament::badge size="sm" :color="is_string($item['status']) ? match($item['status']) {
                                             'confirmed' => 'success',
-                                            'pending' => 'warning',
+                                            'scheduled' => 'warning',
                                             default => 'gray'
                                         } : $item['status']->getColor()">
                                             {{ substr(is_string($item['status']) ? ucfirst($item['status']) : $item['status']->getLabel(), 0, 1) }}

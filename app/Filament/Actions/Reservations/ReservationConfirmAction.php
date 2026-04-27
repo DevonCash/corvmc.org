@@ -18,7 +18,11 @@ class ReservationConfirmAction
                 return auth()->user()->can('confirm', $record);
             })
             ->visible(function (Reservation $record) {
-                return method_exists($record, 'canConfirm') && $record->canConfirm();
+                try {
+                    return method_exists($record, 'canConfirm') && $record->canConfirm();
+                } catch (\Throwable) {
+                    return false;
+                }
             })
             ->requiresConfirmation()
             ->modalHeading('Confirm Reservation')

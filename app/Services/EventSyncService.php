@@ -54,7 +54,7 @@ class EventSyncService
         ) {
             return [
                 'success' => true,
-                'conflicts' => ['reservations' => collect(), 'closures' => collect()],
+                'conflicts' => ['reservations' => collect(), 'productions' => collect(), 'closures' => collect()],
                 'reservation' => $existingReservation,
             ];
         }
@@ -75,7 +75,11 @@ class EventSyncService
         if ($hasConflicts && ! $force) {
             return [
                 'success' => false,
-                'conflicts' => $conflicts,
+                'conflicts' => [
+                    'reservations' => $conflicts->filter(fn ($item) => $item instanceof \CorvMC\SpaceManagement\Models\Reservation),
+                    'productions' => $conflicts->filter(fn ($item) => $item instanceof \CorvMC\Events\Models\Event),
+                    'closures' => $conflicts->filter(fn ($item) => $item instanceof \CorvMC\SpaceManagement\Models\SpaceClosure),
+                ],
                 'reservation' => null,
             ];
         }
@@ -101,7 +105,11 @@ class EventSyncService
 
         return [
             'success' => true,
-            'conflicts' => $conflicts,
+            'conflicts' => [
+                'reservations' => $conflicts->filter(fn ($item) => $item instanceof \CorvMC\SpaceManagement\Models\Reservation),
+                'productions' => $conflicts->filter(fn ($item) => $item instanceof \CorvMC\Events\Models\Event),
+                'closures' => $conflicts->filter(fn ($item) => $item instanceof \CorvMC\SpaceManagement\Models\SpaceClosure),
+            ],
             'reservation' => $reservation,
         ];
     }

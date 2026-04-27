@@ -58,13 +58,13 @@
                 <x-filament::icon :icon="match ($record->status) {
                     'confirmed' => 'tabler-clock-check',
                     'cancelled' => 'tabler-clock-x',
-                    'pending' => 'tabler-clock-question',
+                    'scheduled' => 'tabler-clock-question',
                     default => 'tabler-clock',
                 }" :class="'size-4 ' .
                     match ($record->status) {
                         'confirmed' => 'text-success-500',
                         'cancelled' => 'text-danger-500',
-                        'pending' => 'text-warning-500',
+                        'scheduled' => 'text-warning-500',
                         default => 'text-gray-500',
                     }" />
             </dt>
