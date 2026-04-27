@@ -99,6 +99,16 @@ class PermissionSeeder extends Seeder
             // Member Profile Management (continued)
             'delete member profiles',
             'restore member profiles',
+
+            // Volunteering
+            'volunteer.position.manage',
+            'volunteer.shift.manage',
+            'volunteer.manage',
+            'volunteer.checkin',
+            'volunteer.hours.approve',
+            'volunteer.hours.submit',
+            'volunteer.hours.report',
+            'volunteer.signup',
         ];
 
         foreach ($permissions as $permission) {
@@ -137,6 +147,10 @@ class PermissionSeeder extends Seeder
             'approve revisions',
             'reject revisions',
             'manage staff profiles',
+            'volunteer.manage',
+            'volunteer.checkin',
+            'volunteer.hours.approve',
+            'volunteer.hours.report',
         ]);
 
         // Production Manager - Event and show management
@@ -148,6 +162,10 @@ class PermissionSeeder extends Seeder
             'view bands',
             'create bands',
             'view band members',
+            'volunteer.shift.manage',
+            'volunteer.manage',
+            'volunteer.checkin',
+            'volunteer.hours.report',
         ]);
 
         // Practice Space Manager - Practice space and booking management
@@ -219,6 +237,7 @@ class PermissionSeeder extends Seeder
             'view bands',
             'view productions',
             'view reservations',
+            'volunteer.checkin',
         ]);
 
         // Sustaining Member - Enhanced features for paying members
@@ -227,6 +246,8 @@ class PermissionSeeder extends Seeder
             'view bands',
             'create bands',
             'view band members',
+            'volunteer.signup',
+            'volunteer.hours.submit',
         ]);
 
         // Member - Basic authenticated user
@@ -235,6 +256,8 @@ class PermissionSeeder extends Seeder
             'view bands',
             'create bands',
             'view band members',
+            'volunteer.signup',
+            'volunteer.hours.submit',
         ]);
     }
 }
