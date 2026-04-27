@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1a68b74e88ecc7985888a442aa1993b0",
+    "content-hash": "7066ab6aaeca0235c5eb0442ba36bc30",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1737,6 +1737,38 @@
                 "proprietary"
             ],
             "description": "Library components and cross-cutting utilities for CorvMC modules",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "corvmc/volunteering",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/volunteering",
+                "reference": "52babe90559748baa0796d300f61c666062c45aa"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "CorvMC\\Volunteering\\Providers\\VolunteeringServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CorvMC\\Volunteering\\": "src/",
+                    "CorvMC\\Volunteering\\Tests\\": "tests/",
+                    "CorvMC\\Volunteering\\Database\\Factories\\": "database/factories/",
+                    "CorvMC\\Volunteering\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
             "transport-options": {
                 "symlink": true,
                 "relative": true

@@ -88,6 +88,11 @@ class AppServiceProvider extends ServiceProvider
             // Sponsorship models
             'sponsor' => \CorvMC\Sponsorship\Models\Sponsor::class,
 
+            // Volunteering models
+            'volunteer_position' => \CorvMC\Volunteering\Models\Position::class,
+            'volunteer_shift' => \CorvMC\Volunteering\Models\Shift::class,
+            'volunteer_hour_log' => \CorvMC\Volunteering\Models\HourLog::class,
+
             // Local Resources models
             'resource_list' => \App\Models\ResourceList::class,
             'local_resource' => \App\Models\LocalResource::class,
@@ -138,6 +143,16 @@ class AppServiceProvider extends ServiceProvider
         \CorvMC\Events\Models\Event::observe(\App\Observers\EventObserver::class);
         \CorvMC\SpaceManagement\Models\SpaceClosure::observe(SpaceClosureObserver::class);
         Tag::observe(TagObserver::class);
+
+        // Volunteering module: cross-module relationships
+        if (class_exists(\CorvMC\Volunteering\Models\Shift::class)) {
+            \CorvMC\Volunteering\Models\Shift::resolveRelationUsing('event', function ($model) {
+                return $model->belongsTo(\CorvMC\Events\Models\Event::class, 'event_id');
+            });
+            User::resolveRelationUsing('volunteerHourLogs', function ($model) {
+                return $model->hasMany(\CorvMC\Volunteering\Models\HourLog::class, 'user_id');
+            });
+        }
 
         // Register facade aliases
         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
