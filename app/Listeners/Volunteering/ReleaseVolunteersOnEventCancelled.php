@@ -6,6 +6,7 @@ use CorvMC\Events\Events\EventCancelled;
 use CorvMC\Volunteering\Models\HourLog;
 use CorvMC\Volunteering\Models\Shift;
 use CorvMC\Volunteering\Services\HourLogService;
+use Illuminate\Support\Facades\Log;
 
 class ReleaseVolunteersOnEventCancelled
 {
@@ -24,7 +25,15 @@ class ReleaseVolunteersOnEventCancelled
         $service = app(HourLogService::class);
 
         foreach ($hourLogs as $hourLog) {
-            $service->release($hourLog);
+            try {
+                $service->release($hourLog);
+            } catch (\Throwable $e) {
+                Log::error('Failed to release volunteer on event cancellation', [
+                    'hour_log_id' => $hourLog->id,
+                    'event_id' => $event->event->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 }

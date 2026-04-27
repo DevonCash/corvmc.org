@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use CorvMC\Events\Enums\EventStatus;
 use CorvMC\Events\Events\EventCancelled;
 use CorvMC\Events\Models\Event;
 use CorvMC\Volunteering\Models\HourLog;
@@ -20,7 +21,7 @@ beforeEach(function () {
 
     $this->position = Position::factory()->create(['title' => 'Sound Engineer']);
 
-    $this->event = Event::factory()->create(['status' => \CorvMC\Events\Enums\EventStatus::Scheduled]);
+    $this->event = Event::factory()->create(['status' => EventStatus::Scheduled]);
 
     $this->shift = Shift::factory()
         ->for($this->position, 'position')
@@ -83,7 +84,7 @@ it('does not affect terminal-status hour logs', function () {
 });
 
 it('does not affect volunteers on other events', function () {
-    $otherEvent = Event::factory()->create(['status' => \CorvMC\Events\Enums\EventStatus::Scheduled]);
+    $otherEvent = Event::factory()->create(['status' => EventStatus::Scheduled]);
     $otherShift = Shift::factory()
         ->for($this->position, 'position')
         ->create([
@@ -107,7 +108,7 @@ it('does not affect volunteers on other events', function () {
 });
 
 it('handles events with no shifts gracefully', function () {
-    $emptyEvent = Event::factory()->create(['status' => \CorvMC\Events\Enums\EventStatus::Scheduled]);
+    $emptyEvent = Event::factory()->create(['status' => EventStatus::Scheduled]);
 
     EventCancelled::dispatch($emptyEvent);
 

@@ -161,14 +161,14 @@ class EventService
     {
         DB::transaction(function () use ($event) {
             $event->update(['status' => 'cancelled']);
-
-            // Notify attendees and organizer
-            if ($event->organizer) {
-                $event->organizer->notify(new EventCancelledNotification($event));
-            }
-
-            EventCancelled::dispatch($event);
         });
+
+        // Notify attendees and organizer
+        if ($event->organizer) {
+            $event->organizer->notify(new EventCancelledNotification($event));
+        }
+
+        EventCancelled::dispatch($event);
     }
 
     /**
