@@ -5,7 +5,6 @@ namespace App\Filament\Staff\Resources\SpaceManagement;
 use App\Filament\Staff\Resources\SpaceManagement\Pages\ListSpaceUsage;
 use App\Filament\Staff\Resources\SpaceManagement\Schemas\SpaceManagementForm;
 use App\Filament\Staff\Resources\SpaceManagement\Tables\SpaceManagementTable;
-use CorvMC\Finance\Models\Charge;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
@@ -60,15 +59,6 @@ class SpaceManagementResource extends Resource
                     return $models;
                 }
 
-                // Bulk-load charges to avoid N+1 queries.
-                // Standard ->with(['charge']) doesn't work because the base Reservation
-                // morph class ('reservation') doesn't match the actual chargeable_type
-                // ('rehearsal_reservation') stored on charges due to STI.
-                $charges = Charge::whereIn('chargeable_id', $models->pluck('id'))
-                    ->whereIn('chargeable_type', ['rehearsal_reservation', 'event_reservation'])
-                    ->get()
-                    ->keyBy('chargeable_id');
-
                 // Pre-compute "first reservation" flags to avoid N+1 EXISTS queries
                 // from isFirstReservationForUser() called in the responsibleUser column.
                 $userReservableIds = $models
@@ -91,8 +81,6 @@ class SpaceManagementResource extends Resource
                 }
 
                 foreach ($models as $model) {
-                    $model->setRelation('charge', $charges->get($model->id));
-
                     if ($model->reservable_type === 'user') {
                         $model->setIsFirstReservation(
                             ! $usersWithMultipleRehearsals->has($model->reservable_id)

@@ -85,7 +85,6 @@ class RehearsalReservationFactory extends Factory
 
     /**
      * Indicate that the reservation uses free hours.
-     * Note: Actual cost/payment is tracked via the Charge model.
      */
     public function free(): static
     {
@@ -110,7 +109,6 @@ class RehearsalReservationFactory extends Factory
 
     /**
      * Create a reservation for a sustaining member.
-     * Note: Actual cost/payment is tracked via the Charge model.
      */
     public function forSustainingMember(): static
     {

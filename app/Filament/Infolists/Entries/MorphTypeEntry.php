@@ -163,7 +163,6 @@ class MorphTypeEntry extends TextEntry
         // Check staff panel resources (for admins/staff)
         $staffResources = [
             \App\Models\User::class => 'filament.staff.resources.users.view',
-            \CorvMC\Finance\Models\Charge::class => 'filament.staff.resources.charges.view',
             \CorvMC\Moderation\Models\Report::class => 'filament.staff.resources.reports.view',
             \CorvMC\Sponsorship\Models\Sponsor::class => 'filament.staff.resources.sponsors.view',
         ];

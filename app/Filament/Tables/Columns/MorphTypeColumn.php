@@ -29,7 +29,6 @@ class MorphTypeColumn extends TextColumn
         'equipment_damage_report' => 'danger',
         
         // Finance
-        'charge' => 'success',
         'subscription' => 'purple',
         
         // Users & Profiles
@@ -69,7 +68,6 @@ class MorphTypeColumn extends TextColumn
         'equipment_damage_report' => 'tabler-alert-triangle',
         
         // Finance
-        'charge' => 'tabler-receipt',
         'subscription' => 'tabler-credit-card',
         
         // Users & Profiles
@@ -269,7 +267,6 @@ class MorphTypeColumn extends TextColumn
         // Check staff panel resources (for admins/staff)
         $staffResources = [
             \App\Models\User::class => 'filament.staff.resources.users.view',
-            \CorvMC\Finance\Models\Charge::class => 'filament.staff.resources.charges.view',
             \CorvMC\Moderation\Models\Report::class => 'filament.staff.resources.reports.view',
             \CorvMC\Sponsorship\Models\Sponsor::class => 'filament.staff.resources.sponsors.view',
         ];

@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use CorvMC\Finance\Facades\Finance;
-use CorvMC\Finance\Facades\PaymentService;
 use CorvMC\Finance\Facades\SubscriptionService;
 use CorvMC\Finance\Facades\MemberBenefitService;
 use CorvMC\Finance\Models\Transaction;
@@ -32,8 +30,6 @@ class StripeWebhookController extends CashierWebhookController
 
             if ($checkoutType === 'order') {
                 return $this->handleOrderCheckout($payload, $session, $metadata);
-            } elseif ($checkoutType === 'practice_space_reservation') {
-                return $this->handleReservationCheckout($session, $metadata);
             } elseif ($checkoutType === 'sliding_scale_membership') {
                 return $this->handleSubscriptionCheckout($session, $metadata);
             } elseif ($checkoutType === 'ticket_order') {
@@ -140,33 +136,6 @@ class StripeWebhookController extends CashierWebhookController
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-    }
-
-    /**
-     * Handle reservation checkout completion.
-     */
-    private function handleReservationCheckout(array $session, array $metadata): SymfonyResponse
-    {
-        $sessionId = $session['id'];
-        $paymentIntentId = $session['payment_intent'] ?? null;
-        $reservationId = $metadata['reservation_id'] ?? null;
-
-        $success = PaymentService::processCheckout(
-            $reservationId,
-            $sessionId,
-            $paymentIntentId
-        );
-
-        if (! $success && ! $reservationId) {
-            // Only return error if processing failed due to something other than missing ID
-            Log::warning('Stripe webhook: Failed to process reservation checkout', [
-                'session_id' => $sessionId,
-                'payment_intent_id' => $paymentIntentId,
-                'reservation_id' => $reservationId,
-            ]);
-        }
-
-        return $this->successMethod();
     }
 
     /**
@@ -354,53 +323,6 @@ class StripeWebhookController extends CashierWebhookController
             ]);
 
             return response('Error processing webhook', 500);
-        }
-
-        return $this->successMethod();
-    }
-
-    /**
-     * Handle payment intent payment failed webhook.
-     */
-    public function handlePaymentIntentPaymentFailed(array $payload): SymfonyResponse
-    {
-        try {
-            $paymentIntent = $payload['data']['object'];
-            $metadata = $paymentIntent['metadata'] ?? [];
-
-            // Only handle reservation payments
-            if (($metadata['type'] ?? '') !== 'practice_space_reservation') {
-                return $this->successMethod();
-            }
-
-            $reservationId = $metadata['reservation_id'] ?? null;
-
-            if (! $reservationId) {
-                Log::warning('Stripe webhook: No reservation ID in payment failure metadata');
-
-                return $this->successMethod();
-            }
-
-            $reservation = Reservation::find($reservationId);
-
-            if (! $reservation) {
-                Log::error('Stripe webhook: Reservation not found for payment failure', ['reservation_id' => $reservationId]);
-
-                return $this->successMethod();
-            }
-
-            // Handle failed payment
-            PaymentService::handleFailedPayment($reservation);
-
-            Log::info('Stripe webhook: Processed payment failure', [
-                'reservation_id' => $reservationId,
-                'payment_intent_id' => $paymentIntent['id'],
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Stripe webhook: Error processing payment_intent.payment_failed', [
-                'error' => $e->getMessage(),
-                'payload' => $payload,
-            ]);
         }
 
         return $this->successMethod();

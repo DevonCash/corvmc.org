@@ -195,7 +195,7 @@ class OrderSeeder extends Seeder
             'total_amount' => 0,
         ]);
 
-        $lineItems = Finance::price([$reservation]);
+        $lineItems = Finance::price([$reservation], $user);
 
         foreach ($lineItems as $lineItem) {
             $lineItem->order_id = $order->id;

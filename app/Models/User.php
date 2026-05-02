@@ -287,11 +287,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
         return $this->productions();
     }
 
-    public function charges(): HasMany
-    {
-        return $this->hasMany(\CorvMC\Finance\Models\Charge::class);
-    }
-
     public function orders(): HasMany
     {
         return $this->hasMany(\CorvMC\Finance\Models\Order::class);

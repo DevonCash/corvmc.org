@@ -35,7 +35,6 @@ use Spatie\ModelStates\HasStates;
  * @property string|null $reservable_type
  * @property int|null $reservable_id
  * @property string|null $google_calendar_event_id
- * @property-read \CorvMC\Finance\Models\Charge|null $charge
  *
  * @mixin \Eloquent
  */
@@ -184,7 +183,7 @@ class RehearsalReservation extends Reservation implements InvitationSubject, Rec
     /**
      * Get the price per unit (hour) from config.
      *
-     * Implements Chargeable::getPricePerUnit()
+     * Used by RehearsalProduct for pricing.
      */
     public function getPricePerUnit(): float
     {
@@ -194,7 +193,7 @@ class RehearsalReservation extends Reservation implements InvitationSubject, Rec
     /**
      * Get the billable hours for this reservation.
      *
-     * Implements Chargeable::getBillableUnits()
+     * Used by RehearsalProduct for pricing.
      */
     public function getBillableUnits(): float
     {
@@ -208,7 +207,7 @@ class RehearsalReservation extends Reservation implements InvitationSubject, Rec
     /**
      * Get a human-readable description for the charge.
      *
-     * Implements Chargeable::getChargeableDescription()
+     * Used by RehearsalProduct for line item descriptions.
      */
     public function getChargeableDescription(): string
     {
@@ -221,7 +220,7 @@ class RehearsalReservation extends Reservation implements InvitationSubject, Rec
     /**
      * Get the user responsible for payment.
      *
-     * Implements Chargeable::getBillableUser()
+     * Used by RehearsalProduct for credit eligibility.
      */
     public function getBillableUser(): User
     {

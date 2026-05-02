@@ -4,7 +4,7 @@ namespace App\Filament\Staff\Resources\Users\Actions;
 
 use App\Models\User;
 use Brick\Money\Money;
-use CorvMC\Finance\Facades\PaymentService;
+use CorvMC\Finance\Facades\FeeService;
 use CorvMC\Finance\Facades\SubscriptionService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Slider;
@@ -43,7 +43,7 @@ class CreateMembershipSubscriptionAction
                     ->helperText(function ($get) {
                         $amount = Money::of($get('amount'), 'USD');
                         if (! $amount->isZero()) {
-                            $feeInfo = PaymentService::getFeeDisplayInfo($amount);
+                            $feeInfo = FeeService::getFeeDisplayInfo($amount);
 
                             return $feeInfo['message'];
                         }
@@ -59,7 +59,7 @@ class CreateMembershipSubscriptionAction
                         if ($amount->isZero()) {
                             return 'Please select a contribution amount';
                         }
-                        $breakdown = PaymentService::getFeeBreakdown($amount, $get('cover_fees'));
+                        $breakdown = FeeService::getFeeBreakdown($amount, $get('cover_fees'));
                         $totalAmount = Money::of($breakdown['total_amount'], 'USD');
 
                         return $breakdown['description'] . ' = ' . $totalAmount->formatTo('en_US') . ' total per month';

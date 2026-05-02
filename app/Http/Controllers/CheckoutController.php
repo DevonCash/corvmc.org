@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use CorvMC\Finance\Facades\Finance;
-use CorvMC\Finance\Facades\PaymentService;
 use CorvMC\Finance\Facades\SubscriptionService;
 use CorvMC\Finance\Models\Transaction;
 use Filament\Notifications\Notification;
@@ -93,11 +92,6 @@ class CheckoutController extends Controller
                 // Process payment immediately for better UX
                 if ($checkoutType === 'order') {
                     $this->settleOrderTransaction($metadata, $session);
-                } elseif ($checkoutType === 'practice_space_reservation') {
-                    PaymentService::processCheckout(
-                        $metadata['reservation_id'] ?? null,
-                        $sessionId
-                    );
                 } elseif ($checkoutType === 'sliding_scale_membership') {
                     SubscriptionService::processCheckout(
                         $metadata['user_id'] ?? null,
@@ -237,12 +231,6 @@ class CheckoutController extends Controller
                 ->success()
                 ->send(),
 
-            'practice_space_reservation' => Notification::make()
-                ->title('Reservation Payment Successful!')
-                ->body('Your practice space reservation has been confirmed. You will receive a confirmation email shortly.')
-                ->success()
-                ->send(),
-
             default => Notification::make()
                 ->title('Payment Successful!')
                 ->body('Your payment has been processed successfully. You will receive confirmation shortly.')
@@ -266,12 +254,6 @@ class CheckoutController extends Controller
             'sliding_scale_membership' => Notification::make()
                 ->title('Subscription Processing')
                 ->body('Your subscription is being processed. You will receive confirmation shortly.')
-                ->warning()
-                ->send(),
-
-            'practice_space_reservation' => Notification::make()
-                ->title('Reservation Processing')
-                ->body('Your reservation payment is being processed. You will receive confirmation shortly.')
                 ->warning()
                 ->send(),
 
@@ -301,12 +283,6 @@ class CheckoutController extends Controller
                 ->warning()
                 ->send(),
 
-            'practice_space_reservation' => Notification::make()
-                ->title('Reservation Cancelled')
-                ->body('Your reservation checkout was cancelled. You can try again anytime.')
-                ->warning()
-                ->send(),
-
             default => Notification::make()
                 ->title('Checkout Cancelled')
                 ->body('Your checkout was cancelled. You can try again anytime.')
@@ -322,7 +298,6 @@ class CheckoutController extends Controller
     {
         return match ($checkoutType) {
             'order' => $this->getOrderRedirect($metadata),
-            'practice_space_reservation' => $this->getReservationRedirect($metadata),
             'sliding_scale_membership' => redirect()->route('filament.member.pages.membership'),
             default => redirect()->route('filament.member.pages.profile'),
         };
@@ -335,19 +310,9 @@ class CheckoutController extends Controller
     {
         return match ($checkoutType) {
             'order' => redirect()->route('filament.member.pages.profile'),
-            'practice_space_reservation' => redirect()->route('filament.member.resources.reservations.index'),
             'sliding_scale_membership' => redirect()->route('filament.member.pages.membership'),
             default => redirect()->route('filament.member.pages.profile'),
         };
-    }
-
-    /**
-     * Get reservation-specific redirect from metadata.
-     */
-    private function getReservationRedirect(array $metadata)
-    {
-        // Always redirect to the index page - users can view/edit from there
-        return redirect()->route('filament.member.resources.reservations.index');
     }
 
     /**

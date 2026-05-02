@@ -1,12 +1,14 @@
 @php
     use App\Models\User;
     use Carbon\Carbon;
-    use CorvMC\Finance\Facades\PricingService;
     use Filament\Facades\Filament;
 
     $start = $get('reserved_at');
     $end = $get('reserved_until');
     $notes = $get('notes');
+    $costCents = (int) $get('cost');
+    $freeHoursUsed = (float) $get('free_hours_used');
+    $hoursUsed = (float) $get('hours_used');
     $band = Filament::getTenant();
     $user = auth()->user();
 
@@ -18,18 +20,14 @@
         $startFormatted = Carbon::parse($start)->format('l, M j, Y');
         $startTime = Carbon::parse($start)->format('g:i A');
         $endTime = Carbon::parse($end)->format('g:i A');
-        $duration = Carbon::parse($start)->diffInMinutes(Carbon::parse($end)) / 60;
+        $duration = $hoursUsed ?: Carbon::parse($start)->diffInMinutes(Carbon::parse($end)) / 60;
 
-        $calculation = PricingService::calculateReservationCost(
-            $user,
-            Carbon::parse($start),
-            Carbon::parse($end)
-        );
-
-        $reservationDate = Carbon::parse($start);
-        $paidHours = $calculation['total_hours'] - $calculation['free_hours'];
+        $hourlyRate = config('finance.pricing.' . \CorvMC\SpaceManagement\Models\RehearsalReservation::class . '.rate', 1500) / 100;
+        $freeHours = $freeHoursUsed * 0.5; // blocks to hours
+        $paidHours = max(0, $duration - $freeHours);
         $isSustainingMember = $user->hasRole('sustaining member');
-        $hourlyRate = config('reservation.hourly_rate');
+        $costFormatted = '$' . number_format($costCents / 100, 2);
+        $isFree = $costCents <= 0;
     }
 @endphp
 
@@ -95,15 +93,15 @@
                     <div class="flex items-center gap-2">
                         <x-filament::icon
                             icon="tabler-gift"
-                            class="w-5 h-5 {{ $calculation['free_hours'] > 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-400 dark:text-gray-600' }}"
+                            class="w-5 h-5 {{ $freeHours > 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-400 dark:text-gray-600' }}"
                         />
                         <span class="text-sm text-gray-700 dark:text-gray-300">
                             Free Hours ({{ $user->name }})
                         </span>
                     </div>
-                    <div class="font-semibold {{ $calculation['free_hours'] > 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-500 dark:text-gray-400' }}">
-                        @if($calculation['free_hours'] > 0)
-                            -{{ number_format($calculation['free_hours'], 1) }} {{ Str::plural('hour', $calculation['free_hours']) }}
+                    <div class="font-semibold {{ $freeHours > 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-500 dark:text-gray-400' }}">
+                        @if($freeHours > 0)
+                            -{{ number_format($freeHours, 1) }} {{ Str::plural('hour', $freeHours) }}
                         @else
                             0.0 hours
                         @endif
@@ -135,12 +133,12 @@
                         />
                         <span class="text-lg font-bold text-gray-900 dark:text-gray-100">Total</span>
                     </div>
-                    <span class="text-2xl font-bold {{ $calculation['cost']->isZero() ? 'text-success-600 dark:text-success-400' : 'text-gray-900 dark:text-gray-100' }}">
-                        {{ $calculation['cost']->formatTo('en_US') }}
+                    <span class="text-2xl font-bold {{ $isFree ? 'text-success-600 dark:text-success-400' : 'text-gray-900 dark:text-gray-100' }}">
+                        {{ $costFormatted }}
                     </span>
                 </div>
 
-                @if($calculation['cost']->isZero())
+                @if($isFree)
                     <div class="flex items-center gap-2 text-sm text-success-700 dark:text-success-300 bg-success-50 dark:bg-success-900/20 rounded-lg px-3 py-2">
                         <x-filament::icon
                             icon="tabler-check"

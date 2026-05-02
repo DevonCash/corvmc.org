@@ -7,7 +7,7 @@ use App\Filament\Band\Resources\BandReservationsResource;
 use CorvMC\Bands\Models\Band;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Carbon\Carbon;
-use CorvMC\Finance\Facades\PaymentService;
+use CorvMC\Finance\Facades\Finance;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
@@ -225,12 +225,15 @@ class CreateBandReservation extends CreateRecord
             'reserved_until' => Carbon::parse($end),
         ]);
 
-        // Calculate cost using the booking user's credits
-        $calculation = PaymentService::calculateCost($reservation);
+        // Calculate cost using Finance::price() which applies credit discounts
+        $lineItems = Finance::price([$reservation], $user);
+        $totalCents = (int) $lineItems->sum('amount');
+        $hours = $reservation->reserved_at->floatDiffInHours($reservation->reserved_until);
+        $discountBlocks = (int) abs($lineItems->filter->isDiscount()->sum('quantity'));
 
-        $set('cost', $calculation['cost']->getMinorAmount()->toInt());
-        $set('free_hours_used', $calculation['free_hours']);
-        $set('hours_used', $calculation['total_hours']);
+        $set('cost', max(0, $totalCents));
+        $set('free_hours_used', $discountBlocks);
+        $set('hours_used', $hours);
     }
 
     protected function handleRecordCreation(array $data): RehearsalReservation

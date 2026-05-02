@@ -4,7 +4,6 @@ namespace CorvMC\Finance\Services;
 
 use Brick\Math\RoundingMode;
 use Brick\Money\Money;
-use CorvMC\SpaceManagement\Models\RehearsalReservation;
 
 /**
  * Service for managing payment processing fees and calculations.
@@ -163,14 +162,4 @@ class FeeService
         ];
     }
 
-    /**
-     * Mark a reservation as refunded.
-     * 
-     * @param RehearsalReservation $reservation The reservation to mark as refunded
-     * @param string|null $notes Optional refund notes
-     */
-    public function markReservationAsRefunded(RehearsalReservation $reservation, ?string $notes = null): void
-    {
-        $reservation->charge?->markAsRefunded($notes);
-    }
 }

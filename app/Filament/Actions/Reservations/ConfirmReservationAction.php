@@ -59,22 +59,41 @@ class ConfirmReservationAction
             ->modalHeading('Confirm Reservation')
             ->modalSubmitAction(false)
             ->modalCancelActionLabel('Close')
-            ->extraModalFooterActions(fn (Action $action) => [
-                $action->makeModalSubmitAction('confirmStripe')
-                    ->label('Pay Online')
-                    ->icon('tabler-credit-card')
-                    ->color('success')
-                    ->action(function (RehearsalReservation $record) {
-                        static::handleConfirm($record, 'stripe');
-                    }),
-                $action->makeModalSubmitAction('confirmCash')
-                    ->label('Pay with Cash')
-                    ->icon('tabler-cash')
-                    ->color('warning')
-                    ->action(function (RehearsalReservation $record) {
-                        static::handleConfirm($record, 'cash');
-                    }),
-            ])
+            ->extraModalFooterActions(function (Action $action) {
+                $record = $action->getRecord();
+                $user = $record->getResponsibleUser();
+                $lineItems = Finance::price([$record], $user);
+                $totalCents = (int) $lineItems->sum('amount');
+
+                if ($totalCents <= 0) {
+                    return [
+                        $action->makeModalSubmitAction('confirmFree')
+                            ->label('Reserve')
+                            ->icon('tabler-calendar-check')
+                            ->color('success')
+                            ->action(function (RehearsalReservation $record) {
+                                static::handleConfirm($record, 'free');
+                            }),
+                    ];
+                }
+
+                return [
+                    $action->makeModalSubmitAction('confirmStripe')
+                        ->label('Pay Online')
+                        ->icon('tabler-credit-card')
+                        ->color('success')
+                        ->action(function (RehearsalReservation $record) {
+                            static::handleConfirm($record, 'stripe');
+                        }),
+                    $action->makeModalSubmitAction('confirmCash')
+                        ->label('Pay with Cash')
+                        ->icon('tabler-cash')
+                        ->color('warning')
+                        ->action(function (RehearsalReservation $record) {
+                            static::handleConfirm($record, 'cash');
+                        }),
+                ];
+            })
             ->action(fn () => null);
     }
 

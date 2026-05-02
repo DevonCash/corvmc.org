@@ -16,10 +16,8 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use CorvMC\Finance\Models\Charge;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Watson\Validating\ValidatingTrait;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\ModelStates\HasStates;
@@ -202,17 +200,6 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     }
 
     /**
-     * Get the charge for this reservation.
-     * Only RehearsalReservations have charges, but this relationship
-     * is defined here to support queries on the base model.
-     */
-    public function charge(): MorphOne
-    {
-        return $this->morphOne(Charge::class, 'chargeable');
-    }
-
-
-    /**
      * Query scope: Get upcoming reservations within a specified number of days.
      *
      * @param Builder $query
@@ -354,8 +341,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
     /**
      * Check if this reservation requires payment.
      *
-     * For RehearsalReservations with charges, this delegates to the charge system.
-     * Override in subclasses that implement Chargeable.
+     * Override in subclasses that support pricing.
      */
     public function requiresPayment(): bool
     {
