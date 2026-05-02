@@ -61,7 +61,10 @@ class ListReservations extends ListRecords
     {
         return [
             'upcoming' => Tab::make()
-                ->modifyQueryUsing(fn(Builder $query) => $query->upcoming()),
+                ->modifyQueryUsing(fn(Builder $query) => $query
+                    ->where('reserved_until', '>', now())
+                    ->whereNotState('status', \CorvMC\SpaceManagement\States\ReservationState\Cancelled::class)
+                    ->orderBy('reserved_at', 'asc')),
             'all' => Tab::make(),
         ];
     }
