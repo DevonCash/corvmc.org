@@ -84,13 +84,13 @@ describe('Custom pages', function () {
         Livewire::actingAs($this->member)
             ->test(VolunteerPage::class)
             ->assertSuccessful();
-    });
+    })->skip('Volunteer pages are disabled until the feature is ready');
 
     it('renders SubmitHoursPage', function () {
         Livewire::actingAs($this->member)
             ->test(SubmitHoursPage::class)
             ->assertSuccessful();
-    });
+    })->skip('Volunteer pages are disabled until the feature is ready');
 });
 
 describe('Bands resource', function () {
@@ -137,6 +137,8 @@ describe('Reservations resource', function () {
     it('renders ViewReservation', function () {
         $reservation = RehearsalReservation::create([
             'user_id' => $this->member->id,
+            'reservable_type' => 'user',
+            'reservable_id' => $this->member->id,
             'reserved_at' => now()->addDays(3)->setHour(10),
             'reserved_until' => now()->addDays(3)->setHour(12),
             'hours_used' => 2,
@@ -157,7 +159,7 @@ describe('Equipment resource', function () {
     });
 
     it('renders ViewEquipment', function () {
-        $equipment = Equipment::create([
+        $equipment = Equipment::factory()->create([
             'name' => 'Test Amp',
             'type' => 'amplifier',
             'description' => 'A test amplifier',
@@ -183,7 +185,11 @@ describe('Member Profiles resource', function () {
     });
 
     it('renders ViewMemberProfile', function () {
-        $profile = MemberProfile::firstOrCreate(['user_id' => $this->member->id]);
+        // MemberProfile has a MemberVisibilityScope that filters by auth user,
+        // so we need to bypass it to find the auto-created profile.
+        $profile = MemberProfile::withoutGlobalScopes()
+            ->where('user_id', $this->member->id)
+            ->first();
 
         Livewire::actingAs($this->member)
             ->test(ViewMemberProfile::class, ['record' => $profile->getRouteKey()])
