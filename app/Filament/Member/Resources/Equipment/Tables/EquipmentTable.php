@@ -118,7 +118,7 @@ class EquipmentTable
                 TextColumn::make('location')
                     ->toggleable()
                     ->placeholder('Not specified')
-                    ->visible(fn (EquipmentModel $record) => Auth::user()->can('update', $record)),
+                    ->visible(fn () => Auth::user()->hasRole('equipment manager')),
             ])
             ->filters([
                 SelectFilter::make('type')

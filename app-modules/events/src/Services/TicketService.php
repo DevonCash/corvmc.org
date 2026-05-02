@@ -195,9 +195,6 @@ class TicketService
             // Generate tickets immediately
             $this->generateTickets($ticketOrder);
 
-            // Increment sold count on the event
-            $event->incrementTicketsSold($quantity);
-
             // Create Finance Order with payment method, settled immediately
             if ($totalCents > 0) {
                 $lineItems = Finance::price([$ticketOrder], $staffUser);

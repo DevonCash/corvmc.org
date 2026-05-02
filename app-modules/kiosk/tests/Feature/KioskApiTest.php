@@ -299,8 +299,7 @@ describe('Kiosk: Door Sales', function () {
                 ],
             ]);
 
-        $this->event->refresh();
-        expect($this->event->tickets_sold)->toBe(2);
+        expect($this->event->fresh()->getTicketsSold())->toBe(2);
     });
 
     it('applies member discount to door sale', function () {

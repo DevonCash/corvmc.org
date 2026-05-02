@@ -57,7 +57,6 @@ class EventFormData extends Data
         public bool|Optional|null $ticketing_enabled = new Optional,
         public int|Optional|null $ticket_quantity = new Optional,
         public int|Optional|null $ticket_price_override = new Optional,
-        public int|Optional|null $tickets_sold = new Optional,
 
         // Relationship fields (handled separately by actions)
         public array|Optional $tags = new Optional,
@@ -211,7 +210,6 @@ class EventFormData extends Data
             'ticketing_enabled',
             'ticket_quantity',
             'ticket_price_override',
-            'tickets_sold',
         ];
 
         foreach ($directFields as $field) {

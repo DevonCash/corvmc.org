@@ -76,7 +76,7 @@ class CheckInController extends Controller
             'type' => 'success',
             'name' => $ticket->getHolderName(),
             'stats' => [
-                'sold' => $event->tickets_sold ?? 0,
+                'sold' => $event->getTicketsSold(),
                 'checked_in' => $checkedInCount,
             ],
         ]);

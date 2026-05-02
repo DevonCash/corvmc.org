@@ -56,7 +56,7 @@ class EventController extends Controller
             ->count();
 
         return response()->json([
-            'sold' => $event->tickets_sold ?? 0,
+            'sold' => $event->getTicketsSold(),
             'capacity' => $event->ticket_quantity,
             'checked_in' => $checkedInCount,
         ]);
@@ -73,7 +73,7 @@ class EventController extends Controller
             'start_datetime' => $event->start_datetime->toIso8601String(),
             'venue_name' => $event->venue_name,
             'ticket_quantity' => $event->ticket_quantity,
-            'tickets_sold' => $event->tickets_sold ?? 0,
+            'tickets_sold' => $event->getTicketsSold(),
             'base_price' => $event->getBaseTicketPrice()->getMinorAmount(),
         ];
     }

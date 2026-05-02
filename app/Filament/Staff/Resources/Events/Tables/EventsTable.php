@@ -48,19 +48,21 @@ class EventsTable
                     ->label('Start Time')
                     ->dateTime('M d, Y h:i A')
                     ->description(fn ($record) => $record->start_datetime->diffForHumans(parts: 1)),
-                TextColumn::make('tickets_sold')
+                TextColumn::make('tickets_sold_display')
                     ->label('Tickets')
                     ->alignCenter()
-                    ->formatStateUsing(function ($state, $record) {
+                    ->state(function ($record) {
                         if (! $record->ticketing_enabled) {
                             return '—';
                         }
 
+                        $sold = $record->getTicketsSold();
+
                         if ($record->ticket_quantity === null) {
-                            return (string) ($state ?? 0);
+                            return (string) $sold;
                         }
 
-                        return ($state ?? 0).'/'.$record->ticket_quantity;
+                        return $sold.'/'.$record->ticket_quantity;
                     })
                     ->color(fn ($record) => $record->isSoldOut() ? 'danger' : null),
                 IconColumn::make('publication_status')

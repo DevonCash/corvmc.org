@@ -12,6 +12,7 @@ use CorvMC\Events\Concerns\HasPoster;
 use CorvMC\Events\Concerns\HasPublishing;
 use CorvMC\Events\Data\LocationData;
 use CorvMC\Events\Enums\EventStatus;
+use CorvMC\Events\Enums\TicketStatus;
 use CorvMC\Moderation\Enums\Visibility;
 use CorvMC\Moderation\Models\ContentModel;
 use CorvMC\Support\Concerns\HasInvitations;
@@ -152,6 +153,8 @@ class Event extends ContentModel implements InvitationSubject, Recurrable
 {
     use HasFactory, HasInvitations, HasPoster, HasPublishing, HasRecurringSeries, HasTimePeriod, LogsActivity, SoftDeletes;
 
+    protected ?int $memoizedTicketsSold = null;
+
     /**
      * Default attribute values.
      *
@@ -159,7 +162,6 @@ class Event extends ContentModel implements InvitationSubject, Recurrable
      */
     protected $attributes = [
         'ticketing_enabled' => false,
-        'tickets_sold' => 0,
     ];
 
     protected static function newFactory(): EventFactory
@@ -207,7 +209,6 @@ class Event extends ContentModel implements InvitationSubject, Recurrable
         'ticketing_enabled',
         'ticket_quantity',
         'ticket_price_override',
-        'tickets_sold',
         'published_at',
         'organizer_id',
         'status',
@@ -240,7 +241,6 @@ class Event extends ContentModel implements InvitationSubject, Recurrable
             'ticketing_enabled' => 'boolean',
             'ticket_quantity' => 'integer',
             'ticket_price_override' => 'integer',
-            'tickets_sold' => 'integer',
         ];
     }
 
@@ -596,7 +596,7 @@ class Event extends ContentModel implements InvitationSubject, Recurrable
             return null; // Unlimited
         }
 
-        return max(0, $this->ticket_quantity - $this->tickets_sold);
+        return max(0, $this->ticket_quantity - $this->getTicketsSold());
     }
 
     /**
@@ -620,23 +620,15 @@ class Event extends ContentModel implements InvitationSubject, Recurrable
     }
 
     /**
-     * Increment the tickets sold count.
+     * Get the number of tickets sold (computed from active tickets).
+     *
+     * Counts tickets with Valid or CheckedIn status. Memoized per model instance.
      */
-    public function incrementTicketsSold(int $quantity = 1): self
+    public function getTicketsSold(): int
     {
-        $this->increment('tickets_sold', $quantity);
-
-        return $this;
-    }
-
-    /**
-     * Decrement the tickets sold count.
-     */
-    public function decrementTicketsSold(int $quantity = 1): self
-    {
-        $this->decrement('tickets_sold', $quantity);
-
-        return $this;
+        return $this->memoizedTicketsSold ??= $this->tickets()
+            ->whereIn('tickets.status', [TicketStatus::Valid, TicketStatus::CheckedIn])
+            ->count();
     }
 
 

@@ -75,8 +75,14 @@ describe('Ticketing: Event Configuration', function () {
     it('tracks tickets remaining correctly', function () {
         expect($this->event->getTicketsRemaining())->toBe(100);
 
-        $this->event->incrementTicketsSold(10);
+        $order = TicketOrder::factory()->completed()->create([
+            'event_id' => $this->event->id,
+            'quantity' => 10,
+        ]);
+        TicketService::generateTickets($order);
 
+        // Fresh instance to clear memoization
+        $this->event = $this->event->fresh();
         expect($this->event->getTicketsRemaining())->toBe(90);
     });
 
@@ -337,6 +343,20 @@ describe('Ticketing: Refund Order', function () {
         expect($order->tickets()->where('status', 'voided')->count())->toBe(3);
     });
 
+    it('reduces tickets sold count when refunding', function () {
+        $order = TicketOrder::factory()->completed()->create([
+            'event_id' => $this->event->id,
+            'quantity' => 3,
+        ]);
+        TicketService::generateTickets($order);
+
+        expect($this->event->fresh()->getTicketsSold())->toBe(3);
+
+        TicketService::refundOrder($order);
+
+        expect($this->event->fresh()->getTicketsSold())->toBe(0);
+    });
+
     it('accepts optional reason parameter', function () {
         $order = TicketOrder::factory()->completed()->create([
             'event_id' => $this->event->id,
@@ -352,12 +372,15 @@ describe('Ticketing: Refund Order', function () {
 
 describe('Ticketing: Sold Out', function () {
     it('detects sold out event', function () {
-        $this->event->update([
-            'ticket_quantity' => 10,
-            'tickets_sold' => 10,
-        ]);
+        $this->event->update(['ticket_quantity' => 10]);
 
-        expect($this->event->isSoldOut())->toBeTrue();
+        $order = TicketOrder::factory()->completed()->create([
+            'event_id' => $this->event->id,
+            'quantity' => 10,
+        ]);
+        TicketService::generateTickets($order);
+
+        expect($this->event->fresh()->isSoldOut())->toBeTrue();
     });
 
     it('prevents order creation when not enough tickets', function () {

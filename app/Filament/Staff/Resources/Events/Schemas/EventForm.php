@@ -170,12 +170,13 @@ class EventForm
                     ->placeholder(number_format(config('ticketing.default_price', 1000) / 100, 2))
                     ->helperText('Default: $' . number_format(config('ticketing.default_price', 1000) / 100, 2)),
 
-                TextInput::make('tickets_sold')
+                TextInput::make('tickets_sold_display')
                     ->label('Tickets Sold')
                     ->numeric()
                     ->default(0)
                     ->disabled()
-                    ->dehydrated(false),
+                    ->dehydrated(false)
+                    ->formatStateUsing(fn ($record) => $record?->getTicketsSold() ?? 0),
             ]);
     }
 
