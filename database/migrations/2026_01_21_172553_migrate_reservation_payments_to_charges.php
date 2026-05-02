@@ -1,8 +1,6 @@
 <?php
 
 use App\Models\User;
-use CorvMC\Finance\Enums\ChargeStatus;
-use CorvMC\Finance\Models\Charge;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +20,7 @@ return new class extends Migration
 
         // Get all rehearsal reservations that don't have a charge yet
         $reservations = RehearsalReservation::withoutGlobalScopes()
-            ->whereNotIn('id', Charge::where('chargeable_type', RehearsalReservation::class)->pluck('chargeable_id'))
+            ->whereNotIn('id', DB::table('charges')->where('chargeable_type', RehearsalReservation::class)->pluck('chargeable_id'))
             ->get();
 
         $migrated = 0;
@@ -62,13 +60,13 @@ return new class extends Migration
             $netAmount = $reservation->cost->getMinorAmount()->toInt();
             $grossAmount = $netAmount + $freeHoursValue;
 
-            // Create charge record
-            Charge::create([
+            // Insert directly via DB to avoid MoneyCast treating cents as dollars
+            DB::table('charges')->insert([
                 'user_id' => $userId,
                 'chargeable_type' => RehearsalReservation::class,
                 'chargeable_id' => $reservation->id,
                 'amount' => $grossAmount,
-                'credits_applied' => $creditsApplied,
+                'credits_applied' => $creditsApplied ? json_encode($creditsApplied) : null,
                 'net_amount' => $netAmount,
                 'status' => $status,
                 'payment_method' => $reservation->payment_method,
@@ -90,21 +88,20 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Delete all charges for rehearsal reservations
-        Charge::where('chargeable_type', RehearsalReservation::class)->delete();
+        DB::table('charges')->where('chargeable_type', RehearsalReservation::class)->delete();
     }
 
     /**
-     * Map old PaymentStatus values to ChargeStatus.
+     * Map old PaymentStatus values to charge status strings.
      */
-    protected function mapPaymentStatus(?string $paymentStatus): ChargeStatus
+    protected function mapPaymentStatus(?string $paymentStatus): string
     {
         return match ($paymentStatus) {
-            'paid' => ChargeStatus::Paid,
-            'comped' => ChargeStatus::Comped,
-            'refunded' => ChargeStatus::Refunded,
-            'n/a' => ChargeStatus::Paid, // N/A means no payment needed (free)
-            default => ChargeStatus::Pending, // unpaid or null
+            'paid' => 'paid',
+            'comped' => 'comped',
+            'refunded' => 'refunded',
+            'n/a' => 'paid', // N/A means no payment needed (free)
+            default => 'pending', // unpaid or null
         };
     }
 };

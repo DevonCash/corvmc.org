@@ -2,7 +2,8 @@
 
 1. ~~Show number of tickets sold instead of number of ticket orders in the Events index~~ Done — tickets_sold is now computed live from ticket records via Event::getTicketsSold()
 2. ~~When you create a reservation with full credit coverage, it still shows "Pay online" and "Pay with cash" instead of "reserve"~~ Done — ConfirmReservationAction now checks cost and shows "Reserve" button when credits fully cover the reservation. Also removed entire Charge payment system (PaymentService, PricingService, Charge model, ChargeStatus enum, old payment actions, BackfillChargesToOrders command) and migrated all references to Finance Order/Transaction system.
-3. When a reservation is cancelled before its start time, its order should be refunded
-4. Staff dashboard revenue numbers are off by about two factors of ten
+3. ~~When a reservation is cancelled before its start time, its order should be refunded~~ Done — CancelOrderOnReservationCancelled listener now calls Finance::refund() for Completed/Comped orders when reserved_at is future. Also fixed activeOrderCache staleness bug that caused PurchasableLockedException.
+4. ~~Staff dashboard revenue numbers are off by about two factors of ten~~ Done — Root cause: migrate_reservation_payments_to_charges migration passed cents to Charge::create() but MoneyCast::set() treated them as dollars (100x inflation). BackfillChargesToOrders then copied inflated values to Orders/Transactions. Fixed migration to use DB::table() to bypass MoneyCast, corrected production data via SQL.
 5. The "free hours used" box on the member's practice space reservation area shouldn't include refunded orders in its reckoning for hours used.
 6. Update "Upcoming" reservation tab to show all future reservations without a cutoff
+7. We've got Ultraloq locks now that can be configured via REST api – auto generate a code for each reservation, and compose an sms message to be copied in prep for Twilio integration
