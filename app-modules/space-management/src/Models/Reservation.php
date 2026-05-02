@@ -33,7 +33,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
 
     public function getLockableFields(): array
     {
-        return ['status', 'updated_at', 'cancelled_at', 'confirmed_at', 'completed_at'];
+        return ['status', 'updated_at', 'cancelled_at', 'confirmed_at', 'completed_at', 'cancellation_reason'];
     }
 
     protected $table = 'reservations';

@@ -43,6 +43,36 @@ class FinanceManager
      */
     protected array $activeOrderCache = [];
 
+    /**
+     * Clear the active order cache for all products referenced by an Order's line items.
+     *
+     * Called after cancel/refund so the purchasable lock sees the updated state.
+     */
+    public function clearActiveOrderCache(?Order $order = null): void
+    {
+        if ($order === null) {
+            $this->activeOrderCache = [];
+
+            return;
+        }
+
+        foreach ($order->lineItems as $lineItem) {
+            if ($lineItem->product_id === null) {
+                continue;
+            }
+
+            // Find the model class for this product type
+            $productType = $lineItem->product_type;
+            if (isset($this->productsByType[$productType])) {
+                $modelClass = $this->productsByType[$productType]::$model;
+                if ($modelClass) {
+                    $cacheKey = $modelClass . ':' . $lineItem->product_id;
+                    unset($this->activeOrderCache[$cacheKey]);
+                }
+            }
+        }
+    }
+
     // =========================================================================
     // Registry
     // =========================================================================
@@ -697,6 +727,8 @@ class FinanceManager
 
             $order->status->transitionTo(\CorvMC\Finance\States\OrderState\Cancelled::class);
 
+            $this->clearActiveOrderCache($order);
+
             return $order->fresh(['lineItems', 'transactions']);
         });
     }
@@ -783,6 +815,8 @@ class FinanceManager
 
             // Transition to Refunded (hooks handle credit reversal + event)
             $order->status->transitionTo(\CorvMC\Finance\States\OrderState\Refunded::class);
+
+            $this->clearActiveOrderCache($order);
 
             return $order->fresh(['lineItems', 'transactions']);
         });
