@@ -22,5 +22,4 @@ class Confirmed extends ReservationState
     {
         return 'Confirmed';
     }
-
 }

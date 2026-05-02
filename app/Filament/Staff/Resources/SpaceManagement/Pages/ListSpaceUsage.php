@@ -8,10 +8,15 @@ use App\Filament\Staff\Resources\SpaceClosures\SpaceClosureResource;
 use App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource;
 use App\Filament\Staff\Resources\SpaceManagement\Widgets\SpaceStatsWidget;
 use App\Filament\Staff\Resources\SpaceManagement\Widgets\UpcomingClosuresWidget;
-use CorvMC\SpaceManagement\Models\Reservation;
 use App\Models\User;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Models\Reservation;
+use CorvMC\SpaceManagement\Services\UltraloqService;
+use CorvMC\SpaceManagement\Settings\UltraloqSettings;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -37,6 +42,16 @@ class ListSpaceUsage extends ListRecords
                 ->icon('tabler-calendar-repeat')
                 ->color('gray')
                 ->url(RecurringReservationResource::getUrl('index')),
+
+            ActionGroup::make([
+                $this->getUltraloqCredentialsAction(),
+                $this->getUltraloqConnectAction(),
+                $this->getUltraloqDeviceAction(),
+            ])
+                ->label('Lock Settings')
+                ->icon('tabler-lock')
+                ->color('gray')
+                ->button(),
 
             Action::make('create_reservation')
                 ->label('Create Reservation')
@@ -90,23 +105,23 @@ class ListSpaceUsage extends ListRecords
                         ->where('status', '!=', 'cancelled')
                         ->count();
                 })
-                ->modifyQueryUsing(fn(Builder $query) => $query
+                ->modifyQueryUsing(fn (Builder $query) => $query
                     ->where('reserved_until', '>', now())
                     ->where('status', '!=', 'cancelled')
                     ->orderBy('reserved_at', 'asc')),
 
             'needs_attention' => Tab::make('Needs Attention')
                 ->icon('tabler-alert-circle')
-                ->badge(fn() => Reservation::needsAttention()->count())
+                ->badge(fn () => Reservation::needsAttention()->count())
                 ->badgeColor('warning')
                 /** @phpstan-ignore method.notFound */
-                ->modifyQueryUsing(fn(Builder $query) => $query
+                ->modifyQueryUsing(fn (Builder $query) => $query
                     ->needsAttention()
                     ->orderBy('reserved_at', 'asc')),
 
             'all' => Tab::make('All')
                 ->icon('tabler-calendar')
-                ->modifyQueryUsing(fn(Builder $query) => $query
+                ->modifyQueryUsing(fn (Builder $query) => $query
                     ->orderBy('reserved_at', 'desc')),
         ];
     }
@@ -114,5 +129,98 @@ class ListSpaceUsage extends ListRecords
     public function getDefaultActiveTab(): string|int|null
     {
         return 'upcoming';
+    }
+
+    protected function getUltraloqCredentialsAction(): Action
+    {
+        $settings = app(UltraloqSettings::class);
+
+        return Action::make('ultraloq_credentials')
+            ->label('API Credentials')
+            ->icon('tabler-key')
+            ->schema([
+                TextInput::make('client_id')
+                    ->label('Client ID')
+                    ->required()
+                    ->default($settings->client_id),
+                TextInput::make('client_secret')
+                    ->label('Client Secret')
+                    ->required()
+                    ->password()
+                    ->revealable()
+                    ->default($settings->client_secret),
+            ])
+            ->action(function (array $data) {
+                $settings = app(UltraloqSettings::class);
+                $settings->client_id = $data['client_id'];
+                $settings->client_secret = $data['client_secret'];
+                $settings->save();
+
+                Notification::make()
+                    ->title('Credentials Saved')
+                    ->body('U-tec API credentials have been saved. Now connect your account.')
+                    ->success()
+                    ->send();
+            });
+    }
+
+    protected function getUltraloqConnectAction(): Action
+    {
+        $settings = app(UltraloqSettings::class);
+
+        return Action::make('ultraloq_connect')
+            ->label($settings->isConnected() ? 'Reconnect U-tec' : 'Connect U-tec')
+            ->icon($settings->isConnected() ? 'tabler-refresh' : 'tabler-plug-connected')
+            ->color($settings->isConnected() ? 'gray' : 'primary')
+            ->visible(fn () => $settings->client_id !== '')
+            ->url(route('ultraloq.authorize'));
+    }
+
+    protected function getUltraloqDeviceAction(): Action
+    {
+        $settings = app(UltraloqSettings::class);
+
+        return Action::make('ultraloq_device')
+            ->label('Select Lock')
+            ->icon('tabler-device-mobile')
+            ->visible(fn () => $settings->isConnected())
+            ->schema(function () {
+                $service = app(UltraloqService::class);
+                $devices = $service->discoverDevices() ?? [];
+
+                $lockDevices = collect($devices)->filter(
+                    fn ($d) => ($d['category'] ?? '') === 'SmartLock'
+                );
+
+                $options = $lockDevices->pluck('name', 'id')->toArray();
+
+                if (empty($options)) {
+                    $options = ['' => 'No locks found — check your U-tec account'];
+                }
+
+                return [
+                    Select::make('device')
+                        ->label('Lock Device')
+                        ->options($options)
+                        ->required()
+                        ->default(app(UltraloqSettings::class)->device_id),
+                ];
+            })
+            ->action(function (array $data) {
+                $service = app(UltraloqService::class);
+                $devices = $service->discoverDevices() ?? [];
+                $selected = collect($devices)->firstWhere('id', $data['device']);
+
+                $settings = app(UltraloqSettings::class);
+                $settings->device_id = $data['device'];
+                $settings->device_name = $selected['name'] ?? '';
+                $settings->save();
+
+                Notification::make()
+                    ->title('Lock Selected')
+                    ->body("Selected lock: {$settings->device_name}")
+                    ->success()
+                    ->send();
+            });
     }
 }

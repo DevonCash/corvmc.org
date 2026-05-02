@@ -1,11 +1,22 @@
 <?php
 
-use CorvMC\SpaceManagement\States\ReservationState;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\PublicMemberController;
+use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\TicketCheckoutController;
+use App\Models\ResourceList;
+use App\Models\StaffProfile;
+use App\Models\User;
+use App\Notifications\PasswordResetNotification;
+use App\Settings\BylawsSettings;
 use CorvMC\Bands\Models\Band;
+use CorvMC\Equipment\Http\Controllers\PublicEquipmentController;
 use CorvMC\Events\Models\Event;
 use CorvMC\Membership\Models\MemberProfile;
+use CorvMC\SpaceManagement\Models\Reservation;
+use CorvMC\SpaceManagement\States\ReservationState;
 use CorvMC\Sponsorship\Models\Sponsor;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -25,7 +36,7 @@ Route::get('/', function () {
         'monthly_events' => Event::publishedUpcoming()
             ->whereBetween('start_datetime', [now()->startOfMonth(), now()->endOfMonth()])
             ->count(),
-        'practice_hours' => \CorvMC\SpaceManagement\Models\Reservation::whereState('status', ReservationState\Confirmed::class)
+        'practice_hours' => Reservation::whereState('status', ReservationState\Confirmed::class)
             ->whereBetween('reserved_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->get()
             ->sum(function ($reservation) {
@@ -40,12 +51,12 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/about', function () {
-    $boardMembers = \App\Models\StaffProfile::active()
+    $boardMembers = StaffProfile::active()
         ->board()
         ->ordered()
         ->get();
 
-    $staffMembers = \App\Models\StaffProfile::active()
+    $staffMembers = StaffProfile::active()
         ->staff()
         ->ordered()
         ->get();
@@ -114,7 +125,7 @@ Route::get('/bands', function () {
 })->name('bands.index');
 
 // Individual profile pages still work
-Route::get('/members/{memberProfile}', [\App\Http\Controllers\PublicMemberController::class, 'show'])->where('memberProfile', '[0-9]+')->name('members.show');
+Route::get('/members/{memberProfile}', [PublicMemberController::class, 'show'])->where('memberProfile', '[0-9]+')->name('members.show');
 
 Route::get('/bands/{band}', function (Band $band) {
     abort_unless($band->isVisible(Auth::user()), 404);
@@ -160,13 +171,13 @@ Route::get('/sponsors', function () {
 })->name('sponsors');
 
 Route::get('/about/bylaws', function () {
-    $bylaws = app(\App\Settings\BylawsSettings::class);
+    $bylaws = app(BylawsSettings::class);
 
     return view('public.bylaws', compact('bylaws'));
 })->name('bylaws');
 
 Route::get('/local-resources', function () {
-    $lists = \App\Models\ResourceList::query()
+    $lists = ResourceList::query()
         ->whereHas('publishedResources')
         ->with(['publishedResources'])
         ->ordered()
@@ -176,27 +187,27 @@ Route::get('/local-resources', function () {
 })->name('local-resources');
 
 // Equipment Library routes (public gear catalog)
-Route::get('/equipment', [\CorvMC\Equipment\Http\Controllers\PublicEquipmentController::class, 'index'])->name('equipment.index');
-Route::get('/equipment/{equipment}', [\CorvMC\Equipment\Http\Controllers\PublicEquipmentController::class, 'show'])->where('equipment', '[0-9]+')->name('equipment.show');
+Route::get('/equipment', [PublicEquipmentController::class, 'index'])->name('equipment.index');
+Route::get('/equipment/{equipment}', [PublicEquipmentController::class, 'show'])->where('equipment', '[0-9]+')->name('equipment.show');
 
 Route::get('/privacy-policy', function () {
     return view('public.privacy-policy');
 })->name('privacy-policy');
 
 // User invitation routes (public, no auth required)
-Route::get('/invitation/accept/{token}', [\App\Http\Controllers\InvitationController::class, 'show'])
+Route::get('/invitation/accept/{token}', [InvitationController::class, 'show'])
     ->name('invitation.accept')
     ->where('token', '.*'); // Allow any characters in token
 
 // Stripe webhook (no authentication needed - Stripe validates with signature)
-Route::post('/stripe/webhook', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook'])
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])
     ->name('cashier.webhook');
 
 // Ticket purchase page (supports guest checkout, no auth required)
 Route::get('/events/{event}/tickets', function (Event $event) {
     Gate::authorize('view', $event);
 
-    if (!$event->hasNativeTicketing()) {
+    if (! $event->hasNativeTicketing()) {
         abort(404);
     }
 
@@ -204,18 +215,18 @@ Route::get('/events/{event}/tickets', function (Event $event) {
 })->where('event', '[0-9]+')->name('events.tickets');
 
 // Ticket checkout routes (supports guest checkout, no auth required)
-Route::get('/tickets/checkout/success', [\App\Http\Controllers\TicketCheckoutController::class, 'success'])
+Route::get('/tickets/checkout/success', [TicketCheckoutController::class, 'success'])
     ->name('tickets.checkout.success');
-Route::get('/tickets/checkout/free-success/{order:uuid}', [\App\Http\Controllers\TicketCheckoutController::class, 'freeSuccess'])
+Route::get('/tickets/checkout/free-success/{order:uuid}', [TicketCheckoutController::class, 'freeSuccess'])
     ->name('tickets.checkout.free-success');
-Route::get('/tickets/checkout/cancel/{order:uuid}', [\App\Http\Controllers\TicketCheckoutController::class, 'cancel'])
+Route::get('/tickets/checkout/cancel/{order:uuid}', [TicketCheckoutController::class, 'cancel'])
     ->name('tickets.checkout.cancel');
 
 // Checkout success/cancel handling (unified for all checkout types)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/checkout/success', [\App\Http\Controllers\CheckoutController::class, 'success'])
+    Route::get('/checkout/success', [CheckoutController::class, 'success'])
         ->name('checkout.success');
-    Route::get('/checkout/cancel', [\App\Http\Controllers\CheckoutController::class, 'cancel'])
+    Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])
         ->name('checkout.cancel');
 });
 
@@ -227,7 +238,7 @@ if (app()->environment('local', 'development')) {
             'email' => 'john@example.com',
         ]);
 
-        $notification = new \App\Notifications\PasswordResetNotification('sample-token-12345');
+        $notification = new PasswordResetNotification('sample-token-12345');
 
         return $notification->toMail($user)->render();
     })->name('email.preview.password-reset');

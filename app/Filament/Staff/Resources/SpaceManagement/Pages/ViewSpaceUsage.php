@@ -2,14 +2,15 @@
 
 namespace App\Filament\Staff\Resources\SpaceManagement\Pages;
 
+use App\Filament\Actions\Reservations\CancelReservationAction;
+use App\Filament\Actions\Reservations\ReservationConfirmAction;
 use App\Filament\Staff\Resources\Orders\OrderResource;
 use App\Filament\Staff\Resources\SpaceManagement\SpaceManagementResource;
 use App\Filament\Staff\Resources\Users\UserResource;
 use App\Models\User;
-use App\Filament\Actions\Reservations\CancelReservationAction;
-use App\Filament\Actions\Reservations\ReservationConfirmAction;
 use CorvMC\Finance\Facades\Finance;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use CorvMC\SpaceManagement\Services\UltraloqService;
 use Filament\Actions\Action;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -40,7 +41,7 @@ class ViewSpaceUsage extends ViewRecord
 
     protected function formatHours(float $hours): string
     {
-        return fmod($hours, 1) === 0.0 ? intval($hours) . ' hrs' : number_format($hours, 1) . ' hrs';
+        return fmod($hours, 1) === 0.0 ? intval($hours).' hrs' : number_format($hours, 1).' hrs';
     }
 
     protected function formatCostBreakdown(?Model $record): ?string
@@ -57,11 +58,11 @@ class ViewSpaceUsage extends ViewRecord
         foreach ($order->lineItems as $lineItem) {
             if ($lineItem->isDiscount()) {
                 $blocks = abs((float) $lineItem->quantity);
-                $parts[] = $this->formatHours($blocks) . ' free';
+                $parts[] = $this->formatHours($blocks).' free';
             } else {
                 $qty = (float) $lineItem->quantity;
-                $unitPrice = '$' . number_format($lineItem->unit_price / 100, 2);
-                $parts[] = $this->formatHours($qty) . ' × ' . $unitPrice;
+                $unitPrice = '$'.number_format($lineItem->unit_price / 100, 2);
+                $parts[] = $this->formatHours($qty).' × '.$unitPrice;
             }
         }
 
@@ -129,7 +130,7 @@ class ViewSpaceUsage extends ViewRecord
                                     ->icon('tabler-external-link')
                                     ->iconButton()
                                     ->color('gray')
-                                    ->url(fn(?Model $record): ?string => $record?->reservable instanceof User
+                                    ->url(fn (?Model $record): ?string => $record?->reservable instanceof User
                                         ? UserResource::getUrl('edit', ['record' => $record->reservable->getKey()])
                                         : null)
                                     ->openUrlInNewTab(),
@@ -140,10 +141,10 @@ class ViewSpaceUsage extends ViewRecord
                                         ->hiddenLabel()
                                         ->circular()
                                         ->imageSize(48)
-                                        ->state(fn(?Model $record): ?string => $record?->reservable instanceof User
+                                        ->state(fn (?Model $record): ?string => $record?->reservable instanceof User
                                             ? $record->reservable->getFilamentAvatarUrl()
                                             : null)
-                                        ->visible(fn(?Model $record): bool => $record?->reservable instanceof User)
+                                        ->visible(fn (?Model $record): bool => $record?->reservable instanceof User)
                                         ->grow(false),
                                     Grid::make(1)
                                         ->gap(0)
@@ -153,7 +154,7 @@ class ViewSpaceUsage extends ViewRecord
                                                     ->hiddenLabel()
                                                     ->weight(FontWeight::SemiBold)
                                                     ->size(TextSize::Large)
-                                                    ->state(fn(?Model $record): string => $record?->reservable instanceof User
+                                                    ->state(fn (?Model $record): string => $record?->reservable instanceof User
                                                         ? $record->reservable->name
                                                         : ($record?->getDisplayTitle() ?? 'Unknown')),
                                                 TextEntry::make('sustaining_badge')
@@ -162,7 +163,7 @@ class ViewSpaceUsage extends ViewRecord
                                                     ->color('success')
                                                     ->icon('tabler-star')
                                                     ->state('Sustaining')
-                                                    ->visible(fn(?Model $record): bool => $record?->reservable instanceof User
+                                                    ->visible(fn (?Model $record): bool => $record?->reservable instanceof User
                                                         && $record->reservable->isSustainingMember()),
                                             ])->verticallyAlignCenter(),
                                             TextEntry::make('reservable.email')
@@ -170,13 +171,13 @@ class ViewSpaceUsage extends ViewRecord
                                                 ->icon('tabler-mail')
                                                 ->iconColor('gray')
                                                 ->copyable()
-                                                ->visible(fn(?Model $record): bool => $record?->reservable instanceof User),
+                                                ->visible(fn (?Model $record): bool => $record?->reservable instanceof User),
                                             TextEntry::make('reservable.phone')
                                                 ->hiddenLabel()
                                                 ->icon('tabler-phone')
                                                 ->iconColor('gray')
                                                 ->copyable()
-                                                ->visible(fn(?Model $record): bool => $record?->reservable instanceof User && $record->reservable->phone),
+                                                ->visible(fn (?Model $record): bool => $record?->reservable instanceof User && $record->reservable->phone),
                                         ]),
                                 ])->verticallyAlignCenter(),
                             ])
@@ -228,7 +229,7 @@ class ViewSpaceUsage extends ViewRecord
                                             TextEntry::make('cost_breakdown')
                                                 ->hiddenLabel()
                                                 ->color('gray')
-                                                ->state(fn(?Model $record): ?string => $this->formatCostBreakdown($record)),
+                                                ->state(fn (?Model $record): ?string => $this->formatCostBreakdown($record)),
                                             TextEntry::make('order_rail')
                                                 ->hiddenLabel()
                                                 ->icon('tabler-credit-card')
@@ -241,7 +242,7 @@ class ViewSpaceUsage extends ViewRecord
 
                                                     $rails = $order->transactions->where('type', 'payment')->pluck('currency')->unique();
 
-                                                    return $rails->map(fn($r) => ucfirst($r))->implode(', ') ?: null;
+                                                    return $rails->map(fn ($r) => ucfirst($r))->implode(', ') ?: null;
                                                 })
                                                 ->visible(function (?Model $record): bool {
                                                     $order = $record ? Finance::findActiveOrder($record) : null;
@@ -252,8 +253,27 @@ class ViewSpaceUsage extends ViewRecord
                                 ])->verticallyAlignCenter(),
                             ])
                             ->collapsible()
-                            ->visible(fn(?Model $record): bool => $record instanceof RehearsalReservation),
+                            ->visible(fn (?Model $record): bool => $record instanceof RehearsalReservation),
 
+                        // Lock Code
+                        Section::make('Lock Code')
+                            ->icon('tabler-lock-access')
+                            ->compact()
+                            ->schema([
+                                TextEntry::make('lock_code')
+                                    ->label('Code')
+                                    ->weight(FontWeight::Bold)
+                                    ->size(TextSize::ExtraLarge)
+                                    ->copyable()
+                                    ->copyMessage('Code copied'),
+                                TextEntry::make('sms_message')
+                                    ->label('SMS Message')
+                                    ->state(fn (?Model $record): ?string => UltraloqService::composeSmsMessage($record))
+                                    ->copyable()
+                                    ->copyMessage('SMS copied'),
+                            ])
+                            ->collapsible()
+                            ->visible(fn (?Model $record): bool => (bool) $record?->lock_code),
 
                         // Reservation Details - duplicates hero info with labels for learning
                         Section::make('Reservation Details')
@@ -271,10 +291,10 @@ class ViewSpaceUsage extends ViewRecord
                                         ->date('l, M j, Y'),
                                     TextEntry::make('time_range')
                                         ->label('Time')
-                                        ->state(fn(Model $record): string => $record->reserved_at->format('g:i A') . ' – ' . $record->reserved_until->format('g:i A')),
+                                        ->state(fn (Model $record): string => $record->reserved_at->format('g:i A').' – '.$record->reserved_until->format('g:i A')),
                                     TextEntry::make('hours_used')
                                         ->label('Duration')
-                                        ->state(fn(Model $record): string => $this->formatHours($record->hours_used)),
+                                        ->state(fn (Model $record): string => $this->formatHours($record->hours_used)),
                                 ]),
                             ]),
 
@@ -288,7 +308,7 @@ class ViewSpaceUsage extends ViewRecord
                                     ->markdown(),
                             ])
                             ->collapsible()
-                            ->visible(fn(?Model $record): bool => ! empty($record?->notes)),
+                            ->visible(fn (?Model $record): bool => ! empty($record?->notes)),
 
                     ])->columnSpan(2),
 
@@ -302,7 +322,7 @@ class ViewSpaceUsage extends ViewRecord
                         ViewEntry::make('activity_log')
                             ->hiddenLabel()
                             ->view('filament.staff.components.reservation-activity-log')
-                            ->state(fn() => Activity::forSubject($this->record)
+                            ->state(fn () => Activity::forSubject($this->record)
                                 ->with('causer')
                                 ->latest()
                                 ->get()),
