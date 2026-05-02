@@ -99,6 +99,78 @@ it('calculates net usage when partially refunded', function () {
     expect($this->user->getUsedFreeHoursThisMonth())->toBe(2.0);
 });
 
+it('counts deductions from order_commit source', function () {
+    // Create an order commit deduction (2 hours = 4 blocks)
+    CreditTransaction::create([
+        'user_id' => $this->user->id,
+        'credit_type' => CreditType::FreeHours->value,
+        'amount' => -4,
+        'balance_after' => 4,
+        'source' => 'order_commit',
+        'source_id' => 1,
+        'description' => 'Order committed',
+        'created_at' => now(),
+    ]);
+
+    expect($this->user->getUsedFreeHoursThisMonth())->toBe(2.0);
+});
+
+it('accounts for refunds from order_refunded source', function () {
+    // Deduct via order commit (2 hours = 4 blocks)
+    CreditTransaction::create([
+        'user_id' => $this->user->id,
+        'credit_type' => CreditType::FreeHours->value,
+        'amount' => -4,
+        'balance_after' => 4,
+        'source' => 'order_commit',
+        'source_id' => 1,
+        'description' => 'Order committed',
+        'created_at' => now(),
+    ]);
+
+    // Refund restores credits (2 hours = 4 blocks)
+    CreditTransaction::create([
+        'user_id' => $this->user->id,
+        'credit_type' => CreditType::FreeHours->value,
+        'amount' => 4,
+        'balance_after' => 8,
+        'source' => 'order_refunded',
+        'source_id' => 1,
+        'description' => 'Order refunded',
+        'created_at' => now(),
+    ]);
+
+    expect($this->user->getUsedFreeHoursThisMonth())->toBe(0.0);
+});
+
+it('accounts for cancellations from order_cancelled source', function () {
+    // Deduct via order commit (3 hours = 6 blocks)
+    CreditTransaction::create([
+        'user_id' => $this->user->id,
+        'credit_type' => CreditType::FreeHours->value,
+        'amount' => -6,
+        'balance_after' => 2,
+        'source' => 'order_commit',
+        'source_id' => 1,
+        'description' => 'Order committed',
+        'created_at' => now(),
+    ]);
+
+    // Cancel restores credits (3 hours = 6 blocks)
+    CreditTransaction::create([
+        'user_id' => $this->user->id,
+        'credit_type' => CreditType::FreeHours->value,
+        'amount' => 6,
+        'balance_after' => 8,
+        'source' => 'order_cancelled',
+        'source_id' => 1,
+        'description' => 'Order cancelled',
+        'created_at' => now(),
+    ]);
+
+    expect($this->user->getUsedFreeHoursThisMonth())->toBe(0.0);
+});
+
 it('ignores transactions from other sources', function () {
     // Create an admin adjustment (not from charges)
     CreditTransaction::create([

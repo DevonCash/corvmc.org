@@ -361,11 +361,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenant
             return 0;
         }
 
-        // Sum charge-related transactions this month (deductions are negative, refunds are positive)
-        // Net result is negative if user has used more than refunded
+        // Sum credit transactions this month (deductions are negative, restorations are positive)
+        // Includes both legacy Charge sources and new Finance Order sources
         $netBlocks = CreditTransaction::where('user_id', $this->id)
             ->where('credit_type', CreditType::FreeHours)
-            ->whereIn('source', ['charge_usage', 'charge_cancellation'])
+            ->whereIn('source', [
+                'charge_usage', 'charge_cancellation',                   // legacy Charge system
+                'order_commit', 'order_cancelled', 'order_refunded',     // Finance system
+            ])
             ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->sum('amount');
 

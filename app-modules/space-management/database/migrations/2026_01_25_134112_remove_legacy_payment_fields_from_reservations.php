@@ -1,8 +1,6 @@
 <?php
 
 use App\Models\User;
-use CorvMC\Finance\Enums\ChargeStatus;
-use CorvMC\Finance\Models\Charge;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -47,7 +45,7 @@ return new class extends Migration
         // Use raw query to avoid model issues with columns being removed
         $reservations = DB::table('reservations')
             ->where('type', RehearsalReservation::class)
-            ->whereNotIn('id', Charge::where('chargeable_type', RehearsalReservation::class)->pluck('chargeable_id'))
+            ->whereNotIn('id', DB::table('charges')->where('chargeable_type', RehearsalReservation::class)->pluck('chargeable_id'))
             ->get();
 
         $migrated = 0;
@@ -89,13 +87,13 @@ return new class extends Migration
             $freeHoursValue = (int) ($reservation->free_hours_used * $hourlyRateCents);
             $grossAmount = $netAmount + $freeHoursValue;
 
-            // Create charge record
-            Charge::create([
+            // Insert directly via DB to bypass deleted Charge model and MoneyCast
+            DB::table('charges')->insert([
                 'user_id' => $userId,
                 'chargeable_type' => RehearsalReservation::class,
                 'chargeable_id' => $reservation->id,
                 'amount' => $grossAmount,
-                'credits_applied' => $creditsApplied,
+                'credits_applied' => $creditsApplied ? json_encode($creditsApplied) : null,
                 'net_amount' => $netAmount,
                 'status' => $status,
                 'payment_method' => $reservation->payment_method,
@@ -112,16 +110,16 @@ return new class extends Migration
     }
 
     /**
-     * Map old PaymentStatus values to ChargeStatus.
+     * Map old PaymentStatus values to charge status strings.
      */
-    protected function mapPaymentStatus(?string $paymentStatus): ChargeStatus
+    protected function mapPaymentStatus(?string $paymentStatus): string
     {
         return match ($paymentStatus) {
-            'paid' => ChargeStatus::Paid,
-            'comped' => ChargeStatus::Comped,
-            'refunded' => ChargeStatus::Refunded,
-            'n/a' => ChargeStatus::Paid, // N/A means no payment needed (free)
-            default => ChargeStatus::Pending, // unpaid or null
+            'paid' => 'paid',
+            'comped' => 'comped',
+            'refunded' => 'refunded',
+            'n/a' => 'paid', // N/A means no payment needed (free)
+            default => 'pending', // unpaid or null
         };
     }
 
@@ -139,13 +137,15 @@ return new class extends Migration
         });
 
         // Restore payment data from charges
-        $charges = Charge::where('chargeable_type', RehearsalReservation::class)->get();
+        $charges = DB::table('charges')
+            ->where('chargeable_type', RehearsalReservation::class)
+            ->get();
 
         foreach ($charges as $charge) {
             DB::table('reservations')
                 ->where('id', $charge->chargeable_id)
                 ->update([
-                    'cost' => $charge->net_amount->getMinorAmount()->toInt() / 100,
+                    'cost' => $charge->net_amount / 100,
                     'payment_status' => $this->mapChargeStatusToPaymentStatus($charge->status),
                     'payment_method' => $charge->payment_method,
                     'paid_at' => $charge->paid_at,
@@ -155,15 +155,16 @@ return new class extends Migration
     }
 
     /**
-     * Map ChargeStatus back to legacy payment_status string.
+     * Map charge status string back to legacy payment_status string.
      */
-    protected function mapChargeStatusToPaymentStatus(ChargeStatus $status): string
+    protected function mapChargeStatusToPaymentStatus(string $status): string
     {
         return match ($status) {
-            ChargeStatus::Paid => 'paid',
-            ChargeStatus::Comped => 'comped',
-            ChargeStatus::Refunded => 'refunded',
-            ChargeStatus::Pending => 'unpaid',
+            'paid' => 'paid',
+            'comped' => 'comped',
+            'refunded' => 'refunded',
+            'pending' => 'unpaid',
+            default => 'unpaid',
         };
     }
 };
