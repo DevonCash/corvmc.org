@@ -21,6 +21,7 @@ class ReservationColumns
             ->label('#')
             ->prefix('#')
             ->sortable()
+            ->width(0)
             ->grow(false);
     }
 
@@ -38,6 +39,8 @@ class ReservationColumns
     {
         return TextColumn::make('responsible_user')
             ->label('Responsible')
+            ->grow(false)
+            ->width(0)
             ->getStateUsing(function (Reservation $record) {
                 if ($record instanceof EventReservation) {
                     return $record->getDisplayTitle();
@@ -71,15 +74,17 @@ class ReservationColumns
     {
         return TextColumn::make('time_range')
             ->label('When')
-            ->formatStateUsing(function (Reservation $record): string {
+            ->description(function (Reservation $record): string {
                 return $record->reserved_at->format('M j, Y');
             })
-            ->description(function (Reservation $record): string {
+            ->formatStateUsing(function (Reservation $record): string {
                 return $record->reserved_at->format('g:i A') . ' - ' . $record->reserved_until->format('g:i A');
             })
             ->icon(fn($record) => $record->is_recurring ? 'tabler-repeat' : null)
             ->iconPosition(IconPosition::After)
             ->tooltip(fn($record) => $record->is_recurring ? 'Recurring reservation' : null)
+            ->width(0)
+            ->grow(false)
             ->sortable(['reserved_at']);
     }
 
@@ -98,7 +103,7 @@ class ReservationColumns
         return IconColumn::make('status')
             ->label('')
             ->tooltip(fn( $state ) => $state->getLabel())
-            ->grow(false)
+            ->grow(true)
             ->width(0)
             ;
     }

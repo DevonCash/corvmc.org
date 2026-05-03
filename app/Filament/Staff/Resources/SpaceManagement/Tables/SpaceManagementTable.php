@@ -42,10 +42,10 @@ class SpaceManagementTable
                 return '';
             })
             ->columns([
-                ReservationColumns::statusDisplay(),
                 ReservationColumns::id(),
-                ReservationColumns::responsibleUser(),
+                ReservationColumns::statusDisplay(),
                 ReservationColumns::timeRange(),
+                ReservationColumns::responsibleUser(),
                 ReservationColumns::costDisplay(),
                 ReservationColumns::createdAt(),
                 ReservationColumns::updatedAt(),
