@@ -15,6 +15,15 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ReservationColumns
 {
+    public static function id(): TextColumn
+    {
+        return TextColumn::make('id')
+            ->label('#')
+            ->prefix('#')
+            ->sortable()
+            ->grow(false);
+    }
+
     public static function type(): TextColumn
     {
         return TextColumn::make('type')

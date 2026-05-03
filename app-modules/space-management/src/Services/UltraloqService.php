@@ -307,16 +307,7 @@ class UltraloqService
      */
     protected function buildUserName(Reservation $reservation): string
     {
-        $user = $reservation->reservable;
-        $date = $reservation->reserved_at->format('n/j');
-
-        if ($user && method_exists($user, 'getFilamentName')) {
-            $name = $user->getFilamentName();
-
-            return Str::limit($name, 15, '')." {$date}";
-        }
-
-        return "Res-{$reservation->id} {$date}";
+        return "Reservation #{$reservation->id}";
     }
 
     /**

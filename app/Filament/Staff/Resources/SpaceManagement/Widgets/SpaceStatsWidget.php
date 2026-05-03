@@ -13,8 +13,6 @@ class SpaceStatsWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        $needsAttention = Reservation::needsAttention()->count();
-
         // This week's reservations
         $weekReservations = Reservation::whereBetween('reserved_at', [
             now()->startOfWeek(),
@@ -46,11 +44,6 @@ class SpaceStatsWidget extends BaseWidget
         $totalWeekHours = $weekHours + $weekEventHours;
 
         return [
-            Stat::make('Needs Attention', $needsAttention)
-                ->description('Pending auto-cancels & past unpaid')
-                ->color($needsAttention > 0 ? 'warning' : 'success')
-                ->icon('tabler-alert-circle'),
-
             Stat::make('This Week', number_format($totalWeekHours, 1).' hours')
                 ->description(sprintf('$%s revenue • %d reservations • %d events', number_format($weekRevenue, 2), $weekReservationCount, $weekEvents->count()))
                 ->color('primary')

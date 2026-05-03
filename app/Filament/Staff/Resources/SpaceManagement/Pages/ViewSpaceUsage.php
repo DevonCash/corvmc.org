@@ -263,7 +263,7 @@ class ViewSpaceUsage extends ViewRecord
                                 TextEntry::make('lock_code')
                                     ->label('Code')
                                     ->weight(FontWeight::Bold)
-                                    ->size(TextSize::ExtraLarge)
+                                    ->size(TextSize::Large)
                                     ->copyable()
                                     ->copyMessage('Code copied'),
                                 TextEntry::make('sms_message')

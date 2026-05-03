@@ -37,6 +37,8 @@ class SpaceManagementServiceProvider extends ServiceProvider
                 ->name('ultraloq.authorize');
             Route::get('/ultraloq/callback', [UltraloqOAuthController::class, 'callback'])
                 ->name('ultraloq.callback');
+            Route::get('/ultraloq/authed', [UltraloqOAuthController::class, 'authed'])
+                ->name('ultraloq.authed');
         });
 
         if ($this->app->runningInConsole()) {

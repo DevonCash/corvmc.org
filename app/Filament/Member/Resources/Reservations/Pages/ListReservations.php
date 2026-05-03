@@ -51,7 +51,6 @@ class ListReservations extends ListRecords
     public function table(Table $table): Table
     {
         return parent::table($table)
-            ->modifyQueryUsing(fn(Builder $query) => $query->with(['charge']))
             ->emptyStateActions([
                 $this->getReserveSpaceAction(),
             ]);

@@ -133,6 +133,11 @@ class ReservationInfolist
                 ])
                     ->visible(fn() => User::me()->can('manage users'))
                     ->extraAttributes(['style' => 'padding: calc(var(--spacing) * 1) calc(var(--spacing) * 3) calc(var(--spacing) * 3);']),
+                TextEntry::make('id')
+                    ->label('Reservation #')
+                    ->prefix('#')
+                    ->copyable()
+                    ->extraAttributes(['style' => 'padding: calc(var(--spacing) * 4);']),
                 TextEntry::make('notes')
                     ->label('Additional Notes')
                     ->columnSpanFull()

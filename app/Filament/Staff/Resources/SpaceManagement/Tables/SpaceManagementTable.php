@@ -43,6 +43,7 @@ class SpaceManagementTable
             })
             ->columns([
                 ReservationColumns::statusDisplay(),
+                ReservationColumns::id(),
                 ReservationColumns::responsibleUser(),
                 ReservationColumns::timeRange(),
                 ReservationColumns::costDisplay(),
@@ -135,11 +136,6 @@ class SpaceManagementTable
                 Filter::make('free_hours_used')
                     ->label('Used Free Hours')
                     ->query(fn(Builder $query): Builder => $query->where('free_hours_used', '>', 0)),
-
-                Filter::make('needs_attention')
-                    ->label('Needs Attention')
-                    ->query(fn(Builder $query): Builder => $query
-                        ->needsAttention()),
             ])
             ->recordActions([
                 ViewAction::make()

@@ -50,7 +50,7 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
 
     /**
      * Base validation rules for all reservations.
-     * 
+     *
      * @deprecated hours_used is auto-calculated and will be removed in future version
      */
     protected array $rules = [
@@ -361,13 +361,6 @@ class Reservation extends Model implements HasColor, HasIcon, HasLabel
                 $q->whereState('status', ReservationState\Scheduled::class)
                     ->where('reserved_at', '>', now())
                     ->where('reserved_at', '<=', now()->addDays(3));
-            })->orWhere(function ($q) {
-                // Past reservations that are unpaid (check via charges table)
-                $q->whereHas('charge', function ($chargeQuery) {
-                    $chargeQuery->where('status', 'pending')
-                        ->where('net_amount', '>', 0);
-                })
-                    ->where('reserved_at', '<', now());
             });
         })->where('status', '!=', 'cancelled');
     }

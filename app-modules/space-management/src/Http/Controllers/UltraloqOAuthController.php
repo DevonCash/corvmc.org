@@ -3,7 +3,6 @@
 namespace CorvMC\SpaceManagement\Http\Controllers;
 
 use CorvMC\SpaceManagement\Services\UltraloqService;
-use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -36,7 +35,7 @@ class UltraloqOAuthController
                 ->danger()
                 ->sendToDatabase($request->user());
 
-            return redirect('/Staff/space-management');
+            return redirect('/staff/space-management');
         }
 
         $code = $request->query('authorization_code') ?? $request->query('code');
@@ -48,25 +47,49 @@ class UltraloqOAuthController
                 ->danger()
                 ->sendToDatabase($request->user());
 
-            return redirect('/Staff/space-management');
+            return redirect('/staff/space-management');
         }
 
         $success = $service->exchangeCode($code);
 
-        if ($success) {
-            Notification::make()
-                ->title('U-tec Connected')
-                ->body('Successfully connected to your U-tec account. Now select your lock device.')
-                ->success()
-                ->sendToDatabase($request->user());
-        } else {
-            Notification::make()
-                ->title('Connection Failed')
-                ->body('Could not connect to U-tec. Please check your credentials and try again.')
-                ->danger()
-                ->sendToDatabase($request->user());
-        }
+        return redirect()->route('ultraloq.authed', [
+            'success' => $success ? 1 : 0,
+        ]);
+    }
 
-        return redirect('/Staff/space-management');
+    /**
+     * Show a simple confirmation page after OAuth completes.
+     * This tab can be closed — the wizard in the main tab stays open.
+     */
+    public function authed(Request $request)
+    {
+        $success = (bool) $request->query('success', false);
+
+        $title = $success ? 'U-tec Connected' : 'Connection Failed';
+        $message = $success
+            ? 'Your U-tec account is connected. You can close this tab and continue the lock setup wizard.'
+            : 'Could not connect to U-tec. Close this tab, check your credentials, and try again.';
+        $color = $success ? '#16a34a' : '#dc2626';
+
+        return response(<<<HTML
+            <!DOCTYPE html>
+            <html>
+            <head><title>{$title}</title></head>
+            <body style="font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f9fafb;">
+                <div style="text-align: center; max-width: 400px; padding: 2rem;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">{$this->statusIcon($success)}</div>
+                    <h1 style="font-size: 1.25rem; color: {$color}; margin: 0 0 0.5rem;">{$title}</h1>
+                    <p style="color: #6b7280; margin: 0;">{$message}</p>
+                </div>
+            </body>
+            </html>
+            HTML);
+    }
+
+    private function statusIcon(bool $success): string
+    {
+        return $success
+            ? '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+            : '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
     }
 }
