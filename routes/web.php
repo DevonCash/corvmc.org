@@ -163,21 +163,34 @@ Route::get('/contact', function () {
 })->name('contact');
 
 Route::get('/poster/{month?}', function (Request $request, ?string $month = null) {
-    $date = $month
+    abort_unless(Auth::check(), 403);
+
+    $startDate = $month
         ? Carbon::createFromFormat('Y-m', $month, config('app.timezone'))->startOfMonth()
         : now()->startOfMonth();
 
     $events = Event::published()
-        ->whereBetween('start_datetime', [$date, $date->copy()->endOfMonth()])
+        ->where('start_datetime', '>=', $startDate)
+        ->orderBy('start_datetime')
         ->with('performers')
+        ->limit(30)
         ->get();
 
     $sponsor = Sponsor::active()->with('media')->inRandomOrder()->first();
 
-    $monthLabel = $date->format('F Y');
-    $size = $request->query('size', 'tabloid');
+    $firstMonth = $startDate;
+    $lastMonth = $events->isNotEmpty()
+        ? $events->last()->start_datetime->copy()->startOfMonth()
+        : $startDate;
 
-    return view('public.poster', compact('events', 'sponsor', 'monthLabel', 'size'));
+    $monthLabel = $firstMonth->eq($lastMonth)
+        ? $firstMonth->format('F Y')
+        : $firstMonth->format('F').' – '.$lastMonth->format('F Y');
+
+    $size = $request->query('size', 'tabloid');
+    $mono = (bool) $request->query('mono', false);
+
+    return view('public.poster', compact('events', 'sponsor', 'monthLabel', 'size', 'mono'));
 })->name('poster');
 
 Route::get('/sponsors', function () {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="{{ $size === 'letter' ? 'letter' : 'tabloid' }}">
+<html lang="en" class="{{ $size === 'letter' ? 'letter' : 'tabloid' }}{{ $mono ? ' mono' : '' }}">
 
 <head>
     <meta charset="UTF-8">
@@ -280,12 +280,9 @@
 
         /* Footer note */
         .footer-note {
-            position: absolute;
-            top: 100%;
-            width: 100%;
-            padding-top: 0.4rem;
-            text-align: center;
-            font-size: 0.38rem;
+            align-self: flex-end;
+            text-align: left;
+            font-size: 0.4rem;
             font-weight: 600;
             color: #3A8C96;
             letter-spacing: 0.02rem;
@@ -316,7 +313,8 @@
         .footer-bottom {
             display: flex;
             flex: auto;
-            padding-top: .5rem;
+            padding-top: .2rem;
+            margin-top: .2rem;
             justify-content: space-between;
             align-items: flex-start;
             border-top: 0.06rem solid #5C3D2E;
@@ -352,6 +350,8 @@
         }
 
         .footer-qr {
+            grid-column: 2;
+            grid-row: 1 / -1;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -379,10 +379,11 @@
         }
 
         .footer {
-            display: flex;
-            align-items: flex-end;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            grid-template-rows: auto auto;
             font-size: .5rem;
-            gap: .5rem;
+            gap: 0 1rem;
         }
 
         .contact {
@@ -390,6 +391,103 @@
             align-items: center;
             justify-content: center;
             gap: 0.4rem;
+        }
+
+        /* Monochrome variant */
+        .mono body {
+            color: #222;
+        }
+
+        .mono .org-name {
+            color: #222;
+        }
+
+        .mono .month-label {
+            color: #222;
+        }
+
+        .mono .header-rule {
+            background: #222;
+        }
+
+        .mono .vertical-title {
+            color: #222;
+        }
+
+        .mono .date-square:nth-of-type(4n+1),
+        .mono .date-square:nth-of-type(4n+2),
+        .mono .date-square:nth-of-type(4n+3),
+        .mono .date-square:nth-of-type(4n+4) {
+            background: #222;
+        }
+
+        .mono .time-pill {
+            border-color: #222;
+        }
+
+        .mono .time-pill span {
+            color: #222;
+        }
+
+        .mono .band-box {
+            border-color: #222;
+        }
+
+        .mono .event-title {
+            color: #222;
+        }
+
+        .mono .event-performers {
+            color: #444;
+        }
+
+        .mono .free-badge {
+            color: #222;
+            border-color: #222;
+        }
+
+        .mono .footer-note {
+            color: #444;
+        }
+
+        .mono .footer-info-left,
+        .mono .footer-info-right {
+            color: #222;
+        }
+
+        .mono .footer-bottom {
+            border-top-color: #222;
+        }
+
+        .mono .sponsor-label {
+            color: #666;
+        }
+
+        .mono .sponsor-logo-placeholder {
+            color: #222;
+        }
+
+        .mono .footer-qr .qr-label {
+            color: #666;
+        }
+
+        .mono .footer-qr svg path {
+            fill: #222;
+        }
+
+        .mono .no-events {
+            color: #666;
+        }
+
+        .mono .logo {
+            --speaker-case: #222;
+            --speaker-front: #fff;
+            --speaker-fill: #fff;
+            --sound-lines: #222;
+        }
+
+        .mono .sponsor-logo {
+            filter: grayscale(1);
         }
 
         /* Preview controls */
@@ -438,6 +536,10 @@
             <input type="checkbox" id="size-toggle" {{ $size === 'letter' ? 'checked' : '' }}>
             8.5 × 11
         </label>
+        <label>
+            <input type="checkbox" id="mono-toggle" {{ $mono ? 'checked' : '' }}>
+            Mono
+        </label>
     </div>
 
     <div class="poster">
@@ -460,14 +562,15 @@
 
             <div class="events">
                 @forelse ($events as $event)
-                    <div class="date-square">
+                    <div class="date-square" data-event-row="{{ $loop->index }}"
+                        data-event-month="{{ $event->start_datetime->format('F Y') }}">
                         <span class="day-abbrev">{{ $event->start_datetime->format('D') }}</span>
                         <span class="date-num">{{ $event->start_datetime->format('n/d') }}</span>
                     </div>
-                    <div class="time-pill">
+                    <div class="time-pill" data-event-row="{{ $loop->index }}">
                         <span>{{ $event->start_datetime->format('g A') }}</span>
                     </div>
-                    <div class="band-box">
+                    <div class="band-box" data-event-row="{{ $loop->index }}">
                         <div class="event-title-row">
                             <span class="event-title">{{ $event->title }}</span>
                             @if ($event->isFree())
@@ -504,13 +607,13 @@
                     @empty
                         <div class="no-events">No events scheduled yet.</div>
                     @endforelse
-                    <div class="footer-note">All Ages • No One Turned Away For Lack of Funds</div>
                 </div>
-
             </div>
 
             <!-- Footer -->
             <div class='footer'>
+                <div class="footer-note">Every Show • All Ages • No One Turned Away For Lack of Funds</div>
+
                 <div class='footer-bottom'>
                     <div class="sponsor">
                         @if ($sponsor)
@@ -525,7 +628,8 @@
                     </div>
                     <div class='contact'>
                         <div class="footer-info">
-                            <div class='instagram'><tabler-brand-instagram /> @@corvmc</div>
+                            <div class='instagram'>@@corvmc <x-tabler-brand-instagram
+                                    style="width: 1.4em; height: 1.4em; vertical-align: middle;" /></div>
                             <div class='website'>corvallismusic.org</div>
                             <div class="address">
                                 6775 SW Philomath Blvd.<br>
@@ -553,6 +657,17 @@
             const pageStyle = document.createElement('style');
             document.head.appendChild(pageStyle);
 
+            function syncUrl() {
+                const params = new URLSearchParams(window.location.search);
+                params.set('size', document.getElementById('size-toggle').checked ? 'letter' : 'tabloid');
+                if (document.getElementById('mono-toggle').checked) {
+                    params.set('mono', '1');
+                } else {
+                    params.delete('mono');
+                }
+                history.replaceState(null, '', window.location.pathname + '?' + params.toString());
+            }
+
             document.getElementById('size-toggle').addEventListener('change', function() {
                 const html = document.documentElement;
                 if (this.checked) {
@@ -564,7 +679,75 @@
                     html.classList.add('tabloid');
                     pageStyle.textContent = '@page { size: 11in 17in; margin: 0; }';
                 }
+                autoFit();
+                syncUrl();
             });
+
+            document.getElementById('mono-toggle').addEventListener('change', function() {
+                const html = document.documentElement;
+                if (this.checked) {
+                    html.classList.add('mono');
+                } else {
+                    html.classList.remove('mono');
+                }
+                syncUrl();
+            });
+
+            function autoFit() {
+                const poster = document.querySelector('.poster');
+
+                // Read the target height from CSS before we override it
+                const fixedHeight = parseInt(getComputedStyle(poster).height, 10);
+
+                const rows = [...new Set(
+                    [...document.querySelectorAll('[data-event-row]')]
+                    .map(el => el.dataset.eventRow)
+                )];
+
+                // Show all rows
+                document.querySelectorAll('[data-event-row]').forEach(el => {
+                    el.style.display = '';
+                });
+
+                // Measure without height constraint
+                poster.style.height = 'auto';
+
+                for (let i = rows.length - 1; i >= 0; i--) {
+                    if (poster.scrollHeight <= fixedHeight) break;
+
+                    document.querySelectorAll(`[data-event-row="${rows[i]}"]`).forEach(el => {
+                        el.style.display = 'none';
+                    });
+                }
+
+                poster.style.height = '';
+
+                // Update month label to reflect only visible events
+                const visibleMonths = [...new Set(
+                    [...document.querySelectorAll('.date-square[data-event-month]')]
+                    .filter(el => el.style.display !== 'none')
+                    .map(el => el.dataset.eventMonth)
+                )];
+
+                const monthLabel = document.querySelector('.month-label');
+                if (visibleMonths.length === 0) {
+                    monthLabel.textContent = @json(strtolower($monthLabel));
+                } else if (visibleMonths.length === 1) {
+                    monthLabel.textContent = visibleMonths[0].toLowerCase();
+                } else {
+                    const first = visibleMonths[0].split(' ');
+                    const last = visibleMonths[visibleMonths.length - 1].split(' ');
+                    if (first[1] === last[1]) {
+                        monthLabel.textContent = first[0].toLowerCase() + ' – ' + last[0].toLowerCase() + ' ' + last[1];
+                    } else {
+                        monthLabel.textContent = visibleMonths[0].toLowerCase() + ' – ' + visibleMonths[visibleMonths.length -
+                            1].toLowerCase();
+                    }
+                }
+            }
+
+            autoFit();
+            syncUrl();
         </script>
     </body>
 

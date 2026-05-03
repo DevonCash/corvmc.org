@@ -63,6 +63,12 @@ class ListEvents extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('poster')
+                ->label('Poster')
+                ->icon('tabler-printer')
+                ->color('gray')
+                ->url(fn () => route('poster'), shouldOpenInNewTab: true),
+
             Action::make('venues')
                 ->label('Venues')
                 ->icon('tabler-map-pin')
