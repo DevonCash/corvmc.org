@@ -308,7 +308,7 @@ class ReservationSeeder extends Seeder
 
     private function getRandomStatus(): string
     {
-        return collect(['confirmed', 'pending', 'confirmed', 'confirmed'])
+        return collect(['confirmed', 'scheduled', 'confirmed', 'confirmed'])
             ->random(); // Bias toward confirmed reservations
     }
 

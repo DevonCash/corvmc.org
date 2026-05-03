@@ -10,6 +10,7 @@ use App\Models\StaffProfile;
 use App\Models\User;
 use App\Notifications\PasswordResetNotification;
 use App\Settings\BylawsSettings;
+use Carbon\Carbon;
 use CorvMC\Bands\Models\Band;
 use CorvMC\Equipment\Http\Controllers\PublicEquipmentController;
 use CorvMC\Events\Models\Event;
@@ -160,6 +161,24 @@ Route::get('/volunteer', function () {
 Route::get('/contact', function () {
     return view('public.contact');
 })->name('contact');
+
+Route::get('/poster/{month?}', function (Request $request, ?string $month = null) {
+    $date = $month
+        ? Carbon::createFromFormat('Y-m', $month, config('app.timezone'))->startOfMonth()
+        : now()->startOfMonth();
+
+    $events = Event::published()
+        ->whereBetween('start_datetime', [$date, $date->copy()->endOfMonth()])
+        ->with('performers')
+        ->get();
+
+    $sponsor = Sponsor::active()->with('media')->inRandomOrder()->first();
+
+    $monthLabel = $date->format('F Y');
+    $size = $request->query('size', 'tabloid');
+
+    return view('public.poster', compact('events', 'sponsor', 'monthLabel', 'size'));
+})->name('poster');
 
 Route::get('/sponsors', function () {
     $sponsors = Sponsor::active()

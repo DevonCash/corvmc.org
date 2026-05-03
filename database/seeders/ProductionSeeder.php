@@ -29,17 +29,33 @@ class ProductionSeeder extends Seeder
         $cmcVenue = Venue::cmc()->first();
 
         // Create upcoming events with unique times
+        // First 5 events are pinned to the current month so the poster always has content
         // Enable native ticketing on most CMC events
         $upcomingEvents = collect();
-        for ($i = 0; $i < 8; $i++) {
-            $factory = Event::factory()->upcoming();
+        for ($i = 0; $i < 13; $i++) {
+            if ($i < 10) {
+                // Pin to current month with a variety of event types
+                $eventTypes = ['performance', 'performance', 'performance', 'open_mic', 'workshop', 'volunteer', 'meetup', 'performance', 'open_mic', 'performance'];
+                $daysLeft = now()->daysInMonth - now()->day;
+                $dayOffset = max(1, (int) (($daysLeft / 10) * ($i + 1)));
+                $startTime = now()->addDays($dayOffset)->setHour(fake()->randomElement([18, 19, 20]))->setMinute(0)->setSecond(0);
+                $factory = Event::factory()->state([
+                    'start_datetime' => $startTime,
+                    'end_datetime' => (clone $startTime)->addHours(fake()->numberBetween(2, 4)),
+                    'doors_datetime' => (clone $startTime)->subMinutes(30),
+                    'status' => \CorvMC\Events\Enums\EventStatus::Scheduled,
+                    'published_at' => now()->subDays(fake()->numberBetween(1, 14)),
+                    'event_type' => $eventTypes[$i],
+                ]);
+            } else {
+                $factory = Event::factory()->upcoming();
+            }
 
             // Enable native ticketing on 6 of 8 upcoming events (CMC events only)
             if ($i < 6 && $cmcVenue) {
                 $ticketsSold = fake()->numberBetween(5, 40);
                 $factory = $factory->withNativeTicketing(
-                    quantity: fake()->randomElement([75, 100, 150]),
-                    sold: $ticketsSold
+                    quantity: fake()->randomElement([75, 100, 150])
                 );
 
                 $event = $factory->create([
@@ -68,8 +84,7 @@ class ProductionSeeder extends Seeder
             if ($i < 4 && $cmcVenue) {
                 $ticketsSold = fake()->numberBetween(30, 80);
                 $factory = $factory->withNativeTicketing(
-                    quantity: 100,
-                    sold: $ticketsSold
+                    quantity: 100
                 );
 
                 $event = $factory->create([
@@ -105,8 +120,13 @@ class ProductionSeeder extends Seeder
             ->concat($completedEvents)
             ->concat($draftEvents);
 
-        // Attach bands to events with realistic performer counts and set lengths
+        // Attach bands to events that would have performers
+        $performerEventTypes = ['performance', 'open_mic', null]; // null = default factory events
         foreach ($allEvents as $event) {
+            if (! in_array($event->event_type, $performerEventTypes)) {
+                continue;
+            }
+
             $performerCount = fake()->numberBetween(1, 5);
             $selectedBands = $bands->random($performerCount);
 
