@@ -23,7 +23,7 @@ class EventsGrid extends SearchableGrid
     {
         return match ($this->scope) {
             'past' => Event::publishedPast(),
-            default => Event::publishedUpcoming(),
+            default => Event::published()->notEnded(),
         };
     }
 
