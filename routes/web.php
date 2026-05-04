@@ -93,7 +93,7 @@ Route::get('/events/{event}', function (Event $event, Request $request) {
 
 Route::get('/show-tonight', function () {
     // Find all published events happening today
-    $tonightShows = Event::publishedToday()->get();
+    $tonightShows = Event::published()->whereDate('start_datetime', now()->toDateString())->get();
 
     // If exactly one show tonight, redirect to it
     if ($tonightShows->count() === 1) {
