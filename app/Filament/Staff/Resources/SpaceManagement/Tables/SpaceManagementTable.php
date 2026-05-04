@@ -4,16 +4,22 @@ namespace App\Filament\Staff\Resources\SpaceManagement\Tables;
 
 use App\Filament\Actions\Reservations\CancelReservationAction;
 use App\Filament\Actions\Reservations\ReservationConfirmAction;
+use App\Filament\Member\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Member\Resources\Reservations\Schemas\ReservationInfolist;
 use App\Filament\Member\Resources\Reservations\Tables\Columns\ReservationColumns;
 use App\Filament\Shared\Actions\ViewAction;
+use App\Models\User;
+use Carbon\Carbon;
+use CorvMC\SpaceManagement\Models\RehearsalReservation;
 use CorvMC\SpaceManagement\States\ReservationState\Cancelled;
 use CorvMC\SpaceManagement\States\ReservationState\Completed;
 use CorvMC\SpaceManagement\States\ReservationState\Confirmed;
 use CorvMC\SpaceManagement\States\ReservationState\Scheduled;
 use CorvMC\SpaceManagement\Models\Reservation;
 use CorvMC\SpaceManagement\Models\SpaceClosure;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
+use Filament\Notifications\Notification;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
@@ -51,6 +57,44 @@ class SpaceManagementTable
                 ReservationColumns::updatedAt(),
             ])
             ->defaultSort('reserved_at', 'desc')
+            ->toolbarActions([
+                Action::make('create_reservation')
+                    ->label('Create Reservation')
+                    ->icon('tabler-calendar-plus')
+                    ->modalWidth('lg')
+                    ->steps(ReservationForm::getStaffSteps())
+                    ->action(function (array $data) {
+                        try {
+                            $user = User::find($data['user_id']);
+
+                            $reservedAt = Carbon::parse($data['reserved_at']);
+                            $reservedUntil = Carbon::parse($data['reserved_until']);
+
+                            $reservation = RehearsalReservation::create([
+                                'reservable_type' => 'user',
+                                'reservable_id' => $user->id,
+                                'reserved_at' => $reservedAt,
+                                'reserved_until' => $reservedUntil,
+                                'status' => $data['status'] ?? 'confirmed',
+                                'notes' => $data['notes'] ?? null,
+                                'is_recurring' => $data['is_recurring'] ?? false,
+                                'hours_used' => $reservedAt->diffInMinutes($reservedUntil) / 60,
+                            ]);
+
+                            Notification::make()
+                                ->title('Reservation Created')
+                                ->body('The reservation has been created successfully.')
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Error')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+            ])
             ->groups([
                 Group::make('reserved_at')
                     ->titlePrefixedWithLabel(false)
@@ -78,6 +122,7 @@ class SpaceManagementTable
                     ),
             ])
             ->defaultGroup('reserved_at')
+            ->groupingSettingsHidden()
             ->filters([
                 SelectFilter::make('status')
                     ->label('Reservation Status')

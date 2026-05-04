@@ -119,7 +119,6 @@ class SpaceManagementResource extends Resource
     public static function getWidgets(): array
     {
         return [
-            Widgets\SpaceUsageWidget::class,
             Widgets\SpaceStatsWidget::class,
         ];
     }

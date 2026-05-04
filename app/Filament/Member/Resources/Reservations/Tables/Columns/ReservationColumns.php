@@ -75,14 +75,14 @@ class ReservationColumns
         return TextColumn::make('time_range')
             ->label('When')
             ->description(function (Reservation $record): string {
-                return $record->reserved_at->format('M j, Y');
+                return $record->reserved_until->format('g:i A');
             })
             ->formatStateUsing(function (Reservation $record): string {
-                return $record->reserved_at->format('g:i A') . ' - ' . $record->reserved_until->format('g:i A');
+                return $record->reserved_at->format('g:i A');
             })
             ->icon(fn($record) => $record->is_recurring ? 'tabler-repeat' : null)
             ->iconPosition(IconPosition::After)
-            ->tooltip(fn($record) => $record->is_recurring ? 'Recurring reservation' : null)
+            ->tooltip(fn($record) => $record->reserved_until->diffForHumans($record->reserved_at, true))
             ->width(0)
             ->grow(false)
             ->sortable(['reserved_at']);
@@ -102,10 +102,10 @@ class ReservationColumns
     {
         return IconColumn::make('status')
             ->label('')
-            ->tooltip(fn( $state ) => $state->getLabel())
+            ->tooltip(fn($state) => $state->getLabel())
             ->grow(true)
             ->width(0)
-            ;
+        ;
     }
 
     public static function costDisplay(): TextColumn
@@ -134,13 +134,22 @@ class ReservationColumns
 
                 $amount = $order->formattedTotal();
 
+                return $amount;
+            })
+            ->description(function ($record) {
+                $order = Finance::findActiveOrder($record);
+
+                if (! $order) {
+                    return '';
+                }
+
                 return match (true) {
-                    $order->status instanceof OrderState\Pending => "{$amount} due " . $record->reserved_at->format('n/j'),
-                    $order->status instanceof OrderState\Completed => "{$amount} paid " . ($order->settled_at?->format('n/j') ?? ''),
+                    $order->status instanceof OrderState\Pending => 'Pending',
+                    $order->status instanceof OrderState\Completed => 'Paid ' . ($order->settled_at?->format('n/j') ?? ''),
                     $order->status instanceof OrderState\Comped => 'Comped',
-                    $order->status instanceof OrderState\Refunded => "{$amount} refunded",
+                    $order->status instanceof OrderState\Refunded => 'Refunded',
                     $order->status instanceof OrderState\Cancelled => 'Cancelled',
-                    default => $amount,
+                    default => '',
                 };
             });
     }

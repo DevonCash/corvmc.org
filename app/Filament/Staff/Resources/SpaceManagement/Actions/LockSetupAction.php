@@ -19,7 +19,7 @@ class LockSetupAction
     public static function make(): Action
     {
         return Action::make('lock_setup')
-            ->label('Lock Settings')
+            ->label('Door Lock')
             ->icon('tabler-lock')
             ->color('gray')
             ->modalWidth('lg')
