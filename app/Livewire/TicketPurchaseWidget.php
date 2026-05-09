@@ -7,7 +7,6 @@ use CorvMC\Events\Facades\TicketService;
 use CorvMC\Events\Models\Event;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
@@ -20,7 +19,7 @@ use Livewire\Component;
  *
  * Supports both authenticated members and guest checkout.
  *
- * @property \Filament\Schemas\Schema $form
+ * @property Schema $form
  */
 class TicketPurchaseWidget extends Component implements HasSchemas
 {
@@ -35,6 +34,8 @@ class TicketPurchaseWidget extends Component implements HasSchemas
     public bool $coversFees = false;
 
     public bool $isProcessing = false;
+
+    public ?string $errorMessage = null;
 
     public function mount(Event $event): void
     {
@@ -75,7 +76,7 @@ class TicketPurchaseWidget extends Component implements HasSchemas
                             ->maxLength(255)
                             ->disabled((bool) $user),
                     ])
-                    ->visible(!$user),
+                    ->visible(! $user),
 
                 Section::make('Tickets')
                     ->schema([
@@ -108,52 +109,35 @@ class TicketPurchaseWidget extends Component implements HasSchemas
         }
 
         $this->isProcessing = true;
+        $this->errorMessage = null;
 
         try {
-            // Validate form
             $validated = $this->form->getState();
 
             /** @var User|null $user */
             $user = Auth::user();
 
-            // Create the ticket order
-            $order = TicketService::createOrder(
+            $redirectUrl = TicketService::checkout(
                 event: $this->event,
                 quantity: (int) ($validated['quantity'] ?? 1),
-                name: $validated['name'] ?? $user?->name,
-                email: $validated['email'] ?? $user?->email,
+                successUrl: route('events.show', $this->event),
+                cancelUrl: route('events.tickets', $this->event),
                 user: $user,
-                coversFees: (bool) ($validated['covers_fees'] ?? false)
+                guestName: $validated['name'] ?? null,
+                guestEmail: $validated['email'] ?? null,
+                coversFees: (bool) ($validated['covers_fees'] ?? false),
             );
 
-            // Create checkout session and redirect
-            $checkout = TicketService::processCheckout($order);
-
-            $this->redirect($checkout->url);
+            $this->redirect($redirectUrl);
         } catch (\InvalidArgumentException $e) {
             $this->isProcessing = false;
-
-            Notification::make()
-                ->title('Unable to Purchase')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
+            $this->errorMessage = $e->getMessage();
         } catch (\RuntimeException $e) {
             $this->isProcessing = false;
-
-            Notification::make()
-                ->title('Tickets Unavailable')
-                ->body($e->getMessage())
-                ->warning()
-                ->send();
+            $this->errorMessage = $e->getMessage();
         } catch (\Exception $e) {
             $this->isProcessing = false;
-
-            Notification::make()
-                ->title('Error')
-                ->body('An error occurred. Please try again.')
-                ->danger()
-                ->send();
+            $this->errorMessage = 'An error occurred. Please try again.';
 
             report($e);
         }

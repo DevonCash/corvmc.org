@@ -126,6 +126,14 @@
                 </p>
             @endif
 
+            {{-- Error Message --}}
+            @if($errorMessage)
+                <div class="alert alert-error mt-6">
+                    <x-tabler-alert-circle class="size-5 flex-shrink-0" />
+                    <span>{{ $errorMessage }}</span>
+                </div>
+            @endif
+
             {{-- Submit Button --}}
             <div class="mt-6" wire:ignore.self>
                 <button
