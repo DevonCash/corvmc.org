@@ -2,14 +2,23 @@
 
 use App\Models\User;
 use Carbon\Carbon;
+use CorvMC\Events\Models\Event;
+use CorvMC\Events\Models\TicketOrder;
+use CorvMC\Events\Models\Venue;
 use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Events\OrderSettled;
 use CorvMC\Finance\Facades\Finance;
 use CorvMC\Finance\Models\LineItem;
 use CorvMC\Finance\Models\Order;
 use CorvMC\Finance\Models\Transaction;
+use CorvMC\Finance\States\OrderState\Comped;
 use CorvMC\Finance\States\OrderState\Completed;
 use CorvMC\Finance\States\OrderState\Pending;
+use CorvMC\Finance\States\TransactionState\Cancelled;
+use CorvMC\Finance\States\TransactionState\Cleared;
 use CorvMC\SpaceManagement\Models\RehearsalReservation;
+use Stripe\Checkout\Session;
+use Stripe\StripeClient;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -69,7 +78,7 @@ describe('Finance::commit() with cash rail', function () {
         expect($txn->currency)->toBe('cash');
         expect($txn->amount)->toBe(3000); // positive = money received by organization
         expect($txn->type)->toBe('payment');
-        expect($txn->status)->toBeInstanceOf(\CorvMC\Finance\States\TransactionState\Pending::class);
+        expect($txn->status)->toBeInstanceOf(CorvMC\Finance\States\TransactionState\Pending::class);
     });
 
     it('reprices at commit time with fresh discounts', function () {
@@ -214,14 +223,14 @@ describe('Finance::commit() validation', function () {
 
         // Try committing again
         expect(fn () => Finance::commit($order, ['cash' => 0]))
-            ->toThrow(\RuntimeException::class, 'expected Pending');
+            ->toThrow(RuntimeException::class, 'expected Pending');
     });
 
     it('throws when rail amounts do not match net total', function () {
         ['order' => $order] = createOrderWithReservation($this, 2.0);
 
         expect(fn () => Finance::commit($order, ['cash' => 999]))
-            ->toThrow(\RuntimeException::class, 'do not match net total');
+            ->toThrow(RuntimeException::class, 'do not match net total');
     });
 
     it('allows empty rails when net total is zero', function () {
@@ -244,6 +253,91 @@ describe('Finance::commit() validation', function () {
 // =========================================================================
 // Order helpers
 // =========================================================================
+
+// =========================================================================
+// Guest Stripe checkout (no user on Order)
+// =========================================================================
+
+describe('Finance::commit() guest Stripe checkout', function () {
+    it('creates a Stripe Transaction for a guest Order and calls Checkout::create', function () {
+        // Create a TicketOrder and Finance Order with no user
+        $venue = Venue::create([
+            'name' => 'Test Venue',
+            'address' => '123 Main St',
+            'city' => 'Corvallis',
+            'state' => 'OR',
+            'zip' => '97333',
+            'is_cmc' => true,
+        ]);
+
+        $event = Event::factory()->create([
+            'venue_id' => $venue->id,
+            'ticketing_enabled' => true,
+            'ticket_quantity' => 100,
+        ]);
+
+        $ticketOrder = TicketOrder::factory()->create([
+            'event_id' => $event->id,
+            'user_id' => null,
+            'name' => 'Guest User',
+            'email' => 'guest@example.com',
+            'quantity' => 1,
+        ]);
+
+        $lineItems = Finance::price([$ticketOrder], null);
+        $totalCents = (int) $lineItems->sum('amount');
+
+        $order = Order::create([
+            'user_id' => null,
+            'total_amount' => 0,
+        ]);
+
+        foreach ($lineItems as $lineItem) {
+            $lineItem->order_id = $order->id;
+            $lineItem->save();
+        }
+
+        $order->update(['total_amount' => $totalCents]);
+
+        // Build a fake Stripe Checkout Session
+        $fakeSession = new Session('cs_test_guest_session');
+        $fakeSession->url = 'https://checkout.stripe.com/guest-session';
+
+        // Mock the StripeClient so Cashier::stripe()->checkout->sessions->create() returns it
+        $sessionsService = Mockery::mock();
+        $sessionsService->shouldReceive('create')
+            ->once()
+            ->with(Mockery::on(function (array $params) {
+                return ($params['customer_email'] ?? null) === 'guest@example.com'
+                    && isset($params['line_items'])
+                    && ($params['metadata']['type'] ?? null) === 'order';
+            }))
+            ->andReturn($fakeSession);
+
+        $checkoutService = new stdClass;
+        $checkoutService->sessions = $sessionsService;
+
+        $fakeStripe = Mockery::mock(StripeClient::class)->makePartial();
+        $fakeStripe->checkout = $checkoutService;
+
+        app()->bind(StripeClient::class, fn () => $fakeStripe);
+
+        $committed = Finance::commit($order->fresh(), ['stripe' => $totalCents], customerEmail: 'guest@example.com');
+
+        // A Pending Stripe Transaction should exist with checkout metadata
+        $stripeTxn = $committed->transactions->firstWhere('currency', 'stripe');
+        expect($stripeTxn)->not->toBeNull();
+        expect($stripeTxn->amount)->toBe($totalCents);
+        expect($stripeTxn->type)->toBe('payment');
+        expect($stripeTxn->user_id)->toBeNull();
+        expect($stripeTxn->status)->toBeInstanceOf(CorvMC\Finance\States\TransactionState\Pending::class);
+        expect($stripeTxn->metadata['session_id'])->toBe('cs_test_guest_session');
+        expect($stripeTxn->metadata['checkout_url'])->toBe('https://checkout.stripe.com/guest-session');
+
+        // Order should still be Pending (waiting for Stripe payment)
+        expect($committed->status)->toBeInstanceOf(Pending::class);
+    });
+});
 
 describe('Order::checkoutUrl()', function () {
     it('returns null when no Stripe Transaction exists', function () {
@@ -287,7 +381,7 @@ describe('Order::checkoutUrl()', function () {
         ]);
 
         // Transition to Cleared
-        $txn->status->transitionTo(\CorvMC\Finance\States\TransactionState\Cleared::class);
+        $txn->status->transitionTo(Cleared::class);
 
         expect($order->checkoutUrl())->toBeNull();
     });
@@ -336,7 +430,7 @@ describe('Order::resolveProducts()', function () {
 
 describe('OrderState transition hooks', function () {
     it('fires OrderSettled when Order transitions to Completed', function () {
-        \Illuminate\Support\Facades\Event::fake([\CorvMC\Finance\Events\OrderSettled::class]);
+        Illuminate\Support\Facades\Event::fake([OrderSettled::class]);
 
         config(['finance.wallets.free_hours.cents_per_unit' => 1500]);
         $this->user->addCredit(
@@ -350,7 +444,7 @@ describe('OrderState transition hooks', function () {
 
         Finance::commit($order);
 
-        \Illuminate\Support\Facades\Event::assertDispatched(\CorvMC\Finance\Events\OrderSettled::class);
+        Illuminate\Support\Facades\Event::assertDispatched(OrderSettled::class);
     });
 
     it('cancels Pending Transactions when Order transitions to Comped', function () {
@@ -367,21 +461,21 @@ describe('OrderState transition hooks', function () {
         ]);
 
         // Transition to Comped
-        $order->status->transitionTo(\CorvMC\Finance\States\OrderState\Comped::class);
+        $order->status->transitionTo(Comped::class);
 
         $txn->refresh();
-        expect($txn->status)->toBeInstanceOf(\CorvMC\Finance\States\TransactionState\Cancelled::class);
+        expect($txn->status)->toBeInstanceOf(Cancelled::class);
         expect($txn->cancelled_at)->not->toBeNull();
     });
 
     it('fires OrderSettled when Order transitions to Comped', function () {
-        \Illuminate\Support\Facades\Event::fake([\CorvMC\Finance\Events\OrderSettled::class]);
+        Illuminate\Support\Facades\Event::fake([OrderSettled::class]);
 
         ['order' => $order] = createOrderWithReservation($this, 2.0);
 
-        $order->status->transitionTo(\CorvMC\Finance\States\OrderState\Comped::class);
+        $order->status->transitionTo(Comped::class);
 
-        \Illuminate\Support\Facades\Event::assertDispatched(\CorvMC\Finance\Events\OrderSettled::class);
+        Illuminate\Support\Facades\Event::assertDispatched(OrderSettled::class);
     });
 
     it('sets settled_at when Order transitions to Completed', function () {

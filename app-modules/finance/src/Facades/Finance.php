@@ -2,6 +2,7 @@
 
 namespace CorvMC\Finance\Facades;
 
+use CorvMC\Finance\FinanceManager;
 use Illuminate\Support\Facades\Facade;
 
 /**
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void allocate(\App\Models\User $user, string $walletType, int $amount, string $reason, ?\Illuminate\Database\Eloquent\Model $source = null)
  * @method static void adjust(\App\Models\User $user, string $walletType, int $amount, string $reason)
  * @method static \Illuminate\Support\Collection price(array $models, ?\App\Models\User $user = null)
- * @method static \CorvMC\Finance\Models\Order commit(\CorvMC\Finance\Models\Order $order, array $rails = [], bool $coversFees = false)
+ * @method static \CorvMC\Finance\Models\Order commit(\CorvMC\Finance\Models\Order $order, array $rails = [], bool $coversFees = false, array $checkoutUrls = [], ?string $customerEmail = null)
  * @method static \CorvMC\Finance\Models\Transaction settle(\CorvMC\Finance\Models\Transaction $transaction, ?string $paymentIntentId = null)
  * @method static \CorvMC\Finance\Models\Order comp(\CorvMC\Finance\Models\Order $order)
  * @method static \CorvMC\Finance\Models\Order cancel(\CorvMC\Finance\Models\Order $order)
@@ -23,12 +24,12 @@ use Illuminate\Support\Facades\Facade;
  * @method static string|null retryStripePayment(\CorvMC\Finance\Models\Order $order)
  * @method static string|null switchToStripe(\CorvMC\Finance\Models\Order $order)
  *
- * @see \CorvMC\Finance\FinanceManager
+ * @see FinanceManager
  */
 class Finance extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return \CorvMC\Finance\FinanceManager::class;
+        return FinanceManager::class;
     }
 }

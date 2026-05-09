@@ -4,14 +4,25 @@ namespace CorvMC\Finance;
 
 use App\Models\User;
 use CorvMC\Finance\Enums\CreditType;
+use CorvMC\Finance\Events\TransactionCleared;
 use CorvMC\Finance\Exceptions\PurchasableLockedException;
 use CorvMC\Finance\Models\LineItem;
 use CorvMC\Finance\Models\Order;
 use CorvMC\Finance\Models\Transaction;
 use CorvMC\Finance\Products\Product;
 use CorvMC\Finance\States\OrderState\Cancelled;
+use CorvMC\Finance\States\OrderState\Comped;
+use CorvMC\Finance\States\OrderState\Completed;
+use CorvMC\Finance\States\OrderState\Pending;
 use CorvMC\Finance\States\OrderState\Refunded;
+use CorvMC\Finance\States\TransactionState\Cleared;
+use CorvMC\Finance\States\TransactionState\Failed;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Laravel\Cashier\Cashier;
+use Laravel\Cashier\Checkout;
 
 /**
  * FinanceManager — the singleton backing the Finance facade.
@@ -66,7 +77,7 @@ class FinanceManager
             if (isset($this->productsByType[$productType])) {
                 $modelClass = $this->productsByType[$productType]::$model;
                 if ($modelClass) {
-                    $cacheKey = $modelClass . ':' . $lineItem->product_id;
+                    $cacheKey = $modelClass.':'.$lineItem->product_id;
                     unset($this->activeOrderCache[$cacheKey]);
                 }
             }
@@ -80,7 +91,7 @@ class FinanceManager
     /**
      * Register an array of Product classes.
      *
-     * @param array<class-string<Product>> $productClasses
+     * @param  array<class-string<Product>>  $productClasses
      */
     public function register(array $productClasses): void
     {
@@ -140,7 +151,7 @@ class FinanceManager
             return null;
         }
 
-        $cacheKey = get_class($model) . ':' . $model->getKey();
+        $cacheKey = get_class($model).':'.$model->getKey();
 
         if (array_key_exists($cacheKey, $this->activeOrderCache)) {
             return $this->activeOrderCache[$cacheKey];
@@ -177,6 +188,7 @@ class FinanceManager
         // Direct match
         if (isset($this->productsByModel[$class])) {
             $productClass = $this->productsByModel[$class];
+
             return $productClass::for($model);
         }
 
@@ -184,6 +196,7 @@ class FinanceManager
         foreach (class_parents($class) as $parent) {
             if (isset($this->productsByModel[$parent])) {
                 $productClass = $this->productsByModel[$parent];
+
                 return $productClass::for($model);
             }
         }
@@ -205,6 +218,7 @@ class FinanceManager
         }
 
         $productClass = $this->productsByType[$type];
+
         return $productClass::for();
     }
 
@@ -332,10 +346,10 @@ class FinanceManager
      *
      * Pure — no DB writes, no wallet mutations.
      *
-     * @param  array<\Illuminate\Database\Eloquent\Model>  $models
-     * @return \Illuminate\Support\Collection<int, LineItem>
+     * @param  array<Model>  $models
+     * @return Collection<int, LineItem>
      */
-    public function price(array $models, ?User $user = null): \Illuminate\Support\Collection
+    public function price(array $models, ?User $user = null): Collection
     {
         $lineItems = collect();
 
@@ -370,12 +384,12 @@ class FinanceManager
 
                 foreach ($eligibleWallets as $walletKey) {
                     // Verify the derived discount product type is registered
-                    $discountType = $walletKey . '_discount';
+                    $discountType = $walletKey.'_discount';
 
                     if (! $this->isRegisteredType($discountType)) {
                         throw new \RuntimeException(
                             "Wallet [{$walletKey}] requires a registered discount product type [{$discountType}]. "
-                                . 'Create and register the Product class before using this wallet.'
+                                .'Create and register the Product class before using this wallet.'
                         );
                     }
 
@@ -459,18 +473,22 @@ class FinanceManager
      * @param  Order  $order  A Pending Order with at least one LineItem already attached.
      * @param  array<string, int>  $rails  Payment rails and amounts, e.g. ['stripe' => 2500, 'cash' => 500].
      * @param  bool  $coversFees  Whether to add a processing fee LineItem for Stripe payments.
-     * @return Order  The fresh Order with all relationships loaded.
+     * @return Order The fresh Order with all relationships loaded.
      *
-     * @throws \RuntimeException  If the Order is not in Pending state.
-     * @throws \RuntimeException  If rail amounts don't cover the net total.
+     * @throws \RuntimeException If the Order is not in Pending state.
+     * @throws \RuntimeException If rail amounts don't cover the net total.
      */
-    public function commit(Order $order, array $rails = [], bool $coversFees = false): Order
+    /**
+     * @param  array{success_url?: string, cancel_url?: string}  $checkoutUrls  Optional custom Stripe redirect URLs.
+     * @param  string|null  $customerEmail  Email for guest Stripe checkout (no Cashier user).
+     */
+    public function commit(Order $order, array $rails = [], bool $coversFees = false, array $checkoutUrls = [], ?string $customerEmail = null): Order
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($order, $rails, $coversFees) {
+        return DB::transaction(function () use ($order, $rails, $coversFees, $checkoutUrls, $customerEmail) {
             // 1. Lock the Order row
             $order = Order::lockForUpdate()->findOrFail($order->id);
 
-            if (! ($order->status instanceof \CorvMC\Finance\States\OrderState\Pending)) {
+            if (! ($order->status instanceof Pending)) {
                 throw new \RuntimeException(
                     "Cannot commit Order [{$order->id}]: status is [{$order->status->getLabel()}], expected Pending."
                 );
@@ -562,18 +580,18 @@ class FinanceManager
                 ]);
 
                 // 8. For Stripe rail: create Checkout Session
-                if ($currency === 'stripe' && $order->user) {
-                    $this->createStripeCheckout($order, $transaction, "Order #{$order->id}");
+                if ($currency === 'stripe') {
+                    $this->createStripeCheckout($order, $transaction, "Order #{$order->id}", $checkoutUrls, $customerEmail);
                 }
             }
 
             // 9. If no Transactions (fully covered by discounts), settle immediately
             $hasPendingTransactions = $order->transactions()
-                ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
+                ->whereState('status', States\TransactionState\Pending::class)
                 ->exists();
 
             if (! $hasPendingTransactions) {
-                $order->status->transitionTo(\CorvMC\Finance\States\OrderState\Completed::class);
+                $order->status->transitionTo(Completed::class);
             }
 
             return $order->fresh(['lineItems', 'transactions']);
@@ -594,16 +612,16 @@ class FinanceManager
      *
      * @param  Transaction  $transaction  A Pending Transaction to settle.
      * @param  string|null  $paymentIntentId  Optional Stripe payment intent ID to store in metadata.
-     * @return Transaction  The fresh Transaction.
+     * @return Transaction The fresh Transaction.
      *
-     * @throws \RuntimeException  If the Transaction is not in Pending state.
+     * @throws \RuntimeException If the Transaction is not in Pending state.
      */
     public function settle(Transaction $transaction, ?string $paymentIntentId = null): Transaction
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($transaction, $paymentIntentId) {
+        return DB::transaction(function () use ($transaction, $paymentIntentId) {
             $transaction = Transaction::lockForUpdate()->findOrFail($transaction->id);
 
-            if (! ($transaction->status instanceof \CorvMC\Finance\States\TransactionState\Pending)) {
+            if (! ($transaction->status instanceof States\TransactionState\Pending)) {
                 throw new \RuntimeException(
                     "Cannot settle Transaction [{$transaction->id}]: status is [{$transaction->status->getLabel()}], expected Pending."
                 );
@@ -618,9 +636,9 @@ class FinanceManager
 
             $transaction->cleared_at = now();
             $transaction->save();
-            $transaction->status->transitionTo(\CorvMC\Finance\States\TransactionState\Cleared::class);
+            $transaction->status->transitionTo(Cleared::class);
 
-            \CorvMC\Finance\Events\TransactionCleared::dispatch($transaction);
+            TransactionCleared::dispatch($transaction);
 
             return $transaction->fresh();
         });
@@ -637,13 +655,13 @@ class FinanceManager
      * returns the Transaction unchanged if it is already in a terminal state.
      *
      * @param  Transaction  $transaction  A Pending Transaction to fail.
-     * @return Transaction  The fresh Transaction.
+     * @return Transaction The fresh Transaction.
      *
-     * @throws \RuntimeException  If the Transaction is in a non-terminal, non-Pending state that cannot transition to Failed.
+     * @throws \RuntimeException If the Transaction is in a non-terminal, non-Pending state that cannot transition to Failed.
      */
     public function fail(Transaction $transaction): Transaction
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($transaction) {
+        return DB::transaction(function () use ($transaction) {
             $transaction = Transaction::lockForUpdate()->findOrFail($transaction->id);
 
             // Already terminal — nothing to do
@@ -651,13 +669,13 @@ class FinanceManager
                 return $transaction;
             }
 
-            if (! ($transaction->status instanceof \CorvMC\Finance\States\TransactionState\Pending)) {
+            if (! ($transaction->status instanceof States\TransactionState\Pending)) {
                 throw new \RuntimeException(
                     "Cannot fail Transaction [{$transaction->id}]: status is [{$transaction->status->getLabel()}], expected Pending."
                 );
             }
 
-            $transaction->status->transitionTo(\CorvMC\Finance\States\TransactionState\Failed::class);
+            $transaction->status->transitionTo(Failed::class);
             $transaction->update(['failed_at' => now()]);
 
             return $transaction->fresh();
@@ -677,22 +695,22 @@ class FinanceManager
      * their share of the cost.
      *
      * @param  Order  $order  A Pending Order to comp.
-     * @return Order  The fresh Order.
+     * @return Order The fresh Order.
      *
-     * @throws \RuntimeException  If the Order is not in Pending state.
+     * @throws \RuntimeException If the Order is not in Pending state.
      */
     public function comp(Order $order): Order
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+        return DB::transaction(function () use ($order) {
             $order = Order::lockForUpdate()->findOrFail($order->id);
 
-            if (! ($order->status instanceof \CorvMC\Finance\States\OrderState\Pending)) {
+            if (! ($order->status instanceof Pending)) {
                 throw new \RuntimeException(
                     "Cannot comp Order [{$order->id}]: status is [{$order->status->getLabel()}], expected Pending."
                 );
             }
 
-            $order->status->transitionTo(\CorvMC\Finance\States\OrderState\Comped::class);
+            $order->status->transitionTo(Comped::class);
 
             return $order->fresh(['lineItems', 'transactions']);
         });
@@ -710,22 +728,22 @@ class FinanceManager
      * event is fired for cross-module cleanup (e.g. ticket cancellation).
      *
      * @param  Order  $order  A Pending Order to cancel.
-     * @return Order  The fresh Order.
+     * @return Order The fresh Order.
      *
-     * @throws \RuntimeException  If the Order is not in Pending state.
+     * @throws \RuntimeException If the Order is not in Pending state.
      */
     public function cancel(Order $order): Order
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+        return DB::transaction(function () use ($order) {
             $order = Order::lockForUpdate()->findOrFail($order->id);
 
-            if (! ($order->status instanceof \CorvMC\Finance\States\OrderState\Pending)) {
+            if (! ($order->status instanceof Pending)) {
                 throw new \RuntimeException(
                     "Cannot cancel Order [{$order->id}]: status is [{$order->status->getLabel()}], expected Pending."
                 );
             }
 
-            $order->status->transitionTo(\CorvMC\Finance\States\OrderState\Cancelled::class);
+            $order->status->transitionTo(Cancelled::class);
 
             $this->clearActiveOrderCache($order);
 
@@ -749,18 +767,18 @@ class FinanceManager
      * The Refunded state hooks reverse credit deductions and fire OrderRefunded.
      *
      * @param  Order  $order  A Completed or Comped Order to refund.
-     * @return Order  The fresh Order with refund Transactions.
+     * @return Order The fresh Order with refund Transactions.
      *
-     * @throws \RuntimeException  If the Order is not in Completed or Comped state.
-     * @throws \RuntimeException  If a Stripe refund API call fails.
+     * @throws \RuntimeException If the Order is not in Completed or Comped state.
+     * @throws \RuntimeException If a Stripe refund API call fails.
      */
     public function refund(Order $order): Order
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+        return DB::transaction(function () use ($order) {
             $order = Order::lockForUpdate()->findOrFail($order->id);
 
-            $isCompleted = $order->status instanceof \CorvMC\Finance\States\OrderState\Completed;
-            $isComped = $order->status instanceof \CorvMC\Finance\States\OrderState\Comped;
+            $isCompleted = $order->status instanceof Completed;
+            $isComped = $order->status instanceof Comped;
 
             if (! $isCompleted && ! $isComped) {
                 throw new \RuntimeException(
@@ -771,7 +789,7 @@ class FinanceManager
             // Create compensating refund Transactions for each Cleared payment
             $clearedPayments = $order->transactions()
                 ->where('type', 'payment')
-                ->whereState('status', \CorvMC\Finance\States\TransactionState\Cleared::class)
+                ->whereState('status', Cleared::class)
                 ->get();
 
             foreach ($clearedPayments as $payment) {
@@ -798,7 +816,7 @@ class FinanceManager
                         );
                     }
 
-                    $stripeRefund = \Laravel\Cashier\Cashier::stripe()->refunds->create([
+                    $stripeRefund = Cashier::stripe()->refunds->create([
                         'payment_intent' => $paymentIntentId,
                         'amount' => $refundAmount, // Stripe expects positive cents
                     ]);
@@ -814,7 +832,7 @@ class FinanceManager
             }
 
             // Transition to Refunded (hooks handle credit reversal + event)
-            $order->status->transitionTo(\CorvMC\Finance\States\OrderState\Refunded::class);
+            $order->status->transitionTo(Refunded::class);
 
             $this->clearActiveOrderCache($order);
 
@@ -839,7 +857,7 @@ class FinanceManager
      */
     public function retryStripePayment(Order $order): ?string
     {
-        if (! ($order->status instanceof \CorvMC\Finance\States\OrderState\Pending)) {
+        if (! ($order->status instanceof Pending)) {
             throw new \RuntimeException(
                 "Cannot retry payment on Order [{$order->id}]: status is [{$order->status->getLabel()}], expected Pending."
             );
@@ -849,8 +867,8 @@ class FinanceManager
             ->where('currency', 'stripe')
             ->where('type', 'payment')
             ->whereState('status', [
-                \CorvMC\Finance\States\TransactionState\Failed::class,
-                \CorvMC\Finance\States\TransactionState\Cancelled::class,
+                Failed::class,
+                States\TransactionState\Cancelled::class,
             ])
             ->first();
 
@@ -895,7 +913,7 @@ class FinanceManager
      */
     public function switchToStripe(Order $order): ?string
     {
-        if (! ($order->status instanceof \CorvMC\Finance\States\OrderState\Pending)) {
+        if (! ($order->status instanceof Pending)) {
             throw new \RuntimeException(
                 "Cannot switch payment on Order [{$order->id}]: status is [{$order->status->getLabel()}], expected Pending."
             );
@@ -904,14 +922,14 @@ class FinanceManager
         $cashTxn = $order->transactions()
             ->where('currency', 'cash')
             ->where('type', 'payment')
-            ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
+            ->whereState('status', States\TransactionState\Pending::class)
             ->first();
 
         if (! $cashTxn) {
             return null;
         }
 
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($order, $cashTxn) {
+        return DB::transaction(function () use ($order, $cashTxn) {
             $amount = $cashTxn->amount;
 
             // Create the stripe transaction and attempt checkout BEFORE cancelling
@@ -928,7 +946,7 @@ class FinanceManager
             $checkoutUrl = $this->createStripeCheckout($order, $newTxn, "Order #{$order->id}");
 
             // Stripe succeeded — now safe to cancel the cash transaction
-            $cashTxn->status->transitionTo(\CorvMC\Finance\States\TransactionState\Cancelled::class);
+            $cashTxn->status->transitionTo(States\TransactionState\Cancelled::class);
 
             $newTxn->refresh();
             $newTxn->update([
@@ -961,7 +979,7 @@ class FinanceManager
         $staleTransactions = Transaction::query()
             ->where('currency', 'stripe')
             ->where('type', 'payment')
-            ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
+            ->whereState('status', States\TransactionState\Pending::class)
             ->where('created_at', '<', $cutoff)
             ->get();
 
@@ -982,7 +1000,7 @@ class FinanceManager
             }
 
             try {
-                $session = \Laravel\Cashier\Cashier::stripe()->checkout->sessions->retrieve($sessionId);
+                $session = Cashier::stripe()->checkout->sessions->retrieve($sessionId);
             } catch (\Exception $e) {
                 $errors[] = [
                     'transaction_id' => $transaction->id,
@@ -1031,7 +1049,7 @@ class FinanceManager
         $transactions = Transaction::query()
             ->where('currency', 'stripe')
             ->where('type', 'payment')
-            ->whereState('status', \CorvMC\Finance\States\TransactionState\Cleared::class)
+            ->whereState('status', Cleared::class)
             ->where('cleared_at', '>=', $since)
             ->whereNotNull('cleared_at')
             ->get();
@@ -1054,7 +1072,7 @@ class FinanceManager
             }
 
             try {
-                $paymentIntent = \Laravel\Cashier\Cashier::stripe()->paymentIntents->retrieve($paymentIntentId);
+                $paymentIntent = Cashier::stripe()->paymentIntents->retrieve($paymentIntentId);
             } catch (\Exception $e) {
                 $errors++;
 
@@ -1103,7 +1121,7 @@ class FinanceManager
     {
         $cutoff = now()->subDays($days);
 
-        $count = \Illuminate\Support\Facades\DB::table('stripe_webhook_events')
+        $count = DB::table('stripe_webhook_events')
             ->where('created_at', '<', $cutoff)
             ->count();
 
@@ -1111,22 +1129,22 @@ class FinanceManager
             return ['archived' => 0, 'file' => null];
         }
 
-        \Illuminate\Support\Facades\Storage::disk('local')->makeDirectory('finance/archives');
+        Storage::disk('local')->makeDirectory('finance/archives');
 
-        $filename = 'finance/archives/webhook-events-' . now()->format('Y-m-d-His') . '.jsonl';
-        $path = \Illuminate\Support\Facades\Storage::disk('local')->path($filename);
+        $filename = 'finance/archives/webhook-events-'.now()->format('Y-m-d-His').'.jsonl';
+        $path = Storage::disk('local')->path($filename);
 
         $written = 0;
         $maxArchivedId = 0;
         $handle = fopen($path, 'w');
 
         try {
-            \Illuminate\Support\Facades\DB::table('stripe_webhook_events')
+            DB::table('stripe_webhook_events')
                 ->where('created_at', '<', $cutoff)
                 ->orderBy('id')
                 ->chunk(500, function ($events) use ($handle, &$written, &$maxArchivedId) {
                     foreach ($events as $event) {
-                        fwrite($handle, json_encode((array) $event) . "\n");
+                        fwrite($handle, json_encode((array) $event)."\n");
                         $maxArchivedId = max($maxArchivedId, $event->id);
                         $written++;
                     }
@@ -1139,7 +1157,7 @@ class FinanceManager
             return ['archived' => 0, 'file' => null];
         }
 
-        \Illuminate\Support\Facades\DB::table('stripe_webhook_events')
+        DB::table('stripe_webhook_events')
             ->where('id', '<=', $maxArchivedId)
             ->delete();
 
@@ -1156,26 +1174,56 @@ class FinanceManager
      * @param  Order  $order  The parent Order.
      * @param  Transaction  $transaction  The Stripe Transaction to attach the session to.
      * @param  string  $description  The product name shown in Stripe checkout.
-     * @return string  The Checkout URL.
+     * @param  array{success_url?: string, cancel_url?: string}  $checkoutUrls  Optional custom redirect URLs.
+     * @return string The Checkout URL.
      */
-    private function createStripeCheckout(Order $order, Transaction $transaction, string $description): string
+    private function createStripeCheckout(Order $order, Transaction $transaction, string $description, array $checkoutUrls = [], ?string $customerEmail = null): string
     {
         $user = $order->user;
 
-        $checkout = $user->checkoutCharge(
-            $transaction->amount,
-            $description,
-            1,
-            [
-                'metadata' => [
-                    'type' => 'order',
-                    'transaction_id' => $transaction->id,
-                    'order_id' => $order->id,
-                ],
-                'success_url' => route('checkout.success') . '?user_id=' . $user->id . '&session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => route('checkout.cancel') . '?user_id=' . $user->id . '&type=order&transaction_id=' . $transaction->id,
-            ]
-        );
+        $metadata = [
+            'type' => 'order',
+            'transaction_id' => $transaction->id,
+            'order_id' => $order->id,
+        ];
+
+        if ($user) {
+            // Authenticated user: use Cashier with Stripe Customer record
+            $defaultSuccessUrl = route('checkout.success').'?user_id='.$user->id.'&session_id={CHECKOUT_SESSION_ID}';
+            $defaultCancelUrl = route('checkout.cancel').'?user_id='.$user->id.'&type=order&transaction_id='.$transaction->id;
+
+            $checkout = $user->checkoutCharge(
+                $transaction->amount,
+                $description,
+                1,
+                [
+                    'metadata' => $metadata,
+                    'success_url' => $checkoutUrls['success_url'] ?? $defaultSuccessUrl,
+                    'cancel_url' => $checkoutUrls['cancel_url'] ?? $defaultCancelUrl,
+                ]
+            );
+        } else {
+            // Guest checkout: no Cashier user, use Checkout::create directly
+            $sessionOptions = [
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => config('cashier.currency', 'usd'),
+                        'product_data' => ['name' => $description],
+                        'unit_amount' => $transaction->amount,
+                    ],
+                    'quantity' => 1,
+                ]],
+                'metadata' => $metadata,
+                'success_url' => $checkoutUrls['success_url'] ?? route('checkout.success').'?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => $checkoutUrls['cancel_url'] ?? route('checkout.cancel').'?type=order&transaction_id='.$transaction->id,
+            ];
+
+            if ($customerEmail) {
+                $sessionOptions['customer_email'] = $customerEmail;
+            }
+
+            $checkout = Checkout::create(null, $sessionOptions);
+        }
 
         $transaction->update([
             'metadata' => array_merge($transaction->metadata ?? [], [

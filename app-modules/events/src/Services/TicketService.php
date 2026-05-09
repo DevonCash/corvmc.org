@@ -8,6 +8,7 @@ use CorvMC\Events\Models\Ticket;
 use CorvMC\Events\Models\TicketOrder;
 use CorvMC\Finance\Facades\Finance;
 use CorvMC\Finance\Models\Order;
+use CorvMC\Finance\States\TransactionState\Pending;
 use CorvMC\Support\Money\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -22,85 +23,108 @@ use Illuminate\Support\Str;
 class TicketService
 {
     /**
-     * Create a ticket order and its Finance Order.
+     * Create a ticket order for an authenticated user.
      *
-     * @return TicketOrder The created ticket order (with Finance Order committed)
-     * @throws \Exception if not enough tickets available
+     * @return TicketOrder The created ticket order
+     *
+     * @throws \RuntimeException if not enough tickets available
      */
-    public function createOrder(Event $event, User $purchaser, int $quantity, array $additionalData = []): TicketOrder
+    public function createOrder(Event $event, User $purchaser, int $quantity, bool $coversFees = false): TicketOrder
     {
-        $availableTickets = $event->available_tickets;
-        if ($availableTickets !== null && $quantity > $availableTickets) {
-            throw new \Exception("Only {$availableTickets} tickets available for this event");
-        }
+        $this->guardAvailability($event, $quantity);
 
-        return DB::transaction(function () use ($event, $purchaser, $quantity, $additionalData) {
-            $ticketPrice = $event->ticket_price ?? 0;
-            $totalAmount = $ticketPrice * $quantity;
+        $unitPriceCents = $event->getTicketPriceForUser($purchaser)->getMinorAmount();
 
-            $ticketOrder = TicketOrder::create(array_merge([
-                'event_id' => $event->id,
-                'purchaser_id' => $purchaser->id,
-                'quantity' => $quantity,
-                'unit_price' => $ticketPrice,
-                'total_amount' => $totalAmount,
-                'status' => 'pending',
-                'order_number' => $this->generateOrderNumber(),
-            ], $additionalData));
+        return $this->buildTicketOrder($event, $quantity, $unitPriceCents, $coversFees, [
+            'user_id' => $purchaser->id,
+            'name' => $purchaser->name,
+            'email' => $purchaser->email,
+        ]);
+    }
 
-            return $ticketOrder;
-        });
+    /**
+     * Create a ticket order for a guest (no authenticated user).
+     *
+     * @return TicketOrder The created ticket order
+     *
+     * @throws \RuntimeException if not enough tickets available
+     */
+    public function guestCheckout(Event $event, int $quantity, string $name, string $email, bool $coversFees = false): TicketOrder
+    {
+        $this->guardAvailability($event, $quantity);
+
+        $unitPriceCents = $event->getTicketPriceForUser(null)->getMinorAmount();
+
+        return $this->buildTicketOrder($event, $quantity, $unitPriceCents, $coversFees, [
+            'user_id' => null,
+            'name' => $name,
+            'email' => $email,
+        ]);
+    }
+
+    /**
+     * Full checkout flow: create a ticket order and process payment.
+     *
+     * For authenticated users, pass a User. For guests, pass name/email instead.
+     * Returns a redirect URL — either a Stripe checkout page or the success URL (for free tickets).
+     *
+     * @throws \RuntimeException if not enough tickets available
+     */
+    public function checkout(
+        Event $event,
+        int $quantity,
+        string $successUrl,
+        string $cancelUrl,
+        ?User $user = null,
+        ?string $guestName = null,
+        ?string $guestEmail = null,
+        bool $coversFees = false,
+    ): string {
+        $ticketOrder = $user
+            ? $this->createOrder($event, $user, $quantity, $coversFees)
+            : $this->guestCheckout($event, $quantity, $guestName, $guestEmail, $coversFees);
+
+        return $this->processCheckout($ticketOrder, $successUrl, $cancelUrl);
     }
 
     /**
      * Process checkout for a ticket order via the Finance Order system.
      *
      * Creates a Finance Order, prices it, commits with Stripe rail,
-     * and returns the checkout URL.
+     * and returns the redirect URL.
      */
-    public function processCheckout(TicketOrder $ticketOrder, string $successUrl, string $cancelUrl): array
+    public function processCheckout(TicketOrder $ticketOrder, string $successUrl, string $cancelUrl): string
     {
         // Guard against duplicate orders
         $existingOrder = Finance::findActiveOrder($ticketOrder);
         if ($existingOrder) {
-            $checkoutUrl = $existingOrder->checkoutUrl();
-
-            return [
-                'success' => true,
-                'checkout_url' => $checkoutUrl,
-                'session_id' => null,
-            ];
+            return $existingOrder->checkoutUrl();
         }
 
-        $user = $ticketOrder->user ?? User::find($ticketOrder->purchaser_id);
+        $user = $ticketOrder->user;
 
         // Price via Finance
         $lineItems = Finance::price([$ticketOrder], $user);
         $totalCents = (int) $lineItems->sum('amount');
 
         if ($totalCents <= 0) {
-            // Free tickets — create Order, complete immediately, generate tickets
+            // Free tickets — create Order, commit settles immediately.
+            // The GenerateTicketsOnOrderSettled listener handles ticket
+            // generation and marking the TicketOrder completed.
             $order = $this->createFinanceOrder($ticketOrder, $lineItems, $totalCents);
             Finance::commit($order->fresh(), []);
-            $this->completeTicketOrder($ticketOrder);
 
-            return [
-                'success' => true,
-                'redirect_url' => $successUrl,
-            ];
+            return $successUrl;
         }
 
         // Create Finance Order and commit with Stripe
         $order = $this->createFinanceOrder($ticketOrder, $lineItems, $totalCents);
-        $committed = Finance::commit($order->fresh(), ['stripe' => $totalCents]);
+        $committed = Finance::commit($order->fresh(), ['stripe' => $totalCents], checkoutUrls: [
+            'success_url' => $successUrl.'?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => $cancelUrl,
+        ], customerEmail: $ticketOrder->email);
 
-        $checkoutUrl = $committed->checkoutUrl();
-
-        return [
-            'success' => true,
-            'checkout_url' => $checkoutUrl,
-            'session_id' => $committed->transactions->first()?->metadata['session_id'] ?? null,
-        ];
+        return $committed->checkoutUrl();
     }
 
     /**
@@ -122,7 +146,7 @@ class TicketService
                 $stripeTxn = $financeOrder->transactions()
                     ->where('currency', 'stripe')
                     ->where('type', 'payment')
-                    ->whereState('status', \CorvMC\Finance\States\TransactionState\Pending::class)
+                    ->whereState('status', Pending::class)
                     ->first();
 
                 if ($stripeTxn) {
@@ -155,7 +179,7 @@ class TicketService
         ?string $attendeeEmail = null,
         ?string $notes = null
     ): TicketOrder {
-        if (!$staffUser) {
+        if (! $staffUser) {
             throw new \Exception('staffUser is required for door sales');
         }
 
@@ -289,10 +313,10 @@ class TicketService
     /**
      * Create a Finance Order with LineItems for a TicketOrder.
      */
-    private function createFinanceOrder(TicketOrder $ticketOrder, \Illuminate\Support\Collection $lineItems, int $totalCents): Order
+    private function createFinanceOrder(TicketOrder $ticketOrder, Collection $lineItems, int $totalCents): Order
     {
         $order = Order::create([
-            'user_id' => $ticketOrder->purchaser_id,
+            'user_id' => $ticketOrder->user_id,
             'total_amount' => 0,
         ]);
 
@@ -319,9 +343,51 @@ class TicketService
         $this->generateTickets($ticketOrder);
     }
 
+    /**
+     * Guard that enough tickets are available.
+     *
+     * @throws \RuntimeException
+     */
+    private function guardAvailability(Event $event, int $quantity): void
+    {
+        $remaining = $event->getTicketsRemaining();
+
+        if ($remaining !== null && $quantity > $remaining) {
+            throw new \RuntimeException("Only {$remaining} tickets available for this event");
+        }
+    }
+
+    /**
+     * Build a TicketOrder with correct pricing fields.
+     *
+     * @param  array<string, mixed>  $attributes  Additional attributes (user_id, name, email)
+     */
+    private function buildTicketOrder(Event $event, int $quantity, int $unitPriceCents, bool $coversFees, array $attributes): TicketOrder
+    {
+        return DB::transaction(function () use ($event, $quantity, $unitPriceCents, $coversFees, $attributes) {
+            $subtotalCents = $unitPriceCents * $quantity;
+            $feesCents = $coversFees
+                ? (int) round($subtotalCents * 0.029) + 30
+                : 0;
+            $totalCents = $subtotalCents + $feesCents;
+
+            return TicketOrder::create(array_merge($attributes, [
+                'event_id' => $event->id,
+                'quantity' => $quantity,
+                'unit_price' => Money::ofMinor($unitPriceCents, 'USD'),
+                'subtotal' => Money::ofMinor($subtotalCents, 'USD'),
+                'discount' => Money::ofMinor(0, 'USD'),
+                'fees' => Money::ofMinor($feesCents, 'USD'),
+                'total' => Money::ofMinor($totalCents, 'USD'),
+                'covers_fees' => $coversFees,
+                'status' => 'pending',
+            ]));
+        });
+    }
+
     private function generateOrderNumber(): string
     {
-        return 'TKT-' . strtoupper(Str::random(8));
+        return 'TKT-'.strtoupper(Str::random(8));
     }
 
     private function generateTicketNumber(): string
