@@ -17,7 +17,7 @@ class SyncTablerIcons extends Command
 
     private const SCAN_DIRS = ['app', 'app-modules', 'resources', 'config'];
 
-    private const SCAN_EXTENSIONS = ['php', 'js'];
+    private const SCAN_EXTENSIONS = ['php', 'js', 'md'];
 
     public function handle(): int
     {
