@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Password Migration Secret
+    |--------------------------------------------------------------------------
+    |
+    | Shared secret for the bcrypt→scrypt password migration endpoint.
+    | Used by the SvelteKit app on Cloudflare Workers to verify bcrypt
+    | passwords via the Laravel app. Remove once migration is complete.
+    |
+    */
+    'migration_secret' => env('MIGRATION_SECRET'),
+
 ];
